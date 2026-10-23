@@ -11,6 +11,7 @@ import type { AiModelRate, AiVisibilityPrice } from "./catalog-pricing";
 import { parseResponsesBasePrice, parseVisibilityPrice } from "./catalog-pricing";
 import type { AiResearchCatalog, AiVisibilityMarket } from "./catalog-types";
 import { aiDeadlineSignal } from "./deadline";
+import { type AiEngine, engineCatalogPath } from "./engines";
 import { isLegacyModel } from "./legacy";
 import { fetchOfficialModelRates } from "./official-model-rates";
 
@@ -80,6 +81,22 @@ async function metadata(credentials: ProviderCredentials, path: string, deadline
   if (!parsed.success)
     throw new ProviderCallError("AI provider returned an invalid free catalog.", 0);
   return { value, rows: parsed.data.tasks[0].result };
+}
+/** Free per-engine model catalog; validates calibrated flagships before a paid dispatch. */
+export async function fetchEngineModelCatalog(
+  credentials: ProviderCredentials,
+  engine: AiEngine,
+  deadlineAt = Date.now() + 10_000,
+) {
+  const { rows } = await metadata(
+    credentials,
+    `ai_optimization/${engineCatalogPath(engine)}`,
+    deadlineAt,
+  );
+  return z
+    .array(model)
+    .parse(rows)
+    .map((entry) => ({ name: entry.model_name, reasoning: entry.reasoning }));
 }
 export async function fetchAiResearchCapabilities(
   credentials: ProviderCredentials,

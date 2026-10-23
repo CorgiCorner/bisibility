@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { compactInputClassName } from "@/components/ui/input-styles";
 import { Kbd } from "@/components/ui/Kbd";
 import type { ActionPaymentOption } from "@/lib/action-payment/contract";
-import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
-import { normalizeDomain } from "@/lib/domains/normalize";
+import type { DomainOverviewScope } from "@/lib/domain-overview/types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ResearchScope } from "@/lib/research/scope";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
@@ -40,7 +39,6 @@ type DomainOverviewAnalyzeCardProps = {
   target: string;
   researchScope: ResearchScope | null;
   trackedScopes: readonly ResearchScope[];
-  report?: DomainOverviewReport | null;
 };
 
 export function DomainOverviewAnalyzeCard({
@@ -57,7 +55,6 @@ export function DomainOverviewAnalyzeCard({
   target,
   researchScope,
   trackedScopes,
-  report,
 }: Readonly<DomainOverviewAnalyzeCardProps>) {
   const presentAmount = usePaymentAmountFormatter();
   const t = useTranslations("projectDomainOverview.workspace.analyze");
@@ -75,17 +72,12 @@ export function DomainOverviewAnalyzeCard({
   const targetField = register("target");
   const detected = detectedDomainScope(target);
   const resolvedScope = detected === "root" ? "root" : (scopeOverride ?? detected);
-  const matchesReport = Boolean(
-    report && normalizeDomain(target) === report.target && resolvedScope === report.scope,
-  );
   const valid = Boolean(
     detected &&
       estimate.valid &&
       researchScope?.researchAvailable &&
       researchScope?.providerLocationCode != null,
   );
-  const descriptionIds = ["domain-overview-scope-help"];
-  if (report && !matchesReport) descriptionIds.push("domain-overview-report-target-note");
 
   return (
     <Card className="min-w-0 p-4.5 sm:p-5" size="md">
@@ -104,7 +96,7 @@ export function DomainOverviewAnalyzeCard({
             <input
               data-input-inner
               {...targetField}
-              aria-describedby={descriptionIds.join(" ")}
+              aria-describedby="domain-overview-scope-help"
               aria-label={t("targetAria")}
               autoCapitalize="none"
               autoCorrect="off"
@@ -144,35 +136,7 @@ export function DomainOverviewAnalyzeCard({
             />
           </div>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center justify-end gap-4">
-          {onPaymentOptionChange ? (
-            <ActionPaymentOptionPicker
-              options={estimate.paymentOptions ?? []}
-              value={estimate.payment?.option.id ?? ""}
-              disabled={estimate.loading || submitting}
-              onChange={(id) => {
-                const option = estimate.paymentOptions?.find((item) => item.id === id);
-                if (option) onPaymentOptionChange(option);
-              }}
-            />
-          ) : null}
-          <Button
-            aria-describedby={
-              report && !matchesReport ? "domain-overview-report-target-note" : undefined
-            }
-            disabled={disabled || !valid || submitting}
-            loading={submitting}
-            loadingLabel={submitLabel(true)}
-            size="sm"
-            startIcon={<Globe aria-hidden size={14} weight="regular" />}
-            style={{ height: 37, minHeight: 37, minWidth: 200 }}
-            title={!valid ? t("needValid") : presented?.title}
-            type="submit"
-          >
-            {submitLabel(false)}
-          </Button>
-        </div>
-        <div className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
           {detected ? (
             <span
               className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px]"
@@ -204,12 +168,32 @@ export function DomainOverviewAnalyzeCard({
               {t("scopeHelp")}
             </span>
           )}
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
+            {onPaymentOptionChange ? (
+              <ActionPaymentOptionPicker
+                options={estimate.paymentOptions ?? []}
+                value={estimate.payment?.option.id ?? ""}
+                disabled={estimate.loading || submitting}
+                onChange={(id) => {
+                  const option = estimate.paymentOptions?.find((item) => item.id === id);
+                  if (option) onPaymentOptionChange(option);
+                }}
+              />
+            ) : null}
+            <Button
+              disabled={disabled || !valid || submitting}
+              loading={submitting}
+              loadingLabel={submitLabel(true)}
+              size="sm"
+              startIcon={<Globe aria-hidden size={14} weight="regular" />}
+              style={{ height: 37, minHeight: 37, minWidth: 200 }}
+              title={!valid ? t("needValid") : presented?.title}
+              type="submit"
+            >
+              {submitLabel(false)}
+            </Button>
+          </div>
         </div>
-        {report && !matchesReport ? (
-          <p className="text-[12px] text-fg-muted" id="domain-overview-report-target-note">
-            {t("previousResult", { target: report.target })}
-          </p>
-        ) : null}
       </form>
     </Card>
   );

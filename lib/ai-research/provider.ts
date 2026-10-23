@@ -12,6 +12,7 @@ import type { DataForSeoResponse } from "@/lib/providers/serp/dataforseo-payload
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { readObservedResponse } from "@/lib/providers/usage";
 import { z } from "zod";
+import type { AdmittedEngine } from "./admission";
 import { fetchAiResearchCapabilities } from "./catalog";
 import type { AiModelCapability } from "./catalog-types";
 import {
@@ -20,6 +21,7 @@ import {
   aiDeadlineSignal,
   assertAiDeadline,
 } from "./deadline";
+import { engineResponsePath, engineSearchParameters } from "./engines";
 import { isLegacyModel, isLegacyPrompt } from "./legacy";
 import { observedRow, promptRow } from "./normalize";
 import { aiUsageReceipt } from "./provider-receipt";
@@ -182,6 +184,40 @@ export async function supportedPromptModels(
       task.result.filter((model) => !model.reasoning).map((model) => model.model_name),
     ),
   );
+}
+/** ADR-023 engine-mode call: the calibrated model at its calibrated output length. */
+export async function fetchEnginePrompt(
+  credentials: ProviderCredentials,
+  input: PromptInput,
+  engine: AdmittedEngine,
+  tag: string,
+  deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS,
+  onDispatch?: () => void,
+) {
+  const result = await aiProviderRequest(
+    credentials,
+    engineResponsePath(engine.engine),
+    {
+      user_prompt: input.prompt,
+      model_name: engine.model,
+      max_output_tokens: engine.outputTokens,
+      ...engineSearchParameters(engine.engine, input.web_search),
+      ...(engine.reasoning ? {} : { temperature: 0 }),
+      // The country hint is only documented for ChatGPT responses.
+      ...(engine.engine === "chat_gpt" && input.web_search && input.country_iso_code
+        ? { web_search_country_iso_code: input.country_iso_code }
+        : {}),
+      system_message: `Respond in language ${input.response_language}. This is a response instruction, not a dataset filter.`,
+      tag,
+    },
+    deadlineAt,
+    onDispatch,
+  );
+  try {
+    return { ...result, row: promptRow(result.result, input, engine.model, engine.engine) };
+  } catch {
+    throw new ProviderCallError("Prompt response could not be normalized.", result.costCents);
+  }
 }
 export async function fetchPrompt(
   credentials: ProviderCredentials,

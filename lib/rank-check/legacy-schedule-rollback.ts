@@ -7,12 +7,12 @@ import {
   recordLegacyRollbackStatus,
   recoverLegacyRollbackPending,
 } from "./legacy-rollback-checkpoint";
+import { rankCheckScheduleId, type SyncRankCheckScheduleInput } from "./legacy-schedule-builder";
 import type { ScheduleWriterQuiescenceEvaluation } from "./schedule-writer-quiescence";
 import {
   waitForExactSchedulerCount,
   waitForStableSchedulerCount,
 } from "./scheduler-count-convergence";
-import { rankCheckScheduleId, type SyncRankCheckScheduleInput } from "./temporal-schedule";
 
 export type {
   LegacyRollbackCheckpoint,

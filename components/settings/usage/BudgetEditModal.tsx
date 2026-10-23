@@ -4,10 +4,12 @@ import { ProviderAllocationDialog } from "@/components/provider-management/Provi
 import { ProviderUiProvider } from "@/components/provider-management/ProviderUiProvider";
 import type { UsageConnection } from "@/lib/metering/user-views";
 import { useOverlayFocus } from "@/lib/ui/use-overlay-focus";
+import type { ProviderAllocationRow } from "@usagekit/views";
 import { useRef } from "react";
 
 type BudgetEditModalProps = {
   connections: readonly UsageConnection[];
+  surface?: ProviderAllocationRow["surface"];
   onClose: () => void;
   onSaved: () => void;
   projectId: string;
@@ -16,6 +18,7 @@ type BudgetEditModalProps = {
 
 export function BudgetEditModal({
   connections,
+  surface,
   onClose,
   onSaved,
   projectId,
@@ -34,7 +37,8 @@ export function BudgetEditModal({
     <ProviderUiProvider projectId={projectId}>
       <ProviderAllocationDialog
         connections={connections}
-        key={JSON.stringify(connections.map((item) => item.connectionId))}
+        surface={surface}
+        key={JSON.stringify([connections.map((item) => item.connectionId), surface])}
         onClose={() => dismiss(onClose)}
         onSaved={() => dismiss(onSaved)}
         onExited={restoreOpener}

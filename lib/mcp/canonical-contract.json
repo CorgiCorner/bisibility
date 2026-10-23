@@ -6141,6 +6141,17 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           }
         },
+        "engines": {
+          "uniqueItems": true,
+          "description": "Engine mode on Credits: each engine answers with its calibrated flagship model under the hard cap. Excludes models and max_output_tokens.",
+          "minItems": 1,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["chat_gpt", "claude", "gemini", "perplexity"]
+          }
+        },
         "web_search": {
           "default": false,
           "description": "Enable provider web search when supported.",

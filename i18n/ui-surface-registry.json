@@ -4254,7 +4254,17 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-research/AiEngineFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-research/AiPromptFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiResearchCostCap.tsx",
       "status": "pending"
     },
     {
@@ -5974,6 +5984,11 @@
     {
       "kind": "render",
       "path": "components/integrations/Ga4PropertyManualEntry.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/IntegrationCategories.tsx",
       "status": "migrated"
     },
     {
@@ -9220,6 +9235,11 @@
       "kind": "render",
       "path": "components/schedules/ScheduleRowActions.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/SchedulerUpgradeBanner.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",

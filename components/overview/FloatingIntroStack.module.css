@@ -3,7 +3,7 @@
   .stack {
     position: fixed;
     left: 24px;
-    bottom: 80px;
+    bottom: max(20px, env(safe-area-inset-bottom));
     z-index: 30;
     width: min(300px, calc(100vw - 32px));
     isolation: isolate;
@@ -16,7 +16,7 @@
   }
   .active {
     position: relative;
-    max-height: calc(100dvh - 112px);
+    max-height: calc(100dvh - 52px);
     overflow-y: auto;
     overscroll-behavior: contain;
     border-radius: var(--radius-card);

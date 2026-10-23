@@ -38,6 +38,7 @@ export const envClassification = {
     "LOCAL_MONITOR_RECURRING_ENABLED",
   ],
   hostedOnly: [
+    "AI_RESPONSE_ENGINES_ENABLED",
     "AMPLIFY_HOSTING",
     "APNS_KEY_ID",
     "APNS_TEAM_ID",

@@ -1,32 +1,10 @@
-import {
-  ScheduleAlreadyRunning,
-  ScheduleNotFoundError,
-  ScheduleOverlapPolicy,
-} from "@temporalio/client";
+import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { computeNextCheckAt } from "./schedule";
 import {
   buildRankCheckScheduleOptions,
   buildRankCheckScheduleSpec,
-  rankCheckScheduleId,
-  syncRankCheckSchedule,
-  syncRankCheckScheduleNonFatal,
-  type TemporalScheduleClient,
-  upsertRankCheckSchedule,
-} from "./temporal-schedule";
-
-function clientMock() {
-  const handle = {
-    delete: vi.fn(),
-    update: vi.fn(),
-  };
-  const client = {
-    create: vi.fn(),
-    getHandle: vi.fn(() => handle),
-  } as unknown as TemporalScheduleClient;
-
-  return { client, handle };
-}
+} from "./legacy-schedule-builder";
+import { computeNextCheckAt } from "./schedule";
 
 const scheduledInput = {
   keywordId: "keyword_1",
@@ -157,109 +135,5 @@ describe("Temporal rank-check schedules", () => {
       cronExpressions: ["30 6 28 * *"],
       timezone: "UTC",
     });
-  });
-
-  it("creates a Temporal schedule when none exists", async () => {
-    const { client } = clientMock();
-
-    await expect(upsertRankCheckSchedule(scheduledInput, client)).resolves.toEqual({
-      scheduleId: "rank-check-keyword_1",
-      status: "created",
-      workflowId: "rank-check-keyword_1",
-    });
-    expect(client.create).toHaveBeenCalledWith(
-      expect.objectContaining({ scheduleId: "rank-check-keyword_1" }),
-    );
-  });
-
-  it("logs and continues when schedule sync fails", async () => {
-    const { client } = clientMock();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    vi.mocked(client.create).mockRejectedValue(new Error("Temporal unavailable"));
-
-    await expect(syncRankCheckScheduleNonFatal(scheduledInput, client)).resolves.toBeNull();
-    expect(consoleError).toHaveBeenCalledWith(
-      "[temporal] rank-check schedule sync failed",
-      expect.objectContaining({
-        keywordId: "keyword_1",
-        projectId: "project_1",
-        scheduleId: "rank-check-keyword_1",
-      }),
-    );
-
-    consoleError.mockRestore();
-  });
-
-  it("updates an existing schedule instead of creating a duplicate", async () => {
-    const { client, handle } = clientMock();
-    vi.mocked(client.create).mockRejectedValue(
-      new ScheduleAlreadyRunning("already exists", "rank-check-keyword_1"),
-    );
-
-    await expect(upsertRankCheckSchedule(scheduledInput, client)).resolves.toMatchObject({
-      status: "updated",
-    });
-    expect(client.getHandle).toHaveBeenCalledWith("rank-check-keyword_1");
-    expect(handle.update).toHaveBeenCalledTimes(1);
-
-    const updateFn = vi.mocked(handle.update).mock.calls[0][0];
-    expect(updateFn({})).toMatchObject({
-      action: expect.objectContaining({ workflowId: "rank-check-keyword_1" }),
-      typedSearchAttributes: expect.any(Array),
-    });
-  });
-
-  it("deletes the schedule for manual or paused frequencies", async () => {
-    const { client, handle } = clientMock();
-
-    await expect(
-      syncRankCheckSchedule(
-        {
-          ...scheduledInput,
-          schedule: { frequency: "manual", jitterMinutes: 0 },
-        },
-        client,
-      ),
-    ).resolves.toEqual({
-      scheduleId: rankCheckScheduleId("keyword_1"),
-      status: "deleted",
-      workflowId: "rank-check-keyword_1",
-    });
-    expect(client.create).not.toHaveBeenCalled();
-    expect(handle.delete).toHaveBeenCalledTimes(1);
-  });
-
-  it("treats a missing deleted schedule as already synced", async () => {
-    const { client, handle } = clientMock();
-    vi.mocked(handle.delete).mockRejectedValue(
-      new ScheduleNotFoundError("missing", "rank-check-keyword_1"),
-    );
-
-    await expect(
-      syncRankCheckSchedule(
-        {
-          ...scheduledInput,
-          schedule: { frequency: "paused", jitterMinutes: 0 },
-        },
-        client,
-      ),
-    ).resolves.toMatchObject({ status: "missing" });
-  });
-
-  it("refuses direct owned Schedule mutation outside legacy mode", async () => {
-    const { client, handle } = clientMock();
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
-
-    await expect(upsertRankCheckSchedule(scheduledInput, client)).rejects.toThrow(
-      "disabled outside legacy mode",
-    );
-    await expect(
-      syncRankCheckSchedule(
-        { ...scheduledInput, schedule: { frequency: "paused", jitterMinutes: 0 } },
-        client,
-      ),
-    ).rejects.toThrow("disabled outside legacy mode");
-    expect(client.create).not.toHaveBeenCalled();
-    expect(handle.delete).not.toHaveBeenCalled();
   });
 });

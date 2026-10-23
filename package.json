@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.39.0",
+  "version": "0.41.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -56,6 +56,7 @@
     "db:metering:resolve-history": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/resolve-historical-accounting.ts",
     "db:metering:adopt-utc": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/adopt-metering-timestamps.ts",
     "db:metering:closeout-history": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/closeout-historical-finances.ts",
+    "scheduler:upgrade": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/self-host/upgrade-rank-scheduler.ts",
     "db:metering:split-project-limits": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/split-project-funding-limits.ts",
     "temporal:dev": "temporal server start-dev --search-attribute keywordId=Keyword --search-attribute projectId=Keyword --search-attribute provider=Keyword",
     "pretemporal:worker": "node tools/check-node.mjs",

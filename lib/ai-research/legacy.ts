@@ -27,9 +27,10 @@ export function isLegacyPrompt(
   input: Pick<
     PromptInput,
     "models" | "max_output_tokens" | "web_search" | "response_language" | "country_iso_code"
-  > & { cost_policy?: PromptInput["cost_policy"] },
+  > & { cost_policy?: PromptInput["cost_policy"]; engines?: PromptInput["engines"] },
 ): boolean {
   return (
+    !input.engines?.length &&
     (input.cost_policy === undefined || input.cost_policy === "hard_cap") &&
     input.models.length > 0 &&
     input.models.every(isLegacyModel) &&

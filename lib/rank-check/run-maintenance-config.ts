@@ -7,11 +7,6 @@ export type RankCheckRunsScheduleDecision = {
   reason: string;
 };
 
-function isFalseyFlag(raw: string | undefined) {
-  const value = raw?.trim().toLowerCase();
-  return value === "0" || value === "false" || value === "no" || value === "off";
-}
-
 function isTruthyFlag(raw: string | undefined) {
   const value = raw?.trim().toLowerCase();
   return value === "1" || value === "true" || value === "yes" || value === "on";
@@ -20,7 +15,7 @@ function isTruthyFlag(raw: string | undefined) {
 function scheduledMaintenanceEnabled() {
   const raw = process.env.SCHEDULED_MAINTENANCE_ENABLED?.trim();
   if (raw === undefined || raw.length === 0) {
-    return !isFalseyFlag(process.env.RANK_CHECK_RECONCILER_ENABLED);
+    return true;
   }
   return isTruthyFlag(raw);
 }
@@ -34,13 +29,9 @@ export function rankCheckRunsScheduleDecision(
       reason: "RANK_CHECK_SCHEDULER_MODE=dispatcher requires run reconciliation",
     };
   }
-  const maintenanceFlag = process.env.SCHEDULED_MAINTENANCE_ENABLED?.trim();
   return {
     enabled: scheduledMaintenanceEnabled(),
-    reason:
-      maintenanceFlag === undefined || maintenanceFlag.length === 0
-        ? "RANK_CHECK_RECONCILER_ENABLED controls legacy maintenance fallback"
-        : "SCHEDULED_MAINTENANCE_ENABLED controls legacy maintenance",
+    reason: "SCHEDULED_MAINTENANCE_ENABLED controls maintenance during cutover",
   };
 }
 
@@ -50,7 +41,7 @@ export function assertRankCheckRunsScheduleEnabled(
   const decision = rankCheckRunsScheduleDecision(mode);
   if (!decision.enabled) {
     throw new Error(
-      "Rank-check runs maintenance is disabled. Check SCHEDULED_MAINTENANCE_ENABLED and RANK_CHECK_RECONCILER_ENABLED.",
+      "Rank-check runs maintenance is disabled. Check SCHEDULED_MAINTENANCE_ENABLED.",
     );
   }
   return decision;

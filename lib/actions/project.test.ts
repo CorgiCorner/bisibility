@@ -111,10 +111,15 @@ describe("project actions", () => {
       isSample: false,
     });
     mocks.prisma.$queryRaw.mockImplementation(async (query, ...values) => {
+      if ("text" in query && query.text.includes('AS "keywordId"')) return [];
       if ("text" in query) return meter.tx.$queryRaw(query, ...values);
       return String(query).includes("memberships") ? [{ role: "member" }] : [{ id: "user_1" }];
     });
-    mocks.prisma.$executeRaw.mockImplementation(meter.tx.$executeRaw);
+    mocks.prisma.$executeRaw.mockImplementation((query, ...values) => {
+      if ("text" in query && query.text.includes('"keyword_dispatch_states"'))
+        return Promise.resolve(0);
+      return meter.tx.$executeRaw(query, ...values);
+    });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mockActor();
     mocks.prisma.project.create.mockImplementation(({ data }) =>

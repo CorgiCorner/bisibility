@@ -1,3 +1,4 @@
+import type { AiResponseExecution } from "@/lib/ai-research/engines";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
@@ -24,6 +25,7 @@ export type DeploymentExecutionInput = {
   keywordId?: string;
   /** Trusted continuation principal, checked against its durable binding and current lease. */
   snapshotRequestId?: string;
+  aiResponse?: AiResponseExecution;
 };
 
 export type DeploymentRankReservationInput = {

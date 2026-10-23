@@ -89,7 +89,7 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
             size="xs"
             variant="ghost"
           >
-            {comparing ? <XIcon aria-hidden size={16} /> : t("compareAction")}
+            {comparing ? <XIcon weight="regular" aria-hidden size={16} /> : t("compareAction")}
           </Button>
         </div>
       </div>

@@ -15,16 +15,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AiCatalogNotice } from "./AiCatalogNotice";
-import { AiCostPolicyFields } from "./AiCostPolicyFields";
+import { type AiEngineOption, researchDefaults } from "./AiEngineFields";
 import { AiPromptFields } from "./AiPromptFields";
+import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchHistoryEntry } from "./AiResearchHistory";
 import { AiResearchWorkspaceOutcome } from "./AiResearchWorkspaceOutcome";
 import { AiVisibilityFields } from "./AiVisibilityFields";
-import {
-  aiResearchDefaults,
-  extendedPromptAvailable,
-  legacyResearchInput,
-} from "./ai-research-presets";
+import { extendedPromptAvailable, legacyResearchInput } from "./ai-research-presets";
 import { useAiResearchCatalogRefresh } from "./useAiResearchCatalogRefresh";
 import { useAiResearchSubmission } from "./useAiResearchSubmission";
 export function AiResearchWorkspace({
@@ -39,6 +36,7 @@ export function AiResearchWorkspace({
   catalogError,
   catalogFailure,
   supportingProviders = [],
+  engineOptions = [],
 }: Readonly<{
   projectId: string;
   domain: string;
@@ -51,6 +49,7 @@ export function AiResearchWorkspace({
   catalogError?: string;
   catalogFailure?: AiCatalogFailureReason;
   supportingProviders?: readonly string[];
+  engineOptions?: readonly AiEngineOption[];
 }>) {
   const paymentT = useTranslations("shared.actionPayment");
   const locale = useLocale();
@@ -58,12 +57,13 @@ export function AiResearchWorkspace({
   const schema = mode === "visibility" ? visibilitySchema : promptSchema;
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: aiResearchDefaults(mode, domain),
+    defaultValues: researchDefaults(mode, domain, engineOptions),
   });
   const values = form.watch();
   const { displayCatalog, freshCatalog, noticeReason, onCatalogInteract, status } =
     useAiResearchCatalogRefresh({ catalog, catalogError, catalogFailure, projectId });
   const legacy = legacyResearchInput(mode, values);
+  const engineMode = "engines" in values && (values.engines?.length ?? 0) > 0;
   const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
   const catalogSourceMissing = catalogFailure === "no_source";
   const pricingUnavailable =
@@ -72,7 +72,9 @@ export function AiResearchWorkspace({
     Boolean(freshCatalog) &&
     !freshCatalog?.models.some((model) => model.priceAvailable);
   const extendedUnavailable =
-    !legacy && (mode === "prompt" ? !extendedPromptAvailable(freshCatalog, values) : !freshCatalog);
+    !engineMode &&
+    !legacy &&
+    (mode === "prompt" ? !extendedPromptAvailable(freshCatalog, values) : !freshCatalog);
   const submission = useAiResearchSubmission({
     form,
     mode,
@@ -112,7 +114,7 @@ export function AiResearchWorkspace({
       ) : status === "unavailable" ? (
         <AiCatalogNotice mode={mode} projectId={projectId} reason={noticeReason} />
       ) : null}
-      {pricingUnavailable ? (
+      {pricingUnavailable && !engineMode ? (
         <Card role="alert" className="text-ui-body text-fg-muted">
           {t("pricingUnavailableLegacy")}
         </Card>
@@ -146,22 +148,14 @@ export function AiResearchWorkspace({
               {mode === "visibility" ? (
                 <AiVisibilityFields form={form} catalog={displayCatalog} disabled={disabled} />
               ) : (
-                <AiPromptFields form={form} catalog={displayCatalog} disabled={disabled} />
+                <AiPromptFields
+                  form={form}
+                  catalog={displayCatalog}
+                  disabled={disabled}
+                  engineOptions={engineOptions}
+                />
               )}
-              {mode === "prompt" ? (
-                <AiCostPolicyFields form={form} catalog={displayCatalog} disabled={disabled} />
-              ) : (
-                <label htmlFor="ai-cost-limit" className="grid gap-2 text-ui-body">
-                  {t("costCap")}
-                  <Input
-                    id="ai-cost-limit"
-                    type="number"
-                    min={0}
-                    max={1000}
-                    {...form.register("max_cost_cents", { valueAsNumber: true })}
-                  />
-                </label>
-              )}
+              {mode === "visibility" ? <AiResearchCostCap form={form} /> : null}
             </div>
             {Object.values(form.formState.errors).length ? (
               <p role="alert" className="text-ui-body text-red-text">

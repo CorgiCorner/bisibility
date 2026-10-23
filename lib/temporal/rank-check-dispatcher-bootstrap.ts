@@ -6,6 +6,11 @@ import {
   RANK_CHECK_DISPATCHER_WORKFLOW_TYPE,
 } from "../rank-check/dispatcher-constants";
 import {
+  dispatcherClaimsAllowed,
+  type RankCheckSchedulerMode,
+  rankCheckSchedulerMode,
+} from "../rank-check/scheduler-mode";
+import {
   type BootstrapScheduleClient,
   type EnsureScheduleResult,
   ensureSingletonSchedule,
@@ -22,10 +27,11 @@ function dispatcherInterval() {
 
 export async function ensureRankCheckDispatcherSchedule(
   client?: BootstrapScheduleClient,
+  mode: RankCheckSchedulerMode = rankCheckSchedulerMode(),
 ): Promise<EnsureScheduleResult> {
   return ensureSingletonSchedule(
     {
-      enabled: isRankCheckDispatcherEnabled(),
+      enabled: dispatcherClaimsAllowed(mode),
       convergeSpec: true,
       memo: { kind: "rank-check-dispatcher" },
       note: "Due rank-check dispatcher",

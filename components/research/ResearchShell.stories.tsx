@@ -1,3 +1,4 @@
+import type { AiEngineOption } from "@/components/ai-research/AiEngineFields";
 import { AiResearchWorkspace } from "@/components/ai-research/AiResearchWorkspace";
 import {
   aiResearchCatalogFixture,
@@ -52,6 +53,7 @@ export function ResearchShell({
   unknownCost = false,
   credentialRotation = false,
   chargedFailure = false,
+  engineOptions = [],
 }: {
   module?: "audit" | "visibility" | "prompt";
   failed?: boolean;
@@ -59,6 +61,7 @@ export function ResearchShell({
   unknownCost?: boolean;
   credentialRotation?: boolean;
   chargedFailure?: boolean;
+  engineOptions?: readonly AiEngineOption[];
 }) {
   return (
     <FeatureMessagesProvider
@@ -129,6 +132,7 @@ export function ResearchShell({
                           ? fixtureUnknownCostAction
                           : fixtureResearchAction
                     }
+                    engineOptions={engineOptions}
                   />
                 )}
               </main>
@@ -161,6 +165,18 @@ export const Visibility: Story = {
 export const PromptExplorer: Story = {
   args: { module: "prompt" },
   parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/prompt-explorer` } } },
+};
+export const PromptExplorerEngines: Story = {
+  args: {
+    module: "prompt",
+    engineOptions: [
+      { engine: "chat_gpt", model: "gpt-5.6-luna" },
+      { engine: "claude", model: "claude-sonnet-5" },
+      { engine: "gemini", model: "gemini-4-argon" },
+      { engine: "perplexity", model: "sonar-pro" },
+    ],
+  },
+  parameters: PromptExplorer.parameters,
 };
 
 export const LegacyPromptCatalogOutage: Story = {

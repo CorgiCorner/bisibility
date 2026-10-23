@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => {
   }
   const roleRank = { admin: 2, auditor: 0.5, member: 1, owner: 3, viewer: 0 };
   const prisma = {
+    $executeRaw: vi.fn(async () => 0),
+    $queryRaw: vi.fn(async () => []),
     $transaction: vi.fn(),
     keyword: { findFirst: vi.fn() },
     keywordSchedule: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn(), upsert: vi.fn() },

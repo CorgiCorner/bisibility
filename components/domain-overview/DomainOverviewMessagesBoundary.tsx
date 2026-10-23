@@ -8,7 +8,8 @@ import { DomainOverviewCacheProvider } from "./DomainOverviewCacheProvider";
 /** Supplies domain-overview copy only to the normal interactive workspace. */
 export async function DomainOverviewMessagesBoundary({
   children,
-}: Readonly<{ children: ReactNode }>) {
+  ttlSeconds,
+}: Readonly<{ children: ReactNode; ttlSeconds?: number }>) {
   const runtime = await resolveRegionalDocumentLocale();
   const messages = await loadCoreMessages(runtime.locale, ["shared", "projectDomainOverview"]);
   return (
@@ -17,7 +18,7 @@ export async function DomainOverviewMessagesBoundary({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <DomainOverviewCacheProvider ttlSeconds={domainOverviewCacheTtlSeconds()}>
+      <DomainOverviewCacheProvider ttlSeconds={ttlSeconds ?? domainOverviewCacheTtlSeconds()}>
         {children}
       </DomainOverviewCacheProvider>
     </FeatureMessagesProvider>

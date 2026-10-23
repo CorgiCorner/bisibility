@@ -1,7 +1,11 @@
 import "server-only";
 
 import { DEFAULT_RANK_CHECK_PLANNER_INTERVAL } from "../rank-check/planner-interval";
-import { plannerOwnsAutomaticChecks } from "../rank-check/scheduler-mode";
+import {
+  plannerOwnsAutomaticChecks,
+  type RankCheckSchedulerMode,
+  rankCheckSchedulerMode,
+} from "../rank-check/scheduler-mode";
 import {
   type BootstrapScheduleClient,
   type EnsureScheduleResult,
@@ -22,11 +26,12 @@ function plannerInterval() {
 
 export function ensureRankCheckPlannerSchedule(
   client?: BootstrapScheduleClient,
+  mode: RankCheckSchedulerMode = rankCheckSchedulerMode(),
 ): Promise<EnsureScheduleResult> {
   return ensureSingletonSchedule(
     {
       convergeSpec: true,
-      enabled: isRankCheckPlannerEnabled(),
+      enabled: plannerOwnsAutomaticChecks(mode),
       memo: { kind: "rank-check-planner" },
       note: "Planned rank-check runs",
       scheduleId: RANK_CHECK_PLANNER_SCHEDULE_ID,

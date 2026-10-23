@@ -70,6 +70,7 @@
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/engine",
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
@@ -96,7 +97,8 @@
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items",
-      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items"
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/engine"
     ],
     "subject": "operation analyzeAiVisibility"
   },
@@ -104,12 +106,14 @@
     "problems": [
       "enum-without-kind /requestBody/application/json/oneOf/0/properties/cost_policy",
       "enum-without-kind /requestBody/application/json/properties/cost_policy",
+      "enum-without-kind /requestBody/application/json/properties/engines/items",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/credential_source",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/estimate_kind",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/evidence",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
       "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/engine",
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
@@ -129,6 +133,7 @@
       "unnamed /requestBody/application/json/oneOf/0/properties/cost_policy",
       "unnamed /requestBody/application/json/oneOf/1",
       "unnamed /requestBody/application/json/properties/cost_policy",
+      "unnamed /requestBody/application/json/properties/engines/items",
       "unnamed /responses/200 application/json",
       "unnamed /responses/200 application/json/properties/data",
       "unnamed /responses/200 application/json/properties/data/oneOf/0",
@@ -142,7 +147,8 @@
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items",
-      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items"
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/engine"
     ],
     "subject": "operation compareAiPrompts"
   },

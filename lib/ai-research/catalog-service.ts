@@ -3,10 +3,12 @@ import { createHash } from "node:crypto";
 import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { resolveConnectionCredentials } from "@/lib/providers/connection-credentials";
-import { fetchAiResearchCapabilities } from "./catalog";
+import { fetchAiResearchCapabilities, fetchEngineModelCatalog } from "./catalog";
 import { AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS } from "./catalog-freshness";
 import type { AiCatalogOutcome } from "./catalog-types";
 import { requireAiSource } from "./context";
+import { engineOptions } from "./engine-bounds";
+import type { AiEngine } from "./engines";
 
 async function catalogCredentials(
   source: Awaited<ReturnType<typeof requireAiSource>>,
@@ -26,6 +28,27 @@ export async function loadAiResearchCapabilities(
 ) {
   // Admission pricing must use its bound account, never a free catalog pool member.
   return fetchAiResearchCapabilities(await catalogCredentials(source), deadlineAt);
+}
+/** Free per-engine catalog through the free-catalog credential, never a paid pool member. */
+export async function loadEngineCatalog(
+  source: Awaited<ReturnType<typeof requireAiSource>>,
+  engine: AiEngine,
+  deadlineAt = Date.now() + 10_000,
+) {
+  return fetchEngineModelCatalog(
+    await catalogCredentials(source, "free_catalog"),
+    engine,
+    deadlineAt,
+  );
+}
+/** Engine-mode picker options: Credits (hosted) connections only, fresh calibrations only. */
+export async function getPromptEngineOptions(projectId: string) {
+  try {
+    const source = await requireAiSource(projectId);
+    return source.connection.credentialSource === "hosted" ? engineOptions() : [];
+  } catch {
+    return [];
+  }
 }
 export async function getAiResearchCatalog(projectId: string): Promise<AiCatalogOutcome> {
   try {

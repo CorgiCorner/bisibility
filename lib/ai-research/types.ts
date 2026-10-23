@@ -1,7 +1,11 @@
+import type { AiEngine } from "./engines";
+
 export type AiCitation = { title: string; url: string; targetDomain: boolean };
 export type AiResearchRow = {
   prompt: string;
   model: string;
+  /** Engine-mode rows name the engine that answered (ADR-023). */
+  engine?: AiEngine;
   requestedModel?: string;
   actualModel?: string | null;
   answer: string;

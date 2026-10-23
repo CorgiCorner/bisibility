@@ -77,6 +77,14 @@ function renderCard(
 }
 
 describe("DomainOverviewAnalyzeCard country picker", () => {
+  it("keeps the detected scope beside the primary action", () => {
+    renderCard([domainOverviewScopeFixture]);
+    const hint = screen.getByText("Detected: whole domain").closest("#domain-overview-scope-help");
+    const submit = screen.getByRole("button", { name: "Analyze domain" });
+    expect(hint?.parentElement).toBe(submit.parentElement?.parentElement);
+    expect(hint?.parentElement).not.toHaveClass("border-t");
+  });
+
   it("fills the desktop picker wrapper and shows the selected country flag", () => {
     renderCard([domainOverviewScopeFixture]);
 

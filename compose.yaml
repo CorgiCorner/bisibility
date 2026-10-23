@@ -77,7 +77,7 @@ x-app-env: &app-env
   OPS_THROTTLE_MINUTES: ${OPS_THROTTLE_MINUTES:-}
   RANK_CHECK_DISPATCHER_ENABLED: ${RANK_CHECK_DISPATCHER_ENABLED:-}
   RANK_CHECK_RAW_RETENTION_DAYS: ${RANK_CHECK_RAW_RETENTION_DAYS:-}
-  RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-}
+  RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-dispatcher}
   REDIS_TLS_CA_B64: ${REDIS_TLS_CA_B64:-}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
@@ -95,7 +95,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.39.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.41.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -106,7 +106,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.39.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.41.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

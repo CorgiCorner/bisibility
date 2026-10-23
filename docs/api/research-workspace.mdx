@@ -74,6 +74,17 @@ country-name dictionary for the documented
 not observed dataset coverage. Reasoning requests require at least 1024 requested
 output tokens. The provider may exceed the requested limit for reasoning or search.
 
+Engine mode sends `engines` instead of `models`: one to four of `chat_gpt`,
+`claude`, `gemini` and `perplexity`. Each engine answers with its calibrated
+flagship model at the calibrated output length, so `models` and
+`max_output_tokens` must be omitted. Engine mode runs on Credits under the
+`hard_cap` policy only. Each engine's maximum price comes from a measured cost
+bound, and the charge for an engine never exceeds that quoted maximum. An engine
+without a current calibration, or whose calibrated model left the provider
+catalog, is refused with `engine_unavailable` before any payment. Own provider
+keys keep the model list above and are refused with `engine_credits_only`.
+Results name the answering `engine` on each row.
+
 The default `hard_cap` policy requires `max_cost_cents` from 0 to 1000 and keeps
 existing BYOK or hosted-credit admission. A zero cap permits cache hits only.
 Expanded mini/nano text limits require fresh verified prices and conservative

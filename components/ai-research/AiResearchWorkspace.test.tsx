@@ -171,6 +171,54 @@ describe("AI workspace product states", () => {
 });
 
 describe("AI catalog and cost preflight", () => {
+  it.each([
+    ["32.162", false],
+    ["29.99", true],
+    [null, false],
+  ] as const)(
+    "compares an engine quote of %s credits with the customer cap",
+    async (value, affordable) => {
+      const unit = {
+        kind: "credits",
+        key: "credits",
+        singular: "credit",
+        plural: "credits",
+      } as const;
+      const payment = paymentQuote({ charge: { value, certainty: "estimate", unit } });
+      const analyze = vi.fn().mockResolvedValue({
+        ok: true,
+        estimate: true,
+        payment,
+        estimatedCostCents: 24.74,
+        pricingPolicy: "measured_engines",
+        evidence: "synthetic_prompt_test",
+      });
+      render(
+        <AiResearchWorkspace
+          projectId="prj_example"
+          domain="acme.com"
+          mode="prompt"
+          history={[]}
+          catalog={aiResearchCatalogFixture}
+          analyzeAction={analyze}
+          engineOptions={[{ engine: "claude", model: "claude-sonnet-5" }]}
+        />,
+      );
+      fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
+      fireEvent.change(screen.getByLabelText("prompt"), { target: { value: "Compare tools" } });
+      fireEvent.change(screen.getByLabelText("costCap"), { target: { value: "30" } });
+      expect(screen.getByText("estimateRequired")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
+      await waitFor(() => expect(analyze).toHaveBeenCalledOnce());
+      await waitFor(() => expect(screen.queryByText("estimateRequired")).not.toBeInTheDocument());
+      await waitFor(() => {
+        const button = screen.getByRole("button", { name: /^runAnalysis/ });
+        if (affordable) expect(button).toBeEnabled();
+        else expect(button).toBeDisabled();
+      });
+    },
+  );
+
   function workspace(analyzeAction = vi.fn()) {
     render(
       <AiResearchWorkspace

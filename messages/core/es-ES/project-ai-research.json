@@ -112,6 +112,15 @@
     "catalogHelp": "Acerca de los ajustes de IA disponibles",
     "catalogRefreshing": "Actualizando el catálogo del proveedor",
     "openIntegrations": "Abrir integraciones",
-    "sourceRetry": "Reintentar"
+    "sourceRetry": "Reintentar",
+    "enginesMode": "Motores",
+    "modelsMode": "Modelos",
+    "aiEngines": "Motores de IA",
+    "engineModeHint": "Cada motor responde con su modelo principal actual. Solo con créditos; la estimación muestra el precio máximo.",
+    "engineChatGpt": "ChatGPT",
+    "engineClaude": "Claude",
+    "engineGemini": "Gemini",
+    "enginePerplexity": "Perplexity",
+    "engineWebSearchHint": "El precio máximo de cada motor incluye la búsqueda web. La pista de país se aplica a ChatGPT."
   }
 }

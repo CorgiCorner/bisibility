@@ -32,6 +32,7 @@ export default async function PromptExplorerPage({
           catalogError={data.catalogError}
           catalogFailure={data.catalogFailure}
           supportingProviders={data.supportingProviders}
+          engineOptions={data.engineOptions}
         />
       </PageContent>
     </FeatureMessagesProvider>

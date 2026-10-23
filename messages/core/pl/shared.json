@@ -2074,6 +2074,12 @@
       "connectAction": "Wybierz źródło danych",
       "askAdmin": "Poproś administratora projektu o wybór źródła danych do sprawdzania."
     },
+    "schedulerUpgrade": {
+      "title": "{count, plural, one {# słowo kluczowe wymaga sprawdzenia harmonogramu} few {# słowa kluczowe wymagają sprawdzenia harmonogramu} many {# słów kluczowych wymaga sprawdzenia harmonogramu} other {# słowa kluczowego wymaga sprawdzenia harmonogramu}}",
+      "detail": "Automatyczne sprawdzenia tych słów są wstrzymane. Wybierz dla nich harmonogram w sekcji Harmonogramy. Pozostałe słowa działają zgodnie z ustawieniami.",
+      "review": "Pokaż słowa wymagające poprawienia",
+      "schedules": "Otwórz harmonogramy"
+    },
     "durationUnits": {
       "minutes": "{count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}",
       "hours": "{count, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}}",

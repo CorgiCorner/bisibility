@@ -103,7 +103,8 @@ export function identifyProjectCacheKey(key: string, projectId: string) {
   }
   if (
     p[0] === "ai" &&
-    /^v[12](?:-provider-domain-v1)?$/.test(p[1]) &&
+    (/^v[12](?:-provider-domain-v1)?$/.test(p[1]) ||
+      (p[1] === "v3-engines" && p[4] === "prompt_explorer")) &&
     p.length === 6 &&
     ["ai_visibility", "prompt_explorer"].includes(p[4]) &&
     /^[a-f0-9]{64}$/.test(p[5])

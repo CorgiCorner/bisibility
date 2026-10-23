@@ -201,7 +201,7 @@ export default async function DomainOverviewPage({
             {t("projectResearch.page.backToSaved")}
           </Link>
         ) : null}
-        <DomainOverviewMessagesBoundary>
+        <DomainOverviewMessagesBoundary ttlSeconds={context.cacheTtlSeconds}>
           <DomainOverviewWorkspace
             analyzeAction={analyzeDomainOverviewAction}
             context={context}

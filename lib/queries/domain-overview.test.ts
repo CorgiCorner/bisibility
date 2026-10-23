@@ -62,6 +62,24 @@ describe("domain overview page context", () => {
     expect(mocks.cost).toHaveBeenCalledWith("prj_1");
   });
 
+  it("uses the project cache window for the workspace copy", async () => {
+    mocks.projectDetails.mockResolvedValueOnce({
+      competitors: [],
+      defaults: null,
+      markets: [],
+      providerConnections: [],
+      lookupCacheTtlSeconds: 604_800,
+    });
+    await expect(getDomainOverviewPageContext("prj_1")).resolves.toMatchObject({
+      cacheTtlSeconds: 604_800,
+    });
+    expect(mocks.projectDetails).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ lookupCacheTtlSeconds: true }),
+      }),
+    );
+  });
+
   it("deduplicates tracked country-language pairs and preserves unavailable pairs", async () => {
     mocks.projectDetails.mockResolvedValueOnce({
       competitors: [],

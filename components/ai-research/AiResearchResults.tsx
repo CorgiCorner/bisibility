@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type { AiResearchResult } from "@/lib/ai-research/types";
 import { useTranslations } from "next-intl";
+import { engineLabelKey } from "./AiEngineFields";
 
 export function AiResearchResults({
   result,
@@ -67,6 +68,7 @@ export function AiResearchResults({
           <Card key={`${row.model}:${index}`} className="grid min-w-0 content-start gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-ui-xs text-fg-muted">
+                {row.engine ? `${t(engineLabelKey(row.engine))} · ` : ""}
                 {row.actualModel === null ? t("unknownModel") : row.model}
               </span>
               <span className="text-ui-xs text-fg-muted">

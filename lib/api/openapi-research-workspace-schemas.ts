@@ -1,3 +1,4 @@
+import { AI_ENGINES } from "@/lib/ai-research/engines";
 import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
 import { openEnum, sdkName } from "./openapi-sdk-schema";
 
@@ -32,6 +33,7 @@ const aiRow = object(
   {
     prompt: text,
     model: text,
+    engine: { type: "string", enum: [...AI_ENGINES] },
     requested_model: text,
     actual_model: { type: ["string", "null"] },
     answer: text,
@@ -69,7 +71,7 @@ const aiOutcome = {
         is_partial_estimate: flag,
         pricing_policy: {
           type: "string",
-          enum: ["legacy_dated", "current_catalog", "provider_actual_cost"],
+          enum: ["legacy_dated", "current_catalog", "provider_actual_cost", "measured_engines"],
         },
         pricing_checked_at: {
           oneOf: [

@@ -85,31 +85,13 @@ describe("rank-check singleton convergence", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps only the reconciler active in legacy mode", async () => {
-    const mode = "legacy";
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
-    const { client, events, schedules } = clientMock({
-      [RANK_CHECK_DISPATCHER_SCHEDULE_ID]: {
-        paused: false,
-        workflowType: "dispatchDueRankChecksWorkflow",
-      },
-      [RECONCILER_SCHEDULE_ID]: {
-        paused: false,
-        workflowType: "reconcileRankCheckSchedulesWorkflow",
-      },
-      [RANK_CHECK_PLANNER_SCHEDULE_ID]: {
-        paused: false,
-        workflowType: "planRankCheckRunsWorkflow",
-      },
-      "maintenance-audit-purge": { paused: false, workflowType: "purgeAuditLogsWorkflow" },
-    });
-
-    await expect(convergeRankCheckSchedulerSingletons(client)).resolves.toMatchObject({ mode });
-    expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(false);
-    expect(schedules.get(RANK_CHECK_DISPATCHER_SCHEDULE_ID)?.paused).toBe(true);
-    expect(schedules.get(RANK_CHECK_PLANNER_SCHEDULE_ID)?.paused).toBe(true);
-    expect(schedules.get("maintenance-audit-purge")?.paused).toBe(false);
-    expect(events[0]).toBe(`pause:${RANK_CHECK_DISPATCHER_SCHEDULE_ID}`);
+  it("rejects an internal legacy mode instead of reactivating the removed engine", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    const { client, events } = clientMock({});
+    await expect(convergeRankCheckSchedulerSingletons(client, "legacy")).rejects.toThrow(
+      "Legacy scheduler convergence",
+    );
+    expect(events).toEqual([]);
   });
 
   it("keeps the dispatcher and planner active in dispatcher mode", async () => {
@@ -164,7 +146,7 @@ describe("rank-check singleton convergence", () => {
   });
 
   it("is idempotent and unpauses the selected singleton after rollback", async () => {
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     const { client, schedules } = clientMock({
       [RECONCILER_SCHEDULE_ID]: {
         paused: true,
@@ -175,7 +157,7 @@ describe("rank-check singleton convergence", () => {
     await convergeRankCheckSchedulerSingletons(client);
     await convergeRankCheckSchedulerSingletons(client);
 
-    expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(false);
+    expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(true);
   });
 
   it("fails worker startup when the non-selected singleton cannot be retired", async () => {
@@ -194,9 +176,9 @@ describe("rank-check singleton convergence", () => {
   });
 
   it("fails worker startup when the selected singleton has a conflicting action", async () => {
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     const { client } = clientMock({
-      [RECONCILER_SCHEDULE_ID]: {
+      [RANK_CHECK_DISPATCHER_SCHEDULE_ID]: {
         paused: false,
         workflowType: "unrelatedWorkflow",
       },

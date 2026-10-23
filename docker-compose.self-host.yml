@@ -74,7 +74,7 @@ x-app-env: &app-env
   OPS_SLACK_INCLUDE_NAMES: ${OPS_SLACK_INCLUDE_NAMES:-}
   OPS_SLACK_WEBHOOK_URL: ${OPS_SLACK_WEBHOOK_URL:-}
   OPS_THROTTLE_MINUTES: ${OPS_THROTTLE_MINUTES:-}
-  RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-}
+  RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-dispatcher}
   RANK_CHECK_DISPATCHER_ENABLED: ${RANK_CHECK_DISPATCHER_ENABLED:-}
   REDIS_TLS_CA_B64: ${REDIS_TLS_CA_B64:-}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
@@ -101,7 +101,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: docker.io/corgicorner/bisibility:0.39.0
+    image: docker.io/corgicorner/bisibility:0.41.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-transform-types --import ./lib/temporal/register-loader.mjs prisma/seed.ts; fi'
@@ -111,7 +111,7 @@ services:
         condition: service_healthy
 
   app:
-    image: docker.io/corgicorner/bisibility:0.39.0
+    image: docker.io/corgicorner/bisibility:0.41.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:
@@ -298,7 +298,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: docker.io/corgicorner/bisibility-worker:0.39.0
+    image: docker.io/corgicorner/bisibility-worker:0.41.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     profiles: [ "scheduled" ]
     restart: unless-stopped
@@ -323,7 +323,6 @@ services:
       RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS: ${RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS:-}
       RANK_CHECK_RAW_PURGE_CRON: ${RANK_CHECK_RAW_PURGE_CRON:-}
       RANK_CHECK_RECONCILER_ENABLED: ${RANK_CHECK_RECONCILER_ENABLED:-}
-      RANK_CHECK_RECONCILER_INTERVAL: ${RANK_CHECK_RECONCILER_INTERVAL:-}
       SCHEDULED_MAINTENANCE_ENABLED: ${SCHEDULED_MAINTENANCE_ENABLED:-}
       SESSION_PURGE_CRON: ${SESSION_PURGE_CRON:-}
       SITEMAP_SYNC_CRON: ${SITEMAP_SYNC_CRON:-}

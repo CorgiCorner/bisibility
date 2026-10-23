@@ -1,7 +1,7 @@
 "use server";
 import { recordQualifiedUse } from "@/lib/achievements/record-use";
 import { listAgentReports } from "@/lib/agent-reports/service";
-import { getAiResearchCatalog } from "@/lib/ai-research/catalog-service";
+import { getAiResearchCatalog, getPromptEngineOptions } from "@/lib/ai-research/catalog-service";
 import { aiHistoryPayments } from "@/lib/ai-research/history-payment";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
@@ -53,7 +53,9 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
     history.map((row) => row.id),
   );
   const catalogOutcome = await getAiResearchCatalog(project.id);
+  const engineOptions = mode === "prompt" ? await getPromptEngineOptions(project.id) : [];
   return {
+    engineOptions,
     ...moduleSupport("aiResearch"),
     catalog: catalogOutcome.ok ? catalogOutcome.catalog : undefined,
     catalogError: catalogOutcome.ok ? undefined : catalogOutcome.message,

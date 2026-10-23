@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { AI_ENGINES } from "./engines";
+
+const DEFAULT_PROMPT_MODELS = ["gpt-4.1-mini", "gpt-4.1-nano"];
+const DEFAULT_PROMPT_OUTPUT_TOKENS = 512;
 
 /** Provider retrieval strips www; the local citation-matching target keeps its full hostname. */
 export function aiProviderDomain(domain: string) {
@@ -80,7 +84,14 @@ export const promptSchema = z
       .min(1)
       .max(2)
       .refine((values) => new Set(values).size === values.length, "Models must be distinct.")
-      .default(["gpt-4.1-mini", "gpt-4.1-nano"]),
+      .default(DEFAULT_PROMPT_MODELS),
+    /** ADR-023 engine mode: each engine runs its calibrated flagship model under Credits. */
+    engines: z
+      .array(z.enum(AI_ENGINES))
+      .min(1)
+      .max(AI_ENGINES.length)
+      .refine((values) => new Set(values).size === values.length, "Engines must be distinct.")
+      .optional(),
     web_search: z.boolean().default(false),
     country_iso_code: z
       .string()
@@ -90,7 +101,7 @@ export const promptSchema = z
       .string()
       .regex(/^[a-z]{2,3}(?:-[a-zA-Z0-9]{2,4})?$/)
       .default("en"),
-    max_output_tokens: z.number().int().min(16).max(4096).default(512),
+    max_output_tokens: z.number().int().min(16).max(4096).default(DEFAULT_PROMPT_OUTPUT_TOKENS),
   })
   .strict()
   .refine((value) => !value.country_iso_code || value.web_search, {
@@ -98,6 +109,30 @@ export const promptSchema = z
     path: ["country_iso_code"],
   })
   .superRefine((value, context) => {
+    if (value.engines) {
+      // Defaults apply before refinement, so only an explicit change is detectable here.
+      if (
+        value.models.length !== DEFAULT_PROMPT_MODELS.length ||
+        value.models.some((model, index) => model !== DEFAULT_PROMPT_MODELS[index])
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["models"],
+          message: "Engine mode runs each engine's calibrated model. Omit models.",
+        });
+      if (value.max_output_tokens !== DEFAULT_PROMPT_OUTPUT_TOKENS)
+        context.addIssue({
+          code: "custom",
+          path: ["max_output_tokens"],
+          message: "Engine mode uses the calibrated output length. Omit max_output_tokens.",
+        });
+      if (value.cost_policy !== "hard_cap")
+        context.addIssue({
+          code: "custom",
+          path: ["engines"],
+          message: "Engine mode is available with Credits and a hard cost cap only.",
+        });
+    }
     if (value.cost_policy === "hard_cap") {
       if (value.max_cost_cents === undefined)
         context.addIssue({

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { engineCalibrationIdentity } from "./engine-bounds";
 import { isLegacyPrompt, isLegacyVisibility } from "./legacy";
 import { researchPaymentIdentity } from "./research-payment";
 import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
@@ -20,9 +21,14 @@ export function researchCacheIdentity(
   const identity = Object.fromEntries(
     Object.entries(rawIdentity).filter(([, value]) => value !== undefined),
   );
-  const version = legacy ? "v1" : "v2";
+  const engines = "prompt" in input ? input.engines : undefined;
+  const version = legacy ? "v1" : engines?.length ? "v3-engines" : "v2";
   // Retrieval normalization changed; never reuse earlier visibility rows with a different filter.
   const cacheVersion = kind === "ai_visibility" ? `${version}-provider-domain-v1` : version;
-  const key = `ai:${cacheVersion}:${projectId}:${connectionId}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
+  // A recalibrated flagship or bound must never serve an answer from the previous model.
+  const hashed = engines?.length
+    ? { identity, calibration: engineCalibrationIdentity(engines) }
+    : identity;
+  const key = `ai:${cacheVersion}:${projectId}:${connectionId}:${kind}:${createHash("sha256").update(JSON.stringify(hashed)).digest("hex")}`;
   return { identity, key, fresh };
 }

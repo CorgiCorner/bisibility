@@ -10,7 +10,6 @@ import {
   type ScheduleSpec,
 } from "@temporalio/client";
 import { msToNumber } from "@temporalio/common";
-import { legacySchedulingAllowed } from "../rank-check/scheduler-mode";
 import { TEMPORAL_TASK_QUEUE } from "./client";
 import { getSchedulerTemporalClient } from "./scheduler-client";
 
@@ -19,15 +18,13 @@ import { getSchedulerTemporalClient } from "./scheduler-client";
 // alert, traffic, sitemap, presence, and ops Schedules. The app never has to
 // reach the firewalled Temporal gRPC frontend.
 
-/** Schedule id for the singleton reconciler. Shares the `rank-check-` prefix but
- * is reserved (never pruned) by lib/rank-check/reconciler.ts. */
+// Reserved historical id, used only to pause old installations.
 export const RECONCILER_SCHEDULE_ID = "rank-check-reconciler";
 export const RETIRED_JOB_PROCESSOR_SCHEDULE_ID = "maintenance-job-processor";
 
 /** Must match the exported workflow function names in the workflow bundle. */
 export const RECONCILE_WORKFLOW_TYPE = "reconcileRankCheckSchedulesWorkflow";
 
-const DEFAULT_INTERVAL = "2 minutes";
 const DEFAULT_CATCHUP_WINDOW = "1 hour";
 
 /**
@@ -75,14 +72,6 @@ export function isFalseyFlag(raw: string | undefined) {
 export function envValue(value: string | undefined) {
   const raw = value?.trim();
   return raw && raw.length > 0 ? raw : undefined;
-}
-
-export function isReconcilerEnabled() {
-  return legacySchedulingAllowed();
-}
-
-function reconcilerInterval() {
-  return envValue(process.env.RANK_CHECK_RECONCILER_INTERVAL) ?? DEFAULT_INTERVAL;
 }
 
 /** Calendar spec, overridable by a single cron expression env var. */
@@ -257,23 +246,6 @@ export async function ensureSingletonSchedule(
     });
     return { scheduleId: config.scheduleId, status: "failed" };
   }
-}
-
-/** Singleton rank-check schedule reconciler (short interval sweep). */
-export async function ensureReconcilerSchedule(
-  client?: BootstrapScheduleClient,
-): Promise<EnsureScheduleResult> {
-  return ensureSingletonSchedule(
-    {
-      enabled: isReconcilerEnabled(),
-      memo: { kind: "rank-check-reconciler" },
-      note: "Rank check schedule reconciler",
-      scheduleId: RECONCILER_SCHEDULE_ID,
-      spec: { intervals: [{ every: reconcilerInterval() }] },
-      workflowType: RECONCILE_WORKFLOW_TYPE,
-    },
-    client,
-  );
 }
 
 export {

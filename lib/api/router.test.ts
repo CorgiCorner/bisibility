@@ -263,7 +263,12 @@ describe("public API router", () => {
     resetIdempotencyForTests();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.$executeRaw.mockResolvedValue(0);
-    mocks.prisma.$queryRaw.mockResolvedValue([{ id: "project_1" }]);
+    mocks.prisma.$queryRaw.mockImplementation(
+      async (parts: TemplateStringsArray | { sql: string }) => {
+        const sql = "sql" in parts ? parts.sql : parts.join("?");
+        return sql.includes('FROM "keywords" k') ? [] : [{ id: "project_1" }];
+      },
+    );
     process.env.BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE = "100";
     process.env.BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE = "100";
     process.env.REDIS_URL = "";
@@ -730,7 +735,8 @@ describe("public API router", () => {
     expect(body.results.map((item: { keyword: { text: string } }) => item.keyword.text)).toEqual(
       items.map((item) => item.keyword),
     );
-    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    // One capacity transaction plus the default dispatcher-state seed.
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.$executeRaw).toHaveBeenCalledOnce();
     expect(mocks.prisma.keyword.count).toHaveBeenCalledOnce();
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledOnce();

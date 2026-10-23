@@ -34,13 +34,13 @@ vi.mock("../rank-check/runs/finalize", () => ({
 }));
 
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
-import { runLegacyScheduleRollback } from "../rank-check/legacy-schedule-rollback";
-import { ensurePausedRollbackScheduleWithClient } from "../rank-check/legacy-schedule-rollback-schedule";
-import { waitForExactSchedulerCount } from "../rank-check/scheduler-count-convergence";
 import {
   buildRankCheckScheduleOptions,
   rankCheckScheduleId,
-} from "../rank-check/temporal-schedule";
+} from "../rank-check/legacy-schedule-builder";
+import { runLegacyScheduleRollback } from "../rank-check/legacy-schedule-rollback";
+import { ensurePausedRollbackScheduleWithClient } from "../rank-check/legacy-schedule-rollback-schedule";
+import { waitForExactSchedulerCount } from "../rank-check/scheduler-count-convergence";
 import {
   countTemporalSystemSchedulers,
   deleteOwnedRankCheckSchedule,
@@ -349,10 +349,12 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
     ).toBe(true);
 
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
-    await convergeRankCheckSchedulerSingletons(environment.client.schedule);
+    await expect(
+      convergeRankCheckSchedulerSingletons(environment.client.schedule),
+    ).resolves.toMatchObject({ mode: "dispatcher" });
     expect(
       (await environment.client.schedule.getHandle(RECONCILER_SCHEDULE_ID).describe()).state.paused,
-    ).toBe(false);
+    ).toBe(true);
     expect(
       (await environment.client.schedule.getHandle("maintenance-d1-unrelated").describe()).state
         .paused,

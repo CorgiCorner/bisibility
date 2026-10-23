@@ -112,6 +112,15 @@
     "catalogHelp": "Informacje o dostępnych ustawieniach AI",
     "catalogRefreshing": "Odświeżanie katalogu dostawcy",
     "openIntegrations": "Otwórz integracje",
-    "sourceRetry": "Spróbuj ponownie"
+    "sourceRetry": "Spróbuj ponownie",
+    "enginesMode": "Silniki",
+    "modelsMode": "Modele",
+    "aiEngines": "Silniki AI",
+    "engineModeHint": "Każdy silnik odpowiada swoim aktualnym modelem wiodącym. Tylko kredyty; oszacowanie pokazuje cenę maksymalną.",
+    "engineChatGpt": "ChatGPT",
+    "engineClaude": "Claude",
+    "engineGemini": "Gemini",
+    "enginePerplexity": "Perplexity",
+    "engineWebSearchHint": "Maksymalna cena każdego silnika obejmuje wyszukiwanie w sieci. Wskazówka kraju dotyczy ChatGPT."
   }
 }

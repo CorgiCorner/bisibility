@@ -218,6 +218,7 @@ describe("server actions", () => {
     });
     mocks.prisma.keyword.count.mockResolvedValue(0);
     mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
     mocks.prisma.keyword.createMany.mockImplementation(({ data }) => {
       for (const item of data) {
         mocks.createdKeywords.push({
@@ -797,6 +798,7 @@ describe("server actions", () => {
     });
 
     expect(mocks.prisma.keyword.deleteMany).toHaveBeenCalled();
+    expect(mocks.provider.fetchRank).not.toHaveBeenCalled();
     expect(mocks.setKeywordCadence).toHaveBeenCalledExactlyOnceWith(
       mocks.prisma,
       "project_1",

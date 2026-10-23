@@ -70,6 +70,12 @@ export function DomainOverviewContextBar({
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-control border border-border bg-bg-elev px-3.5 py-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
+      <span className="font-semibold text-fg" data-domain-overview-target="">
+        {report.target}
+      </span>
+      <span aria-hidden className="opacity-50">
+        ·
+      </span>
       <span>
         {report.originalPayment?.option.providerId === report.provider
           ? report.originalPayment.option.providerLabel

@@ -39,6 +39,7 @@ import { useState } from "react";
 
 export type ProviderAllocationDialogProps = Readonly<{
   connections: readonly UsageConnection[];
+  surface?: ProviderAllocationRow["surface"];
   onClose: () => void;
   onSaved: () => void;
   onExited?: () => void;
@@ -62,8 +63,18 @@ export function ProviderAllocationDialog(props: ProviderAllocationDialogProps) {
   });
   const { adapter: formAdapter, onReload } = useAllocationForm(entry, status.state === "ready");
   const labels = useAllocationLabels(props.connections, result.data?.rows ?? []);
+  const selectedRow = (row: ProviderAllocationRow) =>
+    !props.surface ||
+    (row.surface === props.surface &&
+      props.connections.some(
+        (connection) =>
+          connection.connectionId === row.connectionId &&
+          row.fundingSource === (connection.credentialSource === "hosted" ? "platform" : "byok"),
+      ));
   const isEmpty =
-    props.connections.length === 0 || result.state === "empty" || result.data?.rows.length === 0;
+    props.connections.length === 0 ||
+    result.state === "empty" ||
+    result.data?.rows.filter(selectedRow).length === 0;
   const [actionsContainer, setActionsContainer] = useState<HTMLElement | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -159,6 +170,7 @@ export function ProviderAllocationDialog(props: ProviderAllocationDialogProps) {
             <div hidden={status.state !== "ready"}>
               <ProviderAllocationPanel
                 connectionIds={props.connections.map((item) => item.connectionId)}
+                rowFilter={props.surface ? selectedRow : undefined}
                 {...labels}
                 labels={{
                   ...labels.labels,

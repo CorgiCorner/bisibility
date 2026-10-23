@@ -66,6 +66,7 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
         maxCostCents: input.maxCostCents,
         costLimit: input.payment?.costLimit ?? input.costLimit,
         beforeReserve: input.payment?.guard,
+        aiResponse: input.payment?.aiResponse,
       }).catch((error: unknown) => {
         if (
           input.payment &&

@@ -1956,6 +1956,7 @@ export type CoreMessages = {
     readonly actualModel: "Actual model";
     readonly actualReplayHint: "Repeating a completed request with the same request ID replays its saved result without a new provider call. Starting a new request can incur a new provider charge, even for the same prompt. Saved reports remain available.";
     readonly actualSearchForecast: "Web search requires BYOK actual-cost mode. Its tool fees and call count are not bounded by the forecast.";
+    readonly aiEngines: "AI engines";
     readonly brand: "Brand";
     readonly brandMentioned: "Brand mentioned";
     readonly brandMentions: "Brand mentions";
@@ -1977,6 +1978,13 @@ export type CoreMessages = {
     readonly domainCitations: "Domain citations";
     readonly domainCited: "Domain cited";
     readonly emptyDescription: "Estimate the cost, then run an analysis to save results to Agent Reports.";
+    readonly engineChatGpt: "ChatGPT";
+    readonly engineClaude: "Claude";
+    readonly engineGemini: "Gemini";
+    readonly engineModeHint: "Each engine answers with its current flagship model. Credits only; the estimate shows the maximum price.";
+    readonly enginePerplexity: "Perplexity";
+    readonly enginesMode: "Engines";
+    readonly engineWebSearchHint: "Each engine's maximum price includes web search. The country hint applies to ChatGPT.";
     readonly estimateAboveCap: "The estimate exceeds your maximum cost. Raise the cap or change the settings, then estimate again.";
     readonly estimateCost: "Estimate cost";
     readonly estimatedCostLimit: "Advisory estimate limit (cents)";
@@ -2002,6 +2010,7 @@ export type CoreMessages = {
     readonly modelNeedsOwnAccount: "Connect your own provider account in Integrations and select actual provider cost.";
     readonly modelPolicyPending: "This model is awaiting a BYOK and cost-policy decision. Its published price does not enable execution.";
     readonly modelPricingUnavailable: "Current pricing cannot be verified for this model. Try again later.";
+    readonly modelsMode: "Models";
     readonly modelUnavailable: "This model is not supported for prompt runs yet.";
     readonly newRequest: "Start a new request";
     readonly noAnswer: "No answer text returned.";
@@ -11622,6 +11631,12 @@ export type CoreMessages = {
       readonly monthly: "Monthly · {day} {time}";
       readonly noFixedTime: "No fixed time";
       readonly weekly: "Weekly · {weekday} {time}";
+    };
+    readonly schedulerUpgrade: {
+      readonly detail: "Automatic checks are paused for these keywords. Choose a schedule for them in Schedules. Other keywords continue as configured.";
+      readonly review: "Show affected keywords";
+      readonly schedules: "Open Schedules";
+      readonly title: "{count, plural, one {# keyword needs schedule review} few {# keywords need schedule review} many {# keywords need schedule review} other {# keywords need schedule review}}";
     };
     readonly setupVideo: {
       readonly fallback: "Your browser does not support video.";

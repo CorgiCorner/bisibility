@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AiEngine } from "./engines";
 import { boundAiRow } from "./row-budget";
 import type { AiResearchRow } from "./types";
 
@@ -49,6 +50,7 @@ function row(
     model: string;
     requestedModel?: string;
     actualModel?: string | null;
+    engine?: AiEngine;
     datetime?: string | null;
     citations: z.infer<typeof citation>[];
   },
@@ -76,6 +78,7 @@ function row(
     prompt: input.prompt.slice(0, 500),
     answer: input.answer.slice(0, 4000),
     model: input.model.slice(0, 120),
+    ...(input.engine ? { engine: input.engine } : {}),
     ...(input.requestedModel === undefined
       ? {}
       : {
@@ -109,6 +112,7 @@ export function promptRow(
   value: unknown,
   target: { brand: string; domain: string; prompt: string },
   requestedModel?: string,
+  engine?: AiEngine,
 ) {
   const item = response.parse(value);
   const sections = item.items
@@ -121,6 +125,7 @@ export function promptRow(
       model: item.model_name ?? "unknown",
       requestedModel,
       actualModel: item.model_name ?? null,
+      engine,
       datetime: item.datetime,
       citations: sections.flatMap((entry) => entry.annotations ?? []),
     },

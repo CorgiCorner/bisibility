@@ -197,7 +197,6 @@ export function DomainOverviewWorkspace({
             scheduleEstimate(target, domainScopeOverride, option.id);
           }}
           onTargetChange={updateTarget}
-          report={report}
           researchScope={researchScope}
           scopeOverride={domainScopeOverride}
           submitting={submitting}

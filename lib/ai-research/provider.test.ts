@@ -2,7 +2,13 @@ import { ProviderCallError } from "@/lib/providers/call-error";
 import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { modelMap } from "./catalog-fixtures.test-support";
-import { aiProviderRequest, fetchObserved, fetchPrompt, VISIBILITY_PATH } from "./provider";
+import {
+  aiProviderRequest,
+  fetchEnginePrompt,
+  fetchObserved,
+  fetchPrompt,
+  VISIBILITY_PATH,
+} from "./provider";
 import { promptSchema, visibilitySchema } from "./schema";
 
 vi.mock("server-only", () => ({}));
@@ -316,6 +322,86 @@ describe("AI provider request accounting", () => {
         {},
       ),
     ).rejects.toThrow("usage could not be confirmed");
+  });
+});
+
+describe("engine-mode provider requests (ADR-023)", () => {
+  const response = (model: string) =>
+    Response.json({
+      status_code: 20000,
+      cost: 0.07,
+      tasks: [
+        {
+          id: "engine-response",
+          status_code: 20000,
+          cost: 0.07,
+          result: [
+            {
+              model_name: model,
+              items: [{ type: "message", sections: [{ text: "Acme", annotations: null }] }],
+            },
+          ],
+        },
+      ],
+    });
+  const credentials = { login: "fixture", password: "fictional", usageObserver: testUsageObserver };
+  const input = (extra: Record<string, unknown> = {}) =>
+    promptSchema.parse({
+      brand: "Acme",
+      domain: "acme.com",
+      prompt: "Same question",
+      max_cost_cents: 20,
+      engines: ["claude"],
+      ...extra,
+    });
+  const engine = (overrides: Record<string, unknown> = {}) => ({
+    engine: "claude" as const,
+    model: "claude-sonnet-5",
+    outputTokens: 1024,
+    costCents: 7.5,
+    measuredAt: "2026-10-23T10:00:00Z",
+    reasoning: false,
+    ...overrides,
+  });
+
+  it("posts the calibrated model to its engine path with web_search only", async () => {
+    const fetch = vi.fn().mockResolvedValue(response("claude-sonnet-5"));
+    vi.stubGlobal("fetch", fetch);
+    const result = await fetchEnginePrompt(
+      credentials,
+      input({ web_search: true, country_iso_code: "DE" }),
+      engine(),
+      "tag",
+      Date.now() + 120_000,
+    );
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://api.dataforseo.com/v3/ai_optimization/claude/llm_responses/live",
+    );
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)[0];
+    expect(payload).toMatchObject({
+      model_name: "claude-sonnet-5",
+      max_output_tokens: 1024,
+      web_search: true,
+      temperature: 0,
+    });
+    expect(payload).not.toHaveProperty("force_web_search");
+    expect(payload).not.toHaveProperty("web_search_country_iso_code");
+    expect(result.row).toMatchObject({ engine: "claude", requestedModel: "claude-sonnet-5" });
+  });
+
+  it("keeps the country hint for ChatGPT and omits temperature for reasoning models", async () => {
+    const fetch = vi.fn().mockResolvedValue(response("gpt-5.6-luna"));
+    vi.stubGlobal("fetch", fetch);
+    await fetchEnginePrompt(
+      credentials,
+      input({ engines: ["chat_gpt"], web_search: true, country_iso_code: "DE" }),
+      engine({ engine: "chat_gpt", model: "gpt-5.6-luna", reasoning: true }),
+      "tag",
+      Date.now() + 120_000,
+    );
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)[0];
+    expect(payload).toMatchObject({ web_search_country_iso_code: "DE", web_search: true });
+    expect(payload).not.toHaveProperty("temperature");
   });
 });
 

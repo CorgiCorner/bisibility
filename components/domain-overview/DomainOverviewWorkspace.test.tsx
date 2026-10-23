@@ -316,7 +316,10 @@ describe("DomainOverviewWorkspace", () => {
     });
     expect(screen.getByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
     expect(screen.getByText("Top organic keywords")).toBeInTheDocument();
-    expect(screen.getByText(/results below are still for/i)).toHaveTextContent("example.com");
+    expect(screen.queryByText(/results below are still for/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText("example.com", { selector: "[data-domain-overview-target]" }),
+    ).toBeInTheDocument();
     expect(routerMock.push).not.toHaveBeenCalled();
     const form = targetInput.closest("form");
     if (!form) throw new Error("Expected the analysis form");

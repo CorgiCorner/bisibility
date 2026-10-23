@@ -36,7 +36,14 @@ vi.mock("../../lib/data-migrations/startup", () => ({
   enforceMigrationsAtStartup: vi.fn(async () => {}),
 }));
 
-const ENV_KEYS = ["NEXT_RUNTIME", "SENTRY_DSN", "NEXT_PUBLIC_SENTRY_DSN"] as const;
+const ENV_KEYS = [
+  "NEXT_RUNTIME",
+  "SENTRY_DSN",
+  "NEXT_PUBLIC_SENTRY_DSN",
+  "RANK_CHECK_SCHEDULER_MODE",
+  "RANK_CHECK_RECONCILER_ENABLED",
+  "RANK_CHECK_DISPATCHER_ENABLED",
+] as const;
 
 // vi.doMock inside a test replaces the registry entry for the rest of the file, and a
 // cached mocked module does not re-run its factory, so each test re-registers its own.
@@ -88,6 +95,24 @@ describe("server instrumentation", () => {
       } else {
         process.env[key] = snapshots[key];
       }
+    }
+  });
+
+  it("warns about legacy settings and continues the automatic-upgrade startup", async () => {
+    process.env.NEXT_RUNTIME = "nodejs";
+    process.env.RANK_CHECK_SCHEDULER_MODE = "legacy";
+    const instrumentation = await import("../../instrumentation");
+    const { enforceMigrationsAtStartup } = await import("../data-migrations/startup");
+    vi.mocked(enforceMigrationsAtStartup).mockClear();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      await expect(instrumentation.register()).resolves.toBeUndefined();
+      expect(enforceMigrationsAtStartup).toHaveBeenCalledOnce();
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("upgrades scheduling automatically"),
+      );
+    } finally {
+      warn.mockRestore();
     }
   });
 

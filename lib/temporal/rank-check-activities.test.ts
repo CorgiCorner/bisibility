@@ -210,8 +210,6 @@ describe("rank-check activities", () => {
   });
 
   it.each([
-    ["legacy", "legacy", true],
-    ["legacy", "dispatcher", false],
     ["cutover", "legacy", false],
     ["cutover", "dispatcher", false],
     ["dispatcher", "legacy", false],
@@ -227,19 +225,16 @@ describe("rank-check activities", () => {
     ).toMatchObject({ allowed, mode, source });
   });
 
-  it.each(["legacy", "cutover", "dispatcher"] as const)(
-    "keeps manual checks available in %s",
-    (mode) => {
-      vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
-      expect(
-        authorizeRankCheckExecutionActivity({
-          keywordId: "keyword_1",
-          scheduleId: null,
-          source: "manual",
-        }),
-      ).toEqual({ allowed: true, mode, reason: null, source: "manual" });
-    },
-  );
+  it.each(["cutover", "dispatcher"] as const)("keeps manual checks available in %s", (mode) => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
+    expect(
+      authorizeRankCheckExecutionActivity({
+        keywordId: "keyword_1",
+        scheduleId: null,
+        source: "manual",
+      }),
+    ).toEqual({ allowed: true, mode, reason: null, source: "manual" });
+  });
 
   it("creates a running rank-check row when no row id is supplied", async () => {
     vi.useFakeTimers();
@@ -1131,7 +1126,7 @@ describe("rank-check activities", () => {
     );
   });
 
-  it("never writes the legacy worker source into a provider attribution", async () => {
+  it("refuses late legacy work before any provider call", async () => {
     mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({
       run: { credentialId: null, credentialKind: null, source: "worker", trigger: "scheduled" },
     });
@@ -1148,16 +1143,16 @@ describe("rank-check activities", () => {
       },
     });
 
-    await runRankCheckActivity({
-      keywordId: "keyword_1",
-      rankCheckId: "rank_running_1",
-      runItemId: "item_1",
-      source: "legacy",
-    });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        runItemId: "item_1",
+        source: "legacy",
+      }),
+    ).rejects.toMatchObject({ nonRetryable: true });
 
-    expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
-      expect.not.objectContaining({ source: "worker" }),
-    );
+    expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
   });
 
   it("rechecks automatic mode before provider execution on a late activity retry", async () => {

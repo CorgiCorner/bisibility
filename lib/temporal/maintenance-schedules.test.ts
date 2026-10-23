@@ -45,7 +45,7 @@ describe("scheduled maintenance gate", () => {
     vi.unstubAllEnvs();
   });
 
-  it("defaults to the reconciler flag when SCHEDULED_MAINTENANCE_ENABLED is unset", () => {
+  it("preserves the old maintenance opt-out until the explicit setting is configured", () => {
     vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "");
     vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "true");
     expect(isScheduledMaintenanceEnabled()).toBe(true);

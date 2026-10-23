@@ -10,6 +10,7 @@ import type { ProviderFeedbackLabels } from "@/components/usagekit/provider-feed
 import { ProviderReadFeedback } from "@/components/usagekit/provider-feedback";
 import { UsageSpinner } from "@/components/usagekit/usage-motion";
 import { useProviderEditor } from "@usagekit/react";
+import type { ProviderAllocationRow } from "@usagekit/views";
 import { useRef, useState } from "react";
 export function ProviderAllocationPanel({
   connectionIds,
@@ -19,6 +20,7 @@ export function ProviderAllocationPanel({
   onReload,
   evidenceAvailable = true,
   canEdit = true,
+  rowFilter,
   onRefreshPendingChange,
   ...presentation
 }: {
@@ -31,6 +33,7 @@ export function ProviderAllocationPanel({
   /** A composing panel may withdraw evidence without discarding this editor's draft. */
   evidenceAvailable?: boolean;
   canEdit?: boolean;
+  rowFilter?: (row: ProviderAllocationRow) => boolean;
 } & Omit<
   AllocationProps,
   "rows" | "evidenceRows" | "action" | "revision" | "fresh" | "labels" | "feedbackLabels"
@@ -90,9 +93,13 @@ export function ProviderAllocationPanel({
             notify.current?.(pending);
           }
         }}
-        rows={result.editorData.rows}
+        rows={rowFilter ? result.editorData.rows.filter(rowFilter) : result.editorData.rows}
         revision={result.editorData.revision}
-        evidenceRows={evidenceAvailable ? (result.evidence?.rows ?? null) : null}
+        evidenceRows={
+          evidenceAvailable
+            ? (result.evidence?.rows.filter((row) => !rowFilter || rowFilter(row)) ?? null)
+            : null
+        }
         action={action}
         fresh={fresh}
         {...(labels ? { labels } : {})}

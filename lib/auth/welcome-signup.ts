@@ -3,6 +3,7 @@ import "server-only";
 import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
+import { onAccountCreated } from "./account-created-extension";
 
 type CreatedUser = Record<string, unknown>;
 
@@ -43,6 +44,7 @@ export async function handleCreatedUser(
   user: { id: string },
   context: UserCreationContext,
 ): Promise<void> {
+  await onAccountCreated(user.id);
   await wakeCloudWelcomeSequenceWorker();
   const method = signupMethodFromContext(context);
   if (!method) return;

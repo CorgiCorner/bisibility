@@ -30,7 +30,7 @@ describe("rank-check planner schedule bootstrap", () => {
     );
   });
 
-  it.each(["legacy", "cutover"] as const)("is disabled in %s mode", async (mode) => {
+  it.each(["cutover"] as const)("is disabled in %s mode", async (mode) => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
     const client = { create: vi.fn() };
 

@@ -41,20 +41,31 @@ export async function prepareResearchAiPayment(
     return null;
   }
   const children =
-    "prompt" in input
-      ? input.models.map((model) => ({
-          key: model,
+    admission.policy === "measured_engines"
+      ? admission.engines.map((entry) => ({
+          key: entry.engine,
           quantity: 1,
-          costCents: admittedModelCost(admission, model, input),
+          costCents: entry.costCents,
           cached,
         }))
-      : [{ key: "visibility", quantity: 1, costCents: admission.estimate, cached }];
+      : "prompt" in input
+        ? input.models.map((model) => ({
+            key: model,
+            quantity: 1,
+            costCents: admittedModelCost(admission, model, input),
+            cached,
+          }))
+        : [{ key: "visibility", quantity: 1, costCents: admission.estimate, cached }];
   const definition = [
     researchPaymentIdentity(input),
     admission.policy,
     admissionRate(admission, kind, admission.estimate).checkedAt,
     admission.estimate,
-    admission.policy === "legacy_dated" ? null : admission.capabilities,
+    admission.policy === "legacy_dated"
+      ? null
+      : admission.policy === "measured_engines"
+        ? admission.engines
+        : admission.capabilities,
   ];
   if (admission.policy !== "provider_actual_cost") {
     const session = await prepareActionPayment({

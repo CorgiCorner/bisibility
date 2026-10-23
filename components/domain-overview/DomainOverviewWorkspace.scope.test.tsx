@@ -168,6 +168,14 @@ describe("DomainOverviewWorkspace research scope state", () => {
     expect(screen.getByRole("button", { name: /analyze domain/i })).toBeDisabled();
   });
 
+  it("keeps the report target in the result header without an extra warning row", () => {
+    renderWorkspace({ initialTarget: "airtable.com", initialOutcome: domainOverviewReportFixture });
+    expect(screen.queryByText("Results below are still for example.com.")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("example.com", { selector: "[data-domain-overview-target]" }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps the cached report visible when a requested analysis fails", async () => {
     const analyzeAction = vi.fn().mockResolvedValue({
       costCents: 0,

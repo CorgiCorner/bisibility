@@ -49,6 +49,7 @@ const noDataOverview = {
 
 const readyOverview = {
   ...noDataOverview,
+  firstCheckSourceReady: true,
   dataSource: { ...noDataOverview.dataSource, primaryProvider: "dataforseo", status: "healthy" },
   gettingStarted: { ...noDataOverview.gettingStarted, providerConnected: true },
   providerConnected: true,
@@ -88,6 +89,7 @@ const actionArgs = {
 
 const meta = {
   component: OverviewNoData,
+  parameters: { nextjs: { appDirectory: true } },
   decorators: [
     (Story) => (
       <ProjectDashboardMessages>

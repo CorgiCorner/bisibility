@@ -21,7 +21,7 @@ export function BudgetHeading({ kind }: { kind: BudgetValueKind }) {
           aria-label={p.budget.reservedInfo}
           className="size-4 min-h-4 p-0 text-fg-muted"
         >
-          <InfoIcon aria-hidden size={12} />
+          <InfoIcon weight="regular" aria-hidden size={12} />
         </IconButton>
       </Tooltip>
     </span>

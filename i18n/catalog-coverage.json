@@ -549,6 +549,7 @@
     "components/integrations/ConnectDrawerScopes.tsx",
     "components/integrations/ConnectedGoogleAccountFooter.tsx",
     "components/integrations/Ga4PropertyManualEntry.tsx",
+    "components/integrations/IntegrationCategories.tsx",
     "components/integrations/IntegrationCategory.tsx",
     "components/integrations/IntegrationsByoNote.tsx",
     "components/integrations/IntegrationsPageLoading.tsx",
@@ -1145,6 +1146,7 @@
     "components/schedules/ScheduleLifecycleActions.tsx",
     "components/schedules/ScheduleObjectFrame.tsx",
     "components/schedules/SchedulePageLoading.tsx",
+    "components/schedules/SchedulerUpgradeBanner.tsx",
     "components/schedules/schedules-table-columns.tsx",
     "components/schedules/SchedulesList.tsx",
     "components/schedules/UnscheduledKeywordsNotice.tsx",
@@ -10747,6 +10749,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.aiEngines",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.brand",
         "tags": []
       },
@@ -10853,6 +10860,41 @@
       {
         "arguments": [],
         "key": "projectAiResearch.emptyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.engineChatGpt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.engineClaude",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.engineGemini",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.engineModeHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.enginePerplexity",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.enginesMode",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.engineWebSearchHint",
         "tags": []
       },
       {
@@ -10997,6 +11039,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.modelPricingUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelsMode",
         "tags": []
       },
       {
@@ -60656,6 +60703,31 @@
           ]
         ],
         "key": "shared.scheduleName.weekly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.schedules",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.schedulerUpgrade.title",
         "tags": []
       },
       {

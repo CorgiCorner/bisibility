@@ -1,3 +1,4 @@
+import type { AiResponseExecution } from "@/lib/ai-research/engines";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { NativeRequestGuard } from "@/lib/metering/paid-attempt-types";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
@@ -9,6 +10,8 @@ export type PaidCallPayment = {
   snapshot: { credentialSource: "own" | "hosted"; credentialsEncrypted: string | null };
   guard: NativeRequestGuard;
   costLimit?: RequestCostLimit;
+  /** Measured-bound AI response child: caps the charge at its frozen price. */
+  aiResponse?: AiResponseExecution;
   record(input: { operationKey?: string; attemptIds?: readonly string[] }): Promise<void>;
 };
 export type DeploymentPaymentQuoteInput = {

@@ -112,6 +112,15 @@
     "catalogHelp": "About available AI settings",
     "catalogRefreshing": "Refreshing provider catalog",
     "openIntegrations": "Open Integrations",
-    "sourceRetry": "Try again"
+    "sourceRetry": "Try again",
+    "enginesMode": "Engines",
+    "modelsMode": "Models",
+    "aiEngines": "AI engines",
+    "engineModeHint": "Each engine answers with its current flagship model. Credits only; the estimate shows the maximum price.",
+    "engineChatGpt": "ChatGPT",
+    "engineClaude": "Claude",
+    "engineGemini": "Gemini",
+    "enginePerplexity": "Perplexity",
+    "engineWebSearchHint": "Each engine's maximum price includes web search. The country hint applies to ChatGPT."
   }
 }

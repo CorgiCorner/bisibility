@@ -2,13 +2,13 @@ import type { ResearchAiPayment } from "./research-payment";
 import "server-only";
 import { paidProviderCall, preflightProviderBudget } from "@/lib/provider-lookups/paid-call";
 import { surfaceOf } from "@/lib/provider-usage/surface";
-import type { AiAdmission } from "./admission";
+import type { AdmittedEngine, AiAdmission } from "./admission";
 import { admissionRate, admittedModelCost } from "./admission";
 import type { AiModelCapability } from "./catalog-types";
 import type { requireAiSource } from "./context";
 import { assertAiDeadline } from "./deadline";
 import { researchFailure } from "./failure";
-import { fetchObserved, fetchPrompt, supportedPromptModels } from "./provider";
+import { fetchEnginePrompt, fetchObserved, fetchPrompt, supportedPromptModels } from "./provider";
 import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
 import type { AiResearchContext } from "./service";
 import type { AiResearchResult, AiResearchRow } from "./types";
@@ -42,13 +42,20 @@ export async function executeResearch({
       ? input.estimated_cost_limit_cents
       : input.max_cost_cents;
   if (limit === undefined) throw new Error("Research cost limit is required.");
+  // One payment child per model, or per engine in engine mode (ADR-023).
+  const units: { key: string; model: string; engine?: AdmittedEngine }[] =
+    admitted.policy === "measured_engines"
+      ? admitted.engines.map((engine) => ({ key: engine.engine, model: engine.model, engine }))
+      : "prompt" in input
+        ? input.models.map((model) => ({ key: model, model }))
+        : [];
   const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
   await preflightProviderBudget({
     connectionId: source.connection.id,
     projectId: context.projectId,
     provider: source.provider.id,
     estimatedCostCents: estimate,
-    estimatedUsageQuantity: "prompt" in input ? input.models.length : 1,
+    estimatedUsageQuantity: "prompt" in input ? units.length : 1,
     surface: surfaceOf(context.origin.source),
   });
   const common = {
@@ -76,32 +83,48 @@ export async function executeResearch({
   };
   try {
     if ("prompt" in input) {
-      for (const model of input.models) {
+      for (const [index, unit] of units.entries()) {
+        const { engine, key, model } = unit;
         dispatched = false;
         currentUsageTag = undefined;
         assertAiDeadline(deadlineAt);
+        const child = payment?.child(key);
         const answer = await paidProviderCall({
-          payment: payment?.child(model),
+          payment:
+            child && engine
+              ? { ...child, aiResponse: { engine: engine.engine, model: engine.model } }
+              : child,
           ...common,
           ...(context.execution
             ? {
                 correlationId:
-                  input.models.length === 1
+                  units.length === 1
                     ? context.execution.correlationId
-                    : `${context.execution.correlationId}:${input.models.indexOf(model)}`,
+                    : `${context.execution.correlationId}:${index}`,
               }
             : {}),
           ...(admitted.policy === "provider_actual_cost"
             ? { requiredCredentialSource: "own" as const }
             : {}),
-          rate: admissionRate(admitted, kind, admittedModelCost(admitted, model, input)),
+          rate: admissionRate(admitted, kind, admittedModelCost(admitted, key, input)),
           call: async (credentials, usage) => {
             currentUsageTag = usage.tag;
             await onUsageTag?.(usage.tag);
+            if (engine)
+              return fetchEnginePrompt(
+                credentials,
+                input,
+                engine,
+                usage.tag,
+                deadlineAt,
+                markDispatched,
+              );
             supported ??=
               admitted.policy === "legacy_dated"
                 ? await supportedPromptModels(credentials, deadlineAt)
-                : new Map(admitted.capabilities.catalog.models.map((entry) => [entry.id, entry]));
+                : "capabilities" in admitted
+                  ? new Map(admitted.capabilities.catalog.models.map((entry) => [entry.id, entry]))
+                  : new Set<string>();
             return fetchPrompt(
               credentials,
               input,
@@ -116,7 +139,12 @@ export async function executeResearch({
         if (answer.providerRequestId) providerRequestIds.push(answer.providerRequestId);
         costCents += answer.costCents;
         rows.push(answer.row);
-        if (admitted.policy === "provider_actual_cost" ? costCents >= limit : costCents > limit)
+        // Engine children were admitted against one capped customer quote. Provider
+        // overruns are absorbed at settlement and must not skip the remaining children.
+        if (
+          admitted.policy !== "measured_engines" &&
+          (admitted.policy === "provider_actual_cost" ? costCents >= limit : costCents > limit)
+        )
           break;
       }
     } else {
@@ -153,7 +181,7 @@ export async function executeResearch({
     truncated:
       totalAvailable !== null
         ? totalAvailable > rows.length
-        : "prompt" in input && rows.length < input.models.length,
+        : "prompt" in input && rows.length < units.length,
     fetchedAt: new Date().toISOString(),
     costCents,
   };

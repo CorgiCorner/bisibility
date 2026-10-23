@@ -221,7 +221,7 @@ function AllocationEditor({
         <AllocationFormSurface id={formId} adapter={formAdapter} editable={editable} save={save}>
           {typeof evidenceBefore === "function" ? evidenceBefore(evidenceRows) : evidenceBefore}
           {help}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-4${rows.length > 1 ? " lg:grid-cols-2" : ""}`}>
             {rows.map((row) => (
               <AllocationRow
                 key={row.id}

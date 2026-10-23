@@ -15,6 +15,7 @@ function patterns(projectId: string) {
     "do:v1:",
     "ai:v1:",
     "ai:v2:",
+    "ai:v3-engines:",
     "ai:v1-provider-domain-v1:",
     "ai:v2-provider-domain-v1:",
   ].map((prefix) => `${prefix}${projectId}:`);

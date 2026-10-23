@@ -112,6 +112,15 @@
     "catalogHelp": "利用できるAI設定について",
     "catalogRefreshing": "プロバイダーカタログを更新しています",
     "openIntegrations": "連携設定を開く",
-    "sourceRetry": "再試行"
+    "sourceRetry": "再試行",
+    "enginesMode": "エンジン",
+    "modelsMode": "モデル",
+    "aiEngines": "AIエンジン",
+    "engineModeHint": "各エンジンは現行の主力モデルで回答します。クレジットのみ。見積もりは上限価格を示します。",
+    "engineChatGpt": "ChatGPT",
+    "engineClaude": "Claude",
+    "engineGemini": "Gemini",
+    "enginePerplexity": "Perplexity",
+    "engineWebSearchHint": "各エンジンの上限価格にはウェブ検索が含まれます。国の指定はChatGPTに適用されます。"
   }
 }

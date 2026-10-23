@@ -28,7 +28,7 @@ describe("claimDueRankChecksActivity", () => {
     vi.unstubAllEnvs();
   });
 
-  it.each(["legacy", "cutover"] as const)("produces no database work in %s mode", async (mode) => {
+  it.each(["cutover"] as const)("produces no database work in %s mode", async (mode) => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
     await expect(claimDueRankChecksActivity()).resolves.toMatchObject({
       claimed: 0,

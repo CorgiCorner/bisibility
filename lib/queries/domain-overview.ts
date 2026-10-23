@@ -2,11 +2,13 @@ import { moduleSupport } from "@/lib/providers/module-support";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { domainOverviewCacheTtlSeconds } from "@/lib/domain-overview/cache-policy";
 import { recentDomainOverviewTargets } from "@/lib/domain-overview/recent";
 import {
   domainOverviewCatalogScopes,
   domainOverviewTrackedScopes,
 } from "@/lib/domain-overview/scope-options";
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { serpProviderCapabilities } from "@/lib/providers/registry";
 import { researchScopeForLocation, researchScopeKey } from "@/lib/research/scope";
 import { trackedProjectDomain } from "@/lib/schemas/project";
@@ -43,6 +45,7 @@ export async function getDomainOverviewPageContext(projectId: string) {
   const [details, fallbackLocation, recentTargets, costContext] = await Promise.all([
     prisma.project.findUnique({
       select: {
+        lookupCacheTtlSeconds: true,
         competitors: { orderBy: { createdAt: "asc" }, select: { domain: true } },
         defaults: {
           select: {
@@ -78,6 +81,10 @@ export async function getDomainOverviewPageContext(projectId: string) {
 
   return {
     ...moduleSupport("domainOverview"),
+    cacheTtlSeconds: withProjectCachePolicy(
+      details.lookupCacheTtlSeconds,
+      domainOverviewCacheTtlSeconds,
+    ),
     catalogScopes: domainOverviewCatalogScopes().filter(
       (scope) => !trackedKeys.has(researchScopeKey(scope)),
     ),

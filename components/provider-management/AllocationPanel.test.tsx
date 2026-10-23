@@ -145,10 +145,11 @@ beforeEach(() => {
     availableAtProvider: { status: "available", unit: "usd", amount: 12.34 },
   });
 });
-function mount(onClose = vi.fn()) {
+function mount(onClose = vi.fn(), surface?: "app" | "programmatic") {
   return renderWithFeatureMessages(
     <BudgetEditModal
       connections={[connections[1]]}
+      surface={surface}
       projectId="prj_step2"
       projectRef="prj_step2"
       onSaved={onSaved}
@@ -161,6 +162,35 @@ const appField = () =>
   screen.findByLabelText(surfaceLabel(dialogCopy.appBudgetField, "DataForSEO"));
 
 describe("shared allocation panel integration", () => {
+  it.each(["app", "programmatic"] as const)(
+    "saves only the selected %s own-key budget",
+    async (surface) => {
+      host.execute.mockImplementation(async (_project, command: ProviderCommand) => ({
+        outcome: "success",
+        commandId: command.commandId,
+        revision: "snapshot-2",
+      }));
+      mount(vi.fn(), surface);
+      const label =
+        surface === "app" ? dialogCopy.appBudgetField : dialogCopy.programmaticBudgetField;
+      const other =
+        surface === "app" ? dialogCopy.programmaticBudgetField : dialogCopy.appBudgetField;
+      const field = await screen.findByLabelText(surfaceLabel(label, "DataForSEO"));
+      expect(screen.queryByLabelText(surfaceLabel(other, "DataForSEO"))).toBeNull();
+      expect(screen.queryByRole("region", { name: /DataForSEO: Credits/ })).toBeNull();
+      fireEvent.change(field, { target: { value: "17.42" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() => expect(host.execute).toHaveBeenCalledTimes(1));
+      const command = host.execute.mock.calls[0][1];
+      expect(command.changes).toHaveLength(1);
+      expect(command.changes[0]).toEqual({
+        rowId: `conn_data:byok:${surface}`,
+        expectedRevision: "snapshot-1",
+        limit: "1742",
+      });
+    },
+  );
+
   it("retains a dirty draft and hides evidence when an explicit reload fails", async () => {
     mount();
     fireEvent.change(await appField(), { target: { value: "17.42" } });

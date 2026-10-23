@@ -177,3 +177,19 @@ it("invalidates retained mixed-case language copies against normalized stored id
     arguments: [],
   });
 });
+
+it("lists and removes engine answers within the owning project's cache", async () => {
+  const engineKey = `ai:v3-engines:projectA:connection:prompt_explorer:${"a".repeat(64)}`;
+  mocks.redis.scan.mockResolvedValue({ cursor: "0", keys: [engineKey] });
+  mocks.redis.get.mockResolvedValue(
+    JSON.stringify({ fetchedAt: new Date().toISOString(), reportId: "agr_engine" }),
+  );
+  mocks.redis.ttl.mockResolvedValue(3000);
+  const page = await listRedisDataCache("projectA", "0", 3600);
+  expect(page.entries).toEqual([
+    expect.objectContaining({ module: "prompt_explorer", reportRef: "agr_engine" }),
+  ]);
+  mocks.redis.eval.mockResolvedValue(1);
+  expect(await removeRedisDataCache("projectA", token(engineKey))).toBe("removed");
+  expect(await removeRedisDataCache("projectB", token(engineKey))).toBe("invalid");
+});

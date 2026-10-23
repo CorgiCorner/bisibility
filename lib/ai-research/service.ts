@@ -95,7 +95,8 @@ async function run(
           evidence,
           estimateKind: actual ? "forecast" : "admission_bound",
           isPartialEstimate: actual,
-          isGuaranteedMaximum: admitted.policy === "current_catalog",
+          isGuaranteedMaximum:
+            admitted.policy === "current_catalog" || admitted.policy === "measured_engines",
           pricingPolicy: admitted.policy,
           pricingCheckedAt: admissionRate(admitted, kind, admitted.estimate).checkedAt,
           credentialSource: source.connection.credentialSource === "own" ? "own" : "hosted",
@@ -127,7 +128,12 @@ async function run(
               estimatedCostCents: estimate,
             });
           const payment = await prepareResearchAiPayment(context, kind, input, source, admitted);
-          if (input.max_cost_cents !== undefined && estimate > input.max_cost_cents)
+          // Engine mode caps the customer price, so the cap compares with that quoted price.
+          const capped =
+            admitted.policy === "measured_engines" && payment
+              ? Number(payment.quote.charge.value)
+              : estimate;
+          if (input.max_cost_cents !== undefined && capped > input.max_cost_cents)
             throw new ProviderLookupSignal({
               ok: false,
               reason: "cost_limit_exceeded",

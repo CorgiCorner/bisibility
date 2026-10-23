@@ -11,7 +11,11 @@ import { warnDeprecatedInspectionDailyBudget } from "../deployment/deprecated-in
 import { notifyOps } from "../ops/notify";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { assertRankCheckRunsScheduleEnabled } from "../rank-check/run-maintenance-config";
-import { rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
+import {
+  rankCheckSchedulerMode,
+  warnRetiredRankSchedulerConfiguration,
+} from "../rank-check/scheduler-mode";
+import { startRankCheckSchedulers } from "../rank-check/scheduler-startup";
 import { assertTemporalSchedulerEnabled, schedulerDriver } from "../scheduler/driver";
 import * as activities from "./activities";
 import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
@@ -35,7 +39,6 @@ import {
 } from "./maintenance-schedule-bootstrap";
 import { ensureMeteringMaintenanceSchedule } from "./metering-maintenance-bootstrap";
 import { ensureProviderUsageReconciliationSchedule } from "./provider-usage-reconcile-bootstrap";
-import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 // Imported directly, not through bootstrap.ts: search-insights-bootstrap.ts already depends on
 // bootstrap.ts for the calendar helpers, so re-exporting it there would close an import cycle.
@@ -127,6 +130,7 @@ async function enforceWorkerSchemaGuard() {
 
 async function run() {
   warnDeprecatedInspectionDailyBudget();
+  warnRetiredRankSchedulerConfiguration();
   assertTemporalSchedulerEnabled();
   console.error("[temporal] worker startup config", {
     address,
@@ -185,7 +189,7 @@ async function run() {
       async () => assertRankCheckRunsScheduleEnabled(schedulerMode),
     );
     const schedules = await runWorkerStartupStage("schedule-bootstrap", async () => {
-      const rankCheckSchedulers = await convergeRankCheckSchedulerSingletons();
+      const rankCheckSchedulers = await startRankCheckSchedulers(schedulerMode);
       const retiredTrafficIntentSweepSchedule = await deleteRetiredTrafficIntentSweepSchedule();
       const rankCheckRunsSchedule = ensureRankCheckRunsSchedule();
       const ensured = await Promise.all([

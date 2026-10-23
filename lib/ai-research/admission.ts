@@ -1,10 +1,14 @@
 import type { ProviderFeatureRate } from "@/lib/cost-estimate/provider-rates";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { serpCountryCatalog } from "@/lib/serp/country-catalog";
+import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
 import { credentialReference, modelForecast } from "./actual-cost";
 import type { AiResearchCapabilities } from "./catalog";
-import { loadAiResearchCapabilities } from "./catalog-service";
+import { loadAiResearchCapabilities, loadEngineCatalog } from "./catalog-service";
 import type { requireAiSource } from "./context";
 import { aiRate, modelAdmissionBound, promptCost, visibilityCost } from "./cost";
+import { aiResponseEnginesEnabled, measuredEngineBound } from "./engine-bounds";
+import type { AiEngine, AiResponseExecution } from "./engines";
 import {
   isLegacyModel,
   isLegacyPrompt,
@@ -15,8 +19,15 @@ import {
 import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
 import { AiResearchValidationError } from "./validation";
 
+export type AdmittedEngine = AiResponseExecution & {
+  costCents: number;
+  measuredAt: string;
+  outputTokens: number;
+  reasoning: boolean;
+};
 export type AiAdmission =
   | { policy: "legacy_dated"; estimate: number }
+  | { policy: "measured_engines"; estimate: number; engines: AdmittedEngine[] }
   | { policy: "current_catalog"; estimate: number; capabilities: AiResearchCapabilities }
   | {
       policy: "provider_actual_cost";
@@ -46,6 +57,8 @@ export async function loadAiAdmission(
       "credentials_changed",
       "The provider credential identity changed after the estimate. Obtain a new estimate before execution.",
     );
+  if ("prompt" in input && input.engines?.length)
+    return admitEngines(source, input, input.engines, deadlineAt);
   if ("prompt" in input && isLegacyPrompt(input)) {
     const estimate = input.models.reduce((sum, model) => sum + legacyBound(model), 0);
     return { policy: "legacy_dated", estimate };
@@ -122,6 +135,62 @@ export async function loadAiAdmission(
     );
   return { policy: "current_catalog", estimate: visibilityCost(input, capabilities), capabilities };
 }
+async function admitEngines(
+  source: Awaited<ReturnType<typeof requireAiSource>>,
+  input: PromptInput,
+  engines: readonly AiEngine[],
+  deadlineAt: number,
+): Promise<AiAdmission> {
+  if (source.connection.credentialSource !== "hosted")
+    throw new AiResearchValidationError(
+      "engine_credits_only",
+      "Engine mode runs on Credits. Your own provider key keeps the model picker with actual-cost consent.",
+    );
+  if (!aiResponseEnginesEnabled())
+    throw new AiResearchValidationError(
+      "engine_unavailable",
+      "Engine mode is temporarily unavailable. The original mini/nano preset remains available.",
+    );
+  if (!serpLanguageCatalog.some((language) => language.code === input.response_language))
+    throw new AiResearchValidationError(
+      "unsupported_language",
+      "The selected response language is unavailable.",
+    );
+  if (
+    input.country_iso_code &&
+    !serpCountryCatalog.some((country) => country.countryCode === input.country_iso_code)
+  )
+    throw new AiResearchValidationError(
+      "unsupported_market",
+      "The selected web search country hint is unavailable.",
+    );
+  const deadline = Math.min(deadlineAt, Date.now() + 10_000);
+  const admitted: AdmittedEngine[] = [];
+  for (const engine of engines) {
+    const catalog = await loadEngineCatalog(source, engine, deadline).catch((error: unknown) => {
+      if (error instanceof ProviderLookupSignal) throw error;
+      return null;
+    });
+    const bound = catalog
+      ? measuredEngineBound(engine, {
+          webSearch: input.web_search,
+          catalogModels: catalog.map((entry) => entry.name),
+        })
+      : null;
+    const reasoning = catalog?.find((entry) => entry.name === bound?.model)?.reasoning ?? false;
+    if (!bound || (reasoning && bound.outputTokens < 1024))
+      throw new AiResearchValidationError(
+        "engine_unavailable",
+        `The ${engine} engine has no current calibrated model with a verified cost bound.`,
+      );
+    admitted.push({ engine, reasoning, ...bound });
+  }
+  return {
+    policy: "measured_engines",
+    estimate: admitted.reduce((sum, entry) => sum + entry.costCents, 0),
+    engines: admitted,
+  };
+}
 function legacyBound(model: string): number {
   if (!isLegacyModel(model))
     throw new AiResearchValidationError(
@@ -130,11 +199,18 @@ function legacyBound(model: string): number {
     );
   return legacyModelAdmissionBound(model);
 }
+/** Admitted cost of one payment child: a model, or an engine in engine mode. */
 export function admittedModelCost(
   admission: AiAdmission,
   model: string,
   input: PromptInput,
 ): number {
+  if (admission.policy === "measured_engines") {
+    const entry = admission.engines.find((candidate) => candidate.engine === model);
+    if (!entry)
+      throw new AiResearchValidationError("engine_unavailable", "The engine was not admitted.");
+    return entry.costCents;
+  }
   return admission.policy === "legacy_dated"
     ? legacyBound(model)
     : admission.policy === "provider_actual_cost"
@@ -146,6 +222,18 @@ export function admissionRate(
   kind: AiResearchKind,
   costCents: number,
 ): ProviderFeatureRate {
+  if (admission.policy === "measured_engines")
+    return {
+      // The oldest calibration in the run dates its bound.
+      checkedAt: admission.engines
+        .map((entry) => entry.measuredAt)
+        .sort()[0]
+        .slice(0, 10),
+      costCents,
+      feature: kind,
+      providerId: "dataforseo",
+      sourceUrl: "https://dataforseo.com/pricing/ai-optimization/llm-responses",
+    };
   return admission.policy === "legacy_dated"
     ? {
         checkedAt: LEGACY_PRICING_CHECKED_AT,

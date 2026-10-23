@@ -197,7 +197,7 @@ describe("claimDueRankChecks", () => {
     expect(mocks.executeRaw).toHaveBeenCalledOnce();
   });
 
-  it.each(["legacy", "cutover"] as const)(
+  it.each(["cutover"] as const)(
     "does not open or advance a claim transaction in %s mode",
     async (mode) => {
       vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);

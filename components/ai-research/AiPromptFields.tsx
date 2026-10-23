@@ -13,7 +13,9 @@ import {
 } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import { Controller } from "react-hook-form";
-import { AiModelSelect } from "./AiCostPolicyFields";
+import { AiCostPolicyFields, AiModelSelect } from "./AiCostPolicyFields";
+import { AiEngineFields, type AiEngineOption } from "./AiEngineFields";
+import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchForm } from "./AiVisibilityFields";
 import { legacyResearchInput } from "./ai-research-presets";
 
@@ -21,9 +23,17 @@ export function AiPromptFields({
   form,
   catalog,
   disabled,
-}: Readonly<{ form: AiResearchForm; catalog?: AiResearchCatalog; disabled: boolean }>) {
+  engineOptions = [],
+}: Readonly<{
+  form: AiResearchForm;
+  catalog?: AiResearchCatalog;
+  disabled: boolean;
+  engineOptions?: readonly AiEngineOption[];
+}>) {
   const t = useTranslations("projectAiResearch");
   const values = form.watch();
+  const engineMode =
+    "engines" in values && Array.isArray(values.engines) && values.engines.length > 0;
   const models = "models" in values ? (values.models ?? []) : [];
   const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
   const selected = catalog?.models.filter((model) => models.includes(model.id)) ?? [];
@@ -102,25 +112,28 @@ export function AiPromptFields({
 
   return (
     <>
-      <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
-        <span>
-          {t(
-            legacy
-              ? "legacyPricingProvenance"
-              : actual
-                ? "actualCostPolicy"
-                : "expandedPricingRequirement",
-            {
-              date: LEGACY_PRICING_CHECKED_AT,
-            },
-          )}
-        </span>
-        {!legacy ? (
-          <Button type="button" variant="secondary" disabled={disabled} onClick={restorePreset}>
-            {t("restoreLegacyPreset")}
-          </Button>
-        ) : null}
-      </div>
+      <AiEngineFields form={form} engineOptions={engineOptions} disabled={disabled} />
+      {engineMode ? null : (
+        <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
+          <span>
+            {t(
+              legacy
+                ? "legacyPricingProvenance"
+                : actual
+                  ? "actualCostPolicy"
+                  : "expandedPricingRequirement",
+              {
+                date: LEGACY_PRICING_CHECKED_AT,
+              },
+            )}
+          </span>
+          {!legacy ? (
+            <Button type="button" variant="secondary" disabled={disabled} onClick={restorePreset}>
+              {t("restoreLegacyPreset")}
+            </Button>
+          ) : null}
+        </div>
+      )}
       <label htmlFor="ai-prompt" className="grid gap-2 text-ui-body sm:col-span-2">
         {t("prompt")}
         <Textarea
@@ -130,19 +143,21 @@ export function AiPromptFields({
           placeholder={t("promptPlaceholder")}
         />
       </label>
-      {[0, 1].map((index) => (
-        <div className="grid gap-2 text-ui-body" key={index}>
-          <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
-          <AiModelSelect
-            catalog={catalog}
-            actual={actual}
-            disabled={disabled}
-            index={index}
-            models={models}
-            onChange={(value) => chooseModel(index, value)}
-          />
-        </div>
-      ))}
+      {engineMode
+        ? null
+        : [0, 1].map((index) => (
+            <div className="grid gap-2 text-ui-body" key={index}>
+              <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
+              <AiModelSelect
+                catalog={catalog}
+                actual={actual}
+                disabled={disabled}
+                index={index}
+                models={models}
+                onChange={(value) => chooseModel(index, value)}
+              />
+            </div>
+          ))}
       <Controller
         name="response_language"
         control={form.control}
@@ -153,10 +168,10 @@ export function AiPromptFields({
               ariaLabel={t("responseLanguage")}
               size="input"
               searchable
-              disabled={disabled || !expanded}
+              disabled={disabled || (!expanded && !(engineMode && catalog))}
               value={field.value ?? "en"}
               onChange={field.onChange}
-              options={(expanded
+              options={(expanded || (engineMode && catalog)
                 ? (catalog?.responseLanguages ?? [])
                 : [{ code: "en", name: t("legacyPromptLanguage") }]
               ).map((language) => ({
@@ -171,22 +186,24 @@ export function AiPromptFields({
           </div>
         )}
       />
-      <label htmlFor="ai-output-tokens" className="grid gap-2 text-ui-body">
-        {t("outputTokens")}
-        <Input
-          id="ai-output-tokens"
-          aria-label={t("outputTokens")}
-          aria-describedby="ai-output-token-bounds"
-          type="number"
-          min={minTokens}
-          max={maxTokens}
-          disabled={disabled || !expanded}
-          {...form.register("max_output_tokens", { valueAsNumber: true })}
-        />
-        <span id="ai-output-token-bounds" className="text-ui-xs text-fg-muted">
-          {t("tokenBounds", { min: minTokens, max: maxTokens })}
-        </span>
-      </label>
+      {engineMode ? null : (
+        <label htmlFor="ai-output-tokens" className="grid gap-2 text-ui-body">
+          {t("outputTokens")}
+          <Input
+            id="ai-output-tokens"
+            aria-label={t("outputTokens")}
+            aria-describedby="ai-output-token-bounds"
+            type="number"
+            min={minTokens}
+            max={maxTokens}
+            disabled={disabled || !expanded}
+            {...form.register("max_output_tokens", { valueAsNumber: true })}
+          />
+          <span id="ai-output-token-bounds" className="text-ui-xs text-fg-muted">
+            {t("tokenBounds", { min: minTokens, max: maxTokens })}
+          </span>
+        </label>
+      )}
       <Controller
         name="web_search"
         control={form.control}
@@ -198,7 +215,13 @@ export function AiPromptFields({
             aria-describedby="ai-web-search-hint"
             description={
               <span id="ai-web-search-hint">
-                {t(actual ? "actualSearchForecast" : "webSearchPolicyPending")}
+                {t(
+                  engineMode
+                    ? "engineWebSearchHint"
+                    : actual
+                      ? "actualSearchForecast"
+                      : "webSearchPolicyPending",
+                )}
               </span>
             }
             checked={field.value ?? false}
@@ -213,7 +236,9 @@ export function AiPromptFields({
               );
             }}
             disabled={
-              disabled || !actual || !expanded || !selected.every((model) => model.webSearch)
+              engineMode
+                ? disabled
+                : disabled || !actual || !expanded || !selected.every((model) => model.webSearch)
             }
           />
         )}
@@ -241,6 +266,11 @@ export function AiPromptFields({
           )}
         />
       ) : null}
+      {engineMode ? (
+        <AiResearchCostCap form={form} disabled={disabled} />
+      ) : (
+        <AiCostPolicyFields form={form} catalog={catalog} disabled={disabled} />
+      )}
     </>
   );
 }

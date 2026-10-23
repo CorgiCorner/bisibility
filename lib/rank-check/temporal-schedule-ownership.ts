@@ -1,7 +1,7 @@
 import { RECONCILER_SCHEDULE_ID } from "@/lib/temporal/bootstrap";
 import type { ScheduleDescription, ScheduleSummary } from "@temporalio/client";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "./dispatcher-constants";
-import { rankCheckScheduleId } from "./temporal-schedule";
+import { rankCheckScheduleId } from "./legacy-schedule-builder";
 import { RANK_CHECK_WORKFLOW_TYPE } from "./workflow-id";
 
 type OwnedClassification = {

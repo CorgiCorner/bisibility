@@ -13,7 +13,9 @@ export class AiResearchValidationError extends Error {
       | "credentials_changed"
       | "idempotency_conflict"
       | "usage_reconciliation_required"
-      | "cost_limit_exceeded",
+      | "cost_limit_exceeded"
+      | "engine_unavailable"
+      | "engine_credits_only",
     message: string,
   ) {
     super(message);

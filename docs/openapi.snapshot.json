@@ -57475,7 +57475,12 @@
                               ]
                             },
                             "pricing_policy": {
-                              "enum": ["legacy_dated", "current_catalog", "provider_actual_cost"],
+                              "enum": [
+                                "legacy_dated",
+                                "current_catalog",
+                                "provider_actual_cost",
+                                "measured_engines"
+                              ],
                               "type": "string"
                             }
                           },
@@ -59059,6 +59064,10 @@
                                       },
                                       "domain_cited": {
                                         "type": "boolean"
+                                      },
+                                      "engine": {
+                                        "enum": ["chat_gpt", "claude", "gemini", "perplexity"],
+                                        "type": "string"
                                       },
                                       "model": {
                                         "type": "string"
@@ -68657,6 +68666,17 @@
                     "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
                     "type": "string"
                   },
+                  "engines": {
+                    "description": "Engine mode on Credits: each engine answers with its calibrated flagship model under the hard cap. Excludes models and max_output_tokens.",
+                    "items": {
+                      "enum": ["chat_gpt", "claude", "gemini", "perplexity"],
+                      "type": "string"
+                    },
+                    "maxItems": 4,
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": true
+                  },
                   "estimate_credentials_ref": {
                     "description": "Credential identity from the estimate, required for actual-cost execution.",
                     "pattern": "^[a-f0-9]{64}$",
@@ -69923,7 +69943,12 @@
                               ]
                             },
                             "pricing_policy": {
-                              "enum": ["legacy_dated", "current_catalog", "provider_actual_cost"],
+                              "enum": [
+                                "legacy_dated",
+                                "current_catalog",
+                                "provider_actual_cost",
+                                "measured_engines"
+                              ],
                               "type": "string"
                             }
                           },
@@ -71507,6 +71532,10 @@
                                       },
                                       "domain_cited": {
                                         "type": "boolean"
+                                      },
+                                      "engine": {
+                                        "enum": ["chat_gpt", "claude", "gemini", "perplexity"],
+                                        "type": "string"
                                       },
                                       "model": {
                                         "type": "string"

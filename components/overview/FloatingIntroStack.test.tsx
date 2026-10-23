@@ -61,8 +61,8 @@ it("keeps the server render empty until the client snapshot can create a portal"
 it("uses a viewport-constrained nonmodal entrance and removes movement for reduced motion", () => {
   const css = readFileSync(resolve("components/overview/FloatingIntroStack.module.css"), "utf8");
   expect(css).toContain("position: fixed");
-  expect(css).toContain("bottom: 80px");
-  expect(css).toContain("100dvh - 112px");
+  expect(css).toContain("bottom: max(20px, env(safe-area-inset-bottom))");
+  expect(css).toContain("100dvh - 52px");
   expect(css).toContain("overflow-y: auto");
   expect(css).toContain("@starting-style");
   expect(css).toContain("var(--motion-modal-enter) var(--ease-out)");

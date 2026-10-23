@@ -12,7 +12,9 @@ export function projectCacheTtl(fallback: number) {
   return scope.getStore() ?? fallback;
 }
 export function isProjectResultKey(key: string) {
-  return /^(kr:v2|km:v1|rk:v2|bl:v3|do:v1|ai:v[12](?:-provider-domain-v1)?):/.test(key);
+  return /^(kr:v2|km:v1|rk:v2|bl:v3|do:v1|ai:(?:v[12](?:-provider-domain-v1)?|v3-engines)):/.test(
+    key,
+  );
 }
 export function projectCacheEntryCurrent(key: string, value: unknown, now = Date.now()) {
   if (!isProjectResultKey(key)) return true;

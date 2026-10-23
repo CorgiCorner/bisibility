@@ -2355,7 +2355,7 @@
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 1000,
-                  "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+                  "description": "Maximum accepted provider cost in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata."
                 },
                 "estimate_only": {
                   "default": false,
@@ -2465,7 +2465,7 @@
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 1000,
-                  "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+                  "description": "Maximum accepted provider cost in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata."
                 },
                 "estimate_only": {
                   "default": false,
@@ -2516,6 +2516,17 @@
                     "minLength": 1,
                     "maxLength": 120,
                     "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                  }
+                },
+                "engines": {
+                  "uniqueItems": true,
+                  "description": "Engine mode on Credits: each engine answers with its calibrated flagship model under the hard cap. Excludes models and max_output_tokens.",
+                  "minItems": 1,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["chat_gpt", "claude", "gemini", "perplexity"]
                   }
                 },
                 "web_search": {

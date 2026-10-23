@@ -65,6 +65,14 @@ export function useAiResearchSubmission({
       outcome.forecastScope === "tokens_and_base_only" &&
       outcome.isPartialEstimate === true &&
       outcome.isGuaranteedMaximum === false);
+  const estimateForLimit =
+    outcome?.ok && outcome.estimate
+      ? outcome.pricingPolicy === "measured_engines"
+        ? quote?.charge.unit.kind === "credits" && quote.charge.value !== null
+          ? Number(quote.charge.value)
+          : Number.NaN
+        : outcome.estimatedCostCents
+      : Number.NaN;
   const estimateAffordable = Boolean(
     current &&
       quote?.availability.allowed &&
@@ -72,7 +80,9 @@ export function useAiResearchSubmission({
       credentialsValid &&
       outcome?.ok &&
       outcome.estimate &&
-      outcome.estimatedCostCents <= (limit ?? 0),
+      Number.isFinite(estimateForLimit) &&
+      estimateForLimit >= 0 &&
+      estimateForLimit <= (limit ?? 0),
   );
   const retryBlocked = execution === "review";
   const completed = execution === "complete";

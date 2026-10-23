@@ -119,15 +119,18 @@ describe("keyword workbook import action", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.$executeRaw.mockResolvedValue(0);
-    mocks.prisma.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
-      const sql = parts.join("?");
-      if (sql === 'SELECT "id" FROM "projects" WHERE "id" = ? FOR UPDATE')
-        return [{ id: "project_1" }];
-      if (sql.includes("FROM users")) return [{ id: "user_1" }];
-      if (sql.includes("FROM memberships")) return [{ role: "admin" }];
-      if (sql.includes("to_regclass")) return [{ tables: 0, source: false, guard: false }];
-      throw new Error(`Unexpected export authority query: ${sql}`);
-    });
+    mocks.prisma.$queryRaw.mockImplementation(
+      async (parts: TemplateStringsArray | { sql: string }) => {
+        const sql = "sql" in parts ? parts.sql : parts.join("?");
+        if (sql === 'SELECT "id" FROM "projects" WHERE "id" = ? FOR UPDATE')
+          return [{ id: "project_1" }];
+        if (sql.includes('FROM "keywords" k')) return [];
+        if (sql.includes("FROM users")) return [{ id: "user_1" }];
+        if (sql.includes("FROM memberships")) return [{ role: "admin" }];
+        if (sql.includes("to_regclass")) return [{ tables: 0, source: false, guard: false }];
+        throw new Error(`Unexpected export authority query: ${sql}`);
+      },
+    );
     mocks.prisma.rankCheck.count.mockResolvedValue(0);
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));

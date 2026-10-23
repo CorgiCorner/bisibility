@@ -56,3 +56,15 @@ it("keeps per-project TTL branches independent from the module's stored expiry",
     }).storedAt,
   ).toBe(Date.parse("2026-10-16T10:00:00Z"));
 });
+
+it("expires engine answers when the project shortens its cache window", () => {
+  withProjectCachePolicy(3600, () => {
+    expect(
+      projectCacheEntryCurrent(
+        "ai:v3-engines:p:c:prompt_explorer:hash",
+        { fetchedAt: "2026-10-16T10:00:00Z" },
+        Date.parse("2026-10-16T12:00:00Z"),
+      ),
+    ).toBe(false);
+  });
+});

@@ -50,7 +50,7 @@ describe("loadRankCheckRunItemsActivity", () => {
   });
 
   it("loads an ordered page and resolves frozen and scheduled depth", async () => {
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     mocks.prisma.rankCheckRun.findUnique.mockResolvedValue({
       project: { defaults: { serpDepth: 100 } },
       projectId: "project_1",
@@ -115,7 +115,7 @@ describe("loadRankCheckRunItemsActivity", () => {
   });
 
   it.each([
-    ["legacy", "scheduled_due"],
+    ["cutover", "scheduled_due"],
     ["dispatcher", "manual_ids"],
   ] as const)("keeps items for %s mode and %s runs", async (mode, selectionKind) => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
