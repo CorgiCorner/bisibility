@@ -1,4 +1,5 @@
 import type { Location } from "@/lib/generated/prisma/client";
+import { buildProviderTag } from "@/lib/provider-usage/tag";
 import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -169,6 +170,24 @@ describe("dataForSeoProvider", () => {
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
       expect.objectContaining({ tag: "app=white-label;c=check_123" }),
     ]);
+  });
+
+  it("uses the existing attribution tag when a live caller omits its duplicate tag field", async () => {
+    const context = {
+      correlationId: "check_123",
+      feature: "rank_check",
+      projectId: "project",
+      source: "api",
+      trigger: "manual",
+    } as const;
+    const tag = buildProviderTag({ context, instanceSlug: "fixture", stage: "test" });
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(serpEnvelope([])));
+    vi.stubGlobal("fetch", fetchMock);
+    await dataForSeoProvider.fetchRank({ ...rankInput(), attribution: { context, tag } });
+    const [task] = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    expect(task.tag).toBe(tag);
+    expect(task.tag).toContain(";c=check_123");
+    expect(task).not.toHaveProperty("priority");
   });
 
   it("parses the matching organic result position and ranking URL", async () => {

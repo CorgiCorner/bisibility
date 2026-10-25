@@ -8,8 +8,8 @@ vi.mock("@/lib/actions/ai-research", () => ({ analyzeAiResearchAction: vi.fn() }
 describe("research modules in the real application shell", () => {
   it.each([
     ["audit", "site-audit", "Site Audit"],
-    ["visibility", "ai-visibility", "AI Visibility"],
-    ["prompt", "prompt-explorer", "Prompt Explorer"],
+    ["visibility", "brand-visibility", "Brand Visibility"],
+    ["prompt", "prompt-playground", "Prompt Playground"],
   ] as const)("renders one shared page heading for %s", (module, section, title) => {
     setNavigationState({ pathname: `/app/prj_example/${section}` });
     render(

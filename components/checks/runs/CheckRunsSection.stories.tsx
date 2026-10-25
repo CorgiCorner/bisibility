@@ -1,3 +1,5 @@
+import { withEvidenceMessages } from "@/.storybook/evidence-messages";
+import { storyTimeZone } from "@/.storybook/story-locale";
 import { CheckRunsSection } from "@/components/checks/runs/CheckRunsSection";
 import {
   checkRunsFixtureView,
@@ -8,7 +10,7 @@ import {
 } from "@/components/checks/runs/check-runs-fixtures";
 import { appPath } from "@/lib/routing/app-path";
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 const callbacks = {
   onFilterChange: fn(),
@@ -32,7 +34,11 @@ const links = {
 const meta = {
   title: "Checks/Runs/CheckRunsSection",
   component: CheckRunsSection,
+  render: (args, context) => (
+    <CheckRunsSection {...args} timeZone={storyTimeZone(context.globals.timeZone)} />
+  ),
   decorators: [
+    withEvidenceMessages,
     (Story) => (
       <div className="min-h-screen bg-bg p-4 text-fg sm:p-8">
         <div className="mx-auto max-w-[1080px]">
@@ -134,11 +140,13 @@ export const BudgetWarning: Story = {
 export const AsOfDatePopoverOpen: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole("button", { name: "As of: Jul 24, 2026" }),
+      within(canvasElement).getByRole("button", {
+        name: /As of:|Stan na:|基準日|A fecha de|A fecha:|Fecha de referencia|時点/,
+      }),
     );
-    await expect(
-      within(canvasElement.ownerDocument.body).getByRole("dialog", { name: "As of date" }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(within(canvasElement.ownerDocument.body).getByRole("dialog")).toBeVisible(),
+    );
   },
 };
 

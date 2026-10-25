@@ -7,12 +7,12 @@ const text = { type: "string" };
 const nonempty = { ...text, minLength: 1 };
 const configuration = {
   type: "object",
-  ...sdkName("AiTrackingConfigurationInput"),
+  ...sdkName("PromptTrackerConfigurationInput"),
   properties: {
     provider: { const: "dataforseo", type: "string" },
     endpoint: { ...nonempty, maxLength: 256 },
-    engine: { type: "string", enum: TRACKING_ENGINES, ...closedEnum("AiTrackingEngineInput") },
-    source: { type: "string", enum: TRACKING_SOURCES, ...closedEnum("AiTrackingSourceInput") },
+    engine: { type: "string", enum: TRACKING_ENGINES, ...closedEnum("PromptTrackerEngineInput") },
+    source: { type: "string", enum: TRACKING_SOURCES, ...closedEnum("PromptTrackerSourceInput") },
     model: { type: ["string", "null"], maxLength: 256 },
     parameters: {
       type: "object",
@@ -27,11 +27,11 @@ const recurringPayment = {
   payment_scope: {
     type: "string",
     enum: ["manual", "recurring"],
-    ...closedEnum("AiTrackingPaymentScope"),
+    ...closedEnum("PromptTrackerPaymentScope"),
   },
   payment_recurrence: {
     type: "object",
-    ...sdkName("AiTrackingPaymentRecurrence"),
+    ...sdkName("PromptTrackerPaymentRecurrence"),
     properties: { cron: text, timezone: text },
     required: ["cron", "timezone"],
   },
@@ -62,11 +62,11 @@ export const appOwnedTrackingRunOperations: Record<
   string,
   { parameters: object[]; body?: object }
 > = {
-  previewAiTrackingRun: {
+  previewPromptTrackerRun: {
     parameters: [project],
     body: {
       type: "object",
-      ...sdkName("AiTrackingRunPreviewInput"),
+      ...sdkName("PromptTrackerRunPreviewInput"),
       properties: {
         ...common,
         ...recurringPayment,
@@ -80,11 +80,11 @@ export const appOwnedTrackingRunOperations: Record<
       required: ["prompt_ids", "configurations"],
     },
   },
-  createAiTrackingRun: {
+  createPromptTrackerRun: {
     parameters: [project],
     body: {
       type: "object",
-      ...sdkName("AiTrackingRunCreateInput"),
+      ...sdkName("PromptTrackerRunCreateInput"),
       description:
         "Queues paid work with explicit consent. Credential, budget and consent revisions must match a fresh preview. Manual runs require at least one prompt. schedule_id and planned_at must be supplied together. No per-request max_cost_cents is supported; admission checks the project provider budget.",
       properties: {
@@ -122,8 +122,8 @@ export const appOwnedTrackingRunOperations: Record<
       ],
     },
   },
-  getAiTrackingRun: { parameters: [project, run] },
-  listAiTrackingSamples: {
+  getPromptTrackerRun: { parameters: [project, run] },
+  listPromptTrackerSamples: {
     parameters: [
       project,
       run,
@@ -164,7 +164,7 @@ const planRequired = [
 ];
 const plan = {
   type: "object",
-  ...sdkName("AiTrackingPlanInput"),
+  ...sdkName("PromptTrackerPlanInput"),
   properties: planProperties,
   required: planRequired,
   description:
@@ -195,11 +195,11 @@ const promptProperties = {
   category: {
     type: "string",
     enum: ["neutral", "comparative", "branded"],
-    ...closedEnum("AiTrackingPromptCategoryInput"),
+    ...closedEnum("PromptTrackerPromptCategoryInput"),
   },
   generation_reference: {
     type: "object",
-    ...sdkName("AiTrackingPromptGenerationReferenceInput"),
+    ...sdkName("PromptTrackerPromptGenerationReferenceInput"),
     properties: {
       generation_id: publicIdSchema("asg"),
       draft_id: { type: "string", format: "uuid" },
@@ -209,7 +209,7 @@ const promptProperties = {
   },
   provider_dataset_reference: {
     type: "object",
-    ...sdkName("AiTrackingPromptDatasetReferenceInput"),
+    ...sdkName("PromptTrackerPromptDatasetReferenceInput"),
     properties: {
       report_id: publicIdSchema("agr"),
       row_index: { type: "integer", minimum: 0, maximum: 9999 },
@@ -230,7 +230,7 @@ for (const [resource, prefix, properties, required] of [
   ["Schedule", "ais", scheduleProperties, ["name", "cron", "timezone", "configuration"]],
 ] as const) {
   for (const action of ["create", "update", "archive"] as const) {
-    appOwnedTrackingRunOperations[`${action}AiTracking${resource}`] = {
+    appOwnedTrackingRunOperations[`${action}PromptTracker${resource}`] = {
       parameters: [
         project,
         ...(action === "create" ? [] : [member(`${resource.toLowerCase()}_id`, prefix)]),
@@ -246,7 +246,9 @@ for (const [resource, prefix, properties, required] of [
                       "Enabling a disabled schedule requires a reviewed configuration and explicit consent. Disabling or changing other fields may omit configuration.",
                   }
                 : {}),
-              ...sdkName(`AiTracking${resource}${action === "create" ? "Create" : "Update"}Input`),
+              ...sdkName(
+                `PromptTracker${resource}${action === "create" ? "Create" : "Update"}Input`,
+              ),
               properties,
               required: action === "create" ? required : [],
             },
@@ -254,15 +256,15 @@ for (const [resource, prefix, properties, required] of [
     };
   }
 }
-appOwnedTrackingRunOperations.retryAiTrackingRun = {
+appOwnedTrackingRunOperations.retryPromptTrackerRun = {
   parameters: [project, run],
   body: {
     ...plan,
-    ...sdkName("AiTrackingRunRetryInput"),
+    ...sdkName("PromptTrackerRunRetryInput"),
     properties: { ...planProperties, consent: { type: "boolean", const: true } },
     required: [...planRequired, "consent"],
     description: `${plan.description} Explicit consent is required and all original samples must be terminal. retry_of_run_id is replaced by the selected run.`,
   },
 };
-appOwnedTrackingRunOperations.cancelAiTrackingRun = { parameters: [project, run] };
-appOwnedTrackingRunOperations.suggestAiTrackingPrompts = { parameters: [project] };
+appOwnedTrackingRunOperations.cancelPromptTrackerRun = { parameters: [project, run] };
+appOwnedTrackingRunOperations.suggestPromptResearchPrompts = { parameters: [project] };

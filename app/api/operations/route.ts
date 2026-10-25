@@ -3,7 +3,8 @@ import "server-only";
 import { errorResponse, resourceResponse } from "@/lib/api/responses";
 import { getSession } from "@/lib/auth/session";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
-import { readOperationSnapshot } from "@/lib/rank-check/runs/snapshot";
+import { readRealtimeOperations } from "@/lib/realtime/operations-data";
+import { canReadStream } from "@/lib/realtime/stream-access";
 import { isHTTPAccessFallbackError } from "next/dist/client/components/http-access-fallback/http-access-fallback";
 import { unstable_rethrow } from "next/navigation";
 
@@ -28,8 +29,20 @@ export async function GET(request: Request) {
       return errorResponse("bad_request", "Project is required.", 400, { headers, instance });
     }
     const { projectId } = await resolveProjectAccess(projectRef);
-    const operations = await readOperationSnapshot(projectId);
-    return resourceResponse({ operations }, { headers });
+    if (!(await canReadStream(session, projectId))) {
+      return errorResponse("unauthorized", "Authentication is required.", 401, {
+        headers,
+        instance,
+      });
+    }
+    const operationData = await readRealtimeOperations(projectId, session.user.id);
+    if (!(await canReadStream(session, projectId))) {
+      return errorResponse("unauthorized", "Authentication is required.", 401, {
+        headers,
+        instance,
+      });
+    }
+    return resourceResponse(operationData, { headers });
   } catch (error) {
     unstable_rethrow(error);
     if (isHTTPAccessFallbackError(error)) throw error;

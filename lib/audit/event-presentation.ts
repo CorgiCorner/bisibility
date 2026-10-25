@@ -176,6 +176,7 @@ const eventKeyByAction = {
   "search_data_sync.pause": "searchDataSyncPaused",
   "search_data_sync.resume": "searchDataSyncResumed",
   "search_data_sync.retry": "searchDataSyncRetried",
+  "search_index.inspect": "urlInspectionAllowanceUpdated",
   "search_insights.sync_now": "searchInsightsSyncStarted",
   "settings.budget_updated": "budgetUpdated",
   "settings.data_cache.delete": "cachedDataDeleted",

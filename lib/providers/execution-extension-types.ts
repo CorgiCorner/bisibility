@@ -50,6 +50,8 @@ export type DeploymentExecution = {
   credentials: ProviderCredentials;
   readonly started: boolean;
   readonly costCents: number | null;
+  /** Settled charge of the latest native request, separate from earlier successful pages. */
+  readonly lastRequestCostCents?: number | null;
   readonly quantity: number | null;
   finish(): Promise<void>;
 };

@@ -5,11 +5,19 @@ import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { loadCheckRunsSummary } from "./check-runs-stats";
 
+vi.mock("@/lib/provider-evidence/projection/read", () => ({
+  readCheckEvidence: vi.fn(async () => new Map()),
+}));
+
 const mocks = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $queryRaw: mocks.query,
-    rankCheck: { count: vi.fn().mockResolvedValue(0), groupBy: vi.fn().mockResolvedValue([]) },
+    rankCheck: {
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+      groupBy: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 

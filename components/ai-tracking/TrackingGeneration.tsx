@@ -36,7 +36,7 @@ export function TrackingGeneration({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{t("generationTitle")}</h2>
-          <p className="mt-1 text-xs text-fg-muted">{t("generationDescription")}</p>
+          <p className="mt-1 text-xs leading-5 text-fg-muted">{t("generationDescription")}</p>
         </div>
         <Button
           variant="secondary"

@@ -10,7 +10,13 @@
       "goal": "Help small teams evaluate weekly tracking.",
       "assumptions": ["Fictional fixture, not live customer evidence."]
     },
-    "method": "Agent analysis of saved phrases and tracking evidence; SERP-free intent heuristics.",
+    "method": "SERP-free lexical and semantic heuristics. No SERP overlap was measured.",
+    "serp": {
+      "mode": "serp-free",
+      "results_compared_per_keyword": 0,
+      "overlap_measured": false,
+      "note": "No SERP overlap was measured."
+    },
     "coverage": {
       "state": "partial",
       "tracked_rows": 1,
@@ -74,7 +80,7 @@
         "content_priority": "medium",
         "priority_reason": "Goal fit exists; full content and demand need verification.",
         "confidence": "medium",
-        "uncertainty": "No SERP overlap measured; supplied phrase could also imply product evaluation.",
+        "uncertainty": "No SERP overlap was measured. SERP-free lexical and semantic heuristics only. The supplied phrase could also imply product evaluation.",
         "cannibalization": {
           "status": "unverified",
           "evidence_ids": ["tracked-1"],
@@ -85,11 +91,17 @@
   },
   "provenance": {
     "skill": "keyword-clustering",
-    "skill_version": "0.4.0",
+    "skill_version": "0.5.0",
     "agent": "unknown",
     "source_origin": "fictional_fixture",
     "instance": "https://example.com",
-    "method": "Agent analysis of saved phrases and tracking evidence; SERP-free intent heuristics.",
+    "method": "SERP-free lexical and semantic heuristics. No SERP overlap was measured.",
+    "serp": {
+      "mode": "serp-free",
+      "results_compared_per_keyword": 0,
+      "overlap_measured": false,
+      "note": "No SERP overlap was measured."
+    },
     "evidence_ids": ["tracked-1", "supplied-2"],
     "retrieved_at": "2026-10-16T09:00:00.000Z",
     "limitations": ["Fictional fixture only; no provider calls or live page retrieval."]

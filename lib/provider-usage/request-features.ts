@@ -8,6 +8,7 @@ export const PROVIDER_REQUEST_FEATURES = [
   "ai_visibility",
   "ai_tracking",
   "prompt_explorer",
+  "prompt_research",
   "backlinks",
   "domain_overview",
   "keyword_metrics",

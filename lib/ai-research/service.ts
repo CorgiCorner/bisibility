@@ -1,19 +1,25 @@
 import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { researchCacheIdentity } from "./cache-identity";
 import { AiResearchPaidFailure, outcome } from "./outcome";
+import {
+  copyResearchReport,
+  researchFundingIdentity,
+  researchReportResult,
+} from "./prompt-research-reports";
+import { promptResearchSchema } from "./prompt-research-schema";
 import { prepareResearchAiPayment } from "./research-payment";
+import type { ResearchInput } from "./schema";
 import "server-only";
 import { createAgentReport } from "@/lib/agent-reports/service";
+import { indexPromptResearchCache } from "@/lib/project-data-cache/prompt-research-index";
 import {
   providerLookupCacheConfigured,
   readProviderLookupCache,
   withProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
+import { effectiveProjectLookupTtl } from "@/lib/provider-lookups/effective-lookup-ttl";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
-import {
-  projectCacheTtl,
-  withProjectCachePolicy,
-} from "@/lib/provider-lookups/project-cache-policy";
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import {
   ACTUAL_COST_ASSUMPTIONS,
   ACTUAL_COST_EXCLUSIONS,
@@ -25,13 +31,7 @@ import { requireAiSource } from "./context";
 import { AI_REQUEST_BUDGET_MS } from "./deadline";
 import { executeResearch } from "./execution";
 import { researchProvenance } from "./report-provenance";
-import {
-  type AiResearchKind,
-  type PromptInput,
-  promptSchema,
-  type VisibilityInput,
-  visibilitySchema,
-} from "./schema";
+import { type AiResearchKind, promptSchema, visibilitySchema } from "./schema";
 import { AiPreDispatchRefusal } from "./validation";
 
 export type { AiResearchContext, AiResearchOutcome } from "./outcome-types";
@@ -41,7 +41,7 @@ import type { AiResearchContext, AiResearchOutcome } from "./outcome-types";
 async function run(
   context: AiResearchContext,
   kind: AiResearchKind,
-  input: VisibilityInput | PromptInput,
+  input: ResearchInput,
 ): Promise<AiResearchOutcome> {
   const deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS;
   let source: Awaited<ReturnType<typeof requireAiSource>>;
@@ -67,8 +67,11 @@ async function run(
         source.connection.id,
         kind,
         input,
+        source.project.ownerId,
+        researchFundingIdentity(source.connection),
+        effectiveProjectLookupTtl(source.project.lookupCacheTtlSeconds, kind),
       );
-      const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
+      const evidence = kind !== "prompt_explorer" ? "observed_dataset" : "synthetic_prompt_test";
       if (input.estimate_only) {
         const admitted = await admission();
         const actual = admitted.policy === "provider_actual_cost";
@@ -116,7 +119,7 @@ async function run(
       const loaded = await withProviderLookupCache({
         fresh,
         key,
-        ttlSeconds: projectCacheTtl(43_200),
+        ttlSeconds: effectiveProjectLookupTtl(source.project.lookupCacheTtlSeconds, kind),
         lockTtlSeconds: 330,
         load: async () => {
           const admitted = await admission();
@@ -149,28 +152,42 @@ async function run(
               payment,
               deadlineAt,
             });
+            const provenance = researchProvenance({
+              kind,
+              input,
+              admission: admitted,
+              estimate,
+              deadlineAt,
+              providerRequestIds,
+              providerId: source.provider.id,
+              rows: result.rows,
+            });
             const report = await createAgentReport({
               projectId: context.projectId,
               actorId: context.actorId,
               kind,
-              title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
+              title:
+                "keyword" in input
+                  ? `Prompt Research: ${input.keyword}`
+                  : `${kind === "ai_visibility" ? "Brand Visibility" : "Prompt comparison"}: ${input.brand}`,
               body: {
                 input: identity,
-                result,
+                result: kind === "prompt_research" ? researchReportResult(result) : result,
                 ...(payment?.hasAttempted ? { originalPayment: payment.receipt() } : {}),
               },
-              provenance: researchProvenance({
-                kind,
-                input,
-                admission: admitted,
-                estimate,
-                deadlineAt,
-                providerRequestIds,
-                providerId: source.provider.id,
-                rows: result.rows,
-              }),
+              provenance,
             });
             return {
+              ...("keyword" in input
+                ? {
+                    researchReport: {
+                      projectId: context.projectId,
+                      keyword: input.keyword,
+                      identity,
+                      provenance,
+                    },
+                  }
+                : {}),
               reportId: report.id,
               result,
               ...(payment ? { originalPayment: payment.receipt() } : {}),
@@ -187,14 +204,28 @@ async function run(
           reason: "in_progress",
           message: "An identical analysis is already running.",
         };
-      const { originalPayment: rawPayment, ...value } = loaded.value;
+      const copied =
+        kind === "prompt_research" ? await copyResearchReport(context, loaded.value) : null;
+      if (kind === "prompt_research" && "keyword" in input)
+        await indexPromptResearchCache(
+          context.projectId,
+          key,
+          {
+            fetchedAt: loaded.value.result.fetchedAt,
+            keyword: input.keyword,
+            reportId: copied?.id ?? loaded.value.reportId,
+          },
+          effectiveProjectLookupTtl(source.project.lookupCacheTtlSeconds, kind),
+        );
+      const { originalPayment: rawPayment, researchReport: _retained, ...value } = loaded.value;
       const validated = actionPaymentReceiptSchema.safeParse(rawPayment);
-      const originalPayment = validated.success ? validated.data : undefined;
+      const originalPayment = validated.success && !copied ? validated.data : undefined;
       return {
         ok: true,
         estimate: false,
         cached: loaded.cached,
         ...value,
+        ...(copied ? { reportId: copied.id } : {}),
         ...(originalPayment ? { originalPayment } : {}),
         costCents: loaded.cached ? 0 : loaded.value.result.costCents,
         ...(originalPayment
@@ -222,4 +253,8 @@ export function analyzeAiVisibility(context: AiResearchContext, input: unknown) 
 }
 export function compareAiPrompts(context: AiResearchContext, input: unknown) {
   return outcome(() => run(context, "prompt_explorer", promptSchema.parse(input)));
+}
+
+export function researchAiQuestions(context: AiResearchContext, input: unknown) {
+  return outcome(() => run(context, "prompt_research", promptResearchSchema.parse(input)));
 }

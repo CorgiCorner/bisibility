@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
+import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 import { loadRankTrackerMetadataBatches } from "@/lib/queries/rank-tracker-metadata-batches";
 import type { RankTrackerReportOptions } from "@/lib/queries/rank-tracker-report-model";
 import { validateRankTrackerReportPolicy } from "@/lib/queries/rank-tracker-report-policy";
@@ -134,6 +135,11 @@ export async function loadHistoryExportSnapshot(
         metadata,
         input.includeNormalizedItems ?? false,
       );
+      const evidenceProjections = await readCheckEvidence(
+        project.id,
+        { checkIds: targets.flatMap((target) => target.checks.map((check) => check.id)) },
+        tx,
+      );
       const resolved = resolveCurrentRankTrackerTargets(targets, policy, project.id);
       const unobserved = input.includeUnobservedRuns
         ? await loadHistoryExportRuns(tx, {
@@ -145,6 +151,7 @@ export async function loadHistoryExportSnapshot(
           })
         : { records: [], unresolvedMembershipCount: 0, source: null };
       const sourceDigest = reportDigest({
+        evidenceProjections: [...evidenceProjections].sort(([a], [b]) => a.localeCompare(b)),
         keywords: keywords.map((row) => ({
           ...row,
           tags: [...row.tags].sort((a, b) => a.tag.name.localeCompare(b.tag.name)),
@@ -156,6 +163,7 @@ export async function loadHistoryExportSnapshot(
         unobserved: unobserved.source,
       });
       return {
+        evidenceProjections,
         asOf: asOf.toISOString(),
         keywords,
         policy,

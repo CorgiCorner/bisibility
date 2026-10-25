@@ -80,6 +80,8 @@ export function errorFromUnknown(
       },
     );
   }
+  if (error instanceof ProviderChainError && error.fundingExhaustion)
+    return errorFromUnknown(error.fundingExhaustion, headers, url, admissionDetails);
   if (
     error instanceof ProviderChainError &&
     error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
+import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import {
   type RunLedgerActual,
@@ -45,11 +47,15 @@ export function rankCheckAccountingOverride(
  */
 export async function rankCheckResources(projectId: string, checks: readonly RankCheckRecord[]) {
   if (checks.length === 0) return [];
-  const ledger = await rankCheckLedgerActuals(
-    projectId,
-    checks.map((check) => check.id),
-  );
-  return checks.map((check) =>
-    rankCheckResource(check, rankCheckAccountingOverride(check, ledger.get(check.id))),
-  );
+  const [ledger, evidence] = await Promise.all([
+    rankCheckLedgerActuals(
+      projectId,
+      checks.map((check) => check.id),
+    ),
+    readCheckEvidence(projectId, { checkIds: checks.map((check) => check.id) }),
+  ]);
+  return checks.map((check) => ({
+    ...rankCheckResource(check, rankCheckAccountingOverride(check, ledger.get(check.id))),
+    evidence_projection: evidenceProjectionResource(evidence.get(check.publicId ?? check.id)),
+  }));
 }

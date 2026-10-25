@@ -1,6 +1,8 @@
 "use client";
 
 import { useKeywordDeletion } from "@/components/keywords/use-keyword-deletion";
+import { NewResultsBanner } from "@/components/realtime/NewResultsBanner";
+import { useHeldRows } from "@/components/realtime/useHeldRows";
 import { Card } from "@/components/ui/Card";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
 import { dataTableColumnId } from "@/components/ui/data-table/data-table-model";
@@ -21,12 +23,13 @@ import {
 import { rankTrackerScope } from "@/lib/keywords/rank-tracker-report-scope";
 import { keywordViewScopeLabels } from "@/lib/keywords/view-scope-description";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { useAppRealtime } from "@/lib/realtime/useAppRealtime";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { BulkActionBar } from "./BulkActionBar";
 import { type KeywordColumnLabels, keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
@@ -56,13 +59,17 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 }
 
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
-export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows, viewDevices, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows: incomingRows, viewDevices, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
   const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
   const format = useFormatter();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { rankDataVersion = 0 } = useAppRealtime();
+  const held = useHeldRows(incomingRows, JSON.stringify([projectId, query, marketScope, searchValue]), rankDataVersion);
+  const rows = held.rows;
+  const listFocus = useRef<HTMLDivElement>(null);
   const layout = useDataTableLayout(KEYWORD_DATA_TABLE_ID);
   const [density, setDensity] = useState<DataTableDensity>(initialDensity ?? "standard");
   const [selection, setSelection] = useState<ReadonlySet<string>>(() => new Set());
@@ -105,7 +112,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
     }),
     [columnT, format, marketCellsT],
   );
-  const deletion = useKeywordDeletion({ action: bulkDeleteAction, onDeleted: () => router.refresh(), projectId });
+  const deletion = useKeywordDeletion({ action: bulkDeleteAction, onDeleted: () => { held.immediate(); router.refresh(); }, projectId });
   const columns = useMemo(
     () =>
       keywordColumns(
@@ -155,6 +162,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   }
 
   function navigate(next: RankTrackerQueryState, present: RankTrackerQueryField[]) {
+    held.immediate();
     onQueryNavigation?.();
     setNavigationSequence((current) => current + 1);
     const rebased = searchValue !== query.search ? { ...next, search: searchValue } : next;
@@ -166,9 +174,6 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
     });
     startNavigation(() => router.push(href));
   }
-
-
-
   function handlePagination(next: { page: number; pageSize: number }) {
     if (next.page === pagination.page && next.pageSize === pagination.pageSize) return;
     navigate(
@@ -197,16 +202,16 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           filterChips={filterChips}
           filterCount={filterCount}
           id={KEYWORD_DATA_TABLE_ID}
-          onAddKeyword={onAddKeyword}
+          onAddKeyword={() => { held.immediate(); onAddKeyword?.(); }}
           onClearFilters={onClearFilters}
           onColumnSizingChange={setSizing}
           onColumnVisibilityChange={setVisibility}
           onDensityChange={handleDensityChange}
-          onImportCsv={onImportCsv}
+          onImportCsv={() => { held.immediate(); onImportCsv?.(); }}
           exportDisabled={Boolean(local)}
           onOpenExport={() => { if (!local) onOpenExport(selectedIds); }}
           onOpenFilters={onOpenFilters}
-          onRefresh={() => router.refresh()}
+          onRefresh={() => { held.immediate(); router.refresh(); }}
           onRemoveFilter={onRemoveFilter}
           onSearchChange={onSearchChange}
           onSearchCommit={onSearchCommit}
@@ -219,10 +224,9 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           scopeChip={scopeChip}
           scopeControl={scopeControl}
         />
-
-
-
         {!local ? <KeywordReportSummary report={report} expected={matchedTargetCount} pending={navigationPending} /> : null}
+        {held.pending ? <NewResultsBanner onShow={held.show} focusRef={listFocus} /> : null}
+        <div ref={listFocus} tabIndex={-1} aria-label={t("tableAria")}>
         <KeywordGridViewport
           key={`${query.grouped ? "grouped" : "flat"}:${searchParams.toString()}:${navigationSequence}`}
           columnOrder={personalPreferences ? personalLayout.order : undefined}
@@ -247,6 +251,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           selection={selection}
           sorting={query.sort}
         />
+        </div>
         {canUpdateKeyword && editing ? (
           <KeywordEditDrawer
             focusTargetUrl={editing.focusTargetUrl}
@@ -257,16 +262,16 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
             projectId={projectId}
             projectMarkets={projectMarkets}
             providerRate={checkHealth?.providerRate}
-            updateKeywordAction={updateKeywordAction}
+            updateKeywordAction={async (...args) => { const result = await updateKeywordAction(...args); held.immediate(); return result; }}
           />
         ) : null}
         {canDeleteKeyword ? deletion.modal : null}
       </Card>
       <BulkActionBar
-        bulkClearTargetAction={bulkClearTargetAction}
-        bulkDeleteAction={bulkDeleteAction}
-        bulkSetTargetAction={bulkSetTargetAction}
-        bulkTagAction={bulkTagAction}
+        bulkClearTargetAction={async (...args) => { const result = await bulkClearTargetAction(...args); held.immediate(); return result; }}
+        bulkDeleteAction={async (...args) => { const result = await bulkDeleteAction(...args); held.immediate(); return result; }}
+        bulkSetTargetAction={async (...args) => { const result = await bulkSetTargetAction(...args); held.immediate(); return result; }}
+        bulkTagAction={async (...args) => { const result = await bulkTagAction(...args); held.immediate(); return result; }}
         canDeleteKeyword={canDeleteKeyword}
         canUpdateKeyword={canUpdateKeyword}
         checksRunning={selectedIds.some((id) => pendingCheckIds.has(id))}

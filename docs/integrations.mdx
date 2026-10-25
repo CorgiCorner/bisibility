@@ -159,21 +159,58 @@ details, and other providers require a new, deeper **Run check** instead.
 ## SERP fallback order
 
 The integrations page shows one dedicated order for SERP providers. Active
-connections are tried from top to bottom. Paused and disconnected providers are
-shown separately and are not used for rank checks.
+connections are tried from top to bottom. Providers that are switched off or
+disconnected are shown separately and are not used for rank checks. New providers
+start switched off unless the project has no other enabled SERP connection.
+They are added after existing connections.
 
 Use the arrow buttons to move a provider, then **Save fallback order** to apply
-the complete order. The pause button removes a connected provider from active
-fallback without disconnecting it. Readers see the ordered list without editing
-buttons. When project writes are temporarily paused, managers keep the same
+the complete order. The switch next to a provider turns it on or off for rank
+checks without disconnecting it. Readers see the ordered list without editing
+controls. When project writes are temporarily paused, managers keep the same
 controls in a disabled state.
 
 If a rank check succeeds, bisibility stores the result with the provider that
-returned it. If a provider request fails, is rate-limited, or cannot use its
-stored credentials, bisibility tries the next enabled provider in the chain.
+returned it.
 
-If every provider is rate-limited, the check is deferred for a later retry. If
-every provider fails for another reason, the check fails with a provider error.
+### When the next provider is used
+
+bisibility moves to the next active provider when the current one:
+
+- fails without charging for the request, for example an authentication or
+  service error;
+- is rate-limited without a charge;
+- cannot use its stored credentials;
+- has no capacity for the request;
+- has reached its own provider limit;
+- is paid from Credits and the Credits balance or Credits limit is used up;
+- is paid from a funding source (Credits or your own provider keys) whose
+  project limit is reached. The next provider can be paid from the other
+  source if that source still has budget. To prevent this, set the other
+  source's project limit to `0`.
+
+### When the check stops instead
+
+bisibility does not try another provider when:
+
+- the request may have reached the provider but its result was not confirmed.
+  The check is not sent again, so it cannot be paid twice;
+- the provider charged for the request but returned a partial or unusable
+  result. The check fails instead of buying the same check from the next
+  provider;
+- the provider charged for a rate-limited response;
+- a required budget is missing;
+- the shared project budget cap is reached, or earlier usage still needs
+  reconciliation;
+- the check was started with an approved cost quote. It uses only the quoted
+  provider;
+- the check goes through the DataForSEO task queue, which is used when
+  DataForSEO is first in the order. Queued checks use DataForSEO only.
+
+If every provider is rate-limited without a charge, the check is deferred for a
+later retry. If every provider reached a funding limit, the check stops with a
+budget error. If every provider fails for another reason, the check fails with a
+provider error.
 
 ## Budget cap
 
@@ -274,9 +311,9 @@ for remaining Search Console quota. Inspect usage in the Google Cloud Console
 quotas tab; an HTTP `429` response is the runtime backstop.
 
 The project limit controls how many target URLs that project may inspect per
-day. It accepts up to 1,000 inspections, leaving room below Google's
-2,000-per-day property quota for other tools and retries. Google's own `429`
-response remains the runtime backstop and applies the existing account cooldown.
+Pacific day. Fixed mode accepts 0-2,000 URLs within the shared property counter.
+Self-host can also use available quota; Cloud offers off and fixed modes. Google's
+daily `429` blocks the property until Pacific midnight. Other tools also consume quota.
 
 For `N` tracked target URLs and a project limit `L` greater than zero, each URL
 is re-inspected about every `ceil(N / L)` days. For example, 120 URLs at a limit

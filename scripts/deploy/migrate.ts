@@ -49,13 +49,17 @@ export async function runPrismaMigrateDeploy(
   runtime: PrismaRuntime,
   projectRoot: string,
   migrationsPath?: string,
+  environment: NodeJS.ProcessEnv = process.env,
 ) {
   const child = spawn(
     process.execPath,
     [runtime.cli, "--config", runtime.config, "migrate", "deploy"],
     {
       cwd: projectRoot,
-      env: { ...process.env, ...(migrationsPath ? { BISIBILITY_MIGRATIONS_PATH: migrationsPath } : {}) },
+      env: {
+        ...environment,
+        ...(migrationsPath ? { BISIBILITY_MIGRATIONS_PATH: migrationsPath } : {}),
+      },
       stdio: "inherit",
     },
   );
@@ -80,15 +84,16 @@ export async function runMigrationPipeline(pipeline: MigrationPipeline) {
   await pipeline.contracts?.();
 }
 
-export async function runMigrations() {
+export async function runMigrations({ prisma = runPrismaMigrateDeploy } = {}) {
   const projectRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
   const runtime = await resolvePrismaRuntime(projectRoot);
   await runStagedMigrationPipeline({
     activeIds: activeDataMigrationManifest().map((migration) => migration.id),
     completed: completedDataMigrations,
-    prisma: (completed) => withPreDataMigrations(projectRoot, (path) => runPrismaMigrateDeploy(runtime, projectRoot, path), completed),
+    prisma: (completed) =>
+      withPreDataMigrations(projectRoot, (path) => prisma(runtime, projectRoot, path), completed),
     runData: () => runDataMigrations({ deferUnready: true }),
-    contracts: () => runPrismaMigrateDeploy(runtime, projectRoot),
+    contracts: () => prisma(runtime, projectRoot),
   });
 }
 

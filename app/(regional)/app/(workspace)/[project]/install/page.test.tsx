@@ -34,6 +34,9 @@ vi.mock("@/lib/deployment/deployment", () => ({
   get isCloud() {
     return mocks.deployment.isCloud;
   },
+  get isSelfHost() {
+    return !mocks.deployment.isCloud;
+  },
 }));
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
 vi.mock("@/lib/queries/install", () => ({

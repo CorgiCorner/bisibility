@@ -43,19 +43,23 @@ export function useAiResearchCatalogRefresh({
   const [, startTransition] = useTransition();
   const inFlight = useRef(false);
   const held = newerCatalog(catalog, refreshed);
-  const freshCatalog = freshResearchCatalog(held, catalogError);
+  const initialError = refreshed ? undefined : catalogError;
+  const freshCatalog = freshResearchCatalog(held, initialError);
   const [retained, setRetained] = useState(freshCatalog);
   if (freshCatalog && freshCatalog.fetchedAt !== retained?.fetchedAt) setRetained(freshCatalog);
   // A catalog that has never been usable in this session is an outage. One that
   // was usable and then aged stays on screen so the current selections remain.
-  const displayCatalog = catalogError ? undefined : (freshCatalog ?? (retained ? held : undefined));
+  const displayCatalog = initialError ? undefined : (freshCatalog ?? (retained ? held : undefined));
   const pastWindow = isResearchCatalogPastWindow(held, Date.now());
-  const outage = !held || Boolean(catalogError) || (!freshCatalog && !retained);
+  const outage = !held || Boolean(initialError) || (!freshCatalog && !retained);
+  const noticeReason = refresh.reason ?? catalogFailure;
   const status: AiResearchCatalogStatus =
-    catalogFailure === "no_source"
+    noticeReason === "no_source"
       ? "hidden"
       : outage
-        ? "unavailable"
+        ? refresh.state === "refreshing"
+          ? "refreshing"
+          : "unavailable"
         : pastWindow
           ? refresh.state === "failed"
             ? "unavailable"
@@ -68,11 +72,13 @@ export function useAiResearchCatalogRefresh({
       setRefresh(next);
     });
   }
-  function onCatalogInteract() {
-    if (catalogFailure === "no_source" || catalogError || inFlight.current) return;
+  function refreshCatalog(force = false) {
+    if (noticeReason === "no_source" || inFlight.current) return;
     const current = held;
-    if (!current || !researchCatalogNeedsRefresh(current, Date.now())) return;
-    if (!freshCatalog && !retained) return;
+    if (!force) {
+      if (initialError || !current || !researchCatalogNeedsRefresh(current, Date.now())) return;
+      if (!freshCatalog && !retained) return;
+    }
     inFlight.current = true;
     setRefresh({ state: "refreshing" });
     startTransition(() => {
@@ -99,8 +105,9 @@ export function useAiResearchCatalogRefresh({
   return {
     displayCatalog,
     freshCatalog,
-    noticeReason: refresh.reason ?? catalogFailure,
-    onCatalogInteract,
+    noticeReason,
+    onCatalogInteract: () => refreshCatalog(),
+    onCatalogRetry: () => refreshCatalog(true),
     status,
   };
 }

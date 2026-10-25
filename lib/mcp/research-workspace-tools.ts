@@ -8,7 +8,7 @@ const routes = {
   listAgentReports: ["GET", "agent-reports"],
   createAgentReport: ["POST", "agent-reports"],
   getAgentReport: ["GET", "agent-reports"],
-  analyzeAiVisibility: ["POST", "ai-visibility"],
+  analyzeBrandVisibility: ["POST", "brand-visibility"],
   compareAiPrompts: ["POST", "prompt-explorer"],
   runSiteAudit: ["POST", "site-audits"],
   listSiteAudits: ["GET", "site-audits"],

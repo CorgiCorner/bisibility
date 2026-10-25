@@ -59,6 +59,88 @@ function chooseGooglePoland() {
   fireEvent.click(screen.getByRole("menuitem", { name: "Poland" }));
 }
 
+describe("catalog recovery after initial failure", () => {
+  it("retries the free catalog and restores markets without reloading or losing input", async () => {
+    const pending = deferred<AiCatalogOutcome>();
+    mocks.catalog.mockReturnValue(pending.promise);
+    render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="visibility"
+        history={[]}
+        catalogError="temporary catalog failure"
+        catalogFailure="provider_unavailable"
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
+    expect(mocks.catalog).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(mocks.marketUnavailable);
+    fireEvent.click(screen.getByRole("button", { name: "sourceRetry" }));
+    expect(mocks.catalog).toHaveBeenCalledExactlyOnceWith("prj_example");
+    expect(screen.getByRole("status")).toHaveTextContent("Refreshing provider catalog");
+    expect(screen.queryByRole("button", { name: "sourceRetry" })).not.toBeInTheDocument();
+
+    await act(async () => {
+      pending.resolve({
+        ok: true,
+        catalog: { ...openedCatalog(), fetchedAt: new Date().toISOString() },
+      });
+      await pending.promise;
+    });
+    expect(screen.queryByText(mocks.marketUnavailable)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("brand")).toHaveValue("Acme");
+    chooseGooglePoland();
+    expect(screen.getByRole("button", { name: "country" })).toHaveTextContent("Poland");
+    expect(screen.getByRole("button", { name: "language" })).toHaveTextContent("Polish");
+    expect(mocks.catalog).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a failed retry visible and permits a later successful retry", async () => {
+    mocks.catalog
+      .mockResolvedValueOnce({ ok: false, reason: "contended", message: "retry shortly" })
+      .mockResolvedValueOnce({
+        ok: true,
+        catalog: { ...openedCatalog(), fetchedAt: new Date().toISOString() },
+      });
+    render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="visibility"
+        history={[]}
+        catalogError="temporary catalog failure"
+        catalogFailure="provider_unavailable"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "sourceRetry" }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(mocks.marketUnavailable),
+    );
+    expect(mocks.catalog).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "sourceRetry" }));
+    await waitFor(() =>
+      expect(screen.queryByText(mocks.marketUnavailable)).not.toBeInTheDocument(),
+    );
+    expect(mocks.catalog).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps missing-provider guidance separate from a retryable catalog outage", () => {
+    render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="visibility"
+        history={[]}
+        catalogError="missing compatible source"
+        catalogFailure="no_source"
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "sourceRetry" })).not.toBeInTheDocument();
+    expect(mocks.catalog).not.toHaveBeenCalled();
+  });
+});
+
 beforeEach(() => {
   mocks.catalog.mockReset();
   vi.useFakeTimers({ toFake: ["Date"] });

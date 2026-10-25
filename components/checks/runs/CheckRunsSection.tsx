@@ -14,9 +14,13 @@ import { CheckRunFilters, CheckRunStats, CheckRunsHeader } from "./CheckRunsCont
 import { ProviderHealth, RateLimitBanner } from "./CheckRunsProviderHealth";
 import { type CheckRunsBudget, CheckRunsStatusBands } from "./CheckRunsStatusBands";
 import { CheckRunsTable } from "./CheckRunsTable";
+import { EvidenceProjectionBands } from "./EvidenceProjectionBands";
 import { type SkippedRunsLinks, SkippedRunsView } from "./SkippedRunsView";
 
 export type CheckRunsSectionProps = SkippedRunsLinks & {
+  exactRange?: boolean;
+  hideAsOfDate?: boolean;
+  hideProvider?: boolean;
   asOfDate: string;
   budget: CheckRunsBudget;
   budgetSettingsHref: string;
@@ -42,6 +46,9 @@ export type CheckRunsSectionProps = SkippedRunsLinks & {
 };
 
 export function CheckRunsSection({
+  exactRange,
+  hideAsOfDate,
+  hideProvider,
   asOfDate,
   budget,
   budgetSettingsHref,
@@ -83,6 +90,9 @@ export function CheckRunsSection({
     <Card className="min-w-0 overflow-hidden p-0" size="md">
       <section aria-labelledby="check-runs-title">
         <CheckRunsHeader
+          exactRange={exactRange}
+          hideAsOfDate={hideAsOfDate}
+          hideProvider={hideProvider}
           asOfDate={asOfDate}
           now={now}
           onAsOfDateChange={onAsOfDateChange}
@@ -103,6 +113,7 @@ export function CheckRunsSection({
           onRetryFailed={onRetryFailed}
           onRetryStale={onRetryStale}
           showStale={
+            !exactRange &&
             asOfDate === zonedDateInputValue(now, timeZone) &&
             filter === "all" &&
             provider === "all" &&
@@ -111,8 +122,17 @@ export function CheckRunsSection({
           timeZone={timeZone}
           view={view}
         />
-        <RateLimitBanner onFilterChange={onFilterChange} range={range} view={view} />
+        {filter !== "deferred" ? (
+          <EvidenceProjectionBands counts={view.evidenceCounts} onFilterChange={onFilterChange} />
+        ) : null}
+        <RateLimitBanner
+          exactRange={exactRange}
+          onFilterChange={onFilterChange}
+          range={range}
+          view={view}
+        />
         <ProviderHealth
+          exactRange={exactRange}
           onFilterChange={onFilterChange}
           range={range}
           reorderProvidersHref={reorderProvidersHref}
@@ -121,7 +141,10 @@ export function CheckRunsSection({
         <CheckRunFilters counts={view.counts} filter={filter} onFilterChange={onFilterChange} />
         {filter === "deferred" ? (
           <SkippedRunsView
+            exactRange={exactRange}
             groups={view.deferredGroups}
+            evidenceCounts={view.evidenceCounts}
+            onFilterChange={onFilterChange}
             links={{ connectProviderHref, reviewProvidersHref, timelineHref }}
             now={now}
             range={range}

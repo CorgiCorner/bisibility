@@ -214,10 +214,10 @@ export const featureStatus = {
     docs: "/docs/guides/alerts",
   },
   aiVisibilityTracking: {
-    label: "AI tracking with retained answers and citations",
+    label: "Prompt Tracker with retained answers and citations",
     status: "shipped",
     activity: "building",
-    docs: "/docs/guides/ai-tracking",
+    docs: "/docs/guides/prompt-tracker",
     maturity: "beta",
   },
   appTranslations: {

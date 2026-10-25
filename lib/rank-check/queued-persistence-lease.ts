@@ -1,8 +1,10 @@
+import { clearQueuedRankAcknowledgment } from "@/lib/provider-evidence/recovery/queued-completion";
 import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { lockRecoveryTask } from "@/lib/provider-evidence/recovery/lease";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
 import { QUEUED_PERSISTENCE_LEASE_MS } from "./queued-timeouts";
 
@@ -19,7 +21,26 @@ type LeaseClient = Pick<Prisma.TransactionClient, "$queryRaw" | "queuedRankCheck
 export async function claimQueuedPersistenceLease(
   taskId: string,
   client: LeaseClient = prisma,
+  purpose: "collect" | "cleanup" = "collect",
 ): Promise<QueuedPersistenceLease | null> {
+  if (client === prisma)
+    return prisma.$transaction((tx) =>
+      claimQueuedPersistenceLeaseInTransaction(taskId, tx, purpose),
+    );
+  return claimQueuedPersistenceLeaseInTransaction(taskId, client, purpose);
+}
+
+async function claimQueuedPersistenceLeaseInTransaction(
+  taskId: string,
+  client: LeaseClient,
+  purpose: "collect" | "cleanup",
+): Promise<QueuedPersistenceLease | null> {
+  await lockRecoveryTask(client, taskId);
+  const active = await client.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT i.id FROM provider_recovery_intents i
+    JOIN provider_recovery_candidates c ON c.id=i."candidateId"
+    WHERE c."queuedTaskId"=${taskId} AND i."leaseExpiresAt">CURRENT_TIMESTAMP`);
+  if (active.length) return null;
   const owner = randomUUID();
   const claimed = await client.$queryRaw<Array<{ expiresAt: Date }>>(Prisma.sql`
     UPDATE "queued_rank_check_tasks"
@@ -44,6 +65,7 @@ export async function claimQueuedPersistenceLease(
     RETURNING "persistenceLeaseExpiresAt" AS "expiresAt"
   `);
   const row = claimed[0];
+  if (row && purpose === "collect") await clearQueuedRankAcknowledgment(client, taskId);
   return row ? { expiresAt: row.expiresAt, owner, taskId } : null;
 }
 

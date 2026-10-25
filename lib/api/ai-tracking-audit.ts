@@ -1,5 +1,5 @@
 import "server-only";
-import { writeAudit } from "@/lib/auth/audit";
+import { type AuditClient, writeAudit } from "@/lib/auth/audit";
 import type { Actor } from "@/lib/auth/authorize";
 
 type AuditProject = { id: string; publicId: string };
@@ -8,15 +8,18 @@ async function event(
   project: AuditProject,
   action: string,
   after: { resourceId?: string; consent?: boolean; count?: number },
+  client?: AuditClient,
 ) {
-  await writeAudit({
+  const input = {
     action,
     actorId: actor.id,
     projectId: project.id,
     targetType: "project",
     targetId: project.publicId,
     after,
-  });
+  };
+  if (client) await writeAudit(input, client);
+  else await writeAudit(input);
 }
 export async function auditTrackingCatalog(
   actor: Actor,
@@ -25,6 +28,7 @@ export async function auditTrackingCatalog(
   method: string,
   input: unknown,
   result: { publicId: string },
+  client?: AuditClient,
 ) {
   const kind = { topics: "topic", prompts: "prompt", schedules: "schedule" }[resource];
   const values = input as { paused?: boolean; enabled?: boolean; consent?: boolean };
@@ -38,7 +42,13 @@ export async function auditTrackingCatalog(
           : values.paused
             ? "pause"
             : "resume";
-  await event(actor, project, `ai_tracking.${kind}.${operation}`, { resourceId: result.publicId });
+  await event(
+    actor,
+    project,
+    `ai_tracking.${kind}.${operation}`,
+    { resourceId: result.publicId },
+    client,
+  );
   if (resource === "schedules" && method !== "DELETE") {
     if (values.enabled !== undefined)
       await event(actor, project, `ai_tracking.schedule.${values.enabled ? "enable" : "disable"}`, {

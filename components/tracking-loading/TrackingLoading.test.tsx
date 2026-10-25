@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
-import AiTrackingRouteLoading from "@/app/(regional)/app/(workspace)/[project]/ai-tracking/loading";
 import MarketTrackerLoading from "@/app/(regional)/app/(workspace)/[project]/m/[market]/rank-tracker/loading";
+import AiTrackingRouteLoading from "@/app/(regional)/app/(workspace)/[project]/prompt-tracker/loading";
 import TrackerLoading from "@/app/(regional)/app/(workspace)/[project]/rank-tracker/loading";
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { AiVisibilityLoading } from "./AiVisibilityLoading";
 import { DashboardLoadingContent } from "./DashboardLoading";
+import { PromptResearchLoading } from "./PromptResearchLoading";
 
 afterEach(cleanup);
 
@@ -38,7 +39,15 @@ describe("tracking loading boundaries", () => {
     expect(container.querySelector("h1, button, input, a")).toBeNull();
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
   });
-  it("uses an AI Visibility form fallback instead of keyword research results", () => {
+  it("mirrors Prompt Research with a description and two draft cards", () => {
+    const { container } = render(<PromptResearchLoading />);
+    const page = container.querySelector('[data-tracking-loading="prompt-research"]');
+    expect(page).not.toBeNull();
+    expect(page?.querySelectorAll("[data-slot='card']")).toHaveLength(2);
+    expect(container.querySelector("button, input, a")).toBeNull();
+    expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
+  });
+  it("uses an Brand Visibility form fallback instead of keyword research results", () => {
     const { container } = render(<AiVisibilityLoading />);
     expect(container.querySelector("[data-loading-fields]")).not.toBeNull();
     expect(container.querySelector("[data-loading-table]")).toBeNull();

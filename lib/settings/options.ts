@@ -48,6 +48,8 @@ export type DefaultsData = {
   device: string;
   keywordCount: number;
   inspectionDailyLimit: number;
+  inspectionBudgetMode?: "off" | "fixed" | "available_quota";
+  inspectionAvailableModes?: ("off" | "fixed" | "available_quota")[];
   searchSync?: {
     firstDataDate: string | null;
     firstDataDateLabel: string | null;

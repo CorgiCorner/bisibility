@@ -23,6 +23,7 @@ it.each([
     "example.com",
   ],
   [`ai:v2-provider-domain-v1:projectA:c:ai_visibility:${hash}`, "ai_visibility", null],
+  [`ai:prompt-research-project-v2:projectA:${hash}`, "prompt_research", null],
   [`ai:v2:projectA:c:prompt_explorer:${hash}`, "prompt_explorer", null],
   [`ai:v3-engines:projectA:c:prompt_explorer:${hash}`, "prompt_explorer", null],
 ])("classifies %s without admitting locks or another tenant", (key, module, keyword) => {
@@ -36,6 +37,7 @@ it("never treats catalog, session, paid receipts or arbitrary values as result c
     "sessions:projectA:key",
     "paid:receipt:projectA:c",
     "unknown:v1:projectA:c",
+    `ai:prompt-research-v2:${hash}`,
   ])
     expect(identifyProjectCacheKey(key, "projectA")).toBeNull();
 });

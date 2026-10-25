@@ -107,3 +107,43 @@ export function checkedAtEndForDate(value: string, timeZone: string) {
 
   return new Date(boundary.getTime() - 1).toISOString();
 }
+
+/** Wall time conversion rejects DST gaps instead of silently changing the requested time. */
+export function zonedDateTimeInputValue(date: Date, timeZone: string) {
+  const p = zonedDateTimeParts(date, timeZone);
+  return `${zonedDateInputValue(date, timeZone)}T${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}:${String(p.second).padStart(2, "0")}`;
+}
+export function zonedDateTimeInputToUtc(value: string, timeZone: string) {
+  const match =
+    /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(Z|[+-]\d{2}:\d{2})?$/.exec(
+      value,
+    );
+  if (!match) throw new RangeError("Invalid local date-time");
+  const p = {
+    ...parseDateInput(match[1]),
+    hour: Number(match[2]),
+    minute: Number(match[3]),
+    second: Number(match[4] ?? 0),
+  };
+  if (p.hour > 23 || p.minute > 59 || p.second > 59)
+    throw new RangeError("Invalid local date-time");
+  const instant = match[6] ? new Date(value) : localDateTimeToUtc(p, timeZone);
+  if (!Number.isFinite(instant.getTime())) throw new RangeError("Invalid local date-time");
+  if (
+    zonedDateTimeInputValue(instant, timeZone) !==
+    `${match[1]}T${match[2]}:${match[3]}:${match[4] ?? "00"}`
+  )
+    throw new RangeError("Invalid local date-time");
+  if (match[5] && !match[6]) instant.setUTCMilliseconds(Number(match[5]));
+  return instant.toISOString();
+}
+
+/** Retains the offset so reapplying a repeated DST hour preserves the exact UTC bounds. */
+export function zonedDateTimeInputWithOffset(date: Date, timeZone: string) {
+  const offset =
+    new Intl.DateTimeFormat("en", { timeZone, timeZoneName: "longOffset" })
+      .formatToParts(date)
+      .find((part) => part.type === "timeZoneName")
+      ?.value.replace("GMT", "") || "+00:00";
+  return `${zonedDateTimeInputValue(date, timeZone)}.${String(date.getUTCMilliseconds()).padStart(3, "0")}${offset}`;
+}

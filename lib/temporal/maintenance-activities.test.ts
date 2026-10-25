@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
     heartbeat: vi.fn(),
     info: {
       activityId: "activity_1",
+      scheduledTimestampMs: Date.parse("2026-07-06T06:15:00.000Z"),
       heartbeatDetails: undefined as unknown,
       workflowExecution: { runId: "run_1", workflowId: "workflow_1" },
     },
@@ -312,6 +313,8 @@ describe("maintenance activities", () => {
     ]);
     mocks.sendWeeklyDigestForProject
       .mockResolvedValueOnce({
+        failed: 0,
+        ambiguous: 0,
         failedChecksCount: 0,
         recipients: 1,
         status: "sent",
@@ -320,16 +323,12 @@ describe("maintenance activities", () => {
       .mockRejectedValueOnce(error)
       .mockResolvedValueOnce({ reason: "no_activity", status: "skipped" });
 
-    await expect(sendWeeklyReportDigestActivity()).resolves.toEqual({
-      projects: 3,
-      sent: 1,
-      skipped: 2,
-    });
+    await expect(sendWeeklyReportDigestActivity()).rejects.toThrow("retryable failures");
 
     expect(mocks.prisma.project.findMany).toHaveBeenCalledWith({ select: { id: true } });
-    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(1, "project_1", now);
-    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(2, "project_2", now);
-    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(3, "project_3", now);
+    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(1, "project_1", now, false);
+    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(2, "project_2", now, false);
+    expect(mocks.sendWeeklyDigestForProject).toHaveBeenNthCalledWith(3, "project_3", now, false);
     expect(console.error).toHaveBeenCalledWith("[reports] weekly digest failed", {
       error,
       projectId: "project_2",

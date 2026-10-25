@@ -13,6 +13,7 @@ import type { RecoveryCase } from "@/lib/metering/recovery/contract";
 import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { RecoveryEvidence } from "./RecoveryEvidence";
 
 type Row = DataTableRowBase & {
   value?: RecoveryCase;
@@ -73,8 +74,8 @@ export function RecoveryTable({
       {
         id: "select",
         header: t("select"),
-        size: 96,
-        minSize: 96,
+        size: 140,
+        minSize: 140,
         meta: { sortable: false, lockResize: true },
         cell: ({ row }) => {
           const value = row.original.value;
@@ -126,7 +127,7 @@ export function RecoveryTable({
       ...(["send", "work", "accounting"] as const).map((axis) => ({
         id: axis,
         header: t(axis),
-        size: axis === "send" ? 165 : 130,
+        size: axis === "send" ? 260 : 180,
         meta: { sortable: false },
         cell: ({ row }: { row: { original: Row } }) => {
           const value = row.original.value;
@@ -145,6 +146,15 @@ export function RecoveryTable({
           );
         },
       })),
+      ...(["classification", "acceptance", "incident", "lookup"] as const).map((column) => ({
+        id: column,
+        header: t(`evidence.${column}`),
+        size: column === "incident" || column === "lookup" ? 260 : 240,
+        meta: { sortable: false },
+        cell: ({ row }: { row: { original: Row } }) => (
+          <RecoveryEvidence value={row.original.value?.evidence} column={column} />
+        ),
+      })),
       {
         id: "triage",
         header: t("triage"),
@@ -158,13 +168,13 @@ export function RecoveryTable({
       {
         id: "details",
         header: t("details"),
-        size: 100,
+        size: 144,
         meta: { sortable: false },
         cell: ({ row }) => {
           const value = row.original.value;
           return (
             value && (
-              <Button variant="secondary" onClick={() => onDetails(value)}>
+              <Button size="sm" variant="secondary" onClick={() => onDetails(value)}>
                 {t("details")}
               </Button>
             )
@@ -197,6 +207,7 @@ export function RecoveryTable({
         onSortingChange={unsorted}
         defaultExpanded="all"
         layout="auto"
+        rowClassName={() => "h-auto! min-h-14 [&_[role=cell]]:py-3"}
         renderSection={(row) => (
           <p className="m-0 font-medium">
             {row.label} ({row.subRows?.length ?? 0})

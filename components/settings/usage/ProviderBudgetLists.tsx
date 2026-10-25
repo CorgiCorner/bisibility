@@ -63,7 +63,10 @@ export function ProviderBudgetLists({
   return (
     <div className="min-w-0 space-y-4">
       {projectRows.length > 0 && (
-        <section aria-label={t("projectBudget")} className="min-w-0 border-l-2 border-accent pl-3">
+        <section
+          aria-label={t("projectBudget")}
+          className="min-w-0 rounded-control bg-bg-band pl-3"
+        >
           <ul className="m-0 min-w-0 list-none divide-y divide-border p-0">
             {projectRows.map((row) => (
               <ProviderBudgetRow key={row.id} row={row} onEdit={onEdit} />

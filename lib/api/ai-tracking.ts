@@ -32,7 +32,7 @@ import {
   trackingCamelizeKeys as camelizeKeys,
   trackingSnakeizeKeys as snakeizeKeys,
 } from "./ai-tracking-keys";
-import { aiTrackingOperationPolicy } from "./ai-tracking-policy";
+import { promptTrackerOperationPolicy } from "./ai-tracking-policy";
 import { trackingQueryInput, trackingTrendsQuerySchema } from "./ai-tracking-query";
 import {
   mutateTrackingCatalog,
@@ -45,7 +45,7 @@ import {
   trackingSamples,
   trackingScope,
 } from "./ai-tracking-service";
-import { handleAiTrackingSuggestionGeneration } from "./ai-tracking-suggestions";
+import { handlePromptTrackerSuggestionGeneration } from "./ai-tracking-suggestions";
 import { trackingTrends } from "./ai-tracking-trends";
 import type { ApiContext } from "./context";
 import { requireApiActor } from "./context";
@@ -53,8 +53,8 @@ import { paginateItems } from "./pagination";
 import { dataResponse, errorResponse, listResponse } from "./responses";
 import { domainError, readJsonBody, scopedProject } from "./surface";
 
-export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null> {
-  const policy = aiTrackingOperationPolicy(ctx.method, ctx.path);
+export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | null> {
+  const policy = promptTrackerOperationPolicy(ctx.method, ctx.path);
   if (!policy) return null;
   const projectPublicId = ctx.path[1];
   const scoped = scopedProject(ctx, projectPublicId);
@@ -212,14 +212,14 @@ export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null>
         const csv = download.content;
         const headers = new Headers(ctx.headers);
         headers.set("Content-Type", "text/csv; charset=utf-8");
-        headers.set("Content-Disposition", 'attachment; filename="ai-tracking-evidence.csv"');
+        headers.set("Content-Disposition", 'attachment; filename="prompt-tracker-evidence.csv"');
         if (download.nextCursor) headers.set("X-Next-Cursor", download.nextCursor);
         headers.set("X-Export-Complete", String(download.complete));
         return new Response(csv, { headers });
       }
       if (resource === "suggestions") {
         if (member === "preview" || member === "generate")
-          return handleAiTrackingSuggestionGeneration(ctx, actor, project, member, body);
+          return handlePromptTrackerSuggestionGeneration(ctx, actor, project, member, body);
         if (!member) return response(await projectContextSuggestions(actor, project));
         const drafts = trackingAcceptedDrafts(body);
         const prompts = [];

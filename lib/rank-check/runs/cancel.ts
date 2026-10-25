@@ -1,3 +1,4 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
 import "server-only";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
@@ -86,12 +87,15 @@ export async function cancelUnrunnableRankCheckRunItem(
       error: input.reason,
       errorCode: "cancelled",
       estimatedCostCents: null,
+      comparisonAllowed: false,
+      terminalPersistedAt: new Date(),
       finishedAt: now,
       status: "failed",
     },
     where: { attemptCount: 0, id: input.rankCheckId, status: "running" },
   });
   if (closed.count === 0) return false;
+  queueCheckSummary(tx, input.rankCheckId);
   const cancelled = await tx.rankCheckRunItem.updateMany({
     data: cancelledItemData(now, input.reason),
     where: { rankCheckId: input.rankCheckId, status: "running" },
@@ -237,12 +241,15 @@ export async function closeRankCheckAsCancelled(tx: Prisma.TransactionClient, ra
       errorCode: "cancelled",
       error: CANCELLED_REASON,
       estimatedCostCents: null,
+      comparisonAllowed: false,
+      terminalPersistedAt: new Date(),
       finishedAt: new Date(),
       status: "failed",
     },
     where: { id: rankCheckId, status: "running" },
   });
   if (closed.count === 0) return false;
+  queueCheckSummary(tx, rankCheckId);
 
   const item = await tx.rankCheckRunItem.findUnique({
     select: {

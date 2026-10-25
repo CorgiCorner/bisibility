@@ -9,11 +9,9 @@ import type {
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
 import { useTranslations } from "next-intl";
 import { TrackingBulkActions } from "./TrackingBulkActions";
-import { TrackingGeneration } from "./TrackingGeneration";
 import { TrackingHistoryPanel } from "./TrackingHistoryPanel";
 import { TrackingMetrics } from "./TrackingMetrics";
 import { TrackingPromptTable } from "./TrackingPromptTable";
-import { TrackingSuggestions } from "./TrackingSuggestions";
 import { TrackingTopicActions } from "./TrackingTopicActions";
 import { TrackingWorkspaceDrawers } from "./TrackingWorkspaceDrawers";
 import { useTrackingWorkspace } from "./useTrackingWorkspace";
@@ -25,6 +23,7 @@ export function AiTrackingWorkspace({
   initialSamples = [],
   initialTab = "prompts",
   schedulesHref,
+  researchHref,
   shellOwnsHeading = false,
 }: Readonly<{
   initialData: TrackingWorkspaceData;
@@ -33,6 +32,8 @@ export function AiTrackingWorkspace({
   initialTab?: "prompts" | "runs";
   /** AI schedules live on the common project Schedules page. */
   schedulesHref?: string;
+  /** Prompt suggestions and model generation live on Prompt Research. */
+  researchHref?: string;
   shellOwnsHeading?: boolean;
 }>) {
   const t = useTranslations("projectAiTracking");
@@ -132,25 +133,11 @@ export function AiTrackingWorkspace({
       <div id="ai-tracking-view" role="tabpanel" aria-labelledby={`ai-tracking-view-${tab}-tab`}>
         {tab === "prompts" && (
           <section className="space-y-3">
-            <TrackingSuggestions
-              canWrite={data.canWrite}
-              onSuggest={actions.suggest}
-              onReview={(text, category) => {
-                setEditing(undefined);
-                setDraft({ text, category });
-                setDrawer("prompt");
-              }}
-            />
-            <TrackingGeneration
-              actions={actions.generation}
-              onCatalog={actions.catalog}
-              canWrite={data.canWrite}
-              onReviewDraft={(draft) => {
-                setEditing(undefined);
-                setDraft(draft);
-                setDrawer("prompt");
-              }}
-            />
+            {researchHref ? (
+              <Button href={researchHref} size="sm" variant="secondary">
+                {t("findPromptsInPromptResearch")}
+              </Button>
+            ) : null}
             <div className="flex items-center gap-3">
               <MenuSelect
                 ariaLabel={t("filterByTopic")}

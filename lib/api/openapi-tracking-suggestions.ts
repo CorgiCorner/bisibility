@@ -22,11 +22,11 @@ const configuration = object({
   type: "string",
   pattern: "^[A-Z]{2}$",
 };
-export const aiTrackingSuggestionSnapshotSchema = {
-  ...sdkName("AiTrackingSuggestionSnapshot"),
+export const promptResearchSuggestionSnapshotSchema = {
+  ...sdkName("PromptResearchSuggestionSnapshot"),
   ...object({
     context: {
-      ...sdkName("AiTrackingSuggestionContext"),
+      ...sdkName("PromptResearchSuggestionContext"),
       ...object({
         business: text,
         audience: text,
@@ -36,15 +36,15 @@ export const aiTrackingSuggestionSnapshotSchema = {
       }),
     },
     competitors: array({
-      ...sdkName("AiTrackingSuggestionCompetitor"),
+      ...sdkName("PromptResearchSuggestionCompetitor"),
       ...object({ id: id("cmp"), label: { type: ["string", "null"] }, domain: text }),
     }),
   }),
 };
-export const aiTrackingSuggestionPreviewSchema = object({
+export const promptResearchSuggestionPreviewSchema = object({
   version: { const: 1 },
   configuration,
-  input_snapshot: aiTrackingSuggestionSnapshotSchema,
+  input_snapshot: promptResearchSuggestionSnapshotSchema,
   snapshot_hash: { type: "string", pattern: "^[a-f0-9]{64}$" },
   estimated_cost_cents: { type: "number", exclusiveMinimum: 0 },
   estimate_kind: { const: "forecast" },
@@ -56,7 +56,7 @@ export const aiTrackingSuggestionPreviewSchema = object({
   expires_at: { type: "string", format: "date-time" },
   limitations: array(text),
 });
-export const aiTrackingSuggestionGenerationSchema = object({
+export const promptResearchSuggestionGenerationSchema = object({
   generation_id: id("asg"),
   drafts: array(
     object({
@@ -74,13 +74,13 @@ export const aiTrackingSuggestionGenerationSchema = object({
   method: { const: "model_generated_hypothesis" },
   limitations: array(text),
 });
-export const aiTrackingSuggestionResponseSchemas = {
-  aiTrackingSuggestionsPreview: object({ data: aiTrackingSuggestionPreviewSchema }),
-  aiTrackingSuggestionsGenerate: object({ data: aiTrackingSuggestionGenerationSchema }),
+export const promptResearchSuggestionResponseSchemas = {
+  promptResearchSuggestionsPreview: object({ data: promptResearchSuggestionPreviewSchema }),
+  promptResearchSuggestionsGenerate: object({ data: promptResearchSuggestionGenerationSchema }),
 };
 
-Object.assign(aiTrackingSuggestionPreviewSchema.properties, paymentResponseFields);
-Object.assign(aiTrackingSuggestionGenerationSchema.properties, {
+Object.assign(promptResearchSuggestionPreviewSchema.properties, paymentResponseFields);
+Object.assign(promptResearchSuggestionGenerationSchema.properties, {
   ...paymentResponseFields,
   original_payment: paymentReceiptWireSchema,
 });

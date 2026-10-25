@@ -14,6 +14,7 @@ import { resultRecoveryCutoff } from "@/lib/rank-check/recovery-result-grace";
 import { readResultRecoveryActivity } from "@/lib/rank-check/recovery-result-health";
 import { classifyRecoveryRecord } from "./classify";
 import type { RecoveryFilters, RecoveryPage } from "./contract";
+import { readPartialEvidence, readRecoveryEvidence } from "./evidence-read";
 import { readRecoveryRecords, recoveryCasesSql } from "./query";
 import { openRecoveryCursor, recoveryInstance, sealRecoveryCursor } from "./tokens";
 import { readUncertaintyGates } from "./uncertainty-gates";
@@ -41,7 +42,12 @@ export async function readRecoveryPage(
         readResultRecoveryActivity(tx, scope.namespace),
       ]);
       const rows = records.slice(0, 50);
+      const [evidence, partialEvidence] = await Promise.all([
+        readRecoveryEvidence(tx, scope.namespace, rows, now),
+        readPartialEvidence(tx, scope.namespace),
+      ]);
       return {
+        partialEvidence,
         instance: process.env.SITE_URL ?? "self-host",
         namespace: scope.namespace,
         asOf: to.toISOString(),
@@ -58,7 +64,10 @@ export async function readRecoveryPage(
           lastCleanAt: activity?.lastCleanAt ?? null,
           lastResultActivityAt: resultActivity,
         },
-        rows: rows.map((row) => classifyRecoveryRecord(row, scope, now)),
+        rows: rows.map((row) => ({
+          ...classifyRecoveryRecord(row, scope, now),
+          evidence: evidence.get(row.key),
+        })),
         nextCursor: sealRecoveryCursor(
           records.length > 50 ? (rows.at(-1)?.key ?? null) : null,
           to.toISOString(),

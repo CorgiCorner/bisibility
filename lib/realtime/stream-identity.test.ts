@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   canRead: vi.fn(),
   feed: vi.fn(),
   operations: vi.fn(),
+  revision: vi.fn(),
   subscribe: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -39,7 +40,10 @@ vi.mock("@/lib/notifications/realtime", () => ({
   subscribeToNotificationEvents: mocks.subscribe,
   subscribeToOperationEvents: mocks.subscribe,
 }));
-vi.mock("@/lib/rank-check/runs/snapshot", () => ({ readOperationSnapshot: mocks.operations }));
+vi.mock("@/lib/rank-check/runs/snapshot", () => ({
+  readOperationSnapshot: mocks.operations,
+  readRankDataRevision: mocks.revision,
+}));
 
 import { GET } from "./stream-route";
 
@@ -67,6 +71,7 @@ beforeEach(() => {
   mocks.canRead.mockResolvedValue(true);
   mocks.feed.mockResolvedValue({ items: [], unreadCount: 0 });
   mocks.operations.mockResolvedValue([]);
+  mocks.revision.mockResolvedValue("revision");
   mocks.subscribe.mockReturnValue({ close: vi.fn(), ready: Promise.resolve() });
   redirect.mockImplementation(() => {
     throw Object.assign(new Error("NEXT_REDIRECT"), {

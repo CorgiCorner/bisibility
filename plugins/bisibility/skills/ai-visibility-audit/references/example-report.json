@@ -106,7 +106,7 @@
       {
         "id": "observed-citation",
         "source_class": "retained_provider_answers",
-        "source_tool": "list_ai_tracking_samples",
+        "source_tool": "list_prompt_tracker_samples",
         "run_id": "fixture-run-20261014",
         "sample_id": "fixture-sample-01",
         "prompt_revision_id": "fixture-revision-setup-1",
@@ -127,7 +127,7 @@
       {
         "id": "observed-gap",
         "source_class": "retained_provider_answers",
-        "source_tool": "list_ai_tracking_samples",
+        "source_tool": "list_prompt_tracker_samples",
         "run_id": "fixture-run-20261014",
         "sample_id": "fixture-sample-03",
         "prompt_revision_id": "fixture-revision-comparison-1",

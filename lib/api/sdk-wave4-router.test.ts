@@ -107,6 +107,9 @@ const preference = {
   alertPush: true,
   checkEmail: false,
   checkInApp: false,
+  checkNotificationSetting: "important",
+  checkNotificationTopN: 10,
+  checkNotificationPositionMove: 5,
   importEmail: true,
   importInApp: true,
   inviteEmail: true,
@@ -384,15 +387,20 @@ describe("SDK wave 4 core operations through the real router", () => {
     });
   });
   it("reads full preferences and applies a partial patch with the real preference service", async () => {
+    mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
+      Promise.resolve({ ...preference, ...update }),
+    );
     const read = await call("GET", `projects/${projectId}/notification-preferences`);
     expect(read.status).toBe(200);
     expect(await read.json()).toMatchObject({ email_verification: "verified", report_email: true });
     const updated = await call("PATCH", `projects/${projectId}/notification-preferences`, {
       alert_push: false,
+      provider_incident_in_app: false,
     });
     expect(updated.status).toBe(200);
     expect(await updated.json()).toMatchObject({
       alert_push: false,
+      provider_incident_in_app: false,
       report_email: true,
       project_id: projectId,
     });
@@ -473,5 +481,105 @@ describe("SDK wave 4 core operations through the real router", () => {
     const sync = await call("POST", `projects/${projectId}/analytics/sync`);
     expect(sync.status).toBe(200);
     expect((await sync.json()).runs[0]).toMatchObject({ connection_id: connectionId });
+  });
+  it.each(["all", "important", "none"] as const)(
+    "CN-12 REST and MCP preserve %s on both legacy echoes",
+    async (setting) => {
+      const { dispatchMcpTool } = await import("@/lib/mcp/tools");
+      for (const legacy of [false, true]) {
+        const stored = {
+          ...preference,
+          checkInApp: !legacy,
+          checkNotificationSetting: setting,
+          checkNotificationTopN: 33,
+          checkNotificationPositionMove: 7,
+        };
+        mocks.prisma.notificationPreference.findUnique.mockResolvedValue(stored);
+        mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
+          Promise.resolve({ ...stored, ...update }),
+        );
+        const read = await call("GET", `projects/${projectId}/notification-preferences`);
+        expect(await read.json()).toMatchObject({
+          check_in_app: setting !== "none",
+          check_notification_setting: setting,
+        });
+        const response = await call("PATCH", `projects/${projectId}/notification-preferences`, {
+          check_in_app: legacy,
+        });
+        expect(response.status).toBe(200);
+        expect(response.headers.get("Deprecation")).toBe("@1792800000");
+        const expected = {
+          check_in_app: setting !== "none",
+          check_notification_setting: setting,
+          check_notification_top_n: 33,
+          check_notification_position_move: 7,
+          warnings: [expect.objectContaining({ field: "check_in_app", code: "deprecated_field" })],
+        };
+        expect(await response.json()).toMatchObject(expected);
+        const mcpRead = await dispatchMcpTool(
+          "get_notification_preferences",
+          { project_id: projectId },
+          "bsb_key_test_notification_0001",
+        );
+        expect(mcpRead.payload).toMatchObject({
+          check_in_app: setting !== "none",
+          check_notification_setting: setting,
+        });
+        const mcp = await dispatchMcpTool(
+          "update_notification_preferences",
+          { project_id: projectId, check_in_app: legacy },
+          "bsb_key_test_notification_0001",
+        );
+        expect(mcp.status).toBe(200);
+        expect(mcp.payload).toMatchObject(expected);
+        const write = mocks.prisma.notificationPreference.upsert.mock.lastCall?.[0];
+        expect(write.update).not.toHaveProperty("checkInApp");
+        expect(write.create).not.toHaveProperty("checkInApp");
+        expect(write.update).not.toHaveProperty("checkNotificationSetting");
+      }
+    },
+  );
+  it("CN-13 applies new fields with or without the deprecated field", async () => {
+    mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
+      Promise.resolve({ ...preference, ...update }),
+    );
+    for (const legacy of [undefined, false, true]) {
+      const response = await call("PATCH", `projects/${projectId}/notification-preferences`, {
+        check_in_app: legacy,
+        check_notification_setting: "none",
+        check_notification_top_n: 100,
+        check_notification_position_move: 1,
+      });
+      expect(response.status).toBe(200);
+      const result = await response.json();
+      expect(result).toMatchObject({
+        check_in_app: false,
+        check_notification_setting: "none",
+        check_notification_top_n: 100,
+        check_notification_position_move: 1,
+      });
+      expect(Boolean(result.warnings)).toBe(legacy !== undefined);
+    }
+  });
+  it.each(["check_notification_top_n", "check_notification_position_move"])(
+    "CN-13 rejects invalid %s using the normal API error",
+    async (field) => {
+      for (const value of [0, 101, 1.5]) {
+        const response = await call("PATCH", `projects/${projectId}/notification-preferences`, {
+          [field]: value,
+        });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({ title: "Validation failed" });
+        expect(mocks.prisma.notificationPreference.upsert).not.toHaveBeenCalled();
+      }
+    },
+  );
+  it("CN-13 rejects unknown settings before any preference write", async () => {
+    const response = await call("PATCH", `projects/${projectId}/notification-preferences`, {
+      check_notification_setting: "everything",
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ title: "Validation failed" });
+    expect(mocks.prisma.notificationPreference.upsert).not.toHaveBeenCalled();
   });
 });

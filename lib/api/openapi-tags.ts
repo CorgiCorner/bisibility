@@ -5,10 +5,16 @@ import { assertOperationPolicy } from "./operation-policy";
 
 export const openApiTags = [
   {
-    name: "ai-tracking",
+    name: "prompt-tracker",
     description:
       "Configure AI observations and inspect project-scoped answers, citations and comparable history.",
-    "x-group": "AI Tracking",
+    "x-group": "Prompt Tracker",
+  },
+  {
+    name: "prompt-research",
+    description:
+      "Find questions to track. Today this is model-generated suggestions to review; accepted suggestions become Prompt Tracker prompts.",
+    "x-group": "Prompt Research",
   },
   {
     name: "discovery",

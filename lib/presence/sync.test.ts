@@ -1,42 +1,11 @@
+import "./sync.test-support";
+
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "./constants";
 import { syncPresenceForProject } from "./sync";
-
-const mocks = vi.hoisted(() => {
-  const tx = {
-    urlPresence: { upsert: vi.fn() },
-  };
-  return {
-    decryptProviderCredentials: vi.fn(),
-    emitSignal: vi.fn(),
-    markProviderNeedsReauth: vi.fn(),
-    notifyPresenceBudgetExhausted: vi.fn(),
-    prisma: {
-      $transaction: vi.fn(),
-      keyword: { findMany: vi.fn() },
-      project: { findFirst: vi.fn(), findMany: vi.fn() },
-      providerConnection: { findFirst: vi.fn() },
-      urlPresence: { findMany: vi.fn(), upsert: vi.fn() },
-    },
-    provider: { createUrlInspectionSession: vi.fn(), inspectUrl: vi.fn() },
-    tx,
-  };
-});
-
-vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/analytics/gsc", () => ({ gscAnalyticsProvider: mocks.provider }));
-vi.mock("@/lib/providers/auth-state", () => ({
-  markProviderNeedsReauth: mocks.markProviderNeedsReauth,
-}));
-vi.mock("@/lib/providers/crypto", () => ({
-  decryptProviderCredentials: mocks.decryptProviderCredentials,
-}));
-vi.mock("@/lib/signals/emit", () => ({ emitSignal: mocks.emitSignal }));
-vi.mock("./ops", () => ({
-  notifyPresenceBudgetExhausted: mocks.notifyPresenceBudgetExhausted,
-}));
+import { mocks } from "./sync.test-support";
+import { configurePresenceDatabase } from "./sync-database.test-support";
 
 const now = new Date("2026-07-04T03:45:00.000Z");
 
@@ -63,7 +32,12 @@ function presence(url: string, verdict: string, checkedAt = "2026-07-01T00:00:00
 
 describe("presence sync", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 50 });
+    mocks.reserveInspections.mockImplementation(async ({ urls }) => ({
+      admitted: urls.slice(0, (await mocks.getInspectionBudget()).remaining),
+      targetId: "prj_a00000000000000000000000",
+    }));
     process.env.REDIS_URL = "";
     mocks.decryptProviderCredentials.mockReturnValue({
       apiKey: "refresh_token",
@@ -78,6 +52,7 @@ describe("presence sync", () => {
       id: "connection_1",
     });
     mocks.prisma.urlPresence.findMany.mockResolvedValue([]);
+    configurePresenceDatabase(mocks.prisma, mocks.tx);
     mocks.provider.inspectUrl.mockResolvedValue(inspection("PASS"));
     mocks.provider.createUrlInspectionSession.mockResolvedValue({
       inspectUrl: mocks.provider.inspectUrl,
@@ -104,6 +79,7 @@ describe("presence sync", () => {
     expect(mocks.provider.inspectUrl).toHaveBeenCalledWith({
       property: "sc-domain:example.com",
       url: "https://example.com/page",
+      signal: expect.any(AbortSignal),
     });
     expect(mocks.prisma.urlPresence.upsert).toHaveBeenCalledWith({
       create: expect.objectContaining({
@@ -189,23 +165,8 @@ describe("presence sync", () => {
     expect(calledUrls.slice(2)).toEqual(urls.slice(0, 48));
   });
 
-  it("skips projects whose inspection limit is zero", async () => {
-    mocks.prisma.project.findFirst.mockResolvedValue({
-      defaults: { inspectionDailyLimit: 0 },
-      id: "project_1",
-    });
-
-    await expect(syncPresenceForProject("project_1", now)).resolves.toEqual({
-      projectId: "project_1",
-      reason: "disabled",
-      status: "skipped",
-    });
-
-    expect(mocks.prisma.providerConnection.findFirst).not.toHaveBeenCalled();
-    expect(mocks.provider.inspectUrl).not.toHaveBeenCalled();
-  });
-
   it("respects the per-project inspection limit", async () => {
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 2 });
     mocks.prisma.project.findFirst.mockResolvedValue({
       defaults: { inspectionDailyLimit: 2 },
       id: "project_1",
@@ -219,11 +180,23 @@ describe("presence sync", () => {
     await expect(syncPresenceForProject("project_1", now)).resolves.toMatchObject({
       attempted: 2,
       checked: 2,
-      deferred: 0,
+      deferred: 1,
+      deferredReason: "project_allowance",
     });
 
     expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(2);
     expect(mocks.provider.createUrlInspectionSession).toHaveBeenCalledTimes(1);
+    expect(mocks.reserveInspections).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: null,
+        projectId: "project_1",
+        skipEmpty: true,
+        urls: ["https://example.com/a", "https://example.com/b", "https://example.com/c"],
+      }),
+    );
+    expect(mocks.reserveInspections).toHaveBeenCalledBefore(
+      mocks.provider.createUrlInspectionSession,
+    );
   });
 
   it("skips projects without a connected Search Console connection", async () => {
@@ -259,6 +232,41 @@ describe("presence sync", () => {
 
     expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.urlPresence.upsert).toHaveBeenCalledTimes(1);
+    expect(mocks.releaseInspections).toHaveBeenCalledWith(expect.objectContaining({ released: 1 }));
+  });
+
+  it("excludes today's results and selects only the remaining allowance", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      { targetUrl: "https://example.com/a" },
+      { targetUrl: "https://example.com/b" },
+      { targetUrl: "https://example.com/c" },
+    ]);
+    mocks.prisma.urlPresence.findMany.mockResolvedValue([
+      presence("https://example.com/a", "PASS", "2026-07-04T00:00:00Z"),
+      presence("https://example.com/c", "PASS"),
+    ]);
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 1 });
+    await expect(syncPresenceForProject("project_1", now)).resolves.toMatchObject({
+      attempted: 1,
+      checked: 1,
+    });
+    expect(mocks.provider.inspectUrl).toHaveBeenCalledExactlyOnceWith({
+      property: "sc-domain:example.com",
+      url: "https://example.com/b",
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it("shares the daily allowance with manual inspections before any provider call", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/a" }]);
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 0 });
+    await expect(syncPresenceForProject("project_1", now)).resolves.toMatchObject({
+      checked: 0,
+      deferred: 1,
+      deferredReason: "project_allowance",
+    });
+    expect(mocks.provider.createUrlInspectionSession).not.toHaveBeenCalled();
+    expect(mocks.provider.inspectUrl).not.toHaveBeenCalled();
   });
 
   it("counts non-rate-limit inspection errors and continues", async () => {

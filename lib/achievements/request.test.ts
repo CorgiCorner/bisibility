@@ -33,12 +33,14 @@ describe("practice request qualification", () => {
   });
 });
 
-it.each(["analyzeDomainOverview", "getKeywordMetrics", "analyzeAiVisibility", "compareAiPrompts"])(
-  "excludes body estimates for %s without consuming the request",
-  async (operation) => {
-    const url = new URL("https://example.com/api/v1/test");
-    const req = new Request(url, { method: "POST", body: JSON.stringify({ estimate_only: true }) });
-    expect(await isPracticeEstimate(req, url, operation)).toBe(true);
-    expect(await req.json()).toEqual({ estimate_only: true });
-  },
-);
+it.each([
+  "analyzeDomainOverview",
+  "getKeywordMetrics",
+  "analyzeBrandVisibility",
+  "compareAiPrompts",
+])("excludes body estimates for %s without consuming the request", async (operation) => {
+  const url = new URL("https://example.com/api/v1/test");
+  const req = new Request(url, { method: "POST", body: JSON.stringify({ estimate_only: true }) });
+  expect(await isPracticeEstimate(req, url, operation)).toBe(true);
+  expect(await req.json()).toEqual({ estimate_only: true });
+});

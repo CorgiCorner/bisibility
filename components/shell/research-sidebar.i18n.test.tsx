@@ -13,31 +13,38 @@ vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 const sections = [
   {
+    key: "promptResearch",
+    title: "Prompt Research",
+    segment: "prompt-research",
+    group: "ai",
+    scope: "own-axis",
+  },
+  {
     key: "aiTracking",
-    title: "AI Tracking",
-    segment: "ai-tracking",
-    group: "tracking",
+    title: "Prompt Tracker",
+    segment: "prompt-tracker",
+    group: "ai",
     scope: "own-axis",
   },
   {
     key: "aiVisibility",
-    title: "AI Visibility",
-    segment: "ai-visibility",
-    group: "research",
+    title: "Brand Visibility",
+    segment: "brand-visibility",
+    group: "ai",
     scope: "own-axis",
   },
   {
     key: "promptExplorer",
-    title: "Prompt Explorer",
-    segment: "prompt-explorer",
-    group: "research",
+    title: "Prompt Playground",
+    segment: "prompt-playground",
+    group: "ai",
     scope: "own-axis",
   },
   {
     key: "siteAudit",
     title: "Site Audit",
     segment: "site-audit",
-    group: "research",
+    group: "seo",
     scope: "own-axis",
   },
   {

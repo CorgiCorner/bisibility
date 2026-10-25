@@ -1,6 +1,5 @@
 import "server-only";
-
-import type { DeferredReason } from "@/lib/checks/contract";
+import type { DeferredGroup, DeferredReason } from "@/lib/checks/contract";
 import {
   buildProviderHealth,
   type CheckRunsSummary,
@@ -9,133 +8,97 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { canonicalUsageSql } from "@/lib/metering/usage-sql";
+import { projectionCounts } from "@/lib/provider-evidence/projection/model";
+import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 
-type SpendRow = { total: unknown };
-type DeferredGroupRow = {
-  count: number;
-  firstAt: Date;
-  keywordCount: number;
-  lastAt: Date;
-  reason: string;
+const reasons: readonly string[] = [
+  "budget_exhausted",
+  "migration_hold",
+  "no_provider",
+  "rate_limited",
+] satisfies DeferredReason[];
+type DeferredSource = {
+  deferredReason: string | null;
+  checkedAt: Date;
+  keywordId: string;
+  status: string;
 };
-
-type Range = {
-  end: Date;
-  start: Date;
-};
-
-function countFor(groups: readonly { _count: { _all: number }; status: string }[], status: string) {
-  return groups.find((group) => group.status === status)?._count._all ?? 0;
+/** Every raw reason, including an unknown or null one, remains countable. */
+export function deferredGroups(rows: readonly DeferredSource[]): DeferredGroup[] {
+  const groups = new Map<string, DeferredSource[]>();
+  for (const row of rows) {
+    if (row.status !== "deferred") continue;
+    const key = row.deferredReason ?? "(null)";
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  return [...groups]
+    .map(([rawReason, members]) => ({
+      reason: reasons.includes(rawReason) ? (rawReason as DeferredReason) : ("other" as const),
+      ...(reasons.includes(rawReason) ? {} : { rawReason }),
+      count: members.length,
+      keywordCount: new Set(members.map((row) => row.keywordId)).size,
+      firstAt: new Date(Math.min(...members.map((row) => row.checkedAt.getTime()))).toISOString(),
+      lastAt: new Date(Math.max(...members.map((row) => row.checkedAt.getTime()))).toISOString(),
+    }))
+    .sort(
+      (a, b) =>
+        b.count - a.count || (a.rawReason ?? a.reason).localeCompare(b.rawReason ?? b.reason),
+    );
 }
-
-function deferredGroups(rows: readonly DeferredGroupRow[]) {
-  return rows.flatMap((row) => {
-    if (
-      row.reason !== "budget_exhausted" &&
-      row.reason !== "migration_hold" &&
-      row.reason !== "no_provider" &&
-      row.reason !== "rate_limited"
-    ) {
-      return [];
-    }
-    return [
-      {
-        count: row.count,
-        firstAt: row.firstAt.toISOString(),
-        keywordCount: row.keywordCount,
-        lastAt: row.lastAt.toISOString(),
-        reason: row.reason as DeferredReason,
-      },
-    ];
-  });
-}
-
 export async function loadCheckRunsSummary(
   projectId: string,
-  range: Range,
+  range: { start: Date; end: Date },
   providerChain: Promise<readonly ProviderChainEntry[]>,
+  where: Prisma.RankCheckWhereInput = { checkedAt: { gte: range.start, lte: range.end } },
 ): Promise<CheckRunsSummary> {
-  const scope = {
-    checkedAt: { gte: range.start, lte: range.end },
-    keyword: { projectId },
-  };
-  const [statusGroups, viaFallback, spendRows, deferredRows, completionGroups, attemptRows, chain] =
-    await Promise.all([
-      prisma.rankCheck.groupBy({
-        _count: { _all: true },
-        by: ["status"],
-        where: scope,
-      }),
-      prisma.rankCheck.count({
-        where: { ...scope, viaFallback: true },
-      }),
-      prisma.$queryRaw<SpendRow[]>(Prisma.sql`
-      SELECT COALESCE(SUM("costCents"), 0) AS total
-      FROM (${canonicalUsageSql()}) usage
-      WHERE "projectId" = ${projectId}
-        AND feature = 'rank_check'
-        AND "createdAt" >= ${range.start}
-        AND "createdAt" <= ${range.end}
-        AND cached = false
-        AND "measurementStatus" = 'recorded'
-    `),
-      prisma.$queryRaw<DeferredGroupRow[]>`
-      SELECT
-        rc."deferredReason" AS reason,
-        COUNT(*)::int AS count,
-        COUNT(DISTINCT rc."keywordId")::int AS "keywordCount",
-        MIN(rc."checkedAt") AS "firstAt",
-        MAX(rc."checkedAt") AS "lastAt"
-      FROM "rank_checks" rc
-      JOIN "keywords" k ON k.id = rc."keywordId"
-      WHERE k."projectId" = ${projectId}
-        AND rc."checkedAt" >= ${range.start}
-        AND rc."checkedAt" <= ${range.end}
-        AND rc.status = 'deferred'
-        AND rc."deferredReason" IN (
-          'budget_exhausted',
-          'migration_hold',
-          'no_provider',
-          'rate_limited'
-        )
-      GROUP BY rc."deferredReason"
-      ORDER BY COUNT(*) DESC, rc."deferredReason" ASC
-    `,
-      prisma.rankCheck.groupBy({
-        _count: { _all: true },
-        by: ["provider", "viaFallback"],
-        where: { ...scope, status: "completed" },
-      }),
-      prisma.$queryRaw<Array<{ attempts: unknown; provider: string; status: string }>>`
-      SELECT rc.attempts, rc.provider, rc.status
-      FROM "rank_checks" rc
-      JOIN "keywords" k ON k.id = rc."keywordId"
-      WHERE k."projectId" = ${projectId}
-        AND rc."checkedAt" >= ${range.start}
-        AND rc."checkedAt" <= ${range.end}
-        AND (
-          rc."viaFallback" = true
-          OR rc.status IN ('failed', 'deferred')
-        )
-    `,
-      providerChain,
-    ]);
-
-  const completed = countFor(statusGroups, "completed");
-  const failed = countFor(statusGroups, "failed");
-  const running = countFor(statusGroups, "running");
-
+  const scope = { AND: [{ keyword: { projectId } }, where] };
+  const [rows, evidence, spendRows, chain] = await Promise.all([
+    prisma.rankCheck.findMany({
+      where: scope,
+      select: {
+        status: true,
+        provider: true,
+        viaFallback: true,
+        attempts: true,
+        keywordId: true,
+        checkedAt: true,
+        deferredReason: true,
+      },
+    }),
+    readCheckEvidence(projectId, { where }),
+    prisma.$queryRaw<Array<{ total: unknown }>>(Prisma.sql`
+      SELECT COALESCE(SUM("costCents"), 0) AS total FROM (${canonicalUsageSql()}) usage
+      WHERE "projectId"=${projectId} AND feature='rank_check'
+        AND "createdAt">=${range.start} AND "createdAt"<=${range.end}
+        AND cached=false AND "measurementStatus"='recorded'`),
+    providerChain,
+  ]);
+  const count = (status: string) => rows.filter((row) => row.status === status).length;
+  const completed = count("completed"),
+    failed = count("failed"),
+    running = count("running");
   return {
     counts: {
       completed,
-      deferred: countFor(statusGroups, "deferred"),
       failed,
       running,
+      deferred: count("deferred"),
       runs: completed + failed + running,
-      viaFallback,
+      viaFallback: rows.filter((row) => row.viaFallback).length,
     },
-    deferredGroups: deferredGroups(deferredRows),
-    providerHealth: buildProviderHealth(completionGroups, attemptRows, chain),
+    deferredGroups: deferredGroups(rows),
+    evidenceCounts: projectionCounts(evidence.values()),
+    providerHealth: buildProviderHealth(
+      rows
+        .filter((row) => row.status === "completed")
+        .map((row) => ({
+          provider: row.provider,
+          viaFallback: row.viaFallback,
+          _count: { _all: 1 },
+        })),
+      rows.filter((row) => row.viaFallback || ["failed", "deferred"].includes(row.status)),
+      chain,
+    ),
     spendCents: Number(spendRows[0]?.total ?? 0),
   };
 }

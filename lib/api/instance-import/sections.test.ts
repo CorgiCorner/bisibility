@@ -74,6 +74,10 @@ describe("saved view import", () => {
     expect(parsed.notificationPreferences[0]).toMatchObject({
       checkEmail: true,
       checkInApp: false,
+      checkNotificationPositionMove: 5,
+      checkNotificationSetting: "important",
+      checkNotificationTopN: 10,
+      providerIncidentInApp: true,
       reportEmail: false,
     });
   });

@@ -14,7 +14,7 @@ const paidTools = [
   "load_domain_overview_pages",
   "load_domain_overview_history",
   "estimate_domain_overview_cost",
-  "analyze_ai_visibility",
+  "analyze_brand_visibility",
   "compare_ai_prompts",
   "research_keywords",
   "analyze_backlinks",

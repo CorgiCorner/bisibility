@@ -15,12 +15,13 @@ export function dataForSeoRankTask(input: SerpRankInput) {
     location: input.location,
   });
   const stopTarget = normalizeDomain(input.domain) ?? input.domain;
+  const tag = input.tag || input.attribution?.tag;
   return {
     ...requestParams,
     keyword: input.keyword,
     search_param: "&nfpr=1",
     device: input.device,
-    ...(input.tag ? { tag: input.tag } : {}),
+    ...(tag ? { tag } : {}),
     ...(resolveSerpStopOnMatch(input.stopOnMatch)
       ? {
           find_targets_in: ["organic"],

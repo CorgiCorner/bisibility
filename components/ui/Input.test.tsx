@@ -24,6 +24,14 @@ describe("Input", () => {
     );
   });
 
+  it("uses the existing compact geometry without leaking density to the native field", () => {
+    render(<Input aria-label="Threshold" density="compact" />);
+    const input = screen.getByRole("textbox", { name: "Threshold" });
+    expect(input).toHaveClass("min-h-[34px]", "compact-text-12", "px-[13px]");
+    expect(input).not.toHaveClass("min-h-10");
+    expect(input).not.toHaveAttribute("density");
+  });
+
   it("keeps reusable style values in a server-safe module", () => {
     // Read the file rather than importing it with ?raw: that bundler-only
     // specifier cannot be resolved by the public allowlist boundary check.

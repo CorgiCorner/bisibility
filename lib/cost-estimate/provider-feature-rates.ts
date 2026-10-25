@@ -10,6 +10,7 @@ export type ProviderFeatureRate = {
     | "ai_tracking"
     | "ai_visibility"
     | "prompt_explorer"
+    | "prompt_research"
     | "backlinks_history"
     | "backlinks_rows"
     | "backlinks_summary"

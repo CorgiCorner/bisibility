@@ -141,6 +141,20 @@ describe("notification realtime publisher", () => {
     expect(redis.subscriber.unsubscribe).toHaveBeenCalledWith(notificationChannel("user 1"));
   });
 
+  it.each(["updated", "withdrawn"] as const)("accepts %s events from Redis", async (kind) => {
+    redis.redisConfigured.mockReturnValue(true);
+    const onEvent = vi.fn();
+    let receive: ((message: string) => void) | undefined;
+    redis.subscriber.subscribe.mockImplementation(async (_channel, handler) => {
+      receive = handler;
+    });
+    const subscription = subscribeToNotificationEvents("user 1", { onEvent, onError: vi.fn() });
+    await subscription?.ready;
+    receive?.(JSON.stringify({ ...event, kind }));
+    expect(onEvent).toHaveBeenCalledWith({ ...event, kind });
+    subscription?.close();
+  });
+
   it("aborts a never-settling subscriber connection when the stream closes", () => {
     vi.useFakeTimers();
     redis.redisConfigured.mockReturnValue(true);

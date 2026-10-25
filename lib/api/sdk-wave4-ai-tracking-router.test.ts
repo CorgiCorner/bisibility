@@ -145,8 +145,14 @@ const run = {
   samples: [],
 };
 
-async function call(method: string, suffix: string, body?: unknown, idempotency = true) {
-  const url = new URL(`https://example.com/api/v1/projects/${projectId}/ai-tracking/${suffix}`);
+async function call(
+  method: string,
+  suffix: string,
+  body?: unknown,
+  idempotency = true,
+  root = "prompt-tracker",
+) {
+  const url = new URL(`https://example.com/api/v1/projects/${projectId}/${root}/${suffix}`);
   return handleApiRequest(
     new Request(url, {
       method,
@@ -210,7 +216,7 @@ beforeEach(() => {
   });
 });
 
-describe("SDK wave 4 AI tracking through the real router and projections", () => {
+describe("SDK wave 4 Prompt Tracker through the real router and projections", () => {
   it("creates, updates, archives and pages topics", async () => {
     for (const [method, path, body, status] of [
       ["POST", "topics", { name: "Example topic" }, 201],
@@ -327,7 +333,7 @@ describe("SDK wave 4 AI tracking through the real router and projections", () =>
     ).toBe(422);
   });
   it("builds heuristic suggestions and a manual fallback from actual context", async () => {
-    const response = await call("POST", "suggestions", { ignored: true });
+    const response = await call("POST", "suggestions", { ignored: true }, true, "prompt-research");
     expect(response.status).toBe(200);
     expect((await response.json()).data).toMatchObject({
       method: "context_template_heuristic",
@@ -342,7 +348,7 @@ describe("SDK wave 4 AI tracking through the real router and projections", () =>
       agentRules: "",
       updatedAt: null,
     });
-    const fallback = await call("POST", "suggestions");
+    const fallback = await call("POST", "suggestions", undefined, true, "prompt-research");
     expect(fallback.status).toBe(200);
     expect((await fallback.json()).data).toMatchObject({ method: "manual_fallback", drafts: [] });
   });

@@ -10,6 +10,9 @@ export type SkillCategory =
 
 export type SkillStatus = "available" | "beta" | "coming-soon";
 
+export const skillGroups = ["seo", "ai-visibility", "setup-admin"] as const;
+export type SkillGroup = (typeof skillGroups)[number];
+
 export type SkillCatalogEntry = Readonly<{
   slug: string;
   title: string;
@@ -18,7 +21,20 @@ export type SkillCatalogEntry = Readonly<{
   channels: Readonly<{ plugin: boolean; archive: boolean }>;
 }>;
 
-export const skillCatalog = [
+export function skillGroup(skill: SkillCatalogEntry): SkillGroup {
+  if (skill.category === "ai-visibility" || skill.slug === "ai-visibility-audit") {
+    return "ai-visibility";
+  }
+  if (
+    skill.category === "setup-admin" ||
+    (skill.category === "start-here" && skill.slug !== "seo-coach")
+  ) {
+    return "setup-admin";
+  }
+  return "seo";
+}
+
+const catalogEntries = [
   {
     slug: "project-setup",
     title: "Project setup",
@@ -38,14 +54,14 @@ export const skillCatalog = [
     title: "Domain onboarding",
     category: "start-here",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "bisibility",
     title: "Bisibility skill router",
     category: "start-here",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "seo-audit",
@@ -56,7 +72,7 @@ export const skillCatalog = [
   },
   {
     slug: "ai-visibility-audit",
-    title: "AI visibility audit",
+    title: "Brand Visibility audit",
     category: "audit",
     status: "available",
     channels: { plugin: true, archive: true },
@@ -73,7 +89,7 @@ export const skillCatalog = [
     title: "Keyword import",
     category: "setup-admin",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "rank-tracking-report",
@@ -87,7 +103,7 @@ export const skillCatalog = [
     title: "Weekly report",
     category: "monitoring",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "alert-triage",
@@ -108,21 +124,21 @@ export const skillCatalog = [
     title: "Provider setup",
     category: "setup-admin",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "team-api-governance",
     title: "Team API governance",
     category: "setup-admin",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "self-host-health",
     title: "Self-host health",
     category: "setup-admin",
     status: "available",
-    channels: { plugin: false, archive: true },
+    channels: { plugin: true, archive: true },
   },
   {
     slug: "keyword-clustering",
@@ -149,31 +165,22 @@ export const skillCatalog = [
     slug: "ai-prompt-research",
     title: "AI prompt research",
     category: "ai-visibility",
-    status: "coming-soon",
-    channels: { plugin: false, archive: false },
+    status: "available",
+    channels: { plugin: true, archive: false },
   },
   {
     slug: "local-seo",
     title: "Local SEO",
     category: "local",
-    status: "coming-soon",
-    channels: { plugin: false, archive: false },
-  },
-  {
-    slug: "link-prospecting",
-    title: "Link prospecting",
-    category: "links",
-    status: "coming-soon",
-    channels: { plugin: false, archive: false },
-  },
-  {
-    slug: "sitemap-change-watch",
-    title: "Sitemap change watch",
-    category: "monitoring",
-    status: "coming-soon",
-    channels: { plugin: false, archive: false },
+    status: "available",
+    channels: { plugin: true, archive: false },
   },
 ] as const satisfies readonly SkillCatalogEntry[];
+
+// Retain planned/beta states in consumer types even when every current skill is available.
+export const skillCatalog: readonly (Omit<(typeof catalogEntries)[number], "status"> & {
+  status: SkillStatus;
+})[] = catalogEntries;
 
 export function skillArchivePath(entry: SkillCatalogEntry): string | null {
   return entry.channels.archive ? `/.well-known/agent-skills/${entry.slug}.tar.gz` : null;

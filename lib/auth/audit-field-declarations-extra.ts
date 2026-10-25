@@ -285,9 +285,6 @@ export function registerAdditionalAuditDeclarations(
   declare(["keyword.csv_export", "keyword.json_export", "keyword.xlsx_export"], {
     after: { ...f.numbers("count"), ...strings("format", "scope") },
   });
-  declare(["report.weekly_digest_sent"], {
-    after: f.numbers("failedChecksCount", "recipients", "topMovers"),
-  });
   declare(["search_insights.sync_now"], {
     after: { ...strings("property"), ...f.dates("syncRequestedAt") },
   });

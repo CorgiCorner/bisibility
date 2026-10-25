@@ -122,6 +122,7 @@ describe("backlinks REST handlers", () => {
         includeSubdomains: false,
         maxCostCents: 9,
         mode: "one_per_domain",
+        requirePayment: false,
         resultLimit: 1000,
         target: "acme-store.com",
         targetScope: "site",
@@ -154,10 +155,33 @@ describe("backlinks REST handlers", () => {
         includeSubdomains: true,
         maxCostCents: undefined,
         mode: "as_is",
+        requirePayment: false,
         resultLimit: 100,
         target: "acme-store.com",
         targetScope: "site",
       },
+    );
+  });
+
+  it.each([
+    ["true", true],
+    ["false", false],
+  ] as const)("forwards analyze consent with require_payment=%s", async (value, required) => {
+    await getBacklinks(
+      context(
+        "GET",
+        `?target=example.com&payment_option_id=option-a&payment_quote_token=signed-consent&require_payment=${value}`,
+      ),
+      "prj_1",
+    );
+
+    expect(mocks.analyze).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: "user_1", projectId: "project_1" }),
+      expect.objectContaining({
+        acceptedPayment: { quoteToken: "signed-consent" },
+        paymentOptionId: "option-a",
+        requirePayment: required,
+      }),
     );
   });
 

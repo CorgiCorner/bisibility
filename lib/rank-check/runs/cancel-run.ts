@@ -1,3 +1,4 @@
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 
 import { ApiConflictError, ApiNotFoundError } from "@/lib/api/errors";
@@ -21,7 +22,7 @@ export async function cancelRankCheckRunCommand(input: {
   projectId: string;
   publicId: string;
 }) {
-  const claimed = await prisma.$transaction(async (tx) => {
+  const claimed = await notificationTransaction(async (tx) => {
     const run = await tx.rankCheckRun.findFirst({
       select: {
         id: true,
@@ -88,7 +89,7 @@ export async function cancelRankCheckRunCommand(input: {
       logTemporalError(error);
     } finally {
       if (item.rankCheckId) {
-        await prisma.$transaction(
+        await notificationTransaction(
           (tx) => closeRankCheckAsCancelled(tx, item.rankCheckId as string),
           transactionOptions,
         );

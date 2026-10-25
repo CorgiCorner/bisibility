@@ -172,8 +172,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "getAiTrackingTrends",
-      "path": "/projects/{project_id}/ai-tracking/trends",
+      "operationId": "getPromptTrackerTrends",
+      "path": "/projects/{project_id}/prompt-tracker/trends",
       "status": 200
     }
   ],

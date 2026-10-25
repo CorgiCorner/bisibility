@@ -256,5 +256,6 @@ export async function rankCheckWorkflow(
   }
 }
 
+export { checkNotificationSummariesWorkflow } from "./check-summary-maintenance-workflow";
 export { localMonitorRunWorkflow } from "./local-monitor-workflow";
 export { providerComparisonWorkflow } from "./provider-comparison-workflow";

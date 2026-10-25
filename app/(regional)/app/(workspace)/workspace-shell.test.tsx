@@ -442,7 +442,10 @@ describe("workspace layout", () => {
       }),
     );
 
-    expect(mocks.noticeExtension).toHaveBeenCalledWith({ locale: "en" });
+    expect(mocks.noticeExtension).toHaveBeenCalledWith({
+      locale: "en",
+      projectRef: "prj_f00000000000000000000000",
+    });
     expect(markup).toContain('data-testid="account-notice"');
     expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup.indexOf('data-testid="account-notice"')).toBeLessThan(markup.indexOf("<header"));

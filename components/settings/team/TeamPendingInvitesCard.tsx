@@ -118,10 +118,7 @@ export function TeamPendingInvitesCard({
           const pending = pendingAction?.endsWith(invite.id);
           return (
             <div
-              className={cn(
-                "flex flex-wrap items-center gap-3 p-3",
-                invite.expired && "border-l-2 border-l-red bg-red/5",
-              )}
+              className={cn("flex flex-wrap items-center gap-3 p-3", invite.expired && "bg-red/5")}
               data-expired={invite.expired}
               key={invite.id}
             >

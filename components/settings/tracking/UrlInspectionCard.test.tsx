@@ -18,14 +18,17 @@ describe("UrlInspectionCard", () => {
       />,
     );
 
+    expect(screen.getByText("Background inspection mode")).toBeVisible();
     expect(screen.getByText("URL inspection")).toBeInTheDocument();
     expect(
-      screen.getByText("Daily Search Console index-status checks for tracked target URLs."),
+      screen.getByText(
+        "Build a partial Page indexing report from Google's stored indexed state, not a live test.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "Daily inspection limit" })).toHaveValue(200);
     expect(
       screen.getByText(
-        "Google allows 2,000 inspections per day per property, shared across every tool using it. bisibility caps this at 1,000 to leave room for other tools sharing the property quota. URLs over the limit wait for the next day.",
+        "The fixed limit is 0-2000 URLs per Pacific day. All projects and explicit inspections share the property counter. Other tools also consume quota, so the counter is an estimate.",
       ),
     ).toBeInTheDocument();
   });
@@ -49,6 +52,7 @@ describe("UrlInspectionCard", () => {
     await waitFor(() =>
       expect(updateInspectionBudget).toHaveBeenCalledWith({
         inspectionDailyLimit: 300,
+        inspectionBudgetMode: "fixed",
         projectId: "prj_1",
       }),
     );
@@ -69,4 +73,14 @@ describe("UrlInspectionCard", () => {
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
+});
+
+it("offers available quota only on self-host deployments", async () => {
+  const view = render(<UrlInspectionCard canEdit dailyLimit={50} projectId="prj_1" />);
+  fireEvent.click(screen.getByRole("button", { name: "Background inspection mode" }));
+  expect(screen.queryByText("Use available quota")).not.toBeInTheDocument();
+  view.unmount();
+  render(<UrlInspectionCard canEdit dailyLimit={50} projectId="prj_1" selfHost />);
+  fireEvent.click(screen.getByRole("button", { name: "Background inspection mode" }));
+  expect(await screen.findByText("Use available quota")).toBeInTheDocument();
 });

@@ -6,7 +6,7 @@ import type {
   ProviderTestResult,
   QueryStatRow,
 } from "@/lib/providers/types";
-import { googleApiFetch, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
+import { listGoogleSites, refreshGoogleAccessToken } from "./google-client";
 import { preserveGoogleRequestFailure } from "./google-failure";
 import { readGscCredentials as readCredentials } from "./gsc-credentials";
 import {
@@ -26,8 +26,8 @@ import {
   type GscQueryInput,
   type GscRow,
   type GscSearchAnalyticsEnvelope,
-  gscFetchContext,
 } from "./gsc-search-analytics";
+import { fetchGscSitemaps, type GscSitemapStatus } from "./gsc-sitemaps";
 
 export type {
   GscUrlInspectionInput,
@@ -42,36 +42,7 @@ export type {
   GscSearchAnalyticsMetadata,
   GscSearchType,
 } from "./gsc-search-analytics";
-
-function sitemapUrl(property: string, feedpath: string) {
-  return `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(
-    property,
-  )}/sitemaps/${encodeURIComponent(feedpath)}`;
-}
-
-// Subset of the WmxSitemap resource returned by sitemaps.get - enough to report
-// whether GSC could parse the feed and surface any per-feed errors/warnings.
-export type GscSitemapStatus = {
-  contents: Array<{ submitted: number; type: string }>;
-  errors: number;
-  isPending: boolean;
-  isSitemapsIndex: boolean;
-  lastDownloaded: string | null;
-  lastSubmitted: string | null;
-  path: string;
-  warnings: number;
-};
-
-type WmxSitemap = {
-  contents?: Array<{ submitted?: unknown; type?: unknown }>;
-  errors?: unknown;
-  isPending?: unknown;
-  isSitemapsIndex?: unknown;
-  lastDownloaded?: unknown;
-  lastSubmitted?: unknown;
-  path?: unknown;
-  warnings?: unknown;
-};
+export type { GscSitemapStatus } from "./gsc-sitemaps";
 
 function numberValue(value: unknown): number {
   const parsed = typeof value === "string" ? Number(value) : value;
@@ -142,6 +113,7 @@ export type GscAnalyticsProvider = AnalyticsProvider & {
     credentials: ProviderCredentials,
     input: AnalyticsQueryStatsInput,
   ): Promise<QueryStatRow[]>;
+  listSitemaps(creds: ProviderCredentials): Promise<GscSitemapStatus[]>;
   getSitemapStatus(creds: ProviderCredentials, feedpath: string): Promise<GscSitemapStatus>;
   inspectUrl(
     creds: ProviderCredentials,
@@ -219,30 +191,13 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
     return filterGscQueryStats(stats, input);
   },
 
-  // GET sitemaps/{feedpath} reports parse state - isPending while GSC is still reading,
-  // and errors/warnings counts once processed (works with readonly scope too).
-  async getSitemapStatus(creds: ProviderCredentials, feedpath: string): Promise<GscSitemapStatus> {
-    const { property, refreshToken } = readCredentials(creds);
-    const accessToken = await refreshGoogleAccessToken(refreshToken, creds.onRefreshToken);
-    const data = await googleApiFetch<WmxSitemap>(
-      sitemapUrl(property, feedpath),
-      accessToken,
-      {},
-      gscFetchContext(creds, property),
-    );
-    return {
-      contents: (data.contents ?? []).map((entry) => ({
-        submitted: numberValue(entry.submitted),
-        type: typeof entry.type === "string" ? entry.type : "web",
-      })),
-      errors: numberValue(data.errors),
-      isPending: data.isPending === true,
-      isSitemapsIndex: data.isSitemapsIndex === true,
-      lastDownloaded: typeof data.lastDownloaded === "string" ? data.lastDownloaded : null,
-      lastSubmitted: typeof data.lastSubmitted === "string" ? data.lastSubmitted : null,
-      path: typeof data.path === "string" ? data.path : feedpath,
-      warnings: numberValue(data.warnings),
-    };
+  async listSitemaps(creds) {
+    return fetchGscSitemaps(creds);
+  },
+
+  async getSitemapStatus(creds, feedpath) {
+    const [sitemap] = await fetchGscSitemaps(creds, feedpath);
+    return sitemap;
   },
 
   // URL Inspection reports the indexed state Google already knows about. It is

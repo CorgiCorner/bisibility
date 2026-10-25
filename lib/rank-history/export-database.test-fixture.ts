@@ -1,4 +1,4 @@
-import type { Mock } from "vitest";
+import { type Mock, vi } from "vitest";
 
 type LegacyMocks = {
   $transaction: Mock;
@@ -8,6 +8,10 @@ type LegacyMocks = {
 };
 /** Unit-only DB model. It adds no observation metadata and never supplies positive quality proof. */
 export function configureHistoryExportDatabase(db: LegacyMocks) {
+  Object.assign(db, {
+    providerDispatchIdentity: { findMany: vi.fn(async () => []) },
+    providerRecoveryCandidate: { findMany: vi.fn(async () => []) },
+  });
   db.$transaction.mockImplementation((read: (tx: LegacyMocks) => Promise<unknown>) => read(db));
   db.$queryRaw.mockImplementation((parts: TemplateStringsArray, actorId: string) =>
     Promise.resolve(
@@ -29,6 +33,9 @@ export function configureHistoryExportDatabase(db: LegacyMocks) {
       }) =>
         (keyword.rankChecks ?? []).map((check) => ({
           ...check,
+          recoveryRestoredAt: null,
+          recoveryProvenance: null,
+          partialEvidence: [],
           keywordId: keyword.id ?? keyword.publicId,
           attemptCount: 1,
           createdAt: check.checkedAt,

@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "domain-onboarding",
   title: "Domain onboarding",
   description:
-    "Set up a new domain project with reviewed defaults, an intended provider and first keywords. Request initial paid checks only with explicit spending approval. Use when a user wants to start tracking a new website in bisibility.",
+    "Create a domain project with reviewed defaults, an intended provider and first keywords. Use when starting rank tracking for a new website. Do not use for importing keywords into an existing project, repairing a provider alone or launching unapproved paid checks.",
   compatibility:
     "Requires a resolved bisibility origin and a write-scoped personal access token for project creation; a project API key cannot create projects.",
   kind: "task-skill",

@@ -25,6 +25,12 @@ const baseTestAliases = [
 ];
 const browserTestAliases = [
   {
+    find: "@/lib/actions/prompt-research",
+    replacement: fileURLToPath(
+      new URL("./.storybook/prompt-research-action-stubs.ts", import.meta.url),
+    ),
+  },
+  {
     find: "@/lib/actions/provider-comparison",
     replacement: fileURLToPath(
       new URL("./.storybook/provider-comparison-stubs.ts", import.meta.url),

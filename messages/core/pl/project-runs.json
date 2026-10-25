@@ -18,7 +18,7 @@
       "searchConsole": "Search Console",
       "source": "Źródło:",
       "status": "Status:",
-      "aiTracking": "AI Tracking"
+      "aiTracking": "Monitor promptów"
     },
     "content": {
       "activeDescription": "Sprawdź historię przebiegów lub wybierz inny status, aby znaleźć zakończone przebiegi.",
@@ -26,7 +26,7 @@
       "clearFilters": "Wyczyść filtry",
       "filteredDescription": "Zmień lub wyczyść filtry, aby zobaczyć inne przebiegi.",
       "filteredTitle": "Brak pasujących przebiegów",
-      "historyDescription": "Tutaj pojawią się sprawdzenia pozycji, uruchomienia śledzenia AI i importy Search Console.",
+      "historyDescription": "Tutaj pojawią się sprawdzenia pozycji, uruchomienia monitora promptów i importy Search Console.",
       "historyTitle": "Brak przebiegów",
       "loadError": "Nie udało się wczytać przebiegów",
       "manageSchedules": "Zarządzaj harmonogramami",
@@ -87,7 +87,7 @@
       "reviewBlocker": "Sprawdź przyczynę blokady",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {cel} few {cele} many {celów} other {celu}}",
       "dayProgress": "{completed, number} / {total, number} {total, plural, one {dzień z ostatecznymi danymi} few {dni z ostatecznymi danymi} many {dni z ostatecznymi danymi} other {dnia z ostatecznymi danymi}}",
-      "aiTrackingRun": "Pomiar widoczności AI",
+      "aiTrackingRun": "Pomiar Monitora promptów",
       "sampleCount": "Próbki: {count, number}",
       "sampleProgress": "{completed, number} / {total, number} próbek",
       "costUnknown": "Koszt niepotwierdzony",
@@ -134,47 +134,47 @@
     "aiStatuses": {
       "planned": {
         "label": "Zaplanowane",
-        "description": "Pomiar AI czeka na rozpoczęcie."
+        "description": "Pomiar Monitora promptów czeka na rozpoczęcie."
       },
       "running": {
         "label": "W toku",
-        "description": "Przetwarzanie próbek pomiaru AI."
+        "description": "Przetwarzanie próbek pomiaru Monitora promptów."
       },
       "completed": {
         "label": "Zakończone",
-        "description": "Pomiar AI został zakończony."
+        "description": "Pomiar Monitora promptów został zakończony."
       },
       "partial": {
         "label": "Częściowe",
-        "description": "Tylko część pomiaru AI zakończyła się powodzeniem."
+        "description": "Tylko część pomiaru Monitora promptów zakończyła się powodzeniem."
       },
       "blocked": {
         "label": "Zablokowane",
-        "description": "Pomiar AI nie mógł być kontynuowany."
+        "description": "Pomiar Monitora promptów nie mógł być kontynuowany."
       },
       "failed": {
         "label": "Nieudane",
-        "description": "Pomiar AI zakończył się błędem."
+        "description": "Pomiar Monitora promptów zakończył się błędem."
       },
       "cancelled": {
         "label": "Anulowane",
-        "description": "Pomiar AI został anulowany."
+        "description": "Pomiar Monitora promptów został anulowany."
       },
       "skipped": {
         "label": "Pominięte",
-        "description": "Pomiar AI został pominięty. Sprawdź przyczynę."
+        "description": "Pomiar Monitora promptów został pominięty. Sprawdź przyczynę."
       },
       "cost_limit_exceeded": {
         "label": "Przekroczono limit kosztu",
-        "description": "Pomiar AI pominięto z powodu przekroczenia limitu kosztu."
+        "description": "Pomiar Monitora promptów pominięto z powodu przekroczenia limitu kosztu."
       },
       "status_unavailable": {
         "label": "Stan niedostępny",
-        "description": "Nie udało się ustalić stanu pomiaru AI."
+        "description": "Nie udało się ustalić stanu pomiaru Monitora promptów."
       }
     },
     "aiResults": {
-      "title": "Wyniki pomiaru AI",
+      "title": "Wyniki Monitora promptów",
       "back": "Wróć do wykonań",
       "next": "Kolejne próbki",
       "empty": "Dla tego wykonania nie zapisano próbek.",
@@ -191,6 +191,26 @@
         "failed": "Błąd",
         "unknown": "Nieznany"
       }
+    },
+    "summary": {
+      "title": "Podsumowanie sprawdzeń",
+      "withdrawn": "To podsumowanie zostało wycofane.",
+      "down": "Spadki",
+      "up": "Wzrosty",
+      "failed": "Nieudane",
+      "under_review": "W weryfikacji",
+      "quiet": "Bez zmian / nowe",
+      "unavailable": "Sprawdzenie niedostępne",
+      "openRuns": "Otwórz na stronie uruchomień",
+      "thresholds": "Top {topN}; zmiana o co najmniej {positionMove} pozycji",
+      "version": "Wersja podsumowania {version}",
+      "keyword": "Słowo kluczowe",
+      "market": "Rynek",
+      "positions": "Poprzednio → obecnie",
+      "incident": "{count, plural, one {# powiązany incydent} few {# powiązane incydenty} many {# powiązanych incydentów} other {# powiązanego incydentu}}",
+      "run": "Uruchomienie {run}",
+      "classification": "Klasyfikacja w chwili odczytu: {classification}",
+      "noResult": "Brak wyniku"
     }
   }
 }

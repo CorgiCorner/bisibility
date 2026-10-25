@@ -654,6 +654,22 @@ export async function startCreditsTrial(_input: unknown) {
   return { status: "unavailable" as const };
 }
 
+export async function connectOnboardingCredits(_input: unknown) {
+  return { connectionId: "conn_preview" };
+}
+
+export async function manageBillingSubscription() {
+  return { status: "unavailable" as const };
+}
+
+export async function quoteBillingTopup() {
+  throw new Error("Credit purchases are not available in previews.");
+}
+
+export async function purchaseBillingTopup(): Promise<string> {
+  throw new Error("Credit purchases are not available in previews.");
+}
+
 export async function syncProjectTraffic() {
   return {
     connections: 1,

@@ -1,3 +1,4 @@
+import type { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import type { ProviderRequestSurface } from "@/lib/provider-usage/surface";
 import type { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { dominantErrorCode, type ProviderErrorCode } from "@/lib/providers/provider-error-code";
@@ -7,7 +8,7 @@ export type FallbackAttempt = {
   provider: string;
   message: string;
   code?: ProviderErrorCode;
-  reason?: "allocation_exhausted";
+  reason?: "allocation_exhausted" | "funding_exhausted";
   surface?: ProviderRequestSurface;
 };
 
@@ -17,6 +18,7 @@ export class ProviderChainError extends RankCheckRunnerError {
   constructor(
     readonly attempts: FallbackAttempt[],
     readonly admissionExhaustion?: DeploymentAdmissionExhaustedError,
+    readonly fundingExhaustion?: BudgetExhaustedError,
   ) {
     super(
       "provider_failed",

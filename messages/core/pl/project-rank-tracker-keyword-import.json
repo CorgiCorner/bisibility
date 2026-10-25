@@ -570,7 +570,8 @@
           "position": "poz. {position, number}",
           "mixed": "różne",
           "noDifficultyData": "Brak danych o trudności",
-          "coverageUnknown": "Nieznany zakres wyników"
+          "coverageUnknown": "Nieznany zakres wyników",
+          "partialDepth": "Niepełne: sprawdzono do pozycji {depth, number}"
         },
         "columns": {
           "keyword": "Słowo kluczowe",

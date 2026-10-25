@@ -4,8 +4,10 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { z } from "zod";
+import { guardedNotificationType, notificationDeliveryAllowed } from "./delivery-guard";
 import type { NotificationPayload } from "./format";
 import { publishNotificationCreated } from "./realtime";
+import { notificationStoredCopy } from "./stored-copy";
 
 const notificationPayloadSchema: z.ZodType<NotificationPayload> = z.lazy(() =>
   z.union([
@@ -28,58 +30,12 @@ const createNotificationSchema = z.object({
   userId: z.string().min(1),
 });
 
-const IN_APP_DEFAULTS = {
-  alertInApp: true,
-  checkInApp: false,
-  importInApp: true,
-  inviteInApp: true,
-} as const;
-
 function prismaPayload(value: NotificationPayload | undefined) {
   if (value === undefined) {
     return undefined;
   }
 
   return value === null ? Prisma.JsonNull : (value as Prisma.InputJsonValue);
-}
-
-function inAppPreference(type: NotificationType) {
-  if (type === NotificationType.alert_fired) {
-    return "alertInApp";
-  }
-  if (type === NotificationType.check_complete || type === NotificationType.check_failed) {
-    return "checkInApp";
-  }
-  if (type === NotificationType.invite || type === NotificationType.member_joined) {
-    return "inviteInApp";
-  }
-  if (type === NotificationType.import_done || type === NotificationType.import_failed) {
-    return "importInApp";
-  }
-  return null;
-}
-
-async function shouldCreateInAppNotification(
-  userId: string,
-  projectId: string | null,
-  type: NotificationType,
-) {
-  const field = inAppPreference(type);
-  if (!field || !projectId) {
-    return true;
-  }
-
-  const preference = await prisma.notificationPreference.findUnique({
-    select: {
-      alertInApp: true,
-      checkInApp: true,
-      importInApp: true,
-      inviteInApp: true,
-    },
-    where: { userId_projectId: { projectId, userId } },
-  });
-
-  return preference?.[field] ?? IN_APP_DEFAULTS[field];
 }
 
 export async function createNotification(
@@ -101,20 +57,17 @@ export async function createNotification(
     userId,
   });
 
-  if (!(await shouldCreateInAppNotification(data.userId, data.projectId, data.type))) {
-    return null;
-  }
-
-  const notification = await (async () => {
+  const persist = async (db: Prisma.TransactionClient) => {
+    if (!(await notificationDeliveryAllowed(db, data.userId, data.projectId, data.type)))
+      return null;
     try {
-      return await prisma.notification.create({
+      return await db.notification.create({
         data: {
-          body: data.body || null,
+          ...notificationStoredCopy(data.type, data.title, data.body),
           idempotencyKey: data.idempotencyKey ?? null,
           payload: prismaPayload(data.payload),
           publicId: makePublicId("ntf"),
           projectId: data.projectId,
-          title: data.title,
           type: data.type,
           userId: data.userId,
         },
@@ -136,7 +89,10 @@ export async function createNotification(
       }
       throw error;
     }
-  })();
+  };
+  const notification = guardedNotificationType(data.type)
+    ? await prisma.$transaction(persist)
+    : await persist(prisma);
 
   if (!notification) {
     return null;

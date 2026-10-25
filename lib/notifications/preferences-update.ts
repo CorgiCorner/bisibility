@@ -9,35 +9,29 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import {
+  checkPreferenceSelect,
+  checkPreferenceView,
+  legacyCheckPreferenceWarning,
+} from "./check-preferences";
 
-const idSchema = z.string().trim().min(1).max(120);
+export {
+  type NotificationPreferencesForm,
+  notificationPreferenceSchema,
+} from "./preference-schema";
 
-export const notificationPreferenceSchema = z.object({
-  alertEmail: z.boolean(),
-  alertInApp: z.boolean(),
-  /** Optional: forms without a push toggle keep the stored value. */
-  alertPush: z.boolean().optional(),
-  alertSlack: z.boolean(),
-  alertWebhook: z.boolean(),
-  checkEmail: z.boolean(),
-  checkInApp: z.boolean(),
-  importEmail: z.boolean(),
-  importInApp: z.boolean(),
-  inviteEmail: z.boolean(),
-  inviteInApp: z.boolean(),
-  projectId: idSchema,
-  reportEmail: z.boolean(),
-});
-
-export type NotificationPreferencesForm = z.infer<typeof notificationPreferenceSchema>;
+import {
+  type NotificationPreferencesForm,
+  notificationPreferenceSchema,
+} from "./preference-schema";
 
 const preferenceSelect = {
   alertEmail: true,
   alertInApp: true,
   alertPush: true,
+  providerIncidentInApp: true,
   checkEmail: true,
-  checkInApp: true,
+  ...checkPreferenceSelect,
   importEmail: true,
   importInApp: true,
   inviteEmail: true,
@@ -51,7 +45,18 @@ function preferenceData(data: NotificationPreferencesForm) {
     alertInApp: data.alertInApp,
     ...(data.alertPush === undefined ? {} : { alertPush: data.alertPush }),
     checkEmail: data.checkEmail,
-    checkInApp: data.checkInApp,
+    ...(data.providerIncidentInApp === undefined
+      ? {}
+      : { providerIncidentInApp: data.providerIncidentInApp }),
+    ...(data.checkNotificationSetting === undefined
+      ? {}
+      : { checkNotificationSetting: data.checkNotificationSetting }),
+    ...(data.checkNotificationTopN === undefined
+      ? {}
+      : { checkNotificationTopN: data.checkNotificationTopN }),
+    ...(data.checkNotificationPositionMove === undefined
+      ? {}
+      : { checkNotificationPositionMove: data.checkNotificationPositionMove }),
     importEmail: data.importEmail,
     importInApp: data.importInApp,
     inviteEmail: data.inviteEmail,
@@ -92,6 +97,7 @@ export async function applyNotificationPreferences(
   actor: Actor,
   data: NotificationPreferencesForm,
 ) {
+  data = notificationPreferenceSchema.parse(data);
   const project = await requireProjectScope(actor, "update", data.projectId, {
     type: "notification_preference",
   });
@@ -152,6 +158,8 @@ export async function applyNotificationPreferences(
 
   return {
     ...preference,
+    ...checkPreferenceView(preference),
+    ...(data.checkInApp === undefined ? {} : { warnings: [legacyCheckPreferenceWarning] }),
     alertSlack: data.alertSlack,
     alertWebhook: data.alertWebhook,
     projectId: data.projectId,

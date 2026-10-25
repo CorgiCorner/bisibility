@@ -8,6 +8,7 @@ import {
   splitPage,
 } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
+import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 import { deferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
 import { rankItemPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
@@ -86,6 +87,9 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   const { nextCursor, page } = splitPage(rows, limit, (row) =>
     encodeUnprefixedCursor({ publicId: row.id, timestamp: row.createdAt }),
   );
+  const evidence = await readCheckEvidence(projectId, {
+    checkIds: page.flatMap((row) => (row.rankCheck?.publicId ? [row.rankCheck.publicId] : [])),
+  });
   const ledgerActuals = await rankCheckRunTargetLedgerActuals(projectId, run.id);
   return {
     data: await Promise.all(
@@ -110,6 +114,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
           rankCheck: storedRankCheck
             ? {
                 ...(payment ? { payment } : {}),
+                evidenceProjection: evidence.get(storedRankCheck.publicId) ?? null,
                 billingUnits: ledgerActualUnits(
                   ledger,
                   storedRankCheck.billingUnits,

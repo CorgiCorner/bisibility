@@ -13,7 +13,7 @@ export const researchWorkspaceToolNames = {
   listAgentReports: "list_agent_reports",
   createAgentReport: "create_agent_report",
   getAgentReport: "get_agent_report",
-  analyzeAiVisibility: "analyze_ai_visibility",
+  analyzeBrandVisibility: "analyze_brand_visibility",
   compareAiPrompts: "compare_ai_prompts",
   runSiteAudit: "run_site_audit",
   listSiteAudits: "list_site_audits",

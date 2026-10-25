@@ -4,14 +4,20 @@ description: "Choose the right evidence source, provide business context and ret
 ---
 
 These project workflows serve different purposes. The current application has
-AI Visibility, Prompt Explorer, Project Context, Agent Reports and Site Audit.
-Recurring AI Tracking is in development; this guide does not announce its
+Prompt Tracker, Prompt Research, Brand Visibility, Prompt Playground, Project Context, Agent Reports and Site Audit.
+Recurring Prompt Tracker is in development; this guide does not announce its
 availability in a deployed or released build.
 
 ## AI research
 
-AI Visibility searches a supported provider dataset for brand mentions or domain
-citations. Prompt Explorer performs a one-shot synthetic model test. Neither is
+Prompt Research searches dataset questions by keyword for ChatGPT in US English.
+Questions are mostly from Google “People also ask”, not ChatGPT conversation logs.
+Review cost before confirming. Cached reads are free within the project’s data cache setting
+(Settings > Data cache), or the instance default when unset.
+See the [Prompt Tracker guide](/guides/prompt-tracker) for selection and topic review.
+
+Brand Visibility searches a supported provider dataset for brand mentions or domain
+citations. Prompt Playground performs a one-shot synthetic model test. Neither is
 recurring prompt tracking, and a synthetic answer does not establish customer
 search demand.
 
@@ -65,12 +71,13 @@ sample is not proof of full-site coverage or actual search-engine indexing.
 See the [Site Audit guide](/guides/site-audit) for exact budgets, URL eligibility,
 robots behavior and saved-report reuse.
 
-## AI Tracking
+## Prompt Tracker
 
 The recurring feature in development retains selected prompt observations with
 exact revisions, source, model, market, answers and citations. Consumer scraping,
 model API responses and Google AI Overview observations keep distinct scope.
-Generated suggestions remain editable hypotheses. Saving them does not buy a
+Generated suggestions remain editable hypotheses, not questions found in a
+database. Saving them does not buy a
 baseline run or enable a schedule.
 
 The design includes explicit paid-run review, disabled-by-default schedules and
@@ -78,5 +85,5 @@ coverage-aware history. Availability depends on the application build and the
 matching released API and client packages. Use the current on-demand research
 and reporting workflows while recurring tracking is prepared for release.
 
-See the [AI Tracking guide](/guides/ai-tracking) for the implementation contract.
+See the [Prompt Tracker guide](/guides/prompt-tracker) for the implementation contract.
 Its presence in the repository does not announce a production release.

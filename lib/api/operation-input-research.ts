@@ -7,6 +7,11 @@ import {
   localRunHistorySchema,
 } from "@/lib/local-monitor-results/schema";
 import { historyExportRequestSchema } from "@/lib/rank-history/report-export-model";
+import {
+  pageIndexingSettingsPatchSchema,
+  pageIndexingUrlsQuerySchema,
+} from "@/lib/search-index/report-schema";
+import { searchIndexInspectionSchema } from "@/lib/search-index/schema";
 import { siteAuditSchema } from "@/lib/site-audit/schema";
 import { z } from "zod";
 import { snapshotQuery } from "./analytics";
@@ -129,6 +134,13 @@ export const researchOperationInputs = {
       }),
     ),
   },
+  getPageIndexingReport: noInput,
+  getPageIndexingSettings: noInput,
+  updatePageIndexingSettings: { body: zodInput(pageIndexingSettingsPatchSchema, { keys: "wire" }) },
+  listPageIndexingUrls: { query: zodInput(pageIndexingUrlsQuerySchema, { keys: "wire" }) },
+  listSearchIndexSitemaps: noInput,
+  getSearchIndexSitemap: noInput,
+  inspectSearchIndexUrls: { body: zodInput(searchIndexInspectionSchema, { keys: "wire" }) },
   listSearchPerformanceQueryStats: { query: zodInput(queryStatsQuery) },
   listSiteAudits: noInput,
   listSitemapMonitors: noInput,

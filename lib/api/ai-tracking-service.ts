@@ -29,6 +29,7 @@ import {
   listSchedules,
   updateSchedule,
 } from "@/lib/ai-tracking/stores/schedules";
+import type { TrackingTransaction } from "@/lib/ai-tracking/stores/shared";
 import {
   archiveTopic,
   createTopic,
@@ -46,10 +47,15 @@ export async function resolveTrackingId(
   projectId: string,
   resource: "topics" | "prompts" | "schedules",
   publicId: string,
+  transaction?: TrackingTransaction,
 ) {
-  const rows = await { topics: listTopics, prompts: listPrompts, schedules: listSchedules }[
-    resource
-  ](projectId);
+  if (transaction && resource !== "topics")
+    throw new Error("Only topic resolution supports a catalog transaction.");
+  const rows = transaction
+    ? await listTopics(projectId, transaction)
+    : await { topics: listTopics, prompts: listPrompts, schedules: listSchedules }[resource](
+        projectId,
+      );
   const row = rows.find((item) => item.publicId === publicId);
   if (!row) throw new Error(`${resource} not found.`);
   return row.id;
@@ -85,14 +91,19 @@ export async function mutateTrackingCatalog(
   method: string,
   value: unknown,
   publicId?: string,
+  transaction?: TrackingTransaction,
 ) {
+  if (transaction && (publicId || method !== "POST" || !["topics", "prompts"].includes(resource)))
+    throw new Error("Only catalog creates support a shared transaction.");
   if (resource === "topics") {
     const id = publicId ? await resolveTrackingId(projectId, "topics", publicId) : null;
     if (id && method === "DELETE") return archiveTopic(projectId, id);
     const input = (id ? trackingTopicForm.partial() : trackingTopicForm).parse(value);
     return id
       ? updateTopic(projectId, id, input)
-      : createTopic(projectId, trackingTopicForm.parse(value));
+      : transaction
+        ? createTopic(projectId, trackingTopicForm.parse(value), undefined, transaction)
+        : createTopic(projectId, trackingTopicForm.parse(value));
   }
   if (resource === "prompts") {
     const id = publicId ? await resolveTrackingId(projectId, "prompts", publicId) : null;
@@ -102,11 +113,18 @@ export async function mutateTrackingCatalog(
       input.topicId === undefined
         ? undefined
         : input.topicId
-          ? await resolveTrackingId(projectId, "topics", input.topicId)
+          ? await resolveTrackingId(projectId, "topics", input.topicId, transaction)
           : null;
     return id
       ? updatePrompt(projectId, id, { ...input, topicId })
-      : createPrompt(projectId, { ...trackingPromptForm.parse(value), topicId });
+      : transaction
+        ? createPrompt(
+            projectId,
+            { ...trackingPromptForm.parse(value), topicId },
+            undefined,
+            transaction,
+          )
+        : createPrompt(projectId, { ...trackingPromptForm.parse(value), topicId });
   }
   if (resource === "schedules") {
     const id = publicId ? await resolveTrackingId(projectId, "schedules", publicId) : null;

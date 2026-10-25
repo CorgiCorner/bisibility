@@ -110,7 +110,7 @@ const operations: [string, JsonObject, number][] = [
     201,
   ],
   ["get_agent_report", { report_id: reportId }, 200],
-  ["analyze_ai_visibility", analysisFields, 200],
+  ["analyze_brand_visibility", analysisFields, 200],
   [
     "compare_ai_prompts",
     { ...analysisFields, prompt: "Compare tools", models: ["gpt-4.1-mini"] },
@@ -127,7 +127,7 @@ const operationServices: Record<string, typeof mocks.context> = {
   list_agent_reports: mocks.listReports,
   create_agent_report: mocks.createReport,
   get_agent_report: mocks.getReport,
-  analyze_ai_visibility: mocks.visibility,
+  analyze_brand_visibility: mocks.visibility,
   compare_ai_prompts: mocks.prompts,
   run_site_audit: mocks.runAudit,
   list_site_audits: mocks.listAudits,
@@ -137,7 +137,7 @@ const writes = operations.filter(([name]) =>
   [
     "update_project_context",
     "create_agent_report",
-    "analyze_ai_visibility",
+    "analyze_brand_visibility",
     "compare_ai_prompts",
     "run_site_audit",
   ].includes(name),

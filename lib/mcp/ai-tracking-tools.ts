@@ -2,44 +2,49 @@ import type { RestCall } from "./rest-call";
 import type { JsonObject, McpToolDefinition } from "./types";
 
 const operations = {
-  listAiTrackingTopics: ["GET", "topics"],
-  createAiTrackingTopic: ["POST", "topics"],
-  updateAiTrackingTopic: ["PATCH", "topics", "topic_id"],
-  archiveAiTrackingTopic: ["DELETE", "topics", "topic_id"],
-  listAiTrackingPrompts: ["GET", "prompts"],
-  createAiTrackingPrompt: ["POST", "prompts"],
-  updateAiTrackingPrompt: ["PATCH", "prompts", "prompt_id"],
-  archiveAiTrackingPrompt: ["DELETE", "prompts", "prompt_id"],
-  listAiTrackingSchedules: ["GET", "schedules"],
-  createAiTrackingSchedule: ["POST", "schedules"],
-  updateAiTrackingSchedule: ["PATCH", "schedules", "schedule_id"],
-  archiveAiTrackingSchedule: ["DELETE", "schedules", "schedule_id"],
-  previewAiTrackingRun: ["POST", "runs/preview"],
-  createAiTrackingRun: ["POST", "runs"],
-  listAiTrackingRuns: ["GET", "runs"],
-  getAiTrackingRun: ["GET", "runs", "run_id"],
-  listAiTrackingSamples: ["GET", "runs", "run_id", "samples"],
-  cancelAiTrackingRun: ["POST", "runs", "run_id", "cancel"],
-  retryAiTrackingRun: ["POST", "runs", "run_id", "retry"],
-  getAiTrackingHistory: ["GET", "history"],
-  getAiTrackingTrends: ["GET", "trends"],
-  exportAiTrackingEvidence: ["GET", "export"],
-  suggestAiTrackingPrompts: ["POST", "suggestions"],
-  acceptAiTrackingSuggestions: ["POST", "suggestions/accept"],
-  aiTrackingSuggestionsPreview: ["POST", "suggestions/preview"],
-  aiTrackingSuggestionsGenerate: ["POST", "suggestions/generate"],
+  listPromptTrackerTopics: ["GET", "topics"],
+  createPromptTrackerTopic: ["POST", "topics"],
+  updatePromptTrackerTopic: ["PATCH", "topics", "topic_id"],
+  archivePromptTrackerTopic: ["DELETE", "topics", "topic_id"],
+  listPromptTrackerPrompts: ["GET", "prompts"],
+  createPromptTrackerPrompt: ["POST", "prompts"],
+  updatePromptTrackerPrompt: ["PATCH", "prompts", "prompt_id"],
+  archivePromptTrackerPrompt: ["DELETE", "prompts", "prompt_id"],
+  listPromptTrackerSchedules: ["GET", "schedules"],
+  createPromptTrackerSchedule: ["POST", "schedules"],
+  updatePromptTrackerSchedule: ["PATCH", "schedules", "schedule_id"],
+  archivePromptTrackerSchedule: ["DELETE", "schedules", "schedule_id"],
+  previewPromptTrackerRun: ["POST", "runs/preview"],
+  createPromptTrackerRun: ["POST", "runs"],
+  listPromptTrackerRuns: ["GET", "runs"],
+  getPromptTrackerRun: ["GET", "runs", "run_id"],
+  listPromptTrackerSamples: ["GET", "runs", "run_id", "samples"],
+  cancelPromptTrackerRun: ["POST", "runs", "run_id", "cancel"],
+  retryPromptTrackerRun: ["POST", "runs", "run_id", "retry"],
+  getPromptTrackerHistory: ["GET", "history"],
+  getPromptTrackerTrends: ["GET", "trends"],
+  exportPromptTrackerEvidence: ["GET", "export"],
+  suggestPromptResearchPrompts: ["POST", "suggestions"],
+  acceptPromptResearchSuggestions: ["POST", "suggestions/accept"],
+  promptResearchSuggestionsPreview: ["POST", "suggestions/preview"],
+  promptResearchSuggestionsGenerate: ["POST", "suggestions/generate"],
 } as const;
 function required(input: JsonObject, key: string) {
   const value = input[key];
   if (typeof value !== "string" || !value.trim()) throw new Error(`${key} is required.`);
   return encodeURIComponent(value);
 }
-export function dispatchAiTrackingTool(name: string, input: JsonObject): RestCall | null {
+export function dispatchPromptTrackerTool(name: string, input: JsonObject): RestCall | null {
   if (!(name in operations)) return null;
   const [method, resource, member, action] = operations[
     name as keyof typeof operations
   ] as readonly [RestCall["method"], string, string?, string?];
-  let path = `/projects/${required(input, "project_id")}/ai-tracking/${resource}`;
+  const promptResearch =
+    name === "suggestPromptResearchPrompts" ||
+    name === "acceptPromptResearchSuggestions" ||
+    name.startsWith("promptResearch");
+  const root = promptResearch ? "prompt-research" : "prompt-tracker";
+  let path = `/projects/${required(input, "project_id")}/${root}/${resource}`;
   if (member) path += `/${required(input, member)}`;
   if (action) path += `/${action}`;
   const query = new URLSearchParams();
@@ -65,19 +70,26 @@ export function dispatchAiTrackingTool(name: string, input: JsonObject): RestCal
     idempotencyKey: typeof input.idempotency_key === "string" ? input.idempotency_key : undefined,
   };
 }
-export const aiTrackingToolDefinitions: McpToolDefinition[] = Object.entries(operations).map(
+export const promptTrackerToolDefinitions: McpToolDefinition[] = Object.entries(operations).map(
   ([name, route]) => {
-    const preview = name === "previewAiTrackingRun" || name === "aiTrackingSuggestionsPreview";
-    const readOnly = route[0] === "GET" || preview || name === "suggestAiTrackingPrompts";
+    const preview =
+      name === "previewPromptTrackerRun" || name === "promptResearchSuggestionsPreview";
+    const readOnly = route[0] === "GET" || preview || name === "suggestPromptResearchPrompts";
     return {
       name,
       title: name.replace(/([A-Z])/g, " $1").trim(),
-      description: preview
-        ? "Spend-free AI tracking capability and budget preview. Never submits a provider task."
-        : "Project-scoped AI tracking operation. Preserve evidence provenance, partial/unknown states, and explicit budget consent. Writes never trigger an automatic baseline.",
+      description:
+        name.startsWith("promptResearch") || name.includes("PromptResearch")
+          ? preview
+            ? "Spend-free Prompt Research suggestion preview. Never submits a provider task."
+            : "Prompt Research suggestions to review. Accepted drafts become Prompt Tracker prompts."
+          : preview
+            ? "Spend-free Prompt Tracker capability and budget preview. Never submits a provider task."
+            : "Project-scoped Prompt Tracker operation. Preserve evidence provenance, partial/unknown states, and explicit budget consent. Writes never trigger an automatic baseline.",
       annotations: {
         destructiveHint: route[0] === "DELETE",
-        openWorldHint: name === "createAiTrackingRun" || name === "aiTrackingSuggestionsGenerate",
+        openWorldHint:
+          name === "createPromptTrackerRun" || name === "promptResearchSuggestionsGenerate",
         readOnlyHint: readOnly,
       },
       execution: { taskSupport: "forbidden" },
@@ -100,12 +112,12 @@ export const aiTrackingToolDefinitions: McpToolDefinition[] = Object.entries(ope
   },
 );
 
-export const aiTrackingToolOperationNames = Object.fromEntries(
+export const promptTrackerToolOperationNames = Object.fromEntries(
   Object.keys(operations).map((name) => [
     name,
     name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
   ]),
 );
-export const aiTrackingToolSchemas = Object.fromEntries(
-  aiTrackingToolDefinitions.map((tool) => [tool.name, tool.inputSchema]),
+export const promptTrackerToolSchemas = Object.fromEntries(
+  promptTrackerToolDefinitions.map((tool) => [tool.name, tool.inputSchema]),
 );

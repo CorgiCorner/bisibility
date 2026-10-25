@@ -64,12 +64,18 @@ describe("notification preference queries", () => {
     });
 
     expect(result).toMatchObject({
+      checkNotificationSetting: "important",
+      checkNotificationTopN: 10,
+      checkNotificationPositionMove: 5,
+    });
+    expect(result).toHaveProperty("providerIncidentInApp", true);
+    expect(result).toMatchObject({
       alertEmail: true,
       alertInApp: true,
       alertSlack: false,
       alertWebhook: false,
       checkEmail: false,
-      checkInApp: false,
+      checkInApp: true,
       email: "owner@example.com",
       emailVerification: "verified",
       importEmail: true,
@@ -106,7 +112,7 @@ describe("notification preference queries", () => {
       alertSlack: true,
       alertWebhook: true,
       checkEmail: true,
-      checkInApp: false,
+      checkInApp: true,
       importEmail: false,
       inviteInApp: false,
       reportEmail: false,
@@ -114,4 +120,23 @@ describe("notification preference queries", () => {
       webhookAvailable: true,
     });
   });
+  it.each(["all", "important", "none"] as const)(
+    "derives %s independently of the legacy column",
+    async (setting) => {
+      for (const legacy of [true, false]) {
+        mocks.prisma.notificationPreference.findUnique.mockResolvedValue({
+          checkInApp: legacy,
+          checkNotificationSetting: setting,
+          checkNotificationTopN: 33,
+          checkNotificationPositionMove: 7,
+        });
+        expect(await getNotificationPreferences("prj_1")).toMatchObject({
+          checkInApp: setting !== "none",
+          checkNotificationSetting: setting,
+          checkNotificationTopN: 33,
+          checkNotificationPositionMove: 7,
+        });
+      }
+    },
+  );
 });

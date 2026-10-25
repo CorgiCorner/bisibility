@@ -15,6 +15,9 @@ export function keywordExportJson(
       location: row.location,
       intent: row.intent,
       rankingHistory: selectedChecks(row, options).map((check) => ({
+        ...(options.scope === "history"
+          ? { evidenceProjection: check.evidenceProjection ?? null }
+          : {}),
         checkedAt: check.checkedAt.toISOString(),
         normalizationVersion: check.normalizationVersion,
         position: check.position,

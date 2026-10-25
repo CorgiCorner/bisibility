@@ -23,6 +23,7 @@ const valueSchema = z
     serpDepth: z.number().int(),
     serpStopOnMatch: z.boolean(),
     inspectionDailyLimit: z.number().int(),
+    inspectionBudgetMode: z.enum(["off", "fixed", "available_quota"]),
     searchSyncImportMonths: z.number().int().nullable(),
     searchSyncPace: z.string().nullable(),
   })
@@ -72,6 +73,11 @@ export function defaultsMutationScope(
     bodyHash: settingsHash("defaults-mutation-body", { request, confirmation }),
   };
 }
+const storedReceiptSchema = defaultsReceiptSchema.extend({
+  value: valueSchema.extend({
+    inspectionBudgetMode: valueSchema.shape.inspectionBudgetMode.optional(),
+  }),
+});
 type Scope = ReturnType<typeof defaultsMutationScope>;
 export async function readDefaultsReceipt(tx: SettingsHostTransaction, scope: Scope) {
   const row = await tx.measurementSettingsMutation.findUnique({
@@ -86,7 +92,7 @@ export async function readDefaultsReceipt(tx: SettingsHostTransaction, scope: Sc
   if (!row) return null;
   if (row.bodyHash !== scope.bodyHash || row.actorScopeHash !== scope.actorScopeHash)
     throw new SettingsHostError("mutation_conflict");
-  const result = defaultsReceiptSchema.parse(row.result);
+  const result = storedReceiptSchema.parse(row.result);
   if (result.sourceHash !== row.resultSourceHash) throw new SettingsHostError("source_unavailable");
   return result;
 }

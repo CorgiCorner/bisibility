@@ -1,3 +1,4 @@
+import { withEvidenceShellMessages } from "@/.storybook/evidence-shell-messages";
 import type { OperationSnapshot } from "@/lib/rank-check/runs/contract";
 import { AppRealtimeContext, type AppRealtimeValue } from "@/lib/realtime/useAppRealtime";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -17,7 +18,7 @@ const rankCheck = {
   },
   estimatedCostCents: 0,
   finishedAt: null,
-  id: "rcr_story",
+  id: "rcr_abcdefghijklmnopqrstuvwx",
   keywordCount: 350,
   kind: "rank_check",
   outcome: null,
@@ -57,6 +58,7 @@ function TrayStory({
 
 const meta = {
   title: "Dashboard/Runs",
+  decorators: [withEvidenceShellMessages],
   component: TrayStory,
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof TrayStory>;
@@ -139,4 +141,39 @@ export const AllDaysImportedStillRunning: Story = {
       },
     ],
   },
+};
+
+const recent = {
+  ...rankCheck,
+  status: "completed",
+  outcome: "succeeded",
+  finishedAt: "2026-10-24T07:00:00Z",
+  recent: { up: 12, down: 4, underReview: 0, incidentHref: null },
+} satisfies OperationSnapshot;
+export const RecentIdle: Story = { args: { operations: [recent] } };
+export const RecentFailure: Story = {
+  args: {
+    defaultOpen: true,
+    operations: [
+      {
+        ...recent,
+        outcome: "failed",
+        recent: {
+          ...recent.recent,
+          underReview: 2,
+          incidentHref: "/app/prj_story/runs?view=checks&incidentId=example",
+        },
+      },
+    ],
+  },
+};
+export const RecentDismissed: Story = { args: { operations: [] } };
+export const ActiveAttention: Story = {
+  args: {
+    defaultOpen: true,
+    operations: [{ ...rankCheck, status: "blocked", blockedReason: "budget_exhausted" }],
+  },
+};
+export const MixedRecentActive: Story = {
+  args: { defaultOpen: true, operations: [recent, rankCheck] },
 };

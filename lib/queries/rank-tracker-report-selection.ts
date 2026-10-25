@@ -69,6 +69,9 @@ function prepareRankTrackerReportSelection(
   });
   return { query, actor, asOf, limits, pausedSchedules, loadMetadata, policy, request };
 }
+
+import { readRankResultEvidence } from "./rank-result-evidence";
+
 async function readRankTrackerReportSelection(
   tx: Prisma.TransactionClient,
   plan: ReturnType<typeof prepareRankTrackerReportSelection>,
@@ -104,7 +107,7 @@ async function readRankTrackerReportSelection(
   const resolutions = resolveCurrentRankTrackerTargets(targets, policy, project.id);
   const resolved = new Map(resolutions.map((target) => [target.id, target]));
   const projectSchedule = createKeywordMembershipProjector(asOf);
-  const rows = candidates.rows.map((candidate) => {
+  const projectedRows = candidates.rows.map((candidate) => {
     const value = metadata.get(candidate.publicId);
     const metrics = value?.metrics ?? {
       cpc: null,
@@ -123,6 +126,17 @@ async function readRankTrackerReportSelection(
     if (!resolution) throw new Error("Authorized rank tracker target is missing its resolution.");
     return projectRankTrackerQuality(row, resolution, policy, project.id);
   });
+  const evidence = await readRankResultEvidence(
+    tx,
+    project.id,
+    projectedRows.flatMap((row) =>
+      row.rankQuality.latestAttempt?.id ? [row.rankQuality.latestAttempt.id] : [],
+    ),
+  );
+  const rows = projectedRows.map((row) => ({
+    ...row,
+    rankEvidence: evidence.get(row.rankQuality.latestAttempt?.id ?? ""),
+  }));
   const locations = rankTrackerReportLocations(rows, candidates.registeredLocations);
   // An unavailable market stays empty; it never widens to every market.
   const lensRows = rows.filter(

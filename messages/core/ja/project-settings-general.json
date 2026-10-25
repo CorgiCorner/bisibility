@@ -85,8 +85,9 @@
         "history": "履歴",
         "keywords": "キーワード",
         "pages": "ページ",
-        "ai_visibility": "AIでの可視性",
-        "prompt_explorer": "プロンプト調査",
+        "ai_visibility": "ブランド可視性",
+        "prompt_explorer": "プロンプトプレイグラウンド",
+        "prompt_research": "質問リサーチ",
         "site_audit": "サイト監査"
       },
       "notice": "削除しても検索は実行されません。次の検索には有料リクエストが必要になる場合があります。",
@@ -96,8 +97,9 @@
         "ranked_keywords": "ランキングキーワード",
         "backlinks": "被リンク",
         "domain_overview": "ドメイン概要",
-        "ai_visibility": "AIでの可視性",
-        "prompt_explorer": "プロンプト調査",
+        "ai_visibility": "ブランド可視性",
+        "prompt_explorer": "プロンプトプレイグラウンド",
+        "prompt_research": "質問リサーチ",
         "site_audit": "サイト監査"
       }
     }

@@ -2,6 +2,7 @@
 
 import type { CheckRunsView } from "@/lib/checks/contract";
 import { parsePublicId } from "@/lib/db/public-id";
+import { projectionKeys } from "@/lib/provider-evidence/projection/model";
 import { getCheckRunsView } from "@/lib/queries/check-runs";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -13,12 +14,22 @@ const checkRunsCursorSchema = z.object({
 
 const loadCheckRunsSchema = z.object({
   cursor: checkRunsCursorSchema.nullish(),
-  filter: z.enum(["all", "completed", "failed", "running", "deferred", "fallback"]),
+  filter: z.enum([
+    "all",
+    "completed",
+    "failed",
+    "running",
+    "deferred",
+    "fallback",
+    ...projectionKeys,
+  ]),
   projectId: z.string().min(1),
   provider: z.string().min(1).max(100),
+  from: z.string().optional(),
+  to: z.string().optional(),
   endAt: z.string().datetime().optional(),
   range: z.enum(["24h", "7d", "30d"]),
-  trigger: z.enum(["all", "manual", "scheduled"]),
+  trigger: z.enum(["all", "manual", "scheduled", "programmatic"]),
 });
 
 export async function loadCheckRuns(input: unknown): Promise<CheckRunsView> {
@@ -36,6 +47,8 @@ export async function loadCheckRuns(input: unknown): Promise<CheckRunsView> {
 
   return getCheckRunsView(data.projectId, {
     cursor: data.cursor ?? undefined,
+    ...(data.from === undefined ? {} : { from: data.from }),
+    ...(data.to === undefined ? {} : { to: data.to }),
     limit: 50,
     now: rangeEnd,
     provider: data.provider,

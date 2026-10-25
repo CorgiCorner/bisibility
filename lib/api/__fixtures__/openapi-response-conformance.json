@@ -1,22 +1,12 @@
 [
   {
     "kinds": ["no-capture"],
-    "operation": "acceptAiTrackingSuggestions",
+    "operation": "acceptPromptResearchSuggestions",
     "status": "none"
   },
   {
     "kinds": ["no-capture"],
-    "operation": "aiTrackingSuggestionsGenerate",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "aiTrackingSuggestionsPreview",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "analyzeAiVisibility",
+    "operation": "analyzeBrandVisibility",
     "status": "none"
   },
   {
@@ -296,6 +286,16 @@
     "operation": "mintMigrationToken",
     "sources": ["lib/api/app-surface-more.test.ts"],
     "status": "201"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "promptResearchSuggestionsGenerate",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "promptResearchSuggestionsPreview",
+    "status": "none"
   },
   {
     "kinds": ["no-capture"],

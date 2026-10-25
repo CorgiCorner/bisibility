@@ -21,6 +21,9 @@ const preferences: NotificationPreferencesView = {
   alertWebhook: false,
   checkEmail: false,
   checkInApp: true,
+  checkNotificationSetting: "important",
+  checkNotificationTopN: 10,
+  checkNotificationPositionMove: 5,
   email: "owner@example.com",
   emailVerification: "verified",
   importEmail: true,
@@ -101,4 +104,24 @@ export const RouteLoading: Story = {
   args: { canEdit: true, preferences },
   name: "Route loading",
   render: () => <NotificationsRouteLoading />,
+};
+
+export const AllChecks: Story = {
+  args: { canEdit: true, preferences: { ...preferences, checkNotificationSetting: "all" } },
+};
+export const ImportantChecks: Story = { args: { canEdit: true, preferences } };
+export const NoChecks: Story = {
+  args: { canEdit: true, preferences: { ...preferences, checkNotificationSetting: "none" } },
+};
+export const IncidentsOff: Story = {
+  args: { canEdit: true, preferences: { ...preferences, providerIncidentInApp: false } },
+};
+export const ThresholdErrors: Story = {
+  args: { canEdit: true, preferences },
+  play: async ({ canvas, userEvent }) => {
+    const input = canvas.getByRole("textbox", { name: /Top-N|top N|上位 N/ });
+    await userEvent.clear(input);
+    await userEvent.type(input, "0");
+    await userEvent.tab();
+  },
 };

@@ -443,7 +443,7 @@ describe("provider actions", () => {
     expect(stored).not.toContain("password");
     expect(JSON.parse(decryptSecret(stored))).toEqual({ login: "login", password: "password" });
     expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledWith({
-      select: { priority: true },
+      select: { enabled: true, priority: true },
       where: { kind: "serp", projectId: "project_1" },
     });
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledWith(
@@ -483,6 +483,32 @@ describe("provider actions", () => {
     });
     expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("password");
   });
+
+  it.each([true, false])(
+    "sets new SERP activation from the existing chain (%s)",
+    async (enabled) => {
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
+      mocks.prisma.providerConnection.findMany.mockResolvedValue([
+        connection({ enabled, priority: 7, provider: "serpapi" }),
+      ]);
+      mocks.prisma.providerConnection.upsert.mockImplementation(({ create }) =>
+        Promise.resolve(connection({ ...create, id: "new_connection" })),
+      );
+      await connectProvider({
+        projectId: "prj_a00000000000000000000000",
+        providerId: "dataforseo",
+        login: "login",
+        secret: "password",
+        enabled: true,
+        priority: 0,
+      });
+      expect(mocks.prisma.providerConnection.upsert.mock.calls[0][0].create).toMatchObject({
+        enabled: !enabled,
+        priority: 8,
+      });
+      expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+    },
+  );
 
   it("aborts connect when the locked stable identity replaced the verified row", async () => {
     const preliminary = connection({ id: "stale_connection" });
@@ -876,6 +902,7 @@ describe("provider actions", () => {
     expect(
       [...rows.values()].map((row) => row.priority).sort((left, right) => left - right),
     ).toEqual([0, 1]);
+    expect([...rows.values()].filter((row) => row.enabled)).toHaveLength(1);
   });
 
   it("tests a connection with stored encrypted credentials", async () => {

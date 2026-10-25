@@ -54,7 +54,7 @@ describe("installable SEO audit skill contract", () => {
       "get_agent_report",
       "create_agent_report",
       "list_search_performance_query_stats",
-      "analyze_ai_visibility",
+      "analyze_brand_visibility",
       "compare_ai_prompts",
     ]) {
       expect(skill).toContain(`\`${name}\``);
@@ -95,9 +95,14 @@ describe("installable SEO audit skill contract", () => {
     payload.body.recommendations[0].evidence_ids = ["invented"];
     expect(() => validateReport(payload)).toThrow("Dangling");
     const synthetic = copy();
-    synthetic.body.evidence[0].type = "synthetic_prompt_test";
-    synthetic.body.evidence[0].source_tool = "get_agent_report";
+    const cited = synthetic.body.evidence.find((row) => row.id === "crawl-pricing");
+    expect(cited).toBeDefined();
+    if (!cited) return;
+    cited.type = "synthetic_prompt_test";
+    cited.class = "synthetic_prompt";
+    cited.source_tool = "get_agent_report";
     synthetic.body.recommendations[0].category = "visibility";
+    synthetic.body.recommendations[0].evidence_class = "synthetic_prompt";
     expect(() => validateReport(synthetic)).toThrow("observed data");
   });
 

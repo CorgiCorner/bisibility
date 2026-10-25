@@ -53,8 +53,8 @@ export const Expanded: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId("sidebar-collapse-icon")).toBeInTheDocument();
     await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
-    await expect(canvas.getByText("Tracking")).toBeVisible();
-    await expect(canvas.getByText("Research & audits")).toBeVisible();
+    await expect(canvas.getByText("SEO")).toBeVisible();
+    await expect(canvas.getByText("AI Search")).toBeVisible();
     await expect(canvas.getByText("Data & reports")).toBeVisible();
     await expect(canvas.getByText("Project")).toBeVisible();
     const searchConsole = canvas.getByText("Search Console").closest("a");

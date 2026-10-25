@@ -1,8 +1,10 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
-import { prisma } from "@/lib/db/prisma";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
+import { captureRecoveryCandidate } from "@/lib/provider-evidence/recovery/capture";
 import {
   type QueuedDeadlineMaintenanceCursor,
   reconcileExpiredQueuedRankCheckBatches,
@@ -50,7 +52,7 @@ export async function markStaleRunningChecks(
   const olderThanMinutes = staleWindowMinutes(input.olderThanMinutes);
   const now = input.now ?? new Date();
   const cutoff = new Date(now.getTime() - olderThanMinutes * 60_000);
-  const staleResult = await prisma.$transaction(async (tx) => {
+  const staleResult = await notificationTransaction(async (tx) => {
     const staleChecks = await tx.rankCheck.findMany({
       orderBy: { id: "asc" },
       select: {
@@ -80,12 +82,16 @@ export async function markStaleRunningChecks(
         status: { in: ["queued", "running"] },
       },
     });
+    for (const check of staleChecks)
+      await captureRecoveryCandidate(tx, check.id, { finishedAt: now }, now);
     const result = await tx.rankCheck.updateMany({
       data: {
         attemptCount: 0,
         degradedToCountry: false,
         error: STALE_RUNNING_CHECK_ERROR,
         estimatedCostCents: null,
+        comparisonAllowed: false,
+        terminalPersistedAt: new Date(),
         finishedAt: now,
         normalizationVersion: null,
         status: "failed",
@@ -94,6 +100,7 @@ export async function markStaleRunningChecks(
       where: { id: { in: staleCheckIds }, status: "running" },
     });
 
+    for (const id of staleCheckIds) queueCheckSummary(tx, id);
     const projectIds = new Set<string>();
     for (const item of linkedItems) {
       if (item.rankCheckId) {

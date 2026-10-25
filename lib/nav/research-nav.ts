@@ -1,34 +1,47 @@
 import { ChatCircleTextIcon } from "@phosphor-icons/react/dist/ssr/ChatCircleText";
+import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
 import { FileTextIcon } from "@phosphor-icons/react/dist/ssr/FileText";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { ScanIcon } from "@phosphor-icons/react/dist/ssr/Scan";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import type { NavEntry } from "./nav-items";
 
-export const aiTrackingNavEntry = {
-  group: "tracking",
-  label: "AI Tracking",
+export const promptResearchNavEntry = {
+  group: "ai",
+  label: "Prompt Research",
   scope: "own-axis",
-  segment: "ai-tracking",
+  segment: "prompt-research",
+  icon: MagnifyingGlassIcon,
+} as const satisfies NavEntry;
+
+export const aiTrackingNavEntry = {
+  group: "ai",
+  label: "Prompt Tracker",
+  scope: "own-axis",
+  segment: "prompt-tracker",
   icon: SparkleIcon,
 } as const satisfies NavEntry;
 
-export const researchModuleNavEntries = [
+export const aiSearchNavEntries = [
   {
-    group: "research",
-    label: "AI Visibility",
+    group: "ai",
+    label: "Brand Visibility",
     scope: "own-axis",
-    segment: "ai-visibility",
-    icon: SparkleIcon,
+    segment: "brand-visibility",
+    icon: EyeIcon,
   },
   {
-    group: "research",
-    label: "Prompt Explorer",
+    group: "ai",
+    label: "Prompt Playground",
     scope: "own-axis",
-    segment: "prompt-explorer",
+    segment: "prompt-playground",
     icon: ChatCircleTextIcon,
   },
+] as const satisfies readonly NavEntry[];
+
+export const researchModuleNavEntries = [
   {
-    group: "research",
+    group: "seo",
     label: "Site Audit",
     scope: "own-axis",
     segment: "site-audit",

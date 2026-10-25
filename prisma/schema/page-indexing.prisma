@@ -1,0 +1,40 @@
+model PageIndexingSitemap {
+  id             String    @id @default(cuid())
+  projectId      String
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  path           String
+  parentPath     String?
+  isIndex        Boolean
+  childCount     Int
+  contentType    String
+  isPending      Boolean
+  errors         Int
+  warnings       Int
+  lastSubmitted  DateTime?
+  lastDownloaded DateTime?
+  submitted      Int
+  readAt         DateTime
+
+  @@unique([projectId, path])
+  @@map("page_indexing_sitemaps")
+}
+
+model PageIndexingDay {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date             String
+  property         String?
+  indexed          Int
+  notIndexed       Int
+  failed           Int
+  checked          Int
+  total            Int
+  inspectedThatDay Int
+  stop             String?
+  changes          Json
+  recordedAt       DateTime
+
+  @@unique([projectId, date])
+  @@map("page_indexing_days")
+}

@@ -393,6 +393,8 @@ describe("queued rank-check run-item preparation", () => {
       expect(mocks.state.batches[0]).toMatchObject({ error: reason, state: "deferred" });
       expect(mocks.state.rankChecks[0]).toMatchObject({
         deferredReason: code,
+        terminalPersistedAt: expect.any(Date),
+        comparisonAllowed: false,
         estimatedCostCents: null,
         status: "deferred",
       });

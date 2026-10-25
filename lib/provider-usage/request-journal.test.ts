@@ -187,6 +187,7 @@ describe("createProviderRequestJournal", () => {
     await usage.observer.settle(await usage.observer.begin(), successReceipt);
     expect(usage.quantity).toBe(1);
     expect(usage.costCents).toBe(0);
+    expect(usage.lastRequestCostCents).toBe(0);
   });
 
   it("settle turns the durable unknown row into a recorded receipt", async () => {

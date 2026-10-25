@@ -1,4 +1,5 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { queueRunSummary } from "@/lib/notifications/check-summaries/triggers";
 import { ACTIVE_RUN_STATUSES } from "./contract";
 import {
   pendingRunItemCount,
@@ -58,5 +59,6 @@ export async function finalizeRankCheckRun(
     data: finalRunData({ groups, now: input.now, run: input.run }),
     where: { id: input.run.id, status: input.run.status },
   });
+  if (finalized.count > 0) queueRunSummary(client as Prisma.TransactionClient, input.run.id);
   return { finalized: finalized.count > 0, projectId: input.run.projectId };
 }

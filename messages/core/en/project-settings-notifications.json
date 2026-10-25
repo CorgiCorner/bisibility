@@ -8,19 +8,43 @@
       "inApp": "In-app",
       "email": "Email",
       "alertFired": "Alert fired",
-      "checkComplete": "Check complete",
+      "checkComplete": "Check notifications",
       "importFinished": "Import finished",
       "invite": "Invite",
       "weeklyReport": "Weekly report",
       "unavailable": "{label} is not available",
       "unavailableHelp": "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week.",
-      "saveError": "Preferences could not be saved."
+      "saveError": "Preferences could not be saved.",
+      "providerIncident": "Provider incidents"
     },
     "delivery": {
       "title": "Delivery address",
       "description": "The address that receives notification emails.",
       "manageEmail": "Manage email",
       "deliveredTo": "Notifications are delivered to <address>{email}</address>."
+    },
+    "checks": {
+      "mode": "Check notifications",
+      "modes": {
+        "all": "All",
+        "important": "Important",
+        "none": "None"
+      },
+      "descriptions": {
+        "all": "Manual summaries and every scheduled check window.",
+        "important": "Manual summaries, significant changes and failures.",
+        "none": "No check summaries. Provider incidents have a separate switch."
+      },
+      "checkNotificationTopN": "Top-N entry or exit",
+      "checkNotificationPositionMove": "Minimum position move",
+      "thresholdError": "Enter a whole number from 1 to 100.",
+      "significantChange": "Significant change",
+      "positions": "positions",
+      "optionDescriptions": {
+        "all": "Every check summary",
+        "important": "Significant changes and failures",
+        "none": "Check summaries off"
+      }
     }
   }
 }

@@ -8,19 +8,43 @@
       "inApp": "En la app",
       "email": "Correo",
       "alertFired": "Alerta activada",
-      "checkComplete": "Comprobación finalizada",
+      "checkComplete": "Notificaciones de comprobaciones",
       "importFinished": "Importación finalizada",
       "invite": "Invitación",
       "weeklyReport": "Informe semanal",
       "unavailable": "{label} no está disponible",
       "unavailableHelp": "Un guion indica que el canal no existe para ese evento: el informe semanal es un correo y solo se envía una vez a la semana.",
-      "saveError": "No se han podido guardar las preferencias."
+      "saveError": "No se han podido guardar las preferencias.",
+      "providerIncident": "Incidentes del proveedor"
     },
     "delivery": {
       "title": "Dirección de entrega",
       "description": "La dirección que recibe los correos de notificación.",
       "manageEmail": "Gestionar el correo",
       "deliveredTo": "Las notificaciones se envían a <address>{email}</address>."
+    },
+    "checks": {
+      "mode": "Notificaciones de comprobación",
+      "modes": {
+        "all": "Todas",
+        "important": "Importantes",
+        "none": "Ninguna"
+      },
+      "descriptions": {
+        "all": "Resúmenes manuales y cada ventana programada.",
+        "important": "Resúmenes manuales, cambios importantes y fallos.",
+        "none": "Sin resúmenes. Los incidentes tienen un interruptor aparte."
+      },
+      "checkNotificationTopN": "Entrada o salida del top N",
+      "checkNotificationPositionMove": "Cambio mínimo de posición",
+      "thresholdError": "Introduce un número entero del 1 al 100.",
+      "significantChange": "Cambio significativo",
+      "positions": "posiciones",
+      "optionDescriptions": {
+        "all": "Todos los resúmenes",
+        "important": "Cambios importantes y fallos",
+        "none": "Resúmenes desactivados"
+      }
     }
   }
 }

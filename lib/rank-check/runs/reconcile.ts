@@ -1,3 +1,4 @@
+import { recomputeSummaryForRun } from "@/lib/notifications/check-summaries/triggers";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -125,6 +126,7 @@ export async function reconcileRankCheckRuns(
         run: { ...run, status },
       });
       if (finalized.finalized) {
+        await recomputeSummaryForRun(run.id).catch(() => undefined);
         await publishOperationChanged({ projectId: finalized.projectId }).catch(() => undefined);
       }
     }

@@ -27,6 +27,7 @@ export type { FlushAlertDigestsActivityResult } from "./alert-digest-activities"
 export { flushAlertDigestsActivity } from "./alert-digest-activities";
 export type { AlertHealthActivityResult } from "./alert-health-activities";
 export { alertHealthActivity } from "./alert-health-activities";
+export { checkNotificationSummariesActivity } from "./check-summary-maintenance-activity";
 export { executeLocalMonitorIntentActivity } from "./local-monitor-activities";
 export {
   cleanupRankCheckRawPurgeProgressActivity,

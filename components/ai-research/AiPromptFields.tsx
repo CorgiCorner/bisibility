@@ -2,6 +2,7 @@
 import { CountrySelect } from "@/components/locations/CountrySelect";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Textarea } from "@/components/ui/Textarea";
@@ -24,11 +25,13 @@ export function AiPromptFields({
   catalog,
   disabled,
   engineOptions = [],
+  onSelectionChange,
 }: Readonly<{
   form: AiResearchForm;
   catalog?: AiResearchCatalog;
   disabled: boolean;
   engineOptions?: readonly AiEngineOption[];
+  onSelectionChange?: () => void;
 }>) {
   const t = useTranslations("projectAiResearch");
   const values = form.watch();
@@ -112,28 +115,15 @@ export function AiPromptFields({
 
   return (
     <>
-      <AiEngineFields form={form} engineOptions={engineOptions} disabled={disabled} />
-      {engineMode ? null : (
-        <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
-          <span>
-            {t(
-              legacy
-                ? "legacyPricingProvenance"
-                : actual
-                  ? "actualCostPolicy"
-                  : "expandedPricingRequirement",
-              {
-                date: LEGACY_PRICING_CHECKED_AT,
-              },
-            )}
-          </span>
-          {!legacy ? (
-            <Button type="button" variant="secondary" disabled={disabled} onClick={restorePreset}>
-              {t("restoreLegacyPreset")}
-            </Button>
-          ) : null}
-        </div>
-      )}
+      <AiEngineFields
+        form={form}
+        engineOptions={engineOptions}
+        disabled={disabled}
+        onSelectionChange={onSelectionChange}
+      />
+      {!engineMode && legacy ? (
+        <p className="m-0 text-ui-body sm:col-span-2">{t("quickCheck")}</p>
+      ) : null}
       <label htmlFor="ai-prompt" className="grid gap-2 text-ui-body sm:col-span-2">
         {t("prompt")}
         <Textarea
@@ -143,21 +133,6 @@ export function AiPromptFields({
           placeholder={t("promptPlaceholder")}
         />
       </label>
-      {engineMode
-        ? null
-        : [0, 1].map((index) => (
-            <div className="grid gap-2 text-ui-body" key={index}>
-              <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
-              <AiModelSelect
-                catalog={catalog}
-                actual={actual}
-                disabled={disabled}
-                index={index}
-                models={models}
-                onChange={(value) => chooseModel(index, value)}
-              />
-            </div>
-          ))}
       <Controller
         name="response_language"
         control={form.control}
@@ -186,24 +161,6 @@ export function AiPromptFields({
           </div>
         )}
       />
-      {engineMode ? null : (
-        <label htmlFor="ai-output-tokens" className="grid gap-2 text-ui-body">
-          {t("outputTokens")}
-          <Input
-            id="ai-output-tokens"
-            aria-label={t("outputTokens")}
-            aria-describedby="ai-output-token-bounds"
-            type="number"
-            min={minTokens}
-            max={maxTokens}
-            disabled={disabled || !expanded}
-            {...form.register("max_output_tokens", { valueAsNumber: true })}
-          />
-          <span id="ai-output-token-bounds" className="text-ui-xs text-fg-muted">
-            {t("tokenBounds", { min: minTokens, max: maxTokens })}
-          </span>
-        </label>
-      )}
       <Controller
         name="web_search"
         control={form.control}
@@ -266,11 +223,76 @@ export function AiPromptFields({
           )}
         />
       ) : null}
-      {engineMode ? (
-        <AiResearchCostCap form={form} disabled={disabled} />
-      ) : (
-        <AiCostPolicyFields form={form} catalog={catalog} disabled={disabled} />
-      )}
+      <Disclosure title={t("advanced")} variant="inline" className="sm:col-span-2">
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <AiEngineFields form={form} engineOptions={engineOptions} disabled={disabled} advanced />
+          {!engineMode ? (
+            <p className="m-0 text-ui-xs text-fg-muted sm:col-span-2">{t("modelLimit")}</p>
+          ) : null}
+          {engineMode ? null : (
+            <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
+              <span>
+                {t(
+                  legacy
+                    ? "legacyPricingProvenance"
+                    : actual
+                      ? "actualCostPolicy"
+                      : "expandedPricingRequirement",
+                  { date: LEGACY_PRICING_CHECKED_AT },
+                )}
+              </span>
+              {!legacy ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={disabled}
+                  onClick={restorePreset}
+                >
+                  {t("restoreLegacyPreset")}
+                </Button>
+              ) : null}
+            </div>
+          )}
+          {engineMode
+            ? null
+            : [0, 1].map((index) => (
+                <div className="grid gap-2 text-ui-body" key={index}>
+                  <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
+                  <AiModelSelect
+                    catalog={catalog}
+                    actual={actual}
+                    disabled={disabled}
+                    index={index}
+                    models={models}
+                    onChange={(value) => chooseModel(index, value)}
+                  />
+                </div>
+              ))}
+          {engineMode ? null : (
+            <label htmlFor="ai-output-tokens" className="grid gap-2 text-ui-body">
+              {t("outputTokens")}
+              <Input
+                id="ai-output-tokens"
+                aria-label={t("outputTokens")}
+                aria-describedby="ai-output-token-bounds"
+                type="number"
+                min={minTokens}
+                max={maxTokens}
+                disabled={disabled || !expanded}
+                {...form.register("max_output_tokens", { valueAsNumber: true })}
+              />
+              <span id="ai-output-token-bounds" className="text-ui-xs text-fg-muted">
+                {t("tokenBounds", { min: minTokens, max: maxTokens })}
+              </span>
+            </label>
+          )}
+          {engineMode ? (
+            <AiResearchCostCap form={form} disabled={disabled} />
+          ) : (
+            <AiCostPolicyFields form={form} catalog={catalog} disabled={disabled} />
+          )}
+        </div>
+      </Disclosure>
     </>
   );
 }

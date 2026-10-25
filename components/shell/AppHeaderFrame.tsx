@@ -3,6 +3,7 @@ import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { OperationsTray } from "@/components/shell/OperationsTray";
 import type { PlanStatus } from "@/components/shell/plan-status";
+import { RealtimeIndicator } from "@/components/shell/RealtimeIndicator";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
@@ -90,6 +91,7 @@ export function AppHeaderFrame({
       {/* Right cluster: spend pill and account utilities share one rhythm. */}
       <div className="col-start-3 row-start-1 flex flex-none items-center gap-2.5">
         {actions}
+        <RealtimeIndicator />
         <OperationsTray defaultOpen={operationsTrayDefaultOpen} projectRef={projectRef} />
         <div className="lg:hidden">
           <CommandPaletteTrigger variant="header" />

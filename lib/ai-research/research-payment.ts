@@ -1,3 +1,4 @@
+import type { ResearchInput } from "./schema";
 import "server-only";
 import type { PaidCallPayment, PaymentPart } from "@/lib/action-payment/paid-call";
 import { actionPaymentReceipt, readPaymentPart } from "@/lib/action-payment/receipt";
@@ -12,10 +13,10 @@ import {
   bindAiPaymentExecution,
   readAiPaymentConsent,
 } from "./payment";
-import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
+import type { AiResearchKind } from "./schema";
 import type { AiResearchContext } from "./service";
 
-export function researchPaymentIdentity(input: PromptInput | VisibilityInput) {
+export function researchPaymentIdentity(input: ResearchInput) {
   const {
     accepted_payment: _accepted,
     payment_option_id: _option,
@@ -30,7 +31,7 @@ export function researchPaymentIdentity(input: PromptInput | VisibilityInput) {
 export async function prepareResearchAiPayment(
   context: AiResearchContext,
   kind: AiResearchKind,
-  input: PromptInput | VisibilityInput,
+  input: ResearchInput,
   source: Awaited<ReturnType<typeof requireAiSource>>,
   admission: AiAdmission,
   cached = false,

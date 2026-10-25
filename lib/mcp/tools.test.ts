@@ -54,15 +54,51 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 140-tool contract", () => {
+  it("publishes the canonical unprefixed 147-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(140);
+    expect(definitions).toHaveLength(147);
     expect(definitions.some((tool) => tool.name === "preview_project_defaults")).toBe(true);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
     expect(definitions.some((tool) => tool.name === "list_rank_checks")).toBe(false);
+  });
+
+  it("publishes and dispatches the complete Page indexing contract", async () => {
+    const project_id = "prj_a00000000000000000000000";
+    for (const [name, tail, method, extra] of [
+      ["list_search_index_sitemaps", "sitemaps", "GET", {}],
+      [
+        "get_search_index_sitemap",
+        "sitemaps/https://example.com/sitemap.xml",
+        "GET",
+        { path: "https://example.com/sitemap.xml" },
+      ],
+      ["inspect_search_index_urls", "inspections", "POST", { urls: ["https://example.com/"] }],
+    ] as const) {
+      const definition = getMcpToolDefinitions().find((tool) => tool.name === name);
+      expect(definition?.description).toContain("not a live test");
+      expect(definition?.description).toContain("partial or delayed");
+      expect(definition?.inputSchema.properties).not.toHaveProperty("property");
+      expect(definition?.annotations.readOnlyHint).toBe(method === "GET");
+      const result = await dispatchMcpTool(name, { project_id, ...extra }, "test");
+      expect(result.payload).toMatchObject({
+        method,
+        path: [
+          "projects",
+          project_id,
+          "search-index",
+          ...(tail.startsWith("sitemaps/")
+            ? ["sitemaps", "https://example.com/sitemap.xml"]
+            : [tail]),
+        ],
+      });
+    }
+    expect(agentMcpSchemas.inspectSearchIndexUrls.properties.urls).toMatchObject({
+      minItems: 1,
+      maxItems: 10,
+    });
   });
 
   it("describes every required top-level input and publishes safety annotations", () => {
@@ -89,6 +125,33 @@ describe("MCP tool dispatch", () => {
       destructiveHint: true,
       openWorldHint: false,
       readOnlyHint: false,
+    });
+  });
+
+  it("publishes CN-13 check summary preferences and legacy deprecation", () => {
+    const schema = getMcpToolDefinitions().find(
+      (tool) => tool.name === "update_notification_preferences",
+    )?.inputSchema;
+    expect(schema?.properties).toMatchObject({
+      check_in_app: { deprecated: true },
+      check_notification_setting: { enum: ["all", "important", "none"] },
+      check_notification_top_n: { type: "integer", minimum: 1, maximum: 100 },
+      check_notification_position_move: { type: "integer", minimum: 1, maximum: 100 },
+      provider_incident_in_app: { type: "boolean" },
+    });
+  });
+
+  it.each([true, false])("forwards provider incident preference %s", async (enabled) => {
+    const project_id = "prj_a00000000000000000000000";
+    const result = await dispatchMcpTool(
+      "update_notification_preferences",
+      { project_id, provider_incident_in_app: enabled },
+      "test",
+    );
+    expect(result.payload).toMatchObject({
+      method: "PATCH",
+      path: ["projects", project_id, "notification-preferences"],
+      body: { provider_incident_in_app: enabled },
     });
   });
 

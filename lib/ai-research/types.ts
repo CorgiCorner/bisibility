@@ -3,6 +3,8 @@ import type { AiEngine } from "./engines";
 export type AiCitation = { title: string; url: string; targetDomain: boolean };
 export type AiResearchRow = {
   prompt: string;
+  /** Dataset ordering only. Never display as measured AI demand. */
+  datasetVolume?: number;
   model: string;
   /** Engine-mode rows name the engine that answered (ADR-023). */
   engine?: AiEngine;

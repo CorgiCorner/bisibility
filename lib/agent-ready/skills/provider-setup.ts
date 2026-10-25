@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "provider-setup",
   title: "Provider setup",
   description:
-    "Connect, test, tune, or disconnect a search-data provider for a bisibility project. Use when an agent must wire up bring-your-own provider credentials so rank checks can run, or diagnose a provider that is failing.",
+    "Connect, test, tune or disconnect a search-data provider. Use when wiring bring-your-own credentials or diagnosing a failing connection. Do not use for rank reports, keyword imports or disconnecting a working provider as cleanup.",
   compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
   version: "0.1.1",

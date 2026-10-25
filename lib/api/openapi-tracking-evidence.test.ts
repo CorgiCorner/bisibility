@@ -3,20 +3,23 @@ import { normalizeTrackingResponse } from "@/lib/ai-tracking/providers/normalize
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { trackingRawEvidenceSchema, trackingSampleSchema } from "./openapi-tracking-evidence";
-import { aiTrackingComponentSchemas, aiTrackingResponseSchemas } from "./openapi-tracking-schemas";
+import {
+  promptTrackerComponentSchemas,
+  promptTrackerResponseSchemas,
+} from "./openapi-tracking-schemas";
 
 const validate = new Ajv2020({ strict: false, allowUnionTypes: true }).compile(
   trackingRawEvidenceSchema,
 );
 
-describe("AI tracking raw evidence contract", () => {
+describe("Prompt Tracker raw evidence contract", () => {
   it("shares one named raw component between samples and exports", () => {
-    const reference = { $ref: "#/components/schemas/AiTrackingRawEvidence" };
+    const reference = { $ref: "#/components/schemas/PromptTrackerRawEvidence" };
     expect(trackingSampleSchema).toMatchObject({
       properties: { evidence: { oneOf: [{ properties: { raw: reference } }, { type: "null" }] } },
     });
-    expect(aiTrackingComponentSchemas.AiTrackingRawEvidence).toBe(trackingRawEvidenceSchema);
-    expect(aiTrackingResponseSchemas.exportAiTrackingEvidence).toMatchObject({
+    expect(promptTrackerComponentSchemas.PromptTrackerRawEvidence).toBe(trackingRawEvidenceSchema);
+    expect(promptTrackerResponseSchemas.exportPromptTrackerEvidence).toMatchObject({
       properties: { data: { properties: { items: { items: trackingSampleSchema } } } },
     });
   });

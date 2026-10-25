@@ -2,6 +2,8 @@
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { isSelfHost } from "@/lib/deployment/deployment";
+import { validateInspectionMode } from "@/lib/presence/budget-mode";
 import { projectInspectionBudgetSchema, projectSearchSyncSchema } from "@/lib/schemas/project";
 import { replanActiveGscBackfill } from "@/lib/search-insights/sync/backfill-plan";
 import {
@@ -17,6 +19,7 @@ import {
 
 export async function updatePresenceInspectionBudget(input: unknown) {
   const data = parseActionInput(projectInspectionBudgetSchema, input);
+  validateInspectionMode(data.inspectionBudgetMode, isSelfHost);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, {
     type: "project_defaults",
@@ -25,8 +28,15 @@ export async function updatePresenceInspectionBudget(input: unknown) {
     where: { projectId: project.id },
   });
   const defaults = await prisma.projectDefaults.upsert({
-    create: { inspectionDailyLimit: data.inspectionDailyLimit, projectId: project.id },
-    update: { inspectionDailyLimit: data.inspectionDailyLimit },
+    create: {
+      inspectionDailyLimit: data.inspectionDailyLimit,
+      inspectionBudgetMode: data.inspectionBudgetMode,
+      projectId: project.id,
+    },
+    update: {
+      inspectionDailyLimit: data.inspectionDailyLimit,
+      inspectionBudgetMode: data.inspectionBudgetMode,
+    },
     where: { projectId: project.id },
   });
 

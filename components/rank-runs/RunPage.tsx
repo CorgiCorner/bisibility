@@ -1,19 +1,22 @@
 "use client";
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { NewResultsBanner } from "@/components/realtime/NewResultsBanner";
+import { useHeldRows } from "@/components/realtime/useHeldRows";
 import { useAppRealtime } from "@/components/shell/AppRealtimeProvider";
 import { useLiveNow } from "@/components/ui/useLiveNow";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RunPageBlockedBanner } from "./RunPageBlockedBanner";
 import { RunPageCancelDialog } from "./RunPageCancelDialog";
 import { RunPageCounters } from "./RunPageCounters";
 import { RunPageHeader } from "./RunPageHeader";
 import { liveRun, orderedRunItems, type RunItemFilter, runSummary } from "./RunPageModel";
 import { RunPageTargets } from "./RunPageTargets";
-import type { RunPageData, RunPageInitialData, RunPageItem } from "./RunPageTypes";
+import type { RunPageData, RunPageInitialData } from "./RunPageTypes";
 import { createRunPageSummaryLabels } from "./run-page-summary-presentation";
+import { useRunPageItems } from "./useRunPageItems";
 
 type RunMutation = "cancel" | "run-now" | "skip" | "retry-failed" | "retry-deferred";
 
@@ -58,15 +61,37 @@ export function RunPage({
   const t = useTranslations("projectRuns.rankRuns");
   const paymentT = useTranslations("shared.actionPayment");
   const statusT = useTranslations("shared.controls.status");
-  const { operations } = useAppRealtime();
+  const { operations, rankDataVersion = 0 } = useAppRealtime();
   const [run, setRun] = useState(initialRun);
-  const [items, setItems] = useState(initialItems);
-  const [cursor, setCursor] = useState(initialCursor);
+  const [serverRun, setServerRun] = useState(initialRun);
+  if (serverRun !== initialRun) {
+    setServerRun(initialRun);
+    setRun(initialRun);
+  }
   const [filter, setFilter] = useState<RunItemFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [busy, setBusy] = useState<RunMutation | null>(null);
   const [error, setError] = useState("");
+  const { items, cursor, loadMore } = useRunPageItems(
+    { projectRef, runId: initialRun.id },
+    initialItems,
+    initialCursor,
+    rankDataVersion,
+    setError,
+    t("loadingTargets"),
+  );
   const currentRun = liveRun(run, operations);
+  const ordered = useMemo(
+    () => orderedRunItems(items, filter, { status: currentRun.status }),
+    [items, filter, currentRun.status],
+  );
+  const held = useHeldRows(
+    ordered,
+    `${projectRef}/${initialRun.id}/${filter}`,
+    rankDataVersion,
+    true,
+  );
+  const listFocus = useRef<HTMLDivElement>(null);
   const hasRealtimeRun = operations.some(
     (operation) => operation.kind === "rank_check" && operation.id === run.id,
   );
@@ -107,6 +132,7 @@ export function RunPage({
   }, [hasRealtimeRun, projectRef, run.id, run.sharedDeferralCode, t]);
 
   async function mutate(mutation: RunMutation) {
+    held.immediate();
     setBusy(mutation);
     setError("");
     try {
@@ -130,29 +156,6 @@ export function RunPage({
     }
   }
 
-  async function loadMore() {
-    if (!cursor) return;
-    try {
-      const response = await fetch(
-        `/api/rank-check-runs/${currentRun.id}/items?project=${encodeURIComponent(projectRef)}&cursor=${encodeURIComponent(cursor)}`,
-        { cache: "no-store", credentials: "same-origin" },
-      );
-      const payload = (await response.json()) as {
-        data?: RunPageItem[];
-        meta?: { next_cursor?: string | null };
-      };
-      if (!response.ok || !Array.isArray(payload.data)) throw new Error("Unable to load targets.");
-      const nextItems = payload.data;
-      setItems((known) => [
-        ...known,
-        ...nextItems.filter((item) => !known.some((current) => current.id === item.id)),
-      ]);
-      setCursor(payload.meta?.next_cursor ?? null);
-    } catch {
-      setError(t("loadingTargets"));
-    }
-  }
-
   return (
     <div className="grid min-w-0 gap-4">
       <RunPageHeader
@@ -169,20 +172,26 @@ export function RunPage({
         run={currentRun}
         summary={summary}
       />
-      <RunPageTargets
-        busy={busy}
-        canMutate={canMutate}
-        cursor={cursor}
-        filter={filter}
-        items={orderedRunItems(items, filter, currentRun)}
-        onFilter={setFilter}
-        onLoadMore={() => void loadMore()}
-        onMutate={(mutation) => void mutate(mutation)}
-        onCancel={() => setDialogOpen(true)}
-        projectRef={scopedProject}
-        run={currentRun}
-        summary={summary}
-      />
+      {held.pending ? <NewResultsBanner onShow={held.show} focusRef={listFocus} /> : null}
+      <div ref={listFocus} tabIndex={-1} aria-labelledby="run-targets-title">
+        <RunPageTargets
+          busy={busy}
+          canMutate={canMutate}
+          cursor={cursor}
+          filter={filter}
+          items={held.rows}
+          onFilter={setFilter}
+          onLoadMore={() => {
+            held.immediate();
+            void loadMore();
+          }}
+          onMutate={(mutation) => void mutate(mutation)}
+          onCancel={() => setDialogOpen(true)}
+          projectRef={scopedProject}
+          run={currentRun}
+          summary={summary}
+        />
+      </div>
       {error ? (
         <p className="m-0 text-[12px] text-red-text" role="alert">
           {error}

@@ -1,4 +1,5 @@
 import type { RecoveryErrorCode } from "@/lib/provider-usage/recovery-error";
+import type { PartialEvidenceView, RecoveryEvidenceView } from "./evidence-model";
 
 export const TRIAGE_STATUSES = [
   "open",
@@ -18,6 +19,7 @@ export type RecoveryUiError =
   | "invalid";
 export type RecoveryCaseKind = "operation" | "evidence" | "run" | "result" | "check";
 export type RecoveryCase = {
+  evidence?: RecoveryEvidenceView;
   token: string;
   version: string;
   kind: RecoveryCaseKind;
@@ -33,6 +35,7 @@ export type RecoveryCase = {
   accounting: "unknown" | "measured" | "not_applicable";
   unknownDimensions: string[];
   proofAvailable: boolean;
+  spendingGateEligible?: { project: boolean; connection: boolean };
   spendingBlocked?: { project: boolean; connection: boolean };
   originalAuthorization?: { maxCostCents: string; targets: number; maxAttempts: number } | null;
   failure: {
@@ -79,6 +82,7 @@ export type RecoveryFilters = {
   cursor?: string;
 };
 export type RecoveryPage = {
+  partialEvidence?: PartialEvidenceView[];
   instance: string;
   namespace: string;
   asOf: string;

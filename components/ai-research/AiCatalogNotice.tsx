@@ -24,10 +24,12 @@ export function AiCatalogNotice({
   mode,
   projectId,
   reason,
+  onRetry,
 }: Readonly<{
   mode: "prompt" | "visibility";
   projectId: string;
   reason?: AiCatalogFailureReason;
+  onRetry?: () => void;
 }>) {
   const t = useTranslations("projectAiResearch");
   const noSource = reason === "no_source";
@@ -42,6 +44,11 @@ export function AiCatalogNotice({
               : "catalogUnavailableVisibility",
         )}
       </p>
+      {!noSource && onRetry ? (
+        <Button type="button" variant="secondary" size="sm" onClick={onRetry}>
+          {t("sourceRetry")}
+        </Button>
+      ) : null}
       {noSource ? (
         <Button asChild variant="outline" size="sm">
           <Link href={appPath(projectId, "integrations")}>{t("openIntegrations")}</Link>

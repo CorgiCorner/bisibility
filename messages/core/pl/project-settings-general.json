@@ -85,8 +85,9 @@
         "history": "Historia",
         "keywords": "Frazy",
         "pages": "Strony",
-        "ai_visibility": "Widoczność w AI",
-        "prompt_explorer": "Badanie promptów",
+        "ai_visibility": "Widoczność marki",
+        "prompt_explorer": "Pracownia promptów",
+        "prompt_research": "Badanie pytań",
         "site_audit": "Audyt strony"
       },
       "notice": "Usunięcie wyniku nie uruchamia wyszukiwania. Kolejne wyszukiwanie może wymagać płatnego zapytania.",
@@ -96,8 +97,9 @@
         "ranked_keywords": "Rankujące słowa",
         "backlinks": "Backlinki",
         "domain_overview": "Przegląd domeny",
-        "ai_visibility": "Widoczność w AI",
-        "prompt_explorer": "Badanie promptów",
+        "ai_visibility": "Widoczność marki",
+        "prompt_explorer": "Pracownia promptów",
+        "prompt_research": "Badanie pytań",
         "site_audit": "Audyt strony"
       }
     }

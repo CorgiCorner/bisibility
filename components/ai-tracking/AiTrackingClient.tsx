@@ -1,6 +1,5 @@
 "use client";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
-import { getAiResearchCatalogAction } from "@/lib/actions/ai-research";
 import {
   aiTrackingRunAction,
   getAiTrackingPage,
@@ -12,18 +11,13 @@ import {
   previewAiTrackingAction,
   suggestAiTrackingPromptsAction,
 } from "@/lib/actions/ai-tracking";
-import {
-  generateAiTrackingSuggestionsAction,
-  getAiTrackingSuggestionReviewAction,
-  previewAiTrackingSuggestionsAction,
-} from "@/lib/actions/ai-tracking-suggestions";
 import { downloadTrackingEvidence } from "@/lib/ai-tracking/exports/browser";
 import {
   type TrackingGenerationActionResult,
   unwrapTrackingGenerationActionResult,
 } from "@/lib/ai-tracking/projections/generation-result";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
-import { asProjectRef } from "@/lib/routing/app-path";
+import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { useRef } from "react";
 import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
@@ -42,28 +36,9 @@ export function AiTrackingClient({
     <AiTrackingWorkspace
       initialData={data}
       schedulesHref={projectSchedulesPath(asProjectRef(projectId))}
+      researchHref={appPath(asProjectRef(projectId), "prompt-research")}
       shellOwnsHeading
       actions={{
-        generation: {
-          review: async () => actionValue(await getAiTrackingSuggestionReviewAction(projectId)),
-          preview: async (input) =>
-            actionValue(await previewAiTrackingSuggestionsAction(projectId, input)),
-          generate: async (preview, idempotencyKey) =>
-            actionValue(
-              await generateAiTrackingSuggestionsAction(
-                projectId,
-                {
-                  preview,
-                  consent: true,
-                  acceptedPayment: preview.payment
-                    ? { quoteToken: preview.payment.quoteToken }
-                    : undefined,
-                },
-                idempotencyKey,
-              ),
-            ),
-        },
-        catalog: () => getAiResearchCatalogAction(projectId),
         save: (resource, method, input, member) =>
           mutateAiTrackingAction(projectId, resource, method, input, member),
         preview: async (promptIds, configurations, payment) =>

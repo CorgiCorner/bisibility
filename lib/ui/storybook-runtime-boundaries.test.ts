@@ -141,3 +141,12 @@ describe("Storybook provider-management action boundary", () => {
     ).toMatch(/[\\/]\.storybook[\\/]browser-runtime-stubs\.tsx$/);
   });
 });
+
+describe("Storybook recent-run dismissal boundary", () => {
+  it("routes dismissal to a dedicated browser fixture", async () => {
+    const aliases = await configuredAliases();
+    expect(aliases.get("@/lib/actions/run-tray")).toMatch(
+      /[\\/]\.storybook[\\/]run-tray-action-stubs\.ts$/,
+    );
+  });
+});

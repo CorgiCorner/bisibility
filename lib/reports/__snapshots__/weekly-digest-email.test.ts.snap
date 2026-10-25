@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WD-1 renders every result and cost count using the bell wording in both mail variants 1`] = `
+{
+  "html": "<p><strong>Weekly rank report for Example &lt;&amp;&quot;</strong></p><p>example.test - 2026-10-05 to 2026-10-12</p><p>Average delta: +2. Checked keywords: 3. Failed checks: 0.</p><p>Expected keywords: 4. Comparable: 3. Unknown: 1. Fresh coverage: 75%.</p><p><strong>Top movers</strong></p><ul style="margin:0 0 16px 20px;padding:0;"><li>safe &lt;&amp;&quot;: #5 -&gt; #3 (+2)</li></ul><p><strong>Provider evidence review</strong></p><ul><li>Changed: 1 result under review, 2 recovered results, 3 partial results, 4 provider errors, 5 missing results; cost measured for 6 checks, cost unknown for 7 checks, cost under review for 8 checks, cost conflict for 9 checks. We did not retry these checks automatically. <a href="https://example.test/app/prj_public/runs">View runs</a></li></ul>",
+  "subject": "Weekly rank report - Example <&"",
+  "text": "Weekly rank report for Example <&"
+example.test - 2026-10-05 to 2026-10-12
+Average delta: +2. Checked keywords: 3. Failed checks: 0.
+Expected keywords: 4. Comparable: 3. Unknown: 1. Fresh coverage: 75%.
+
+Top movers
+- safe <&": #5 -> #3 (+2)
+Provider evidence review
+Changed: 1 result under review, 2 recovered results, 3 partial results, 4 provider errors, 5 missing results; cost measured for 6 checks, cost unknown for 7 checks, cost under review for 8 checks, cost conflict for 9 checks. We did not retry these checks automatically. https://example.test/app/prj_public/runs",
+}
+`;
+
+exports[`keeps the switch-off mail byte-identical to the frozen base renderer 1`] = `
+{
+  "html": "<p><strong>Weekly rank report for Example &lt;&amp;&quot;</strong></p><p>example.test - 2026-10-05 to 2026-10-12</p><p>Average delta: +2. Checked keywords: 3. Failed checks: 1.</p><p>Expected keywords: 4. Comparable: 3. Unknown: 1. Fresh coverage: 75%.</p><p><strong>Top movers</strong></p><ul style="margin:0 0 16px 20px;padding:0;"><li>safe &lt;&amp;&quot;: #5 -&gt; #3 (+2)</li></ul>",
+  "subject": "Weekly rank report - Example <&"",
+  "text": "Weekly rank report for Example <&"
+example.test - 2026-10-05 to 2026-10-12
+Average delta: +2. Checked keywords: 3. Failed checks: 1.
+Expected keywords: 4. Comparable: 3. Unknown: 1. Fresh coverage: 75%.
+
+Top movers
+- safe <&": #5 -> #3 (+2)",
+}
+`;

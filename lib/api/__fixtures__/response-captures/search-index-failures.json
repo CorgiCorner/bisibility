@@ -1,0 +1,244 @@
+{
+  "captures": [
+    {
+      "body": {
+        "detail": "Provider rate limit reached; retry shortly.",
+        "docs_url": "https://bisibility.com/docs/api/errors#rate_limited",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/sitemaps",
+        "status": 429,
+        "title": "Rate limit exceeded",
+        "type": "https://bisibility.com/problems/rate_limited"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchIndexSitemaps",
+      "path": "/projects/{project_id}/search-index/sitemaps",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Expected an absolute HTTP or HTTPS sitemap URL of 1-2048 characters."],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchIndexSitemap",
+      "path": "/projects/{project_id}/search-index/sitemaps/{path}",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Search Console denied access to this property; check that the connected account can access it.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/sitemaps",
+        "status": 422,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchIndexSitemaps",
+      "path": "/projects/{project_id}/search-index/sitemaps",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Search Console property not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/sitemaps",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchIndexSitemaps",
+      "path": "/projects/{project_id}/search-index/sitemaps",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Search Console request failed.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/sitemaps",
+        "status": 502,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchIndexSitemaps",
+      "path": "/projects/{project_id}/search-index/sitemaps",
+      "status": 502
+    },
+    {
+      "body": {
+        "detail": "Sitemap not found in Search Console for this property.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/sitemaps/https%3A%2F%2Fexample.com%2Fblog%2Fsitemap.xml",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchIndexSitemap",
+      "path": "/projects/{project_id}/search-index/sitemaps/{path}",
+      "status": 404
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "results": [
+          {
+            "url": "https://example.com/blog/a",
+            "inspection": null,
+            "error": {
+              "code": "inspection_failed",
+              "message": "Inspection or result storage failed. Every URL sent to Google counts against the daily allowance, even when the call fails."
+            }
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "inspectSearchIndexUrls",
+      "path": "/projects/{project_id}/search-index/inspections",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "results": [
+          {
+            "url": "https://example.com/blog/a",
+            "inspection": null,
+            "error": {
+              "code": "provider_rate_limited",
+              "message": "Search Console rate limit reached; no further URLs in this request were sent.",
+              "reset_at": "2026-10-25T00:00:00.000Z",
+              "scope": "daily"
+            }
+          },
+          {
+            "url": "https://example.com/blog/b",
+            "inspection": null,
+            "error": {
+              "code": "provider_rate_limited",
+              "message": "Search Console rate limit reached; no further URLs in this request were sent.",
+              "reset_at": "2026-10-25T00:00:00.000Z",
+              "scope": "daily"
+            }
+          },
+          {
+            "url": "https://example.com/blog/c",
+            "inspection": null,
+            "error": {
+              "code": "provider_rate_limited",
+              "message": "Search Console rate limit reached; no further URLs in this request were sent.",
+              "reset_at": "2026-10-25T00:00:00.000Z",
+              "scope": "daily"
+            }
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "inspectSearchIndexUrls",
+      "path": "/projects/{project_id}/search-index/inspections",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "sc-domain:example.com",
+        "results": [
+          {
+            "url": "https://example.com/",
+            "inspection": {
+              "coverage_state": "Submitted and indexed",
+              "crawled_as": "MOBILE",
+              "google_canonical": "https://example.com/blog/page",
+              "indexing_state": "INDEXING_ALLOWED",
+              "inspection_result_link": "https://search.google.com/search-console/inspect?resource_id=sc-domain%3Aexample.com",
+              "last_crawl_at": "2026-10-23T01:00:00.000Z",
+              "last_crawl_time": "2026-10-23T01:00:00Z",
+              "page_fetch_state": "SUCCESSFUL",
+              "referring_urls": ["https://example.com/"],
+              "rich_results_result": {
+                "verdict": "FAIL",
+                "detected_items": [
+                  {
+                    "rich_result_type": "Product",
+                    "item_count": 2,
+                    "issue_count": 3,
+                    "issues": [
+                      {
+                        "severity": "ERROR",
+                        "count": 2
+                      },
+                      {
+                        "severity": "WARNING",
+                        "count": 1
+                      }
+                    ]
+                  },
+                  {
+                    "rich_result_type": "Breadcrumbs",
+                    "item_count": 1,
+                    "issue_count": 0,
+                    "issues": []
+                  }
+                ]
+              },
+              "robots_txt_state": "ALLOWED",
+              "sitemap": ["https://example.com/blog/sitemap.xml"],
+              "user_canonical": "https://example.com/blog/page",
+              "verdict": "PASS"
+            },
+            "error": null
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "inspectSearchIndexUrls",
+      "path": "/projects/{project_id}/search-index/inspections",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "sc-domain:example.com",
+        "sitemap": {
+          "contents": [
+            {
+              "submitted": 42,
+              "type": "web"
+            }
+          ],
+          "errors": 2,
+          "is_pending": false,
+          "is_sitemaps_index": true,
+          "last_downloaded": "2026-10-23T01:00:00Z",
+          "last_submitted": "2026-10-23T00:00:00Z",
+          "path": "https://example.com/blog/sitemap.xml",
+          "type": "sitemap",
+          "warnings": 3
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSearchIndexSitemap",
+      "path": "/projects/{project_id}/search-index/sitemaps/{path}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/search-index-failures.test.ts"
+}

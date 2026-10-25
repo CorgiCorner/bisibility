@@ -1,10 +1,8 @@
 import { alertRuleToolSchema } from "@/lib/alerts/tool-schema";
-import type { McpToolName } from "@/lib/mcp/canonical-tools";
-import {
-  researchWorkspaceSchemas,
-  researchWorkspaceToolNames,
-} from "@/lib/mcp/research-workspace-contract";
-import { aiTrackingSchemas, aiTrackingToolNames } from "@/lib/mcp/tracking-contract";
+import { pageIndexingToolSchemas } from "@/lib/mcp/page-indexing-contract";
+import { researchWorkspaceSchemas } from "@/lib/mcp/research-workspace-contract";
+import { searchIndexToolSchemas } from "@/lib/mcp/search-index-contract";
+import { promptTrackerSchemas } from "@/lib/mcp/tracking-contract";
 import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEVICE, serpDeviceValues } from "@/lib/serp/constants";
 import { apiKeyCreateProperties } from "./api-key-contract";
@@ -72,7 +70,9 @@ const scheduleSchema = {
 } as const;
 
 export const toolInputSchemas = {
-  ...aiTrackingSchemas(),
+  ...searchIndexToolSchemas,
+  ...pageIndexingToolSchemas,
+  ...promptTrackerSchemas(),
   ...researchWorkspaceSchemas,
   addKeywords: {
     properties: {
@@ -251,55 +251,4 @@ export const toolInputSchemas = {
 
 export type ToolName = keyof typeof toolInputSchemas;
 
-export const mcpToolNameByCapability: Record<ToolName, McpToolName | null> = {
-  ...aiTrackingToolNames,
-  ...researchWorkspaceToolNames,
-  addCompetitor: "add_competitor",
-  addKeywords: "add_keywords",
-  connectProvider: "connect_provider",
-  createAlertRule: "create_alert_rule",
-  createApiKey: "create_api_key",
-  createCloudImportSession: null,
-  createSavedView: "create_saved_view",
-  createSignal: "create_signal",
-  createTeamInvite: "create_team_invite",
-  deleteAlertRule: "delete_alert_rule",
-  deleteProject: "delete_project",
-  deleteSavedView: "delete_saved_view",
-  disableSitemapMonitor: "disable_sitemap_monitor",
-  disconnectProvider: "disconnect_provider",
-  enableSitemapMonitor: "enable_sitemap_monitor",
-  estimateSerpCost: "get_cost_estimate",
-  exportRankHistory: "export_rank_history",
-  finalizeCloudImportSession: null,
-  getCloudImportCompatibility: "get_cloud_import_compatibility",
-  getNotificationPreferences: "get_notification_preferences",
-  getRankCheckResult: "get_rank_check_result",
-  importCloudExport: null,
-  listAlertRules: "list_alert_rules",
-  listCompetitors: "list_competitors",
-  listKeywords: "list_keywords",
-  listMigrationTokens: "list_migration_tokens",
-  listProviders: "list_providers",
-  listSavedViews: "list_saved_views",
-  listSignals: "list_signals",
-  listSitemapMonitors: "list_sitemap_monitors",
-  listTeamInvites: "list_team_invites",
-  listTeamMembers: "list_team_members",
-  listTriggeredAlerts: "list_triggered_alerts",
-  markProjectAlertsRead: "mark_project_alerts_read",
-  mintMigrationToken: "mint_migration_token",
-  muteTriggeredAlert: "mute_triggered_alert",
-  removeCompetitor: "remove_competitor",
-  revokeMigrationToken: "revoke_migration_token",
-  revokeTeamInvite: "revoke_team_invite",
-  runRankCheck: "run_rank_check",
-  setKeywordTargetUrl: "set_keyword_target_url",
-  testProviderConnection: "test_provider_connection",
-  updateAlertRule: "update_alert_rule",
-  updateNotificationPreferences: "update_notification_preferences",
-  updateProject: "update_project",
-  updateProjectDefaults: "update_project_defaults",
-  updateProviderSettings: "update_provider_settings",
-  uploadCloudImportChunk: null,
-};
+export { mcpToolNameByCapability } from "./capabilities-tool-names";

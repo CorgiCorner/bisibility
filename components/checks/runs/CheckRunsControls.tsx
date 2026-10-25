@@ -22,6 +22,9 @@ import { AsOfDatePopover } from "./AsOfDatePopover";
 import { rangeValues } from "./check-runs-format";
 
 type HeaderProps = {
+  exactRange?: boolean;
+  hideAsOfDate?: boolean;
+  hideProvider?: boolean;
   asOfDate: string;
   now: Date;
   onAsOfDateChange: (date: string) => void;
@@ -36,6 +39,9 @@ type HeaderProps = {
 };
 
 export function CheckRunsHeader({
+  exactRange = false,
+  hideAsOfDate = false,
+  hideProvider = false,
   asOfDate,
   now,
   onAsOfDateChange,
@@ -52,10 +58,12 @@ export function CheckRunsHeader({
   const t = useTranslations("projectRankTracker.checks");
   const [dateAnchor, setDateAnchor] = useState<HTMLElement | null>(null);
   const providerMenuOptions = [{ label: t("allProviders"), value: "all" }, ...providerOptions];
+  const evidence = useTranslations("projectRankTracker.checks.evidence");
   const triggerOptions = [
     { label: t("allTriggers"), value: "all" },
     { label: t("scheduled"), value: "scheduled" },
     { label: t("manual"), value: "manual" },
+    { label: evidence("programmatic"), value: "programmatic" },
   ] as const;
   const rangeOptions = rangeValues.map((value) => ({ label: t(`range${value}`), value }));
 
@@ -67,12 +75,14 @@ export function CheckRunsHeader({
           <span>{t("newestFirst")}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <MenuSelect
-            ariaLabel={t("filterByProvider")}
-            onChange={onProviderChange}
-            options={providerMenuOptions}
-            value={provider}
-          />
+          {hideProvider ? null : (
+            <MenuSelect
+              ariaLabel={t("filterByProvider")}
+              onChange={onProviderChange}
+              options={providerMenuOptions}
+              value={provider}
+            />
+          )}
           <MenuSelect
             ariaLabel={t("filterByTrigger")}
             onChange={(value) => onTriggerChange(value as CheckRunTriggerFilter)}
@@ -82,27 +92,31 @@ export function CheckRunsHeader({
           <SegmentedControl
             ariaLabel={t("checkRunRange")}
             fitContent
-            onChange={onRangeChange}
+            onChange={(value) => {
+              if (value !== "custom") onRangeChange(value);
+            }}
             options={rangeOptions}
             size="toolbar"
-            value={range}
+            value={exactRange ? "custom" : range}
           />
-          <Tooltip
-            semantics="description"
-            content={t("asOfTooltip", { range: t(`range${range}`) })}
-          >
-            <Button
-              aria-expanded={Boolean(dateAnchor)}
-              aria-haspopup="dialog"
-              onClick={(event) => setDateAnchor(event.currentTarget)}
-              size="sm"
-              startIcon={<CalendarBlank weight="regular" aria-hidden size={15} />}
-              style={{ fontWeight: 400 }}
-              variant="secondary"
+          {hideAsOfDate ? null : (
+            <Tooltip
+              semantics="description"
+              content={t("asOfTooltip", { range: t(`range${range}`) })}
             >
-              {t("asOf", { date: formatDisplayDate(asOfDate, dateDisplay) })}
-            </Button>
-          </Tooltip>
+              <Button
+                aria-expanded={Boolean(dateAnchor)}
+                aria-haspopup="dialog"
+                onClick={(event) => setDateAnchor(event.currentTarget)}
+                size="sm"
+                startIcon={<CalendarBlank weight="regular" aria-hidden size={15} />}
+                style={{ fontWeight: 400 }}
+                variant="secondary"
+              >
+                {t("asOf", { date: formatDisplayDate(asOfDate, dateDisplay) })}
+              </Button>
+            </Tooltip>
+          )}
         </div>
       </div>
       <AsOfDatePopover

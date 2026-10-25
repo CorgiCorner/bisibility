@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectSerpChain } from "./ProjectSerpChain";
 import { binding, connection, legacy, mount, providers, reply } from "./project-chain-fixtures";
@@ -48,7 +49,9 @@ describe("project SERP chain adoption", () => {
     async (change) => {
       const projectId = `prj_chain_card_${change}`;
       const view = mount(projectId);
-      await screen.findByRole("button", { name: "Pause: DataForSEO" });
+      expect(
+        await screen.findByRole("switch", { name: "Use DataForSEO for rank checks" }),
+      ).toBeChecked();
       host.read.mockResolvedValue(
         reply(
           change === "disconnect"
@@ -72,9 +75,15 @@ describe("project SERP chain adoption", () => {
       );
       await waitFor(() => expect(host.read).toHaveBeenCalledTimes(2));
       await waitFor(() => {
-        expect(screen.queryByRole("button", { name: "Pause: DataForSEO" })).toBeNull();
-        if (change === "disconnect") expect(screen.getAllByRole("listitem")).toHaveLength(1);
-        else expect(screen.getByRole("button", { name: "Activate: DataForSEO" })).toBeVisible();
+        if (change === "disconnect") {
+          expect(
+            screen.queryByRole("switch", { name: "Use DataForSEO for rank checks" }),
+          ).toBeNull();
+          expect(screen.getAllByRole("listitem")).toHaveLength(1);
+        } else
+          expect(
+            screen.getByRole("switch", { name: "Use DataForSEO for rank checks" }),
+          ).not.toBeChecked();
       });
       expect(host.execute).not.toHaveBeenCalled();
     },
@@ -83,7 +92,10 @@ describe("project SERP chain adoption", () => {
     host.readOnly = true;
     host.binding.mockImplementation(async (id: string) => ({ ...binding(id), canManage: false }));
     mount("prj_chain_read_only");
-    expect(await screen.findByRole("button", { name: "Move up: SerpApi" })).toBeDisabled();
+    expect(
+      await screen.findByRole("switch", { name: "Use DataForSEO for rank checks" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Move up: SerpApi" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save fallback order" })).toBeDisabled();
     expect(host.execute).not.toHaveBeenCalled();
   });
@@ -105,7 +117,9 @@ describe("project SERP chain adoption", () => {
     expect(rows[1]).toHaveTextContent("Fallback #2");
     expect(screen.getByText("2 active")).toBeVisible();
     expect(
-      screen.getByText("If a provider fails or is rate-limited, the next active provider is used."),
+      screen.getByText(
+        "Active providers are tried from top to bottom. A charge, unconfirmed usage, or a missing budget stops the check.",
+      ),
     ).toBeVisible();
   });
 
@@ -138,7 +152,36 @@ describe("project SERP chain adoption", () => {
     expect(await screen.findByText("Fallback order saved.")).toBeVisible();
   });
 
-  it("uses shared toggle buttons and preserves paused ordering in the complete command", async () => {
+  it("names the rank-check switch, keeps a 40px target, and toggles it with Space", async () => {
+    const user = userEvent.setup();
+    const view = mount("prj_chain_switch");
+    const toggle = await screen.findByRole("switch", { name: "Use DataForSEO for rank checks" });
+    expect(toggle).toBeChecked();
+    expect(toggle).toBeEnabled();
+    const target = toggle.closest("label");
+    expect(target).toHaveClass("min-h-10", "min-w-10");
+    expect(target?.className ?? "").not.toContain("sm:min-h-7");
+    expect(target?.className ?? "").not.toContain("sm:min-w-7");
+    toggle.focus();
+    await user.keyboard(" ");
+    expect(toggle).not.toBeChecked();
+    view.unmount();
+
+    host.readOnly = true;
+    const held = mount("prj_chain_switch_hold");
+    expect(
+      await screen.findByRole("switch", { name: "Use DataForSEO for rank checks" }),
+    ).toBeDisabled();
+    held.unmount();
+
+    host.readOnly = false;
+    host.binding.mockImplementation(async (id: string) => ({ ...binding(id), canManage: false }));
+    mount("prj_chain_switch_reader", false);
+    expect(await screen.findByText("2 active")).toBeVisible();
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+  });
+
+  it("toggles a provider with a switch and preserves paused ordering in the complete command", async () => {
     const paused = {
       ...connection(1),
       id: "conn_pausedabcdefghijklmnopqr",
@@ -148,8 +191,10 @@ describe("project SERP chain adoption", () => {
     };
     host.read.mockResolvedValue(reply([connection(0), connection(1), paused]));
     mount("prj_chain_pause");
-    fireEvent.click(await screen.findByRole("button", { name: "Pause: DataForSEO" }));
-    expect(screen.queryByRole("switch")).toBeNull();
+    fireEvent.click(await screen.findByRole("switch", { name: "Use DataForSEO for rank checks" }));
+    expect(
+      screen.getByRole("switch", { name: "Use DataForSEO for rank checks" }),
+    ).not.toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Save fallback order" }));
     await waitFor(() => expect(host.execute).toHaveBeenCalledOnce());
     expect(host.execute.mock.calls[0][1].entries.map((row: { id: string }) => row.id)).toEqual([
@@ -183,9 +228,10 @@ describe("project SERP chain adoption", () => {
       expect(rows[1]).toHaveTextContent("Fallback #2");
       expect(
         screen.queryAllByRole("button", {
-          name: /Move up|Move down|Pause|Save fallback order|Reload order/,
+          name: /Move up|Move down|Save fallback order|Reload order/,
         }),
       ).toHaveLength(0);
+      expect(screen.queryAllByRole("switch")).toHaveLength(0);
       expect(host.execute).not.toHaveBeenCalled();
     },
   );

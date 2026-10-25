@@ -3,11 +3,14 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { keywordLabel } from "@/lib/ops/labels";
+import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
 import { DEFAULT_STALE_RUNNING_CHECK_MINUTES } from "@/lib/rank-check/stale-checks";
 import {
   collectRankDispatchHeartbeat,
   type RankDispatchHeartbeat,
 } from "./heartbeat-dispatch-data";
+import { type HeartbeatEvidenceCounts, heartbeatEvidenceCounts } from "./heartbeat-evidence";
+import { readHeartbeatEvidence } from "./heartbeat-evidence-read";
 import {
   collectRankScheduleHeartbeat,
   type RankScheduleHeartbeat,
@@ -16,6 +19,8 @@ import { collectTrafficHeartbeat, type TrafficHeartbeatRow } from "./heartbeat-t
 import { failureEntries, fallbackEntries } from "./rank-failure-summary";
 
 export type RankHeartbeat = {
+  evidenceCounts?: HeartbeatEvidenceCounts;
+  deferredReasons?: Record<string, number>;
   deferred: number;
   failed: number;
   lagP50Ms: number | null;
@@ -58,6 +63,8 @@ export type OperationalHeartbeat = Omit<
 >;
 
 type RankHeartbeatRow = {
+  publicId?: string;
+  deferredReason?: string | null;
   attempts: Prisma.JsonValue | null;
   checkedAt: Date;
   error: string | null;
@@ -81,6 +88,8 @@ async function findRankHeartbeatRows(now: Date, since: Date): Promise<RankHeartb
     orderBy: { checkedAt: "desc" },
     select: {
       attempts: true,
+      publicId: true,
+      deferredReason: true,
       checkedAt: true,
       error: true,
       provider: true,
@@ -105,6 +114,7 @@ function summarizeRankHeartbeatRows(
   now: Date,
   since: Date,
   withDetails: boolean,
+  evidence: ReadonlyMap<string, EvidenceProjection | null>,
 ): AdminRankHeartbeat {
   const stuckBefore = new Date(now.getTime() - DEFAULT_STALE_RUNNING_CHECK_MINUTES * 60 * 1000);
   const recent = rows.filter((row) =>
@@ -118,6 +128,16 @@ function summarizeRankHeartbeatRows(
   const failures = rows.filter((row) => row.status === "failed" && row.checkedAt >= since);
   const fallbacks = rows.filter((row) => row.status === "completed" && row.checkedAt >= since);
   return {
+    evidenceCounts: heartbeatEvidenceCounts(
+      recent.map((row) => evidence.get(row.publicId ?? "") ?? null),
+    ),
+    deferredReasons: recent
+      .filter((row) => row.status === "deferred")
+      .reduce<Record<string, number>>((counts, row) => {
+        const reason = row.deferredReason ?? "other";
+        counts[reason] = (counts[reason] ?? 0) + 1;
+        return counts;
+      }, {}),
     deferred: recent.filter((row) => row.status === "deferred").length,
     failed: recent.filter((row) => row.status === "failed").length,
     lagP50Ms: percentile(lag, 50),
@@ -148,10 +168,17 @@ export async function collectRankHeartbeatWindows<const Windows extends Record<s
   const detailKeys = detailWindows ? (detailWindows as readonly string[]) : null;
   const earliest = new Date(Math.min(...entries.map(([, since]) => since.getTime())));
   const rows = await findRankHeartbeatRows(now, earliest);
+  const evidence = await readHeartbeatEvidence(rows);
   return Object.fromEntries(
     entries.map(([key, since]) => [
       key,
-      summarizeRankHeartbeatRows(rows, now, since, !detailKeys || detailKeys.includes(key)),
+      summarizeRankHeartbeatRows(
+        rows,
+        now,
+        since,
+        !detailKeys || detailKeys.includes(key),
+        evidence,
+      ),
     ]),
   ) as { [Key in keyof Windows]: AdminRankHeartbeat };
 }

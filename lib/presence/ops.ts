@@ -6,6 +6,7 @@ export async function notifyPresenceBudgetExhausted(input: {
   projectIds: string[];
   property: string;
   propertyAccountKey: string;
+  resetAt?: Date | null;
 }) {
   const includeNames = getOpsConfig().includeNames;
   await notifyOps({
@@ -14,6 +15,7 @@ export async function notifyPresenceBudgetExhausted(input: {
       "Affected projects": input.projectIds.join(", "),
       "Deferred URLs": input.deferred,
       "Property identifier": input.propertyAccountKey,
+      ...(input.resetAt ? { "Quota reset at": input.resetAt.toISOString() } : {}),
       ...(includeNames ? { Property: input.property } : {}),
     },
     kind: "presence_inspection_budget",

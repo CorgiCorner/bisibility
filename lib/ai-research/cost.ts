@@ -4,7 +4,10 @@ import { catalogAdmissionBound } from "./catalog-pricing";
 import type { PromptInput, VisibilityInput } from "./schema";
 import { AiResearchValidationError } from "./validation";
 
-export function visibilityCost(input: VisibilityInput, capabilities: AiResearchCapabilities) {
+export function visibilityCost(
+  input: Pick<VisibilityInput, "limit">,
+  capabilities: AiResearchCapabilities,
+) {
   const rate = capabilities.visibilityPricing;
   if (!rate)
     throw new AiResearchValidationError(
@@ -60,7 +63,7 @@ export function promptCost(input: PromptInput, capabilities: AiResearchCapabilit
   );
 }
 export function aiRate(
-  feature: "ai_visibility" | "prompt_explorer",
+  feature: import("./schema").AiResearchKind,
   costCents: number,
   checkedAt: string,
 ): ProviderFeatureRate {

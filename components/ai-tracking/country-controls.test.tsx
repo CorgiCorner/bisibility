@@ -156,7 +156,8 @@ describe("AI country controls", () => {
         .querySelector("[data-country-flag]"),
     ).toBeNull();
     await user.click(screen.getByRole("button", { name: "generationCountry" }));
-    await user.type(screen.getByRole("textbox", { name: "searchPlaceholder" }), "Polska");
+    await user.click(screen.getByRole("textbox", { name: "searchPlaceholder" }));
+    await user.paste("Polska");
     const poland = screen.getByRole("menuitem", { name: "Poland" });
     expect(flag(poland, "PL")).toBeInTheDocument();
     await user.click(poland);

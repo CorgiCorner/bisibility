@@ -158,7 +158,7 @@ export function formatAttemptOutcome(
 export function totalForFilter(filter: CheckRunFilter, counts: CheckRunsViewCounts) {
   if (filter === "all") return counts.runs;
   if (filter === "fallback") return counts.viaFallback;
-  return counts[filter];
+  return filter in counts ? counts[filter as keyof CheckRunsViewCounts] : 0;
 }
 
 type CheckRunsViewCounts = {

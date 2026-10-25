@@ -38,12 +38,12 @@ const meta = {
     onReload: async () => snapshot,
     labels: {
       title: "SERP fallback order",
-      description: "If a provider fails or is rate-limited, the next active provider is used.",
+      description:
+        "Active providers are tried from top to bottom. A charge, unconfirmed usage, or a missing budget stops the check.",
       first: "First provider",
       next: "",
-      disable: "Pause",
-      enable: "Activate",
-      paused: "Paused",
+      enabled: "Active",
+      paused: "Off · not used for rank checks",
     },
     formatPosition: (row, index) => (row.enabled && index > 0 ? `Fallback #${index + 1}` : null),
     formatCount: (count) => `${count} active`,

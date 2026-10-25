@@ -46,7 +46,7 @@ export function trackingEvidenceAudit({
   };
   return {
     kind: "ai_visibility_audit",
-    title: "Retained AI visibility evidence audit",
+    title: "Retained Brand Visibility evidence audit",
     body: {
       method: "retained_evidence",
       runId,

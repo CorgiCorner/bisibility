@@ -220,6 +220,17 @@ describe("audit redaction canaries", () => {
     expect(undeclared).toEqual([]);
   });
 
+  it.each([
+    ["search_index.inspect", { requested: 3, admitted: 2, refused: 1, repeats: 1, released: 1 }],
+  ])("retains %s allowance evidence and drops unrelated data", async (action, after) => {
+    const data = await writeCanary(
+      { ...after, unreviewed: "audit-canary-secret" },
+      undefined,
+      action,
+    );
+    expect(data.after).toEqual(after);
+  });
+
   it("retains reviewed competitor details and drops unrelated edit payload fields", async () => {
     const details = {
       id: "cmp_aaaaaaaaaaaaaaaaaaaaaaaa",

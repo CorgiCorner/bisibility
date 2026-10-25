@@ -610,7 +610,57 @@
       "projectBlocked": "未確定の会計によりプロジェクトの支出が制限されています。",
       "connectionBlocked": "未確定の会計により接続の支出が制限されています。",
       "lastResultActivityAt": "結果復旧ワーカーの最終実行",
-      "noSpendShort": "復旧では、操作の前に保存済みの証拠を確認します。"
+      "noSpendShort": "復旧では、操作の前に保存済みの証拠を確認します。",
+      "evidence": {
+        "classification": "証拠の分類",
+        "acceptance": "受付 / 復旧",
+        "incident": "インシデント",
+        "lookup": "検索試行",
+        "result": "結果",
+        "cost": "費用",
+        "unclassified": "未分類",
+        "age": "開始から {minutes, number} 分",
+        "last": "前回の試行 (UTC)",
+        "next": "次回の試行 (UTC)",
+        "reason": "理由",
+        "project": "プロジェクト / チェック",
+        "depth": "確認済み順位",
+        "createdUtc": "保存日時 (UTC)",
+        "partialTitle": "部分的・未解決の証拠",
+        "partialHelp": "最新の50件。不完全な証拠を完全な結果として復元することはできません。",
+        "empty": "部分的または未解決の証拠はありません。",
+        "results": {
+          "under_review": "確認中",
+          "recovered": "復旧済み",
+          "partial": "部分的",
+          "provider_error": "プロバイダーエラー",
+          "missing": "結果なし"
+        },
+        "costs": {
+          "measured": "計測済み",
+          "unknown": "不明",
+          "under_review": "確認中",
+          "conflict": "不一致"
+        },
+        "acceptanceStates": {
+          "accepted": "受付済み",
+          "unconfirmed": "未確認",
+          "rejected": "拒否"
+        },
+        "recoveryStates": {
+          "not_needed": "不要",
+          "waiting_for_attempt_end": "試行完了待ち",
+          "scheduled": "予定済み",
+          "attempting": "検索中",
+          "resolved": "解決済み",
+          "operator_review": "運用者の確認"
+        },
+        "partialKinds": {
+          "partial": "部分的",
+          "unresolved": "未解決"
+        },
+        "utcTimestamp": "{timestamp} UTC"
+      }
     },
     "dangerousActions": {
       "notice": "{action}には、二要素認証を有効にしてください。",

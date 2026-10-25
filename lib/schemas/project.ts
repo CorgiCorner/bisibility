@@ -1,4 +1,5 @@
 import { LEGACY_DEFAULT_MARKET_NAME } from "@/lib/api/legacy-market-input";
+import { inspectionBudgetModeSchema } from "@/lib/presence/budget-mode";
 import {
   DEFAULT_INSPECTION_DAILY_LIMIT,
   MAX_INSPECTION_DAILY_LIMIT,
@@ -30,6 +31,7 @@ export const projectSearchSyncSchema = z.object({
 });
 
 export const projectInspectionBudgetSchema = z.object({
+  inspectionBudgetMode: inspectionBudgetModeSchema.optional(),
   inspectionDailyLimit: z.coerce
     .number()
     .int()

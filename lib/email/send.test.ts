@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmailBudgetExceededError, EmailSendError, sendEmail } from "./send";
+import { EmailNotSubmittedError, EmailProviderUnavailableError } from "./types";
 
 const { notifyOpsMock, recordResendSendMock, reserveBudgetMock, sendMock } = vi.hoisted(() => ({
   notifyOpsMock: vi.fn(),
@@ -210,5 +211,63 @@ describe("sendEmail orchestration", () => {
         kind: "email_daily_budget_exhausted",
       }),
     );
+  });
+});
+
+describe("required provider preflight", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
+  });
+
+  it.each(["", "resend"])(
+    "exposes provider-unavailable cause for selection %s",
+    async (provider) => {
+      clearEmailEnv();
+      vi.stubEnv("EMAIL_PROVIDER", provider);
+      const error = await sendEmail({ ...input, requireProvider: true }).catch(
+        (error: unknown) => error,
+      );
+      expect(error).toBeInstanceOf(EmailNotSubmittedError);
+      expect((error as Error).cause).toBeInstanceOf(EmailProviderUnavailableError);
+      expect(sendMock).not.toHaveBeenCalled();
+      expect(reserveBudgetMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not label budget rejection as provider-unavailable", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "resend");
+    vi.stubEnv("RESEND_API_KEY", "email-key");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    reserveBudgetMock.mockResolvedValue({
+      granted: false,
+      notificationDue: false,
+      limit: 1,
+      day: new Date("2026-10-24T00:00:00Z"),
+    });
+    const error = await sendEmail({ ...input, requireProvider: true }).catch(
+      (error: unknown) => error,
+    );
+    expect(error).toBeInstanceOf(EmailBudgetExceededError);
+    expect((error as Error).cause).not.toBeInstanceOf(EmailProviderUnavailableError);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("does not label the demo guard as provider-unavailable", async () => {
+    clearEmailEnv();
+    vi.stubEnv("READ_ONLY_DEMO", "1");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    const error = await sendEmail({ ...input, requireProvider: true }).catch(
+      (error: unknown) => error,
+    );
+    expect(error).toBeInstanceOf(EmailNotSubmittedError);
+    expect((error as Error).cause).toMatchObject({
+      message: "Email delivery is disabled in the demo.",
+    });
+    expect((error as Error).cause).not.toBeInstanceOf(EmailProviderUnavailableError);
+    expect(sendMock).not.toHaveBeenCalled();
   });
 });

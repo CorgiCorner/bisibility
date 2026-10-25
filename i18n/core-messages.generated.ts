@@ -1271,6 +1271,56 @@ export type CoreMessages = {
         readonly two_factor_required: "Two-factor authentication must be enabled.";
         readonly unavailable: "Recovery is temporarily unavailable. Refresh the command status before retrying.";
       };
+      readonly evidence: {
+        readonly acceptance: "Acceptance / recovery";
+        readonly acceptanceStates: {
+          readonly accepted: "Accepted";
+          readonly rejected: "Rejected";
+          readonly unconfirmed: "Unconfirmed";
+        };
+        readonly age: "{minutes, number} min open";
+        readonly classification: "Evidence classification";
+        readonly cost: "Cost";
+        readonly costs: {
+          readonly conflict: "Conflict";
+          readonly measured: "Measured";
+          readonly under_review: "Under review";
+          readonly unknown: "Unknown";
+        };
+        readonly createdUtc: "Retained at (UTC)";
+        readonly depth: "Checked depth";
+        readonly empty: "No partial or unresolved evidence.";
+        readonly incident: "Incident";
+        readonly last: "Last attempt (UTC)";
+        readonly lookup: "Lookup attempts";
+        readonly next: "Next attempt (UTC)";
+        readonly partialHelp: "Latest 50 retained records. Incomplete evidence cannot be restored as a complete result.";
+        readonly partialKinds: {
+          readonly partial: "Partial";
+          readonly unresolved: "Unresolved";
+        };
+        readonly partialTitle: "Partial and unresolved evidence";
+        readonly project: "Project / check";
+        readonly reason: "Reason";
+        readonly recoveryStates: {
+          readonly attempting: "Looking up";
+          readonly not_needed: "Not needed";
+          readonly operator_review: "Operator review";
+          readonly resolved: "Resolved";
+          readonly scheduled: "Scheduled";
+          readonly waiting_for_attempt_end: "Waiting for attempt";
+        };
+        readonly result: "Result";
+        readonly results: {
+          readonly missing: "Missing";
+          readonly partial: "Partial";
+          readonly provider_error: "Provider error";
+          readonly recovered: "Recovered";
+          readonly under_review: "Under review";
+        };
+        readonly unclassified: "Unclassified";
+        readonly utcTimestamp: "{timestamp} UTC";
+      };
       readonly excluded: "Skipped cases: {count, number}";
       readonly expires: "Preview expires";
       readonly failureCodes: {
@@ -1946,126 +1996,138 @@ export type CoreMessages = {
   };
   readonly projectAiResearch: {
     readonly actualCost: "{cost} cents confirmed usage";
-    readonly actualCostAcknowledgement: "I accept a PARTIAL ESTIMATE without a guaranteed maximum and actual provider charges";
+    readonly actualCostAcknowledgement: "I agree to pay DataForSEO's charges, which may exceed the estimate";
     readonly actualCostForecast: "Token and base cost forecast: {cost} cents. Partial estimate with no guaranteed maximum.";
-    readonly actualCostOwnCredentials: "BYOK uses your own existing provider credentials. Hosted credentials and credits are not used in this mode.";
-    readonly actualCostPolicy: "BYOK: actual provider cost";
-    readonly actualCostRisk: "PARTIAL ESTIMATE: tokens and provider base fees only. It excludes search tool fees, search call counts, fetched content, loop input and provider role serialization overhead. Total charges can exceed it. Your own provider credentials are billed for actual usage.";
-    readonly actualCostUnavailable: "Actual provider cost requires your own provider credentials and a current catalog. It is unavailable with hosted credits. The existing hard-cap preset remains available.";
-    readonly actualCostUsageReview: "This request may have incurred a provider charge. Further paid attempts are blocked. Review provider usage and the saved report before starting another request.";
+    readonly actualCostOwnCredentials: "Uses your own DataForSEO key. DataForSEO bills your account for usage; Bisibility Credits are not used.";
+    readonly actualCostPolicy: "Billed to your own DataForSEO account";
+    readonly actualCostRisk: "This is a partial estimate, not a maximum price. It covers the question, answer and basic fees only. It excludes web search fees, the number of searches, fetched pages, repeated input and extra formatting added by DataForSEO. DataForSEO bills your own account for all usage, which may cost more.";
+    readonly actualCostUnavailable: "To pay DataForSEO directly, connect your own key and reload the available models. You can still use quick check with a maximum price.";
+    readonly actualCostUsageReview: "DataForSEO may already have charged for this check. Further attempts are blocked. Review your DataForSEO usage and saved report before starting a new check.";
     readonly actualModel: "Actual model";
-    readonly actualReplayHint: "Repeating a completed request with the same request ID replays its saved result without a new provider call. Starting a new request can incur a new provider charge, even for the same prompt. Saved reports remain available.";
-    readonly actualSearchForecast: "Web search requires BYOK actual-cost mode. Its tool fees and call count are not bounded by the forecast.";
+    readonly actualReplayHint: "Reopening a completed check shows its saved answer without another DataForSEO charge. Starting a new check may incur a new charge, even for the same question.";
+    readonly actualSearchForecast: "DataForSEO bills your own account for web search. Search fees and the number of searches are not included in the estimate.";
+    readonly advanced: "Advanced";
+    readonly advisoryAmountHint: "Warn me if the estimate exceeds {amount}. This does not cap DataForSEO's final charges.";
     readonly aiEngines: "AI engines";
     readonly brand: "Brand";
     readonly brandMentioned: "Brand mentioned";
     readonly brandMentions: "Brand mentions";
-    readonly cacheHint: "Uses your connected provider. Cached results remain available for 12 hours.";
+    readonly cacheHint: "Saved answers can be reused for 12 hours. Check the price to see who pays for this check.";
     readonly catalogHelp: "About available AI settings";
-    readonly catalogRefreshing: "Refreshing provider catalog";
-    readonly catalogUnavailable: "The provider catalog is unavailable. Check your compatible provider connection in Integrations. Saved reports remain readable.";
-    readonly catalogUnavailableLegacy: "Model list unavailable. The mini/nano preset is still available.";
+    readonly catalogRefreshing: "Updating available AI options";
+    readonly catalogUnavailable: "We could not load the available AI options. Check DataForSEO in Integrations. Saved reports are still available.";
+    readonly catalogUnavailableLegacy: "We could not load other models. You can still use quick check with GPT-4.1 mini and nano.";
     readonly catalogUnavailableVisibility: "Market list unavailable. ChatGPT for the United States in English is still available.";
+    readonly chooseModels: "Choose specific models instead";
     readonly citedPages: "Cited pages";
     readonly conservativeBound: "Conservative admission bound: {cost} cents. This reserves the full documented model context plus bounded output because provider input overhead is unknown. Actual usage is recorded from the provider receipt.";
     readonly contentTruncated: "Answer excerpts are shortened to fit the saved report.";
-    readonly costCap: "Maximum cost (cents)";
-    readonly costPolicy: "Payment policy";
+    readonly costCap: "Spending limit (USD)";
+    readonly costPolicy: "How to pay";
     readonly country: "Country";
     readonly coverageDisclaimer: "The provider returned no matches in this market. This does not establish that your brand is absent from every AI answer.";
-    readonly credentialsChanged: "The provider credentials changed after the forecast. Start a new request and obtain a new estimate before execution. No hosted credential fallback is allowed.";
+    readonly credentialsChanged: "Your DataForSEO key changed after the price check. Start a new check and confirm the price again. We will not switch to a Bisibility-paid key.";
     readonly domain: "Domain";
     readonly domainCitations: "Domain citations";
     readonly domainCited: "Domain cited";
-    readonly emptyDescription: "Estimate the cost, then run an analysis to save results to Agent Reports.";
+    readonly emptyDescription: "Check the price, then get answers. Results are saved in Agent Reports.";
     readonly engineChatGpt: "ChatGPT";
     readonly engineClaude: "Claude";
     readonly engineGemini: "Gemini";
-    readonly engineModeHint: "Each engine answers with its current flagship model. Credits only; the estimate shows the maximum price.";
+    readonly engineLimit: "Choose up to {max, number} engines per check.";
+    readonly engineModeHint: "Paid with Bisibility Credits. Each engine uses the model shown below its name. Check the price to see the most you can be charged.";
     readonly enginePerplexity: "Perplexity";
     readonly enginesMode: "Engines";
-    readonly engineWebSearchHint: "Each engine's maximum price includes web search. The country hint applies to ChatGPT.";
-    readonly estimateAboveCap: "The estimate exceeds your maximum cost. Raise the cap or change the settings, then estimate again.";
-    readonly estimateCost: "Estimate cost";
-    readonly estimatedCostLimit: "Advisory estimate limit (cents)";
-    readonly estimateRequired: "Estimate the current settings before running. Any change requires a new estimate.";
-    readonly expandedPricingRequirement: "Extended settings require a fresh verified quote before running. The existing 512-token preset rates do not quote these settings.";
-    readonly firstModel: "First model";
+    readonly engineUnavailable: "This engine is temporarily unavailable. Choose another engine.";
+    readonly engineWebSearchHint: "The maximum price includes web search. The country choice applies to ChatGPT. Perplexity always searches the web.";
+    readonly estimateAboveCap: "This check would exceed your spending limit. Increase the limit or change your choices, then check the price again.";
+    readonly estimateCalculation: "How we estimate the price";
+    readonly estimateCost: "Check the price";
+    readonly estimatedCostLimit: "Estimate warning threshold (USD)";
+    readonly estimateRequired: "Check the price before getting answers. If you change an option, check the price again.";
+    readonly expandedPricingRequirement: "Other settings need a new price check. Quick check prices do not cover them.";
+    readonly firstModel: "AI model to test";
+    readonly forecastDetails: "We assume standard processing, a short question and no reused input. Regional fees and fees for storing reusable input are not included. We estimate input length from the size of your text, including the answer-language instruction; DataForSEO may count it differently. Answer cost uses your chosen length limit, but reasoning and web search may generate more text. An ongoing request may exceed the warning threshold; DataForSEO’s usage record determines the final charge.";
     readonly generatedAt: "Generated {date}";
-    readonly hardCapPolicy: "Hard cost cap";
+    readonly hardCapPolicy: "Use a maximum price";
     readonly historyEmpty: "Completed analyses will appear here.";
     readonly language: "Language";
     readonly languageCode: "Language code";
     readonly legacyAdmissionEstimate: "Legacy admission estimate: {cost} cents, using rates checked {date}. This dated admission bound is not an unconditional guarantee of a future provider invoice. Actual usage is recorded from the provider receipt.";
-    readonly legacyPreset: "Existing preset";
-    readonly legacyPricingProvenance: "Existing mini/nano preset: up to 512 output tokens, no web search. Admission rates last checked {date}; these are the approved preset rates, not a fresh provider quote. Estimate the cost before running.";
-    readonly legacyPromptLanguage: "Follow the original prompt";
-    readonly legacyPromptLanguageHint: "The existing preset sends your prompt unchanged and adds no language instruction.";
+    readonly legacyPreset: "Quick check models";
+    readonly legacyPricingProvenance: "Quick check uses GPT-4.1 mini and nano, short answers (up to 512 tokens) and no web search. Prices use previously approved rates, which may differ from today's DataForSEO prices. Check the price before running. Rates last reviewed: {date}.";
+    readonly legacyPromptLanguage: "Let the AI follow your question";
+    readonly legacyPromptLanguageHint: "Your question is sent as written, without a separate language instruction.";
     readonly legacyVisibilityPreset: "Existing dataset preset: ChatGPT, United States, English. Other countries, languages and platforms require the live catalog.";
-    readonly liveCatalog: "Live provider catalog";
+    readonly liveCatalog: "Other available models";
     readonly locationCode: "Location code";
     readonly marketCoverageHint: "Only countries and languages supported by the selected platform’s dataset are available.";
+    readonly maximumAmountHint: "Spending limit for this check: {amount}. Check the price before you run it.";
     readonly modelAlreadySelected: "Already selected as the other model.";
-    readonly modelNeedsActualPayment: "Select actual provider cost to use this model with your own provider account.";
-    readonly modelNeedsOwnAccount: "Connect your own provider account in Integrations and select actual provider cost.";
-    readonly modelPolicyPending: "This model is awaiting a BYOK and cost-policy decision. Its published price does not enable execution.";
+    readonly modelLimit: "Compare up to 2 models per check.";
+    readonly modelNeedsActualPayment: "Choose to pay with your own DataForSEO account to use this model.";
+    readonly modelNeedsOwnAccount: "Connect your own DataForSEO key in Integrations and choose to pay DataForSEO directly.";
+    readonly modelPolicyPending: "This model cannot be used yet, even if a price is listed.";
     readonly modelPricingUnavailable: "Current pricing cannot be verified for this model. Try again later.";
     readonly modelsMode: "Models";
     readonly modelUnavailable: "This model is not supported for prompt runs yet.";
-    readonly newRequest: "Start a new request";
+    readonly newRequest: "Start a new check";
     readonly noAnswer: "No answer text returned.";
     readonly noBrandMention: "No brand mention";
     readonly noCitations: "No citations returned by this model.";
     readonly noDomainCitation: "No domain citation";
     readonly noObservations: "No matching observations";
-    readonly noSecondModel: "Compare one model";
-    readonly noSource: "Choose a DataForSEO source in Integrations to estimate costs or run an analysis.";
+    readonly noSecondModel: "Use one model only";
+    readonly noSource: "Connect DataForSEO in Integrations to check prices and get answers.";
     readonly observedAt: "Observed {date}";
     readonly observedDataset: "Observed provider dataset";
     readonly openIntegrations: "Open Integrations";
     readonly openReport: "Open saved report";
-    readonly outputTokens: "Maximum output tokens per model";
+    readonly outputTokens: "Answer length limit (tokens)";
     readonly partialFailure: "The analysis could not be completed. Confirmed results are retained. Review provider usage before retrying.";
     readonly platform: "Platform";
-    readonly pricingUnavailable: "Current models are visible, but verified cost bounds are unavailable. New prompt tests are blocked until pricing can be confirmed. Saved reports remain readable.";
-    readonly pricingUnavailableLegacy: "Fresh bounded pricing is unavailable for extended settings. The existing 512-token mini/nano preset remains available with its dated admission rates.";
-    readonly prompt: "Prompt";
-    readonly promptDescription: "Compare the same prompt in selected supported models. These synthetic tests show generated answers, mentions and returned citations. They do not measure consumer ChatGPT traffic or Google AI Overview visibility.";
-    readonly promptEmpty: "Compare your first prompt";
+    readonly pricingUnavailable: "Models are listed, but we cannot confirm their prices. New checks are paused until prices are available. You can still view saved reports.";
+    readonly pricingUnavailableLegacy: "We cannot confirm prices for other settings. Quick check with GPT-4.1 mini and nano is still available at previously approved rates.";
+    readonly prompt: "Your question";
+    readonly promptDescription: "Try a question in ChatGPT or compare answers from Claude, Gemini and Perplexity. See whether they mention your brand or link to your site. These checks do not measure how often people see your brand in AI search.";
+    readonly promptEmpty: "Try your first question";
     readonly promptPlaceholder: "Which tools help small businesses track search visibility?";
-    readonly promptTitle: "Prompt Explorer";
-    readonly readOnly: "This project is read-only or your role cannot run paid analyses. You can still open saved reports.";
-    readonly reasoningModel: "Reasoning";
+    readonly promptTitle: "Prompt Playground";
+    readonly quickCheck: "Quick check with GPT-4.1 mini and nano. Prices use previously approved rates. Open Advanced to choose other models and how to pay.";
+    readonly readOnly: "You can view saved reports, but your project or role does not allow paid checks.";
+    readonly reasoningModel: "Works through complex questions";
     readonly recentReports: "Recent reports";
     readonly requestedModel: "Requested model";
-    readonly requestFailure: "Analysis could not be completed. Check your provider connection and review usage before trying again.";
-    readonly responseLanguage: "Response language";
-    readonly responseLanguageHint: "An instruction for generated answers, not a dataset language filter.";
-    readonly restoreLegacyPreset: "Use the existing 512-token preset";
-    readonly runAnalysis: "Run analysis";
+    readonly requestFailure: "We could not finish this check. Check your DataForSEO connection and charges before trying again.";
+    readonly responseLanguage: "Answer language";
+    readonly responseLanguageHint: "Ask the AI to answer in this language.";
+    readonly restoreLegacyPreset: "Use quick check with mini and nano";
+    readonly resultsLabel: "Answers and citations";
+    readonly runAnalysis: "Get answers";
     readonly sample: "Showing a bounded sample of {total, number} results. Counts describe the fetched answers only.";
-    readonly searchCountry: "Web search country";
-    readonly searchCountryHint: "A country hint for web search, not a measurement of consumer traffic.";
+    readonly searchCountry: "Country for web results";
+    readonly searchCountryHint: "Suggest a country for web results. This does not show what people in that country see.";
     readonly searchFor: "Search for";
-    readonly secondModel: "Second model (optional)";
+    readonly secondModel: "Compare with another model (optional)";
     readonly showUnavailableModels: "Show unavailable models";
     readonly sourceRetry: "Try again";
     readonly summary: "{answers, number} answers · {mentions, number} brand mentions · {citations, number} domain citations";
-    readonly syntheticTest: "Synthetic prompt test";
-    readonly tokenBounds: "Allowed range: {min, number} to {max, number} tokens.";
+    readonly syntheticTest: "Answers to your test question";
+    readonly tokenBounds: "Choose {min, number} to {max, number} tokens. Tokens are short pieces of text; longer answers may cost more.";
     readonly unavailableModels: "Unavailable models";
     readonly unknownCost: "{cost} cents confirmed subtotal; total usage unknown";
     readonly unknownModel: "Unknown model";
-    readonly unknownPrice: "A bounded cost is unavailable for this model. Runs are blocked.";
-    readonly unsupportedSettings: "These settings are not supported by the current provider catalog. Refresh the page and choose supported settings before estimating again.";
-    readonly validation: "Check the brand, domain, prompt and maximum cost values.";
+    readonly unknownPrice: "We cannot confirm a maximum price for this model, so it cannot run yet.";
+    readonly unsupportedSettings: "DataForSEO does not currently support these choices. Refresh the page, choose available options and check the price again.";
+    readonly useEngines: "Choose AI engines";
+    readonly validation: "Check your brand name, website, question and spending limit.";
     readonly visibilityDescription: "Find brand mentions, cited pages and related questions in the provider's ChatGPT or Google AI Overview dataset. Dataset coverage depends on platform and market.";
-    readonly visibilityEmpty: "Explore your AI visibility";
+    readonly visibilityEmpty: "Explore your brand visibility";
     readonly visibilityEstimate: "Estimated provider cost: {cost} cents. Your cost cap is checked before a new provider request.";
-    readonly visibilityTitle: "AI Visibility";
-    readonly webSearch: "Web search";
-    readonly webSearchHint: "Adds provider web search when supported. Cost must be estimated before running.";
-    readonly webSearchPolicyPending: "Web search is available only with an explicit BYOK actual-cost opt-in.";
+    readonly visibilityTitle: "Brand Visibility";
+    readonly webSearch: "Let the AI search the web";
+    readonly webSearchHint: "Available for supported models. Check the price before getting answers.";
+    readonly webSearchPolicyPending: "To use web search with a chosen model, connect your own DataForSEO key and agree to pay its charges in Advanced.";
     readonly yourDomain: "Your domain";
   };
   readonly projectAiTracking: {
@@ -2077,7 +2139,7 @@ export type CoreMessages = {
     readonly addSchedule: "Add schedule";
     readonly addTopic: "Add topic";
     readonly advisoryEstimate: "Advisory estimate · ${cost}";
-    readonly aiTracking: "AI Tracking";
+    readonly aiTracking: "Prompt Tracker";
     readonly allTopics: "All topics";
     readonly answer: "Answer";
     readonly answerTruncatedAtTheRetentionLimit: "Answer truncated at the retention limit.";
@@ -2136,6 +2198,7 @@ export type CoreMessages = {
     readonly exportIncomplete: "Downloaded {count, number} samples. This file is incomplete: the 1,000-sample download bound was reached. Continue to download the remaining evidence.";
     readonly exportJson: "Export JSON";
     readonly filterByTopic: "Filter by topic";
+    readonly findPromptsInPromptResearch: "Find prompts in Prompt Research";
     readonly generatedPrompt: "Prompt origin: generated hypothesis";
     readonly generationAdvisoryLimit: "Advisory forecast limit (cents)";
     readonly generationAgentRules: "Agent rules";
@@ -2187,7 +2250,7 @@ export type CoreMessages = {
     readonly neutral: "Neutral";
     readonly nextRun: "Next run";
     readonly nextRunPending: "Next occurrence pending";
-    readonly noActivePrompts: "Add or activate a prompt in AI tracking before previewing this schedule.";
+    readonly noActivePrompts: "Add or activate a prompt in Prompt Tracker before previewing this schedule.";
     readonly noAIOverviewWasPresentThisIsNot: "No AI Overview was present. This is not a brand mention failure.";
     readonly noCitationsWereRetained: "No citations were retained.";
     readonly noCitedSourcesInLoadedEvidence: "No cited sources in the loaded evidence.";
@@ -2211,13 +2274,69 @@ export type CoreMessages = {
     readonly previousRun: "Previous run";
     readonly projectTrackingMeta: "{domain} · {count, number} active prompts · schedules disabled by default";
     readonly prompt: "Prompt";
+    readonly promptAddedToPromptTracker: "Prompt added to Prompt Tracker.";
     readonly promptCategory: "Prompt category";
     readonly promptCount: "{count, number} prompts";
+    readonly promptResearchDescription: "Find dataset questions about your market and the sites ChatGPT answers cite.";
     readonly prompts: "Prompts";
     readonly promptText: "Prompt text";
     readonly providerDatasetPrompt: "Prompt origin: provider dataset";
     readonly replacementConfigurationScope: "A replacement uses the configuration below and keeps the saved prompt selection. Preview and approve its current cost before enabling.";
     readonly requestedLocale: "Requested locale";
+    readonly research: {
+      readonly added: "{count} prompts added · Open Prompt Tracker";
+      readonly brandMentioned: "Brand mentioned";
+      readonly bulkActions: "Prompt actions";
+      readonly cached: "Cached result · no new charge";
+      readonly cacheHint: "Up to 100 dataset rows. Revisiting this keyword is free for {duration}.";
+      readonly clearSelection: "Clear selection";
+      readonly confirmResearch: "Confirm research";
+      readonly confirmTracking: "Save {count} prompts to Prompt Tracker";
+      readonly contentTruncated: "Some provider content was shortened to fit evidence limits; mentions or sources may be incomplete.";
+      readonly datasetNotice: "Questions come from DataForSEO’s dataset, built mostly from Google People also ask. They are not logged ChatGPT prompts. Dataset volume only orders results; no AI usage volume is shown.";
+      readonly details: "Details";
+      readonly emptyHint: "Try a shorter, broader term.";
+      readonly emptyTitle: "No prompts found for “{keyword}”";
+      readonly existingTopic: "Existing topic";
+      readonly fromMemory: "The AI answered from memory and cited no sources.";
+      readonly insufficientCredits: "Not enough Credits. Add Credits before researching.";
+      readonly keyword: "Keyword";
+      readonly keywordRequired: "Enter a keyword.";
+      readonly keywordsHint: "Select a keyword to see the prompts people ask AI about it.";
+      readonly keywordTooLong: "Use at most 100 characters.";
+      readonly loadingQuote: "Preparing a free cost estimate…";
+      readonly loadingResults: "Looking up dataset questions…";
+      readonly market: "ChatGPT · United States · English";
+      readonly merged: "+{count} similar prompts merged";
+      readonly noKeywordsHint: "Add Prompt Tracker topics or Rank Tracker keywords, or search a keyword above.";
+      readonly noSources: "No sources";
+      readonly ownDomainCited: "Cites your site";
+      readonly partialFailure: "The provider returned incomplete evidence. Review this attempt before retrying.";
+      readonly placeholder: "Enter a keyword";
+      readonly prompt: "Prompt";
+      readonly promptCount: "{count, plural, one {# prompt} other {# prompts}}";
+      readonly readOnly: "Research requires project write access";
+      readonly readOnlyHint: "Ask a project editor to run research or add prompts.";
+      readonly relevantKeywords: "Relevant keywords";
+      readonly requestFailure: "Research is unavailable. Review the provider connection, pricing and spending limits.";
+      readonly resultsTitle: "Prompts about “{keyword}”";
+      readonly retry: "Refresh estimate";
+      readonly reviewAttempt: "Review this attempt and its charge before starting another lookup.";
+      readonly reviewHint: "Choose or type a topic. Saving prompts does not start a paid tracking run.";
+      readonly reviewTitle: "Review prompts to track";
+      readonly search: "Search";
+      readonly selectAll: "Select all untracked prompts";
+      readonly selected: "{count} selected";
+      readonly selectPrompt: "Select {prompt}";
+      readonly showSources: "Show sources for {prompt}";
+      readonly sourceCount: "{count, plural, one {# source} other {# sources}}";
+      readonly sources: "Sources";
+      readonly topic: "Topic (choose above or type a new one)";
+      readonly topicRequired: "Enter a topic (up to 200 characters).";
+      readonly tracked: "Tracked";
+      readonly trackPrompts: "Track prompts";
+      readonly yourSite: "Your site";
+    };
     readonly resume: "Resume";
     readonly reviewDraft: "Review draft";
     readonly reviewReplacementConfiguration: "Review replacement configuration";
@@ -2817,6 +2936,7 @@ export type CoreMessages = {
         readonly unknown: "Other activity";
         readonly unknownMissing: "Other activity";
         readonly updateDenied: "Update denied";
+        readonly urlInspectionAllowanceUpdated: "URL inspection allowance updated";
         readonly usageDisplayUpdated: "Usage display updated";
         readonly webhookCreated: "Webhook created";
         readonly webhookDeleted: "Webhook deleted";
@@ -4065,25 +4185,30 @@ export type CoreMessages = {
       readonly show: "Show how to start";
     };
     readonly skills: {
-      readonly "ai-prompt-research": "Explore AI prompts";
-      readonly "ai-visibility-audit": "Check AI visibility";
+      readonly "ai-prompt-research": "Pick questions to track";
+      readonly "ai-visibility-audit": "Check Brand Visibility";
       readonly "alert-triage": "Investigate ranking alerts";
-      readonly available: "available";
+      readonly archiveDownload: "Download archive";
       readonly availableCount: "{count, plural, one {# available} other {# available}}";
       readonly "backlink-profile-analysis": "Assess backlink quality";
       readonly bisibility: "Find the right skill";
       readonly "competitive-landscape": "Map the competition";
       readonly "competitor-analysis": "Compare competitor performance";
-      readonly description: "Download skill archives or use skills in the Claude Code plugin. Planned tasks are marked below.";
+      readonly copyCommand: "Copy install command";
+      readonly copySkill: "Copy {skill} install command";
+      readonly description: "Installs all Bisibility skills for Claude Code, Codex, Cursor and other Agent Skills clients.";
       readonly "domain-onboarding": "First domain setup";
-      readonly footer: "Download an archive and follow your agent client's instructions for installing skills.";
+      readonly footer: "Copy a single skill command, or download an archive where one is listed.";
+      readonly groups: {
+        readonly "ai-visibility": "AI visibility";
+        readonly seo: "SEO";
+        readonly "setup-admin": "Setup and management";
+      };
       readonly heading: "Skills";
-      readonly inPlugin: "in the Claude Code plugin";
       readonly "keyword-clustering": "Group by intent";
       readonly "keyword-import": "Bulk add, dedupe";
       readonly "keyword-opportunity-research": "Find keyword opportunities";
-      readonly "link-prospecting": "Find link opportunities";
-      readonly "local-seo": "Improve local visibility";
+      readonly "local-seo": "Read local map visibility";
       readonly planned: "planned";
       readonly "project-setup": "Save project context and tracking setup";
       readonly "provider-setup": "Connect, verify keys";
@@ -4091,7 +4216,6 @@ export type CoreMessages = {
       readonly "self-host-health": "Check instance health";
       readonly "seo-audit": "Prioritized SEO fixes";
       readonly "seo-coach": "Choose the next SEO skill";
-      readonly "sitemap-change-watch": "Watch sitemap changes";
       readonly "team-api-governance": "Manage team API access";
       readonly "weekly-report": "Digest of movements";
     };
@@ -4160,7 +4284,7 @@ export type CoreMessages = {
       readonly activateAction: "Activate";
       readonly active: "Active";
       readonly activeCount: "{count, number} active";
-      readonly description: "If a provider fails or is rate-limited, the next active provider is used.";
+      readonly description: "Active providers are tried from top to bottom. A charge, unconfirmed usage, or a missing budget stops the check.";
       readonly empty: "Connect a SERP provider above to configure fallback order.";
       readonly first: "First provider";
       readonly invalid: "The complete connected provider list is required.";
@@ -4169,13 +4293,14 @@ export type CoreMessages = {
       readonly next: "Fallback #{position, number}";
       readonly notApplied: "The previous order change was not applied.";
       readonly pauseAction: "Pause";
-      readonly paused: "Paused · not used for rank checks";
-      readonly pausedState: "Paused";
+      readonly paused: "Off · not used for rank checks";
+      readonly pausedState: "Off";
       readonly reload: "Reload order";
       readonly save: "Save fallback order";
       readonly saved: "Fallback order saved.";
       readonly saving: "Saving order...";
       readonly title: "SERP fallback order";
+      readonly useForRankChecks: "Use {provider} for rank checks";
     };
     readonly meta: {
       readonly labels: {
@@ -4599,6 +4724,35 @@ export type CoreMessages = {
       readonly estimatedAmount: "{isLessThanCent, select, true {<{amount}} other {~{amount}}}";
       readonly estimatedCost: "~{amount}";
       readonly estimatedOnly: "~";
+      readonly evidence: {
+        readonly apply: "Apply";
+        readonly cost_conflict: "Cost conflict";
+        readonly cost_conflictDescription: "Cost evidence disagrees and needs review.";
+        readonly costUnknown: "Cost unknown";
+        readonly customRange: "Custom range";
+        readonly customRangeCaption: "selected range";
+        readonly customRangeWindow: "in the selected range";
+        readonly dateTime: "Date and time";
+        readonly deferredDescription: "Recorded deferrals and evidence states, {range}. Provider work may already have been submitted. Checks under review were not automatically repeated.";
+        readonly from: "From";
+        readonly invalidRange: "Use a valid range of up to 90 days, with the end after the start.";
+        readonly missing: "Missing result";
+        readonly missingDescription: "Result evidence is missing. We did not retry these checks automatically.";
+        readonly other: "Other";
+        readonly otherDescription: "Other recorded reasons.";
+        readonly partial: "Partial result";
+        readonly partialDescription: "Only part of the requested depth was returned.";
+        readonly programmatic: "Programmatic";
+        readonly provider_error: "Provider error";
+        readonly provider_errorDescription: "The provider returned an error. We did not retry these checks automatically.";
+        readonly recovered: "Recovered";
+        readonly recoveredDescription: "The original result was recovered. Its cost is shown separately.";
+        readonly timeZone: "Time zone: {timeZone}";
+        readonly to: "To (exclusive)";
+        readonly under_review: "Under review";
+        readonly under_reviewDescription: "The submission is unconfirmed or its result is under review. We did not retry these checks automatically.";
+        readonly viewChecks: "View checks";
+      };
       readonly failed: "Failed";
       readonly failedChecks: "{failed, number} of {total, number} checks failed. Successful checks in the same run kept their results.";
       readonly failedCount: "{count, number} failed";
@@ -4647,6 +4801,7 @@ export type CoreMessages = {
       readonly onHold: "{count, number} on hold";
       readonly openFullResults: "Open full results";
       readonly overBudget: "{count, number} over budget";
+      readonly partialNoMatch: "Incomplete: checked to position {depth, number}";
       readonly pausedDuringImport: "Paused during import";
       readonly pausedDuringImportCount: "Paused during import · {count, number} {count, plural, one {keyword} other {keywords}}";
       readonly perProvider: "Per provider";
@@ -6137,6 +6292,7 @@ export type CoreMessages = {
           readonly notRanked: "Not in top {depth, number}";
           readonly noVolumeDataForPair: "No volume data for this market-language pair";
           readonly pairVolumeHelp: "Search volume for this market-language pair";
+          readonly partialDepth: "Incomplete: checked to position {depth, number}";
           readonly position: "#{position, number}";
         };
         readonly rowActions: {
@@ -6897,7 +7053,7 @@ export type CoreMessages = {
       readonly model: "Model";
       readonly next: "Next samples";
       readonly observed: "Observed at";
-      readonly title: "AI tracking results";
+      readonly title: "Prompt Tracker results";
     };
     readonly aiStatuses: {
       readonly blocked: {
@@ -6947,7 +7103,7 @@ export type CoreMessages = {
       readonly clearFilters: "Clear filters";
       readonly filteredDescription: "Change or clear the filters to see other runs.";
       readonly filteredTitle: "No matching runs";
-      readonly historyDescription: "Rank checks, AI tracking runs and Search Console imports will appear here.";
+      readonly historyDescription: "Rank checks, Prompt Tracker runs and Search Console imports will appear here.";
       readonly historyTitle: "No runs yet";
       readonly loadError: "Runs could not be loaded";
       readonly manageSchedules: "Manage schedules";
@@ -6970,7 +7126,7 @@ export type CoreMessages = {
     };
     readonly filters: {
       readonly active: "Active";
-      readonly aiTracking: "AI Tracking";
+      readonly aiTracking: "Prompt Tracker";
       readonly all: "All";
       readonly allSources: "All sources";
       readonly allStatuses: "All statuses";
@@ -7326,16 +7482,16 @@ export type CoreMessages = {
       readonly actions: "Actions";
       readonly addKeywords: "Add keywords";
       readonly ai: {
-        readonly addPromptFirst: "Add or activate a prompt in AI tracking first.";
+        readonly addPromptFirst: "Add or activate a prompt in Prompt Tracker first.";
         readonly archiveBody: "Future prompt monitoring runs will stop. Runs already launched can finish, and past results remain available. Archived prompt monitoring schedules cannot be restored.";
         readonly archived: "Prompt monitoring schedule archived. Past runs and results are preserved.";
         readonly archivedReadOnlyHint: "Archived prompt monitoring schedules are kept for history and cannot be edited or restored.";
         readonly archiveFailed: "Could not archive the prompt monitoring schedule.";
         readonly emptyNext: "Add prompts to start";
-        readonly kindAi: "AI tracking";
+        readonly kindAi: "Prompt Tracker";
         readonly kindRank: "Rank checks";
         readonly loadFailed: "Prompt monitoring schedules could not be loaded. Rank schedules are shown below.";
-        readonly newSchedule: "New AI tracking schedule";
+        readonly newSchedule: "New Prompt Tracker schedule";
         readonly nextPending: "Pending";
         readonly prompts: "{count, plural, one {# prompt} other {# prompts}}";
         readonly readOnly: "Read-only";
@@ -7584,11 +7740,31 @@ export type CoreMessages = {
         readonly Wednesday: "Wednesday";
       };
     };
+    readonly summary: {
+      readonly classification: "Classification at read time: {classification}";
+      readonly down: "Down";
+      readonly failed: "Failed";
+      readonly incident: "{count, plural, one {# linked incident} other {# linked incidents}}";
+      readonly keyword: "Keyword";
+      readonly market: "Market";
+      readonly noResult: "No result";
+      readonly openRuns: "Open on runs page";
+      readonly positions: "Previous → current";
+      readonly quiet: "Unchanged / new";
+      readonly run: "Run {run}";
+      readonly thresholds: "Top {topN}; move of {positionMove}+ positions";
+      readonly title: "Check summary";
+      readonly unavailable: "Unavailable check";
+      readonly under_review: "Under review";
+      readonly up: "Up";
+      readonly version: "Summary version {version}";
+      readonly withdrawn: "This summary was withdrawn.";
+    };
     readonly table: {
       readonly actions: "Actions";
       readonly actual: "actual";
       readonly actualCost: "Cost {cost}";
-      readonly aiTrackingRun: "AI tracking measurement";
+      readonly aiTrackingRun: "Prompt Tracker measurement";
       readonly connectProvider: "Connect a supporting provider";
       readonly cost: "Cost";
       readonly costUnknown: "Cost not confirmed";
@@ -8021,6 +8197,194 @@ export type CoreMessages = {
       readonly waitingForFirstData: "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.";
       readonly yearOverYearNeeds: "Needs {required, number} months of history - {imported, number} of {target, number} imported";
     };
+    readonly indexing: {
+      readonly allChanges: "All changes";
+      readonly allSitemaps: "All sitemaps";
+      readonly allStates: "All indexing states";
+      readonly alphaBadge: "alpha";
+      readonly andMore: "and {count, number} more";
+      readonly asOf: "As of";
+      readonly change: "Change";
+      readonly changedLast7Days: "Changed in the last 7 days";
+      readonly changeKinds: {
+        readonly changed: "Changed {date}";
+        readonly dropped: "Dropped out {date}";
+        readonly indexed: "Indexed {date}";
+      };
+      readonly changes: "Changes";
+      readonly changeTransition: "{previous} -> {next}";
+      readonly checkedAt: "Last inspected";
+      readonly checksBreakdown: "{indexed, number} indexed, {notIndexed, number} not indexed, {failed, number} failed inspections, {notChecked, number} not checked";
+      readonly checksIndexed: "{indexed, number} of {total, number} indexed";
+      readonly coverageState: "Indexing state";
+      readonly crawledAs: "Crawled as";
+      readonly dailyExhausted: "The daily inspection allowance or property quota is exhausted, possibly by other tools too. Checks can resume after {reset}. Stored results remain available.";
+      readonly dailyExhaustedPartial: "Daily inspection quota exhausted. The report is still partial. Checks can resume after {reset}.";
+      readonly denominator: "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}} from sitemaps and keyword targets.";
+      readonly discoveredUrls: "Discovered URLs";
+      readonly enums: {
+        readonly crawledAs: {
+          readonly CRAWLING_USER_AGENT_UNSPECIFIED: "Unspecified";
+          readonly DESKTOP: "Googlebot desktop";
+          readonly MOBILE: "Googlebot smartphone";
+        };
+        readonly indexingState: {
+          readonly BLOCKED_BY_HTTP_HEADER: "Blocked by an HTTP header";
+          readonly BLOCKED_BY_META_TAG: "Blocked by a meta tag";
+          readonly BLOCKED_BY_ROBOTS_TXT: "Blocked by robots.txt";
+          readonly INDEXING_ALLOWED: "Indexing allowed";
+          readonly INDEXING_STATE_UNSPECIFIED: "Unspecified";
+        };
+        readonly pageFetchState: {
+          readonly ACCESS_DENIED: "Access denied (401)";
+          readonly ACCESS_FORBIDDEN: "Access forbidden (403)";
+          readonly BLOCKED_4XX: "Blocked by another 4xx error";
+          readonly BLOCKED_ROBOTS_TXT: "Blocked by robots.txt";
+          readonly INTERNAL_CRAWL_ERROR: "Internal crawl error";
+          readonly INVALID_URL: "Invalid URL";
+          readonly NOT_FOUND: "Not found (404)";
+          readonly PAGE_FETCH_STATE_UNSPECIFIED: "Unspecified";
+          readonly REDIRECT_ERROR: "Redirect error";
+          readonly SERVER_ERROR: "Server error (5xx)";
+          readonly SOFT_404: "Soft 404";
+          readonly SUCCESSFUL: "Fetched successfully";
+        };
+        readonly robotsTxtState: {
+          readonly ALLOWED: "Allowed";
+          readonly DISALLOWED: "Disallowed";
+          readonly ROBOTS_TXT_STATE_UNSPECIFIED: "Unspecified";
+        };
+        readonly verdict: {
+          readonly FAIL: "Failed";
+          readonly NEUTRAL: "Neutral";
+          readonly PARTIAL: "Partially passed";
+          readonly PASS: "Passed";
+          readonly VERDICT_UNSPECIFIED: "Unspecified";
+        };
+      };
+      readonly feedback: {
+        readonly daily: "Daily inspection allowance exhausted. Wait until the next Pacific midnight reset.";
+        readonly failure: "Inspection failed. Check the connection and try again.";
+        readonly minute: "Per-minute limit reached. Wait briefly before trying again.";
+        readonly outside: "The batch contains a URL outside the connected property. No URLs were sent.";
+        readonly success: "Inspection saved.";
+      };
+      readonly freshness: "Oldest result: {oldest}. As of: {newest}.";
+      readonly googleCanonical: "Google canonical";
+      readonly googleChose: "Google chose:";
+      readonly googleLastRead: "Last read by Google";
+      readonly groups: {
+        readonly indexed: "Indexed";
+        readonly inspection_failed: "Inspection failed (not from Google)";
+        readonly not_checked: "Not checked yet";
+        readonly not_indexed: "Not indexed";
+      };
+      readonly history: "Change history";
+      readonly historyBaseline: "{date}: first inspection, {next}";
+      readonly historyPartial: "Showing the latest 100 changes. Older changes are omitted.";
+      readonly historySince: "History since {date}";
+      readonly historyTransition: "{date}: {previous} -> {next}";
+      readonly indexingState: "Indexing permission";
+      readonly inspect: "Inspect URL";
+      readonly inspectDescription: "Request the stored indexing state for up to 10 URLs.";
+      readonly inspectedThatDay: "Inspected that day: {count, number}";
+      readonly inspectHelp: "Enter 1-10 URLs, one per line. This requests Google's indexed state and uses the property quota. It is not a live page test.";
+      readonly inspectionFailedAt: "Our inspection failed at {date}. The strip retains the last known Google state.";
+      readonly inspectionStatus: "Inspection status";
+      readonly inspectionSucceeded: "Inspection saved";
+      readonly invalidBatch: "Enter between 1 and 10 URLs, at most 2048 characters each.";
+      readonly last90Days: "Last 90 days";
+      readonly lastCrawl: "Last crawl";
+      readonly loadFailed: "Stored results could not be loaded. Try again.";
+      readonly loadMore: "Load more URLs";
+      readonly modes: {
+        readonly available_quota: "Mode: use free quota";
+        readonly fixed: "Mode: fixed daily limit";
+        readonly off: "Mode: off";
+      };
+      readonly navigation: "Search Console views";
+      readonly next: "Next";
+      readonly noConnection: "Connect a Search Console property in project integrations to view page indexing.";
+      readonly noHistory: "No recorded changes.";
+      readonly noMatches: "No URLs match these filters.";
+      readonly noSitemaps: "No stored sitemap URLs. Submit a sitemap in Search Console and wait for discovery. This does not confirm that no sitemap is submitted.";
+      readonly noSitemapsSubmitted: "No sitemap is submitted for this property in Search Console.";
+      readonly nothingInspected: "No URL has been inspected yet. Stored results will appear after the first inspection.";
+      readonly notIndexedCount: "Page indexing, {alpha}, {count, plural, one {# not indexed} other {# not indexed}}";
+      readonly openConsole: "Open in Search Console";
+      readonly ourChecks: "Our checks";
+      readonly overview: {
+        readonly badge: "Likely to be removed";
+        readonly keepQuestion: "Want us to keep this section? Click to tell us by email.";
+        readonly keepSubject: "Keep the Page indexing overview";
+        readonly note: "Rebuilt from our inspections, so it can be partial or out of date. Search Console's Page indexing report is the complete version. This section will likely be removed in an upcoming release.";
+        readonly openConsole: "Open the full report in Search Console";
+        readonly title: "Overview from our checks";
+      };
+      readonly pageCount: "{count, plural, one {# page} other {# pages}}";
+      readonly pageFetch: "Page fetch";
+      readonly pages: "Pages";
+      readonly partial: "This report is partial. Discovery or inspections are still incomplete.";
+      readonly pausedRange: "No inspections {dates}: mode off";
+      readonly performance: "Performance";
+      readonly previous: "Previous";
+      readonly reason: "Reason";
+      readonly reasonsCaption: "Grouped like Search Console. Select a reason to filter URLs.";
+      readonly reasonsTitle: "Why pages are or are not indexed";
+      readonly referringPages: "Referring pages";
+      readonly richCounts: "{items, plural, one {# item} other {# items}}, {issues, plural, one {# issue} other {# issues}}";
+      readonly richResults: "Rich results";
+      readonly robots: "robots.txt state";
+      readonly search: "Search URLs";
+      readonly settings: "Inspection settings";
+      readonly sitemap: "Sitemap";
+      readonly sitemapChild: "In index";
+      readonly sitemapErrors: "{count, plural, one {# error} other {# errors}}";
+      readonly sitemapIndex: "Index of {count, number}";
+      readonly sitemapOk: "OK";
+      readonly sitemapPending: "Pending";
+      readonly sitemapPlain: "Sitemap";
+      readonly sitemapReadAt: "Read from Search Console {date}";
+      readonly sitemapReadErrors: {
+        readonly permission: "Permission denied reading sitemaps at {failed}. Last successful read: {success}. Showing stored rows.";
+        readonly unavailable: "Search Console was unavailable at {failed}. Last successful read: {success}. Showing stored rows.";
+      };
+      readonly sitemapRemoved: "No longer submitted";
+      readonly sitemaps: "Sitemaps";
+      readonly sitemapSnapshotCaption: "Submitted in Search Console. An index counts the URLs of its children. Our checks come from stored inspections.";
+      readonly sitemapsNotRead: "Sitemaps not read yet; the first background run reads them";
+      readonly sitemapStatus: "Status";
+      readonly sitemapStoredOnly: "Discovered sitemap files and URL counts from stored data. These are not Search Console submitted totals or the sitemap index hierarchy.";
+      readonly sitemapTotal: "{count, number} total";
+      readonly sitemapType: "Type";
+      readonly sitemapWarnings: "{count, plural, one {# warning} other {# warnings}}";
+      readonly source: "Source";
+      readonly sourceManual: "On demand";
+      readonly sourceTracked: "Sitemap or keyword target";
+      readonly stillChecking: "Still checking: {remaining, number} of {total, number} URLs not checked yet";
+      readonly stops: {
+        readonly off: "No inspections: mode off";
+        readonly quota: "Daily quota reached";
+      };
+      readonly storedDescription: "Google's stored indexed state, not a live test. Opening this drawer makes no Google request.";
+      readonly stripSummary: "{start} to {end}: {indexed, number} indexed days, {notIndexed, number} not indexed days, {notChecked, number} not checked days.";
+      readonly title: "Page indexing";
+      readonly trendCaption: "Counts are from our inspections, so early days cover fewer URLs.";
+      readonly trendChecked: "Checked {checked, number} of {total, number} URLs";
+      readonly trendEmpty: "Nothing inspected yet. History starts with the first inspection; there is no backfill.";
+      readonly trendTitle: "Page indexing over time";
+      readonly trustStrip: "Google's stored indexed state, not a live test. Today: {count, plural, one {# check} other {# checks}} (estimate). Daily quota resets at {reset} your time, midnight Pacific time.";
+      readonly unspecifiedReason: "Unspecified";
+      readonly url: "URL";
+      readonly urlNotOnGoogle: "URL is not on Google";
+      readonly urlOnGoogle: "URL is on Google";
+      readonly urls: "URLs";
+      readonly urlsCaption: "Each row is the latest stored result for a URL. Opening a row makes no Google request.";
+      readonly userCanonical: "Your canonical";
+      readonly verdict: "Verdict";
+      readonly verdictInspectionFailed: "Inspection failed";
+      readonly viewStored: "View stored result";
+    };
     readonly oauthSelection: {
       readonly domainBadge: "DOMAIN";
       readonly domainCoverage: "covers every subdomain";
@@ -8270,6 +8634,7 @@ export type CoreMessages = {
         readonly unknown: "Other activity";
         readonly unknownMissing: "Other activity";
         readonly updateDenied: "Update denied";
+        readonly urlInspectionAllowanceUpdated: "URL inspection allowance updated";
         readonly usageDisplayUpdated: "Usage display updated";
         readonly webhookCreated: "Webhook created";
         readonly webhookDeleted: "Webhook deleted";
@@ -8504,12 +8869,13 @@ export type CoreMessages = {
       readonly list: "Cached results";
       readonly loadError: "Cached results could not be loaded. Try again.";
       readonly module: {
-        readonly ai_visibility: "AI visibility";
+        readonly ai_visibility: "Brand visibility";
         readonly backlinks: "Backlinks";
         readonly domain_overview: "Domain overview";
         readonly keyword_metrics: "Keyword metrics";
         readonly keyword_research: "Keyword research";
-        readonly prompt_explorer: "Prompt explorer";
+        readonly prompt_explorer: "Prompt Playground";
+        readonly prompt_research: "Prompt research";
         readonly ranked_keywords: "Ranked keywords";
         readonly site_audit: "Site audit";
       };
@@ -8523,7 +8889,7 @@ export type CoreMessages = {
       readonly save: "Save";
       readonly saved: "Saved";
       readonly source: {
-        readonly ai_visibility: "AI visibility";
+        readonly ai_visibility: "Brand visibility";
         readonly backlinks: "Backlinks";
         readonly history: "History";
         readonly idea: "Ideas";
@@ -8531,7 +8897,8 @@ export type CoreMessages = {
         readonly metrics: "Metrics";
         readonly overview: "Overview";
         readonly pages: "Pages";
-        readonly prompt_explorer: "Prompt explorer";
+        readonly prompt_explorer: "Prompt Playground";
+        readonly prompt_research: "Prompt research";
         readonly related: "Related";
         readonly site_audit: "Site audit";
         readonly suggestion: "Suggestions";
@@ -8865,7 +9232,7 @@ export type CoreMessages = {
   readonly projectSettingsNotifications: {
     readonly channels: {
       readonly alertFired: "Alert fired";
-      readonly checkComplete: "Check complete";
+      readonly checkComplete: "Check notifications";
       readonly description: "Where an alert goes once it is raised. Alert conditions are configured on the Alerts screen.";
       readonly email: "Email";
       readonly event: "Event";
@@ -8873,11 +9240,35 @@ export type CoreMessages = {
       readonly importFinished: "Import finished";
       readonly inApp: "In-app";
       readonly invite: "Invite";
+      readonly providerIncident: "Provider incidents";
       readonly saveError: "Preferences could not be saved.";
       readonly title: "Channels";
       readonly unavailable: "{label} is not available";
       readonly unavailableHelp: "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week.";
       readonly weeklyReport: "Weekly report";
+    };
+    readonly checks: {
+      readonly checkNotificationPositionMove: "Minimum position move";
+      readonly checkNotificationTopN: "Top-N entry or exit";
+      readonly descriptions: {
+        readonly all: "Manual summaries and every scheduled check window.";
+        readonly important: "Manual summaries, significant changes and failures.";
+        readonly none: "No check summaries. Provider incidents have a separate switch.";
+      };
+      readonly mode: "Check notifications";
+      readonly modes: {
+        readonly all: "All";
+        readonly important: "Important";
+        readonly none: "None";
+      };
+      readonly optionDescriptions: {
+        readonly all: "Every check summary";
+        readonly important: "Significant changes and failures";
+        readonly none: "Check summaries off";
+      };
+      readonly positions: "positions";
+      readonly significantChange: "Significant change";
+      readonly thresholdError: "Enter a whole number from 1 to 100.";
     };
     readonly delivery: {
       readonly deliveredTo: "Notifications are delivered to <address>{email}</address>.";
@@ -9178,8 +9569,19 @@ export type CoreMessages = {
     };
     readonly inspection: {
       readonly dailyLimit: "Daily inspection limit";
-      readonly description: "Daily Search Console index-status checks for tracked target URLs.";
-      readonly help: "Google allows 2,000 inspections per day per property, shared across every tool using it. bisibility caps this at 1,000 to leave room for other tools sharing the property quota. URLs over the limit wait for the next day.";
+      readonly description: "Build a partial Page indexing report from Google's stored indexed state, not a live test.";
+      readonly help: "The fixed limit is 0-2000 URLs per Pacific day. All projects and explicit inspections share the property counter. Other tools also consume quota, so the counter is an estimate.";
+      readonly modeHelp: {
+        readonly available_quota: "Continue until Google reports a daily limit, within the run time budget. This may leave less quota for other tools.";
+        readonly fixed: "Inspect up to the project daily limit, within the shared property allowance.";
+        readonly off: "Background inspection is off. Explicit inspections remain available.";
+      };
+      readonly modeLabel: "Background inspection mode";
+      readonly modes: {
+        readonly available_quota: "Use available quota";
+        readonly fixed: "Fixed daily limit";
+        readonly off: "Off";
+      };
       readonly readOnly: "Read-only";
       readonly saveError: "URL inspection limit could not be saved.";
       readonly saveValidation: "Check the highlighted settings before saving.";
@@ -11467,6 +11869,16 @@ export type CoreMessages = {
       readonly supported: "Supported providers: {providers}.";
       readonly unavailable: "No supported data source is available for this feature.";
     };
+    readonly rankEvidence: {
+      readonly costUnknown: "Cost remains unknown";
+      readonly noMatch: "No match";
+      readonly originalTime: "Original check: {date}";
+      readonly partialDepth: "Incomplete · to #{depth, number}";
+      readonly partialNoMatch: "No match in incomplete results";
+      readonly partialUnknownDepth: "Incomplete results; checked depth unknown";
+      readonly position: "Position {position, number}";
+      readonly recovered: "Recovered";
+    };
     readonly rankPreflight: {
       readonly alreadyScheduled: "Already scheduled";
       readonly budget: "Budget";
@@ -11525,6 +11937,10 @@ export type CoreMessages = {
       readonly startRun: "Start run";
       readonly startUnconfirmed: "The start response was lost. Retry to recover the same run without starting it twice.";
       readonly topDepth: "Top {depth, number}";
+    };
+    readonly realtime: {
+      readonly newResults: "New results";
+      readonly show: "Show";
     };
     readonly reviewedDefaults: {
       readonly cadence: "{frequency}; {timezone}; cron {cron}; jitter {jitter} minutes.";
@@ -11955,8 +12371,9 @@ export type CoreMessages = {
         readonly markets: "Manage locations, keyword defaults, and market lifecycle.";
         readonly preferences: "Theme and personal defaults.";
         readonly projectContext: "Business, audience, products and goals for your agents.";
-        readonly promptExplorer: "Compare synthetic prompt tests across supported models.";
-        readonly runs: "Rank checks, AI tracking and Search Console imports for this project.";
+        readonly promptExplorer: "Try one prompt on several models and compare their answers and citations.";
+        readonly promptResearch: "Find dataset questions people ask AI about your market and the sites the answers cite.";
+        readonly runs: "Rank checks, Prompt Tracker and Search Console imports for this project.";
         readonly searchConsole: "What Google reported, what it withheld, and what you keep.";
         readonly security: "Password, sessions and account protection.";
         readonly siteAudit: "Crawl your project site and inspect issues by URL.";
@@ -11965,8 +12382,8 @@ export type CoreMessages = {
       readonly titles: {
         readonly account: "Account settings";
         readonly agentReports: "Agent Reports";
-        readonly aiTracking: "AI Tracking";
-        readonly aiVisibility: "AI Visibility";
+        readonly aiTracking: "Prompt Tracker";
+        readonly aiVisibility: "Brand Visibility";
         readonly alerts: "Alerts";
         readonly audit: "Audit log";
         readonly backlinks: "Backlinks";
@@ -11985,7 +12402,8 @@ export type CoreMessages = {
         readonly overview: "Overview";
         readonly preferences: "Preferences";
         readonly projectContext: "Project Context";
-        readonly promptExplorer: "Prompt Explorer";
+        readonly promptExplorer: "Prompt Playground";
+        readonly promptResearch: "Prompt Research";
         readonly rankTracker: "Rank Tracker";
         readonly run: "Run";
         readonly runs: "Runs";
@@ -12017,6 +12435,11 @@ export type CoreMessages = {
       readonly collapseSidebar: "Collapse sidebar";
       readonly expandSidebar: "Expand sidebar";
       readonly groups: {
+        readonly ai: {
+          readonly label: "AI Search";
+          readonly tag: "AI";
+          readonly tooltip: "Track and research how AI answers mention your brand.";
+        };
         readonly project: {
           readonly label: "Project";
           readonly tag: "PROJECT";
@@ -12027,21 +12450,16 @@ export type CoreMessages = {
           readonly tag: "DATA";
           readonly tooltip: "Review connected search data and saved reports.";
         };
-        readonly research: {
-          readonly label: "Research & audits";
-          readonly tag: "RESEARCH";
-          readonly tooltip: "Explore keywords, websites and AI responses.";
-        };
-        readonly tracking: {
-          readonly label: "Tracking";
-          readonly tag: "TRACKING";
-          readonly tooltip: "Track rankings and AI performance over time.";
+        readonly seo: {
+          readonly label: "SEO";
+          readonly tag: "SEO";
+          readonly tooltip: "Track rankings and research keywords, websites, backlinks and site health.";
         };
       };
       readonly items: {
         readonly agentReports: "Agent Reports";
-        readonly aiTracking: "AI Tracking";
-        readonly aiVisibility: "AI Visibility";
+        readonly aiTracking: "Prompt Tracker";
+        readonly aiVisibility: "Brand Visibility";
         readonly alerts: "Alerts";
         readonly backlinks: "Backlinks";
         readonly competitors: "Competitors";
@@ -12052,7 +12470,8 @@ export type CoreMessages = {
         readonly keywordResearch: "Keyword Research";
         readonly markets: "Markets";
         readonly projectContext: "Project Context";
-        readonly promptExplorer: "Prompt Explorer";
+        readonly promptExplorer: "Prompt Playground";
+        readonly promptResearch: "Prompt Research";
         readonly rankTracker: "Rank Tracker";
         readonly runs: "Runs";
         readonly searchConsole: "Search Console";
@@ -12062,9 +12481,41 @@ export type CoreMessages = {
       readonly menu: "Menu";
     };
     readonly notifications: {
+      readonly allNotifications: "All notifications";
       readonly empty: "No notifications";
+      readonly filterError: "Could not load open incidents.";
+      readonly incident: {
+        readonly costConflictCount: "{count, plural, one {cost conflict for # check} other {cost conflict for # checks}}";
+        readonly costMeasuredCount: "{count, plural, one {cost measured for # check} other {cost measured for # checks}}";
+        readonly costUnderReviewCount: "{count, plural, one {cost under review for # check} other {cost under review for # checks}}";
+        readonly costUnknownCount: "{count, plural, one {cost unknown for # check} other {cost unknown for # checks}}";
+        readonly counts: "{results}; {costs}.";
+        readonly noRepeat: "We did not retry these checks automatically.";
+        readonly resolved: "Provider evidence review resolved.";
+        readonly resultMissingCount: "{count, plural, one {# missing result} other {# missing results}}";
+        readonly resultPartialCount: "{count, plural, one {# partial result} other {# partial results}}";
+        readonly resultProviderErrorCount: "{count, plural, one {# provider error} other {# provider errors}}";
+        readonly resultRecoveredCount: "{count, plural, one {# recovered result} other {# recovered results}}";
+        readonly resultUnderReviewCount: "{count, plural, one {# result under review} other {# results under review}}";
+        readonly title: "Provider evidence review";
+      };
       readonly markAllRead: "Mark all read";
       readonly markReadError: "Could not mark notifications as read. Please try again.";
+      readonly openIncidents: "Open incidents";
+      readonly summary: {
+        readonly clientScheduledTitle: "Scheduled checks: {window} ({timeZone})";
+        readonly down: "{count, plural, one {# down} other {# down}}";
+        readonly failed: "{count, plural, one {# failed} other {# failed}}";
+        readonly linkedIncidents: "{count, plural, one {# linked incident} other {# linked incidents}}";
+        readonly manualTitle: "Manual check summary";
+        readonly new: "{count, plural, one {# new} other {# new}}";
+        readonly scheduledTitle: "Scheduled checks: {window} UTC";
+        readonly unchanged: "{count, plural, one {# unchanged} other {# unchanged}}";
+        readonly under_review: "{count, plural, one {# under review} other {# under review}}";
+        readonly up: "{count, plural, one {# up} other {# up}}";
+        readonly viewIncident: "View incident";
+        readonly viewRuns: "View runs";
+      };
       readonly title: "Notifications";
     };
     readonly operations: {
@@ -12122,6 +12573,21 @@ export type CoreMessages = {
           readonly scheduled: "Scheduled run";
         };
       };
+      readonly recent: {
+        readonly counts: "{completed, plural, one {# completed} other {# completed}} · {up, plural, one {# up} other {# up}} · {down, plural, one {# down} other {# down}} · {failed, plural, one {# failed} other {# failed}}";
+        readonly dismiss: "Dismiss";
+        readonly incident: "View incident";
+        readonly outcomes: {
+          readonly deferred: "Deferred";
+          readonly failed: "Failed";
+          readonly partial: "Partially completed";
+          readonly succeeded: "Completed";
+          readonly unconfirmed: "Unconfirmed";
+        };
+        readonly pill: "recent";
+        readonly title: "Recent runs";
+        readonly underReview: "{count, number} under review";
+      };
       readonly runs: "Runs";
       readonly stale: "Live updates are unavailable. Showing the last known operations.";
       readonly states: {
@@ -12137,6 +12603,11 @@ export type CoreMessages = {
       readonly trial: "Trial";
       readonly trialDays: "{days, plural, one {Trial · # day left} other {Trial · # days left}}";
       readonly trialDaysShort: "{days, plural, one {Trial · # day} other {Trial · # days}}";
+    };
+    readonly realtime: {
+      readonly connecting: "Connecting";
+      readonly live: "Live";
+      readonly reconnecting: "Reconnecting";
     };
     readonly userMenu: {
       readonly accountMenu: "Account menu";

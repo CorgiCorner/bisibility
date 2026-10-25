@@ -85,8 +85,9 @@
         "history": "History",
         "keywords": "Keywords",
         "pages": "Pages",
-        "ai_visibility": "AI visibility",
-        "prompt_explorer": "Prompt explorer",
+        "ai_visibility": "Brand visibility",
+        "prompt_explorer": "Prompt Playground",
+        "prompt_research": "Prompt research",
         "site_audit": "Site audit"
       },
       "notice": "Removing a result does not run a search. A later search may need a new paid request.",
@@ -96,8 +97,9 @@
         "ranked_keywords": "Ranked keywords",
         "backlinks": "Backlinks",
         "domain_overview": "Domain overview",
-        "ai_visibility": "AI visibility",
-        "prompt_explorer": "Prompt explorer",
+        "ai_visibility": "Brand visibility",
+        "prompt_explorer": "Prompt Playground",
+        "prompt_research": "Prompt research",
         "site_audit": "Site audit"
       }
     }

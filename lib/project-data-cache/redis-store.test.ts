@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  redis: { scan: vi.fn(), get: vi.fn(), ttl: vi.fn(), eval: vi.fn() },
+  redis: { scan: vi.fn(), get: vi.fn(), exists: vi.fn(), ttl: vi.fn(), eval: vi.fn() },
   connect: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -192,4 +192,42 @@ it("lists and removes engine answers within the owning project's cache", async (
   mocks.redis.eval.mockResolvedValue(1);
   expect(await removeRedisDataCache("projectA", token(engineKey))).toBe("removed");
   expect(await removeRedisDataCache("projectB", token(engineKey))).toBe("invalid");
+});
+
+it("lists project research pointers and atomically purges their shared result, preserving paid locks", async () => {
+  const hash = "b".repeat(64);
+  const shared = `ai:prompt-research-v2:${hash}`;
+  const index = `ai:prompt-research-project-v2:projectA:${hash}`;
+  mocks.redis.scan.mockResolvedValue({ cursor: "0", keys: [index] });
+  mocks.redis.get.mockResolvedValue(
+    JSON.stringify({
+      fetchedAt: new Date().toISOString(),
+      keyword: "tools",
+      reportId: "agr_research",
+    }),
+  );
+  mocks.redis.exists.mockResolvedValue(1);
+  mocks.redis.ttl.mockResolvedValue(3000);
+  expect((await listRedisDataCache("projectA", "0", 3600)).entries).toEqual([
+    expect.objectContaining({
+      module: "prompt_research",
+      keyword: "tools",
+      reportRef: "agr_research",
+    }),
+  ]);
+  expect(mocks.redis.ttl).toHaveBeenCalledWith(shared);
+  expect(await removeRedisDataCache("projectB", token(index))).toBe("invalid");
+  expect(await removeRedisDataCache("projectA", token(shared))).toBe("invalid");
+  mocks.redis.eval.mockResolvedValue(-2);
+  expect(await removeRedisDataCache("projectA", token(index))).toBe("invalid");
+  mocks.redis.eval.mockResolvedValue(-1);
+  expect(await removeRedisDataCache("projectA", token(index))).toBe("busy");
+  mocks.redis.eval.mockResolvedValue(1);
+  expect(await removeRedisDataCache("projectA", token(index))).toBe("removed");
+  expect(mocks.redis.eval).toHaveBeenLastCalledWith(expect.stringContaining("return -2"), {
+    keys: [index, shared, `${shared}:lock`],
+    arguments: [],
+  });
+  mocks.redis.exists.mockResolvedValue(0);
+  expect((await listRedisDataCache("projectA", "0", 3600)).entries).toEqual([]);
 });

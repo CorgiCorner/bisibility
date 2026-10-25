@@ -6,7 +6,7 @@ set -eu
 : "${BISIBILITY_PROJECT_ID:?Set the project public ID}"
 
 project_url="${BISIBILITY_BASE_URL%/}/projects/${BISIBILITY_PROJECT_ID}"
-for resource in context ai-catalog 'ai-tracking/runs?limit=20'; do
+for resource in context ai-catalog 'prompt-tracker/runs?limit=20'; do
   curl --fail-with-body --silent --show-error \
     --header "Authorization: Bearer ${BISIBILITY_API_KEY}" \
     "${project_url}/${resource}"

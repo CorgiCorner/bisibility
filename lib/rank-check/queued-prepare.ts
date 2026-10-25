@@ -1,3 +1,5 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import { loadContext, preparedKeyword } from "./queued-prepare-context";
 import "server-only";
 
@@ -50,7 +52,7 @@ export async function prepareQueuedRankCheckBatch(
     };
   }
   const now = new Date();
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await notificationTransaction(async (tx) => {
     const context = await loadContext(tx, input);
     let runItems = await resolveRunItems(tx, input);
     let prepared = context.keywords.map((keyword) =>
@@ -150,6 +152,8 @@ export async function prepareQueuedRankCheckBatch(
           error: deferredReason,
           estimatedCostCents: deferredReason ? null : estimate,
           finishedAt: deferredReason ? now : null,
+          terminalPersistedAt: deferredReason ? new Date() : null,
+          comparisonAllowed: deferredReason ? false : null,
           keywordId: keyword.id,
           normalizationVersion: null,
           previousPosition: keyword.rankChecks[0]?.position ?? null,
@@ -217,6 +221,7 @@ export async function prepareQueuedRankCheckBatch(
         projectId: input.projectId,
         publicId,
       });
+      if (deferredReason) queueCheckSummary(tx, rankCheck.id);
       if (deferredReason && runItem) {
         await applyRunItemTransition(tx, { rankCheckId: rankCheck.id, to: "deferred" });
       }

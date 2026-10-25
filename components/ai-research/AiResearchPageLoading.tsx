@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
-import { LEGACY_PRICING_CHECKED_AT } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -59,27 +58,17 @@ export function AiResearchPageLoading() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("brand")} textInput />
               <Field label={t("domain")} textInput />
-              <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
-                <span>{t("legacyPricingProvenance", { date: LEGACY_PRICING_CHECKED_AT })}</span>
-              </div>
+              <Field label={t("aiEngines")} wide />
               <Field label={t("prompt")} wide multiline />
-              <Field label={t("firstModel")} />
-              <Field label={t("secondModel")} />
-              <Field label={t("responseLanguage")} hint={t("legacyPromptLanguageHint")} />
-              <Field
-                label={t("outputTokens")}
-                textInput
-                hint={t("tokenBounds", { min: 512, max: 512 })}
-              />
+              <Field label={t("responseLanguage")} hint={t("responseLanguageHint")} />
               <Checkbox
                 disabled
                 tabIndex={-1}
                 containerClassName="sm:col-span-2"
                 label={t("webSearch")}
-                description={<span>{t("webSearchPolicyPending")}</span>}
+                description={<span>{t("engineWebSearchHint")}</span>}
               />
-              <Field label={t("costPolicy")} wide />
-              <Field label={t("costCap")} textInput />
+              <div className="text-ui-body sm:col-span-2">{t("advanced")}</div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button disabled tabIndex={-1} variant="secondary">

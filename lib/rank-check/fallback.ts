@@ -5,6 +5,10 @@ import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
 import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
+import {
+  acknowledgeOriginalRankAttempt,
+  originalRankAttemptSnapshot,
+} from "@/lib/provider-evidence/recovery/capture";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
@@ -46,7 +50,7 @@ export type RunKeywordCheckWithFallbackInput = {
   trigger?: ProviderRequestTrigger;
 };
 
-export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFallbackInput) {
+async function runKeywordCheckWithFallbackOriginal(input: RunKeywordCheckWithFallbackInput) {
   const keyword = await prisma.keyword.findUnique({
     include: {
       locationRef: true,
@@ -193,3 +197,19 @@ export {
   type RunCheckChainResult,
   runCheckWithFallback,
 } from "./fallback-chain";
+
+export async function runKeywordCheckWithFallback(
+  ...args: Parameters<typeof runKeywordCheckWithFallbackOriginal>
+) {
+  const preceding = args[0].rankCheckId
+    ? await originalRankAttemptSnapshot(args[0].rankCheckId)
+    : [];
+  try {
+    return await runKeywordCheckWithFallbackOriginal(...args);
+  } finally {
+    if (args[0].rankCheckId)
+      await acknowledgeOriginalRankAttempt(args[0].rankCheckId, preceding).catch(() => {
+        console.error("[provider-evidence] original attempt acknowledgment failed");
+      });
+  }
+}

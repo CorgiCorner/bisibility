@@ -30,6 +30,9 @@ export type RunPageItem = {
   };
   notBefore: string | null;
   rankCheck: {
+    evidenceProjection?:
+      | import("@/lib/provider-evidence/projection/model").EvidenceProjection
+      | null;
     billingUnits?: number | null;
     provider?: string;
     requestedDepth?: number | null;

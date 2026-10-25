@@ -3,6 +3,11 @@ import { startTransition, use } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SearchInsightsPage from "./page";
 
+vi.mock("./PageIndexingSection", () => ({
+  SearchConsoleNavigation: () => <nav data-testid="search-console-tabs" />,
+  PageIndexingView: () => <div data-testid="page-indexing" />,
+}));
+
 const mocks = vi.hoisted(() => ({
   addKeywords: vi.fn(),
   bandList: vi.fn(),
@@ -252,6 +257,22 @@ describe("SearchInsightsPage", () => {
     mocks.markets.mockResolvedValue({ markets: [], maxMarkets: 5 });
     mocks.defaultMarket.mockResolvedValue({ device: "desktop", locationKey: "us-en" });
     mocks.costContext.mockResolvedValue({ costPerCheckCents: null, depth: 100 });
+  });
+
+  it("loads the Page indexing boundary without starting Performance reads", async () => {
+    await renderPage({ tab: "page-indexing", period: "90" });
+    expect(screen.getByTestId("page-indexing")).toBeInTheDocument();
+    expect(mocks.scope).not.toHaveBeenCalled();
+    expect(mocks.firstView).not.toHaveBeenCalled();
+    expect(mocks.signals).not.toHaveBeenCalled();
+    expect(mocks.syncPlan).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, "unknown"])("keeps Performance as the default for %s", async (tab) => {
+    await renderPage({ tab });
+    expect(mocks.firstView).toHaveBeenCalledTimes(1);
+    expect(mocks.workspace).toHaveBeenCalled();
+    expect(screen.queryByTestId("page-indexing")).not.toBeInTheDocument();
   });
 
   it("hands the drawer stack its actions and the Rank Tracker write it may offer", async () => {

@@ -4,9 +4,16 @@ import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import {
+  availableInspectionModes,
+  effectiveInspectionMode,
+  type InspectionBudgetMode,
+  inspectionBudgetModeSchema,
+} from "@/lib/presence/budget-mode";
 import { projectInspectionBudgetSchema } from "@/lib/schemas/project";
 import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
@@ -21,6 +28,8 @@ export type UpdateInspectionBudget = (input: InspectionBudgetForm) => Promise<un
 type UrlInspectionCardProps = {
   canEdit: boolean;
   dailyLimit: number;
+  budgetMode?: InspectionBudgetMode;
+  selfHost?: boolean;
   projectId: string;
   updateInspectionBudget?: UpdateInspectionBudget;
 };
@@ -28,6 +37,8 @@ type UrlInspectionCardProps = {
 export function UrlInspectionCard({
   canEdit,
   dailyLimit,
+  budgetMode = "fixed",
+  selfHost = false,
   projectId,
   updateInspectionBudget = updatePresenceInspectionBudget,
 }: Readonly<UrlInspectionCardProps>) {
@@ -36,7 +47,11 @@ export function UrlInspectionCard({
   const t = useTranslations("projectSettingsTracking.inspection");
   const [saveError, setSaveError] = useState<string | null>(null);
   const form = useForm<InspectionBudgetForm>({
-    defaultValues: { inspectionDailyLimit: dailyLimit, projectId },
+    defaultValues: {
+      inspectionDailyLimit: dailyLimit,
+      inspectionBudgetMode: effectiveInspectionMode(budgetMode, selfHost),
+      projectId,
+    },
     mode: "onChange",
     resolver: zodResolver(projectInspectionBudgetSchema),
   });
@@ -70,6 +85,31 @@ export function UrlInspectionCard({
           <SettingsField width="field">
             <FieldLabel
               className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+              label={t("modeLabel")}
+            />
+            <MenuSelect
+              triggerWrapperClassName="mt-1.5"
+              ariaLabel={t("modeLabel")}
+              disabled={!canEdit}
+              value={form.watch("inspectionBudgetMode") ?? "fixed"}
+              options={availableInspectionModes(selfHost).map((value) => ({
+                value,
+                label: t(`modes.${value}`),
+              }))}
+              onChange={(value) =>
+                form.setValue("inspectionBudgetMode", inspectionBudgetModeSchema.parse(value), {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
+            <p className="m-0 mt-2 text-[12px] leading-[1.55] text-fg-muted">
+              {t(`modeHelp.${form.watch("inspectionBudgetMode") ?? "fixed"}`)}
+            </p>
+          </SettingsField>
+          <SettingsField width="field">
+            <FieldLabel
+              className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="inspection-daily-limit"
               label={t("dailyLimit")}
             />
@@ -78,7 +118,7 @@ export function UrlInspectionCard({
                 aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
                 className="mt-1.5 min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
                 id="inspection-daily-limit"
-                max={1000}
+                max={2000}
                 min={0}
                 type="number"
                 {...form.register("inspectionDailyLimit", { valueAsNumber: true })}

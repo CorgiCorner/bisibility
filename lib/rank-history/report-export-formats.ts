@@ -1,3 +1,5 @@
+import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
+import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
 import { csvRow } from "@/lib/ui/csv";
 import type { PreparedHistoryExport } from "./report-export-service";
 
@@ -49,6 +51,7 @@ const fields = [
   "counts",
   "normalizedItems",
   "normalizedItemCount",
+  "evidenceProjection",
 ] as const;
 export const historyReportHeaders = fields.map((key) =>
   key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
@@ -56,7 +59,11 @@ export const historyReportHeaders = fields.map((key) =>
 export function historyReportCells(row: PreparedHistoryExport["reportRows"][number]) {
   const values = new Map(Object.entries(row));
   return fields.map((field) => {
-    const value: unknown = values.get(field);
+    const source = values.get(field);
+    const value: unknown =
+      field === "evidenceProjection"
+        ? evidenceProjectionResource(source as EvidenceProjection | null | undefined)
+        : source;
     return value === null || value === undefined
       ? ""
       : typeof value === "string" || typeof value === "number"

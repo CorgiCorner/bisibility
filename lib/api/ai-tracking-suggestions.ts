@@ -19,7 +19,7 @@ import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
 
 /** Membership and declared read/write scope are checked by the tracking route before delegation. */
-export async function handleAiTrackingSuggestionGeneration(
+export async function handlePromptTrackerSuggestionGeneration(
   ctx: ApiContext,
   actor: Actor,
   project: { id: string; publicId: string },

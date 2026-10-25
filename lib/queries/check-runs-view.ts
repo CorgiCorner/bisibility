@@ -1,5 +1,6 @@
 import "server-only";
 
+import { checkTimeWhere, parseExactCheckRange } from "@/lib/checks/exact-range";
 import {
   buildCheckRunsView,
   type CheckRunsViewOptions,
@@ -8,16 +9,21 @@ import {
 } from "@/lib/checks/runs-view";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { evidenceMatches, projectionKeys } from "@/lib/provider-evidence/projection/model";
+import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 import { storedResultsSummaries } from "@/lib/queries/retrieved-results";
 import { requireReadableProject } from "./_auth";
+import { checkRunTriggerWhere } from "./check-run-trigger";
 import { loadCheckRunsSummary } from "./check-runs-stats";
 import { getRequestSerpProviderChain } from "./workspace-request-data";
 
 const STALE_AFTER_MS = 48 * 60 * 60 * 1000;
 
 function statusWhere(status: CheckRunsViewOptions["status"]): Prisma.RankCheckWhereInput {
+  if (status && (projectionKeys as readonly string[]).includes(status)) return {};
   if (status === "fallback") return { status: "completed", viaFallback: true };
-  if (status && status !== "all") return { status };
+  if (status && status !== "all" && !(projectionKeys as readonly string[]).includes(status))
+    return { status: status as "completed" | "failed" | "running" | "deferred" };
   return { status: { in: ["completed", "failed", "running"] } };
 }
 
@@ -38,13 +44,21 @@ export function checkRunRowsWhere(
         }
       : {};
 
+  const exact = Boolean(parseExactCheckRange(options.from, options.to).range);
   return {
-    checkedAt: { gte: rangeStart, lte: now },
+    ...checkTimeWhere(
+      rangeStart,
+      now,
+      Boolean(parseExactCheckRange(options.from, options.to).range),
+    ),
     keyword: { projectId },
     ...statusWhere(options.status),
     ...(options.provider && options.provider !== "all" ? { provider: options.provider } : {}),
-    ...(options.trigger && options.trigger !== "all" ? { trigger: options.trigger } : {}),
+    ...(options.trigger && options.trigger !== "all" && options.trigger !== "programmatic"
+      ? { trigger: options.trigger }
+      : {}),
     ...cursor,
+    ...(exact ? { AND: [checkTimeWhere(rangeStart, now, true), cursor] } : {}),
   };
 }
 
@@ -56,9 +70,42 @@ export async function getCheckRunCount(projectId: string) {
 export async function getCheckRunsView(projectId: string, options: CheckRunsViewOptions = {}) {
   const now = options.now ?? new Date();
   const range = options.range ?? "7d";
-  const rangeStart = checkRangeStart(range, now);
+  const exact = parseExactCheckRange(options.from, options.to).range;
+  const rangeStart = exact ? new Date(exact.from) : checkRangeStart(range, now);
+  const rangeEnd = exact ? new Date(exact.to) : now;
   const limit = checkRunsPageLimit(options.limit);
   const { project } = await requireReadableProject(projectId);
+  const triggerWhere = await checkRunTriggerWhere(project.id, options.trigger);
+  const timeWhere = checkTimeWhere(rangeStart, rangeEnd, Boolean(exact));
+  const incidentRows = options.incidentId
+    ? await prisma.providerDispatchIdentity.findMany({
+        where: {
+          projectId: project.id,
+          operation: {
+            providerIncidentOperations: {
+              some: { incidentId: options.incidentId, incident: { projectId: project.id } },
+            },
+          },
+        },
+        select: { rankCheckId: true },
+      })
+    : null;
+  const incidentWhere = incidentRows
+    ? { id: { in: incidentRows.map((row) => row.rankCheckId) } }
+    : {};
+  const scope = { AND: [timeWhere, triggerWhere, incidentWhere] };
+  const isProjection = projectionKeys.find((key) => key === options.status);
+  const matching = isProjection ? await readCheckEvidence(project.id, { where: scope }) : null;
+  const projectionWhere =
+    matching && isProjection
+      ? {
+          publicId: {
+            in: [...matching]
+              .filter(([, value]) => evidenceMatches(value, isProjection))
+              .map(([id]) => id),
+          },
+        }
+      : {};
   const providerChain = getRequestSerpProviderChain(project.id);
   const staleBefore = new Date(now.getTime() - STALE_AFTER_MS);
   const [rows, summary, staleCount] = await Promise.all([
@@ -99,9 +146,16 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
         viaFallback: true,
       },
       take: limit + 1,
-      where: checkRunRowsWhere(project.id, rangeStart, now, options),
+      where: {
+        AND: [
+          checkRunRowsWhere(project.id, rangeStart, rangeEnd, { ...options, trigger: "all" }),
+          triggerWhere,
+          projectionWhere,
+          incidentWhere,
+        ],
+      },
     }),
-    loadCheckRunsSummary(project.id, { end: now, start: rangeStart }, providerChain),
+    loadCheckRunsSummary(project.id, { end: rangeEnd, start: rangeStart }, providerChain, scope),
     prisma.keyword.count({
       where: {
         dispatchState: { isNot: null },
@@ -117,6 +171,9 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
   const view = buildCheckRunsView(rows, summary, { limit, staleCount });
   // Without this the checks table can never expand a completed run: storedResults would
   // stay undefined on every row and the whole surface would be unreachable in production.
+  const evidence = await readCheckEvidence(project.id, {
+    checkIds: view.rows.map((row) => row.id),
+  });
   const stored = await storedResultsSummaries({
     checkIds: view.rows.map((row) => row.id),
     projectId: project.id,
@@ -124,7 +181,11 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
 
   return {
     ...view,
-    rows: view.rows.map((row) => ({ ...row, storedResults: stored.get(row.id) ?? null })),
+    rows: view.rows.map((row) => ({
+      ...row,
+      evidenceProjection: evidence.get(row.id) ?? null,
+      storedResults: stored.get(row.id) ?? null,
+    })),
   };
 }
 

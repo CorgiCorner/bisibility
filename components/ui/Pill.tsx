@@ -4,6 +4,9 @@ import { cn } from "@/lib/ui/cn";
 import type { ComponentProps } from "react";
 import { Button, type ButtonProps } from "./Button";
 
+export const compactBadgeClassName =
+  "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 text-[9.5px] font-semibold bg-accent-soft text-accent-text";
+
 export type PillProps = Omit<ButtonProps, "size"> & {
   active?: boolean;
   size?: "sm" | "md" | "lg";

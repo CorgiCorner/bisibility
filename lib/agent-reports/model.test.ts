@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agentReportSchema } from "./model";
+import { agentReportSchema, externalAgentReportSchema } from "./model";
 
 const valid = {
   kind: "prompt_explorer",
@@ -39,4 +39,11 @@ describe("agent report boundaries", () => {
       expect(agentReportSchema.safeParse(input).success).toBe(false);
     }
   });
+});
+
+it("reserves keyword research evidence for trusted application producers", () => {
+  expect(externalAgentReportSchema.safeParse({ ...valid, kind: "prompt_research" }).success).toBe(
+    false,
+  );
+  expect(agentReportSchema.safeParse({ ...valid, kind: "prompt_research" }).success).toBe(true);
 });
