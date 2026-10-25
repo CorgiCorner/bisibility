@@ -1,23 +1,34 @@
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { recoveryInstance } from "@/lib/metering/recovery/tokens";
 import { meteringNamespace } from "@/lib/metering/runtime";
+import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
 import { RetainedRankResultUnreadableError } from "./recovery-evidence";
 import { restoreRetainedRankResult } from "./recovery-restore";
 import { resultRecoveryCutoff } from "./recovery-result-grace";
 import { saveResultRecoveryHealth } from "./recovery-result-health";
 
+export function retainedRankResultMaintenanceWhere(
+  scope: { instanceId: string; namespace: string },
+  now: Date,
+): Prisma.RankCheckResultEvidenceWhereInput {
+  return {
+    ...scope,
+    blockedCode: null,
+    createdAt: { lte: resultRecoveryCutoff(now) },
+    expiresAt: { gt: now },
+  };
+}
+
 /** Only ready-to-save results are restored. No provider client is reachable here. */
 export async function maintainRetainedRankResults(now = new Date()) {
+  if (!recoverySwitches().restore) return { restored: 0 };
   const scope = { namespace: meteringNamespace(), instanceId: recoveryInstance() };
   await prisma.rankCheckResultEvidence.deleteMany({ where: { ...scope, expiresAt: { lte: now } } });
   const rows = await prisma.rankCheckResultEvidence.findMany({
-    where: {
-      ...scope,
-      blockedCode: null,
-      expiresAt: { gt: now },
-      createdAt: { lte: resultRecoveryCutoff(now) },
-    },
+    where: retainedRankResultMaintenanceWhere(scope, now),
     orderBy: { createdAt: "asc" },
     take: 10,
     select: { rankCheckId: true },
@@ -26,7 +37,7 @@ export async function maintainRetainedRankResults(now = new Date()) {
   for (const row of rows) {
     try {
       if (
-        await prisma.$transaction(
+        await notificationTransaction(
           (tx) => restoreRetainedRankResult(tx, row.rankCheckId, null, now),
           { timeout: 30000 },
         )
@@ -41,6 +52,6 @@ export async function maintainRetainedRankResults(now = new Date()) {
         });
     }
   }
-  await prisma.$transaction((tx) => saveResultRecoveryHealth(tx, scope.namespace, restored));
+  await notificationTransaction((tx) => saveResultRecoveryHealth(tx, scope.namespace, restored));
   return { restored };
 }

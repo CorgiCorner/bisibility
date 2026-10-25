@@ -172,7 +172,7 @@ describe("rank-history export core", () => {
     const weekly = rankHistoryRows(loaded, "weekly");
     expect(weekly).toHaveLength(1);
     expect(rankHistoryCsvHeader).toBe(
-      "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version",
+      "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version,evidence_projection",
     );
     expect(rankHistoryCsvLine(weekly[0])).toContain('"https://example.com/rank,tracker"');
     expect(rankHistoryCsvLine(weekly[0])).toContain(",dataforseo,100,v1");
@@ -246,7 +246,7 @@ describe("rank-history CSV format safety", () => {
     const before = structuredClone(loaded);
     const rows = rankHistoryRows(loaded, "daily");
     expect(rankHistoryCsvLine(rows[0])).toBe(
-      `${KEYWORD_PUBLIC_ID},'\uFEFF=1+1,2026-10-08T15:00:00.000Z,3,-3,"https://example.com/b?q=""a,b""",'  +provider,100,'@version`,
+      `${KEYWORD_PUBLIC_ID},'\uFEFF=1+1,2026-10-08T15:00:00.000Z,3,-3,"https://example.com/b?q=""a,b""",'  +provider,100,'@version,`,
     );
     expect(rankHistoryCsvLine(rows[1])).toContain(",5,2,https://example.com/a,");
     expect(rows[0].keyword).toBe(keyword.text);

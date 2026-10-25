@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
   };
   const databaseNow = new Date("2026-07-29T01:00:00.000Z");
   const prisma = {
+    $transaction: vi.fn(),
     $queryRaw: vi.fn(async (query: { strings?: string[]; values?: unknown[] }) => {
       const sql = query.strings?.join("?") ?? "";
       const values = query.values ?? [];
@@ -109,6 +110,7 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 describe("queued persistence leases", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.task.persistenceLeaseExpiresAt = null;
     mocks.task.persistenceLeaseOwner = null;
     mocks.task.state = "ready";

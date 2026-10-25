@@ -6,7 +6,7 @@ import { getOpenApiDocument } from "./openapi";
 import { appOwnedTrackingRunOperations } from "./openapi-tracking-run-inputs";
 
 describe("OpenAPI document", () => {
-  it("resolves every local reference, including recursive AI tracking input definitions", () => {
+  it("resolves every local reference, including recursive Prompt Tracker input definitions", () => {
     const document = getOpenApiDocument();
     const unresolved: string[] = [];
     const visit = (value: unknown) => {
@@ -33,7 +33,7 @@ describe("OpenAPI document", () => {
 
   it("keeps provider JSON opaque for SDKs and validated by the runtime", () => {
     const parameters = { nested: [null, true, 1, "text", { nested: [false] }] };
-    const input = appOwnedTrackingRunOperations.retryAiTrackingRun.body as {
+    const input = appOwnedTrackingRunOperations.retryPromptTrackerRun.body as {
       properties: { configurations: { items: { properties: { parameters: object } } } };
     };
     const parameterSchema = input.properties.configurations.items.properties.parameters;
@@ -95,7 +95,8 @@ describe("OpenAPI document", () => {
     expect(doc).toHaveProperty(
       "tags",
       [
-        "ai-tracking",
+        "prompt-tracker",
+        "prompt-research",
         "discovery",
         "account-access",
         "projects",
@@ -119,7 +120,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(154);
+    expect(operations).toHaveLength(161);
     expect(
       Object.entries(doc.paths)
         .filter(([path]) => path.includes("/local-monitors/"))

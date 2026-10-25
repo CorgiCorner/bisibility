@@ -1142,7 +1142,7 @@ describe("public API router", () => {
     expect(body).not.toHaveProperty("credentials_encrypted");
     expect(body).not.toHaveProperty("project_id");
     expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledWith({
-      select: { priority: true },
+      select: { enabled: true, priority: true },
       where: { kind: "serp", projectId: "project_1" },
     });
     expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({
@@ -1167,6 +1167,25 @@ describe("public API router", () => {
       },
     });
   });
+
+  it.each([true, false])(
+    "applies SERP activation and order through REST with another enabled connection (%s)",
+    async (enabled) => {
+      mocks.prisma.providerConnection.findMany.mockResolvedValue([{ enabled, priority: 12 }]);
+      const response = await call(
+        authedRequest("POST", "/projects/prj_a00000000000000000000000/providers/serpapi/connect", {
+          credentials: { api_key: "secret" },
+          cost_per_check: 0.01,
+          enabled: true,
+          priority: 0,
+        }),
+        "/projects/prj_a00000000000000000000000/providers/serpapi/connect",
+      );
+      expect(response.status).toBe(201);
+      expect(await response.json()).toMatchObject({ enabled: !enabled, priority: 13 });
+      expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not serialize raw provider connection data after settings updates", async () => {
     const connection = {

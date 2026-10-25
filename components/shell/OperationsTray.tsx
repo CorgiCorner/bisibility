@@ -5,6 +5,7 @@ import { headerUtilityControlClassName } from "@/components/ui/header-icon-butto
 import { OperationRow } from "@/components/ui/OperationRow";
 import { Popup as Popover } from "@/components/ui/Popup";
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
+import { dismissTrayRun } from "@/lib/actions/run-tray";
 import { useAppRealtime } from "@/lib/realtime/useAppRealtime";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
@@ -20,7 +21,8 @@ import {
   performOperationAction,
   type TrayOperation,
 } from "./OperationsTrayModel";
-import { localizeGscTrayOperation } from "./operations-tray-gsc-copy";
+import { localizedTrayOperation } from "./operations-tray-copy";
+import { RecentTrayRuns } from "./RecentTrayRuns";
 
 export { operationPresentationFor } from "./OperationsTrayModel";
 
@@ -58,82 +60,6 @@ const pillToneClassName = {
   positive: "bg-green",
 } as const;
 
-type OperationsTranslator = ReturnType<typeof useTranslations<"shell.operations">>;
-
-function rankSelectionLabel(
-  selection: NonNullable<TrayOperation["rankCheck"]>["selectionKind"],
-  t: OperationsTranslator,
-) {
-  return t(`rank.selectionKinds.${selection}`);
-}
-
-function rankTitle(
-  trigger: NonNullable<TrayOperation["rankCheck"]>["trigger"],
-  t: OperationsTranslator,
-) {
-  return t(`rank.titles.${trigger}`);
-}
-
-function blockedStateLine(
-  operation: NonNullable<TrayOperation["rankCheck"]>,
-  deploymentMode: ReturnType<typeof useDeploymentMode>,
-  locale: string,
-  t: OperationsTranslator,
-) {
-  if (operation.blockedReason === "temporal_unavailable") {
-    return deploymentMode === "self-host"
-      ? t("rank.blocked.workerSelfHost")
-      : t("rank.blocked.workerCloud");
-  }
-  if (operation.blockedReason === "usage_reconciliation_required")
-    return t("rank.blocked.budgetWithoutAmounts");
-  if (operation.blockedReason === "budget_exhausted") {
-    if (!operation.budget) return t("rank.blocked.budgetWithoutAmounts");
-    const formatCurrency = (cents: number) =>
-      new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
-    return t("rank.blocked.budgetWithAmounts", {
-      cap: formatCurrency(operation.budget.capCents),
-      spent: formatCurrency(operation.budget.spentCents),
-    });
-  }
-  if (
-    operation.blockedReason === "no_provider" ||
-    operation.blockedReason === "credentials_unavailable"
-  ) {
-    return t("rank.blocked.noProvider");
-  }
-  if (operation.blockedReason === "market_inactive") return t("rank.blocked.marketInactive");
-  if (operation.blockedReason === "keyword_archived") return t("rank.blocked.keywordArchived");
-  if (operation.blockedReason === "provider_unavailable")
-    return t("rank.blocked.providerUnavailable");
-  return t("rank.blocked.waiting");
-}
-
-function localizedTrayOperation(
-  operation: TrayOperation,
-  deploymentMode: ReturnType<typeof useDeploymentMode>,
-  locale: string,
-  t: OperationsTranslator,
-): TrayOperation {
-  if (operation.gscImport) return localizeGscTrayOperation(operation, t);
-  if (!operation.rankCheck) return operation;
-  const rankCheck = operation.rankCheck;
-  const keywordCount = t("rank.keywordCount", { count: rankCheck.keywordCount });
-  return {
-    ...operation,
-    meta:
-      rankCheck.selectionKind === "single" || rankCheck.trigger === "scheduled"
-        ? keywordCount
-        : t("rank.scope", {
-            keywords: keywordCount,
-            selection: rankSelectionLabel(rankCheck.selectionKind, t),
-          }),
-    stateLine: operation.blocked ? blockedStateLine(rankCheck, deploymentMode, locale, t) : null,
-    title: rankTitle(rankCheck.trigger, t),
-    unit: t("rank.targetUnit", { count: operation.total }),
-  };
-}
-
 export function OperationsTray({
   defaultOpen = false,
   projectRef,
@@ -145,7 +71,12 @@ export function OperationsTray({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(defaultOpen);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
+  const recent = operations.filter(
+    (op) => op.kind === "rank_check" && op.recent && !dismissed.has(op.id),
+  );
   const trayOperations = operations
+    .filter((operation) => operation.kind !== "rank_check" || !operation.recent)
     .filter(isTrayOperation)
     .map((operation) => operationPresentationFor(operation, projectRef))
     .map((operation) => localizedTrayOperation(operation, deploymentMode, locale, t));
@@ -165,11 +96,11 @@ export function OperationsTray({
 
   // Synchronize the popup anchor with the realtime operation store when it drains.
   useEffect(() => {
-    if (pill.kind === "idle") {
+    if (pill.kind === "idle" && recent.length === 0 && trayOperations.length === 0) {
       setAnchorEl(null);
       setOpen(false);
     }
-  }, [pill.kind]);
+  }, [pill.kind, recent.length, trayOperations.length]);
 
   function runAction(operation: TrayOperation) {
     setActionError(null);
@@ -180,7 +111,7 @@ export function OperationsTray({
 
   return (
     <>
-      {pill.kind === "idle" ? (
+      {pill.kind === "idle" && recent.length === 0 ? (
         <a className={operationsTrayPillClassName} href={runsHref}>
           {t("runs")}
         </a>
@@ -188,37 +119,46 @@ export function OperationsTray({
         <button
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={t("pillAria", { count: pill.count, state: pillState })}
+          aria-label={
+            pill.kind === "idle"
+              ? t("recent.title")
+              : t("pillAria", { count: pill.count, state: pillState })
+          }
           className={operationsTrayPillClassName}
           onClick={(event) => {
             setAnchorEl(event.currentTarget);
             setOpen(true);
           }}
           ref={setAnchorEl}
-          title={t("pillTitle", { count: pill.count, state: pillState })}
+          title={
+            pill.kind === "idle"
+              ? t("recent.title")
+              : t("pillTitle", { count: pill.count, state: pillState })
+          }
           type="button"
         >
           <span
             aria-hidden
             className={cn(
               "h-1.5 w-1.5 rounded-full",
-              pillToneClassName[pill.tone],
-              pill.word === "running" &&
+              pillToneClassName[pill.kind === "idle" ? "neutral" : pill.tone],
+              pill.kind === "busy" &&
+                pill.word === "running" &&
                 "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
             )}
           />
-          <span className="tabular-nums">{pill.count}</span>
+          <span className="tabular-nums">{pill.kind === "idle" ? recent.length : pill.count}</span>
           <span
             className={cn(
               "font-semibold",
-              pill.tone === "critical"
+              pill.kind === "busy" && pill.tone === "critical"
                 ? "text-red-text"
-                : pill.tone === "attention"
+                : pill.kind === "busy" && pill.tone === "attention"
                   ? "text-yellow-text"
                   : "text-fg",
             )}
           >
-            {pillState}
+            {pill.kind === "idle" ? t("recent.pill") : pillState}
           </span>
         </button>
       )}
@@ -264,7 +204,7 @@ export function OperationsTray({
                   />
                 </div>
               ))
-            ) : (
+            ) : recent.length === 0 ? (
               <div className="flex flex-col items-center gap-2.5 px-6 py-11 text-center">
                 <span className="grid h-10 w-10 place-items-center rounded-card bg-bg-sunken text-lg text-fg-muted">
                   ~
@@ -274,7 +214,18 @@ export function OperationsTray({
                   {t("emptyDescription")}
                 </p>
               </div>
-            )}
+            ) : null}
+            {recent.length > 0 ? (
+              <RecentTrayRuns
+                operations={recent}
+                projectRef={projectRef}
+                onDismiss={async (id) => {
+                  const result = await dismissTrayRun({ projectId: projectRef, runId: id });
+                  if (result.dismissed) setDismissed((current) => new Set(current).add(id));
+                }}
+                onError={() => setActionError(t("actionError"))}
+              />
+            ) : null}
           </div>
           {actionError ? (
             <p className="m-0 border-t border-border px-4 py-3 text-xs text-red-text" role="alert">

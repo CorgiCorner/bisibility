@@ -1,3 +1,4 @@
+import { retainRankDispatchIdentity } from "@/lib/provider-evidence/dispatch-identity";
 import { readPaidFenceReference } from "./paid-fence-references";
 import { rankAttribution } from "./rank-attribution";
 import "server-only";
@@ -11,7 +12,7 @@ import { assertProviderCostLimit } from "@/lib/providers/cost-limit";
 import { translatePaidAdmission } from "./admission-errors";
 import { reserveFromEntry } from "./mapping";
 import { reservePaidAttempts } from "./paid-admission";
-import type { PaidFenceHook } from "./paid-attempt-types";
+import type { PaidAttemptContext, PaidFenceHook } from "./paid-attempt-types";
 import { PaidAttemptAdmissionError } from "./paid-attempt-types";
 import { fencePaidAttemptsInTransaction, markPaidAttemptDispatch } from "./paid-dispatch";
 import { reserveOwnPricedRequests } from "./priced-own-request";
@@ -44,21 +45,19 @@ export async function reserveOwnTransports(
           : {};
       reservation.estimateSource = "list";
       reservation.reservationTtlMs = input.queued ? 86400000 : 3600000;
-      return {
-        reservation,
-        context: {
-          feature: entry.feature,
-          projectId: entry.projectId,
-          connectionId: entry.connectionId,
-          publicConnectionId: entry.publicConnectionId,
-          providerCredentialVersion: input.credentialVersion,
-          correlationId: journal.correlationId,
-          ...rank,
-          ...(attribution?.tag ? { tag: attribution?.tag } : {}),
-          ...(attribution?.trigger ? { trigger: attribution?.trigger } : {}),
-          ...(attribution?.keywordId ? { keywordId: attribution?.keywordId } : {}),
-        },
+      const context: PaidAttemptContext = {
+        feature: entry.feature,
+        projectId: entry.projectId,
+        connectionId: entry.connectionId,
+        publicConnectionId: entry.publicConnectionId,
+        providerCredentialVersion: input.credentialVersion,
+        correlationId: journal.correlationId,
+        ...rank,
+        ...(attribution?.tag ? { tag: attribution?.tag } : {}),
+        ...(attribution?.trigger ? { trigger: attribution?.trigger } : {}),
+        ...(attribution?.keywordId ? { keywordId: attribution?.keywordId } : {}),
       };
+      return { reservation, context };
     }),
   );
   try {
@@ -87,10 +86,18 @@ export async function reserveOwnTransports(
       ? priced.map((result) => result.reservation)
       : await reservePaidAttempts(tx, requests);
     const grants = [];
-    for (const reservation of reservations)
+    for (const [index, reservation] of reservations.entries()) {
+      if (
+        inputs[index]?.providerRequest &&
+        reservation.operation.provider === "dataforseo" &&
+        requests[index]?.context.feature === "rank_check" &&
+        requests[index]?.context.rankCheckId
+      )
+        await retainRankDispatchIdentity(tx, reservation.operation, inputs[index]?.providerRequest);
       grants.push(
         await markPaidAttemptDispatch(tx, reservation, `own:${reservation.operation.operationId}`),
       );
+    }
     return grants.map((grant, index) => ({
       attemptId: grant.operation.operationId,
       leaseId: grant.lease.leaseId,

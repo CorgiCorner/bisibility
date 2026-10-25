@@ -32,6 +32,8 @@ export type SettingsView = {
     deviceCount: number;
     keywordCount: number;
     inspectionDailyLimit: number;
+    inspectionBudgetMode?: "off" | "fixed" | "available_quota";
+    inspectionAvailableModes?: ("off" | "fixed" | "available_quota")[];
     searchSync: {
       connectionStatus: "connected" | "connected_no_property" | "needs_reauth" | "not_connected";
       firstDataDate: string | null;

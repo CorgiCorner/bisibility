@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "weekly-report",
   title: "Weekly rank-movement report",
   description:
-    "Compile a week-over-week keyword rank-movement report for a bisibility project (top gainers, losers, and competitor context). Use this when an agent is asked to summarize how a site's rankings changed over the last 7 days.",
+    "Compile a week-over-week rank-movement report from saved checks. Use when summarizing how rankings changed over a recent window. Do not use for starting new checks or treating a current competitor snapshot as weekly history.",
   compatibility: "Requires a bisibility origin and a bearer API key with read scope.",
   kind: "task-skill",
   version: "0.1.1",

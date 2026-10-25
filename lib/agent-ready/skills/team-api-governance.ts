@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "team-api-governance",
   title: "Team & API governance",
   description:
-    "Audit and manage bisibility API keys, project team membership/invites, and migration tokens. Use this skill when an agent must rotate or revoke API keys, review or change who can access a project, or mint/revoke a one-time data-migration token.",
+    "Audit and manage project API keys, team access and migration tokens. Use when rotating keys, reviewing membership or minting a migration token. Do not use for project setup, provider credentials or creating secrets during a read-only audit.",
   compatibility: "Requires a bisibility origin and a bearer API key with admin scope.",
   kind: "task-skill",
   version: "0.1.1",

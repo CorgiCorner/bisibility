@@ -262,6 +262,8 @@ describe("rank-check run cancellation", () => {
         errorCode: "cancelled",
         error: "Cancelled by the run.",
         estimatedCostCents: null,
+        comparisonAllowed: false,
+        terminalPersistedAt: expect.any(Date),
         finishedAt: expect.any(Date),
         status: "failed",
       },

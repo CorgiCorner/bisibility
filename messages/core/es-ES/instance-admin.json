@@ -610,7 +610,57 @@
       "projectBlocked": "La contabilidad pendiente bloquea el gasto del proyecto.",
       "connectionBlocked": "La contabilidad pendiente bloquea el gasto de la conexión.",
       "lastResultActivityAt": "Último progreso del proceso de recuperación de resultados",
-      "noSpendShort": "La recuperación comprueba las pruebas guardadas antes de actuar."
+      "noSpendShort": "La recuperación comprueba las pruebas guardadas antes de actuar.",
+      "evidence": {
+        "classification": "Clasificación de evidencia",
+        "acceptance": "Aceptación / recuperación",
+        "incident": "Incidente",
+        "lookup": "Intentos de consulta",
+        "result": "Resultado",
+        "cost": "Coste",
+        "unclassified": "Sin clasificar",
+        "age": "Abierto hace {minutes, number} min",
+        "last": "Último intento (UTC)",
+        "next": "Próximo intento (UTC)",
+        "reason": "Motivo",
+        "project": "Proyecto / comprobación",
+        "depth": "Profundidad comprobada",
+        "createdUtc": "Guardado (UTC)",
+        "partialTitle": "Evidencia parcial y sin resolver",
+        "partialHelp": "Últimos 50 registros. La evidencia incompleta no se puede restaurar como resultado completo.",
+        "empty": "No hay evidencia parcial ni sin resolver.",
+        "results": {
+          "under_review": "En revisión",
+          "recovered": "Recuperado",
+          "partial": "Parcial",
+          "provider_error": "Error del proveedor",
+          "missing": "Sin resultado"
+        },
+        "costs": {
+          "measured": "Medido",
+          "unknown": "Desconocido",
+          "under_review": "En revisión",
+          "conflict": "Conflicto"
+        },
+        "acceptanceStates": {
+          "accepted": "Aceptado",
+          "unconfirmed": "Sin confirmar",
+          "rejected": "Rechazado"
+        },
+        "recoveryStates": {
+          "not_needed": "No necesario",
+          "waiting_for_attempt_end": "Esperando fin del intento",
+          "scheduled": "Programado",
+          "attempting": "Consultando",
+          "resolved": "Resuelto",
+          "operator_review": "Revisión del operador"
+        },
+        "partialKinds": {
+          "partial": "Parcial",
+          "unresolved": "Sin resolver"
+        },
+        "utcTimestamp": "{timestamp} UTC"
+      }
     },
     "dangerousActions": {
       "notice": "Activa la autenticación de dos factores para {action}.",

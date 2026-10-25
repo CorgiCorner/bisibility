@@ -12,7 +12,7 @@ import {
   legacyModelAdmissionBound,
 } from "./legacy";
 import { PROMPT_PATH, VISIBILITY_PATH } from "./provider";
-import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
+import type { AiResearchKind, ResearchInput } from "./schema";
 import type { AiResearchRow } from "./types";
 import { AiResearchValidationError } from "./validation";
 
@@ -27,7 +27,7 @@ export function researchProvenance({
   rows,
 }: {
   kind: AiResearchKind;
-  input: PromptInput | VisibilityInput;
+  input: ResearchInput;
   admission: AiAdmission;
   estimate: number;
   deadlineAt: number;
@@ -35,7 +35,7 @@ export function researchProvenance({
   providerId: string;
   rows?: readonly AiResearchRow[];
 }): Record<string, ReportJson> {
-  const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
+  const evidence = kind !== "prompt_explorer" ? "observed_dataset" : "synthetic_prompt_test";
   const capabilities = "capabilities" in admission ? admission.capabilities : null;
   const engines = admission.policy === "measured_engines" ? admission.engines : null;
   const actual = admission.policy === "provider_actual_cost";
@@ -137,13 +137,13 @@ export function researchProvenance({
     ...(actual ? { forecastCents: estimate } : { admissionBoundCents: estimate }),
     provider: providerId,
     endpoint:
-      kind === "ai_visibility"
+      kind !== "prompt_explorer"
         ? VISIBILITY_PATH
         : engines
           ? engines.map((entry) => engineResponsePath(entry.engine))
           : PROMPT_PATH,
     evidence,
-    scope: kind === "ai_visibility" ? "provider_dataset_only" : "synthetic_only",
+    scope: kind !== "prompt_explorer" ? "provider_dataset_only" : "synthetic_only",
     webSearch: "prompt" in input && input.web_search,
   };
 }

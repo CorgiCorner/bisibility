@@ -16,7 +16,7 @@ type RedisClient = Pick<BisibilityRedisClient, "publish">;
 export type NotificationRealtimeEvent = {
   createdAt: string;
   id: string;
-  kind: "created";
+  kind: "created" | "updated" | "withdrawn";
   projectId: string | null;
   userId: string;
 };
@@ -169,7 +169,9 @@ export function subscribeToNotificationEvents(
 ): NotificationEventSubscriber | null {
   return subscribeToRealtimeEvents(notificationChannel(userId), handlers, (value) => {
     const event = value as Partial<NotificationRealtimeEvent>;
-    return event.kind === "created" ? (event as NotificationRealtimeEvent) : null;
+    return ["created", "updated", "withdrawn"].includes(event.kind ?? "")
+      ? (event as NotificationRealtimeEvent)
+      : null;
   });
 }
 

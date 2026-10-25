@@ -3,6 +3,13 @@ import { Prisma } from "@/lib/generated/prisma/client";
 export type TrackingTransaction = Prisma.TransactionClient;
 export { prisma };
 
+export function inTrackingTransaction<T>(
+  transaction: TrackingTransaction | undefined,
+  run: (tx: TrackingTransaction) => Promise<T>,
+) {
+  return transaction ? run(transaction) : prisma.$transaction(run);
+}
+
 export async function lockTrackingProject(tx: TrackingTransaction, projectId: string) {
   await tx.$queryRaw(
     Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${projectId}, 0))::text`,

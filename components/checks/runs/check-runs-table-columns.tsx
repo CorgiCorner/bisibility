@@ -83,7 +83,10 @@ function ResultCell({
   run,
   t,
 }: Readonly<{ locale: string; now: Date; run: CheckRunRow; t: CheckRunsTranslations }>) {
-  const value = formatResult(run, now, { locale, t });
+  const value =
+    run.evidenceProjection?.result && run.evidenceProjection.result !== "recovered"
+      ? t(`evidence.${run.evidenceProjection.result}`)
+      : formatResult(run, now, { locale, t });
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <span
@@ -92,7 +95,9 @@ function ResultCell({
       >
         {value}
       </span>
-      {run.status === "completed" ? <PositionDelta run={run} t={t} /> : null}
+      {run.status === "completed" && !run.evidenceProjection?.result ? (
+        <PositionDelta run={run} t={t} />
+      ) : null}
     </div>
   );
 }
@@ -102,6 +107,15 @@ function CostCell({
   run,
   t,
 }: Readonly<{ locale: string; run: CheckRunRow; t: CheckRunsTranslations }>) {
+  if (run.evidenceProjection?.cost && run.evidenceProjection.cost !== "measured") {
+    return (
+      <span className="text-fg-muted">
+        {run.evidenceProjection.cost === "conflict"
+          ? t("evidence.cost_conflict")
+          : t("evidence.costUnknown")}
+      </span>
+    );
+  }
   if (run.status !== "failed") return <>{formatRunCost(run, { locale, t })}</>;
   return (
     <Tooltip content={t("notBilledTooltip")}>
@@ -138,9 +152,20 @@ export function checkRunsTableColumns({
   t,
 }: Readonly<ColumnOptions>): readonly DataTableColumn<CheckRunsTableRow>[] {
   const definitions: DataTableColumn<CheckRunsTableRow>[] = [
-    column("status", t("status"), 140, (run) => <CheckStatusChip kind={run.status} />, {
-      minSize: 140,
-    }),
+    column(
+      "status",
+      t("status"),
+      140,
+      (run) => (
+        <CheckStatusChip
+          kind={run.status === "deferred" ? "pending" : run.status}
+          label={run.status === "deferred" ? t("skipped") : undefined}
+        />
+      ),
+      {
+        minSize: 140,
+      },
+    ),
     column(
       "keyword",
       t("keyword"),

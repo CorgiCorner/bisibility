@@ -18,6 +18,7 @@ import {
   formatWhen,
   isInternalErrorString,
 } from "./check-runs-format";
+import { RankResultMarker } from "./RankResultMarker";
 import type { RunTableColumns } from "./use-run-table-width";
 
 export function CountryLevelBadge({
@@ -207,6 +208,14 @@ export function checkRunDetailLines({
       ? t("timedOut", { count: 15 })
       : formatDuration(run.durationMs, { t });
   const lines: CheckRunDetailLine[] = [
+    ...(run.evidenceProjection
+      ? [
+          {
+            id: `${run.id}-evidence`,
+            content: <RankResultMarker evidence={run.evidenceProjection} position={run.position} />,
+          },
+        ]
+      : []),
     {
       content: (
         <CheckRunDetailsRow>

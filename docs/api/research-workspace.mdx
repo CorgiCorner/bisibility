@@ -14,31 +14,35 @@ All operations use `/api/v1/projects/{project_id}` and the standard authenticate
 API envelope. Project access and write permissions apply to REST, the application
 and MCP. Read discovery capabilities before choosing a provider connection.
 
-## AI Visibility and Prompt Explorer
+## Brand Visibility and Prompt Playground
 
-AI Visibility searches provider datasets for brand or domain mentions, cited
+Open Prompt Playground at `/app/{project_id}/prompt-playground`. Bookmarked
+`/app/{project_id}/prompt-explorer` URLs redirect permanently and retain query parameters.
+The REST endpoint and `compare_ai_prompts` tool name remain unchanged.
+
+Brand Visibility searches provider datasets for brand or domain mentions, cited
 pages and associated prompts. Coverage depends on the selected platform, market
 and provider dataset; it does not expose users' private ChatGPT conversations.
-Prompt Explorer submits the same prompt to selected supported models. Those
+Prompt Playground submits the same prompt to selected supported models. Those
 responses are synthetic tests, not observed visibility or traffic.
 
 The local matching `domain` is a hostname of at most 253 characters, with DNS labels
 of at most 63 characters. It is trimmed and lowercased; do not include a protocol or path.
-Prompt Explorer and `target_type: "brand"` keep this hostname for citation matching
+Prompt Playground and `target_type: "brand"` keep this hostname for citation matching
 and do not send it as a provider domain filter. Domain searches remove one leading
 `www.` only from the outgoing provider filter, with subdomains included, as required
 by the [provider contract](https://docs.dataforseo.com/v3/ai_optimization/llm_mentions/search_mentions/live/).
 The resulting provider field must be at most 63 characters; `www.` plus a 63-character
 host is accepted. The full local hostname still determines citation matches, so an
 apex citation does not become a match for a `www.` target. Longer provider fields
-are rejected before paid dispatch; use brand search or Prompt Explorer instead.
+are rejected before paid dispatch; use brand search or Prompt Playground instead.
 No hostname is truncated or otherwise replaced with a parent host. Visibility results
 from the earlier provider-filter contract are not reused; prompt caches are unchanged.
 
 Start with an estimate, which makes no paid provider request:
 
 ```http
-POST /api/v1/projects/{project_id}/ai-visibility
+POST /api/v1/projects/{project_id}/brand-visibility
 Authorization: Bearer <api_key>
 Content-Type: application/json
 
@@ -57,7 +61,7 @@ combinations in `visibility_markets`. This is a free authenticated metadata look
 mentions currently cover the United States and English only; use returned
 catalog combinations for Google coverage.
 
-The Prompt Explorer endpoint is `POST /prompt-explorer`. It accepts one or two
+The Prompt Playground endpoint is `POST /prompt-explorer`. It accepts one or two
 current model IDs, a prompt of at most 500 characters and 2000 UTF-8 bytes,
 and a requested `max_output_tokens` of 16-4096. Omitting models and output limit
 preserves the original mini/nano, 512-token, text-only request and raw prompt.
@@ -210,7 +214,7 @@ to 256 KiB and 32 KiB respectively. The producer kinds `ai_visibility`,
 one report. Report IDs use the `agr_` prefix. Shared report links require existing
 project access and do not create public access grants.
 
-The corresponding MCP tools are `get_ai_research_catalog`, `analyze_ai_visibility`, `compare_ai_prompts`,
+The corresponding MCP tools are `get_ai_research_catalog`, `analyze_brand_visibility`, `compare_ai_prompts`,
 `get_project_context`, `update_project_context`, `run_site_audit`,
 `list_site_audits`, `get_site_audit`, `create_agent_report`, `list_agent_reports`
 and `get_agent_report`. Exact request and response schemas are in API Reference.

@@ -17,6 +17,7 @@ import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { readActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
 import { type OperationSnapshot, operationSnapshotSchema } from "./contract";
 import { rankCheckProviderPresentation } from "./provider-presentation";
+import { readRecentRunOperations } from "./recent";
 import { pendingRunItems, runStartFacts, startedRunItemWhere } from "./start-facts";
 import { type RunUsageGroup, runUsage } from "./usage";
 
@@ -173,9 +174,12 @@ async function operationForRun(
   };
 }
 
-export async function readOperationSnapshot(projectId: string): Promise<OperationSnapshot[]> {
+export async function readOperationSnapshot(
+  projectId: string,
+  userId?: string,
+): Promise<OperationSnapshot[]> {
   const snapshotAt = new Date();
-  const [runs, searchImport] = await Promise.all([
+  const [runs, searchImport, recent] = await Promise.all([
     prisma.rankCheckRun.findMany({
       orderBy: [{ launchedAt: "desc" }, { id: "desc" }],
       select: snapshotRunSelect,
@@ -183,6 +187,7 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
       where: { projectId, status: { in: ACTIVE_RUN_STATUSES } },
     }),
     readActiveSearchImportSnapshot(projectId),
+    userId ? readRecentRunOperations(projectId, userId, snapshotAt) : [],
   ]);
 
   const spentCents = runs.some((run) => run.blockedReason === "budget_exhausted")
@@ -197,6 +202,7 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
     ),
   ]);
   const operations = [
+    ...recent,
     ...(await Promise.all(
       runs.map((run) =>
         operationForRun(
@@ -229,3 +235,5 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
 
   return operationSnapshotSchema.array().parse(operations);
 }
+
+export { readRankDataRevision } from "./data-revision";

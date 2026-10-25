@@ -310,3 +310,14 @@ describe("commandGroups markets", () => {
     expect(new Set(marketRows.map((item) => item.id)).size).toBe(marketRows.length);
   });
 });
+
+it("keeps AI commands in the same Tracker-first order as the sidebar", () => {
+  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), []);
+  const aiLabels = ["Prompt Tracker", "Prompt Research", "Brand Visibility", "Prompt Playground"];
+  expect(
+    groups
+      .flatMap((group) => group.items)
+      .filter((item) => aiLabels.includes(item.label))
+      .map((item) => item.label),
+  ).toEqual(aiLabels);
+});

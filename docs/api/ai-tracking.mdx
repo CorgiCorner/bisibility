@@ -1,15 +1,17 @@
 ---
-title: "AI Tracking"
+title: "Prompt Tracker"
 description: "Configure project-scoped AI observations and inspect retained answers, citations and comparable history."
 ---
 
-AI Tracking records repeated observations of explicitly selected prompts and sources.
-AI Visibility reads provider datasets, while Prompt Explorer runs one-shot model comparisons.
+Prompt Tracker records repeated observations of explicitly selected prompts and sources.
+Brand Visibility reads provider datasets, while Prompt Playground runs one-shot model comparisons.
+Prompt Research finds questions to track. Today that is model-generated suggestions to review;
+accepted suggestions become Prompt Tracker prompts.
 These sources have different meanings and are never silently combined into one visibility score.
 
 ## Access and configuration
 
-All routes live under `/projects/{project_id}/ai-tracking` and require project membership.
+All routes live under `/projects/{project_id}/prompt-tracker` and require project membership.
 Read operations, context suggestions and `POST /runs/preview` require read scope. Configuration, launch, retry,
 cancel and suggestion acceptance require write scope. Configuration deletion archives it;
 retained revisions and evidence remain available.
@@ -56,15 +58,19 @@ Exports collect bounded pages and include scope and continuation metadata in JSO
 CSV file itself. An incomplete download is explicitly marked; its continuation cursor can
 resume the selected run without silently presenting a partial file as complete.
 
-## Reviewed prompt generation
+## Prompt Research
 
-`POST /suggestions` returns project context and clearly labeled context templates without
-buying model work. `POST /suggestions/preview` reviews an explicitly chosen model, language,
-country and output limit together with all five context fields and selected competitors.
+Prompt Research is the module for finding questions. Today it returns model-generated
+suggestions to review. Accepted suggestions become Prompt Tracker prompts.
+
+`POST /projects/{project_id}/prompt-research/suggestions` returns project context and clearly
+labeled context templates without buying model work. `POST /projects/{project_id}/prompt-research/suggestions/preview`
+reviews an explicitly chosen model, language, country and output limit together with all five
+context fields and selected competitors.
 The reviewed snapshot is limited to 5,000 Unicode code points; oversized context must be
 edited explicitly. It is never silently truncated.
 
-`POST /suggestions/generate` requires write scope, the unchanged preview, explicit own-key
+`POST /projects/{project_id}/prompt-research/suggestions/generate` requires write scope, the unchanged preview, explicit own-key
 actual-cost consent and a UUID `Idempotency-Key`. The estimate is a forecast, not a guaranteed
 maximum. Changes to context, model, credentials, budget or consent require a fresh preview.
 The retained result identifies model-generated hypotheses and its native cost receipt;
@@ -80,7 +86,7 @@ The shared admission limiter requires a healthy Redis connection and fails close
 connection is unavailable. REST, SDK and MCP generation methods share the same reviewed
 preview, consent and idempotency contract. See the [method reference](/sdks/methods).
 
-For the dashboard workflow, see [AI Tracking](/guides/ai-tracking). Review
+For the dashboard workflow, see [Prompt Tracker](/guides/prompt-tracker). Review
 [Project Context](/guides/project-context) before generating hypotheses, and use
 [Agent Reports](/guides/agent-reports) to retain an evidence-bound analysis.
 

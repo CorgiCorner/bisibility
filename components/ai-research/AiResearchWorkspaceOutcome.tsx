@@ -4,6 +4,7 @@ import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine
 import { PaymentQuoteSummary } from "@/components/action-payment/PaymentQuoteSummary";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Card } from "@/components/ui/Card";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
@@ -83,12 +84,10 @@ export function AiResearchWorkspaceOutcome({
             </p>
           ) : null}
           {actual ? <p className="mt-2 text-ui-xs text-fg-muted">{t("actualCostRisk")}</p> : null}
-          {actual && outcome.forecastAssumptions?.length ? (
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-ui-xs text-fg-muted">
-              {outcome.forecastAssumptions.map((assumption) => (
-                <li key={assumption}>{assumption}</li>
-              ))}
-            </ul>
+          {actual ? (
+            <Disclosure title={t("estimateCalculation")} variant="inline" className="mt-2">
+              <p className="text-ui-xs text-fg-muted">{t("forecastDetails")}</p>
+            </Disclosure>
           ) : null}
         </Card>
       ) : null}
@@ -117,6 +116,11 @@ export function AiResearchWorkspaceOutcome({
           title={mode === "visibility" ? t("visibilityEmpty") : t("promptEmpty")}
           description={t("emptyDescription")}
         />
+      ) : null}
+      {noSource && mode === "prompt" && submission.retryBlocked ? (
+        <Card role="alert" className="text-ui-body text-red-text">
+          {t("actualCostUsageReview")}
+        </Card>
       ) : null}
       {sourceRetryAvailable && !catalogSourceMissing && freshCatalog ? (
         <AiSourceRetry onRetry={newRequest} />

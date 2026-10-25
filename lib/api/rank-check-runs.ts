@@ -1,4 +1,5 @@
 import "server-only";
+import { readRunEvidence } from "@/lib/provider-evidence/projection/read-runs";
 import {
   getRankCheckRun as readRun,
   listRankCheckRuns as readRuns,
@@ -15,8 +16,15 @@ export async function listProjectRankCheckRuns(ctx: ApiContext, projectId: strin
   if (denied) return denied;
   requireApiActor(ctx);
   const page = await readRuns(ctx.auth.project.id, ctx.url, { includeUnlaunched: true });
+  const evidence = await readRunEvidence(
+    ctx.auth.project.id,
+    page.data.map((run) => run.id),
+  );
   return listResponse(
-    page.data.map((run) => publicRankCheckRun(run, projectId)),
+    page.data.map((run) => ({
+      ...publicRankCheckRun(run, projectId),
+      evidence_projections: evidence.get(run.id) ?? null,
+    })),
     page.nextCursor,
     { headers: ctx.headers },
   );
@@ -26,5 +34,9 @@ export async function getProjectRankCheckRun(ctx: ApiContext, projectId: string,
   if (denied) return denied;
   requireApiActor(ctx);
   const run = await readRun(ctx.auth.project.id, requireApiPublicId(runId, "rcr"));
-  return resourceResponse(publicRankCheckRun(run, projectId), { headers: ctx.headers });
+  const evidence = await readRunEvidence(ctx.auth.project.id, [run.id]);
+  return resourceResponse(
+    { ...publicRankCheckRun(run, projectId), evidence_projections: evidence.get(run.id) ?? null },
+    { headers: ctx.headers },
+  );
 }

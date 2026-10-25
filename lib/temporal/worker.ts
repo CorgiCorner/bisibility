@@ -26,6 +26,7 @@ import {
   ensureAlertDigestFlushSchedule,
   ensureAlertHealthSchedule,
   ensureAuditPurgeSchedule,
+  ensureCheckNotificationSummariesSchedule,
   ensureMigrationHoldReleaseSchedule,
   ensurePresenceSyncSchedule,
   ensureQueuedRankCheckRetentionSchedule,
@@ -195,6 +196,7 @@ async function run() {
       const ensured = await Promise.all([
         deleteRetiredJobProcessorSchedule(),
         ensureAlertDeliverySweepSchedule(),
+        ensureCheckNotificationSummariesSchedule(),
         ensureAuditPurgeSchedule(),
         ensureRankCheckRawPurgeSchedule(),
         ensureQueuedRankCheckRetentionSchedule(),

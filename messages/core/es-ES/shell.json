@@ -46,15 +46,15 @@
         "new": "nuevo"
       },
       "groups": {
-        "tracking": {
-          "label": "Seguimiento",
-          "tag": "SEGUIMIENTO",
-          "tooltip": "Sigue las posiciones y el rendimiento de IA a lo largo del tiempo."
+        "seo": {
+          "label": "SEO",
+          "tag": "SEO",
+          "tooltip": "Sigue las posiciones e investiga palabras clave, sitios web, backlinks y el estado del sitio."
         },
-        "research": {
-          "label": "Investigación y auditorías",
-          "tag": "INVESTIGACIÓN",
-          "tooltip": "Explora palabras clave, sitios web y respuestas de IA."
+        "ai": {
+          "label": "Búsqueda con IA",
+          "tag": "IA",
+          "tooltip": "Sigue e investiga cómo las respuestas de IA mencionan tu marca."
         },
         "reports": {
           "label": "Datos e informes",
@@ -81,12 +81,13 @@
         "runs": "Ejecuciones",
         "searchConsole": "Search Console",
         "settings": "Ajustes",
-        "aiVisibility": "Visibilidad en IA",
-        "promptExplorer": "Explorador de prompts",
+        "aiVisibility": "Visibilidad de marca",
+        "promptResearch": "Investigación de prompts",
+        "promptExplorer": "Laboratorio de prompts",
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
         "agentReports": "Informes de agentes",
-        "aiTracking": "Seguimiento de IA"
+        "aiTracking": "Seguimiento de prompts"
       },
       "menu": "Menú"
     },
@@ -94,7 +95,39 @@
       "empty": "No hay notificaciones",
       "markAllRead": "Marcar todo como leído",
       "markReadError": "No se han podido marcar las notificaciones como leídas. Inténtalo de nuevo.",
-      "title": "Notificaciones"
+      "title": "Notificaciones",
+      "incident": {
+        "title": "Revisión de pruebas del proveedor",
+        "resolved": "La revisión de pruebas del proveedor ha finalizado.",
+        "noRepeat": "No hemos reintentado automáticamente estas comprobaciones.",
+        "counts": "{results}; {costs}.",
+        "resultUnderReviewCount": "{count, plural, one {# resultado en revisión} other {# resultados en revisión}}",
+        "resultRecoveredCount": "{count, plural, one {# resultado recuperado} other {# resultados recuperados}}",
+        "resultPartialCount": "{count, plural, one {# resultado parcial} other {# resultados parciales}}",
+        "resultProviderErrorCount": "{count, plural, one {# error del proveedor} other {# errores del proveedor}}",
+        "resultMissingCount": "{count, plural, one {# resultado ausente} other {# resultados ausentes}}",
+        "costMeasuredCount": "{count, plural, one {coste medido para # comprobación} other {coste medido para # comprobaciones}}",
+        "costUnknownCount": "{count, plural, one {coste desconocido para # comprobación} other {coste desconocido para # comprobaciones}}",
+        "costUnderReviewCount": "{count, plural, one {coste en revisión para # comprobación} other {coste en revisión para # comprobaciones}}",
+        "costConflictCount": "{count, plural, one {conflicto de coste para # comprobación} other {conflicto de coste para # comprobaciones}}"
+      },
+      "summary": {
+        "manualTitle": "Resumen de comprobación manual",
+        "scheduledTitle": "Comprobaciones programadas: {window} UTC",
+        "down": "{count, plural, one {# bajada} other {# bajadas}}",
+        "up": "{count, plural, one {# subida} other {# subidas}}",
+        "failed": "{count, plural, one {# fallida} other {# fallidas}}",
+        "under_review": "{count, plural, one {# en revisión} other {# en revisión}}",
+        "unchanged": "{count, plural, one {# sin cambios} other {# sin cambios}}",
+        "new": "{count, plural, one {# nueva} other {# nuevas}}",
+        "linkedIncidents": "{count, plural, one {# incidente vinculado} other {# incidentes vinculados}}",
+        "clientScheduledTitle": "Comprobaciones programadas: {window} ({timeZone})",
+        "viewRuns": "Ver ejecuciones",
+        "viewIncident": "Ver incidente"
+      },
+      "openIncidents": "Incidentes abiertos",
+      "allNotifications": "Todas las notificaciones",
+      "filterError": "No se pudieron cargar los incidentes."
     },
     "operations": {
       "actionError": "No se ha podido actualizar esta operación. Actualiza la página e inténtalo de nuevo.",
@@ -159,7 +192,22 @@
         "running": "en curso",
         "waiting": "en espera"
       },
-      "viewAll": "Ver todas las ejecuciones"
+      "viewAll": "Ver todas las ejecuciones",
+      "recent": {
+        "title": "Ejecuciones recientes",
+        "pill": "recientes",
+        "dismiss": "Ocultar",
+        "counts": "{completed, plural, one {# completada} other {# completadas}} · {up, plural, one {# sube} other {# suben}} · {down, plural, one {# baja} other {# bajan}} · {failed, plural, one {# fallida} other {# fallidas}}",
+        "underReview": "{count, number} en revisión",
+        "incident": "Ver incidente",
+        "outcomes": {
+          "succeeded": "Completada",
+          "partial": "Parcialmente completada",
+          "failed": "Fallida",
+          "deferred": "Aplazada",
+          "unconfirmed": "Sin confirmar"
+        }
+      }
     },
     "planStatus": {
       "pro": "Pro",
@@ -226,12 +274,13 @@
         "keywordResearch": "Encuentra frases que merezca la pena seguir, con el coste a la vista antes de cada consulta.",
         "markets": "Gestiona las ubicaciones, los valores por defecto de las palabras clave y el ciclo de vida de los mercados.",
         "preferences": "Tema y preferencias personales.",
-        "runs": "Comprobaciones de posición, seguimiento de IA e importaciones de Search Console de este proyecto.",
+        "runs": "Comprobaciones de posición, seguimiento de prompts e importaciones de Search Console de este proyecto.",
         "searchConsole": "Lo que Google ha comunicado, lo que ha ocultado y lo que tú conservas.",
         "security": "Contraseña, sesiones y protección de la cuenta.",
         "timeline": "Señales del proyecto, cambios en las páginas y notas a lo largo del tiempo.",
         "aiVisibility": "Menciones de marca y citas en las observaciones disponibles de proveedores.",
-        "promptExplorer": "Compara pruebas sintéticas de prompts entre modelos compatibles.",
+        "promptResearch": "Encuentra preguntas del conjunto de datos que las personas hacen a la IA sobre tu mercado y los sitios que citan las respuestas.",
+        "promptExplorer": "Prueba un prompt en varios modelos y compara sus respuestas y citas.",
         "siteAudit": "Rastrea el sitio del proyecto y revisa problemas por URL.",
         "projectContext": "Negocio, público, productos y objetivos para tus agentes.",
         "agentReports": "Análisis guardados y compartidos con los miembros de este proyecto.",
@@ -263,12 +312,13 @@
         "security": "Seguridad",
         "settings": "Ajustes",
         "timeline": "Cronología",
-        "aiVisibility": "Visibilidad en IA",
-        "promptExplorer": "Explorador de prompts",
+        "aiVisibility": "Visibilidad de marca",
+        "promptResearch": "Investigación de prompts",
+        "promptExplorer": "Laboratorio de prompts",
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
         "agentReports": "Informes de agentes",
-        "aiTracking": "Seguimiento de IA"
+        "aiTracking": "Seguimiento de prompts"
       }
     },
     "footer": {
@@ -389,6 +439,11 @@
     },
     "announcements": {
       "learnMore": "Más información"
+    },
+    "realtime": {
+      "live": "En directo",
+      "reconnecting": "Reconectando",
+      "connecting": "Conectando"
     }
   }
 }

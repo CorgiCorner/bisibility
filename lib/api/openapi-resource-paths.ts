@@ -152,12 +152,11 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
       ),
     },
     "/projects/{project_id}/providers/{provider_id}/connect": {
-      post: bearer(
-        "Connect a provider",
-        "connectProvider",
-        ref("Provider"),
-        ref("ProviderConnect"),
-      ),
+      post: {
+        ...bearer("Connect a provider", "connectProvider", ref("Provider"), ref("ProviderConnect")),
+        description:
+          "A new SERP connection starts disabled unless no other SERP connection is enabled, and is placed after existing SERP connections.",
+      },
     },
     "/projects/{project_id}/providers/{provider_id}/test": {
       post: bearer(

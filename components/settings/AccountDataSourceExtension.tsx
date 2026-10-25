@@ -15,7 +15,10 @@ export async function renderProjectDataSourceExtension(
   return <ProviderAccessScopeProvider scope={scope}>{children}</ProviderAccessScopeProvider>;
 }
 
-export async function renderAccountDataSourceExtension(children: ReactNode): Promise<ReactNode> {
+export async function renderAccountDataSourceExtension(
+  children: ReactNode,
+  _options: Readonly<{ onboardingOffer?: boolean }> = {},
+): Promise<ReactNode> {
   return children;
 }
 

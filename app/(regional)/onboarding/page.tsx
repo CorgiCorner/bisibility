@@ -59,6 +59,7 @@ import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
 import { initialFirstCheckCandidates } from "./initial-first-check-candidates";
+import { renderOnboardingDataSourceExtension } from "./onboarding-data-source";
 import { resolveOnboardingLocations } from "./onboarding-location-state";
 import { getOnboardingProviderState } from "./onboarding-provider-state";
 import { updateOnboardingProject } from "./update-project";
@@ -130,9 +131,8 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const activeProjectRef = isNewWorkspace
     ? null
     : (requestedProjectId ?? workspaces[0]?.publicId ?? null);
-  const project = activeProjectRef
-    ? (await requireReadableProject(activeProjectRef)).project
-    : null;
+  const projectScope = activeProjectRef ? await requireReadableProject(activeProjectRef) : null;
+  const project = projectScope?.project ?? null;
   const projectId = project?.publicId ?? null;
   const googleStatus = paramValue(params?.google);
   const googleProvider = paramValue(params?.provider);
@@ -254,7 +254,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     updateProjectDefaultsAction: updateDefaultRankCheckSettings,
   } satisfies OnboardingWizardActions;
 
-  return (
+  return renderOnboardingDataSourceExtension(
     <>
       <OnboardingPageHeading
         title={t("onboarding.page.title")}
@@ -294,6 +294,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         providerConnected={providerState.providerConnected}
         rankedKeywordConnections={providerState.rankedKeywordConnections}
       />
-    </>
+    </>,
+    projectScope,
   );
 }

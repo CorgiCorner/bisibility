@@ -1,5 +1,6 @@
 import { assertDefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
 import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
+import { markRecoveryAttemptStopped } from "@/lib/provider-evidence/recovery/capture";
 import {
   definitionActivityContextFixture,
   definitionClaimQueryFixture,
@@ -38,6 +39,13 @@ import {
   RANK_CHECK_CLOSED_FAILURE,
   runRankCheckActivity,
 } from "./rank-check-activities";
+
+vi.mock("@/lib/provider-evidence/recovery/capture", () => ({
+  markRecoveryAttemptStopped: vi.fn(),
+  captureRecoveryCandidate: vi.fn(),
+  acknowledgeOriginalRankAttempt: vi.fn(),
+  originalRankAttemptSnapshot: vi.fn(async () => []),
+}));
 
 const mocks = vi.hoisted(() => ({
   preflight: vi.fn(),
@@ -747,6 +755,8 @@ describe("rank-check activities", () => {
         attemptCount: 0,
         deferredReason: "rate_limited",
         degradedToCountry: false,
+        comparisonAllowed: false,
+        terminalPersistedAt: expect.any(Date),
         finishedAt: new Date("2026-01-01T06:01:00.000Z"),
         normalizationVersion: null,
         status: "deferred",
@@ -1327,6 +1337,40 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("keeps final funding exhaustion typed for inline checks and non-retryable for schedules", async () => {
+    const funding = new BudgetExhaustedError({
+      projectId: "project_1",
+      capCents: 0,
+      spentCents: 0,
+      fundingSource: "byok",
+    });
+    const chainError = new ProviderChainError(
+      [
+        { provider: "primary", message: "Temporary failure.", code: "provider_transient" },
+        { provider: "secondary", message: funding.message, reason: "funding_exhausted" },
+      ],
+      undefined,
+      funding,
+    );
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({ nonRetryable: true, type: BUDGET_EXHAUSTED_FAILURE });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_inline_1",
+        inline: true,
+        source: "manual",
+      }),
+    ).rejects.toBe(chainError);
+  });
+
   it("makes all exhausted connection allocations non-retryable", async () => {
     const chainError = new ProviderChainError([
       {
@@ -1593,6 +1637,7 @@ describe("rank-check activities", () => {
       type: "rank_check_paid_call_already_attempted",
     });
 
+    expect(markRecoveryAttemptStopped).toHaveBeenCalledWith("rank_1", "non_retryable");
     expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
       data: {
         actualCostCents: null,

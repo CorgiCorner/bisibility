@@ -120,7 +120,12 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
     ? `${props.view.rows.length}:${props.view.nextCursor.id}`
     : `${props.view.rows.length}:complete`;
   const sentinelRef = useAutoLoadMore(canLoadMore, loadKey, props.onLoadMore);
-  const total = totalForFilter(props.filter, props.view.counts);
+  const total =
+    props.view.evidenceCounts && props.filter in props.view.evidenceCounts
+      ? props.view.evidenceCounts[
+          props.filter as keyof NonNullable<typeof props.view.evidenceCounts>
+        ]
+      : totalForFilter(props.filter, props.view.counts);
 
   return (
     <>
@@ -138,6 +143,9 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
           }}
           onSortingChange={ignoreSorting}
           renderSection={renderSection}
+          rowClassName={(row) =>
+            row.detail?.id.endsWith("-evidence") ? "h-auto! min-h-14 py-2" : ""
+          }
           rows={rows}
           sorting={null}
         />

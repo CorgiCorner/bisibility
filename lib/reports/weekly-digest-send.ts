@@ -1,143 +1,123 @@
 import "server-only";
-
-import { Prisma } from "@/lib/generated/prisma/client";
-import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { isLocalDevelopmentDeployment } from "@/lib/deployment/deployment";
+import { EmailNotSubmittedError, EmailProviderUnavailableError } from "@/lib/email/types";
+import { readDemoConfig } from "@/lib/demo/config";
 import { sendEmail } from "@/lib/email/send";
+import { notifyOps } from "@/lib/ops/notify";
+import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
 import { collectWeeklyDigestData } from "./weekly-digest-data";
 import { renderWeeklyDigestEmail } from "./weekly-digest-email";
+import { digestSentAction, finalizeDigest } from "./weekly-digest-finalize";
+import { weeklyDigestPeriod } from "./weekly-digest-period";
+import { digestCandidates, digestRecipient, digestUserSelect } from "./weekly-digest-recipients";
+import { claimDigest, finishDigest } from "./weekly-digest-records";
 
-const digestSentAction = "report.weekly_digest_sent";
 const idempotencyWindowMs = 6 * 24 * 60 * 60 * 1000;
-
-type DigestRecipientUser = {
-  email: string;
-  emailVerified: boolean;
-  id: string;
-  notificationPreferences: Array<{ reportEmail: boolean }>;
-};
-
-type ProjectAccess = {
-  id: string;
-  members: Array<{ user: DigestRecipientUser }>;
-  owner: DigestRecipientUser;
-  publicId: string;
-};
-
 export type WeeklyDigestSendResult =
-  | { reason: "no_activity" | "no_project" | "no_recipients" | "recently_sent"; status: "skipped" }
+  | {
+      reason: "demo" | "no_activity" | "no_project" | "no_recipients" | "recently_sent";
+      status: "skipped";
+    }
   | {
       failedChecksCount: number;
       recipients: number;
       status: "sent";
       topMovers: number;
+      failed: number;
+      ambiguous: number;
+      skippedRecipients: number;
     };
 
-function userSelect(projectId: string) {
-  return {
-    email: true,
-    emailVerified: true,
-    id: true,
-    notificationPreferences: {
-      select: { reportEmail: true },
-      take: 1,
-      where: { OR: [{ projectId }, { project: { publicId: projectId } }] },
-    },
-  } satisfies Prisma.UserSelect;
-}
-
-function projectAccessSelect(projectId: string) {
-  return {
-    id: true,
-    members: { select: { user: { select: userSelect(projectId) } } },
-    owner: { select: userSelect(projectId) },
-    publicId: true,
-  } satisfies Prisma.ProjectSelect;
-}
-
-async function projectAccess(projectId: string) {
-  return prisma.project.findFirst({
-    select: projectAccessSelect(projectId),
-    where: { OR: [{ id: projectId }, { publicId: projectId }] },
-  });
-}
-
-function reportEmailEnabled(user: DigestRecipientUser) {
-  return user.emailVerified && (user.notificationPreferences[0]?.reportEmail ?? true);
-}
-
-function recipientEmails(project: ProjectAccess) {
-  const users = [project.owner, ...project.members.map((member) => member.user)];
-  const recipients = new Map<string, string>();
-
-  for (const user of users) {
-    if (reportEmailEnabled(user)) {
-      recipients.set(user.id, user.email);
-    }
-  }
-
-  return [...recipients.values()];
-}
-
 async function recentlySent(projectId: string, now: Date) {
-  const sentAfter = new Date(now.getTime() - idempotencyWindowMs);
-  const existing = await prisma.auditLog.findFirst({
-    select: { id: true },
-    where: {
-      action: digestSentAction,
-      createdAt: { gte: sentAfter },
-      projectId,
-      targetType: "project",
-    },
-  });
-
-  return Boolean(existing);
+  return Boolean(
+    await prisma.auditLog.findFirst({
+      select: { id: true },
+      where: {
+        action: digestSentAction,
+        createdAt: { gte: new Date(now.getTime() - idempotencyWindowMs) },
+        projectId,
+        targetType: "project",
+      },
+    }),
+  );
 }
 
 export async function sendWeeklyDigestForProject(
   projectId: string,
   now: Date,
+  incidentDigest = recoverySwitches().incidentDigest,
 ): Promise<WeeklyDigestSendResult> {
-  const project = await projectAccess(projectId);
-  if (!project) {
-    return { reason: "no_project", status: "skipped" };
-  }
-  if (await recentlySent(project.id, now)) {
-    return { reason: "recently_sent", status: "skipped" };
-  }
-
-  const recipients = recipientEmails(project);
-  if (recipients.length === 0) {
-    return { reason: "no_recipients", status: "skipped" };
-  }
-
-  const data = await collectWeeklyDigestData(project.id, now);
-  if (!data) {
-    return { reason: "no_activity", status: "skipped" };
-  }
-
-  const email = renderWeeklyDigestEmail(data);
-  for (const to of recipients) {
-    await sendEmail({ ...email, category: "bulk", to });
-  }
-
-  await writeAudit({
-    action: digestSentAction,
-    actorId: null,
-    after: {
-      failedChecksCount: data.failedChecksCount,
-      recipients: recipients.length,
-      topMovers: data.topMovers.length,
+  if (readDemoConfig().kind !== "disabled") return { status: "skipped", reason: "demo" };
+  const period = weeklyDigestPeriod(now);
+  const userSelect = {
+    ...digestUserSelect,
+    notificationPreferences: {
+      ...digestUserSelect.notificationPreferences,
+      where: { OR: [{ projectId }, { project: { publicId: projectId } }] },
+      take: 1,
     },
-    projectId: project.id,
-    targetId: project.publicId,
-    targetType: "project",
+  };
+  const project = await prisma.project.findFirst({
+    where: { OR: [{ id: projectId }, { publicId: projectId }], writeMode: { not: "migrated" } },
+    select: {
+      id: true,
+      publicId: true,
+      owner: { select: userSelect },
+      members: { select: { user: { select: userSelect } } },
+    },
   });
-
+  if (!project) return { reason: "no_project", status: "skipped" };
+  if (await recentlySent(project.id, now)) return { reason: "recently_sent", status: "skipped" };
+  const recipients = digestCandidates(project);
+  if (!recipients.length) return { reason: "no_recipients", status: "skipped" };
+  const data = await collectWeeklyDigestData(project.id, now, incidentDigest);
+  if (!data) return { reason: "no_activity", status: "skipped" };
+  const email = renderWeeklyDigestEmail(data);
+  for (const userId of recipients) {
+    if (!(await digestRecipient(userId, project.id))) continue;
+    const key = { ...period, projectId: project.id, userId };
+    if (!(await claimDigest(key))) continue;
+    const to = await digestRecipient(userId, project.id);
+    if (!to) {
+      await prisma.weeklyDigestSend.deleteMany({ where: { ...key, status: "claimed" } });
+      continue;
+    }
+    try {
+      await sendEmail({ ...email, category: "bulk", to, requireProvider: true });
+    } catch (error) {
+      if (
+        error instanceof EmailNotSubmittedError &&
+        error.cause instanceof EmailProviderUnavailableError &&
+        isLocalDevelopmentDeployment()
+      ) {
+        const subject = email.subject.replace(/^\[bisibility\] /, "");
+        console.info(`[email] ${subject} for ${to}\n${email.text}`);
+        await finishDigest(key, { status: "skipped" });
+        continue;
+      }
+      await finishDigest(key, { error });
+      continue;
+    }
+    // Persistence failure after handoff must leave claimed, never a retryable transport failure.
+    await finishDigest(key, { status: "sent" });
+  }
+  const metrics = { failedChecksCount: data.failedChecksCount, topMovers: data.topMovers.length };
+  const outcome = await finalizeDigest(project, now, metrics, incidentDigest);
+  if (outcome.ambiguous)
+    await notifyOps({
+      dedupeKey: `weekly-digest-ambiguous:${project.id}:${now.toISOString()}`,
+      fields: { projectId: project.id, periodEnd: now.toISOString(), ambiguous: outcome.ambiguous },
+      kind: "weekly_digest_ambiguous",
+      severity: "warning",
+      title: "Weekly digest delivery needs reconciliation",
+    });
   return {
-    failedChecksCount: data.failedChecksCount,
-    recipients: recipients.length,
+    ...metrics,
     status: "sent",
-    topMovers: data.topMovers.length,
+    recipients: outcome.sent,
+    failed: outcome.failed,
+    ambiguous: outcome.ambiguous,
+    skippedRecipients: outcome.skipped,
   };
 }

@@ -1,3 +1,7 @@
+vi.mock("@/lib/provider-evidence/projection/read", () => ({
+  readCheckEvidence: vi.fn(async () => new Map()),
+}));
+
 import { definitionClaimQueryFixture } from "./definition-claim.test-fixture";
 import { recordedDefinitionQueryFixture } from "./recorded-worker-definition.test-fixture";
 

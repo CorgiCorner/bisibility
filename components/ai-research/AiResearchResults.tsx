@@ -3,9 +3,9 @@ import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { aiEngineLabel } from "@/lib/ai-research/engine-labels";
 import type { AiResearchResult } from "@/lib/ai-research/types";
 import { useTranslations } from "next-intl";
-import { engineLabelKey } from "./AiEngineFields";
 
 export function AiResearchResults({
   result,
@@ -39,7 +39,7 @@ export function AiResearchResults({
       </div>
     );
   return (
-    <section className="grid min-w-0 gap-4" aria-label="Analysis results">
+    <section className="grid min-w-0 gap-4" aria-label={t("resultsLabel")}>
       <Card className="flex flex-wrap items-center gap-4 text-ui-body">
         <span className="font-medium">
           {result.evidence === "observed_dataset" ? t("observedDataset") : t("syntheticTest")}
@@ -68,7 +68,7 @@ export function AiResearchResults({
           <Card key={`${row.model}:${index}`} className="grid min-w-0 content-start gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-ui-xs text-fg-muted">
-                {row.engine ? `${t(engineLabelKey(row.engine))} · ` : ""}
+                {row.engine ? `${aiEngineLabel(row.engine)} · ` : ""}
                 {row.actualModel === null ? t("unknownModel") : row.model}
               </span>
               <span className="text-ui-xs text-fg-muted">

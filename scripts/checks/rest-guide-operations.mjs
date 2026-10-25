@@ -93,6 +93,7 @@ export const restGuideOperations = {
     "deleteSavedView",
   ],
   "api/signals.mdx": ["listSignals", "createSignal"],
+  "api/search-index.mdx": ["listSearchIndexSitemaps", "getSearchIndexSitemap", "inspectSearchIndexUrls", "getPageIndexingReport", "listPageIndexingUrls", "getPageIndexingSettings", "updatePageIndexingSettings"],
   "api/sitemap-monitors.mdx": ["listSitemapMonitors", "updateSitemapMonitor"],
   "api/team.mdx": [
     "listTeamMembers",

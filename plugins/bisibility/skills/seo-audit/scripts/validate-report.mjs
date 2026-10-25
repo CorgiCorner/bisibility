@@ -15,6 +15,16 @@ const types = new Set([
   "observed_dataset",
   "synthetic_prompt_test",
 ]);
+const classForType = {
+  http_crawl: "site_crawl",
+  saved_ranking: "google_observation",
+  first_party: "search_console_history",
+  observed_dataset: "observed_ai",
+  synthetic_prompt_test: "synthetic_prompt",
+};
+const classes = new Set(Object.values(classForType));
+const calendarDate = (value) =>
+  typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value));
 const tools = new Set([
   "run_site_audit",
   "get_site_audit",
@@ -22,7 +32,7 @@ const tools = new Set([
   "get_rank_history",
   "list_search_performance_query_stats",
   "get_agent_report",
-  "analyze_ai_visibility",
+  "analyze_brand_visibility",
   "compare_ai_prompts",
 ]);
 const assert = (condition, message) => {
@@ -99,11 +109,22 @@ export function validateReport(payload) {
   assert(Buffer.byteLength(JSON.stringify(payload)) <= 320 * 1024, "Request byte limit exceeded");
   const body = payload.body;
   assert(body.version === 1 && text(body.summary), "Missing report version/summary");
-  for (const key of ["context", "coverage", "visibility", "costs"]) {
+  for (const key of [
+    "context",
+    "coverage",
+    "search_console_history",
+    "google_observation",
+    "site_crawl",
+    "visibility",
+    "costs",
+  ]) {
     assert(
       body[key] && typeof body[key] === "object" && !Array.isArray(body[key]),
       `Missing ${key}`,
     );
+  }
+  for (const key of ["search_console_history", "google_observation", "site_crawl"]) {
+    assert(text(body[key].state), `Missing ${key} section state`);
   }
   assert(Array.isArray(body.checked), "Missing checked candidates");
   assert(Array.isArray(body.evidence) && body.evidence.length > 0, "Missing evidence");
@@ -111,6 +132,27 @@ export function validateReport(payload) {
   for (const row of body.evidence) {
     assert(text(row.id) && !evidence.has(row.id), "Duplicate/missing evidence ID");
     assert(types.has(row.type) && tools.has(row.source_tool), "Unsupported evidence type/tool");
+    assert(row.class === classForType[row.type] && classes.has(row.class), "Evidence class mismatch");
+    if (row.class === "search_console_history") {
+      assert(
+        row.source_tool === "list_search_performance_query_stats",
+        "Search Console tool mismatch",
+      );
+      assert(
+        row.period &&
+          calendarDate(row.period.start_date) &&
+          calendarDate(row.period.end_date) &&
+          text(row.aggregation),
+        "Missing Search Console date range or aggregation",
+      );
+    }
+    if (row.class === "google_observation") {
+      assert(
+        ["list_keywords", "get_rank_history"].includes(row.source_tool),
+        "Rank observation tool mismatch",
+      );
+      assert(text(row.market) && text(row.device), "Missing market or device");
+    }
     assert(row.url === null || safeSourceUrl(row.url), "Unsafe source URL");
     assert(row.observed_at === null || date(row.observed_at), "Invalid observation date");
     assert(date(row.retrieved_at) && text(row.fact), "Missing retrieval date/fact");
@@ -122,7 +164,7 @@ export function validateReport(payload) {
     }
     if (row.type === "observed_dataset") {
       assert(
-        ["get_agent_report", "analyze_ai_visibility"].includes(row.source_tool),
+        ["get_agent_report", "analyze_brand_visibility"].includes(row.source_tool),
         "Observed source mismatch",
       );
     }
@@ -135,6 +177,7 @@ export function validateReport(payload) {
   for (const [index, item] of body.recommendations.entries()) {
     assert(item.priority === index + 1, "Actions must be ordered by priority");
     assert(["technical", "content", "visibility"].includes(item.category), "Invalid category");
+    assert(classes.has(item.evidence_class), "Missing evidence class");
     for (const key of ["action", "rationale", "benefit", "effort", "uncertainty", "verification"]) {
       assert(text(item[key]), `Missing action ${key}`);
     }
@@ -148,6 +191,13 @@ export function validateReport(payload) {
       item.evidence_ids.every((id) => evidence.has(id)),
       "Dangling evidence reference",
     );
+    assert(
+      item.evidence_ids.every((id) => evidence.get(id).class === item.evidence_class),
+      "Finding mixes evidence classes",
+    );
+    if (item.evidence_class === "search_console_history") {
+      assert(item.category !== "visibility", "Search Console history is not current visibility");
+    }
     if (item.category === "visibility" && item.confidence === "high") {
       assert(
         item.evidence_ids.some((id) => evidence.get(id).type === "observed_dataset"),

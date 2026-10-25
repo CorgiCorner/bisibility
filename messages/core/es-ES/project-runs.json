@@ -18,7 +18,7 @@
       "searchConsole": "Search Console",
       "source": "Fuente:",
       "status": "Estado:",
-      "aiTracking": "AI Tracking"
+      "aiTracking": "Seguimiento de prompts"
     },
     "content": {
       "activeDescription": "Revisa el historial de ejecuciones o elige otro estado para encontrar el trabajo ya terminado.",
@@ -26,7 +26,7 @@
       "clearFilters": "Quitar los filtros",
       "filteredDescription": "Cambia o quita los filtros para ver otras ejecuciones.",
       "filteredTitle": "No hay ninguna ejecución que coincida",
-      "historyDescription": "Aquí aparecerán las comprobaciones de posición, el seguimiento de IA y las importaciones de Search Console.",
+      "historyDescription": "Aquí aparecerán las comprobaciones de posición, el seguimiento de prompts y las importaciones de Search Console.",
       "historyTitle": "Todavía no hay ejecuciones",
       "loadError": "No se han podido cargar las ejecuciones",
       "manageSchedules": "Gestionar programaciones",
@@ -174,7 +174,7 @@
       }
     },
     "aiResults": {
-      "title": "Resultados de seguimiento de IA",
+      "title": "Resultados de seguimiento de prompts",
       "back": "Volver a ejecuciones",
       "next": "Más muestras",
       "empty": "No se guardaron muestras para esta ejecución.",
@@ -191,6 +191,26 @@
         "failed": "Error",
         "unknown": "Desconocido"
       }
+    },
+    "summary": {
+      "title": "Resumen de comprobaciones",
+      "withdrawn": "Este resumen se ha retirado.",
+      "down": "Bajadas",
+      "up": "Subidas",
+      "failed": "Fallidas",
+      "under_review": "En revisión",
+      "quiet": "Sin cambios / nuevas",
+      "unavailable": "Comprobación no disponible",
+      "openRuns": "Abrir en la página de ejecuciones",
+      "thresholds": "Top {topN}; cambio de {positionMove}+ posiciones",
+      "version": "Versión del resumen {version}",
+      "keyword": "Palabra clave",
+      "market": "Mercado",
+      "positions": "Anterior → actual",
+      "incident": "{count, plural, one {# incidente vinculado} other {# incidentes vinculados}}",
+      "run": "Ejecución {run}",
+      "classification": "Clasificación al consultar: {classification}",
+      "noResult": "Sin resultado"
     }
   }
 }

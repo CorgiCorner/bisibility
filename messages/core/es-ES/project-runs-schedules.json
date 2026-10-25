@@ -65,16 +65,16 @@
         "archived": "Programación de monitorización de prompts archivada. Las ejecuciones y los resultados anteriores se conservan.",
         "archivedReadOnlyHint": "Las programaciones de monitorización de prompts archivadas se conservan como historial y no se pueden editar ni restaurar.",
         "emptyNext": "Añade prompts para empezar",
-        "kindAi": "Seguimiento de IA",
+        "kindAi": "Seguimiento de prompts",
         "kindRank": "Comprobaciones de posición",
-        "newSchedule": "Nueva programación de seguimiento de IA",
+        "newSchedule": "Nueva programación de seguimiento de prompts",
         "nextPending": "Pendiente",
         "prompts": "{count, plural, one {# prompt} other {# prompts}}",
         "readOnly": "Solo lectura",
         "resumeTitle": "Abre la programación para revisar su configuración, previsualizar el coste y aprobarla antes de que vuelva a ejecutarse.",
         "loadFailed": "No se pudieron cargar los horarios de prompts. Los horarios de posiciones se muestran abajo.",
         "retry": "Reintentar",
-        "addPromptFirst": "Primero añade o activa un prompt en el seguimiento de IA."
+        "addPromptFirst": "Primero añade o activa un prompt en Seguimiento de prompts."
       },
       "archiveDialog": {
         "body": "Las ejecuciones futuras se detendrán. Las que ya han empezado podrán terminar y los resultados anteriores seguirán disponibles.",

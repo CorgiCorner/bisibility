@@ -166,9 +166,54 @@ const nextConfig: NextConfig = {
         source: "/changelog",
       },
       {
+        destination: "/app/:project/prompt-playground",
+        permanent: true,
+        source: "/app/:project/prompt-explorer",
+      },
+      {
         destination: "/app/:project/keyword-research",
         permanent: true,
         source: "/app/:project/research",
+      },
+      {
+        destination: "/app/:project/prompt-tracker",
+        source: "/app/:project/ai-tracking",
+        statusCode: 301,
+      },
+      {
+        destination: "/app/:project/prompt-tracker/:path*",
+        source: "/app/:project/ai-tracking/:path*",
+        statusCode: 301,
+      },
+      {
+        destination: "/features/prompt-tracker",
+        source: "/features/ai-tracking",
+        statusCode: 301,
+      },
+      {
+        destination: "/pl/features/prompt-tracker",
+        source: "/pl/features/ai-tracking",
+        statusCode: 301,
+      },
+      {
+        destination: "/es/features/prompt-tracker",
+        source: "/es/features/ai-tracking",
+        statusCode: 301,
+      },
+      {
+        destination: "/ja/features/prompt-tracker",
+        source: "/ja/features/ai-tracking",
+        statusCode: 301,
+      },
+      {
+        destination: "/app/:project/brand-visibility",
+        source: "/app/:project/ai-visibility",
+        statusCode: 301,
+      },
+      {
+        destination: "/app/:project/brand-visibility/:path*",
+        source: "/app/:project/ai-visibility/:path*",
+        statusCode: 301,
       },
       {
         // Retired duplicate of the audit log in settings.

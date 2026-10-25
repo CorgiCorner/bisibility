@@ -1,7 +1,10 @@
 import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { installSampleDataset } from "@/lib/sample-data/install";
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installSampleData, removeSampleData } from "./sample-data";
+
+const retirementAt = dateFromFrozenNow({ seconds: 1 });
 
 const mocks = vi.hoisted(() => {
   class AuthorizationError extends Error {
@@ -13,13 +16,15 @@ const mocks = vi.hoisted(() => {
   const tx = {
     $executeRaw: vi.fn(async () => 1),
     $queryRawUnsafe: vi.fn(),
-    $queryRaw: vi.fn(async () => []),
+    $queryRaw: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { create: vi.fn() },
     keywordTrafficSnapshot: { createMany: vi.fn() },
     location: { upsert: vi.fn() },
     membership: { findFirst: vi.fn() },
-    project: { create: vi.fn(), delete: vi.fn() },
+    providerIncident: { updateMany: vi.fn() },
+    notification: { deleteMany: vi.fn() },
+    project: { create: vi.fn(), delete: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     providerConnection: { create: vi.fn() },
     rankCheck: { create: vi.fn() },
     signal: { createMany: vi.fn() },
@@ -112,6 +117,12 @@ describe("sample-data actions", () => {
   );
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.tx.$queryRaw.mockImplementation(async (query: TemplateStringsArray) =>
+      Array.isArray(query) && query.join("").includes("clock_timestamp()")
+        ? [{ now: retirementAt }]
+        : [],
+    );
+    mocks.tx.project.findUnique.mockResolvedValue({ providerIncidentsRetiredThrough: null });
     mocks.tx.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mockActor("member", true);
     mockInstallTransaction();
@@ -183,6 +194,28 @@ describe("sample-data actions", () => {
     });
 
     expect(mocks.tx.project.delete).not.toHaveBeenCalled();
+  });
+
+  it("IN-9 removes sample incident notifications before deleting the sample project", async () => {
+    mockActor("admin");
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      id: "project_1",
+      isSample: true,
+      ownerId: "user_1",
+      publicId: "prj_c00000000000000000000000",
+      writeMode: "active",
+    });
+    await removeSampleData({ projectId: "prj_c00000000000000000000000" });
+    expect(mocks.tx.project.update).toHaveBeenCalledWith({
+      where: { id: "project_1" },
+      data: { providerIncidentsRetiredThrough: retirementAt },
+    });
+    expect(mocks.tx.notification.deleteMany).toHaveBeenCalledWith({
+      where: { projectId: "project_1", type: "provider_incident" },
+    });
+    expect(mocks.tx.notification.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.tx.project.delete.mock.invocationCallOrder[0],
+    );
   });
 
   it("installs no provider connection, manual schedules, and zero-cost checks", async () => {

@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   canReadStream: vi.fn(),
   notificationRealtimeRedisConfigured: vi.fn(),
   readOperationSnapshot: vi.fn(),
+  readRankDataRevision: vi.fn(),
   resolveProjectAccess: vi.fn(),
   subscribeToNotificationEvents: vi.fn(),
   subscribeToOperationEvents: vi.fn(),
@@ -47,6 +48,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
+  readRankDataRevision: mocks.readRankDataRevision,
 }));
 
 function streamRequest() {
@@ -78,6 +80,7 @@ describe("app realtime stream", () => {
     mocks.getResolvedDateFormat.mockResolvedValue({ preference: "auto", resolved: "month_first" });
     mocks.getNotificationFeedForScope.mockResolvedValue({ items: [], unreadCount: 0 });
     mocks.readOperationSnapshot.mockResolvedValue([]);
+    mocks.readRankDataRevision.mockResolvedValue("revision-before");
     mocks.notificationRealtimeRedisConfigured.mockReturnValue(true);
     mocks.subscribeToNotificationEvents.mockImplementation((_userId, handlers) => {
       notificationHandlers = handlers;
@@ -110,6 +113,44 @@ describe("app realtime stream", () => {
     expect(chunks[3]).toContain("event: operations");
   });
 
+  it.each(["redis", "poll", "degraded", "reconciliation"])(
+    "carries completed-between-snapshots rank data through %s",
+    async (transport) => {
+      mocks.notificationRealtimeRedisConfigured.mockReturnValue(transport !== "poll");
+      const abort = new AbortController();
+      const response = await GET(
+        new Request("https://example.com/api/realtime/stream?project=prj_1", {
+          signal: abort.signal,
+        }) as NextRequest,
+      );
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Expected response body.");
+      const initial = [];
+      for (let index = 0; index < 4; index += 1) initial.push(await nextText(reader));
+      const delivered: string[] = [];
+      const drain = (async () => {
+        for (;;) {
+          const chunk = await reader.read();
+          if (chunk.done) return;
+          delivered.push(new TextDecoder().decode(chunk.value));
+        }
+      })();
+      mocks.readRankDataRevision.mockResolvedValue("revision-after-short-run");
+      if (transport === "redis") operationHandlers?.onEvent();
+      if (transport === "degraded") {
+        const handlers = mocks.subscribeToOperationEvents.mock.calls[0][1];
+        handlers.onError();
+      }
+      await vi.advanceTimersByTimeAsync(transport === "reconciliation" ? 30_000 : 4_000);
+      abort.abort();
+      await drain;
+      expect(delivered.join("")).toContain('"rankDataRevision":"revision-after-short-run"');
+      expect(initial.join("")).toContain('"rankDataRevision":"revision-before"');
+      // A second read must include terminal runs even though the active set is still [].
+      expect(mocks.readRankDataRevision).toHaveBeenCalledTimes(2);
+    },
+  );
+
   it("applies the resolved date format to initial and polled notification feeds", async () => {
     mocks.getResolvedDateFormat.mockResolvedValue({
       preference: "day_first",
@@ -135,6 +176,41 @@ describe("app realtime stream", () => {
       { activeProjectId: "project_1", userId: "user_1" },
       { dateFormat: "day_first" },
     );
+  });
+
+  it.each([
+    ["polling", "updated"],
+    ["polling", "withdrawn"],
+    ["redis", "updated"],
+    ["redis", "withdrawn"],
+  ] as const)("IN-6 %s refreshes feed items and unread count on %s", async (mode, kind) => {
+    mocks.notificationRealtimeRedisConfigured.mockReturnValue(mode === "redis");
+    mocks.getNotificationFeedForScope.mockResolvedValue({
+      items: [{ id: "ntf_1", version: 1 }],
+      unreadCount: 1,
+    });
+    const response = await GET(streamRequest());
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Expected response body");
+    for (let index = 0; index < 4; index++) await nextText(reader);
+    if (mode === "polling") await nextText(reader); // degraded transport notice
+    const feed =
+      kind === "withdrawn"
+        ? { items: [], unreadCount: 0 }
+        : { items: [{ id: "ntf_1", version: 2, title: "Updated counts" }], unreadCount: 2 };
+    mocks.getNotificationFeedForScope.mockResolvedValue(feed);
+    if (mode === "redis")
+      notificationHandlers?.onEvent({
+        kind,
+        id: "n",
+        userId: "user_1",
+        projectId: "project_1",
+        createdAt: "2026-01-01T00:00:00Z",
+      });
+    await vi.advanceTimersByTimeAsync(mode === "redis" ? 250 : 4_000);
+    const message = await nextText(reader);
+    expect(message).toContain(`"feed":${JSON.stringify(feed)}`);
+    await reader.cancel();
   });
 
   it("coalesces nearby operation invalidations into one snapshot read", async () => {
@@ -166,7 +242,7 @@ describe("app realtime stream", () => {
     );
     await reader.cancel();
 
-    expect(events).toContain(": heartbeat");
+    expect(events).toContain("event: heartbeat\ndata: null");
     expect(events).toContain("event: notification");
     expect(events).toContain("event: operations");
     expect(mocks.getNotificationFeedForScope).toHaveBeenCalledTimes(2);
@@ -224,10 +300,38 @@ describe("app realtime stream", () => {
       await vi.advanceTimersByTimeAsync(transport === "heartbeat" ? 25_000 : 4_000);
       expect(await reader.read()).toMatchObject({ done: true });
       expect(mocks.readOperationSnapshot).toHaveBeenCalledOnce();
+      expect(mocks.readRankDataRevision).toHaveBeenCalledOnce();
       expect(mocks.getNotificationFeedForScope).toHaveBeenCalledOnce();
       expect(vi.getTimerCount()).toBe(0);
     },
   );
+
+  it("never delivers rank data read while stream authorization is revoked", async () => {
+    const response = await GET(streamRequest());
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Expected response body.");
+    for (let index = 0; index < 4; index++) await nextText(reader);
+    mocks.readRankDataRevision.mockImplementation(async () => {
+      mocks.canReadStream.mockResolvedValue(false);
+      return "private-revision-after-revocation";
+    });
+    operationHandlers?.onEvent();
+    await vi.advanceTimersByTimeAsync(250);
+    expect(await reader.read()).toMatchObject({ done: true });
+  });
+
+  it("reads durable terminal data again after stream rotation", async () => {
+    const first = await GET(streamRequest());
+    await first.body?.cancel();
+    mocks.readRankDataRevision.mockResolvedValue("finished-during-rotation");
+    const next = await GET(streamRequest());
+    const reader = next.body?.getReader();
+    if (!reader) throw new Error("Expected response body.");
+    const chunks = [];
+    for (let index = 0; index < 4; index++) chunks.push(await nextText(reader));
+    await reader.cancel();
+    expect(chunks.join("")).toContain('"rankDataRevision":"finished-during-rotation"');
+  });
 
   it("discards a snapshot fetched while access is revoked", async () => {
     const response = await GET(streamRequest());

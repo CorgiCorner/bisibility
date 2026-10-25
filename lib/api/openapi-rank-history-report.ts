@@ -1,3 +1,4 @@
+import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankHistoryNormalizedItemSchema } from "./openapi-rank-history-normalized-items";
 import { rankHistoryRunRecordSchemas } from "./openapi-rank-history-run-records";
@@ -152,6 +153,7 @@ const times = {
   requested_at: nullable(date),
 };
 const observation = object({
+  evidence_projection: evidenceProjectionSchema,
   ...times,
   comparison_digest: nullable(text),
   complete_through: nullable(integer),
@@ -177,6 +179,7 @@ const observation = object({
   normalized_item_count: integer,
 });
 const attempt = object({
+  evidence_projection: evidenceProjectionSchema,
   ...times,
   deferred_reason: nullable(text),
   error_code: nullable(text),

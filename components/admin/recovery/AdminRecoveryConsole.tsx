@@ -21,6 +21,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { useTranslations } from "next-intl";
 import { useCallback, useState, useTransition } from "react";
 import { RecoveryDetails } from "./RecoveryDetails";
+import { RecoveryPartialEvidence } from "./RecoveryPartialEvidence";
 import { RecoveryPreviewDialog } from "./RecoveryPreviewDialog";
 import { RecoverySummary } from "./RecoverySummary";
 import { RecoveryTable } from "./RecoveryTable";
@@ -242,6 +243,7 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
         onDetails={setDetail}
         onSelect={selectCase}
       />
+      <RecoveryPartialEvidence rows={page.partialEvidence ?? []} />
       <div className="flex gap-3">
         {filters.cursor && (
           <Button

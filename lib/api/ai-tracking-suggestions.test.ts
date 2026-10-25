@@ -9,7 +9,7 @@ vi.mock("@/lib/ai-tracking/suggestions/generation", () => ({
 vi.mock("./ai-tracking-audit", () => ({ auditTrackingGeneration: mocks.audit }));
 
 import { SuggestionGenerationError } from "@/lib/ai-tracking/suggestions/generation-schema";
-import { handleAiTrackingSuggestionGeneration } from "./ai-tracking-suggestions";
+import { handlePromptTrackerSuggestionGeneration } from "./ai-tracking-suggestions";
 
 const idempotencyKey = "00000000-0000-4000-8000-000000000071";
 const input = {
@@ -75,7 +75,7 @@ beforeEach(() => {
 });
 describe("AI suggestion generation REST boundary", () => {
   it("returns a spend-free frozen preview with original credential attribution and no audit mutation", async () => {
-    const response = await handleAiTrackingSuggestionGeneration(
+    const response = await handlePromptTrackerSuggestionGeneration(
       context(),
       actor,
       project,
@@ -103,14 +103,14 @@ describe("AI suggestion generation REST boundary", () => {
   it("requires explicit consent and UUID header, preserving the exact snapshot and original actor", async () => {
     expect(
       (
-        await handleAiTrackingSuggestionGeneration(context(), actor, project, "generate", {
+        await handlePromptTrackerSuggestionGeneration(context(), actor, project, "generate", {
           preview,
           consent: true,
         })
       )?.status,
     ).toBe(400);
     await expect(
-      handleAiTrackingSuggestionGeneration(
+      handlePromptTrackerSuggestionGeneration(
         context({ "Idempotency-Key": idempotencyKey }),
         actor,
         project,
@@ -119,7 +119,7 @@ describe("AI suggestion generation REST boundary", () => {
       ),
     ).rejects.toThrow();
     expect(mocks.generate).not.toHaveBeenCalled();
-    const response = await handleAiTrackingSuggestionGeneration(
+    const response = await handlePromptTrackerSuggestionGeneration(
       context({ "Idempotency-Key": idempotencyKey }),
       actor,
       project,
@@ -142,7 +142,7 @@ describe("AI suggestion generation REST boundary", () => {
   });
   it("rejects oversized review and surfaces stale preview conflicts without generation audit", async () => {
     await expect(
-      handleAiTrackingSuggestionGeneration(context(), actor, project, "preview", {
+      handlePromptTrackerSuggestionGeneration(context(), actor, project, "preview", {
         ...input,
         inputSnapshot: {
           ...input.inputSnapshot,
@@ -159,7 +159,7 @@ describe("AI suggestion generation REST boundary", () => {
         "asg_a00000000000000000000000",
       ),
     );
-    const response = await handleAiTrackingSuggestionGeneration(
+    const response = await handlePromptTrackerSuggestionGeneration(
       context({ "Idempotency-Key": idempotencyKey }),
       actor,
       project,

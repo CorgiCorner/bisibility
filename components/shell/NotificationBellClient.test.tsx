@@ -144,11 +144,11 @@ describe("NotificationBellClient", () => {
           refreshNotificationFeed={vi.fn(async () => feed)}
         />,
       );
-      const control =
+      const control = () =>
         scope === "all"
           ? screen.getByRole("button", { name: "Mark all read" })
           : screen.getByRole("link", { name: /Import complete/ });
-      fireEvent.click(control);
+      fireEvent.click(control());
       await waitFor(() =>
         expect(mocks.showToast).toHaveBeenCalledWith(
           "Could not mark notifications as read. Please try again.",
@@ -158,10 +158,11 @@ describe("NotificationBellClient", () => {
       expect(screen.getByRole("button", { name: "Notifications", hidden: true })).toHaveTextContent(
         "1",
       );
+      if (scope === "one") fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
       await waitFor(() =>
         expect(screen.getByRole("button", { name: "Mark all read" })).toBeEnabled(),
       );
-      fireEvent.click(control);
+      fireEvent.click(control());
       await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
       await waitFor(() =>
         expect(
@@ -191,6 +192,7 @@ describe("NotificationBellClient", () => {
     fireEvent.click(screen.getByRole("link", { name: /Import complete/ }));
     mocks.notifications = { items: [...feed.items, checkFailedItem], unreadCount: 2 };
     rerender(<NotificationBellClient {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
     resolve({ updated: 1 });
     await waitFor(() =>

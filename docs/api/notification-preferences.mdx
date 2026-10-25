@@ -25,3 +25,38 @@ machine-readable source of truth for request and response schemas.
 - [`PATCH /projects/{project_id}/notification-preferences`](/api-reference/alerts/update-notification-preferences) (`updateNotificationPreferences`)
 
 Exact request and response schemas live in the generated API Reference.
+
+## Check summaries
+
+The response includes `check_notification_setting` (`all`, `important`, or `none`),
+`check_notification_top_n` (default `10`), and `check_notification_position_move`
+(default `5`). Both thresholds accept integers from `1` to `100`, inclusive.
+A missing preference row uses `important`, `10`, and `5`.
+
+- `all`: manual app run summaries and every nonempty scheduled app check window.
+- `important`: manual app run summaries and scheduled windows with significant changes,
+  failures, or under-review checks without a delivered incident.
+- `none`: no check summaries. Provider incidents have their own preference.
+
+```json
+{
+  "check_notification_setting": "important",
+  "check_notification_top_n": 10,
+  "check_notification_position_move": 5
+}
+```
+
+`check_in_app` is deprecated. Reads derive it from the setting: `false` only for
+`none`, otherwise `true`. Writes ignore it, including when an older client echoes
+`true` or `false`. Sending it cannot change the setting or thresholds. A write with
+the new fields applies those fields even when `check_in_app` is also present.
+Legacy writes return `Deprecation: @1792800000` and a `warnings` array entry with
+`code: "deprecated_field"`, `field: "check_in_app"`, and a migration message.
+MCP preference tools use the same rules and include the warning in their JSON result.
+
+Instance import maps legacy rows with `check_in_app: true`, `false`, or missing to
+`important`. New setting and threshold fields survive export and import unchanged.
+Grouped summary delivery requires the instance's separately enabled summary switch;
+adding or updating these preference fields does not activate it.
+
+Provider incidents use the separate `provider_incident_in_app` boolean, which defaults to `true`. Changing check summaries does not change this preference.

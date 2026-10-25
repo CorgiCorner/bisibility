@@ -121,6 +121,7 @@ export function classifyRecoveryRecord(
     unknownDimensions: [...new Set(dimensions)],
     proofAvailable: row.proof,
     spendingBlocked: row.spendingBlocked,
+    spendingGateEligible: row.spendingGateEligible,
     originalAuthorization: row.originalAuthorization ?? null,
     failure: failure(row),
     triage: {

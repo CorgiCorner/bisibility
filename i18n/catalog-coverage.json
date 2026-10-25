@@ -12,7 +12,6 @@
     "app/(regional)/app/(workspace)/[project]/@context/m/[market]/[...page]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/@context/page.tsx",
     "app/(regional)/app/(workspace)/[project]/~/[...page]/page.tsx",
-    "app/(regional)/app/(workspace)/[project]/ai-tracking/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/alerts/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/alerts/page.tsx",
     "app/(regional)/app/(workspace)/[project]/backlinks/loading.tsx",
@@ -44,6 +43,7 @@
     "app/(regional)/app/(workspace)/[project]/not-found.tsx",
     "app/(regional)/app/(workspace)/[project]/overview/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/overview/page.tsx",
+    "app/(regional)/app/(workspace)/[project]/prompt-tracker/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/[id]/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/[id]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/loading.tsx",
@@ -248,6 +248,14 @@
     "components/ai-research/AiResearchPageLoading.tsx",
     "components/ai-research/AiResearchWorkspaceOutcome.tsx",
     "components/ai-research/useAiResearchCatalogRefresh.ts",
+    "components/ai-tracking/PromptResearchCells.tsx",
+    "components/ai-tracking/PromptResearchClient.tsx",
+    "components/ai-tracking/PromptResearchKeyword.tsx",
+    "components/ai-tracking/PromptResearchMobile.tsx",
+    "components/ai-tracking/PromptResearchReview.tsx",
+    "components/ai-tracking/PromptResearchSourcePanel.tsx",
+    "components/ai-tracking/PromptResearchSources.tsx",
+    "components/ai-tracking/PromptResearchTable.tsx",
     "components/ai-tracking/TrackingSavedConfiguration.tsx",
     "components/alerts/alert-feed-facet-labels.ts",
     "components/alerts/alert-feed-presentation.ts",
@@ -531,6 +539,7 @@
     "components/install/AgentInstallList.tsx",
     "components/install/ChatGptIconDownload.tsx",
     "components/install/CommandHighlight.tsx",
+    "components/install/CommandText.tsx",
     "components/install/install-catalog.ts",
     "components/install/install-getting-started-copy.ts",
     "components/install/InstallGettingStarted.tsx",
@@ -565,6 +574,7 @@
     "components/integrations/ProviderCardDescription.tsx",
     "components/integrations/ProviderCardDisconnectMenu.tsx",
     "components/integrations/ProviderCardFeedback.tsx",
+    "components/integrations/ProviderCardHeader.tsx",
     "components/integrations/ProviderCardMeta.tsx",
     "components/integrations/ProviderConsumerPanel.tsx",
     "components/integrations/ProviderConsumerRows.tsx",
@@ -1404,6 +1414,7 @@
     "components/ui/Checkbox.tsx",
     "components/ui/CheckStatusChip.tsx",
     "components/ui/CheckStatusChipText.tsx",
+    "components/ui/ChoiceGroup.tsx",
     "components/ui/ConclusionSubtitle.tsx",
     "components/ui/confirm-copy.ts",
     "components/ui/ConfirmModal.tsx",
@@ -7508,6 +7519,206 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.acceptance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.acceptanceStates.accepted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.acceptanceStates.rejected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.acceptanceStates.unconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "minutes",
+            2
+          ]
+        ],
+        "key": "instanceAdmin.recovery.evidence.age",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.classification",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.costs.conflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.costs.measured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.costs.under_review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.costs.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.createdUtc",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.depth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.incident",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.last",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.lookup",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.partialHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.partialKinds.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.partialKinds.unresolved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.partialTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.project",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.reason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.attempting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.not_needed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.operator_review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.resolved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.scheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.waiting_for_attempt_end",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.result",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.results.missing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.results.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.results.provider_error",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.results.recovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.results.under_review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.unclassified",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "timestamp",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.recovery.evidence.utcTimestamp",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -10749,6 +10960,21 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.advanced",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.advisoryAmountHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.aiEngines",
         "tags": []
       },
@@ -10795,6 +11021,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.catalogUnavailableVisibility",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.chooseModels",
         "tags": []
       },
       {
@@ -10878,6 +11109,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "max",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.engineLimit",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectAiResearch.engineModeHint",
         "tags": []
@@ -10894,12 +11135,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.engineUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.engineWebSearchHint",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectAiResearch.estimateAboveCap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.estimateCalculation",
         "tags": []
       },
       {
@@ -10925,6 +11176,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.firstModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.forecastDetails",
         "tags": []
       },
       {
@@ -11017,8 +11273,23 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.maximumAmountHint",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectAiResearch.modelAlreadySelected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelLimit",
         "tags": []
       },
       {
@@ -11168,6 +11439,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.quickCheck",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.readOnly",
         "tags": []
       },
@@ -11204,6 +11480,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.restoreLegacyPreset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.resultsLabel",
         "tags": []
       },
       {
@@ -11316,6 +11597,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.unsupportedSettings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.useEngines",
         "tags": []
       },
       {
@@ -11785,6 +12071,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiTracking.findPromptsInPromptResearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiTracking.generatedPrompt",
         "tags": []
       },
@@ -12207,6 +12498,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiTracking.promptAddedToPromptTracker",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiTracking.promptCategory",
         "tags": []
       },
@@ -12218,6 +12514,11 @@
           ]
         ],
         "key": "projectAiTracking.promptCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.promptResearchDescription",
         "tags": []
       },
       {
@@ -12243,6 +12544,321 @@
       {
         "arguments": [],
         "key": "projectAiTracking.requestedLocale",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.added",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.brandMentioned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.bulkActions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.cached",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "duration",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.cacheHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.clearSelection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.confirmResearch",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.confirmTracking",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.contentTruncated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.datasetNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.details",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.emptyHint",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "keyword",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.emptyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.existingTopic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.fromMemory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.insufficientCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.keyword",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.keywordRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.keywordsHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.keywordTooLong",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.loadingQuote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.loadingResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.market",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.merged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.noKeywordsHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.noSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.ownDomainCited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.partialFailure",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.placeholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.prompt",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectAiTracking.research.promptCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.readOnlyHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.relevantKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.requestFailure",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "keyword",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.resultsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.retry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.reviewAttempt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.reviewHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.reviewTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.search",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.selectAll",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.selected",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "prompt",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.selectPrompt",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "prompt",
+            1
+          ]
+        ],
+        "key": "projectAiTracking.research.showSources",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectAiTracking.research.sourceCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.sources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.topic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.topicRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.tracked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.trackPrompts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.yourSite",
         "tags": []
       },
       {
@@ -15564,6 +16180,11 @@
       {
         "arguments": [],
         "key": "projectAudit.presentation.event.updateDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.urlInspectionAllowanceUpdated",
         "tags": []
       },
       {
@@ -22344,7 +22965,7 @@
       },
       {
         "arguments": [],
-        "key": "projectInstall.skills.available",
+        "key": "projectInstall.skills.archiveDownload",
         "tags": []
       },
       {
@@ -22379,6 +23000,21 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.copyCommand",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "skill",
+            1
+          ]
+        ],
+        "key": "projectInstall.skills.copySkill",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.description",
         "tags": []
       },
@@ -22394,12 +23030,22 @@
       },
       {
         "arguments": [],
-        "key": "projectInstall.skills.heading",
+        "key": "projectInstall.skills.groups.ai-visibility",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectInstall.skills.inPlugin",
+        "key": "projectInstall.skills.groups.seo",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.groups.setup-admin",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.heading",
         "tags": []
       },
       {
@@ -22415,11 +23061,6 @@
       {
         "arguments": [],
         "key": "projectInstall.skills.keyword-opportunity-research",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectInstall.skills.link-prospecting",
         "tags": []
       },
       {
@@ -22460,11 +23101,6 @@
       {
         "arguments": [],
         "key": "projectInstall.skills.seo-coach",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectInstall.skills.sitemap-change-watch",
         "tags": []
       },
       {
@@ -22893,6 +23529,16 @@
       {
         "arguments": [],
         "key": "projectIntegrations.fallback.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.fallback.useForRankChecks",
         "tags": []
       },
       {
@@ -25328,6 +25974,151 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.checks.evidence.apply",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.cost_conflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.cost_conflictDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.costUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.customRange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.customRangeCaption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.customRangeWindow",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.dateTime",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "range",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.checks.evidence.deferredDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.from",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.invalidRange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.missing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.missingDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.other",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.otherDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.partialDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.programmatic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.provider_error",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.provider_errorDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.recovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.recoveredDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "timeZone",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.checks.evidence.timeZone",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.to",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.under_review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.under_reviewDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.evidence.viewChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.checks.failed",
         "tags": []
       },
@@ -25684,6 +26475,16 @@
           ]
         ],
         "key": "projectRankTracker.checks.overBudget",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.checks.partialNoMatch",
         "tags": []
       },
       {
@@ -34234,6 +35035,16 @@
       {
         "arguments": [
           [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordImport.management.marketCells.partialDepth",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
             "position",
             2
           ]
@@ -41790,6 +42601,125 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "classification",
+            1
+          ]
+        ],
+        "key": "projectRuns.summary.classification",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.down",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.failed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.summary.incident",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.keyword",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.market",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.noResult",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.openRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.positions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.quiet",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "run",
+            1
+          ]
+        ],
+        "key": "projectRuns.summary.run",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "positionMove",
+            1
+          ],
+          [
+            "topN",
+            1
+          ]
+        ],
+        "key": "projectRuns.summary.thresholds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.under_review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.up",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "version",
+            1
+          ]
+        ],
+        "key": "projectRuns.summary.version",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.summary.withdrawn",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.table.actions",
         "tags": []
@@ -44406,6 +45336,1045 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.indexing.allChanges",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.allSitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.allStates",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.alphaBadge",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.andMore",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.asOf",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.change",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.changedLast7Days",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.changeKinds.changed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.changeKinds.dropped",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.changeKinds.indexed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.changes",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "next",
+            1
+          ],
+          [
+            "previous",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.changeTransition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.checkedAt",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "failed",
+            2
+          ],
+          [
+            "indexed",
+            2
+          ],
+          [
+            "notChecked",
+            2
+          ],
+          [
+            "notIndexed",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.checksBreakdown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "indexed",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.checksIndexed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.coverageState",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.crawledAs",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "reset",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.dailyExhausted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "reset",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.dailyExhaustedPartial",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "checked",
+            2
+          ],
+          [
+            "total",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.denominator",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.discoveredUrls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.crawledAs.CRAWLING_USER_AGENT_UNSPECIFIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.crawledAs.DESKTOP",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.crawledAs.MOBILE",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.indexingState.BLOCKED_BY_HTTP_HEADER",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.indexingState.BLOCKED_BY_META_TAG",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.indexingState.BLOCKED_BY_ROBOTS_TXT",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.indexingState.INDEXING_ALLOWED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.indexingState.INDEXING_STATE_UNSPECIFIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.ACCESS_DENIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.ACCESS_FORBIDDEN",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.BLOCKED_4XX",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.BLOCKED_ROBOTS_TXT",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.INTERNAL_CRAWL_ERROR",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.INVALID_URL",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.NOT_FOUND",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.PAGE_FETCH_STATE_UNSPECIFIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.REDIRECT_ERROR",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.SERVER_ERROR",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.SOFT_404",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.pageFetchState.SUCCESSFUL",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.robotsTxtState.ALLOWED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.robotsTxtState.DISALLOWED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.robotsTxtState.ROBOTS_TXT_STATE_UNSPECIFIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.verdict.FAIL",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.verdict.NEUTRAL",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.verdict.PARTIAL",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.verdict.PASS",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.enums.verdict.VERDICT_UNSPECIFIED",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.feedback.daily",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.feedback.failure",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.feedback.minute",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.feedback.outside",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.feedback.success",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "newest",
+            1
+          ],
+          [
+            "oldest",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.freshness",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.googleCanonical",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.googleChose",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.googleLastRead",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.groups.indexed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.groups.inspection_failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.groups.not_checked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.groups.not_indexed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.history",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ],
+          [
+            "next",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.historyBaseline",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.historyPartial",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.historySince",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ],
+          [
+            "next",
+            1
+          ],
+          [
+            "previous",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.historyTransition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.indexingState",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.inspectedThatDay",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectHelp",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.inspectionFailedAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectionStatus",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectionSucceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.invalidBatch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.last90Days",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.lastCrawl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.loadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.loadMore",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.modes.available_quota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.modes.fixed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.modes.off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.navigation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noConnection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noHistory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noMatches",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noSitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noSitemapsSubmitted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.nothingInspected",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "alpha",
+            1
+          ],
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.notIndexedCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.openConsole",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.ourChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.badge",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.keepQuestion",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.keepSubject",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.note",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.openConsole",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.pageCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.pageFetch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.pages",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.partial",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "dates",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.pausedRange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.performance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.previous",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.reason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.reasonsCaption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.reasonsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.referringPages",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "issues",
+            6
+          ],
+          [
+            "items",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.richCounts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.richResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.robots",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.search",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapChild",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapErrors",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapIndex",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapOk",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapPlain",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapReadAt",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "failed",
+            1
+          ],
+          [
+            "success",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapReadErrors.permission",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "failed",
+            1
+          ],
+          [
+            "success",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapReadErrors.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapSnapshotCaption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapsNotRead",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapStatus",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapStoredOnly",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapTotal",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapType",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapWarnings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.source",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sourceManual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sourceTracked",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "remaining",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.stillChecking",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.stops.off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.stops.quota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.storedDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "end",
+            1
+          ],
+          [
+            "indexed",
+            2
+          ],
+          [
+            "notChecked",
+            2
+          ],
+          [
+            "notIndexed",
+            2
+          ],
+          [
+            "start",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.stripSummary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.trendCaption",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "checked",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.trendChecked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.trendEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.trendTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ],
+          [
+            "reset",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.trustStrip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.unspecifiedReason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.url",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.urlNotOnGoogle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.urlOnGoogle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.urls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.urlsCaption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.userCanonical",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.verdict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.verdictInspectionFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.viewStored",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.oauthSelection.domainBadge",
         "tags": []
       },
@@ -45649,6 +47618,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.urlInspectionAllowanceUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.usageDisplayUpdated",
         "tags": []
       },
@@ -46783,6 +48757,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.prompt_research",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsGeneral.dataCache.module.ranked_keywords",
         "tags": []
       },
@@ -46879,6 +48858,11 @@
       {
         "arguments": [],
         "key": "projectSettingsGeneral.dataCache.source.prompt_explorer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.prompt_research",
         "tags": []
       },
       {
@@ -48549,6 +50533,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsNotifications.channels.providerIncident",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsNotifications.channels.saveError",
         "tags": []
       },
@@ -48575,6 +50564,81 @@
       {
         "arguments": [],
         "key": "projectSettingsNotifications.channels.weeklyReport",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.checkNotificationPositionMove",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.checkNotificationTopN",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.descriptions.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.descriptions.important",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.descriptions.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.mode",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.modes.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.modes.important",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.modes.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.optionDescriptions.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.optionDescriptions.important",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.optionDescriptions.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.positions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.significantChange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsNotifications.checks.thresholdError",
         "tags": []
       },
       {
@@ -49785,6 +51849,41 @@
       {
         "arguments": [],
         "key": "projectSettingsTracking.inspection.help",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modeHelp.available_quota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modeHelp.fixed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modeHelp.off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modeLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modes.available_quota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modes.fixed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.inspection.modes.off",
         "tags": []
       },
       {
@@ -59994,6 +62093,61 @@
       },
       {
         "arguments": [],
+        "key": "shared.rankEvidence.costUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankEvidence.noMatch",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "shared.rankEvidence.originalTime",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "shared.rankEvidence.partialDepth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankEvidence.partialNoMatch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankEvidence.partialUnknownDepth",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "shared.rankEvidence.position",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankEvidence.recovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.rankPreflight.alreadyScheduled",
         "tags": []
       },
@@ -60371,6 +62525,16 @@
           ]
         ],
         "key": "shared.rankPreflight.topDepth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.realtime.newResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.realtime.show",
         "tags": []
       },
       {
@@ -61995,6 +64159,11 @@
       },
       {
         "arguments": [],
+        "key": "shell.header.subtitles.promptResearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.header.subtitles.runs",
         "tags": []
       },
@@ -62135,6 +64304,11 @@
       },
       {
         "arguments": [],
+        "key": "shell.header.titles.promptResearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.header.titles.rankTracker",
         "tags": []
       },
@@ -62255,6 +64429,21 @@
       },
       {
         "arguments": [],
+        "key": "shell.navigation.groups.ai.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.ai.tag",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.ai.tooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.navigation.groups.project.label",
         "tags": []
       },
@@ -62285,32 +64474,17 @@
       },
       {
         "arguments": [],
-        "key": "shell.navigation.groups.research.label",
+        "key": "shell.navigation.groups.seo.label",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "shell.navigation.groups.research.tag",
+        "key": "shell.navigation.groups.seo.tag",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "shell.navigation.groups.research.tooltip",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.groups.tracking.label",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.groups.tracking.tag",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.groups.tracking.tooltip",
+        "key": "shell.navigation.groups.seo.tooltip",
         "tags": []
       },
       {
@@ -62385,6 +64559,11 @@
       },
       {
         "arguments": [],
+        "key": "shell.navigation.items.promptResearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.navigation.items.rankTracker",
         "tags": []
       },
@@ -62415,7 +64594,136 @@
       },
       {
         "arguments": [],
+        "key": "shell.notifications.allNotifications",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.notifications.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.filterError",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.costConflictCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.costMeasuredCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.costUnderReviewCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.costUnknownCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "costs",
+            1
+          ],
+          [
+            "results",
+            1
+          ]
+        ],
+        "key": "shell.notifications.incident.counts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.incident.noRepeat",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.incident.resolved",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.resultMissingCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.resultPartialCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.resultProviderErrorCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.resultRecoveredCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.incident.resultUnderReviewCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.incident.title",
         "tags": []
       },
       {
@@ -62426,6 +64734,120 @@
       {
         "arguments": [],
         "key": "shell.notifications.markReadError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.openIncidents",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "timeZone",
+            1
+          ],
+          [
+            "window",
+            1
+          ]
+        ],
+        "key": "shell.notifications.summary.clientScheduledTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.down",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.failed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.linkedIncidents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.summary.manualTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.new",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "window",
+            1
+          ]
+        ],
+        "key": "shell.notifications.summary.scheduledTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.unchanged",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.under_review",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shell.notifications.summary.up",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.summary.viewIncident",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.summary.viewRuns",
         "tags": []
       },
       {
@@ -62690,6 +65112,83 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "completed",
+            6
+          ],
+          [
+            "down",
+            6
+          ],
+          [
+            "failed",
+            6
+          ],
+          [
+            "up",
+            6
+          ]
+        ],
+        "key": "shell.operations.recent.counts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.dismiss",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.incident",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.outcomes.deferred",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.outcomes.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.outcomes.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.outcomes.succeeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.outcomes.unconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.pill",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.operations.recent.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "shell.operations.recent.underReview",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "shell.operations.runs",
         "tags": []
@@ -62752,6 +65251,21 @@
           ]
         ],
         "key": "shell.planStatus.trialDaysShort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.realtime.connecting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.realtime.live",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.realtime.reconnecting",
         "tags": []
       },
       {

@@ -102,6 +102,14 @@ export const rankCheckProviderSchema = providerIdSchema.extract([
 export type RankCheckProvider = z.infer<typeof rankCheckProviderSchema>;
 
 export const rankCheckOperationSchema = z.object({
+  recent: z
+    .object({
+      up: nonNegativeIntegerSchema,
+      down: nonNegativeIntegerSchema,
+      underReview: nonNegativeIntegerSchema,
+      incidentHref: z.string().nullable(),
+    })
+    .optional(),
   payment: actionPaymentReceiptSchema.optional(),
   budget: z
     .object({

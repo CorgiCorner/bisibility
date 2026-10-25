@@ -1,0 +1,185 @@
+---
+title: "Page indexing"
+description: "Read sitemaps and explicitly inspect Google's known indexed state for URLs in the connected property."
+---
+
+These operations return Google's indexed state as already known to Google, not a
+live test. Results may be partial or delayed. All paths are relative to `/api/v1`.
+The property comes from the project's existing Search Console connection. Requests
+cannot supply a different property. This is separate from sitemap monitoring.
+
+## Sitemaps
+
+Read scope permits both operations:
+
+```http
+GET /projects/{project_id}/search-index/sitemaps
+GET /projects/{project_id}/search-index/sitemaps/https%3A%2F%2Fexample.com%2Fsitemap.xml
+```
+
+Encode the full sitemap URL as one path segment. The list returns `property` and
+`sitemaps`; detail returns `property` and `sitemap`. Both expose `path`, `type`,
+`is_sitemaps_index`, `is_pending`, `errors`, `warnings`, `last_submitted`,
+`last_downloaded`, and `contents` with `type` and `submitted`. Deprecated indexed
+counts are omitted even if Google sends them.
+
+## Explicit inspections
+
+Write scope is required because this operation calls Google and saves results.
+Use an idempotency key to replay a response without repeating the inspection.
+
+```http
+POST /projects/{project_id}/search-index/inspections
+Content-Type: application/json
+Idempotency-Key: page-indexing-001
+
+{"urls":["https://example.com/","https://example.com/pricing"]}
+```
+
+Send 1-10 URLs. URLs are normalized; duplicates after normalization count once. The whole batch is validated before any
+Google call. Domain properties cover HTTP, HTTPS and subdomains. URL-prefix
+properties require the same scheme, host and path prefix. Invalid URLs or URLs
+outside the property return `400` with `details.code=url_outside_property`.
+No connected property returns `404`; authorization needing renewal returns `422`
+for sitemap reads and per-URL `provider_authorization` errors for inspections.
+
+The response contains `property` and `results`. Each result contains `url`,
+`inspection` and `error`. Successful inspections include `verdict`, `coverage_state`
+(the Google field `coverageState`), `robots_txt_state`, `indexing_state`,
+`last_crawl_time`, `last_crawl_at`, `page_fetch_state`, `google_canonical`,
+`user_canonical`, `crawled_as`, `referring_urls`, `sitemap`, `inspection_result_link`,
+and `rich_results_result`. Rich results include their verdict and detected item
+types, item counts, issue counts and counts by severity. Missing scalars are null;
+missing URL arrays are empty. No mobile usability fields are exposed.
+
+Successful inspections save the latest verdict, crawl time, canonical agreement
+and check time. Full inspection details are returned in the response. These
+operations do not provide a complete indexing report or inspection history.
+
+## Daily allowance and partial failures
+
+Every URL sent to Google counts, even when the call fails; URLs admitted but not sent because the batch stopped are released. Manual and background inspections share one project daily inspection allowance that resets at Pacific midnight, alongside the shared property counter. Other tools also consume quota, so the counter is an estimate.
+Background checks exclude URLs already checked today. Overflow URLs receive
+`inspection_daily_limit` without a Google call. A zero limit disables calls.
+Other failures return `inspection_failed`; authorization failures return
+`provider_authorization` and stop the batch. A provider rate limit returns
+`provider_rate_limited` for the affected URL and all later admitted URLs, with
+`reset_at` (ISO timestamp) and `scope` (`daily`, `minute` or `unknown`). No further
+URLs in that request are sent. Only rate-limit errors include those two fields.
+Check each result's error even when HTTP status is `200`.
+
+Sitemap reads return `404` when the sitemap or connected property cannot be found,
+`422 provider_unavailable` when access is denied or authorization needs renewal,
+and `502 provider_unavailable` for other provider request failures. Provider rate
+limits on sitemap reads return `429`.
+
+## MCP and SDK contract
+
+MCP tools are `list_search_index_sitemaps`, `get_search_index_sitemap` (input `path`)
+and `inspect_search_index_urls` (input `urls`), each with `project_id`. Inspection
+also accepts `idempotency_key`. They follow the same validation and scope rules.
+[SDK mappings](/sdks/methods#page-indexing-methods) describe the operation names;
+client package availability depends on the client version.
+
+## Related operations
+
+- [`GET /projects/{project_id}/search-index/sitemaps`](/api-reference/analytics/list-page-indexing-sitemaps) (`listSearchIndexSitemaps`)
+- [`GET /projects/{project_id}/search-index/sitemaps/{path}`](/api-reference/analytics/get-a-page-indexing-sitemap) (`getSearchIndexSitemap`)
+- [`POST /projects/{project_id}/search-index/inspections`](/api-reference/analytics/inspect-page-indexing-urls) (`inspectSearchIndexUrls`)
+- [`GET /projects/{project_id}/page-indexing`](/api-reference/analytics/read-page-indexing-report) (`getPageIndexingReport`)
+- [`GET /projects/{project_id}/page-indexing/urls`](/api-reference/analytics/list-page-indexing-urls) (`listPageIndexingUrls`)
+- [`GET /projects/{project_id}/page-indexing/settings`](/api-reference/analytics/read-page-indexing-settings) (`getPageIndexingSettings`)
+- [`PATCH /projects/{project_id}/page-indexing/settings`](/api-reference/analytics/update-page-indexing-settings) (`updatePageIndexingSettings`)
+
+Exact request and response schemas live in the generated API Reference.
+
+## Stored Page indexing report
+
+`GET /api/v1/projects/{project_id}/search-index/report` (`get_page_indexing_report`)
+reads stored results only. It never calls Google. The denominator includes current
+sitemap URLs and keyword targets. The four groups are `indexed`,
+`not_indexed`, `inspection_failed` (application errors) and `not_checked`.
+Google coverage states are reasons inside the first two groups. Missing states use
+`Unspecified`, which can be passed as `coverage_state` to list those URLs. The
+`inspection_failed` and `not_checked` groups have one reason with a null
+`coverage_state`; drill down by group alone. Each reason includes `oldest_result_at`,
+the oldest stored result for that reason.
+
+The response includes `checked`, `total`, `remaining`, `complete`,
+`oldest_result_at`, `newest_result_at`, `budget_mode`, `today_count`,
+`last429_kind` and `next_reset_at`, both overall and per group. Overall
+`discovery_complete` and `discovered_at` describe the candidate inventory.
+`estimated_days_remaining` estimates the unchecked remainder in fixed mode;
+it is null when the mode has no fixed daily allowance. A report can fill over
+several days. `complete: false` means it must not be treated as a full-site census.
+
+Background discovery reads submitted sitemap metadata, then safely fetches the
+sitemap files using a bounded XML parser. Each run reads at most 20 files, two
+levels of child sitemaps and 5000 unique URLs, within 180 seconds per project and the shared 20-minute run deadline. Failed or
+truncated discovery keeps `discovery_complete: false`. Only URLs in the connected
+property enter the inventory. This is separate from the sitemap change monitor.
+
+## Stored URLs and history
+
+`GET /api/v1/projects/{project_id}/search-index/urls` (`list_page_indexing_urls`)
+returns `data` and `meta.next_cursor`. Optional filters: `group`, `coverage_state`,
+`sitemap` (the file that listed the URL), `source` (`keyword_target`, `sitemap`,
+`manual`), and `search` (case-insensitive URL substring). `limit` is 1-100, default
+50. Pass the returned cursor unchanged as `cursor` on the next request.
+Use `changed_since` (an ISO 8601 timestamp) to filter stored tracked changes before pagination.
+Manual-only URLs are included only when `source=manual` is explicitly requested;
+they do not affect report totals or freshness. `checked_at` is the last Google
+result time, while `inspection_failed_at` records the last failed attempt. A
+failed latest attempt belongs to `inspection_failed` even if it has no Google result.
+
+`history=true` adds `history.changes` and `history.complete` per URL, with up to
+100 most recent changes. Each change contains `at`, `previous` and `next` for
+verdict, coverage state, Google canonical, indexing state, robots state and fetch
+state. The first successful inspection establishes a baseline without a change
+row or alert. Steady repeated results add no history. History remains until the
+workspace is deleted, survives provider disconnect and cascades on project deletion.
+Only indexed/non-indexed transitions emit the existing URL signals.
+
+```bash
+curl "$BISIBILITY_BASE_URL/api/v1/projects/$PROJECT_ID/search-index/urls?group=not_indexed&history=true&limit=50" \
+  -H "Authorization: Bearer $BISIBILITY_API_KEY"
+```
+
+## Inspection settings
+
+`GET /api/v1/projects/{project_id}/search-index/settings`
+(`get_page_indexing_settings`) reads `budget_mode`, `inspection_daily_limit`,
+`available_modes`, `today_count`, `last429_kind`, `last429_at`, and
+`next_reset_at`. The reset is an ISO timestamp for the next midnight in
+`America/Los_Angeles`, including daylight saving changes. The counter is an
+estimate: other tools also consume the property's Google quota.
+
+`PATCH /api/v1/projects/{project_id}/search-index/settings`
+(`update_page_indexing_settings`) requires write scope and at least one setting:
+
+```json
+{
+  "budget_mode": "fixed",
+  "inspection_daily_limit": 2000
+}
+```
+
+- `off`: no background inspections. Explicit inspections remain available with
+  the fixed project allowance.
+- `fixed` (default): up to the project limit (0-2000 URLs per Pacific day), within
+  the shared local property ceiling of 2000 provider attempts.
+- `available_quota`: self-host only. Continue until Google reports daily quota
+  exhaustion, bounded by the run time and retry budgets. Cloud rejects this mode;
+  an imported setting using it behaves as `fixed`.
+
+All projects using the same property account and explicit inspections share the
+persistent counter. Provider retries consume property attempts; a retried URL
+uses one project reservation. Unsent URLs release their project reservations.
+Keyword targets have priority, then unchecked sitemap URLs, then oldest results.
+A project inspection run stops after 20 minutes. Minute limits wait within the
+existing retry bounds; unknown limits back off and stop without claiming daily
+exhaustion. A daily provider 429 stops the property until Pacific midnight.
+
+All these reads expose Google's indexed state, not a live test. Results may be
+partial or delayed. Only the explicit inspection endpoint requests a new indexed
+state from Google; opening a report or reading history does not inspect a URL.

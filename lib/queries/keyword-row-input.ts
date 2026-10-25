@@ -21,7 +21,7 @@ type CheckScheduleSource =
 export type KeywordProject = { defaults: ScheduleSource | null; domain: string };
 type UrlPresenceSource = {
   canonicalOk: boolean | null;
-  checkedAt: Date;
+  checkedAt: Date | null;
   coverageState: string | null;
   lastCrawlAt: Date | null;
   url: string;

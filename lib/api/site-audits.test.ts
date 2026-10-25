@@ -1,6 +1,6 @@
 vi.mock("@/lib/auth/audit", () => ({ writeAuditFailure: vi.fn() }));
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireScope: vi.fn(),
@@ -15,8 +15,10 @@ vi.mock("@/lib/site-audit/service", () => ({
   readSiteAudit: mocks.read,
 }));
 
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { AuditRateLimitError } from "@/lib/site-audit/errors";
 import type { ApiContext } from "./context";
+import { errorFromUnknown } from "./error-mapper";
 import { siteAuditsRoute } from "./site-audits";
 
 const ctx = (method: string, path: string[], body = {}) =>
@@ -35,6 +37,7 @@ const ctx = (method: string, path: string[], body = {}) =>
     origin: { kind: "api" },
   }) as unknown as ApiContext;
 describe("site audit REST contract", () => {
+  beforeEach(() => vi.resetAllMocks());
   it("rejects another project before any service call", async () => {
     const response = await siteAuditsRoute(ctx("POST", ["projects", "prj_other", "site-audits"]));
     expect(response?.status).toBe(403);
@@ -85,6 +88,24 @@ describe("site audit REST contract", () => {
     } finally {
       now.mockRestore();
     }
+  });
+  it("preserves the shared operation denial as HTTP 403", async () => {
+    mocks.requireScope.mockResolvedValue({ id: "internal1", domain: "example.com" });
+    mocks.run.mockRejectedValueOnce(new OperationAccessDeniedError());
+    const context = ctx("POST", ["projects", "prj_one", "site-audits"]);
+    const response = await Promise.resolve(siteAuditsRoute(context)).catch((error) =>
+      errorFromUnknown(error, context.headers, context.url),
+    );
+    expect(mocks.run).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ project: { id: "internal1", domain: "example.com" } }),
+      { maxPages: 10 },
+    );
+    expect(response?.status).toBe(403);
+    expect(await response?.json()).toMatchObject({
+      title: "Forbidden",
+      detail: "This operation is unavailable for this project.",
+      status: 403,
+    });
   });
   it("bounds and rejects arbitrary targets", async () => {
     for (const body of [{ max_pages: 16 }, { target: "http://127.0.0.1" }])

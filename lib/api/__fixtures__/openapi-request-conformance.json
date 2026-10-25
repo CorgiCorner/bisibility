@@ -1,74 +1,32 @@
 [
   {
-    "operation": "acceptAiTrackingSuggestions",
+    "operation": "acceptPromptResearchSuggestions",
     "path": "drafts[].provider_dataset_reference.row_index",
     "detail": "maximum spec=none validator=9999",
     "kind": "bound-mismatch",
     "location": "body"
   },
   {
-    "operation": "acceptAiTrackingSuggestions",
+    "operation": "acceptPromptResearchSuggestions",
     "path": "drafts[].text",
     "detail": "maxLength spec=4000 validator=64000; minLength spec=3 validator=1",
     "kind": "bound-mismatch",
     "location": "body"
   },
   {
-    "operation": "acceptAiTrackingSuggestions",
+    "operation": "acceptPromptResearchSuggestions",
     "kind": "spec-missing-field",
     "path": "drafts[].draft_id",
     "location": "body"
   },
   {
-    "operation": "acceptAiTrackingSuggestions",
+    "operation": "acceptPromptResearchSuggestions",
     "kind": "spec-missing-field",
     "path": "drafts[].generation_id",
     "location": "body"
   },
   {
-    "operation": "aiTrackingSuggestionsGenerate",
-    "path": "preview.configuration.model",
-    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "aiTrackingSuggestionsGenerate",
-    "path": "preview.credential_connection_id",
-    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "aiTrackingSuggestionsGenerate",
-    "path": "preview.input_snapshot.competitors[].id",
-    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "aiTrackingSuggestionsPreview",
-    "path": "configuration.model",
-    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "aiTrackingSuggestionsPreview",
-    "path": "credential_connection_id",
-    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "aiTrackingSuggestionsPreview",
-    "path": "input_snapshot.competitors[].id",
-    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "analyzeAiVisibility",
+    "operation": "analyzeBrandVisibility",
     "path": "domain",
     "detail": "minLength spec=1 validator=none",
     "kind": "bound-mismatch",
@@ -205,16 +163,16 @@
     "location": "body"
   },
   {
-    "operation": "exportAiTrackingEvidence",
-    "detail": "reads cursor, format, limit, run_id",
-    "kind": "raw-query",
-    "location": "query"
-  },
-  {
     "operation": "exportLocalMonitorRun",
     "path": "as_of",
     "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
     "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "exportPromptTrackerEvidence",
+    "detail": "reads cursor, format, limit, run_id",
+    "kind": "raw-query",
     "location": "query"
   },
   {
@@ -607,6 +565,48 @@
     "operation": "mintMigrationToken",
     "detail": "validator reads scope",
     "kind": "spec-missing-body",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsGenerate",
+    "path": "preview.configuration.model",
+    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsGenerate",
+    "path": "preview.credential_connection_id",
+    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsGenerate",
+    "path": "preview.input_snapshot.competitors[].id",
+    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsPreview",
+    "path": "configuration.model",
+    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsPreview",
+    "path": "credential_connection_id",
+    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "promptResearchSuggestionsPreview",
+    "path": "input_snapshot.competitors[].id",
+    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
     "location": "body"
   },
   {

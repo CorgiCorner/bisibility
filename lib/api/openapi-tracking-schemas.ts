@@ -7,11 +7,11 @@ import {
   trackingRawEvidenceSchema,
 } from "./openapi-tracking-evidence";
 import {
-  aiTrackingSuggestionResponseSchemas,
-  aiTrackingSuggestionSnapshotSchema,
+  promptResearchSuggestionResponseSchemas,
+  promptResearchSuggestionSnapshotSchema,
 } from "./openapi-tracking-suggestions";
 
-/** Neutral public AI tracking response schemas, aligned with the boundary projections. */
+/** Neutral public Prompt Tracker response schemas, aligned with the boundary projections. */
 const text = { type: "string" };
 const date = { type: "string", format: "date-time" };
 const nullableDate = { type: ["string", "null"], format: "date-time" };
@@ -31,7 +31,7 @@ const component = (name: string): { $ref: string } => ({
 const promptCategory = {
   type: "string",
   enum: ["neutral", "comparative", "branded"],
-  ...openEnum("AiTrackingPromptCategory"),
+  ...openEnum("PromptTrackerPromptCategory"),
 };
 const array = (items: object) => ({ type: "array", items });
 const nullable = (schema: object) => ({ oneOf: [schema, { type: "null" }] });
@@ -63,11 +63,11 @@ const revision = object({
 });
 Object.assign(revision.properties, {
   generation_reference: named(
-    "AiTrackingPromptGenerationReference",
+    "PromptTrackerPromptGenerationReference",
     object({ generation_id: id("asg"), draft_id: { type: "string", format: "uuid" } }),
   ),
   provider_dataset_reference: named(
-    "AiTrackingPromptDatasetReference",
+    "PromptTrackerPromptDatasetReference",
     object({ report_id: id("agr"), row_index: { type: "integer", minimum: 0 } }),
   ),
 });
@@ -79,7 +79,7 @@ const prompt = object({
   paused_at: nullableDate,
   created_at: date,
   updated_at: date,
-  revisions: array(named("AiTrackingPromptRevision", revision)),
+  revisions: array(named("PromptTrackerPromptRevision", revision)),
 });
 const schedule = object({
   id: id("ais"),
@@ -90,9 +90,9 @@ const schedule = object({
   archived_at: nullableDate,
   next_run_at: nullableDate,
   configuration: named(
-    "AiTrackingScheduleConfiguration",
+    "PromptTrackerScheduleConfiguration",
     object({
-      configurations: array(named("AiTrackingConfiguration", configuration)),
+      configurations: array(named("PromptTrackerConfiguration", configuration)),
       prompt_ids: array(id("aip")),
     }),
   ),
@@ -113,7 +113,7 @@ const run = object({
       "cancelled",
       "skipped",
     ],
-    ...openEnum("AiTrackingRunState"),
+    ...openEnum("PromptTrackerRunState"),
   },
   created_at: date,
   updated_at: date,
@@ -122,7 +122,7 @@ const run = object({
   sample_count: { type: ["integer", "null"], minimum: 0 },
 });
 const preview = object({
-  configurations: array(named("AiTrackingConfiguration", configuration)),
+  configurations: array(named("PromptTrackerConfiguration", configuration)),
   credential_connection_id: id("conn"),
   credential_version: text,
   budget_revision: text,
@@ -130,7 +130,7 @@ const preview = object({
   estimated_cost_cents: { ...usdCents, type: "number", minimum: 0 },
 });
 Object.assign(preview.properties, paymentResponseFields);
-const denominator = named("AiTrackingTrendCounts", {
+const denominator = named("PromptTrackerTrendCounts", {
   ...object({
     expected: count,
     observed: count,
@@ -161,12 +161,12 @@ const trends = object(
     category: { const: "neutral" },
     strata: array(
       named(
-        "AiTrackingTrendStratum",
+        "PromptTrackerTrendStratum",
         object({
           category: {
             type: "string",
             enum: ["neutral", "comparative", "branded", "unknown"],
-            ...openEnum("AiTrackingTrendCategory"),
+            ...openEnum("PromptTrackerTrendCategory"),
           },
           ...trendComparison,
         }),
@@ -182,24 +182,24 @@ const draft = object({
   category: {
     type: "string",
     enum: ["neutral", "comparative", "branded"],
-    ...openEnum("AiTrackingPromptCategory"),
+    ...openEnum("PromptTrackerPromptCategory"),
   },
   provenance: {
     type: "string",
     enum: ["generated_hypothesis", "provider_dataset"],
-    ...openEnum("AiTrackingSuggestionProvenance"),
+    ...openEnum("PromptResearchSuggestionProvenance"),
   },
   evidence_ids: array(text),
   popularity: { type: ["number", "null"] },
   accepted: { const: false },
 });
 const suggestions = object({
-  input_snapshot: aiTrackingSuggestionSnapshotSchema,
-  drafts: array(named("AiTrackingSuggestionDraft", draft)),
+  input_snapshot: promptResearchSuggestionSnapshotSchema,
+  drafts: array(named("PromptResearchSuggestionDraft", draft)),
   method: {
     type: "string",
     enum: ["context_template_heuristic", "manual_fallback"],
-    ...openEnum("AiTrackingSuggestionMethod"),
+    ...openEnum("PromptResearchSuggestionMethod"),
   },
   context_updated_at: nullableDate,
   requires_acceptance: { const: true },
@@ -209,56 +209,56 @@ const suggestions = object({
 const page = (resource: object) =>
   object({
     data: array(resource),
-    meta: named("AiTrackingPageMeta", object({ next_cursor: nullableText })),
+    meta: named("PromptTrackerPageMeta", object({ next_cursor: nullableText })),
   });
 const data = (resource: object) => object({ data: resource });
 
-/** App-owned AI tracking components; the MCP contract has no say in these shapes. */
-export const aiTrackingComponentSchemas = {
-  AiTrackingTopic: topic,
-  AiTrackingTopicResponse: data(component("AiTrackingTopic")),
-  AiTrackingTopicPage: page(component("AiTrackingTopic")),
-  AiTrackingPromptResponse: data(component("AiTrackingPrompt")),
-  AiTrackingSchedule: schedule,
-  AiTrackingScheduleResponse: data(component("AiTrackingSchedule")),
-  AiTrackingSchedulePage: page(component("AiTrackingSchedule")),
-  AiTrackingSuggestionsResponse: data(named("AiTrackingSuggestions", suggestions)),
-  AiTrackingRawEvidence: trackingRawEvidenceSchema,
-  AiTrackingPrompt: prompt,
-  AiTrackingPromptPage: page({ $ref: "#/components/schemas/AiTrackingPrompt" }),
-  AiTrackingRun: run,
-  AiTrackingRunResponse: data(component("AiTrackingRun")),
-  AiTrackingRunPreviewResponse: data(named("AiTrackingRunPreview", preview)),
-  AiTrackingSamplePage: page(named("AiTrackingSample", sample)),
-  AiTrackingRunPage: page({ $ref: "#/components/schemas/AiTrackingRun" }),
-  AiTrackingTrends: trends,
-  AiTrackingTrendsResponse: data({ $ref: "#/components/schemas/AiTrackingTrends" }),
+/** App-owned Prompt Tracker components; the MCP contract has no say in these shapes. */
+export const promptTrackerComponentSchemas = {
+  PromptTrackerTopic: topic,
+  PromptTrackerTopicResponse: data(component("PromptTrackerTopic")),
+  PromptTrackerTopicPage: page(component("PromptTrackerTopic")),
+  PromptTrackerPromptResponse: data(component("PromptTrackerPrompt")),
+  PromptTrackerSchedule: schedule,
+  PromptTrackerScheduleResponse: data(component("PromptTrackerSchedule")),
+  PromptTrackerSchedulePage: page(component("PromptTrackerSchedule")),
+  PromptResearchSuggestionsResponse: data(named("PromptResearchSuggestions", suggestions)),
+  PromptTrackerRawEvidence: trackingRawEvidenceSchema,
+  PromptTrackerPrompt: prompt,
+  PromptTrackerPromptPage: page({ $ref: "#/components/schemas/PromptTrackerPrompt" }),
+  PromptTrackerRun: run,
+  PromptTrackerRunResponse: data(component("PromptTrackerRun")),
+  PromptTrackerRunPreviewResponse: data(named("PromptTrackerRunPreview", preview)),
+  PromptTrackerSamplePage: page(named("PromptTrackerSample", sample)),
+  PromptTrackerRunPage: page({ $ref: "#/components/schemas/PromptTrackerRun" }),
+  PromptTrackerTrends: trends,
+  PromptTrackerTrendsResponse: data({ $ref: "#/components/schemas/PromptTrackerTrends" }),
 };
 
-export const aiTrackingResponseSchemas = {
-  ...aiTrackingSuggestionResponseSchemas,
-  listAiTrackingTopics: component("AiTrackingTopicPage"),
-  createAiTrackingTopic: component("AiTrackingTopicResponse"),
-  updateAiTrackingTopic: component("AiTrackingTopicResponse"),
-  archiveAiTrackingTopic: component("AiTrackingTopicResponse"),
-  listAiTrackingPrompts: component("AiTrackingPromptPage"),
-  createAiTrackingPrompt: component("AiTrackingPromptResponse"),
-  updateAiTrackingPrompt: component("AiTrackingPromptResponse"),
-  archiveAiTrackingPrompt: component("AiTrackingPromptResponse"),
-  listAiTrackingSchedules: component("AiTrackingSchedulePage"),
-  createAiTrackingSchedule: component("AiTrackingScheduleResponse"),
-  updateAiTrackingSchedule: component("AiTrackingScheduleResponse"),
-  archiveAiTrackingSchedule: component("AiTrackingScheduleResponse"),
-  previewAiTrackingRun: component("AiTrackingRunPreviewResponse"),
-  createAiTrackingRun: component("AiTrackingRunResponse"),
-  listAiTrackingRuns: component("AiTrackingRunPage"),
-  getAiTrackingRun: component("AiTrackingRunResponse"),
-  listAiTrackingSamples: component("AiTrackingSamplePage"),
-  cancelAiTrackingRun: component("AiTrackingRunResponse"),
-  retryAiTrackingRun: component("AiTrackingRunResponse"),
-  getAiTrackingHistory: component("AiTrackingRunPage"),
-  getAiTrackingTrends: component("AiTrackingTrendsResponse"),
-  exportAiTrackingEvidence: data(
+export const promptTrackerResponseSchemas = {
+  ...promptResearchSuggestionResponseSchemas,
+  listPromptTrackerTopics: component("PromptTrackerTopicPage"),
+  createPromptTrackerTopic: component("PromptTrackerTopicResponse"),
+  updatePromptTrackerTopic: component("PromptTrackerTopicResponse"),
+  archivePromptTrackerTopic: component("PromptTrackerTopicResponse"),
+  listPromptTrackerPrompts: component("PromptTrackerPromptPage"),
+  createPromptTrackerPrompt: component("PromptTrackerPromptResponse"),
+  updatePromptTrackerPrompt: component("PromptTrackerPromptResponse"),
+  archivePromptTrackerPrompt: component("PromptTrackerPromptResponse"),
+  listPromptTrackerSchedules: component("PromptTrackerSchedulePage"),
+  createPromptTrackerSchedule: component("PromptTrackerScheduleResponse"),
+  updatePromptTrackerSchedule: component("PromptTrackerScheduleResponse"),
+  archivePromptTrackerSchedule: component("PromptTrackerScheduleResponse"),
+  previewPromptTrackerRun: component("PromptTrackerRunPreviewResponse"),
+  createPromptTrackerRun: component("PromptTrackerRunResponse"),
+  listPromptTrackerRuns: component("PromptTrackerRunPage"),
+  getPromptTrackerRun: component("PromptTrackerRunResponse"),
+  listPromptTrackerSamples: component("PromptTrackerSamplePage"),
+  cancelPromptTrackerRun: component("PromptTrackerRunResponse"),
+  retryPromptTrackerRun: component("PromptTrackerRunResponse"),
+  getPromptTrackerHistory: component("PromptTrackerRunPage"),
+  getPromptTrackerTrends: component("PromptTrackerTrendsResponse"),
+  exportPromptTrackerEvidence: data(
     object(
       {
         items: array(sample),
@@ -274,10 +274,14 @@ export const aiTrackingResponseSchemas = {
       ["items", "run_id", "next_cursor"],
     ),
   ),
-  suggestAiTrackingPrompts: component("AiTrackingSuggestionsResponse"),
-  acceptAiTrackingSuggestions: data(object({ prompts: array(component("AiTrackingPrompt")) })),
+  suggestPromptResearchPrompts: component("PromptResearchSuggestionsResponse"),
+  acceptPromptResearchSuggestions: data(
+    object({ prompts: array(component("PromptTrackerPrompt")) }),
+  ),
 } as const;
 
-export function aiTrackingResponseSchema(operationId: keyof typeof aiTrackingResponseSchemas) {
-  return aiTrackingResponseSchemas[operationId];
+export function promptTrackerResponseSchema(
+  operationId: keyof typeof promptTrackerResponseSchemas,
+) {
+  return promptTrackerResponseSchemas[operationId];
 }

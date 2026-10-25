@@ -187,7 +187,7 @@ export function researchWorkspaceResponse(operationId: string) {
   if (operationId === "getAiResearchCatalog")
     return { ...object({ data: aiCatalog }), ...sdkName("AiResearchCatalogResponse") };
   else if (operationId.endsWith("ProjectContext")) data = context;
-  else if (["analyzeAiVisibility", "compareAiPrompts"].includes(operationId)) data = aiOutcome;
+  else if (["analyzeBrandVisibility", "compareAiPrompts"].includes(operationId)) data = aiOutcome;
   else data = report;
   return object({ data });
 }

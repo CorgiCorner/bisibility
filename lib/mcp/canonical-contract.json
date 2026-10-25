@@ -4491,7 +4491,7 @@
   {
     "name": "connect_provider",
     "title": "Connect provider",
-    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. For Plausible, credentials.login is the site domain configured in Plausible (site_id, for example example.com) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. Use priority for ordering (0 promotes the provider to primary and renumbers the rest; omitted keeps a reconnected provider's place and appends a new one); the deprecated primary=true alias promotes priority 0 and primary=false is a no-op.",
+    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. For Plausible, credentials.login is the site domain configured in Plausible (site_id, for example example.com) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A new SERP connection starts disabled unless no other SERP connection is enabled, and is placed after existing SERP connections. Each provider has its own on/off switch; use set_provider_enabled to change it. For existing connections, use priority for ordering (0 promotes the provider to primary and renumbers the rest; omitted keeps a reconnected provider's place); the deprecated primary=true alias promotes priority 0 and primary=false is a no-op.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -4580,7 +4580,7 @@
   {
     "name": "test_provider_connection",
     "title": "Test provider connection",
-    "description": "Test provider credentials or the saved provider connection. For Plausible, credentials.login is the site domain configured in Plausible (site_id) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A successful test returns message \"Connected.\" or \"Connected · <detail>.\" for analytics providers.",
+    "description": "Test provider credentials or the saved provider connection. For Plausible, credentials.login is the site domain configured in Plausible (site_id) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A successful test returns message \"Connected.\" or \"Connected \u00b7 <detail>.\" for analytics providers.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -5542,7 +5542,7 @@
   {
     "name": "update_notification_preferences",
     "title": "Update notification preferences",
-    "description": "Notification channel switches: turn the project's notification channels (email, Slack, webhook) on or off. Does not create or change webhook endpoints; use create_webhook or update_webhook for those.",
+    "description": "Update notification channels and check summary settings (all, important, none). check_in_app is deprecated and ignored on writes; the response includes warnings when it is sent. Does not create or change webhook endpoints.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -5568,7 +5568,30 @@
           "type": "boolean"
         },
         "check_in_app": {
-          "type": "boolean"
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Read-only compatibility value, ignored on writes. Use check_notification_setting; ignored writes return a warning."
+        },
+        "check_notification_setting": {
+          "type": "string",
+          "enum": ["all", "important", "none"],
+          "description": "Check summary mode, default important."
+        },
+        "check_notification_top_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Top-N entry or exit threshold, default 10."
+        },
+        "check_notification_position_move": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Inclusive position movement threshold, default 5."
+        },
+        "provider_incident_in_app": {
+          "type": "boolean",
+          "description": "Show provider incident notices in the app; enabled by default."
         },
         "import_email": {
           "type": "boolean"
@@ -5916,8 +5939,8 @@
     }
   },
   {
-    "name": "analyze_ai_visibility",
-    "title": "Analyze AI visibility",
+    "name": "analyze_brand_visibility",
+    "title": "Analyze Brand Visibility",
     "description": "Inspect provider-observed ChatGPT or Google AI Overview mentions and citations. This is a limited provider dataset, not all user conversations. Requires BYOK or deployment credits, an explicit cost cap, and project write scope. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -6354,9 +6377,9 @@
     }
   },
   {
-    "name": "list_ai_tracking_topics",
-    "title": "List ai tracking topics",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "list_prompt_tracker_topics",
+    "title": "List Prompt Tracker topics",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6391,9 +6414,9 @@
     }
   },
   {
-    "name": "create_ai_tracking_topic",
-    "title": "Create ai tracking topic",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "create_prompt_tracker_topic",
+    "title": "Create Prompt Tracker topic",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6439,9 +6462,9 @@
     }
   },
   {
-    "name": "update_ai_tracking_topic",
-    "title": "Update ai tracking topic",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "update_prompt_tracker_topic",
+    "title": "Update Prompt Tracker topic",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6492,9 +6515,9 @@
     }
   },
   {
-    "name": "archive_ai_tracking_topic",
-    "title": "Archive ai tracking topic",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "archive_prompt_tracker_topic",
+    "title": "Archive Prompt Tracker topic",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6523,9 +6546,9 @@
     }
   },
   {
-    "name": "list_ai_tracking_prompts",
-    "title": "List ai tracking prompts",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "list_prompt_tracker_prompts",
+    "title": "List Prompt Tracker prompts",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6560,9 +6583,9 @@
     }
   },
   {
-    "name": "create_ai_tracking_prompt",
-    "title": "Create ai tracking prompt",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "create_prompt_tracker_prompt",
+    "title": "Create Prompt Tracker prompt",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6596,7 +6619,7 @@
           "type": "object",
           "properties": {
             "report_id": {
-              "description": "Trusted project AI visibility dataset report public ID.",
+              "description": "Trusted project Brand Visibility dataset report public ID.",
               "type": "string",
               "pattern": "^agr_[a-z][a-z0-9]{23}$"
             },
@@ -6663,9 +6686,9 @@
     }
   },
   {
-    "name": "update_ai_tracking_prompt",
-    "title": "Update ai tracking prompt",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "update_prompt_tracker_prompt",
+    "title": "Update Prompt Tracker prompt",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6704,7 +6727,7 @@
           "type": "object",
           "properties": {
             "report_id": {
-              "description": "Trusted project AI visibility dataset report public ID.",
+              "description": "Trusted project Brand Visibility dataset report public ID.",
               "type": "string",
               "pattern": "^agr_[a-z][a-z0-9]{23}$"
             },
@@ -6771,9 +6794,9 @@
     }
   },
   {
-    "name": "archive_ai_tracking_prompt",
-    "title": "Archive ai tracking prompt",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "archive_prompt_tracker_prompt",
+    "title": "Archive Prompt Tracker prompt",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6802,9 +6825,9 @@
     }
   },
   {
-    "name": "list_ai_tracking_schedules",
-    "title": "List ai tracking schedules",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "list_prompt_tracker_schedules",
+    "title": "List Prompt Tracker schedules",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6839,9 +6862,9 @@
     }
   },
   {
-    "name": "create_ai_tracking_schedule",
-    "title": "Create ai tracking schedule",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "create_prompt_tracker_schedule",
+    "title": "Create Prompt Tracker schedule",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7064,9 +7087,9 @@
     }
   },
   {
-    "name": "update_ai_tracking_schedule",
-    "title": "Update ai tracking schedule",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "update_prompt_tracker_schedule",
+    "title": "Update Prompt Tracker schedule",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7293,9 +7316,9 @@
     }
   },
   {
-    "name": "archive_ai_tracking_schedule",
-    "title": "Archive ai tracking schedule",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "archive_prompt_tracker_schedule",
+    "title": "Archive Prompt Tracker schedule",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7324,9 +7347,9 @@
     }
   },
   {
-    "name": "preview_ai_tracking_run",
-    "title": "Preview ai tracking run",
-    "description": "Review capability, credentials, budget and price before paid AI tracking. Preview never submits a provider task.",
+    "name": "preview_prompt_tracker_run",
+    "title": "Preview Prompt Tracker run",
+    "description": "Review capability, credentials, budget and price before a paid Prompt Tracker run. Preview never submits a provider task.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7455,9 +7478,9 @@
     }
   },
   {
-    "name": "create_ai_tracking_run",
-    "title": "Create ai tracking run",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "create_prompt_tracker_run",
+    "title": "Create Prompt Tracker run",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7640,9 +7663,9 @@
     }
   },
   {
-    "name": "list_ai_tracking_runs",
-    "title": "List ai tracking runs",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "list_prompt_tracker_runs",
+    "title": "List Prompt Tracker runs",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7677,9 +7700,9 @@
     }
   },
   {
-    "name": "get_ai_tracking_run",
-    "title": "Get ai tracking run",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "get_prompt_tracker_run",
+    "title": "Get Prompt Tracker run",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7708,9 +7731,9 @@
     }
   },
   {
-    "name": "list_ai_tracking_samples",
-    "title": "List ai tracking samples",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "list_prompt_tracker_samples",
+    "title": "List Prompt Tracker samples",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7750,9 +7773,9 @@
     }
   },
   {
-    "name": "cancel_ai_tracking_run",
-    "title": "Cancel ai tracking run",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "cancel_prompt_tracker_run",
+    "title": "Cancel Prompt Tracker run",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7781,9 +7804,9 @@
     }
   },
   {
-    "name": "retry_ai_tracking_run",
-    "title": "Retry ai tracking run",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "retry_prompt_tracker_run",
+    "title": "Retry Prompt Tracker run",
+    "description": "Manage project-scoped Prompt Tracker. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -7972,9 +7995,9 @@
     }
   },
   {
-    "name": "get_ai_tracking_history",
-    "title": "Get ai tracking history",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "get_prompt_tracker_history",
+    "title": "Get Prompt Tracker history",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -8009,9 +8032,9 @@
     }
   },
   {
-    "name": "get_ai_tracking_trends",
-    "title": "Get ai tracking trends",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "get_prompt_tracker_trends",
+    "title": "Get Prompt Tracker trends",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -8056,9 +8079,9 @@
     }
   },
   {
-    "name": "export_ai_tracking_evidence",
-    "title": "Export ai tracking evidence",
-    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "name": "export_prompt_tracker_evidence",
+    "title": "Export Prompt Tracker evidence",
+    "description": "Read project-scoped Prompt Tracker evidence with original provenance, partial states, and cost uncertainty.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -8104,8 +8127,8 @@
     }
   },
   {
-    "name": "suggest_ai_tracking_prompts",
-    "title": "Suggest ai tracking prompts",
+    "name": "suggest_prompt_research_prompts",
+    "title": "Suggest Prompt Research prompts",
     "description": "Read the complete project context and authoritative competitors for explicit review. Returned manual templates are heuristics with no measured popularity. This never generates with a model, saves a prompt or starts paid provider work.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -8130,9 +8153,9 @@
     }
   },
   {
-    "name": "accept_ai_tracking_suggestions",
-    "title": "Accept ai tracking suggestions",
-    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "name": "accept_prompt_research_suggestions",
+    "title": "Accept Prompt Research suggestions",
+    "description": "Manage project-scoped Prompt Research. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -8173,7 +8196,7 @@
                 "type": "object",
                 "properties": {
                   "report_id": {
-                    "description": "Trusted project AI visibility dataset report public ID.",
+                    "description": "Trusted project Brand Visibility dataset report public ID.",
                     "type": "string",
                     "pattern": "^agr_[a-z][a-z0-9]{23}$"
                   },
@@ -8240,8 +8263,8 @@
     }
   },
   {
-    "name": "ai_tracking_suggestions_preview",
-    "title": "Preview AI prompt model generation",
+    "name": "prompt_research_suggestions_preview",
+    "title": "Preview Prompt Research model generation",
     "description": "Review the full business context, chosen competitors, model and market before model generation. This spend-free forecast never calls a model or reserves budget; its estimate is not a guaranteed maximum.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -8389,8 +8412,8 @@
     }
   },
   {
-    "name": "ai_tracking_suggestions_generate",
-    "title": "Generate AI prompt hypotheses",
+    "name": "prompt_research_suggestions_generate",
+    "title": "Generate Prompt Research hypotheses",
     "description": "Generate editable hypotheses from the exact reviewed preview with explicit paid consent and a stable retry UUID. Generated prompts are hypotheses with no measured popularity and are saved only after separate acceptance.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -8618,6 +8641,269 @@
     "annotations": {
       "destructiveHint": false,
       "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_search_index_sitemaps",
+    "title": "List Page indexing sitemaps",
+    "description": "List Page indexing sitemaps from the project's connected property. Results are Google's indexed state as already known to Google, not a live test, and may be partial or delayed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with an existing Search Console connection.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_search_index_sitemap",
+    "title": "Get a Page indexing sitemap",
+    "description": "Get one Page indexing sitemap from the project's connected property. The sitemap URL must belong to that property. Results are Google's indexed state as already known to Google, not a live test, and may be partial or delayed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with an existing Search Console connection.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Full sitemap URL within the connected property."
+        }
+      },
+      "required": ["project_id", "path"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "inspect_search_index_urls",
+    "title": "Inspect Page indexing URLs",
+    "description": "Explicitly inspect 1-10 URLs in the project's connected property and store the full latest fields and changes. URLs are normalized and validated before any Google call; duplicates after normalization count once. Write scope is required. Every URL sent to Google counts, even when the call fails; URLs admitted but not sent because the batch stopped are released. Manual and background inspections share one project daily inspection allowance that resets at Pacific midnight; both also share a persistent property counter. This is an estimate because other tools consume quota too. Per-URL failures are returned; provider_rate_limited includes reset_at (ISO timestamp) and scope (daily, minute or unknown), and stops further calls in the batch. Results are Google's indexed state as already known to Google, not a live test, and may be partial or delayed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with an existing Search Console connection.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "urls": {
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "description": "1-10 HTTP(S) URLs within the connected property; URLs are normalized and duplicates after normalization count once."
+        },
+        "idempotency_key": {
+          "description": "Reuse this key to replay the response without another inspection.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": ["project_id", "urls"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_page_indexing_report",
+    "title": "Get Page indexing report",
+    "description": "Read the Page indexing report, reasons, completeness and freshness overall and per group, plus the estimated shared property usage and Pacific reset. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with a connected Search Console property.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_page_indexing_urls",
+    "title": "List Page indexing URLs",
+    "description": "List stored Page indexing URLs from current sitemaps and keyword targets; manual-only URLs are included only with source=manual. Synthetic groups have a null coverage_state reason; filter them by group alone. List with filters, cursor pagination and optional history (latest 100 changes per URL, with a completeness flag). Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with a connected Search Console property.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "group": {
+          "description": "Stored result group.",
+          "type": "string",
+          "enum": ["indexed", "not_indexed", "inspection_failed", "not_checked"]
+        },
+        "coverage_state": {
+          "description": "Exact Google coverage state; Unspecified matches a missing state in indexed/not_indexed groups. For inspection_failed and not_checked, filter by group alone.",
+          "type": "string",
+          "maxLength": 500
+        },
+        "sitemap": {
+          "description": "Sitemap that listed the URL.",
+          "type": "string",
+          "maxLength": 2048
+        },
+        "source": {
+          "description": "Candidate or inspection source. Manual-only URLs are included only when source=manual is explicitly requested.",
+          "type": "string",
+          "enum": ["keyword_target", "sitemap", "manual"]
+        },
+        "search": {
+          "description": "Case-insensitive URL substring.",
+          "type": "string",
+          "maxLength": 500
+        },
+        "changed_since": {
+          "description": "Include URLs with a stored tracked change at or after this timestamp, before pagination.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "cursor": {
+          "description": "Opaque next_cursor from the previous page.",
+          "type": "string",
+          "maxLength": 2048
+        },
+        "limit": {
+          "default": 50,
+          "description": "Maximum rows returned.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "history": {
+          "default": "false",
+          "description": "Include up to 100 recent changes per URL.",
+          "type": "string",
+          "enum": ["true", "false"]
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_page_indexing_settings",
+    "title": "Get Page indexing settings",
+    "description": "Read Page indexing budget settings, deployment-supported modes and estimated shared property usage. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with a connected Search Console property.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_page_indexing_settings",
+    "title": "Update Page indexing settings",
+    "description": "Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota is self-host only and runs until a daily 429 within the run time budget. Manual and background calls share the property counter, reset at Pacific midnight. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with a connected Search Console property.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "budget_mode": {
+          "description": "Background budget mode. available_quota is self-host only.",
+          "type": "string",
+          "enum": ["off", "fixed", "available_quota"]
+        },
+        "inspection_daily_limit": {
+          "description": "Fixed project daily allowance, reset at Pacific midnight.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "idempotency_key": {
+          "description": "Replay an update response with this key.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
       "readOnlyHint": false
     },
     "execution": {

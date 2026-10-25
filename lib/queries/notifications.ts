@@ -1,34 +1,15 @@
 import "server-only";
 
-import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
-import { notificationDisplay, relativeTimeLabel } from "@/lib/notifications/format";
-import { notificationFeedWhere } from "@/lib/notifications/scope";
+import {
+  countUnreadNotificationsForScope,
+  getNotificationFeedForScope,
+  listNotificationsForScope,
+  type NotificationFeedOptions,
+} from "@/lib/notifications/feed";
 import { getQueryActor } from "./_auth";
-import { redactAuditIds } from "./audit-public-values";
-
-const DEFAULT_NOTIFICATION_LIMIT = 10;
-const MAX_NOTIFICATION_LIMIT = 50;
-
-const notificationSelect = {
-  body: true,
-  createdAt: true,
-  publicId: true,
-  payload: true,
-  project: { select: { domain: true, name: true, publicId: true } },
-  readAt: true,
-  title: true,
-  type: true,
-} satisfies Prisma.NotificationSelect;
-
-type NotificationRow = Prisma.NotificationGetPayload<{ select: typeof notificationSelect }>;
-
-type NotificationScope = {
-  activeProjectId: string | null;
-  userId: string;
-};
 
 export type NotificationFeedItem = {
   body: string | null;
@@ -42,6 +23,8 @@ export type NotificationFeedItem = {
   time: string;
   title: string;
   type: NotificationType;
+  version?: number;
+  withdrawnAt?: string | null;
 };
 
 export type NotificationFeed = {
@@ -49,23 +32,9 @@ export type NotificationFeed = {
   unreadCount: number;
 };
 
-export type NotificationListOptions = {
-  dateFormat?: DateFormat;
-  limit?: number;
-  now?: Date;
-};
+export type NotificationListOptions = NotificationFeedOptions;
 
-function clampLimit(limit: number | undefined) {
-  if (!limit || !Number.isFinite(limit)) {
-    return DEFAULT_NOTIFICATION_LIMIT;
-  }
-
-  return Math.min(MAX_NOTIFICATION_LIMIT, Math.max(1, Math.trunc(limit)));
-}
-
-async function resolveNotificationScope(
-  activeProjectId: string | null,
-): Promise<NotificationScope> {
+async function resolveNotificationScope(activeProjectId: string | null) {
   const actor = await getQueryActor();
   if (activeProjectId && parsePublicId(activeProjectId)?.prefix !== "prj") {
     throw new Error("Project not found.");
@@ -83,71 +52,15 @@ async function resolveNotificationScope(
   };
 }
 
-function mapNotification(row: NotificationRow, now: Date, dateFormat: DateFormat) {
-  const display = notificationDisplay(row.type, row.body, row.payload, row.project);
-
-  return {
-    body: row.body,
-    createdAt: row.createdAt.toISOString(),
-    href: display.href,
-    id: requiredPublicId(row.publicId, "ntf", "Notification"),
-    meta: display.meta,
-    payload: redactAuditIds(row.payload) as Prisma.JsonValue | null,
-    projectId: row.project?.publicId ?? null,
-    readAt: row.readAt?.toISOString() ?? null,
-    time: relativeTimeLabel(row.createdAt, now, dateFormat),
-    title: row.title,
-    type: row.type,
-  };
-}
-
-function requiredPublicId(value: string | null, prefix: "ntf", resource: string) {
-  if (!value || parsePublicId(value)?.prefix !== prefix) {
-    throw new Error(`${resource} public ID is not available.`);
-  }
-  return value;
-}
-
-async function listScopedNotifications(
-  scope: NotificationScope,
-  { dateFormat = "month_first", limit, now = new Date() }: NotificationListOptions = {},
-) {
-  const take = clampLimit(limit);
-  const unreadRows = await prisma.notification.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    select: notificationSelect,
-    take,
-    where: notificationFeedWhere(scope.userId, scope.activeProjectId, "unread"),
-  });
-  const remaining = take - unreadRows.length;
-  const readRows =
-    remaining > 0
-      ? await prisma.notification.findMany({
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-          select: notificationSelect,
-          take: remaining,
-          where: notificationFeedWhere(scope.userId, scope.activeProjectId, "read"),
-        })
-      : [];
-
-  return [...unreadRows, ...readRows].map((row) => mapNotification(row, now, dateFormat));
-}
-
-async function countScopedUnreadNotifications(scope: NotificationScope) {
-  return prisma.notification.count({
-    where: notificationFeedWhere(scope.userId, scope.activeProjectId, "unread"),
-  });
-}
-
 export async function listCurrentUserNotifications(
   projectId: string | null,
   options: NotificationListOptions = {},
 ) {
-  return listScopedNotifications(await resolveNotificationScope(projectId), options);
+  return listNotificationsForScope(await resolveNotificationScope(projectId), options);
 }
 
 export async function getUnreadNotificationCount(projectId: string | null) {
-  return countScopedUnreadNotifications(await resolveNotificationScope(projectId));
+  return countUnreadNotificationsForScope(await resolveNotificationScope(projectId));
 }
 
 export async function getNotificationBellData(
@@ -155,10 +68,5 @@ export async function getNotificationBellData(
   options: NotificationListOptions = {},
 ): Promise<NotificationFeed> {
   const scope = await resolveNotificationScope(projectId);
-  const [items, unreadCount] = await Promise.all([
-    listScopedNotifications(scope, options),
-    countScopedUnreadNotifications(scope),
-  ]);
-
-  return { items, unreadCount };
+  return getNotificationFeedForScope(scope, options);
 }

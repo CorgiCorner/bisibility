@@ -159,7 +159,7 @@ export async function mutateAiTrackingAction(
       : input;
   const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
   await auditTrackingCatalog(actor, project, resource, method, value, result);
-  revalidatePath(`/app/${projectId}/ai-tracking`);
+  revalidatePath(`/app/${projectId}/prompt-tracker`);
   if (resource === "schedules") revalidatePath(`/app/${projectId}/runs/schedules`);
   return getAiTrackingPage(projectId);
 }
@@ -204,7 +204,7 @@ export async function launchAiTrackingAction(projectId: string, input: unknown) 
       false,
     );
     await auditTrackingRun(actor, project, "launch", result);
-    revalidatePath(`/app/${projectId}/ai-tracking`);
+    revalidatePath(`/app/${projectId}/prompt-tracker`);
     return result;
   });
 }
@@ -247,7 +247,7 @@ export async function aiTrackingRunAction(
     origin: "manual",
   });
   await auditTrackingRun(actor, project, operation, result);
-  revalidatePath(`/app/${projectId}/ai-tracking`);
+  revalidatePath(`/app/${projectId}/prompt-tracker`);
   return result;
 }
 

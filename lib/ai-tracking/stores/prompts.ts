@@ -6,6 +6,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { resolvePromptProvenance } from "./prompt-provenance";
 import {
   activeTrackingPromptWhere,
+  inTrackingTransaction,
   jsonInput,
   lockTrackingProject,
   prisma,
@@ -15,8 +16,11 @@ import {
 import type { PromptInput } from "./signatures";
 
 const revisions = { orderBy: { ordinal: "desc" as const } };
-export function listPrompts(projectId: string) {
-  return prisma.aiPrompt.findMany({
+export function listPrompts(
+  projectId: string,
+  database: Pick<TrackingTransaction, "aiPrompt"> = prisma,
+) {
+  return database.aiPrompt.findMany({
     where: { projectId },
     include: { revisions },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
@@ -40,9 +44,10 @@ export function createPrompt(
   projectId: string,
   input: PromptInput,
   limits: TrackingLimits = DEFAULT_TRACKING_LIMITS,
+  transaction?: TrackingTransaction,
 ) {
   const data = promptInputSchema.parse(input);
-  return prisma.$transaction(async (tx) => {
+  return inTrackingTransaction(transaction, async (tx) => {
     await lockTrackingProject(tx, projectId);
     await topicExists(tx, projectId, data.topicId);
     const provenance = await resolvePromptProvenance(tx, projectId, data);

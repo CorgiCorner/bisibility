@@ -9,6 +9,7 @@ import {
   PROJECT_WRITE_MODE_MIGRATION_HOLD,
   type ProjectWriteMode,
 } from "@/lib/deployment/project-write-mode";
+import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
 import { z } from "zod";
 import {
   getActionActor,
@@ -44,14 +45,18 @@ async function setProjectWriteMode(input: unknown, writeMode: ProjectWriteMode, 
   );
   const before = project;
   const now = new Date();
-  const updated = await prisma.project.update({
-    data: {
-      writeMode,
-      writeModeChangedAt: now,
-      writeModeChangedById: actor.id,
-    },
-    select: selectProjectWriteMode,
-    where: { id: project.id },
+  const updated = await prisma.$transaction(async (tx) => {
+    if (writeMode === PROJECT_WRITE_MODE_MIGRATED)
+      await closeProjectIncidentsSilently(tx, project.id);
+    return tx.project.update({
+      data: {
+        writeMode,
+        writeModeChangedAt: now,
+        writeModeChangedById: actor.id,
+      },
+      select: selectProjectWriteMode,
+      where: { id: project.id },
+    });
   });
   const projectId = requirePublicId(updated.publicId, "prj");
   const beforeProjectId = requirePublicId(before.publicId, "prj");

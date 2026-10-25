@@ -1,9 +1,15 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
-
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
+import {
+  acknowledgeQueuedRankAttempt,
+  captureRecoveryCandidate,
+} from "@/lib/provider-evidence/recovery/capture";
+import { lockRecoveryTask } from "@/lib/provider-evidence/recovery/lease";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { positiveCostCents } from "./cost";
 import { storedDeferralReason } from "./deferral-reason";
@@ -87,9 +93,15 @@ async function reconcileTaskAtDeadline(
   now: Date,
   reason: string,
 ) {
-  const persistenceState = ["persisting", "provider_failed", "ready"].includes(task.state);
-  const lease = persistenceState ? await claimQueuedPersistenceLease(task.id, tx) : null;
-  if (persistenceState && !lease) return;
+  await lockRecoveryTask(tx, task.id);
+  const [current] = await tx.$queryRaw<
+    Array<{ state: string; persistenceLeaseOwner: string | null }>
+  >`SELECT state,"persistenceLeaseOwner" FROM queued_rank_check_tasks WHERE id=${task.id} FOR UPDATE`;
+  if (!current || !ACTIVE_QUEUED_TASK_STATES.includes(current.state)) return;
+  await captureRecoveryCandidate(tx, task.rankCheckId, { finishedAt: now }, now);
+  const persistenceState = ["persisting", "provider_failed", "ready"].includes(current.state);
+  const lease = persistenceState ? await claimQueuedPersistenceLease(task.id, tx, "cleanup") : null;
+  if ((persistenceState && !lease) || (!persistenceState && current.persistenceLeaseOwner)) return;
   const knownCostCents = positiveCostCents(task.costCents);
   if (knownCostCents > 0) {
     try {
@@ -109,6 +121,7 @@ async function reconcileTaskAtDeadline(
               { error: task.error ?? reason, state: "failed" },
               client,
             );
+            await acknowledgeQueuedRankAttempt(client, task.id);
             return;
           }
           const transitioned = await client.queuedRankCheckTask.updateMany({
@@ -121,6 +134,7 @@ async function reconcileTaskAtDeadline(
             where: { id: task.id, state: { in: ACTIVE_QUEUED_TASK_STATES } },
           });
           if (transitioned.count !== 1) throw new RankCheckClosedBeforePersistenceError();
+          await acknowledgeQueuedRankAttempt(client, task.id);
         },
         persistenceGuard: lease
           ? (client) => assertQueuedPersistenceLease(client, lease)
@@ -141,6 +155,8 @@ async function reconcileTaskAtDeadline(
       deferredReason: storedDeferralReason(reason),
       error: reason,
       estimatedCostCents: null,
+      comparisonAllowed: false,
+      terminalPersistedAt: new Date(),
       finishedAt: now,
       normalizationVersion: null,
       status: "deferred",
@@ -173,7 +189,9 @@ async function reconcileTaskAtDeadline(
       where: { id: task.id, state: { in: ACTIVE_QUEUED_TASK_STATES } },
     });
   }
+  await acknowledgeQueuedRankAttempt(tx, task.id);
   if (closed.count === 0) return;
+  queueCheckSummary(tx, task.rankCheckId);
   await applyRunItemTransition(tx, { rankCheckId: task.rankCheckId, to: "deferred" });
   await writeAudit(
     {
@@ -196,9 +214,10 @@ async function reconcileTaskAtDeadline(
 
 export async function deferQueuedRankCheckBatch(batchId: string, reason: string) {
   const now = new Date();
-  const projectIds = await prisma.$transaction(
+  const projectIds = await notificationTransaction(
     async (tx) => {
       const tasks = await tx.queuedRankCheckTask.findMany({
+        orderBy: { id: "asc" },
         include: {
           batch: { select: { connectionId: true } },
           keyword: { select: { id: true, projectId: true, publicId: true } },

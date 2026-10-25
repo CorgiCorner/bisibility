@@ -112,7 +112,7 @@ export async function WorkspaceShell({
   const canSetDefault = !isDemo;
   const accountNotice = isDemo
     ? null
-    : await renderAccountNoticeExtension({ locale: runtime.locale });
+    : await renderAccountNoticeExtension({ locale: runtime.locale, projectRef });
   const planStatus = isDemo ? null : await renderPlanStatusExtension({ userId: session.user.id });
 
   const cookieStore = await cookies();

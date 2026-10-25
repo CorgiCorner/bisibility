@@ -28,6 +28,7 @@ test("validates additional constraints before diff, closes the client and never 
   const options = {
     createClient: () => ({ connect: async () => trace.push("connect"), end: async () => trace.push("end") }),
     verifyAdditional: async (_client, schema) => { trace.push(schema); return ""; },
+    verifyIncidentIndex: async () => { trace.push("incident index"); },
     capture: (command, args) => {
       trace.push(command);
       assert.deepEqual(args, ["prisma", "migrate", "diff", "--from-config-datasource", "--to-schema", "./prisma/schema", "--script", "--exit-code"]);
@@ -35,7 +36,7 @@ test("validates additional constraints before diff, closes the client and never 
     },
   };
   await verifyMigrationDiff(env, options);
-  assert.deepEqual(trace, ["connect", "owned_fixture", "end", "npx"]);
+  assert.deepEqual(trace, ["connect", "owned_fixture", "incident index", "end", "npx"]);
   trace.length = 0;
   await assert.rejects(verifyMigrationDiff(env, { ...options,
     verifyAdditional: async () => { trace.push("missing constraint"); throw new Error("missing constraint"); },

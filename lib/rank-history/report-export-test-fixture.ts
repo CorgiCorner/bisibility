@@ -39,6 +39,7 @@ export function historyExportSnapshotFixture(): HistoryExportSnapshot {
   };
   const resolved = resolveCurrentRankTrackerTargets([target], policy, reportProject.id);
   return {
+    evidenceProjections: new Map(),
     asOf: reportAsOf.toISOString(),
     policy,
     project: reportProject,

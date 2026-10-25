@@ -1,14 +1,16 @@
 "use client";
 
 import { AgentInstallList } from "@/components/install/AgentInstallList";
-import { curlExample, SKILLS } from "@/components/install/install-catalog";
+import { curlExample, SKILLS, skillsInstallCommand } from "@/components/install/install-catalog";
 import { CopyButton } from "@/components/ui/CopyButton";
+import { skillGroups } from "@/lib/agent-ready/skill-catalog";
 import type { InstallApiKeySummary } from "@/lib/queries/install";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { ChatGptIconDownload } from "./ChatGptIconDownload";
 import { HighlightedInstallCode } from "./CommandHighlight";
+import { CommandText } from "./CommandText";
 import { InstallGettingStarted } from "./InstallGettingStarted";
 
 type InstallPageContentProps = {
@@ -28,15 +30,13 @@ const codeCopyClassName =
 const codeCopyStyle = { "--control-color": "var(--code-faint)" };
 
 function skillAvailabilityCounts() {
-  let downloadable = 0;
-  let pluginOnly = 0;
+  let available = 0;
   let planned = 0;
   for (const skill of SKILLS) {
-    if (skill.archivePath) downloadable += 1;
-    else if (skill.plugin) pluginOnly += 1;
-    else if (skill.status === "coming-soon") planned += 1;
+    if (skill.status === "coming-soon") planned += 1;
+    else available += 1;
   }
-  return { downloadable, pluginOnly, planned };
+  return { available, planned };
 }
 
 function scopeMessageKey(scope: NonNullable<InstallApiKeySummary>["scope"]) {
@@ -157,49 +157,71 @@ export function InstallPageContent({
       <section className="mb-3 rounded-card border border-border bg-bg-elev px-5 py-[18px]">
         <div className="mb-1 flex flex-wrap items-baseline gap-2.5">
           <h2 className="m-0 text-[15px] font-semibold">{t("skills.heading")}</h2>
-          {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
-              a 30% alpha that composites to near-invisible on the card. */}
-          <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
-            {t("skills.availableCount", { count: skillCounts.downloadable })}
-            {" · "}
-            {skillCounts.pluginOnly} {t("skills.inPlugin")}
-            {" · "}
-            {skillCounts.planned} {t("skills.planned")}
+          <span className="ml-auto font-sans text-[11.5px] text-fg-muted">
+            {t("skills.availableCount", { count: skillCounts.available })}
+            {skillCounts.planned > 0 ? ` · ${skillCounts.planned} ${t("skills.planned")}` : null}
           </span>
         </div>
-        <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("skills.description")}</p>
-        <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
-          {SKILLS.map((skill) => (
-            <div
-              className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border px-2 py-[9px]"
-              key={skill.name}
-            >
-              {skill.archivePath ? (
-                <a
-                  className="truncate font-sans text-[12px] font-semibold text-accent-text underline"
-                  href={skill.archivePath}
-                  download
-                >
-                  {skill.name}
-                </a>
-              ) : (
-                <span className="truncate font-sans text-[12px] font-semibold text-fg">
-                  {skill.name}
-                </span>
-              )}
-              <span className="text-[11.5px] text-fg-muted">{t(`skills.${skill.name}`)}</span>
-              <span className="text-[10.5px] text-fg-muted">
-                {t(
-                  skill.archivePath
-                    ? "skills.available"
-                    : skill.plugin
-                      ? "skills.inPlugin"
-                      : "skills.planned",
-                )}
-              </span>
-            </div>
-          ))}
+        <p className="m-0 mb-2 text-[12.5px] text-fg-muted">{t("skills.description")}</p>
+        <div className="mb-3 flex min-h-[42px] items-center gap-2.5 rounded-control border border-border-control bg-transparent pl-3 pr-1.5">
+          <span className="min-w-0 flex-1 font-mono text-[12.5px] [overflow-wrap:break-word]">
+            <CommandText command={skillsInstallCommand()} />
+          </span>
+          <CopyButton
+            className="ml-auto shrink-0 !h-8 !min-h-8 !min-w-8 !w-8 !rounded-control !p-0"
+            label={t("skills.copyCommand")}
+            size="sm"
+            text={skillsInstallCommand()}
+          />
         </div>
+        {skillGroups.map((group) => (
+          <section key={group} aria-labelledby={`install-skills-${group}`} className="mt-6">
+            <h3
+              id={`install-skills-${group}`}
+              className="mb-2 flex items-baseline gap-2 text-[13px] font-semibold"
+            >
+              {t(`skills.groups.${group}`)}
+              <span
+                aria-hidden="true"
+                className="text-[11px] font-normal tabular-nums text-fg-muted"
+              >
+                {SKILLS.filter((skill) => skill.group === group).length}
+              </span>
+            </h3>
+            <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-2 xl:grid-cols-3">
+              {SKILLS.filter((skill) => skill.group === group).map((skill) => {
+                const command = skillsInstallCommand(skill.name);
+                return (
+                  <div
+                    className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border px-2 py-[9px]"
+                    key={skill.name}
+                  >
+                    <span className="truncate font-sans text-[12px] font-semibold text-fg">
+                      {skill.name}
+                    </span>
+                    <span className="text-[11.5px] text-fg-muted">{t(`skills.${skill.name}`)}</span>
+                    {skill.status !== "coming-soon" ? (
+                      <span className="flex min-w-0 items-start gap-1.5">
+                        <span className="min-w-0 flex-1 font-mono text-[10.5px] text-fg-muted [overflow-wrap:break-word]">
+                          <CommandText command={command} />
+                        </span>
+                        <CopyButton
+                          className="shrink-0 !h-7 !min-h-7 !min-w-7 !w-7 !rounded-control !bg-transparent !p-0 text-code-faint"
+                          label={t("skills.copySkill", { skill: skill.name })}
+                          size="sm"
+                          text={command}
+                        />
+                      </span>
+                    ) : null}
+                    {skill.status === "coming-soon" ? (
+                      <span className="text-[10.5px] text-fg-muted">{t("skills.planned")}</span>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
         <p className="m-0 mt-3.5 font-sans text-[10.5px] text-fg-muted">{t("skills.footer")}</p>
       </section>
     </div>

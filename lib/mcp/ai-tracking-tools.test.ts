@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { aiTrackingToolDefinitions, dispatchAiTrackingTool } from "./ai-tracking-tools";
+import { dispatchPromptTrackerTool, promptTrackerToolDefinitions } from "./ai-tracking-tools";
 
-describe("AI tracking MCP REST parity", () => {
+describe("Prompt Tracker MCP REST parity", () => {
   it("routes preview as spend-free POST and forwards no idempotency field in body", () => {
     expect(
-      dispatchAiTrackingTool("previewAiTrackingRun", {
+      dispatchPromptTrackerTool("previewPromptTrackerRun", {
         project_id: "prj_example",
         prompt_ids: ["aip_example"],
         configurations: [],
       }),
     ).toMatchObject({
       method: "POST",
-      path: "/projects/prj_example/ai-tracking/runs/preview",
+      path: "/projects/prj_example/prompt-tracker/runs/preview",
       body: { prompt_ids: ["aip_example"], configurations: [] },
     });
     expect(
-      aiTrackingToolDefinitions.find((tool) => tool.name === "previewAiTrackingRun")?.annotations
-        .readOnlyHint,
+      promptTrackerToolDefinitions.find((tool) => tool.name === "previewPromptTrackerRun")
+        ?.annotations.readOnlyHint,
     ).toBe(true);
   });
   it("routes exact frozen suggestion previews and consented generation with header-only identity", () => {
@@ -25,17 +25,17 @@ describe("AI tracking MCP REST parity", () => {
       input_snapshot: { context: { business: "Exact reviewed bytes" } },
     };
     expect(
-      dispatchAiTrackingTool("aiTrackingSuggestionsPreview", {
+      dispatchPromptTrackerTool("promptResearchSuggestionsPreview", {
         project_id: "prj_example",
         input_snapshot: preview.input_snapshot,
       }),
     ).toMatchObject({
       method: "POST",
-      path: "/projects/prj_example/ai-tracking/suggestions/preview",
+      path: "/projects/prj_example/prompt-research/suggestions/preview",
       body: { input_snapshot: preview.input_snapshot },
     });
     expect(
-      dispatchAiTrackingTool("aiTrackingSuggestionsGenerate", {
+      dispatchPromptTrackerTool("promptResearchSuggestionsGenerate", {
         project_id: "prj_example",
         preview,
         consent: true,
@@ -43,25 +43,25 @@ describe("AI tracking MCP REST parity", () => {
       }),
     ).toMatchObject({
       method: "POST",
-      path: "/projects/prj_example/ai-tracking/suggestions/generate",
+      path: "/projects/prj_example/prompt-research/suggestions/generate",
       body: { preview, consent: true },
       idempotencyKey: "stable-uuid",
     });
     expect(
-      aiTrackingToolDefinitions.find((tool) => tool.name === "aiTrackingSuggestionsPreview")
+      promptTrackerToolDefinitions.find((tool) => tool.name === "promptResearchSuggestionsPreview")
         ?.annotations.readOnlyHint,
     ).toBe(true);
     expect(
-      aiTrackingToolDefinitions.find((tool) => tool.name === "suggestAiTrackingPrompts")
+      promptTrackerToolDefinitions.find((tool) => tool.name === "suggestPromptResearchPrompts")
         ?.annotations.readOnlyHint,
     ).toBe(true);
     expect(
-      aiTrackingToolDefinitions.find((tool) => tool.name === "aiTrackingSuggestionsGenerate")
+      promptTrackerToolDefinitions.find((tool) => tool.name === "promptResearchSuggestionsGenerate")
         ?.annotations,
     ).toMatchObject({ readOnlyHint: false, openWorldHint: true });
   });
   it("binds launch idempotency header and exact prompt bytes", () => {
-    const call = dispatchAiTrackingTool("createAiTrackingRun", {
+    const call = dispatchPromptTrackerTool("createPromptTrackerRun", {
       project_id: "prj_example",
       idempotency_key: "request-one",
       consent: true,
@@ -71,22 +71,22 @@ describe("AI tracking MCP REST parity", () => {
     expect(call?.body).toEqual({ consent: true, prompt_ids: ["aip_example"] });
   });
   it("preserves bounded cursors in nested sample reads and rejects missing scoped IDs", () => {
-    const call = dispatchAiTrackingTool("listAiTrackingSamples", {
+    const call = dispatchPromptTrackerTool("listPromptTrackerSamples", {
       project_id: "prj_example",
       run_id: "air_example",
       limit: 25,
       cursor: "a+b/c=",
     });
     expect(call?.path).toBe(
-      "/projects/prj_example/ai-tracking/runs/air_example/samples?limit=25&cursor=a%2Bb%2Fc%3D",
+      "/projects/prj_example/prompt-tracker/runs/air_example/samples?limit=25&cursor=a%2Bb%2Fc%3D",
     );
     expect(() =>
-      dispatchAiTrackingTool("cancelAiTrackingRun", { project_id: "prj_example" }),
+      dispatchPromptTrackerTool("cancelPromptTrackerRun", { project_id: "prj_example" }),
     ).toThrow("run_id");
-    expect(dispatchAiTrackingTool("unrecognized", {})).toBeNull();
+    expect(dispatchPromptTrackerTool("unrecognized", {})).toBeNull();
   });
   it("forwards the CSV format for the evidence export", () => {
-    const call = dispatchAiTrackingTool("exportAiTrackingEvidence", {
+    const call = dispatchPromptTrackerTool("exportPromptTrackerEvidence", {
       project_id: "prj_example",
       run_id: "air_example",
       format: "csv",

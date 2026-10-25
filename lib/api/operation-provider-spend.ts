@@ -56,8 +56,8 @@ export const operationProviderFree = {
 
 export const operationProviderSpend = {
   addKeywords: deferred("lib/api/keyword-create.ts", ["rank_check"]),
-  aiTrackingSuggestionsGenerate: inline("lib/api/ai-tracking-suggestions.ts", ["ai_tracking"]),
-  analyzeAiVisibility: inline("lib/api/ai-research.ts", ["ai_visibility"], estimateOnly()),
+  promptResearchSuggestionsGenerate: inline("lib/api/ai-tracking-suggestions.ts", ["ai_tracking"]),
+  analyzeBrandVisibility: inline("lib/api/ai-research.ts", ["ai_visibility"], estimateOnly()),
   analyzeBacklinks: inline(
     "lib/api/backlinks.ts",
     ["backlinks"],
@@ -70,8 +70,8 @@ export const operationProviderSpend = {
   ),
   bulkUpdateKeywords: deferred("lib/api/keyword-bulk.ts", ["rank_check"]),
   compareAiPrompts: inline("lib/api/ai-research.ts", ["prompt_explorer"], estimateOnly()),
-  createAiTrackingRun: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
-  createAiTrackingSchedule: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
+  createPromptTrackerRun: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
+  createPromptTrackerSchedule: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
   getKeywordMetrics: inline(
     "lib/api/keyword-research.ts",
     ["keyword_metrics"],
@@ -91,18 +91,21 @@ export const operationProviderSpend = {
     ["keyword_research"],
     estimateOnly("KeywordResearchEstimate"),
   ),
-  retryAiTrackingRun: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
+  retryPromptTrackerRun: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
   // Runs inline when no scheduler is configured, otherwise queues the check.
   runRankCheck: inline("lib/api/rank-check-request.ts", ["rank_check"]),
   // A schedule or frequency in the patch can enable recurring checks.
   setKeywordTargetUrl: deferred("lib/api/keywords.ts", ["rank_check"]),
-  updateAiTrackingSchedule: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
+  updatePromptTrackerSchedule: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
   // The project default schedule applies to every keyword without its own.
   updateProjectDefaults: deferred("lib/api/project-defaults.ts", ["rank_check"]),
 } as const satisfies Record<string, OperationProviderSpend>;
 
 /** Billed features no REST operation starts: local scans run from the app and their schedules. */
-export const nonApiProviderFeatures: readonly ProviderRequestFeature[] = ["local_scan"];
+export const nonApiProviderFeatures: readonly ProviderRequestFeature[] = [
+  "local_scan",
+  "prompt_research",
+];
 
 /**
  * Modules that queue provider-billed work for a worker. A deferred operation's handler must reach

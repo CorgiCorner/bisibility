@@ -40,5 +40,15 @@ export function dataResidencyMessage(value = process.env.DATA_REGION) {
   return `Your data is stored and processed in the ${region}.`;
 }
 
+/** Allows local-only behavior for explicitly declared non-production development stages. */
+export function isLocalDevelopmentDeployment(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  return (
+    env.NODE_ENV !== "production" &&
+    ["development", "dev", "local"].includes(env.DEPLOYMENT_ENV?.trim().toLowerCase() ?? "")
+  );
+}
+
 export const isCloud = deploymentMode() === "cloud";
 export const isSelfHost = !isCloud;

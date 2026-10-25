@@ -1,0 +1,545 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listPageIndexingUrls",
+      "path": "/projects/{project_id}/search-index/urls",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "url": "https://example.com/blog/a",
+            "source": "sitemap",
+            "sitemap_url": "https://example.com/blog/sitemap.xml",
+            "verdict": "PASS",
+            "coverage_state": "Submitted and indexed",
+            "checked_at": "2026-10-24T12:00:00.000Z",
+            "created_at": "2026-10-24T12:00:00.000Z",
+            "updated_at": "2026-10-24T12:00:00.000Z",
+            "last_crawl_at": "2026-10-24T12:00:00.000Z",
+            "canonical_ok": true,
+            "google_canonical": "https://example.com/blog/a",
+            "user_canonical": null,
+            "indexing_state": "INDEXING_ALLOWED",
+            "robots_txt_state": "ALLOWED",
+            "page_fetch_state": "SUCCESSFUL",
+            "crawled_as": "MOBILE",
+            "referring_urls": [],
+            "sitemaps": [],
+            "rich_results_summary": null,
+            "inspection_result_link": null,
+            "inspection_error": null,
+            "inspection_failed_at": null,
+            "group": "indexed",
+            "history": {
+              "changes": [
+                {
+                  "at": "2026-10-24T12:00:00.000Z",
+                  "previous": {
+                    "verdict": "FAIL",
+                    "coverage_state": "Not indexed",
+                    "google_canonical": null,
+                    "indexing_state": null,
+                    "robots_txt_state": null,
+                    "page_fetch_state": null
+                  },
+                  "next": {
+                    "verdict": "PASS",
+                    "coverage_state": "Submitted and indexed",
+                    "google_canonical": "https://example.com/blog/a",
+                    "indexing_state": "INDEXING_ALLOWED",
+                    "robots_txt_state": "ALLOWED",
+                    "page_fetch_state": "SUCCESSFUL"
+                  }
+                }
+              ],
+              "complete": true
+            }
+          }
+        ],
+        "meta": {
+          "next_cursor": "https://example.com/blog/a"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listPageIndexingUrls",
+      "path": "/projects/{project_id}/search-index/urls",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "url": "https://example.com/blog/a",
+            "source": "sitemap",
+            "sitemap_url": "https://example.com/blog/sitemap.xml",
+            "verdict": "PASS",
+            "coverage_state": "Submitted and indexed",
+            "checked_at": "2026-10-24T12:00:00.000Z",
+            "created_at": "2026-10-24T12:00:00.000Z",
+            "updated_at": "2026-10-24T12:00:00.000Z",
+            "last_crawl_at": "2026-10-24T12:00:00.000Z",
+            "canonical_ok": true,
+            "google_canonical": "https://example.com/blog/a",
+            "user_canonical": null,
+            "indexing_state": "INDEXING_ALLOWED",
+            "robots_txt_state": "ALLOWED",
+            "page_fetch_state": "SUCCESSFUL",
+            "crawled_as": "MOBILE",
+            "referring_urls": [],
+            "sitemaps": [],
+            "rich_results_summary": null,
+            "inspection_result_link": null,
+            "inspection_error": null,
+            "inspection_failed_at": null,
+            "group": "indexed"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listPageIndexingUrls",
+      "path": "/projects/{project_id}/search-index/urls",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/settings",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updatePageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "No connected Search Console property is available for this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/settings",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updatePageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/settings",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Supply at least one setting."],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updatePageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/settings",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "inspection_daily_limit": ["Too big: expected number to be <=2000"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updatePageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/urls",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "changed_since": ["Invalid ISO datetime"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listPageIndexingUrls",
+      "path": "/projects/{project_id}/search-index/urls",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/search-index/urls",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Too big: expected number to be <=100"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listPageIndexingUrls",
+      "path": "/projects/{project_id}/search-index/urls",
+      "status": 400
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "budget_mode": "fixed",
+        "inspection_daily_limit": 2,
+        "available_modes": ["off", "fixed", "available_quota"],
+        "today_count": 2,
+        "last429_kind": null,
+        "last429_at": null,
+        "next_reset_at": "2026-10-25T07:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getPageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "budget_mode": "fixed",
+        "inspection_daily_limit": 2,
+        "available_modes": ["off", "fixed", "available_quota"],
+        "today_count": 2,
+        "last429_kind": null,
+        "last429_at": null,
+        "next_reset_at": "2026-10-25T07:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updatePageIndexingSettings",
+      "path": "/projects/{project_id}/search-index/settings",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "checked": 0,
+        "total": 0,
+        "complete": true,
+        "remaining": 0,
+        "oldest_result_at": null,
+        "newest_result_at": null,
+        "budget_mode": "fixed",
+        "today_count": 2,
+        "last429_kind": null,
+        "next_reset_at": "2026-10-25T07:00:00.000Z",
+        "discovery_complete": true,
+        "discovered_at": "2026-10-24T12:00:00.000Z",
+        "estimated_days_remaining": 0,
+        "groups": [
+          {
+            "group": "indexed",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          },
+          {
+            "group": "not_indexed",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          },
+          {
+            "group": "inspection_failed",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          },
+          {
+            "group": "not_checked",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getPageIndexingReport",
+      "path": "/projects/{project_id}/search-index/report",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "checked": 3,
+        "total": 3,
+        "complete": true,
+        "remaining": 0,
+        "oldest_result_at": "2026-10-20T06:00:00.000Z",
+        "newest_result_at": "2026-10-24T12:00:00.000Z",
+        "budget_mode": "fixed",
+        "today_count": 2,
+        "last429_kind": null,
+        "next_reset_at": "2026-10-25T07:00:00.000Z",
+        "discovery_complete": true,
+        "discovered_at": "2026-10-24T12:00:00.000Z",
+        "estimated_days_remaining": 0,
+        "groups": [
+          {
+            "group": "indexed",
+            "checked": 2,
+            "total": 2,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": "2026-10-21T06:00:00.000Z",
+            "newest_result_at": "2026-10-24T12:00:00.000Z",
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": "Submitted and indexed",
+                "total": 2,
+                "oldest_result_at": "2026-10-21T06:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "group": "not_indexed",
+            "checked": 1,
+            "total": 1,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": "2026-10-20T06:00:00.000Z",
+            "newest_result_at": "2026-10-20T06:00:00.000Z",
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": "Crawled - currently not indexed",
+                "total": 1,
+                "oldest_result_at": "2026-10-20T06:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "group": "inspection_failed",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          },
+          {
+            "group": "not_checked",
+            "checked": 0,
+            "total": 0,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": []
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getPageIndexingReport",
+      "path": "/projects/{project_id}/search-index/report",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "https://example.com/blog/",
+        "checked": 3,
+        "total": 8,
+        "complete": false,
+        "remaining": 5,
+        "oldest_result_at": "2026-10-24T12:00:00.000Z",
+        "newest_result_at": "2026-10-24T12:00:00.000Z",
+        "budget_mode": "fixed",
+        "today_count": 2,
+        "last429_kind": null,
+        "next_reset_at": "2026-10-25T07:00:00.000Z",
+        "discovery_complete": true,
+        "discovered_at": "2026-10-24T12:00:00.000Z",
+        "estimated_days_remaining": 3,
+        "groups": [
+          {
+            "group": "indexed",
+            "checked": 1,
+            "total": 1,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": "2026-10-24T12:00:00.000Z",
+            "newest_result_at": "2026-10-24T12:00:00.000Z",
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": "Submitted and indexed",
+                "total": 1,
+                "oldest_result_at": "2026-10-24T12:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "group": "not_indexed",
+            "checked": 1,
+            "total": 1,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": "2026-10-24T12:00:00.000Z",
+            "newest_result_at": "2026-10-24T12:00:00.000Z",
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": "Not found (404)",
+                "total": 1,
+                "oldest_result_at": "2026-10-24T12:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "group": "inspection_failed",
+            "checked": 1,
+            "total": 1,
+            "complete": true,
+            "remaining": 0,
+            "oldest_result_at": "2026-10-24T12:00:00.000Z",
+            "newest_result_at": "2026-10-24T12:00:00.000Z",
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": null,
+                "total": 1,
+                "oldest_result_at": "2026-10-24T12:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "group": "not_checked",
+            "checked": 0,
+            "total": 5,
+            "complete": false,
+            "remaining": 5,
+            "oldest_result_at": null,
+            "newest_result_at": null,
+            "budget_mode": "fixed",
+            "today_count": 2,
+            "last429_kind": null,
+            "next_reset_at": "2026-10-25T07:00:00.000Z",
+            "reasons": [
+              {
+                "coverage_state": null,
+                "total": 5,
+                "oldest_result_at": null
+              }
+            ]
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getPageIndexingReport",
+      "path": "/projects/{project_id}/search-index/report",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/page-indexing.test.ts"
+}

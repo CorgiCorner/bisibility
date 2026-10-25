@@ -23,7 +23,8 @@
             "ranking_url": null,
             "run": null,
             "run_id": null,
-            "status": "completed"
+            "status": "completed",
+            "evidence_projection": null
           }
         ],
         "meta": {
@@ -68,7 +69,8 @@
         "ranking_url": null,
         "run": null,
         "run_id": null,
-        "status": "completed"
+        "status": "completed",
+        "evidence_projection": null
       },
       "contentType": "application/json",
       "method": "GET",
@@ -97,7 +99,8 @@
         "ranking_url": null,
         "run": null,
         "run_id": null,
-        "status": "completed"
+        "status": "completed",
+        "evidence_projection": null
       },
       "contentType": "application/json",
       "method": "POST",

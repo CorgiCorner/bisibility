@@ -53,7 +53,12 @@ export const agentReportSchema = z
   })
   .strict();
 
-const reservedProducerKinds = new Set(["site_audit", "ai_visibility", "prompt_explorer"]);
+const reservedProducerKinds = new Set([
+  "site_audit",
+  "ai_visibility",
+  "prompt_explorer",
+  "prompt_research",
+]);
 
 export const externalAgentReportSchema = agentReportSchema.extend({
   kind: agentReportSchema.shape.kind.refine(

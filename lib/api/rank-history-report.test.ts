@@ -46,6 +46,7 @@ describe("existing export route report mode", () => {
     expect(keys(oldBody.data[0]).sort()).toEqual(
       [
         "checked_at",
+        "evidence_projection",
         "id",
         "keyword",
         "keyword_id",

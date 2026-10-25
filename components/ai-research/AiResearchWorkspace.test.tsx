@@ -1,6 +1,6 @@
 import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import sharedMessages from "@/messages/core/en/shared.json";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render as renderUi, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
@@ -16,6 +16,13 @@ vi.mock("@/lib/actions/ai-research", () => ({ analyzeAiResearchAction: vi.fn() }
 import { AiResearchResults } from "./AiResearchResults";
 import { AiResearchWorkspace } from "./AiResearchWorkspace";
 import { aiResearchCatalogFixture } from "./ai-research-fixtures";
+
+function render(...args: Parameters<typeof renderUi>) {
+  const result = renderUi(...args);
+  const advanced = screen.queryByText("advanced");
+  if (advanced) fireEvent.click(advanced);
+  return result;
+}
 
 describe("AI workspace product states", () => {
   it("uses the same source setup state when the source disappears after the page loaded", async () => {
@@ -47,12 +54,12 @@ describe("AI workspace product states", () => {
       target: { value: "Which tools help small businesses?" },
     });
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-    await waitFor(() => expect(screen.getByRole("heading", { name: "emptyTitle" })).toBeVisible());
+    await waitFor(() => expect(screen.getByRole("link", { name: "connectAction" })).toBeVisible());
     expect(screen.getByRole("link", { name: "connectAction" })).toHaveAttribute(
       "href",
       "/app/prj_example/integrations",
     );
-    expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "estimateCost" })).toBeNull();
     expect(screen.queryByText("noSource")).not.toBeInTheDocument();
     rerender(
       <AiResearchWorkspace
@@ -130,7 +137,7 @@ describe("AI workspace product states", () => {
       />,
     );
     expect(screen.queryByRole("button", { name: "sourceRetry" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "estimateCost" })).toBeNull();
     expect(analyze).not.toHaveBeenCalled();
   });
   it("keeps saved reports readable and disables paid actions for read-only users", () => {
@@ -206,7 +213,7 @@ describe("AI catalog and cost preflight", () => {
       );
       fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
       fireEvent.change(screen.getByLabelText("prompt"), { target: { value: "Compare tools" } });
-      fireEvent.change(screen.getByLabelText("costCap"), { target: { value: "30" } });
+      fireEvent.change(screen.getByLabelText("costCap"), { target: { value: "0.30" } });
       expect(screen.getByText("estimateRequired")).toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
       await waitFor(() => expect(analyze).toHaveBeenCalledOnce());

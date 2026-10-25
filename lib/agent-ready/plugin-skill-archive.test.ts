@@ -50,6 +50,11 @@ describe("desktop skill ZIP archives", () => {
   it("keeps frozen public plugin bytes complete and current", () => {
     execFileSync(
       process.execPath,
+      ["--experimental-strip-types", "scripts/generate/archive-plugin-skills.mjs", "--check"],
+      { cwd: root },
+    );
+    execFileSync(
+      process.execPath,
       ["--experimental-strip-types", "scripts/generate/plugin-skill-files.mjs", "--check"],
       { cwd: root },
     );
@@ -136,6 +141,8 @@ describe("desktop skill ZIP archives", () => {
     }
     expect(index).not.toContain("github.com");
     expect(index).toContain("explicit approval");
+    expect(index).toContain("[Domain onboarding](./domain-onboarding/SKILL.md) (REST API)");
+    expect(index).toContain("[Project setup](./project-setup/SKILL.md) (MCP)");
   });
 
   it("preserves UTF-8 names and content and sorts entries deterministically", () => {
@@ -183,7 +190,7 @@ describe("desktop skill ZIP archives", () => {
 
   it.each([
     "missing.zip",
-    "local-seo.zip",
+    "unlisted-skill.zip",
     "../project-setup.zip",
     "%2e%2e%2fproject-setup.zip",
     "project-setup/secret.zip",

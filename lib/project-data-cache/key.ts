@@ -5,11 +5,26 @@ export type CacheModule =
   | "backlinks"
   | "domain_overview"
   | "ai_visibility"
+  | "prompt_research"
   | "prompt_explorer"
   | "site_audit";
 export function identifyProjectCacheKey(key: string, projectId: string) {
   const p = key.split(":");
   if (p[2] !== projectId || !/^[a-zA-Z0-9_-]+$/.test(projectId)) return null;
+  if (
+    p[0] === "ai" &&
+    p[1] === "prompt-research-project-v2" &&
+    p.length === 4 &&
+    /^[a-f0-9]{64}$/.test(p[3])
+  )
+    return {
+      module: "prompt_research" as const,
+      keyword: null,
+      source: "prompt_research",
+      providerRef: "dataforseo",
+      country: "US",
+      language: "en",
+    };
   if (
     p[0] === "kr" &&
     p[1] === "v2" &&
@@ -118,4 +133,9 @@ export function identifyProjectCacheKey(key: string, projectId: string) {
       language: "",
     };
   return null;
+}
+
+export function sharedPromptResearchKey(indexKey: string) {
+  const hash = /^ai:prompt-research-project-v2:[a-zA-Z0-9_-]+:([a-f0-9]{64})$/.exec(indexKey)?.[1];
+  return hash ? `ai:prompt-research-v2:${hash}` : null;
 }

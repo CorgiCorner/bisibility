@@ -18,7 +18,7 @@
       "searchConsole": "Search Console",
       "source": "ソース:",
       "status": "ステータス:",
-      "aiTracking": "AIトラッキング"
+      "aiTracking": "プロンプトトラッカー"
     },
     "content": {
       "activeDescription": "実行履歴を確認するか、別のステータスを選択して完了した処理を探してください。",
@@ -26,7 +26,7 @@
       "clearFilters": "フィルターをクリア",
       "filteredDescription": "他の実行を表示するには、フィルターを変更またはクリアしてください。",
       "filteredTitle": "一致する実行はありません",
-      "historyDescription": "順位チェック、AIトラッキング、Search Consoleのインポートがここに表示されます。",
+      "historyDescription": "順位チェック、プロンプトトラッカー、Search Consoleのインポートがここに表示されます。",
       "historyTitle": "実行はまだありません",
       "loadError": "実行を読み込めませんでした",
       "manageSchedules": "スケジュールを管理",
@@ -87,7 +87,7 @@
       "reviewBlocker": "ブロックの原因を確認",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {対象} other {対象}}",
       "dayProgress": "{completed, number} / {total, number} {total, plural, one {確定日数} other {確定日数}}",
-      "aiTrackingRun": "AI可視性の計測",
+      "aiTrackingRun": "プロンプトトラッカーの計測",
       "sampleCount": "サンプル: {count, number}",
       "sampleProgress": "{completed, number} / {total, number} サンプル",
       "costUnknown": "コスト未確認",
@@ -191,6 +191,26 @@
         "failed": "失敗",
         "unknown": "不明"
       }
+    },
+    "summary": {
+      "title": "チェックのまとめ",
+      "withdrawn": "このまとめは取り下げられました。",
+      "down": "順位低下",
+      "up": "順位上昇",
+      "failed": "失敗",
+      "under_review": "確認中",
+      "quiet": "変化なし / 新規",
+      "unavailable": "利用できないチェック",
+      "openRuns": "実行ページで開く",
+      "thresholds": "上位{topN}位、{positionMove}位以上の変動",
+      "version": "まとめのバージョン{version}",
+      "keyword": "キーワード",
+      "market": "市場",
+      "positions": "前回 → 今回",
+      "incident": "{count, plural, other {#件の関連インシデント}}",
+      "run": "実行{run}",
+      "classification": "読み取り時点の分類: {classification}",
+      "noResult": "結果なし"
     }
   }
 }

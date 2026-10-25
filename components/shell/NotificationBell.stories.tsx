@@ -1,3 +1,4 @@
+import { withEvidenceShellMessages } from "@/.storybook/evidence-shell-messages";
 import { NotificationBellClient } from "@/components/shell/NotificationBellClient";
 import type { NotificationFeed } from "@/lib/queries/notifications";
 import { appPath } from "@/lib/routing/app-path";
@@ -65,6 +66,7 @@ function BellStory() {
 const meta = {
   title: "Shell/NotificationBell",
   component: BellStory,
+  decorators: [withEvidenceShellMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof BellStory>;
 

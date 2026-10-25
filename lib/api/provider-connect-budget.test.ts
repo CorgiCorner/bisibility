@@ -238,25 +238,27 @@ describe("connect priority", () => {
     expect(result.priority).toBe(1);
   });
 
-  it("stores an explicit priority on connect", async () => {
+  it("appends a new SERP provider despite an explicit connect priority", async () => {
     rows.set("dataforseo", { ...connection("dataforseo"), priority: 0 });
     mocks.verify.mockResolvedValue({ ok: true, balance: 200 });
     const result = await connectProviderConnection(
       { ...input, priority: 90, providerId: "serpapi", credentials: { apiKey: "test" } },
       context,
     );
-    expect(result.priority).toBe(90);
+    expect(result.priority).toBe(1);
+    expect(result.enabled).toBe(false);
   });
 
-  it("promotes priority 0 and renumbers the rest of the chain", async () => {
+  it("does not promote a newly connected SERP provider or renumber existing rows", async () => {
     rows.set("dataforseo", { ...connection("dataforseo"), priority: 0 });
     mocks.verify.mockResolvedValue({ ok: true, balance: 200 });
     const result = await connectProviderConnection(
       { ...input, priority: 0, providerId: "serpapi", credentials: { apiKey: "test" } },
       context,
     );
-    expect(result.priority).toBe(0);
-    expect(rows.get("dataforseo")?.priority).toBe(1);
+    expect(result.priority).toBe(1);
+    expect(result.enabled).toBe(false);
+    expect(rows.get("dataforseo")?.priority).toBe(0);
   });
 });
 
@@ -276,4 +278,20 @@ describe("account balance conversion", () => {
         .allocationAmountPerMonth,
     ).toBe(expected);
   });
+});
+
+describe("new SERP activation", () => {
+  it.each([true, false])(
+    "enables a new provider only without another enabled SERP (%s)",
+    async (enabled) => {
+      rows.set("dataforseo", { ...connection("dataforseo"), priority: 17, enabled });
+      const previous = { ...rows.get("dataforseo") };
+      const result = await connectProviderConnection(
+        { ...input, providerId: "serpapi", credentials: { apiKey: "test" } },
+        context,
+      );
+      expect(result).toMatchObject({ enabled: !enabled, priority: 18 });
+      expect(rows.get("dataforseo")).toEqual(previous);
+    },
+  );
 });

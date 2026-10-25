@@ -29,6 +29,7 @@ type DataTableRowProps<TRow extends DataTableRowBase> = {
   onSelectionChange?: (next: ReadonlySet<string>) => void;
   row: Row<TRow>;
   rowClassName?: (row: TRow) => string | undefined;
+  rowHeight?: (row: TRow) => number | undefined;
   rowIndex: number;
   renderSection?: (row: TRow) => ReactNode;
   selectable?: (row: TRow) => boolean;
@@ -53,6 +54,7 @@ export function DataTableRow<TRow extends DataTableRowBase>({
   onSelectionChange,
   row,
   rowClassName,
+  rowHeight,
   rowIndex,
   renderSection,
   selectable,
@@ -73,7 +75,7 @@ export function DataTableRow<TRow extends DataTableRowBase>({
   const style: CSSProperties & Record<typeof DATA_TABLE_ROW_BACKGROUND_VARIABLE, string> = {
     [DATA_TABLE_ROW_BACKGROUND_VARIABLE]: backgroundColor,
     backgroundColor,
-    height: dataTableRowHeight(density, kind),
+    height: rowHeight?.(original) ?? dataTableRowHeight(density, kind),
     minWidth: "100%",
     width: `var(${DATA_TABLE_WIDTH_VARIABLE})`,
     ...virtualStyle,

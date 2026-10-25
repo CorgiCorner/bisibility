@@ -556,6 +556,101 @@ describe("runCheckWithFallback", () => {
     expect(mocks.prisma.providerCostEntry.aggregate).not.toHaveBeenCalled();
   });
 
+  it.each(["byok", "platform"] as const)(
+    "falls back when the %s funding source of the primary reached its project limit",
+    async (fundingSource) => {
+      const primary = provider(
+        "primary",
+        vi.fn().mockRejectedValue(
+          new BudgetExhaustedError({
+            projectId: "project_1",
+            capCents: 100,
+            spentCents: 100,
+            fundingSource,
+          }),
+        ),
+      );
+      const secondary = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
+      const outcome = await runCheckWithFallback({
+        connections: [
+          { provider: "primary", credentials: { apiKey: "a" } },
+          { provider: "secondary", credentials: { apiKey: "b" } },
+        ],
+        keyword: KEYWORD,
+        resolveProvider: (id) => (id === "primary" ? primary : secondary),
+        schedule: { frequency: "manual" },
+      });
+      expect(outcome.provider).toBe("secondary");
+      expect(outcome.attempts).toEqual([
+        expect.objectContaining({ provider: "primary", reason: "funding_exhausted" }),
+      ]);
+    },
+  );
+
+  it("keeps the typed budget denial when every provider's funding source is exhausted", async () => {
+    const denial = (fundingSource: "byok" | "platform") =>
+      new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 1,
+        spentCents: 1,
+        fundingSource,
+      });
+    const primary = provider("primary", vi.fn().mockRejectedValue(denial("byok")));
+    const last = denial("platform");
+    const secondary = provider("secondary", vi.fn().mockRejectedValue(last));
+    await expect(
+      runCheckWithFallback({
+        connections: [
+          { provider: "primary", credentials: { apiKey: "a" } },
+          { provider: "secondary", credentials: { apiKey: "b" } },
+        ],
+        keyword: KEYWORD,
+        resolveProvider: (id) => (id === "primary" ? primary : secondary),
+        schedule: { frequency: "manual" },
+      }),
+    ).rejects.toBe(last);
+  });
+
+  it("stops at the shared project cap without trying the next provider", async () => {
+    const cap = new BudgetExhaustedError({ projectId: "project_1", capCents: 1, spentCents: 1 });
+    const primary = provider("primary", vi.fn().mockRejectedValue(cap));
+    const secondary = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
+    await expect(
+      runCheckWithFallback({
+        connections: [
+          { provider: "primary", credentials: { apiKey: "a" } },
+          { provider: "secondary", credentials: { apiKey: "b" } },
+        ],
+        keyword: KEYWORD,
+        resolveProvider: (id) => (id === "primary" ? primary : secondary),
+        schedule: { frequency: "manual" },
+      }),
+    ).rejects.toBe(cap);
+    expect(secondary.fetchRank).not.toHaveBeenCalled();
+  });
+
+  it("does not buy the check again after a charged response failed", async () => {
+    const charged = new RankCheckRunnerError("provider_failed", "Partial SERP result.", {
+      chargedCents: 0.3,
+    });
+    const secondary = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
+    await expect(
+      runCheckWithFallback({
+        connections: [
+          { provider: "primary", credentials: { apiKey: "a" } },
+          { provider: "secondary", credentials: { apiKey: "b" } },
+        ],
+        keyword: KEYWORD,
+        resolveProvider: (id) => {
+          if (id === "primary") throw charged;
+          return secondary;
+        },
+        schedule: { frequency: "manual" },
+      }),
+    ).rejects.toBe(charged);
+    expect(secondary.fetchRank).not.toHaveBeenCalled();
+  });
+
   it("falls back to the next provider when the primary fails", async () => {
     const callOrder: string[] = [];
     const primary = provider("primary", vi.fn().mockRejectedValue(new Error("network down")));
@@ -1713,3 +1808,61 @@ describe("runKeywordCheckWithFallback", () => {
 });
 
 vi.mock("@/lib/provider-usage/admission-extension", () => ({ ownAdmission: testOwnAdmission }));
+
+describe("mixed funding refusals", () => {
+  it.each(["allocation", "failure", "rate"])(
+    "preserves funding HTTP status after %s",
+    async (first) => {
+      const funding = new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 0,
+        spentCents: 0,
+        fundingSource: "byok",
+      });
+      const chain = await runCheckWithFallback({
+        connections: [{ provider: "first" }, { provider: "last" }],
+        keyword: KEYWORD,
+        schedule: { frequency: "manual" },
+        source: "api",
+        resolveProvider: (id) => {
+          if (id === "last") throw funding;
+          if (first === "allocation")
+            throw new ProviderAllocationExhaustedError("connection", "programmatic");
+          throw new RankCheckRunnerError(
+            first === "rate" ? "provider_rate_limited" : "provider_failed",
+            "Unavailable",
+          );
+        },
+      }).catch((error: unknown) => error);
+      expect(chain).toBeInstanceOf(ProviderChainError);
+      const response = errorFromUnknown(
+        chain,
+        new Headers(),
+        new URL("https://example.com/api/v1/checks"),
+      );
+      expect(response.status).toBe(429);
+      expect((await response.json()).type).toBe("https://bisibility.com/problems/budget_exhausted");
+    },
+  );
+  it("does not reuse funding exhaustion after a provider failure", async () => {
+    const chain = await runCheckWithFallback({
+      connections: [{ provider: "first" }, { provider: "last" }],
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      source: "api",
+      resolveProvider: (id) => {
+        if (id === "first")
+          throw new BudgetExhaustedError({
+            projectId: "project_1",
+            capCents: 0,
+            spentCents: 0,
+            fundingSource: "platform",
+          });
+        throw new RankCheckRunnerError("provider_failed", "Unavailable");
+      },
+    }).catch((error: unknown) => error);
+    expect(
+      errorFromUnknown(chain, new Headers(), new URL("https://example.com/api/v1/checks")).status,
+    ).toBe(502);
+  });
+});

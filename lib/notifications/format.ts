@@ -1,6 +1,7 @@
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { appRootPath, projectScopedHref } from "@/lib/routing/app-path";
+import { notificationTypePresentation } from "./notification-types";
 
 export type NotificationPayload =
   | null
@@ -15,28 +16,6 @@ export type NotificationProject = {
   name: string;
   publicId: string;
 } | null;
-
-const DEFAULT_HREFS = {
-  alert_fired: "alerts",
-  check_complete: "rank-tracker",
-  check_failed: "integrations",
-  import_done: "integrations",
-  import_failed: "integrations",
-  invite: "settings",
-  member_joined: "settings",
-  system: "overview",
-} satisfies Record<NotificationType, string>;
-
-const TYPE_LABELS = {
-  alert_fired: "Alert",
-  check_complete: "Rank check",
-  check_failed: "Rank check failed",
-  import_done: "Import complete",
-  import_failed: "Import failed",
-  invite: "Team invite",
-  member_joined: "Team update",
-  system: "System",
-} satisfies Record<NotificationType, string>;
 
 function payloadObject(payload: Prisma.JsonValue | null) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
@@ -77,7 +56,10 @@ function notificationHref(
   if (!project) {
     return normalizedHref ?? appRootPath();
   }
-  return projectScopedHref(project.publicId, normalizedHref ?? DEFAULT_HREFS[type]);
+  return projectScopedHref(
+    project.publicId,
+    normalizedHref ?? notificationTypePresentation(type).href,
+  );
 }
 
 export function notificationDisplay(
@@ -88,7 +70,11 @@ export function notificationDisplay(
 ) {
   return {
     href: notificationHref(type, payload, project),
-    meta: payloadString(payload, "meta") ?? body ?? project?.name ?? TYPE_LABELS[type],
+    meta:
+      payloadString(payload, "meta") ??
+      body ??
+      project?.name ??
+      notificationTypePresentation(type).label,
   };
 }
 

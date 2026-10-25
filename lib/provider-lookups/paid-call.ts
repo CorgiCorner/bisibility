@@ -99,6 +99,7 @@ async function executePaidProviderCall<
     (input.feature === "backlinks" ||
     input.feature === "domain_overview" ||
     input.feature === "ai_visibility" ||
+    input.feature === "prompt_research" ||
     input.feature === "ai_tracking" ||
     input.feature === "prompt_explorer"
       ? LIST_PROVIDER_RATE_CONTEXT

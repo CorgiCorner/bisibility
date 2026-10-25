@@ -48,7 +48,7 @@ export const visibilitySchema = z
         code: "custom",
         path: ["domain"],
         message:
-          "Domain searches support at most 63 characters after removing a leading www. Use brand search or Prompt Explorer for this domain.",
+          "Domain searches support at most 63 characters after removing a leading www. Use brand search or Prompt Playground for this domain.",
       });
   });
 export const promptSchema = z
@@ -180,4 +180,8 @@ export const promptSchema = z
   });
 export type VisibilityInput = z.infer<typeof visibilitySchema>;
 export type PromptInput = z.infer<typeof promptSchema>;
-export type AiResearchKind = "ai_visibility" | "prompt_explorer";
+export type AiResearchKind = "ai_visibility" | "prompt_explorer" | "prompt_research";
+export type ResearchInput =
+  | VisibilityInput
+  | PromptInput
+  | import("./prompt-research-schema").PromptResearchInput;

@@ -91,6 +91,7 @@ export type RetainedObservationItem = {
 };
 
 export type RetainedReportCheck = RecordedMeasurementCheck & {
+  recoveryRestoredAt?: Date | null;
   attemptCount: number;
   checkedAt: Date;
   createdAt: Date;

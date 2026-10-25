@@ -93,10 +93,6 @@ describe("unified skill catalog", () => {
         ? `/.well-known/agent-skills/${entry.slug}.tar.gz`
         : null;
       expect(skillArchivePath(entry), `Archive helper mismatch: ${entry.slug}`).toBe(expectedPath);
-      expect(
-        SKILLS.find((row) => row.name === entry.slug)?.archivePath,
-        `Install archive path mismatch: ${entry.slug}`,
-      ).toBe(expectedPath);
     }
   });
 

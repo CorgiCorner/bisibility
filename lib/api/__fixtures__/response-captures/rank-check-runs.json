@@ -40,7 +40,8 @@
               "unit": null,
               "quantity": null,
               "unknown_targets": 1
-            }
+            },
+            "evidence_projections": null
           }
         ],
         "meta": {
@@ -136,7 +137,8 @@
           "unit": null,
           "quantity": null,
           "unknown_targets": 1
-        }
+        },
+        "evidence_projections": null
       },
       "contentType": "application/json",
       "method": "GET",
@@ -182,7 +184,8 @@
           "unit": null,
           "quantity": null,
           "unknown_targets": 1
-        }
+        },
+        "evidence_projections": null
       },
       "contentType": "application/json",
       "method": "GET",
@@ -228,7 +231,8 @@
           "unit": null,
           "quantity": null,
           "unknown_targets": 1
-        }
+        },
+        "evidence_projections": null
       },
       "contentType": "application/json",
       "method": "GET",
@@ -274,7 +278,8 @@
           "unit": null,
           "quantity": null,
           "unknown_targets": 1
-        }
+        },
+        "evidence_projections": null
       },
       "contentType": "application/json",
       "method": "GET",

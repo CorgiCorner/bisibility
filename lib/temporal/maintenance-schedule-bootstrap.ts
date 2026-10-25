@@ -280,3 +280,9 @@ export async function ensurePresenceSyncSchedule(
     client,
   );
 }
+
+export {
+  CHECK_NOTIFICATION_SUMMARIES_SCHEDULE_ID,
+  CHECK_NOTIFICATION_SUMMARIES_WORKFLOW_TYPE,
+  ensureCheckNotificationSummariesSchedule,
+} from "./check-summary-maintenance-bootstrap";

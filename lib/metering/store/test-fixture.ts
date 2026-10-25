@@ -125,16 +125,31 @@ export async function createConformanceFixture() {
       pooledClient: base.client(),
       async resetOnClose() {
         try {
-          await base.client().$transaction(async (tx) => {
-            await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(base.schema)}`);
-            await tx.$executeRaw(Prisma.sql`TRUNCATE TABLE
-              metering_history_reference, metering_history_import, metering_paid_attempt_context, metering_operation, metering_receipt, metering_measurement, metering_command,
-              metering_budget, metering_budget_usage, metering_event, metering_metadata,
-              metering_alert, metering_request_command, metering_request_count,
-              metering_usage_evidence,
-              metering_import_family, metering_import,
-              queued_rank_check_tasks RESTART IDENTITY CASCADE`);
-          });
+          const tables = [
+            "metering_history_reference",
+            "metering_history_import",
+            "metering_paid_attempt_context",
+            "metering_operation",
+            "metering_receipt",
+            "metering_measurement",
+            "metering_command",
+            "metering_budget",
+            "metering_budget_usage",
+            "metering_event",
+            "metering_metadata",
+            "metering_alert",
+            "metering_request_command",
+            "metering_request_count",
+            "metering_usage_evidence",
+            "metering_import_family",
+            "metering_import",
+            "queued_rank_check_tasks",
+          ].map((table) => Prisma.raw(`"${base.schema}"."${table}"`));
+          await base
+            .client()
+            .$executeRaw(
+              Prisma.sql`TRUNCATE TABLE ${Prisma.join(tables)} RESTART IDENTITY CASCADE`,
+            );
         } finally {
           conformanceInUse = false;
         }

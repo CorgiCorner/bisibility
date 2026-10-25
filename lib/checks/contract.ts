@@ -5,20 +5,28 @@
 
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import type { Device } from "@/lib/generated/prisma/client";
+import type { EvidenceProjection, ProjectionKey } from "@/lib/provider-evidence/projection/model";
 import type { SnapshotExtensionView } from "@/lib/serp/snapshot-extension";
 
 export type RankCheckStatus = "running" | "completed" | "failed" | "deferred";
 
 export type CheckRange = "24h" | "7d" | "30d";
 
-export type CheckRunFilter = "all" | "completed" | "failed" | "running" | "deferred" | "fallback";
+export type CheckRunFilter =
+  | "all"
+  | "completed"
+  | "failed"
+  | "running"
+  | "deferred"
+  | "fallback"
+  | ProjectionKey;
 
 export type CheckRunProviderOption = {
   label: string;
   value: string;
 };
 
-export type CheckRunTriggerFilter = "all" | "manual" | "scheduled";
+export type CheckRunTriggerFilter = "all" | "manual" | "scheduled" | "programmatic";
 
 export type DeferredReason = "rate_limited" | "no_provider" | "budget_exhausted" | "migration_hold";
 
@@ -41,6 +49,7 @@ export type CheckAttempt = {
 };
 
 export type CheckRunRow = {
+  evidenceProjection?: EvidenceProjection | null;
   id: string;
   keywordId: string;
   /** Identifier usable in /keywords/[id] links. */
@@ -54,7 +63,7 @@ export type CheckRunRow = {
   researchMetricsAvailable: boolean;
   /** Device targeted by the keyword. */
   device: Device;
-  status: Exclude<RankCheckStatus, "deferred">;
+  status: RankCheckStatus;
   position: number | null;
   previousPosition: number | null;
   error: string | null;
@@ -173,7 +182,8 @@ export type ProviderHealthEntry = {
 };
 
 export type DeferredGroup = {
-  reason: DeferredReason;
+  reason: DeferredReason | "other";
+  rawReason?: string;
   count: number;
   keywordCount: number;
   firstAt: string;
@@ -181,6 +191,7 @@ export type DeferredGroup = {
 };
 
 export type CheckRunsView = {
+  evidenceCounts?: Record<ProjectionKey, number>;
   rows: CheckRunRow[];
   counts: CheckRunsCounts;
   /** Scheduled project keywords whose latest completed check is more than 48 hours old. */

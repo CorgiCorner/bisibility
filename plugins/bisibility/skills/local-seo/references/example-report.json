@@ -1,0 +1,125 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "local_seo",
+  "title": "Local visibility: example.com (fictional fixture)",
+  "idempotency_key": "fixture-local-seo-20261016-v1",
+  "body": {
+    "version": 1,
+    "summary": "Fictional sample: the matched listing is weaker at one grid point where a saved rival outranks it. Verify the business profile manually before changing it.",
+    "context": {
+      "goal": "Help a local service business see where it appears in map results.",
+      "assumptions": ["Fictional fixture, not live customer evidence."]
+    },
+    "method": "Read of one retained Local monitor run and one point's listings. No provider work was launched.",
+    "coverage": {
+      "state": "partial",
+      "monitor_id": "lmn_a00000000000000000000000",
+      "run_id": "lmr_b00000000000000000000000",
+      "points_returned": 1,
+      "limitations": ["One fictional point is not a complete grid."]
+    },
+    "zones": [
+      {
+        "target_id": "lmt_c00000000000000000000000",
+        "keyword": "example service near me",
+        "label": "weak",
+        "reason": "The matched project listing is rank 4. A saved rival is rank 1 at the same point.",
+        "evidence_ids": ["run-1", "listing-own", "listing-rival"]
+      }
+    ],
+    "competitor_wins": [
+      {
+        "name": "Example Rival",
+        "domain": "example.org",
+        "rank_absolute": 1,
+        "evidence_ids": ["listing-rival"]
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": 1,
+        "action": "Review why the saved rival outranks the project at this grid point before editing pages.",
+        "evidence_ids": ["listing-own", "listing-rival"],
+        "rationale": "The retained listings show a rank gap at one point. They do not explain the cause.",
+        "confidence": "low",
+        "uncertainty": "One fictional point. Website, rating and review count were not on these listings.",
+        "verification": "Unexecuted: compare this point again on the next scheduled Local monitor run."
+      }
+    ],
+    "profile_suggestions": [
+      {
+        "status": "manual_verification",
+        "idea": "The user may check hours and categories in the business profile. This skill did not read that profile.",
+        "evidence_ids": []
+      }
+    ],
+    "evidence": [
+      {
+        "id": "run-1",
+        "source_tool": "get_local_monitor_run_results",
+        "run_id": "lmr_b00000000000000000000000",
+        "observed_at": "2026-10-15T12:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "financial_state": "settled",
+        "accounting_pending": false,
+        "fact": "Fictional retained run. financial_state is copied from the fixture receipt. No new provider charge was made by this read."
+      },
+      {
+        "id": "listing-own",
+        "source_tool": "list_local_monitor_point_listings",
+        "target_id": "lmt_c00000000000000000000000",
+        "name": "Example Service",
+        "rank_absolute": 4,
+        "matched": "confirmed",
+        "cid": "9007199254740993123",
+        "place_id": "OpaquePlaceFixture",
+        "website": null,
+        "maps_url": null,
+        "rating": null,
+        "review_count": null,
+        "observed_at": "2026-10-15T12:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "fact": "Fictional matched listing. Website, Maps URL, rating and review count were absent and stay null."
+      },
+      {
+        "id": "listing-rival",
+        "source_tool": "list_local_monitor_point_listings",
+        "target_id": "lmt_c00000000000000000000000",
+        "name": "Example Rival",
+        "domain": "example.org",
+        "rank_absolute": 1,
+        "matched": "rejected",
+        "observed_at": "2026-10-15T12:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "fact": "Fictional rival listing that outranks the project at this point. Domain is a fixture label, not a fetched page."
+      }
+    ],
+    "costs": {
+      "new_provider_cost_cents": 0,
+      "paid_calls": 0,
+      "receipt_financial_state": "settled",
+      "accounting_pending": false,
+      "historical_costs": "unknown",
+      "note": "Reads do not launch provider work. The receipt value is the fictional retained state, not a new charge."
+    },
+    "limitations": [
+      "Fictional fixture only.",
+      "Bisibility did not read the business profile and has no profile-management tool.",
+      "Rating and review count were not on these Local monitor listings."
+    ]
+  },
+  "provenance": {
+    "skill": "local-seo",
+    "skill_version": "0.1.0",
+    "agent": "unknown",
+    "source_origin": "fictional_fixture",
+    "instance": "https://example.com",
+    "method": "Read of one retained Local monitor run and one point's listings. No provider work was launched.",
+    "evidence_ids": ["run-1", "listing-own", "listing-rival"],
+    "retrieved_at": "2026-10-16T09:00:00.000Z",
+    "limitations": [
+      "Fictional fixture only.",
+      "Bisibility did not read the business profile and has no profile-management tool."
+    ]
+  }
+}

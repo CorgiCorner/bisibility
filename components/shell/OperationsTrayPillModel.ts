@@ -1,7 +1,9 @@
 import type { OperationsTrayPill, TrayOperation } from "./OperationsTrayModel.types";
 
 export function labelForPill(operations: readonly TrayOperation[]): OperationsTrayPill {
-  const attention = operations.filter((operation) => operation.attention !== null);
+  const attention = operations.filter(
+    (operation) => operation.lifecycle !== "terminal" && operation.attention !== null,
+  );
   if (operations.length === 0) {
     return { kind: "idle" };
   }

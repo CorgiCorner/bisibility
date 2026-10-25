@@ -2,6 +2,7 @@ import { renderWithInstallMessages as render } from "@/i18n/test-support/render-
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { InstallPageContent } from "./InstallPageContent";
+import { SKILLS } from "./install-catalog";
 
 vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label }: { label?: string }) => <button aria-label={label} type="button" />,
@@ -102,64 +103,78 @@ describe("InstallPageContent", () => {
     expect(within(keySection as HTMLElement).getByText(/Read and write/)).not.toHaveClass(
       "font-mono",
     );
-    expect(
-      screen.getByText("9 available · 9 in the Claude Code plugin · 4 planned"),
-    ).not.toHaveClass("font-mono");
+    expect(screen.getByText("20 available")).not.toHaveClass("font-mono");
     expect(container.querySelector("pre")).toHaveClass("font-mono");
   });
 
-  it("distinguishes archive downloads, plugin skills and planned tasks", () => {
+  it("separates SEO, AI visibility, and configuration workflows", () => {
     render(<InstallPageContent {...props} />);
 
+    const seo = screen.getByRole("region", { name: "SEO" });
+    const ai = screen.getByRole("region", { name: "AI visibility" });
+    const setup = screen.getByRole("region", { name: "Setup and management" });
+
+    for (const name of ["seo-audit", "keyword-clustering", "weekly-report", "local-seo"]) {
+      expect(within(seo).getByText(name)).toBeVisible();
+      expect(within(setup).queryByText(name)).not.toBeInTheDocument();
+    }
+    for (const name of ["ai-visibility-audit", "ai-prompt-research"]) {
+      expect(within(ai).getByText(name)).toBeVisible();
+      expect(within(seo).queryByText(name)).not.toBeInTheDocument();
+    }
     for (const name of [
+      "project-setup",
       "domain-onboarding",
       "bisibility",
-      "ai-visibility-audit",
       "keyword-import",
-      "weekly-report",
-      "alert-triage",
       "provider-setup",
       "team-api-governance",
       "self-host-health",
     ]) {
-      const link = screen.getByRole("link", { name });
-      expect(link).toHaveAttribute("href", `/.well-known/agent-skills/${name}.tar.gz`);
-      expect(link).toHaveAttribute("download");
-      expect(within(link.parentElement as HTMLElement).getByText("available")).toBeVisible();
+      expect(within(setup).getByText(name)).toBeVisible();
+      expect(within(seo).queryByText(name)).not.toBeInTheDocument();
     }
-    for (const name of [
-      "project-setup",
-      "seo-coach",
-      "seo-audit",
-      "keyword-opportunity-research",
-      "rank-tracking-report",
-      "backlink-profile-analysis",
-      "keyword-clustering",
-      "competitor-analysis",
-      "competitive-landscape",
-    ]) {
+  });
+
+  it("offers skills.sh commands for every skill without archive downloads", () => {
+    render(<InstallPageContent {...props} />);
+
+    for (const { name } of SKILLS) {
       const label = screen.getByText(name);
+      const row = label.parentElement as HTMLElement;
       expect(label.closest("a, button")).toBeNull();
+      expect(within(row).queryByRole("link")).toBeNull();
+      expect(within(row).queryByText("available")).toBeNull();
+      expect(within(row).queryByText("planned")).toBeNull();
       expect(
-        within(label.parentElement as HTMLElement).getByText("in the Claude Code plugin"),
+        within(row).getByRole("button", { name: `Copy ${name} install command` }),
       ).toBeVisible();
-      expect(within(label.parentElement as HTMLElement).queryByText("planned")).toBeNull();
-    }
-    for (const name of [
-      "ai-prompt-research",
-      "local-seo",
-      "link-prospecting",
-      "sitemap-change-watch",
-    ]) {
-      const label = screen.getByText(name);
-      expect(label.closest("a, button")).toBeNull();
-      expect(within(label.parentElement as HTMLElement).getByText("planned")).toBeVisible();
+      const expected = `npx skills add CorgiCorner/bisibility --skill ${name}`;
+      const command = within(row).getByText(
+        (_, element) =>
+          element?.classList.contains("font-mono") === true && element.textContent === expected,
+      );
+      // Wraps at spaces instead of truncating, and keeps the flag on one line.
+      expect(command).toHaveClass("[overflow-wrap:break-word]");
+      expect(command).not.toHaveClass("truncate", "break-all");
+      expect(within(command).getByText(`--skill ${name}`)).toHaveClass(
+        "inline-block",
+        "max-w-full",
+      );
     }
     expect(screen.queryByText("project-onboarding")).not.toBeInTheDocument();
-    expect(screen.getByText("9 available · 9 in the Claude Code plugin · 4 planned")).toHaveClass(
-      "bg-nav-active",
-      "text-yellow-text",
-    );
+    expect(screen.queryByText("sitemap-change-watch")).not.toBeInTheDocument();
+    expect(screen.queryByText("link-prospecting")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.classList.contains("font-mono") === true &&
+          element.textContent === "npx skills add CorgiCorner/bisibility",
+      ),
+    ).toHaveClass("font-mono");
+    expect(
+      screen.getByRole("button", { name: "Copy domain-onboarding install command" }),
+    ).toBeVisible();
   });
 
   it("highlights curl syntax and environment variables while keeping the URL neutral", () => {

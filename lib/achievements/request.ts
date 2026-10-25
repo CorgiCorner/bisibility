@@ -11,7 +11,7 @@ export async function isPracticeEstimate(request: Request, url: URL, operation: 
     ![
       "analyzeDomainOverview",
       "getKeywordMetrics",
-      "analyzeAiVisibility",
+      "analyzeBrandVisibility",
       "compareAiPrompts",
     ].includes(operation)
   )

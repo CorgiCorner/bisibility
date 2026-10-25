@@ -14,7 +14,7 @@ import { keywordCreateBodySchema } from "./keyword-create-input";
 import { keywordListQueryAliases, keywordListQuerySchema } from "./keyword-list-query";
 import { mintTokenSchema } from "./migration-tokens";
 import { preferencePatchSchema } from "./notification-prefs";
-import { aiTrackingOperationInputs } from "./operation-input-ai-tracking";
+import { promptTrackerOperationInputs } from "./operation-input-ai-tracking";
 import { noInput, type OperationInput, rawInput, zodInput } from "./operation-input-helpers";
 import { researchOperationInputs } from "./operation-input-research";
 import { pageQuery as sharedPageQuery } from "./pagination";
@@ -55,7 +55,7 @@ const pageQuery = rawInput("cursor", "limit");
 const zodPage = zodInput(sharedPageQuery, { keys: "wire" });
 
 export const operationInputs = {
-  ...aiTrackingOperationInputs,
+  ...promptTrackerOperationInputs,
   ...researchOperationInputs,
   addCompetitor: { body: zodInput(addManagedCompetitorSchema, { serverKeys: projectKey }) },
   addKeywords: {

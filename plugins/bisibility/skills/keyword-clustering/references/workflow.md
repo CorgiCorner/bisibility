@@ -8,9 +8,15 @@ Resolve the project even for a user-supplied list; ask which project if unclear.
 
 ## Method and page mapping
 
-The agent clusters by shared intent, audience task, funnel stage and plausible page type using SERP-free lexical and semantic heuristics. State that no live SERP overlap was measured. Split 'how to' guides from purchase/evaluation pages when their tasks differ. For mixed or unclear intent preserve alternatives, lower confidence and name the needed manual check. Approved metrics may inform priority, but volume alone does not prove two terms belong on one page.
+The default method is SERP-free lexical and semantic heuristics. Name that method in the output and in provenance, and state that no SERP overlap was measured. Split 'how to' guides from purchase/evaluation pages when their tasks differ. For mixed or unclear intent preserve alternatives, lower confidence and name the needed manual check. Approved metrics may inform priority, but volume alone does not prove two terms belong on one page.
 
 For each cluster retain member IDs/phrases, intent, primary keyword with selection reason, mapped target URL and its status (observed existing, user-confirmed, proposed or unknown), content priority, business rationale, confidence and uncertainty. An unknown URL is null with a proposed page role; never fabricate an existing page. Prioritize goal fit, existing evidence, effort and uncertainty. Do not sum overlapping volumes or present demand estimates as visits.
+
+## Optional supplied SERP comparison
+
+There is no SERP-fetch tool. Do not invent one or retrieve SERPs yourself. The user may supply SERP results as extra material: URLs per keyword, plus the market, device and date of that result set. Without that material, keep the SERP-free default and state that no SERP overlap was measured.
+
+When supplied SERPs are used, record the method as SERP-assisted. State how many results per keyword were compared. Top 3 overlap is at most a weak signal. Never call two keywords SERP-similar from top-3 overlap alone. Full similarity requires the top 10 URLs, the same market, the same device and the same date. If depth, market, device or date differs, leave the pair unverified and name the mismatch. Supplied rows are user-supplied evidence, not a live Bisibility measurement.
 
 ## Cannibalization evidence
 

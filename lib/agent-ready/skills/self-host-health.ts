@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "self-host-health",
   title: "Self-host health check",
   description:
-    "Diagnose a hosted or self-hosted bisibility instance using read-only liveness, readiness and health evidence. Inspect project wiring and known runs only when relevant to the symptom; distinguish verified failures from missing signals.",
+    "Diagnose a hosted or self-hosted instance from read-only liveness, readiness and health evidence. Use when investigating availability or a known run. Do not use for repairs, provider probes, restarts or starting rank checks.",
   compatibility: "Requires a bisibility origin and a bearer API key with read scope.",
   kind: "task-skill",
   version: "0.1.1",

@@ -156,6 +156,70 @@ describe("live rank deployment boundary", () => {
     expect(finish).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    [0.3, 0.3, 0.3],
+    [0, 0, 0],
+    [1.2, 0, 1.2],
+    [0, 1.5, 1.5],
+  ])(
+    "reports the measured hosted cost %s on a failed response so fallback can refuse a second purchase",
+    async (costCents, lastRequestCostCents, chargedCents) => {
+      mocks.connection.mockResolvedValue({
+        credentialSource: "hosted",
+        projectId: "project_1",
+        provider: "dataforseo",
+      });
+      mocks.startExecution.mockResolvedValue({
+        credentials: { login: "hosted", password: "hosted-secret" },
+        started: true,
+        costCents,
+        lastRequestCostCents,
+        quantity: 1,
+        finish: vi.fn(),
+      });
+      mocks.fetchRank.mockRejectedValue(new Error("Partial SERP result."));
+      const request = {
+        ...input(provider),
+        connection: { ...input(provider).connection, credentialSource: "hosted" },
+      };
+      await expect(runCheck(request)).rejects.toMatchObject({
+        name: "RankCheckRunnerError",
+        code: "provider_failed",
+        chargedCents,
+      });
+    },
+  );
+
+  it.each([
+    [0, null],
+    [1.2, null],
+    [null, 1.5],
+  ])(
+    "refuses fallback when hosted cost or debit is unresolved (%s, %s)",
+    async (costCents, lastRequestCostCents) => {
+      mocks.connection.mockResolvedValue({
+        credentialSource: "hosted",
+        projectId: "project_1",
+        provider: "dataforseo",
+      });
+      mocks.startExecution.mockResolvedValue({
+        credentials: { login: "hosted", password: "hosted-secret" },
+        started: true,
+        costCents,
+        lastRequestCostCents,
+        quantity: 1,
+        finish: vi.fn(),
+      });
+      mocks.fetchRank.mockRejectedValue(new Error("Partial SERP result."));
+      await expect(
+        runCheck({
+          ...input(provider),
+          connection: { ...input(provider).connection, credentialSource: "hosted" },
+        }),
+      ).rejects.toMatchObject({ name: "ProviderUsagePersistenceError" });
+    },
+  );
+
   it("refuses an unavailable hosted deployment before provider I/O or own decryption", async () => {
     mocks.connection.mockResolvedValue({
       credentialSource: "hosted",

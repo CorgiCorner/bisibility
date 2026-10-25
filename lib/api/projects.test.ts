@@ -2,12 +2,15 @@ import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness
 import type { DefaultsHostContext } from "@/lib/measurement-settings/host/defaults-authority";
 import { PROVIDER_CATALOG, serpProviderCapabilities } from "@/lib/providers/registry";
 import { keywordLocation } from "@/lib/test/fixtures/location";
+import { dateFromFrozenNow } from "@/tests/clock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiScope } from "./auth";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { resetIdempotencyForTests } from "./idempotency";
 import * as projectHandlers from "./projects";
 import { handleApiRequest } from "./router";
+
+const retirementAt = dateFromFrozenNow({ seconds: 1 });
 
 const mocks = vi.hoisted(() => ({
   authenticateBearer: vi.fn(),
@@ -25,6 +28,8 @@ const mocks = vi.hoisted(() => ({
       findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
     },
+    providerIncident: { updateMany: vi.fn() },
+    notification: { deleteMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
     providerConnection: { findMany: vi.fn() },
     rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
@@ -223,7 +228,11 @@ describe("project write API routes", () => {
     vi.clearAllMocks();
     resetIdempotencyForTests();
     mocks.prisma.$executeRaw.mockResolvedValue(0);
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.$queryRaw.mockImplementation(async (query: TemplateStringsArray) =>
+      Array.isArray(query) && query.join("").includes("clock_timestamp()")
+        ? [{ now: retirementAt }]
+        : [],
+    );
     mocks.prisma.apiKey.findFirst.mockResolvedValue({
       id: "key_1",
       scopes: ["admin"],
@@ -448,6 +457,16 @@ describe("project write API routes", () => {
     expect(deleted.status).toBe(200);
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
     expect(mocks.prisma.project.delete).toHaveBeenCalledWith({ where: { id: "project_1" } });
+    expect(mocks.prisma.project.update).toHaveBeenCalledWith({
+      where: { id: "project_1" },
+      data: { providerIncidentsRetiredThrough: retirementAt },
+    });
+    expect(mocks.prisma.notification.deleteMany).toHaveBeenCalledWith({
+      where: { projectId: "project_1", type: "provider_incident" },
+    });
+    expect(mocks.prisma.notification.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.project.delete.mock.invocationCallOrder[0],
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "project.delete",

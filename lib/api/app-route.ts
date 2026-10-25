@@ -50,6 +50,8 @@ function mappedError(
   error: unknown,
   admissionDetails?: AdmissionErrorDetails | null,
 ): Response | null {
+  if (error instanceof ProviderChainError && error.fundingExhaustion)
+    return mappedError(error.fundingExhaustion, admissionDetails);
   if (
     error instanceof ProviderChainError &&
     error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError

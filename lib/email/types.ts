@@ -51,3 +51,19 @@ export class EmailBudgetExceededError extends Error {
     this.limit = limit;
   }
 }
+
+/** No mail transport is available; carries no credentials or provider configuration. */
+export class EmailProviderUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EmailProviderUnavailableError";
+  }
+}
+
+/** Raised only before calling a transport; safe to retry without a handoff. */
+export class EmailNotSubmittedError extends Error {
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : "Email preparation failed.", { cause });
+    this.name = "EmailNotSubmittedError";
+  }
+}

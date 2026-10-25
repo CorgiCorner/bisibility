@@ -39,6 +39,7 @@ function setup(analyze = vi.fn().mockResolvedValue(forecast), own = true) {
       analyzeAction={analyze}
     />,
   );
+  fireEvent.click(screen.getByText("advanced"));
   fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
   fireEvent.change(screen.getByLabelText("prompt"), {
     target: { value: "Które narzędzia pomagają małym firmom?" },
@@ -167,7 +168,7 @@ describe("BYOK actual-cost opt-in", () => {
       await estimate();
       fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
       await waitFor(() => expect(screen.getByText("actualCostUsageReview")).toBeVisible());
-      fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "99" } });
+      fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "0.99" } });
       fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
       fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
       expect(analyze).toHaveBeenCalledTimes(2);
@@ -243,7 +244,7 @@ describe("BYOK actual-cost opt-in", () => {
     acknowledge();
     expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     acknowledge();
-    fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "11" } });
+    fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "0.11" } });
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();

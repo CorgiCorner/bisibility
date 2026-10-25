@@ -1,3 +1,6 @@
+import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
+import { finalizeRestoredRecovery } from "./recovery-intent-finalization";
+import { recoveryResultWriteAllowed } from "./recovery-restore-gate";
 import "server-only";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { deriveCheckAttemptSummary } from "@/lib/checks/attempts";
@@ -24,7 +27,9 @@ export async function restoreRetainedRankResult(
   checkId: string,
   actorId: string | null,
   now: Date,
+  lease?: { intentId: string; owner: string },
 ) {
+  if (!recoverySwitches().restore) return false;
   await tx.$queryRaw`SELECT id FROM queued_rank_check_tasks WHERE "rankCheckId"=${checkId} FOR UPDATE`;
   await tx.$queryRaw`SELECT id FROM rank_checks WHERE id=${checkId} FOR UPDATE`;
   await tx.$queryRaw`SELECT run.id FROM rank_check_runs run JOIN rank_checks rc ON rc."runId"=run.id
@@ -45,7 +50,8 @@ export async function restoreRetainedRankResult(
   )
     return false;
   if (check.status === "completed") {
-    await tx.rankCheckResultEvidence.delete({ where: { rankCheckId: checkId } });
+    if (check.recoveryResult.schemaVersion === 1)
+      await tx.rankCheckResultEvidence.delete({ where: { rankCheckId: checkId } });
     return false;
   }
   const evidence = check.recoveryResult;
@@ -55,6 +61,7 @@ export async function restoreRetainedRankResult(
     blocked = "project_unavailable";
   const value = decodeRankResult(evidence),
     keyword = check.keyword;
+  if (!(await recoveryResultWriteAllowed(tx, checkId, value, now, lease))) return false;
   await tx.$queryRaw`SELECT id FROM keywords WHERE id=${keyword.id} FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM projects WHERE id=${keyword.projectId} FOR SHARE`;
   // Reread after locking: a concurrent keyword edit must not pass an old snapshot.
@@ -73,6 +80,9 @@ export async function restoreRetainedRankResult(
     resolveSerpDepth(check.requestedDepth ?? undefined),
   );
   if (
+    (value.version === 2 &&
+      (value.finishedAt !== check.preRecoveryFinishedAt?.toISOString() ||
+        value.result.rankCheck.checkedAt !== check.checkedAt.toISOString())) ||
     value.target.keywordId !== check.keywordId ||
     value.target.projectId !== current.projectId ||
     value.result.rankCheck.keywordId !== check.keywordId ||
@@ -103,11 +113,12 @@ export async function restoreRetainedRankResult(
   await tx.rankCheck.update({
     where: { id: checkId },
     data: {
+      recoveryRestoredAt: now,
       position: result.position,
       previousPosition: result.previousPosition,
       rankingUrl: result.rankingUrl,
       provider: result.provider,
-      checkedAt: new Date(result.checkedAt),
+      checkedAt: value.version === 2 ? check.checkedAt : new Date(result.checkedAt),
       requestedDepth: result.requestedDepth,
       normalizationVersion: result.normalizationVersion,
       organicRanks: (result.organicRanks as Prisma.InputJsonValue) ?? SQL.DbNull,
@@ -122,7 +133,7 @@ export async function restoreRetainedRankResult(
       error: null,
       errorCode: null,
       deferredReason: null,
-      finishedAt: now,
+      finishedAt: check.preRecoveryFinishedAt ?? check.finishedAt ?? undefined,
     },
   });
   if (result.observation) {
@@ -140,7 +151,7 @@ export async function restoreRetainedRankResult(
       where: { id: check.queuedTask.id },
       data: { state: "completed", persistenceLeaseOwner: null, persistenceLeaseExpiresAt: null },
     });
-  await recoverRunItem(tx, checkId, now);
+  await recoverRunItem(tx, checkId, now, check.preRecoveryFinishedAt ?? undefined);
   await writeAudit(
     {
       action: "rank_check.recovered",
@@ -159,5 +170,6 @@ export async function restoreRetainedRankResult(
     tx,
   );
   await tx.rankCheckResultEvidence.delete({ where: { rankCheckId: checkId } });
+  await finalizeRestoredRecovery(tx, value);
   return true;
 }

@@ -1,5 +1,6 @@
 "use client";
 import { IconButton } from "@/components/ui/IconButton";
+import { Switch } from "@/components/ui/Switch";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Button } from "@/components/usagekit/primitives/button";
 import {
@@ -21,8 +22,6 @@ import { useProjectChainController } from "@/components/usagekit/provider-projec
 import { retainMovedRowFocus } from "@/components/usagekit/usage-motion";
 import { ArrowDownIcon } from "@phosphor-icons/react/dist/csr/ArrowDown";
 import { ArrowUpIcon } from "@phosphor-icons/react/dist/csr/ArrowUp";
-import { PauseIcon } from "@phosphor-icons/react/dist/csr/Pause";
-import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
 
 export type {
   ProjectChainCommand,
@@ -144,30 +143,21 @@ export function ProjectChainEditor(props: ProjectChainProps & { labels: Provider
                       <ArrowDownIcon aria-hidden size={16} weight="regular" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip content={row.enabled ? labels.disable : labels.enable}>
-                    <IconButton
-                      type="button"
-                      size="small"
-                      className="min-h-10 min-w-10 sm:min-h-7 sm:min-w-7"
-                      aria-label={`${row.enabled ? labels.disable : labels.enable}: ${row.label}`}
-                      disabled={!state.editable}
-                      onClick={() => {
-                        const rows = state.draft.map((r) =>
-                          r.id === row.id ? { ...r, enabled: !r.enabled } : r,
-                        );
-                        state.change([
-                          ...rows.filter((r) => r.enabled),
-                          ...rows.filter((r) => !r.enabled),
-                        ]);
-                      }}
-                    >
-                      {row.enabled ? (
-                        <PauseIcon aria-hidden size={16} weight="regular" />
-                      ) : (
-                        <PlayIcon aria-hidden size={16} weight="regular" />
-                      )}
-                    </IconButton>
-                  </Tooltip>
+                  <Switch
+                    aria-label={labels.rankCheckSwitchName(row.label)}
+                    checked={row.enabled}
+                    className="min-h-10 min-w-10 justify-center border-0 bg-transparent p-0"
+                    disabled={!state.editable}
+                    onChange={() => {
+                      const rows = state.draft.map((r) =>
+                        r.id === row.id ? { ...r, enabled: !r.enabled } : r,
+                      );
+                      state.change([
+                        ...rows.filter((r) => r.enabled),
+                        ...rows.filter((r) => !r.enabled),
+                      ]);
+                    }}
+                  />
                 </div>
               )}
             </li>

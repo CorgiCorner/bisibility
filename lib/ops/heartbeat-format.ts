@@ -15,6 +15,7 @@ import {
 } from "@/lib/ops/heartbeat-traffic-format";
 import { buildFailureBreakdown } from "@/lib/ops/instance-admin-health";
 import type { OpsEventInput, OpsSeverity } from "@/lib/ops/slack";
+import { heartbeatDeferredText } from "./heartbeat-evidence";
 
 type SweepSummary = { attempted: number; delivered: number };
 type Reason = {
@@ -119,7 +120,7 @@ export function heartbeatVerdict(input: HeartbeatEventInput): {
   if (rank.deferred > 0) {
     reasons.push({
       severity: "warning",
-      text: `Rank checks: ${rank.deferred} deferred - review provider limits and the project budget.`,
+      text: heartbeatDeferredText(rank),
     });
   }
   const fallbacks = rank.recentFallbacks ?? [];

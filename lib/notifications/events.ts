@@ -1,3 +1,4 @@
+import { checkNotificationSummariesEnabled } from "./check-summaries/switch";
 import "server-only";
 
 import type { AlertExternalDeliveryPayload } from "@/lib/alerts/alert-delivery-payload";
@@ -144,6 +145,7 @@ export async function notifyRankCheckCompleted(input: {
   projectId: string;
   rankCheckId: string;
 }) {
+  if (checkNotificationSummariesEnabled()) return;
   if (input.position === input.previousPosition) {
     return;
   }
@@ -189,6 +191,7 @@ function checksHrefSegments(rankCheckId: string): string[] {
 }
 
 export async function notifyRankCheckFailed(input: RankFailureInput) {
+  if (checkNotificationSummariesEnabled()) return;
   await notifyProjectMembers({
     body: `${input.keywordText}: ${input.message}`,
     hrefSegments: checksHrefSegments(input.rankCheckId),

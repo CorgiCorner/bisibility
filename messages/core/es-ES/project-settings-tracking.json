@@ -127,12 +127,23 @@
     },
     "inspection": {
       "title": "Inspección de URL",
-      "description": "Comprobaciones diarias del estado de indexación en Search Console para las URL de destino con seguimiento.",
+      "description": "Informe parcial de indexación basado en el estado guardado por Google, sin prueba en directo.",
       "dailyLimit": "Límite diario de inspecciones",
-      "help": "Google permite 2000 inspecciones al día por propiedad, compartidas entre todas las herramientas que la usan. bisibility lo limita a 1000 para dejar margen a las demás herramientas que comparten la cuota de la propiedad. Las URL que superan el límite esperan al día siguiente.",
+      "help": "El límite fijo es de 0-2000 URL por día del Pacífico. Los proyectos y las inspecciones explícitas comparten el contador de la propiedad. Otras herramientas también consumen cuota; el contador es una estimación.",
       "readOnly": "Solo lectura",
       "saveValidation": "Revisa los ajustes destacados antes de guardar.",
-      "saveError": "No se ha podido guardar el límite de inspección de URL."
+      "saveError": "No se ha podido guardar el límite de inspección de URL.",
+      "modeLabel": "Modo de inspección en segundo plano",
+      "modes": {
+        "off": "Desactivado",
+        "fixed": "Límite diario fijo",
+        "available_quota": "Usar cuota disponible"
+      },
+      "modeHelp": {
+        "off": "La inspección en segundo plano está desactivada. Las inspecciones explícitas siguen disponibles.",
+        "fixed": "Inspeccionar hasta el límite diario del proyecto, dentro de la cuota compartida de la propiedad.",
+        "available_quota": "Continuar hasta que Google indique un límite diario, dentro del tiempo de ejecución. Puede dejar menos cuota para otras herramientas."
+      }
     },
     "measurementPolicy": {
       "title": "Política de medición",

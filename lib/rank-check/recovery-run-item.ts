@@ -2,7 +2,12 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { pendingRunItemCount, runCounterData, runCountsFromItemGroups } from "./runs/counts";
 import { finalRunData } from "./runs/finalize";
 
-export async function recoverRunItem(tx: Prisma.TransactionClient, checkId: string, now: Date) {
+export async function recoverRunItem(
+  tx: Prisma.TransactionClient,
+  checkId: string,
+  now: Date,
+  finishedAt?: Date,
+) {
   await tx.$queryRaw`SELECT run.id FROM rank_check_runs run JOIN rank_check_run_items item
     ON item."runId"=run.id WHERE item."rankCheckId"=${checkId} FOR UPDATE OF run`;
   const item = await tx.rankCheckRunItem.findUnique({
@@ -21,7 +26,7 @@ export async function recoverRunItem(tx: Prisma.TransactionClient, checkId: stri
     where: { id: item.id },
     data: {
       status: "completed",
-      finishedAt: now,
+      finishedAt,
       actualCostCents: null,
       claimExpiresAt: null,
     },
@@ -37,7 +42,10 @@ export async function recoverRunItem(tx: Prisma.TransactionClient, checkId: stri
   await tx.rankCheckRun.update({
     where: { id: item.runId },
     data: terminal
-      ? { ...finalRunData({ groups, now, run: item.run }), finishedAt: item.run.finishedAt ?? now }
+      ? {
+          ...finalRunData({ groups, now, run: item.run }),
+          finishedAt: item.run.finishedAt ?? finishedAt,
+        }
       : counters,
   });
 }

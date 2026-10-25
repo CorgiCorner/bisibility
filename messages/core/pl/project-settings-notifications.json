@@ -8,19 +8,43 @@
       "inApp": "W aplikacji",
       "email": "E-mail",
       "alertFired": "Alert wywołany",
-      "checkComplete": "Sprawdzenie zakończone",
+      "checkComplete": "Powiadomienia o sprawdzeniach",
       "importFinished": "Import zakończony",
       "invite": "Zaproszenie",
       "weeklyReport": "Raport tygodniowy",
       "unavailable": "{label} – niedostępne",
       "unavailableHelp": "Kreska oznacza, że dany kanał nie istnieje dla tego zdarzenia – raport tygodniowy to e-mail wysyłany tylko raz w tygodniu.",
-      "saveError": "Nie udało się zapisać preferencji."
+      "saveError": "Nie udało się zapisać preferencji.",
+      "providerIncident": "Incydenty dostawcy"
     },
     "delivery": {
       "title": "Adres dostarczania",
       "description": "Adres, na który trafiają e-maile z powiadomieniami.",
       "manageEmail": "Zarządzaj adresem",
       "deliveredTo": "Powiadomienia są dostarczane na adres <address>{email}</address>."
+    },
+    "checks": {
+      "mode": "Powiadomienia o sprawdzeniach",
+      "modes": {
+        "all": "Wszystkie",
+        "important": "Ważne",
+        "none": "Brak"
+      },
+      "descriptions": {
+        "all": "Podsumowania ręczne i każde okno zaplanowanych sprawdzeń.",
+        "important": "Podsumowania ręczne, istotne zmiany i błędy.",
+        "none": "Bez podsumowań sprawdzeń. Incydenty mają osobny przełącznik."
+      },
+      "checkNotificationTopN": "Wejście lub wyjście z top N",
+      "checkNotificationPositionMove": "Minimalna zmiana pozycji",
+      "thresholdError": "Podaj liczbę całkowitą od 1 do 100.",
+      "significantChange": "Istotna zmiana",
+      "positions": "pozycji",
+      "optionDescriptions": {
+        "all": "Wszystkie podsumowania",
+        "important": "Istotne zmiany i błędy",
+        "none": "Podsumowania wyłączone"
+      }
     }
   }
 }

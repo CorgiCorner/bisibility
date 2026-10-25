@@ -25,6 +25,7 @@ export function legacyHistoryFromSnapshot(
       )
       .sort((a, b) => b.checkedAt.getTime() - a.checkedAt.getTime() || b.id.localeCompare(a.id))
       .map((check) => ({
+        evidenceProjection: snapshot.evidenceProjections.get(check.id) ?? null,
         checkedAt: check.checkedAt,
         normalizationVersion: check.normalizationVersion,
         position: check.position,

@@ -24,8 +24,7 @@ export const Expanded: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
-    await expect(canvas.getByText("Tracking")).toBeVisible();
-    await expect(canvas.getByText("Research & audits")).toBeVisible();
+    await expect(canvas.getByText("SEO")).toBeVisible();
     await expect(canvas.getByText("Data & reports")).toBeVisible();
     await expect(canvas.getByText("Project")).toBeVisible();
     const searchConsole = canvas.getByText("Search Console").closest("a");
@@ -52,12 +51,12 @@ export const Collapsed: Story = {
     // captions rather than falling back to a bare pad. The two spellings differ by case, which
     // is exactly what an exact-string query distinguishes.
     await expect(canvas.queryByText("ACTIVITY")).not.toBeInTheDocument();
-    await expect(canvas.getByText("TRACKING")).toBeVisible();
-    await expect(canvas.getByText("RESEARCH")).toBeVisible();
+    await expect(canvas.getByText("SEO")).toBeVisible();
+    await expect(canvas.getByText("AI")).toBeVisible();
     await expect(canvas.getByText("DATA")).toBeVisible();
     await expect(canvas.getByText("PROJECT")).toBeVisible();
     await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("Tracking")).not.toBeInTheDocument();
+    await expect(canvas.queryByText("AI Search")).not.toBeInTheDocument();
     await expect(canvas.queryByText("Project")).not.toBeInTheDocument();
 
     // A row drops its visible label and its badge, and the aria-label is the only thing left

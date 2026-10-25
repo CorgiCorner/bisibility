@@ -17,6 +17,7 @@ import { localMonitorResultSchemas } from "./openapi-local-monitor-results";
 import { locationSearchPaths } from "./openapi-locations";
 import { loopClosurePaths } from "./openapi-loop-closure";
 import { migrationPaths, migrationSecuritySchemes } from "./openapi-migration";
+import { pageIndexingPaths } from "./openapi-page-indexing";
 import {
   idempotencyParameterComponents,
   keywordListParameters,
@@ -41,6 +42,7 @@ import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
 import { withSdkCost } from "./openapi-sdk-cost";
 import { sdkName, withPublicIdExtensions } from "./openapi-sdk-schema";
+import { searchIndexPaths } from "./openapi-search-index";
 import {
   sourceHeaderParameterComponents,
   withSourceHeaderParameter,
@@ -48,8 +50,8 @@ import {
 import { createSignalOperation, runRankCheckOperation } from "./openapi-special-operations";
 import { openApiTags, tagOpenApiPaths } from "./openapi-tags";
 import { teamMutationPaths } from "./openapi-team-mutations";
-import { aiTrackingPaths, aiTrackingSchemaComponents } from "./openapi-tracking";
-import { aiTrackingComponentSchemas } from "./openapi-tracking-schemas";
+import { promptTrackerPaths, promptTrackerSchemaComponents } from "./openapi-tracking";
+import { promptTrackerComponentSchemas } from "./openapi-tracking-schemas";
 
 const json = (schema: object) => ({ "application/json": { schema } });
 const response = (schema: object, description = "JSON response") => ({
@@ -81,11 +83,19 @@ function bearerOperation(
   schema: object,
   requestSchema?: object,
   parameters?: object[],
+  options?: { requestRequired?: boolean },
 ) {
   return {
     operationId,
     ...(parameters ? { parameters } : {}),
-    ...(requestSchema ? { requestBody: { content: json(requestSchema), required: false } } : {}),
+    ...(requestSchema
+      ? {
+          requestBody: {
+            content: json(requestSchema),
+            required: options?.requestRequired ?? false,
+          },
+        }
+      : {}),
     responses: { "200": response(schema), ...problemResponses },
     security: personalAccess.apiCredentialSecurity,
     summary,
@@ -126,8 +136,8 @@ export function getOpenApiDocument() {
             ...domainOverviewSchemas,
             ...researchReportsSchemas,
             ...localMonitorResultSchemas,
-            ...aiTrackingSchemaComponents(),
-            ...aiTrackingComponentSchemas,
+            ...promptTrackerSchemaComponents(),
+            ...promptTrackerComponentSchemas,
             ...publicSchemas,
           },
           securitySchemes: {
@@ -165,7 +175,7 @@ export function getOpenApiDocument() {
                 }),
                 ...publicPaths,
                 ...researchWorkspacePaths(),
-                ...aiTrackingPaths(),
+                ...promptTrackerPaths(),
                 ...locationSearchPaths({ bearer: bearerOperation, ref }),
                 ...keywordResearchPaths({ bearer: bearerOperation, ref }),
                 ...loopClosurePaths({ bearer: bearerOperation, ref }),
@@ -234,6 +244,8 @@ export function getOpenApiDocument() {
                 ...projectOverviewPaths({ bearer: bearerOperation, ref }),
                 ...rankedKeywordSuggestionPaths({ bearer: bearerOperation, ref }),
                 ...analyticsPaths({ bearer: bearerOperation, ref }),
+                ...searchIndexPaths({ bearer: bearerOperation, ref }),
+                ...pageIndexingPaths({ bearer: bearerOperation, ref }),
                 ...backlinksPaths({ bearer: bearerOperation }),
                 ...domainOverviewPaths({ bearer: bearerOperation }),
                 ...researchReportsPaths({ bearer: bearerOperation }),

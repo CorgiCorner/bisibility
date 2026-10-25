@@ -133,7 +133,7 @@ export function runFilters(
 export function orderedRunItems(
   items: RunPageItem[],
   filter: RunItemFilter,
-  run: RunPageData,
+  run: Pick<RunPageData, "status">,
 ): RunPageItem[] {
   const selected =
     filter === "all"

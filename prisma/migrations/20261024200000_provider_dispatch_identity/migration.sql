@@ -1,0 +1,36 @@
+-- No backfill: legacy operations retain unknown dispatch identity.
+CREATE TABLE "provider_dispatch_identities" (
+  "operationPk" TEXT NOT NULL,
+  "namespace" TEXT NOT NULL,
+  "instanceId" TEXT NOT NULL,
+  "projectId" TEXT NOT NULL,
+  "connectionId" TEXT NOT NULL,
+  "publicConnectionId" TEXT,
+  "rankCheckId" TEXT NOT NULL,
+  "rankCheckRunId" TEXT,
+  "rankCheckRunItemId" TEXT,
+  "queuedTaskId" TEXT,
+  "keywordId" TEXT NOT NULL,
+  "keywordRevision" TIMESTAMP(3) NOT NULL,
+  "executionMode" TEXT NOT NULL,
+  "payerKind" TEXT NOT NULL,
+  "principal" TEXT NOT NULL,
+  "costOwner" TEXT NOT NULL,
+  "payerAccountRef" TEXT NOT NULL,
+  "providerCredentialVersion" TEXT NOT NULL,
+  "provider" TEXT NOT NULL,
+  "feature" TEXT NOT NULL,
+  "requestSource" TEXT NOT NULL,
+  "requestSurface" TEXT NOT NULL,
+  "nativeTag" TEXT,
+  "endpointPath" TEXT NOT NULL,
+  "payloadSchemaVersion" INTEGER NOT NULL DEFAULT 1,
+  "payloadEncrypted" TEXT NOT NULL,
+  "payloadHash" TEXT NOT NULL,
+  "identityHash" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "provider_dispatch_identities_pkey" PRIMARY KEY ("operationPk")
+);
+CREATE INDEX "provider_dispatch_identity_expiry_idx" ON "provider_dispatch_identities"("expiresAt");
+ALTER TABLE "provider_dispatch_identities" ADD CONSTRAINT "provider_dispatch_identities_operationPk_fkey" FOREIGN KEY ("operationPk") REFERENCES "metering_operation"("operation_pk") ON DELETE NO ACTION ON UPDATE NO ACTION;

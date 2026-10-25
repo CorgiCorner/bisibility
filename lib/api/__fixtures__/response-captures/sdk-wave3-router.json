@@ -120,8 +120,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -176,8 +176,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -202,8 +202,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "previewAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/preview",
+      "operationId": "previewPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/preview",
       "status": 200
     },
     {
@@ -356,8 +356,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "getAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}",
+      "operationId": "getPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}",
       "status": 200
     },
     {
@@ -374,8 +374,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "createAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs",
+      "operationId": "createPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs",
       "status": 201
     },
     {
@@ -389,8 +389,8 @@
       },
       "contentType": "application/problem+json",
       "method": "POST",
-      "operationId": "createAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs",
+      "operationId": "createPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs",
       "status": 400
     },
     {

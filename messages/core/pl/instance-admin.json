@@ -610,7 +610,57 @@
       "projectBlocked": "Nierozstrzygnięte rozliczenia blokują wydatki projektu.",
       "connectionBlocked": "Nierozstrzygnięte rozliczenia blokują wydatki połączenia.",
       "lastResultActivityAt": "Ostatni postęp odzyskiwania wyników",
-      "noSpendShort": "Odzyskiwanie sprawdza zapisane dowody przed wykonaniem operacji."
+      "noSpendShort": "Odzyskiwanie sprawdza zapisane dowody przed wykonaniem operacji.",
+      "evidence": {
+        "classification": "Klasyfikacja dowodów",
+        "acceptance": "Przyjęcie / odzyskiwanie",
+        "incident": "Incydent",
+        "lookup": "Próby wyszukania",
+        "result": "Wynik",
+        "cost": "Koszt",
+        "unclassified": "Niesklasyfikowane",
+        "age": "Otwarte od {minutes, number} min",
+        "last": "Ostatnia próba (UTC)",
+        "next": "Następna próba (UTC)",
+        "reason": "Powód",
+        "project": "Projekt / sprawdzenie",
+        "depth": "Sprawdzona głębokość",
+        "createdUtc": "Zachowano (UTC)",
+        "partialTitle": "Częściowe i nierozstrzygnięte dane",
+        "partialHelp": "Ostatnie 50 zapisów. Niepełnych danych nie można przywrócić jako pełnego wyniku.",
+        "empty": "Brak częściowych lub nierozstrzygniętych danych.",
+        "results": {
+          "under_review": "W weryfikacji",
+          "recovered": "Odzyskane",
+          "partial": "Częściowe",
+          "provider_error": "Błąd dostawcy",
+          "missing": "Brak wyniku"
+        },
+        "costs": {
+          "measured": "Zmierzony",
+          "unknown": "Nieznany",
+          "under_review": "W weryfikacji",
+          "conflict": "Konflikt"
+        },
+        "acceptanceStates": {
+          "accepted": "Przyjęte",
+          "unconfirmed": "Niepotwierdzone",
+          "rejected": "Odrzucone"
+        },
+        "recoveryStates": {
+          "not_needed": "Niewymagane",
+          "waiting_for_attempt_end": "Oczekiwanie na próbę",
+          "scheduled": "Zaplanowane",
+          "attempting": "Wyszukiwanie",
+          "resolved": "Rozwiązane",
+          "operator_review": "Weryfikacja operatora"
+        },
+        "partialKinds": {
+          "partial": "Częściowe",
+          "unresolved": "Nierozstrzygnięte"
+        },
+        "utcTimestamp": "{timestamp} UTC"
+      }
     },
     "dangerousActions": {
       "notice": "Włącz uwierzytelnianie dwuskładnikowe, aby {action}.",

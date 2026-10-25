@@ -32,9 +32,9 @@ vi.mock("./ai-tracking-audit", () => ({
   auditTrackingAcceptance: vi.fn(),
 }));
 vi.mock("./ai-tracking-trends", () => ({ trackingTrends: vi.fn() }));
-vi.mock("./ai-tracking-suggestions", () => ({ handleAiTrackingSuggestionGeneration: vi.fn() }));
+vi.mock("./ai-tracking-suggestions", () => ({ handlePromptTrackerSuggestionGeneration: vi.fn() }));
 
-import { aiTrackingRoute } from "./ai-tracking";
+import { promptTrackerRoute } from "./ai-tracking";
 import type { ApiScope } from "./auth";
 import type { ApiContext } from "./context";
 
@@ -46,11 +46,11 @@ function context(
   scopes: readonly ApiScope[] = ["read", "write"],
 ): ApiContext {
   const url = new URL(
-    `https://example.test/api/v1/projects/prj_public/ai-tracking/${suffix.join("/")}`,
+    `https://example.test/api/v1/projects/prj_public/prompt-tracker/${suffix.join("/")}`,
   );
   return {
     method,
-    path: ["projects", "prj_public", "ai-tracking", ...suffix],
+    path: ["projects", "prj_public", "prompt-tracker", ...suffix],
     req: new Request(url, {
       method,
       headers: { "Content-Type": "application/json", ...headers },
@@ -102,7 +102,7 @@ describe("tracking project REST boundary", () => {
         description: null,
       },
     ]);
-    const response = await aiTrackingRoute(context("GET", ["topics"]));
+    const response = await promptTrackerRoute(context("GET", ["topics"]));
     const payload = await response?.json();
     expect(payload.data[0]).toMatchObject({ id: "ait_public", name: "Topic" });
     expect(payload.data[0]).not.toHaveProperty("project_id");
@@ -113,7 +113,7 @@ describe("tracking project REST boundary", () => {
       estimatedCostCents: 0.12,
       payment: { id: "quote", quoteToken: "signed-preview" },
     });
-    const response = await aiTrackingRoute(
+    const response = await promptTrackerRoute(
       context(
         "POST",
         ["runs", "preview"],
@@ -137,7 +137,7 @@ describe("tracking project REST boundary", () => {
   });
   it("injects trusted actor and credential instead of client provenance", async () => {
     mocks.launch.mockResolvedValue({ publicId: "air_public", state: "planned" });
-    const response = await aiTrackingRoute(
+    const response = await promptTrackerRoute(
       context(
         "POST",
         ["runs"],
@@ -160,10 +160,13 @@ describe("tracking project REST boundary", () => {
     });
   });
   it("requires idempotency and write scope before launch", async () => {
-    expect((await aiTrackingRoute(context("POST", ["runs"])))?.status).toBe(400);
+    expect((await promptTrackerRoute(context("POST", ["runs"])))?.status).toBe(400);
     expect(
-      (await aiTrackingRoute(context("POST", ["runs"], {}, { "Idempotency-Key": "key" }, ["read"])))
-        ?.status,
+      (
+        await promptTrackerRoute(
+          context("POST", ["runs"], {}, { "Idempotency-Key": "key" }, ["read"]),
+        )
+      )?.status,
     ).toBe(403);
     expect(mocks.launch).not.toHaveBeenCalled();
   });
@@ -172,12 +175,13 @@ describe("tracking project REST boundary", () => {
       new Error("Idempotency key is bound to a different tracking payload."),
     );
     expect(
-      (await aiTrackingRoute(context("POST", ["runs"], {}, { "Idempotency-Key": "key" })))?.status,
+      (await promptTrackerRoute(context("POST", ["runs"], {}, { "Idempotency-Key": "key" })))
+        ?.status,
     ).toBe(409);
     mocks.launch.mockRejectedValueOnce(
       new Error("Tracking source and engine combination is unsupported."),
     );
-    expect((await aiTrackingRoute(context("POST", ["runs", "preview"])))?.status).toBe(422);
+    expect((await promptTrackerRoute(context("POST", ["runs", "preview"])))?.status).toBe(422);
   });
   it("exports all bounded pages with public identities and CSV continuation metadata", async () => {
     const sample = {
@@ -195,7 +199,7 @@ describe("tracking project REST boundary", () => {
       .mockResolvedValueOnce({ items: [{ ...sample, publicId: "asm_second" }], nextCursor: null });
     const jsonCtx = context("GET", ["export"]);
     jsonCtx.url.search = "?run_id=air_public&limit=100";
-    const json = await (await aiTrackingRoute(jsonCtx))?.json();
+    const json = await (await promptTrackerRoute(jsonCtx))?.json();
     expect(json.data.scope).toMatchObject({ complete: true, loaded: 2, resumed: false });
     expect(json.data.items.map((item: { id: string }) => item.id)).toEqual([
       "asm_public",
@@ -211,7 +215,7 @@ describe("tracking project REST boundary", () => {
     }));
     const csvCtx = context("GET", ["export"]);
     csvCtx.url.search = "?run_id=air_public&limit=100&format=csv";
-    const csv = await aiTrackingRoute(csvCtx);
+    const csv = await promptTrackerRoute(csvCtx);
     expect(csv?.headers.get("X-Export-Complete")).toBe("false");
     expect(csv?.headers.get("X-Next-Cursor")).toBe("10");
     const bytes = await csv?.text();

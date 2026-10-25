@@ -10,7 +10,7 @@ For each retained sample, preserve run/sample/prompt revision IDs, source, engin
 
 Count answer_present, aio_not_present, partial, failed, unavailable and missing separately. Exclude incomplete answers from mention-rate denominators; an absent Google AI Overview is observed absence, not a mention failure. Show expected and eligible denominators, truncation and cost receipt state, including unknown costs. A provider dataset is limited provider evidence, not all consumer conversations. Synthetic prompt results are controlled model tests, not consumer visibility or verified citation links. Never combine these sources into one visibility score.
 
-`get_ai_tracking_trends` requires project_id and run_id, optionally previous_run_id, limit and cursor. Use it only with identical prompt revisions, source/configuration, locale, model and brand/competitor configuration. Require at least 90% complete coverage in each period; otherwise state that comparison is unsupported. Missing or truncated evidence does not establish improvement or decline.
+`get_prompt_tracker_trends` requires project_id and run_id, optionally previous_run_id, limit and cursor. Use it only with identical prompt revisions, source/configuration, locale, model and brand/competitor configuration. Require at least 90% complete coverage in each period; otherwise state that comparison is unsupported. Missing or truncated evidence does not establish improvement or decline.
 
 ## Proposed changes
 
@@ -18,7 +18,7 @@ For each of up to three recommendations, name the specific question, observed ga
 
 ## Paid extension
 
-Honor no-paid-data requests. Both optional tools require confirmed project_id, brand and domain. `analyze_ai_visibility` additionally needs the reviewed platform, target_type, location_code, language_code and limit. For `compare_ai_prompts`, discover models using `get_ai_research_catalog`; review exact prompt, models, response_language, max_output_tokens and web_search (keep false for controlled synthetic tests). Do not assume a market or model, or silently choose a different one after an estimate failure.
+Honor no-paid-data requests. Both optional tools require confirmed project_id, brand and domain. `analyze_brand_visibility` additionally needs the reviewed platform, target_type, location_code, language_code and limit. For `compare_ai_prompts`, discover models using `get_ai_research_catalog`; review exact prompt, models, response_language, max_output_tokens and web_search (keep false for controlled synthetic tests). Do not assume a market or model, or silently choose a different one after an estimate failure.
 
 Estimate the exact operation with estimate_only true, max_cost_cents zero, fresh false and, for comparisons, cost_policy hard_cap. Show advisory estimate, BYOK/credit source if known, unknown accounting and external client fees. BYOK can still cost money. Obtain explicit approval of inputs and a hard cap before execution; keep the same inputs and stable idempotency key. Do not switch to provider_actual_cost, bypass the cache or broaden scope under the old approval. If hard-cap execution is unavailable, finish the free audit and state the blocker.
 
@@ -36,7 +36,7 @@ Free quote with a zero cap:
 
 ```json mcp-call
 {
-  "tool": "analyze_ai_visibility",
+  "tool": "analyze_brand_visibility",
   "arguments": {
     "project_id": "prj_a00000000000000000000000",
     "brand": "Example",
@@ -57,7 +57,7 @@ Approved execution with a hard cap and a stable key for this exact operation:
 
 ```json mcp-call
 {
-  "tool": "analyze_ai_visibility",
+  "tool": "analyze_brand_visibility",
   "arguments": {
     "project_id": "prj_a00000000000000000000000",
     "brand": "Example",
@@ -70,7 +70,7 @@ Approved execution with a hard cap and a stable key for this exact operation:
     "fresh": false,
     "estimate_only": false,
     "max_cost_cents": 100,
-    "idempotency_key": "example-analyze_ai_visibility-approved-1"
+    "idempotency_key": "example-analyze_brand_visibility-approved-1"
   }
 }
 ```

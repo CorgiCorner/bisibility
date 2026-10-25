@@ -17,6 +17,8 @@ type MarketCellsTranslations = ReturnType<
 >;
 
 export function noRankLabel(row: KeywordRow, t: MarketCellsTranslations) {
+  if (row.rankEvidence?.projection.result === "partial")
+    return t("partialDepth", { depth: row.rankEvidence.projection.returnedDepth ?? 0 });
   const state = row.checkState ?? row.lastCheckStatus;
   if (state === "running") return t("checkRunning");
   if (state === "failed") return t("latestCheckFailed");

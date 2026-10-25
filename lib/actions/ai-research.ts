@@ -5,14 +5,15 @@ import { getAiResearchCatalog, getPromptEngineOptions } from "@/lib/ai-research/
 import { aiHistoryPayments } from "@/lib/ai-research/history-payment";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
-import { getProjectRole } from "@/lib/auth/authorize";
+import { AuthorizationError, getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { moduleSupport } from "@/lib/providers/module-support";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { trackedProjectDomain } from "@/lib/schemas/project";
-import { getActionActor, requireProjectScope } from "./_shared";
+import { notFound } from "next/navigation";
+import { getActionActor, ProjectNotFoundError, requireProjectScope } from "./_shared";
 
 export async function analyzeAiResearchAction(
   projectId: string,
@@ -42,7 +43,17 @@ export async function analyzeAiResearchAction(
 }
 export async function getAiResearchPage(projectId: string, mode: "visibility" | "prompt") {
   const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "read", projectId, { type: "project" });
+  const project = await requireProjectScope(actor, "read", projectId, { type: "project" }).catch(
+    (error: unknown) => {
+      if (
+        error instanceof ProjectNotFoundError ||
+        (error instanceof AuthorizationError && error.code === "forbidden")
+      ) {
+        notFound();
+      }
+      throw error;
+    },
+  );
   const history = await listAgentReports({
     projectId: project.id,
     kind: mode === "visibility" ? "ai_visibility" : "prompt_explorer",

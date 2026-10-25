@@ -1,0 +1,138 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "ai_prompt_research",
+  "title": "Prompt research for example.com (fictional fixture)",
+  "idempotency_key": "fixture-prompt-research-20261024-v1",
+  "body": {
+    "version": 1,
+    "summary": "Reuse one tracked question and propose two distinct questions for review. Nothing was added to the tracker.",
+    "scope": {
+      "category": "Rank tracking",
+      "audience": "Small teams",
+      "language": "en",
+      "market": "US",
+      "goal": "Help teams evaluate reporting workflows"
+    },
+    "assumptions": ["All data is fictional; this is not live customer research."],
+    "coverage": {
+      "state": "partial",
+      "topics_pages": 1,
+      "prompt_pages": 1,
+      "saved_keyword_pages": 1,
+      "ranked_suggestions": "Cache miss refused at zero cost cap.",
+      "free_templates": "Reviewed; no additional distinct intent.",
+      "omitted_pages": "unknown"
+    },
+    "method": "Reused fictional saved evidence; no new model or provider call.",
+    "deduplication": [
+      "Whitespace/case normalized, then same-language semantic equivalents reviewed.",
+      "The configured question is already tracked and excluded from new writes."
+    ],
+    "prompts": [
+      {
+        "text": "How do small teams track weekly keyword rankings?",
+        "category": "neutral",
+        "topic": "Getting started",
+        "source_class": "tracker_sample",
+        "evidence_ids": ["sample-1"],
+        "disposition": "already_tracked",
+        "business_rationale": "Reuses a configured question tied to the audience onboarding goal.",
+        "popularity": null,
+        "confidence": "low",
+        "uncertainty": "Fictional illustration; question frequency and business impact unverified.",
+        "verification": "Review relevance with the project owner; any tracker write or run needs separate approval."
+      },
+      {
+        "text": "Which rank tracker suits a small team?",
+        "category": "comparative",
+        "topic": "Choosing a tracker",
+        "source_class": "model_suggestion",
+        "evidence_ids": ["model-1"],
+        "disposition": "proposed",
+        "business_rationale": "Tests evaluation criteria that could affect product consideration.",
+        "popularity": null,
+        "confidence": "low",
+        "uncertainty": "Fictional illustration; question frequency and business impact unverified.",
+        "verification": "Review relevance with the project owner; any tracker write or run needs separate approval."
+      },
+      {
+        "text": "What should a weekly rank report include?",
+        "category": "neutral",
+        "topic": "Reporting",
+        "source_class": "keyword_derived",
+        "evidence_ids": ["keyword-1"],
+        "disposition": "proposed",
+        "business_rationale": "Connects a saved reporting phrase to a product education question.",
+        "popularity": null,
+        "confidence": "low",
+        "uncertainty": "Fictional illustration; question frequency and business impact unverified.",
+        "verification": "Review relevance with the project owner; any tracker write or run needs separate approval."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "sample-1",
+        "source_class": "tracker_sample",
+        "source_tool": "list_prompt_tracker_samples",
+        "run_id": "air_a00000000000000000000000",
+        "sample_id": "fixture-sample-1",
+        "prompt_revision_id": "fixture-revision-1",
+        "language": "en",
+        "market": "US",
+        "observed_at": "2026-10-23T12:00:00.000Z",
+        "retrieved_at": "2026-10-24T08:00:00.000Z",
+        "fact": "Fictional configured test prompt, not an observed consumer question."
+      },
+      {
+        "id": "model-1",
+        "source_class": "model_suggestion",
+        "source_tool": "get_agent_report",
+        "report_id": "agr_b00000000000000000000000",
+        "language": "en",
+        "market": "US",
+        "observed_at": null,
+        "retrieved_at": "2026-10-24T08:00:00.000Z",
+        "fact": "Fictional saved model proposal. Synthetic hypothesis; no measured popularity. Trusted generation reference unavailable; do not accept as a generated draft."
+      },
+      {
+        "id": "keyword-1",
+        "source_class": "keyword_derived",
+        "source_tool": "list_saved_keywords",
+        "keyword": "weekly rank reports",
+        "language": "en",
+        "market": "US",
+        "observed_at": null,
+        "retrieved_at": "2026-10-24T08:00:00.000Z",
+        "fact": "Fictional saved phrase transformed into a question. No measured AI demand or search volume supplied."
+      }
+    ],
+    "costs": {
+      "paid_calls": 0,
+      "new_provider_cost_cents": 0,
+      "historical_costs": "unknown",
+      "generation": "Not requested; advisory forecast cannot guarantee a hard cap."
+    },
+    "writes": {
+      "tracker_prompts_saved": 0,
+      "runs_started": 0,
+      "schedules_created": 0
+    },
+    "limitations": [
+      "Fictional fixture, not demand measurement.",
+      "Partial inventory cannot establish complete deduplication.",
+      "Model and keyword proposals remain unverified hypotheses."
+    ]
+  },
+  "provenance": {
+    "skill": "ai-prompt-research",
+    "skill_version": "0.1.0",
+    "agent": "unknown",
+    "source_origin": "fictional_fixture",
+    "method": "Retained tracker sample, saved model proposal and saved keyword; no fresh provider work.",
+    "evidence_ids": ["sample-1", "model-1", "keyword-1"],
+    "retrieved_at": "2026-10-24T08:00:00.000Z",
+    "limitations": [
+      "Fictional fixture; original model observation and keyword metric dates unknown."
+    ]
+  }
+}

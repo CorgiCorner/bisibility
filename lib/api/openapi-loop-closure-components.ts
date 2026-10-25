@@ -1,3 +1,4 @@
+import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankHistoryReportSchemas } from "./openapi-rank-history-report";
 
@@ -20,6 +21,7 @@ export const loopClosureSchemas = {
   },
   RankHistoryExportRow: {
     properties: {
+      evidence_projection: evidenceProjectionSchema,
       checked_at: dateTime,
       id: publicIdSchema("check"),
       keyword: { type: "string" },

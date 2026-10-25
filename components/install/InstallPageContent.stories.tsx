@@ -1,5 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import messages from "@/messages/core/en/project-install.json";
+import plMessages from "@/messages/core/pl/project-install.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { InstallPageContent } from "./InstallPageContent";
 
@@ -45,6 +46,17 @@ export const WithApiKey: Story = {
 
 export const WithoutApiKey: Story = {
   args: { ...commonArgs, apiKey: null },
+};
+
+export const Polish: Story = {
+  args: { ...commonArgs, apiKey: null },
+  decorators: [
+    (Story) => (
+      <FeatureMessagesProvider locale="pl" messages={plMessages} timeZone="UTC">
+        <Story />
+      </FeatureMessagesProvider>
+    ),
+  ],
 };
 
 export const WithKeywordAndCheck: Story = {

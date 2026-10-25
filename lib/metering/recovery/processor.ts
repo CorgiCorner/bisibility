@@ -1,6 +1,10 @@
+import { sweepHistoricalRecovery } from "@/lib/provider-evidence/recovery/historical";
 import "server-only";
+import { processRecoveryLookups } from "@/lib/provider-evidence/recovery/job";
+import { sweepRecoveryCandidates } from "@/lib/provider-evidence/recovery/sweep";
 import { maintainRetainedRankResults } from "@/lib/rank-check/recovery-maintenance";
 import { isScheduledMaintenanceEnabled } from "@/lib/temporal/maintenance-schedule-bootstrap";
+import { providerRecoveryWorkflowStop } from "@/lib/temporal/provider-recovery-probe";
 import { processRecoveryCommands } from "./execute";
 
 export function startRecoveryProcessor() {
@@ -12,6 +16,9 @@ export function startRecoveryProcessor() {
     inFlight = (async () => {
       await processRecoveryCommands();
       if (isScheduledMaintenanceEnabled() && Date.now() - lastResults >= 60000) {
+        await sweepRecoveryCandidates(providerRecoveryWorkflowStop);
+        await sweepHistoricalRecovery(providerRecoveryWorkflowStop);
+        await processRecoveryLookups();
         await maintainRetainedRankResults();
         lastResults = Date.now();
       }

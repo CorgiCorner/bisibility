@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * App-owned REST query schemas for AI tracking reads whose MCP tool input differs from what the
+ * App-owned REST query schemas for Prompt Tracker reads whose MCP tool input differs from what the
  * REST handler reads. `openapi-tracking-parameters.ts` derives the spec parameters from here.
  */
 const trackingRunId = z

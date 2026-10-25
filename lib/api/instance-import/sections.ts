@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import { LEGACY_DEFAULT_MARKET_NAME } from "@/lib/api/legacy-market-input";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { notificationPreferenceSelect } from "@/lib/notifications/preference-defaults";
 import { normalizeStoredViewConfig } from "@/lib/saved-views/config-model";
 import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
@@ -245,17 +246,7 @@ async function upsertPreference(
 ) {
   const userId = token.createdById ?? project.ownerId;
   const existing = await client.notificationPreference.findUnique({
-    select: {
-      alertEmail: true,
-      alertInApp: true,
-      checkEmail: true,
-      checkInApp: true,
-      importEmail: true,
-      importInApp: true,
-      inviteEmail: true,
-      inviteInApp: true,
-      reportEmail: true,
-    },
+    select: notificationPreferenceSelect,
     where: { userId_projectId: { projectId: project.id, userId } },
   });
   if (

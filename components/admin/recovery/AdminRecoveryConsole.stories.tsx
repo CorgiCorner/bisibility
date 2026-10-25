@@ -1,32 +1,13 @@
-import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { withRecoveryMessages } from "@/.storybook/recovery-messages";
+import { evidenceRecoveryFixture } from "@/lib/metering/recovery/evidence-view-fixture";
 import { recoveryViewFixture } from "@/lib/metering/recovery/view-fixture";
-import messages from "@/messages/core/en/instance-admin.json";
-import shared from "@/messages/core/en/shared.json";
-import pl from "@/messages/core/pl/instance-admin.json";
-import sharedPl from "@/messages/core/pl/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AdminRecoveryConsole } from "./AdminRecoveryConsole";
 
 const meta = {
   title: "Admin/Task recovery",
   component: AdminRecoveryConsole,
-  decorators: [
-    (Story, context) => (
-      <FeatureMessagesProvider
-        locale={context.parameters.recoveryLocale ?? "en"}
-        timeZone="UTC"
-        messages={mergeMessageCatalogs(
-          context.parameters.recoveryLocale === "pl" ? sharedPl : shared,
-          context.parameters.recoveryLocale === "pl" ? pl : messages,
-        )}
-      >
-        <div className="mx-auto max-w-7xl p-6">
-          <Story />
-        </div>
-      </FeatureMessagesProvider>
-    ),
-  ],
+  decorators: [withRecoveryMessages],
 } satisfies Meta<typeof AdminRecoveryConsole>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -34,7 +15,7 @@ export const MixedCases: Story = { args: { initial: recoveryViewFixture() } };
 export const Unavailable: Story = { args: { initial: null } };
 export const Polish: Story = {
   args: { initial: recoveryViewFixture() },
-  parameters: { recoveryLocale: "pl" },
+  globals: { locale: "pl" },
 };
 export const Empty: Story = {
   args: {
@@ -54,4 +35,21 @@ export const Empty: Story = {
       },
     },
   },
+};
+
+export const UnderReview: Story = { args: { initial: evidenceRecoveryFixture() } };
+export const RecoveredUnknownCost: Story = {
+  args: { initial: evidenceRecoveryFixture("recovered", "unknown") },
+};
+export const Partial: Story = { args: { initial: evidenceRecoveryFixture("partial", "measured") } };
+export const ProviderError: Story = {
+  args: { initial: evidenceRecoveryFixture("provider_error", "measured") },
+};
+export const Missing: Story = { args: { initial: evidenceRecoveryFixture("missing", "unknown") } };
+export const CostConflict: Story = {
+  args: { initial: evidenceRecoveryFixture("recovered", "conflict") },
+};
+export const ReopenedIncident: Story = { args: { initial: evidenceRecoveryFixture() } };
+export const PartialUnresolvedList: Story = {
+  args: { initial: { ...evidenceRecoveryFixture(), rows: [] } },
 };

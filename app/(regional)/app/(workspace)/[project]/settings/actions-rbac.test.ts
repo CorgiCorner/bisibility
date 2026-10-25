@@ -1,10 +1,15 @@
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, expect, it, vi } from "vitest";
 import { deleteWorkspace, updateProject } from "./actions";
+
+const retirementAt = dateFromFrozenNow({ seconds: 1 });
 
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),
   audit: vi.fn(),
   prisma: {
+    providerIncident: { updateMany: vi.fn() },
+    notification: { deleteMany: vi.fn() },
     user: { findUnique: vi.fn() },
     project: {
       findFirst: vi.fn(),
@@ -13,6 +18,7 @@ const mocks = vi.hoisted(() => ({
       delete: vi.fn(),
       update: vi.fn(),
     },
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   },
 }));
@@ -34,6 +40,11 @@ const project = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.prisma.$queryRaw.mockImplementation(async (query: TemplateStringsArray) =>
+    Array.isArray(query) && query.join("").includes("clock_timestamp()")
+      ? [{ now: retirementAt }]
+      : [],
+  );
   mocks.session.mockResolvedValue({ user: { id: "caller" } });
   mocks.prisma.user.findUnique.mockResolvedValue({
     memberships: [{ projectId: project.id, role: "owner" }],
@@ -75,6 +86,10 @@ it.each(operations)(
 it("deletes only as the current owner and ignores forged audit identity", async () => {
   await deleteWorkspace({ projectId, confirmText: project.domain, actorId: "forged" });
   expect(mocks.prisma.project.delete).toHaveBeenCalledWith({ where: { id: project.id } });
+  expect(mocks.prisma.project.update).toHaveBeenCalledWith({
+    where: { id: project.id },
+    data: { providerIncidentsRetiredThrough: retirementAt },
+  });
   expect(mocks.audit).toHaveBeenCalledWith(
     expect.objectContaining({ actorId: "caller", targetId: projectId }),
     mocks.prisma,

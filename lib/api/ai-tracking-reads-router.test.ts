@@ -79,7 +79,7 @@ function run(index: number, state: string, finishedAt: Date | null) {
 }
 
 async function get(resource: string, query = "") {
-  const path = ["projects", projectPublicId, "ai-tracking", resource];
+  const path = ["projects", projectPublicId, "prompt-tracker", resource];
   const response = await handleApiRequest(
     new Request(`https://example.com/api/v1/${path.join("/")}${query}`, {
       headers: { Authorization: "Bearer bsb_key_live_test" },
@@ -118,7 +118,7 @@ beforeEach(() => {
   });
 });
 
-describe("AI tracking reads through the API router", () => {
+describe("Prompt Tracker reads through the API router", () => {
   it("lists prompts with their topic and revisions, one page at a time", async () => {
     const first = await get("prompts", "?limit=1");
 

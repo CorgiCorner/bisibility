@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.42.0] - 2026-10-25
+
+- **Breaking:** use Prompt Tracker and Brand Visibility API/tool names; add US English keyword Prompt Research, engine choices and Prompt Playground UI (formerly Prompt Explorer).
+
+- Add Page indexing with trends, sitemaps, history and inspections; improve live rank updates, provider controls, AI catalog loading, research reliability and layouts.
+
+- Enable hourly check summaries by default; add optional weekly incident updates and provider preferences, improve evidence recovery and prevent repeat SERP fallback charges.
+
+- Add installable SEO and AI research skills with clearer workflow groups, evidence handling and CLI-only setup.
+
+- Require Node.js 22.23.4 and patch security issues in request parsing, transport and collection validation.
+
 ## [0.41.0] - 2026-10-23
 
 ### Fixed

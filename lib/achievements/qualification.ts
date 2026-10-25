@@ -17,7 +17,7 @@ const operations = new Set([
   "listSavedKeywords",
   "createSavedKeywords",
   "runAiResearch",
-  "analyzeAiVisibility",
+  "analyzeBrandVisibility",
   "compareAiPrompts",
   "getKeywordHistory",
 ]);

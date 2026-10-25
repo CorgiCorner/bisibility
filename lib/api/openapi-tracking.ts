@@ -1,45 +1,48 @@
-import { aiTrackingSchemas } from "@/lib/mcp/tracking-contract";
+import { promptTrackerSchemas } from "@/lib/mcp/tracking-contract";
 import { paymentRequestFields } from "./openapi-action-payment";
 import { apiCredentialSecurity } from "./openapi-pat";
 import { problemResponse } from "./openapi-problem";
 import { appOwnedTrackingParameters } from "./openapi-tracking-parameters";
 import { appOwnedTrackingRunOperations } from "./openapi-tracking-run-inputs";
-import { aiTrackingResponseSchema } from "./openapi-tracking-schemas";
-import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
+import { promptTrackerResponseSchema } from "./openapi-tracking-schemas";
+import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 
-const summaries: Record<keyof typeof aiTrackingPolicies, string> = {
-  listAiTrackingTopics: "List AI tracking topics",
-  createAiTrackingTopic: "Create an AI tracking topic",
-  updateAiTrackingTopic: "Update an AI tracking topic",
-  archiveAiTrackingTopic: "Archive an AI tracking topic",
-  listAiTrackingPrompts: "List AI tracking prompts",
-  createAiTrackingPrompt: "Create an AI tracking prompt",
-  updateAiTrackingPrompt: "Revise an AI tracking prompt",
-  archiveAiTrackingPrompt: "Archive an AI tracking prompt",
-  listAiTrackingSchedules: "List AI tracking schedules",
-  createAiTrackingSchedule: "Create an AI tracking schedule",
-  updateAiTrackingSchedule: "Update an AI tracking schedule",
-  archiveAiTrackingSchedule: "Archive an AI tracking schedule",
-  previewAiTrackingRun: "Preview an AI tracking run",
-  createAiTrackingRun: "Queue an AI tracking run",
-  listAiTrackingRuns: "List AI tracking runs",
-  getAiTrackingRun: "Get an AI tracking run",
-  listAiTrackingSamples: "List AI tracking samples",
-  cancelAiTrackingRun: "Cancel an AI tracking run",
-  retryAiTrackingRun: "Retry an AI tracking run",
-  getAiTrackingHistory: "Get AI tracking history",
-  getAiTrackingTrends: "Compare AI tracking periods",
-  exportAiTrackingEvidence: "Export AI tracking evidence",
-  suggestAiTrackingPrompts: "Suggest AI tracking prompts",
-  acceptAiTrackingSuggestions: "Accept AI tracking suggestions",
-  aiTrackingSuggestionsPreview: "Preview AI prompt model generation",
-  aiTrackingSuggestionsGenerate: "Generate AI prompt hypotheses",
+const summaries: Record<
+  keyof typeof promptTrackerPolicies | keyof typeof promptResearchPolicies,
+  string
+> = {
+  listPromptTrackerTopics: "List Prompt Tracker topics",
+  createPromptTrackerTopic: "Create an Prompt Tracker topic",
+  updatePromptTrackerTopic: "Update an Prompt Tracker topic",
+  archivePromptTrackerTopic: "Archive an Prompt Tracker topic",
+  listPromptTrackerPrompts: "List Prompt Tracker prompts",
+  createPromptTrackerPrompt: "Create an Prompt Tracker prompt",
+  updatePromptTrackerPrompt: "Revise an Prompt Tracker prompt",
+  archivePromptTrackerPrompt: "Archive an Prompt Tracker prompt",
+  listPromptTrackerSchedules: "List Prompt Tracker schedules",
+  createPromptTrackerSchedule: "Create an Prompt Tracker schedule",
+  updatePromptTrackerSchedule: "Update an Prompt Tracker schedule",
+  archivePromptTrackerSchedule: "Archive an Prompt Tracker schedule",
+  previewPromptTrackerRun: "Preview an Prompt Tracker run",
+  createPromptTrackerRun: "Queue an Prompt Tracker run",
+  listPromptTrackerRuns: "List Prompt Tracker runs",
+  getPromptTrackerRun: "Get an Prompt Tracker run",
+  listPromptTrackerSamples: "List Prompt Tracker samples",
+  cancelPromptTrackerRun: "Cancel an Prompt Tracker run",
+  retryPromptTrackerRun: "Retry an Prompt Tracker run",
+  getPromptTrackerHistory: "Get Prompt Tracker history",
+  getPromptTrackerTrends: "Compare Prompt Tracker periods",
+  exportPromptTrackerEvidence: "Export Prompt Tracker evidence",
+  suggestPromptResearchPrompts: "Suggest Prompt Research prompts",
+  acceptPromptResearchSuggestions: "Accept Prompt Research suggestions",
+  promptResearchSuggestionsPreview: "Preview AI prompt model generation",
+  promptResearchSuggestionsGenerate: "Generate AI prompt hypotheses",
 };
 
 const json = (schema: object) => ({ "application/json": { schema } });
 const problem = (description: string) => problemResponse(description);
 /** Run operations whose planner rejects a missing Idempotency-Key (the router maps the header). */
-const keyedRunOperations = new Set(["createAiTrackingRun", "retryAiTrackingRun"]);
+const keyedRunOperations = new Set(["createPromptTrackerRun", "retryPromptTrackerRun"]);
 
 function withComponentReferences(value: unknown, operationId: string): unknown {
   if (Array.isArray(value)) return value.map((item) => withComponentReferences(item, operationId));
@@ -55,9 +58,9 @@ function withComponentReferences(value: unknown, operationId: string): unknown {
 }
 
 /** Preserve recursive input definitions when moving MCP schemas into an OpenAPI document. */
-export function aiTrackingSchemaComponents(): Record<string, object> {
+export function promptTrackerSchemaComponents(): Record<string, object> {
   return Object.fromEntries(
-    Object.entries(aiTrackingSchemas()).flatMap(([operationId, input]) =>
+    Object.entries(promptTrackerSchemas()).flatMap(([operationId, input]) =>
       operationId in appOwnedTrackingParameters || operationId in appOwnedTrackingRunOperations
         ? []
         : Object.entries((input.definitions ?? {}) as Record<string, object>).map(
@@ -79,10 +82,13 @@ function queryParameters(properties: Record<string, unknown>, required: readonly
   }));
 }
 
-export function aiTrackingPaths() {
-  const inputs = aiTrackingSchemas();
+export function promptTrackerPaths() {
+  const inputs = promptTrackerSchemas();
   const paths: Record<string, Record<string, object>> = {};
-  for (const [name, operation] of Object.entries(aiTrackingPolicies)) {
+  for (const [name, operation] of [
+    ...Object.entries(promptTrackerPolicies),
+    ...Object.entries(promptResearchPolicies),
+  ]) {
     const operationId = name as keyof typeof inputs;
     const runOwned = appOwnedTrackingRunOperations[operationId];
     const owned =
@@ -95,7 +101,7 @@ export function aiTrackingPaths() {
       string,
       unknown
     >;
-    if (operationId === "aiTrackingSuggestionsGenerate")
+    if (operationId === "promptResearchSuggestionsGenerate")
       Object.assign(properties, {
         accepted_payment: paymentRequestFields.accepted_payment,
         require_payment: paymentRequestFields.require_payment,
@@ -113,19 +119,21 @@ export function aiTrackingPaths() {
       parameters.push(...queryParameters(properties, input.required ?? []));
     } else {
       parameters.push(
-        runOwned && !keyedRunOperations.has(operationId) && operationId !== "previewAiTrackingRun"
+        runOwned &&
+          !keyedRunOperations.has(operationId) &&
+          operationId !== "previewPromptTrackerRun"
           ? { $ref: "#/components/parameters/IdempotencyKey" }
           : {
               in: "header",
               name: "Idempotency-Key",
               required:
                 keyedRunOperations.has(operationId) ||
-                operationId === "aiTrackingSuggestionsGenerate",
+                operationId === "promptResearchSuggestionsGenerate",
               schema: {
                 type: "string",
                 maxLength: 200,
                 ...(keyedRunOperations.has(operationId) ? { minLength: 1 } : {}),
-                ...(operationId === "aiTrackingSuggestionsGenerate" ? { format: "uuid" } : {}),
+                ...(operationId === "promptResearchSuggestionsGenerate" ? { format: "uuid" } : {}),
               },
             },
       );
@@ -134,8 +142,8 @@ export function aiTrackingPaths() {
       description:
         "Project-scoped tracking data with retained provenance and explicit unknown measurements.",
       content: {
-        ...json(aiTrackingResponseSchema(operationId)),
-        ...(operationId === "exportAiTrackingEvidence"
+        ...json(promptTrackerResponseSchema(operationId)),
+        ...(operationId === "exportPromptTrackerEvidence"
           ? {
               "text/csv": {
                 schema: {
@@ -152,7 +160,7 @@ export function aiTrackingPaths() {
     paths[operation.path][operation.method.toLowerCase()] = {
       operationId,
       summary: summaries[operationId],
-      ...(operationId === "cancelAiTrackingRun" || operationId === "suggestAiTrackingPrompts"
+      ...(operationId === "cancelPromptTrackerRun" || operationId === "suggestPromptResearchPrompts"
         ? { description: "No request body fields are used. An optional JSON body is ignored." }
         : {}),
       parameters,
@@ -173,7 +181,7 @@ export function aiTrackingPaths() {
           }
         : {}),
       responses: {
-        [operationId.startsWith("create") || operationId === "acceptAiTrackingSuggestions"
+        [operationId.startsWith("create") || operationId === "acceptPromptResearchSuggestions"
           ? "201"
           : "200"]: success,
         "400": problem("Invalid input or cursor"),

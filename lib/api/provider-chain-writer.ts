@@ -30,3 +30,44 @@ export async function renumberProviderChain(
     ),
   );
 }
+
+/** Call under the project mutation lock so concurrent connects cannot both become primary. */
+export async function newSerpConnectionSettings(projectId: string, client: ProviderChainClient) {
+  const connections = await client.providerConnection.findMany({
+    select: { enabled: true, priority: true },
+    where: { kind: "serp", projectId },
+  });
+  return {
+    enabled: !connections.some((connection) => connection.enabled),
+    priority:
+      connections.length === 0
+        ? 0
+        : Math.max(...connections.map((connection) => connection.priority)) + 1,
+  };
+}
+
+export async function connectedProviderChainSettings(
+  projectId: string,
+  kind: ProviderKind,
+  before: { enabled: boolean; priority: number } | null,
+  input: { enabled: boolean; priority?: number },
+  options: { restoreStoredCredentials?: boolean; activateStoredCredentials?: boolean },
+  client: ProviderChainClient,
+) {
+  if (kind === "serp" && !before) return newSerpConnectionSettings(projectId, client);
+  const connections = await client.providerConnection.findMany({
+    select: { priority: true },
+    where: { kind, projectId },
+  });
+  const priority =
+    input.priority ??
+    before?.priority ??
+    (connections.length === 0
+      ? 0
+      : Math.max(...connections.map((connection) => connection.priority)) + 1);
+  const enabled =
+    options.restoreStoredCredentials && before
+      ? options.activateStoredCredentials === true || before.enabled
+      : priority === 0 || input.enabled;
+  return { priority, enabled };
+}

@@ -37,8 +37,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -78,8 +78,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -137,8 +137,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -181,8 +181,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSamples",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "operationId": "listPromptTrackerSamples",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
       "status": 200
     },
     {
@@ -229,8 +229,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "exportAiTrackingEvidence",
-      "path": "/projects/{project_id}/ai-tracking/export",
+      "operationId": "exportPromptTrackerEvidence",
+      "path": "/projects/{project_id}/prompt-tracker/export",
       "status": 200
     },
     {
@@ -277,8 +277,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "exportAiTrackingEvidence",
-      "path": "/projects/{project_id}/ai-tracking/export",
+      "operationId": "exportPromptTrackerEvidence",
+      "path": "/projects/{project_id}/prompt-tracker/export",
       "status": 200
     },
     {
@@ -343,8 +343,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "exportAiTrackingEvidence",
-      "path": "/projects/{project_id}/ai-tracking/export",
+      "operationId": "exportPromptTrackerEvidence",
+      "path": "/projects/{project_id}/prompt-tracker/export",
       "status": 200
     },
     {
@@ -394,8 +394,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "exportAiTrackingEvidence",
-      "path": "/projects/{project_id}/ai-tracking/export",
+      "operationId": "exportPromptTrackerEvidence",
+      "path": "/projects/{project_id}/prompt-tracker/export",
       "status": 200
     }
   ],

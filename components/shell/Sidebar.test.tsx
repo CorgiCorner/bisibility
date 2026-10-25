@@ -144,14 +144,15 @@ describe("Sidebar", () => {
       [
         "dashboard",
         "rank-tracker",
-        "ai-tracking",
-        "competitors",
         "keyword-research",
         "domain-overview",
         "backlinks",
-        "ai-visibility",
-        "prompt-explorer",
         "site-audit",
+        "competitors",
+        "prompt-tracker",
+        "prompt-research",
+        "brand-visibility",
+        "prompt-playground",
         "search-console",
         "agent-reports",
         "markets",
@@ -397,8 +398,8 @@ describe("Sidebar", () => {
 
     expect(screen.queryByText("ACTIVITY")).toBeNull();
     for (const [tag, firstRow] of [
-      ["TRACKING", "Rank Tracker"],
-      ["RESEARCH", "Keyword Research"],
+      ["SEO", "Rank Tracker"],
+      ["AI", "Prompt Tracker"],
       ["DATA", "Search Console"],
       ["PROJECT", "Markets"],
     ] as const) {
@@ -583,10 +584,10 @@ describe("Sidebar", () => {
     }
 
     const expanded = render(shell(false));
-    const modules = expanded.getByText("Tracking");
+    const modules = expanded.getByText("SEO");
     expect(expanded.queryByText("Activity")).toBeNull();
-    expect(expanded.getByText("Tracking")).toBeInTheDocument();
-    expect(expanded.getByText("Research & audits")).toBeInTheDocument();
+    expect(expanded.getByText("SEO")).toBeInTheDocument();
+    expect(expanded.getByText("AI Search")).toBeInTheDocument();
     expect(expanded.getByText("Data & reports")).toBeInTheDocument();
     expect(expanded.getByText("Project")).toBeInTheDocument();
     expect(modules.closest("a")).toBeNull();
@@ -610,7 +611,7 @@ describe("Sidebar", () => {
     // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
     expect(modules.closest("[data-tooltip]")).toHaveAttribute(
       "data-tooltip",
-      "Track rankings and AI performance over time.",
+      "Track rankings and research keywords, websites, backlinks and site health.",
     );
     expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
 
@@ -621,8 +622,8 @@ describe("Sidebar", () => {
 
     const collapsed = render(shell(true));
     expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-    expect(collapsed.getByText("TRACKING")).toBeInTheDocument();
-    expect(collapsed.getByText("RESEARCH")).toBeInTheDocument();
+    expect(collapsed.getByText("SEO")).toBeInTheDocument();
+    expect(collapsed.getByText("AI")).toBeInTheDocument();
     expect(collapsed.getByText("DATA")).toBeInTheDocument();
     expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
     expect(collapsed.queryByText("Activity")).toBeNull();
@@ -630,13 +631,14 @@ describe("Sidebar", () => {
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual([
       "Dashboard",
       "Rank Tracker",
-      "AI Tracking",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "AI Visibility",
-      "Prompt Explorer",
       "Site Audit",
+      "Prompt Tracker",
+      "Prompt Research",
+      "Brand Visibility",
+      "Prompt Playground",
       "Search Console",
       "Agent Reports",
       "Markets",

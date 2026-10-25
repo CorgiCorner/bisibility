@@ -58,9 +58,9 @@ describe("research workspace MCP/REST contract", () => {
 
   it("publishes cost controls and separates observed data from synthetic tests", () => {
     const definitions = getMcpToolDefinitions();
-    for (const name of ["analyze_ai_visibility", "compare_ai_prompts"]) {
+    for (const name of ["analyze_brand_visibility", "compare_ai_prompts"]) {
       const tool = definitions.find((item) => item.name === name);
-      if (name === "analyze_ai_visibility")
+      if (name === "analyze_brand_visibility")
         expect(tool?.inputSchema.required).toContain("max_cost_cents");
       else expect(tool?.inputSchema.required).not.toContain("max_cost_cents");
       expect(tool?.annotations).toMatchObject({ readOnlyHint: false, openWorldHint: true });

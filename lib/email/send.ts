@@ -6,7 +6,13 @@ import { reserveEmailDailyBudget } from "./budget";
 import { requireEmailFrom } from "./from";
 import { refreshInstanceMailRuntime } from "./instance-mail-store";
 import { resolveEmailProvider } from "./registry";
-import { EmailBudgetExceededError, type EmailCategory, SUPPORTED_EMAIL_PROVIDERS } from "./types";
+import {
+  EmailBudgetExceededError,
+  type EmailCategory,
+  EmailNotSubmittedError,
+  EmailProviderUnavailableError,
+  SUPPORTED_EMAIL_PROVIDERS,
+} from "./types";
 
 const SUBJECT_PREFIX = "[bisibility] ";
 
@@ -15,6 +21,7 @@ export { EmailBudgetExceededError, EmailSendError } from "./types";
 export type SendEmailInput = {
   category: EmailCategory;
   from?: string;
+  requireProvider?: boolean;
   html: string;
   replyTo?: string;
   sendCounterReserved?: boolean;
@@ -27,7 +34,7 @@ function devLogSubject(subject: string) {
   return subject.startsWith(SUBJECT_PREFIX) ? subject.slice(SUBJECT_PREFIX.length) : subject;
 }
 
-export async function sendEmail({
+async function prepareEmail({
   category,
   from,
   to,
@@ -36,51 +43,66 @@ export async function sendEmail({
   replyTo,
   text,
   sendCounterReserved = false,
+  requireProvider = false,
 }: SendEmailInput) {
-  if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
-  await refreshInstanceMailRuntime();
-  const provider = resolveEmailProvider();
+  try {
+    if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
+    await refreshInstanceMailRuntime();
+    const provider = resolveEmailProvider();
 
-  if (!provider) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(`Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to send email.`);
+    if (!provider) {
+      if (requireProvider)
+        throw new EmailProviderUnavailableError("Email provider is unavailable.");
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(`Configure EMAIL_PROVIDER (${SUPPORTED_EMAIL_PROVIDERS}) to send email.`);
+      }
+      console.info(`[email] ${devLogSubject(subject)} for ${to}`);
+      return;
     }
-    console.info(`[email] ${devLogSubject(subject)} for ${to}`);
-    return;
-  }
 
-  const message = {
-    from: from ?? requireEmailFrom(),
-    html,
-    replyTo,
-    sendCounterReserved,
-    subject,
-    text,
-    to,
-  };
-  if (!provider.isConfigured()) {
-    await provider.send(message);
-    return;
-  }
+    if (requireProvider && !provider.isConfigured())
+      throw new EmailProviderUnavailableError("Email provider is not configured.");
 
-  const reservation = await reserveEmailDailyBudget(category);
-  if (!reservation.granted) {
-    if (reservation.notificationDue) {
-      const utcDate = reservation.day.toISOString().slice(0, 10);
-      await notifyOps({
-        dedupeKey: `email-budget:${category}:${utcDate}`,
-        fields: {
-          Category: category,
-          "Daily recipient limit": reservation.limit,
-          "UTC day": utcDate,
-        },
-        kind: "email_daily_budget_exhausted",
-        severity: "error",
-        title: `Daily ${category} email budget exhausted`,
-      });
+    const message = {
+      from: from ?? requireEmailFrom(),
+      html,
+      replyTo,
+      sendCounterReserved,
+      subject,
+      text,
+      to,
+    };
+    if (!provider.isConfigured()) {
+      return { provider, message };
     }
-    throw new EmailBudgetExceededError(category, reservation.limit, reservation.day);
-  }
 
-  await provider.send(message);
+    const reservation = await reserveEmailDailyBudget(category);
+    if (!reservation.granted) {
+      if (reservation.notificationDue) {
+        const utcDate = reservation.day.toISOString().slice(0, 10);
+        await notifyOps({
+          dedupeKey: `email-budget:${category}:${utcDate}`,
+          fields: {
+            Category: category,
+            "Daily recipient limit": reservation.limit,
+            "UTC day": utcDate,
+          },
+          kind: "email_daily_budget_exhausted",
+          severity: "error",
+          title: `Daily ${category} email budget exhausted`,
+        });
+      }
+      throw new EmailBudgetExceededError(category, reservation.limit, reservation.day);
+    }
+
+    return { provider, message };
+  } catch (error) {
+    if (error instanceof EmailBudgetExceededError) throw error;
+    throw new EmailNotSubmittedError(error);
+  }
+}
+
+export async function sendEmail(input: SendEmailInput) {
+  const prepared = await prepareEmail(input);
+  if (prepared) await prepared.provider.send(prepared.message);
 }

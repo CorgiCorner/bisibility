@@ -1,6 +1,7 @@
 "use client";
 
 import { Popup as Popover } from "@/components/ui/Popup";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { useToast } from "@/components/ui/toast-context";
 import {
   type NotificationTransport,
@@ -10,70 +11,20 @@ import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notif
 import { useAppRealtime } from "@/lib/realtime/useAppRealtime";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
-import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
-import { FlagCheckeredIcon as FlagCheckered } from "@phosphor-icons/react/dist/csr/FlagCheckered";
-import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/csr/UsersThree";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
-import type { Icon } from "@phosphor-icons/react/lib";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { NotificationRow } from "./NotificationRow";
+import { OpenIncidentRows } from "./OpenIncidentRows";
 
-type NotificationKind = "check" | "error" | "rank" | "system" | "team";
-
-type NotificationBellClientProps = {
+export type NotificationBellClientProps = {
   defaultOpen?: boolean;
   feed: NotificationFeed;
   markAllNotificationsRead: () => Promise<{ updated: number }>;
   markNotificationRead: (input: { notificationId: string }) => Promise<{ updated: number }>;
   projectRef: string;
-  refreshNotificationFeed: () => Promise<NotificationFeed>;
+  refreshNotificationFeed: (openIncidents?: boolean) => Promise<NotificationFeed>;
   transport?: NotificationTransport;
-};
-
-const tintForKind: Record<NotificationKind, { bg: string; fg: string }> = {
-  check: {
-    bg: "color-mix(in srgb, var(--green) 13%, transparent)",
-    fg: "var(--green)",
-  },
-  error: {
-    bg: "color-mix(in srgb, var(--red) 13%, transparent)",
-    fg: "var(--red)",
-  },
-  rank: {
-    bg: "color-mix(in srgb, var(--blue) 13%, transparent)",
-    fg: "var(--blue)",
-  },
-  system: {
-    bg: "color-mix(in srgb, var(--blue) 13%, transparent)",
-    fg: "var(--blue)",
-  },
-  team: {
-    bg: "color-mix(in srgb, var(--purple) 13%, transparent)",
-    fg: "var(--purple)",
-  },
-};
-
-const iconForType: Record<NotificationFeedItem["type"], Icon> = {
-  alert_fired: WarningCircle,
-  check_complete: FlagCheckered,
-  check_failed: WarningCircle,
-  import_done: FlagCheckered,
-  import_failed: WarningCircle,
-  invite: UsersThree,
-  member_joined: UsersThree,
-  system: Bell,
-};
-
-const kindForType: Record<NotificationFeedItem["type"], NotificationKind> = {
-  alert_fired: "error",
-  check_complete: "check",
-  check_failed: "error",
-  import_done: "check",
-  import_failed: "error",
-  invite: "team",
-  member_joined: "team",
-  system: "system",
+  timeZone?: string;
 };
 
 const POPOVER_STYLE = {
@@ -93,7 +44,7 @@ function isUnread(
   readIds: ReadonlySet<string>,
   allReadAt: string | null,
 ) {
-  if (item.readAt || readIds.has(item.id)) {
+  if (item.withdrawnAt || item.readAt || readIds.has(item.id)) {
     return false;
   }
 
@@ -109,8 +60,9 @@ function unreadCountForFeed(
     return feed.items.filter((item) => isUnread(item, readIds, allReadAt)).length;
   }
 
+  const withdrawnCount = feed.items.filter((item) => item.withdrawnAt && !item.readAt).length;
   const localReadCount = feed.items.filter((item) => !item.readAt && readIds.has(item.id)).length;
-  return Math.max(0, feed.unreadCount - localReadCount);
+  return Math.max(0, feed.unreadCount - localReadCount - withdrawnCount);
 }
 
 export function NotificationBellClient({
@@ -144,18 +96,23 @@ function NotificationBellView({
   feed,
   markAllNotificationsRead,
   markNotificationRead,
+  refreshNotificationFeed,
+  timeZone,
 }: Readonly<NotificationBellClientProps>) {
   const t = useTranslations("shell.notifications");
   const { showToast } = useToast();
+  const [openIncidents, setOpenIncidents] = useState(false);
+  const [incidentFeed, setIncidentFeed] = useState<NotificationFeed | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [allReadAt, setAllReadAt] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const open = Boolean(anchorEl) || defaultOpen;
+  const [open, setOpen] = useState(defaultOpen);
+  const [autoFocus, setAutoFocus] = useState(false);
   const unreadCount = unreadCountForFeed(feed, readIds, allReadAt);
 
   function close() {
-    setAnchorEl(null);
+    setOpen(false);
   }
 
   function markItemRead(item: NotificationFeedItem) {
@@ -202,7 +159,11 @@ function NotificationBellView({
           "grid h-9 w-9 place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
           open ? "bg-bg-sunken" : "",
         ].join(" ")}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
+        ref={setAnchorEl}
+        onClick={(event) => {
+          setAutoFocus(event.detail === 0);
+          setOpen(true);
+        }}
         title={t("title")}
         type="button"
       >
@@ -220,6 +181,7 @@ function NotificationBellView({
         id="notification-bell-menu"
         onClose={close}
         open={open}
+        autoFocus={autoFocus}
         contentProps={{ style: POPOVER_STYLE }}
       >
         <div className="flex items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
@@ -235,62 +197,60 @@ function NotificationBellView({
             {t("markAllRead")}
           </button>
         </div>
+        <div className="border-b border-border px-4 py-2">
+          <ToggleGroup
+            type="multiple"
+            value={openIncidents ? ["incidents"] : []}
+            disabled={isPending}
+            onValueChange={() => {
+              if (openIncidents) {
+                setOpenIncidents(false);
+                return;
+              }
+              startTransition(async () => {
+                try {
+                  setIncidentFeed(await refreshNotificationFeed(true));
+                  setOpenIncidents(true);
+                } catch {
+                  showToast(t("filterError"), { severity: "error" });
+                }
+              });
+            }}
+          >
+            <ToggleGroupItem value="incidents">{t("openIncidents")}</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         <div className="max-h-[380px] overflow-y-auto">
-          {feed.items.length > 0 ? (
-            feed.items.map((item) => (
-              <NotificationRow
-                item={item}
-                key={item.id}
-                onNavigate={() => {
-                  markItemRead(item);
-                  close();
-                }}
-                unread={isUnread(item, readIds, allReadAt)}
-              />
-            ))
+          {openIncidents && incidentFeed ? (
+            <OpenIncidentRows
+              initialFeed={incidentFeed}
+              refreshFeed={refreshNotificationFeed}
+              onNavigate={(item) => {
+                markItemRead(item);
+                close();
+              }}
+              isUnread={(item) => isUnread(item, readIds, allReadAt)}
+            />
+          ) : feed.items.some((item) => !item.withdrawnAt) ? (
+            feed.items
+              .filter((item) => !item.withdrawnAt)
+              .map((item) => (
+                <NotificationRow
+                  item={item}
+                  timeZone={timeZone}
+                  key={item.id}
+                  onNavigate={() => {
+                    markItemRead(item);
+                    close();
+                  }}
+                  unread={isUnread(item, readIds, allReadAt)}
+                />
+              ))
           ) : (
             <div className="px-4 py-8 text-center text-xs text-fg-muted">{t("empty")}</div>
           )}
         </div>
       </Popover>
     </span>
-  );
-}
-
-type NotificationRowProps = {
-  item: NotificationFeedItem;
-  onNavigate: () => void;
-  unread: boolean;
-};
-
-function NotificationRow({ item, onNavigate, unread }: Readonly<NotificationRowProps>) {
-  const Icon = iconForType[item.type] ?? ChartLineUp;
-  const tint = tintForKind[kindForType[item.type] ?? "rank"];
-  const detail = item.type === "check_failed" && item.body ? item.body : item.meta;
-
-  return (
-    <Link
-      className="flex w-full items-start gap-[11px] border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-bg-sunken"
-      href={item.href}
-      onClick={onNavigate}
-    >
-      <span
-        className="grid h-8 w-8 flex-none place-items-center rounded-control"
-        style={{ background: tint.bg, color: tint.fg }}
-      >
-        <Icon aria-hidden size={16} weight="regular" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-medium leading-[1.35] text-fg">{item.title}</span>
-        <span className="mt-0.5 block font-sans text-[11px] text-fg-muted">{detail}</span>
-      </span>
-      <span className="flex flex-none flex-col items-end gap-[5px]">
-        <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">{item.time}</span>
-        <span
-          className="h-[7px] w-[7px] rounded-full bg-accent"
-          style={{ visibility: unread ? "visible" : "hidden" }}
-        />
-      </span>
-    </Link>
   );
 }

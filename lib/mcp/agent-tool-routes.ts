@@ -109,6 +109,27 @@ export function dispatchAgentToolRoute(name: string, input: ToolArgs): AgentRest
       `${project(input, "analytics/query-stats")}${searchPerformanceQuery(input)}`,
       "GET",
     );
+  if (name === "listSearchIndexSitemaps")
+    return call(input, project(input, "search-index/sitemaps"), "GET");
+  if (name === "getSearchIndexSitemap")
+    return call(input, member(input, "search-index/sitemaps", "path"), "GET");
+  if (name === "inspectSearchIndexUrls")
+    return call(input, project(input, "search-index/inspections"), "POST", { urls: input.urls });
+  if (name === "getPageIndexingReport")
+    return call(input, project(input, "search-index/report"), "GET");
+  if (name === "getPageIndexingSettings")
+    return call(input, project(input, "search-index/settings"), "GET");
+  if (name === "listPageIndexingUrls")
+    return call(
+      input,
+      `${project(input, "search-index/urls")}${query(input, ["group", "coverage_state", "sitemap", "source", "search", "changed_since", "cursor", "limit", "history"])}`,
+      "GET",
+    );
+  if (name === "updatePageIndexingSettings")
+    return call(input, project(input, "search-index/settings"), "PATCH", {
+      budget_mode: input.budget_mode,
+      inspection_daily_limit: input.inspection_daily_limit,
+    });
   if (name === "syncProjectTraffic") return call(input, project(input, "analytics/sync"), "POST");
   if (name === "resendTeamInvite")
     return call(input, member(input, "team/invites", "invite_id", "/resend"), "POST");

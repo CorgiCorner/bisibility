@@ -1,11 +1,14 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ThemeSegments } from "@/components/ui/ThemeSegments";
 import { TooltipProvider } from "@/components/ui/Tooltip";
-import { DEFAULT_LOCALE } from "@/i18n/config";
 import { DEFAULT_TIME_ZONE } from "@/i18n/formats";
 import { initializeThemeFromCookie, readTheme } from "@/lib/theme/browser-theme";
-import sharedMessages from "@/messages/core/en/shared.json";
+import shareden from "@/messages/core/en/shared.json";
+import sharedesES from "@/messages/core/es-ES/shared.json";
+import sharedja from "@/messages/core/ja/shared.json";
+import sharedpl from "@/messages/core/pl/shared.json";
 import type { Decorator, Preview } from "@storybook/nextjs-vite";
+import { storyLocale, storyTimeZone } from "./story-locale";
 import "../app/globals.css";
 import "./preview-fonts.css";
 
@@ -42,6 +45,8 @@ if (typeof window !== "undefined") {
 }
 
 const withAppTheme: Decorator = (Story, context) => {
+  const locale = storyLocale(context.globals.locale);
+  const shared = { en: shareden, pl: sharedpl, ja: sharedja, "es-ES": sharedesES };
   const activeTheme = typeof document === "undefined" ? "light" : readTheme();
 
   return (
@@ -51,9 +56,9 @@ const withAppTheme: Decorator = (Story, context) => {
       data-theme={activeTheme}
     >
       <FeatureMessagesProvider
-        locale={DEFAULT_LOCALE}
-        messages={sharedMessages}
-        timeZone={DEFAULT_TIME_ZONE}
+        locale={locale}
+        messages={shared[locale]}
+        timeZone={storyTimeZone(context.globals.timeZone)}
       >
         <TooltipProvider>
           <Story />
@@ -70,6 +75,17 @@ const withAppTheme: Decorator = (Story, context) => {
 
 const preview: Preview = {
   decorators: [withAppTheme],
+  initialGlobals: { locale: "en", timeZone: DEFAULT_TIME_ZONE },
+  globalTypes: {
+    locale: {
+      description: "Locale",
+      toolbar: { icon: "globe", items: ["en", "pl", "ja", "es-ES"] },
+    },
+    timeZone: {
+      description: "Time zone",
+      toolbar: { icon: "calendar", items: [DEFAULT_TIME_ZONE, "Europe/Warsaw", "Asia/Tokyo"] },
+    },
+  },
   parameters: {
     backgrounds: { disabled: true },
     controls: { expanded: true },

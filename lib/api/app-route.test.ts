@@ -42,6 +42,7 @@ import {
   OwnProviderKeyRequiredError,
 } from "@/lib/providers/execution-extension-errors";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
+import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { quoteRankRunReservationForLaunch } from "@/lib/rank-check/runs/launch-preflight";
 import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
@@ -58,6 +59,28 @@ describe("withAppRoute", () => {
     mocks.getActionActor.mockResolvedValue({ id: "user_1" });
     mocks.admissionDetails.mockResolvedValue(null);
     mocks.rankUsesNativeUnits.mockResolvedValue(false);
+  });
+
+  it("maps a mixed provider chain ending in funding exhaustion to an app budget refusal", async () => {
+    const funding = new BudgetExhaustedError({
+      projectId: "project_1",
+      capCents: 0,
+      spentCents: 0,
+      fundingSource: "byok",
+    });
+    const chain = new ProviderChainError(
+      [
+        { provider: "primary", message: "Unavailable" },
+        { provider: "secondary", message: funding.message, reason: "funding_exhausted" },
+      ],
+      undefined,
+      funding,
+    );
+    const response = await withAppRoute(async () => {
+      throw chain;
+    })(request);
+    expect(response.status).toBe(429);
+    expect((await response.json()).details).toMatchObject({ surface: "app" });
   });
 
   it("rejects a missing session before resolving the actor", async () => {

@@ -25,47 +25,47 @@ compatibility form still used by the longer repository examples.
 For version-specific Domain Overview methods and Python project creation, see
 [released client support](/compatibility).
 
-## AI Tracking methods
+## Prompt Tracker methods
 
 Use these methods to configure tracking, inspect retained evidence and review model-generated
 prompt hypotheses. REST, Python, TypeScript, Go and MCP preserve the same project scope,
-prompt revisions and cost provenance. See the [dashboard workflow](/guides/ai-tracking)
+prompt revisions and cost provenance. See the [dashboard workflow](/guides/prompt-tracker)
 and [API contract](/api/ai-tracking) for the complete review and consent flow.
 
 | Source operation | Python | TypeScript | Go | MCP tool |
 | - | - | - | - | - |
 | get AI research Catalog | `get_ai_research_catalog` | `getAiResearchCatalog` | `GetAIResearchCatalog` | `get_ai_research_catalog` |
-| list AI tracking Topics | `list_ai_tracking_topics` | `listAiTrackingTopics` | `ListAITrackingTopics` | `list_ai_tracking_topics` |
-| create AI tracking Topic | `create_ai_tracking_topic` | `createAiTrackingTopic` | `CreateAITrackingTopic` | `create_ai_tracking_topic` |
-| update AI tracking Topic | `update_ai_tracking_topic` | `updateAiTrackingTopic` | `UpdateAITrackingTopic` | `update_ai_tracking_topic` |
-| archive AI tracking Topic | `archive_ai_tracking_topic` | `archiveAiTrackingTopic` | `ArchiveAITrackingTopic` | `archive_ai_tracking_topic` |
-| list AI tracking Prompts | `list_ai_tracking_prompts` | `listAiTrackingPrompts` | `ListAITrackingPrompts` | `list_ai_tracking_prompts` |
-| create AI tracking Prompt | `create_ai_tracking_prompt` | `createAiTrackingPrompt` | `CreateAITrackingPrompt` | `create_ai_tracking_prompt` |
-| update AI tracking Prompt | `update_ai_tracking_prompt` | `updateAiTrackingPrompt` | `UpdateAITrackingPrompt` | `update_ai_tracking_prompt` |
-| archive AI tracking Prompt | `archive_ai_tracking_prompt` | `archiveAiTrackingPrompt` | `ArchiveAITrackingPrompt` | `archive_ai_tracking_prompt` |
-| list AI tracking Schedules | `list_ai_tracking_schedules` | `listAiTrackingSchedules` | `ListAITrackingSchedules` | `list_ai_tracking_schedules` |
-| create AI tracking Schedule | `create_ai_tracking_schedule` | `createAiTrackingSchedule` | `CreateAITrackingSchedule` | `create_ai_tracking_schedule` |
-| update AI tracking Schedule | `update_ai_tracking_schedule` | `updateAiTrackingSchedule` | `UpdateAITrackingSchedule` | `update_ai_tracking_schedule` |
-| archive AI tracking Schedule | `archive_ai_tracking_schedule` | `archiveAiTrackingSchedule` | `ArchiveAITrackingSchedule` | `archive_ai_tracking_schedule` |
-| preview AI tracking Run | `preview_ai_tracking_run` | `previewAiTrackingRun` | `PreviewAITrackingRun` | `preview_ai_tracking_run` |
-| create AI tracking Run | `create_ai_tracking_run` | `createAiTrackingRun` | `CreateAITrackingRun` | `create_ai_tracking_run` |
-| list AI tracking Runs | `list_ai_tracking_runs` | `listAiTrackingRuns` | `ListAITrackingRuns` | `list_ai_tracking_runs` |
-| get AI tracking Run | `get_ai_tracking_run` | `getAiTrackingRun` | `GetAITrackingRun` | `get_ai_tracking_run` |
-| list AI tracking Samples | `list_ai_tracking_samples` | `listAiTrackingSamples` | `ListAITrackingSamples` | `list_ai_tracking_samples` |
-| cancel AI tracking Run | `cancel_ai_tracking_run` | `cancelAiTrackingRun` | `CancelAITrackingRun` | `cancel_ai_tracking_run` |
-| retry AI tracking Run | `retry_ai_tracking_run` | `retryAiTrackingRun` | `RetryAITrackingRun` | `retry_ai_tracking_run` |
-| get AI tracking History | `get_ai_tracking_history` | `getAiTrackingHistory` | `GetAITrackingHistory` | `get_ai_tracking_history` |
-| get AI tracking Trends | `get_ai_tracking_trends` | `getAiTrackingTrends` | `GetAITrackingTrends` | `get_ai_tracking_trends` |
-| export AI tracking Evidence | `export_ai_tracking_evidence` | `exportAiTrackingEvidence` | `ExportAITrackingEvidence` | `export_ai_tracking_evidence` |
-| suggest AI tracking Prompts | `suggest_ai_tracking_prompts` | `suggestAiTrackingPrompts` | `SuggestAITrackingPrompts` | `suggest_ai_tracking_prompts` |
-| accept AI tracking Suggestions | `accept_ai_tracking_suggestions` | `acceptAiTrackingSuggestions` | `AcceptAITrackingSuggestions` | `accept_ai_tracking_suggestions` |
-| Preview AI prompt generation | `ai_tracking_suggestions_preview` | `aiTrackingSuggestionsPreview` | `AITrackingSuggestionsPreview` | `ai_tracking_suggestions_preview` |
-| Generate AI prompt hypotheses | `ai_tracking_suggestions_generate` | `aiTrackingSuggestionsGenerate` | `AITrackingSuggestionsGenerate` | `ai_tracking_suggestions_generate` |
+| list Prompt Tracker Topics | `list_prompt_tracker_topics` | `listPromptTrackerTopics` | `ListPromptTrackerTopics` | `list_prompt_tracker_topics` |
+| create Prompt Tracker Topic | `create_prompt_tracker_topic` | `createPromptTrackerTopic` | `CreatePromptTrackerTopic` | `create_prompt_tracker_topic` |
+| update Prompt Tracker Topic | `update_prompt_tracker_topic` | `updatePromptTrackerTopic` | `UpdatePromptTrackerTopic` | `update_prompt_tracker_topic` |
+| archive Prompt Tracker Topic | `archive_prompt_tracker_topic` | `archivePromptTrackerTopic` | `ArchivePromptTrackerTopic` | `archive_prompt_tracker_topic` |
+| list Prompt Tracker Prompts | `list_prompt_tracker_prompts` | `listPromptTrackerPrompts` | `ListPromptTrackerPrompts` | `list_prompt_tracker_prompts` |
+| create Prompt Tracker Prompt | `create_prompt_tracker_prompt` | `createPromptTrackerPrompt` | `CreatePromptTrackerPrompt` | `create_prompt_tracker_prompt` |
+| update Prompt Tracker Prompt | `update_prompt_tracker_prompt` | `updatePromptTrackerPrompt` | `UpdatePromptTrackerPrompt` | `update_prompt_tracker_prompt` |
+| archive Prompt Tracker Prompt | `archive_prompt_tracker_prompt` | `archivePromptTrackerPrompt` | `ArchivePromptTrackerPrompt` | `archive_prompt_tracker_prompt` |
+| list Prompt Tracker Schedules | `list_prompt_tracker_schedules` | `listPromptTrackerSchedules` | `ListPromptTrackerSchedules` | `list_prompt_tracker_schedules` |
+| create Prompt Tracker Schedule | `create_prompt_tracker_schedule` | `createPromptTrackerSchedule` | `CreatePromptTrackerSchedule` | `create_prompt_tracker_schedule` |
+| update Prompt Tracker Schedule | `update_prompt_tracker_schedule` | `updatePromptTrackerSchedule` | `UpdatePromptTrackerSchedule` | `update_prompt_tracker_schedule` |
+| archive Prompt Tracker Schedule | `archive_prompt_tracker_schedule` | `archivePromptTrackerSchedule` | `ArchivePromptTrackerSchedule` | `archive_prompt_tracker_schedule` |
+| preview Prompt Tracker Run | `preview_prompt_tracker_run` | `previewPromptTrackerRun` | `PreviewPromptTrackerRun` | `preview_prompt_tracker_run` |
+| create Prompt Tracker Run | `create_prompt_tracker_run` | `createPromptTrackerRun` | `CreatePromptTrackerRun` | `create_prompt_tracker_run` |
+| list Prompt Tracker Runs | `list_prompt_tracker_runs` | `listPromptTrackerRuns` | `ListPromptTrackerRuns` | `list_prompt_tracker_runs` |
+| get Prompt Tracker Run | `get_prompt_tracker_run` | `getPromptTrackerRun` | `GetPromptTrackerRun` | `get_prompt_tracker_run` |
+| list Prompt Tracker Samples | `list_prompt_tracker_samples` | `listPromptTrackerSamples` | `ListPromptTrackerSamples` | `list_prompt_tracker_samples` |
+| cancel Prompt Tracker Run | `cancel_prompt_tracker_run` | `cancelPromptTrackerRun` | `CancelPromptTrackerRun` | `cancel_prompt_tracker_run` |
+| retry Prompt Tracker Run | `retry_prompt_tracker_run` | `retryPromptTrackerRun` | `RetryPromptTrackerRun` | `retry_prompt_tracker_run` |
+| get Prompt Tracker History | `get_prompt_tracker_history` | `getPromptTrackerHistory` | `GetPromptTrackerHistory` | `get_prompt_tracker_history` |
+| get Prompt Tracker Trends | `get_prompt_tracker_trends` | `getPromptTrackerTrends` | `GetPromptTrackerTrends` | `get_prompt_tracker_trends` |
+| export Prompt Tracker Evidence | `export_prompt_tracker_evidence` | `exportPromptTrackerEvidence` | `ExportPromptTrackerEvidence` | `export_prompt_tracker_evidence` |
+| suggest Prompt Research Prompts | `suggest_prompt_research_prompts` | `suggestPromptResearchPrompts` | `SuggestPromptResearchPrompts` | `suggest_prompt_research_prompts` |
+| accept Prompt Research Suggestions | `accept_prompt_research_suggestions` | `acceptPromptResearchSuggestions` | `AcceptPromptResearchSuggestions` | `accept_prompt_research_suggestions` |
+| Preview AI prompt generation | `prompt_research_suggestions_preview` | `promptResearchSuggestionsPreview` | `PromptResearchSuggestionsPreview` | `prompt_research_suggestions_preview` |
+| Generate AI prompt hypotheses | `prompt_research_suggestions_generate` | `promptResearchSuggestionsGenerate` | `PromptResearchSuggestionsGenerate` | `prompt_research_suggestions_generate` |
 
 Tracking previews never submit paid provider work. Launch and retry require explicit consent,
 reviewed preview revisions, and a stable retry key. Export returns bounded JSON evidence with
-completeness and continuation metadata by default; select CSV explicitly. Suggestions read saved project context and competitors, remain
-editable hypotheses, and require acceptance before saving. Unknown costs stay null decimal USD
+completeness and continuation metadata by default; select CSV explicitly. Prompt Research suggestions read saved project context and competitors, remain
+editable hypotheses, and become Prompt Tracker prompts only after acceptance. Unknown costs stay null decimal USD
 amounts, and cached observations keep their original timestamps.
 
 Model generation first freezes the complete reviewed context, selected competitors, model and
@@ -82,6 +82,39 @@ generation and draft reference; provider dataset prompts require a verified stor
 
 Use the **API Reference** tab when you need the underlying HTTP route, payload
 fields, status codes, or response shape.
+
+## Page indexing methods
+
+Stored URL lists include current sitemaps and keyword targets. Request
+`source=manual` explicitly for manual-only URLs. Filter missing Google reasons
+with `coverage_state=Unspecified`; synthetic reasons have null coverage state
+and use the group filter alone. `inspection_failed_at` records the last failed
+attempt independently of the last Google result time in `checked_at`.
+
+
+These contract mappings return Google's indexed state as already known to Google,
+not a live test. Results may be partial or delayed. Use the project's existing
+connection; no property override is accepted. Client package support depends on
+version. See [Page indexing](/api/search-index) for REST requests and error handling.
+
+| Source operation | Python | TypeScript | Go | MCP tool |
+| - | - | - | - | - |
+| List Page indexing sitemaps | `list_search_index_sitemaps` | `listSearchIndexSitemaps` | `ListSearchIndexSitemaps` | `list_search_index_sitemaps` |
+| Get a Page indexing sitemap | `get_search_index_sitemap` | `getSearchIndexSitemap` | `GetSearchIndexSitemap` | `get_search_index_sitemap` |
+| Inspect Page indexing URLs | `inspect_search_index_urls` | `inspectSearchIndexUrls` | `InspectSearchIndexUrls` | `inspect_search_index_urls` |
+| Read Page indexing report | `get_page_indexing_report` | `getPageIndexingReport` | `GetPageIndexingReport` | `get_page_indexing_report` |
+| List Page indexing URLs | `list_page_indexing_urls` | `listPageIndexingUrls` | `ListPageIndexingUrls` | `list_page_indexing_urls` |
+| Read Page indexing settings | `get_page_indexing_settings` | `getPageIndexingSettings` | `GetPageIndexingSettings` | `get_page_indexing_settings` |
+| Update Page indexing settings | `update_page_indexing_settings` | `updatePageIndexingSettings` | `UpdatePageIndexingSettings` | `update_page_indexing_settings` |
+
+Inspection requires write scope, accepts 1-10 URLs and returns per-URL errors.
+URLs are normalized; duplicates after normalization count once. Manual and
+background inspections share one project daily allowance that resets at midnight
+Pacific time (`America/Los_Angeles`), including daylight saving changes.
+Every URL sent counts even on failure; admitted URLs not sent after a batch stops
+are released. This application allowance is not Google's quota and may change.
+`provider_rate_limited` errors include `reset_at` and `scope` (`daily`, `minute` or
+`unknown`); no further URLs in the request are sent.
 
 ## MCP tool index
 
@@ -201,35 +234,42 @@ The separately published MCP package is versioned independently; see
 | `list_agent_reports` | List agent reports |
 | `create_agent_report` | Create agent report |
 | `get_agent_report` | Get agent report |
-| `analyze_ai_visibility` | Analyze AI visibility |
+| `analyze_brand_visibility` | Analyze Brand Visibility |
 | `get_ai_research_catalog` | Get AI research catalog |
 | `compare_ai_prompts` | Compare AI prompts |
 | `run_site_audit` | Run site audit |
 | `list_site_audits` | List site audits |
 | `get_site_audit` | Get site audit |
-| `list_ai_tracking_topics` | List ai tracking topics |
-| `create_ai_tracking_topic` | Create ai tracking topic |
-| `update_ai_tracking_topic` | Update ai tracking topic |
-| `archive_ai_tracking_topic` | Archive ai tracking topic |
-| `list_ai_tracking_prompts` | List ai tracking prompts |
-| `create_ai_tracking_prompt` | Create ai tracking prompt |
-| `update_ai_tracking_prompt` | Update ai tracking prompt |
-| `archive_ai_tracking_prompt` | Archive ai tracking prompt |
-| `list_ai_tracking_schedules` | List ai tracking schedules |
-| `create_ai_tracking_schedule` | Create ai tracking schedule |
-| `update_ai_tracking_schedule` | Update ai tracking schedule |
-| `archive_ai_tracking_schedule` | Archive ai tracking schedule |
-| `preview_ai_tracking_run` | Preview ai tracking run |
-| `create_ai_tracking_run` | Create ai tracking run |
-| `list_ai_tracking_runs` | List ai tracking runs |
-| `get_ai_tracking_run` | Get ai tracking run |
-| `list_ai_tracking_samples` | List ai tracking samples |
-| `cancel_ai_tracking_run` | Cancel ai tracking run |
-| `retry_ai_tracking_run` | Retry ai tracking run |
-| `get_ai_tracking_history` | Get ai tracking history |
-| `get_ai_tracking_trends` | Get ai tracking trends |
-| `export_ai_tracking_evidence` | Export ai tracking evidence |
-| `suggest_ai_tracking_prompts` | Suggest ai tracking prompts |
-| `accept_ai_tracking_suggestions` | Accept ai tracking suggestions |
-| `ai_tracking_suggestions_preview` | Preview AI prompt model generation |
-| `ai_tracking_suggestions_generate` | Generate AI prompt hypotheses |
+| `list_prompt_tracker_topics` | List Prompt Tracker topics |
+| `create_prompt_tracker_topic` | Create Prompt Tracker topic |
+| `update_prompt_tracker_topic` | Update Prompt Tracker topic |
+| `archive_prompt_tracker_topic` | Archive Prompt Tracker topic |
+| `list_prompt_tracker_prompts` | List Prompt Tracker prompts |
+| `create_prompt_tracker_prompt` | Create Prompt Tracker prompt |
+| `update_prompt_tracker_prompt` | Update Prompt Tracker prompt |
+| `archive_prompt_tracker_prompt` | Archive Prompt Tracker prompt |
+| `list_prompt_tracker_schedules` | List Prompt Tracker schedules |
+| `create_prompt_tracker_schedule` | Create Prompt Tracker schedule |
+| `update_prompt_tracker_schedule` | Update Prompt Tracker schedule |
+| `archive_prompt_tracker_schedule` | Archive Prompt Tracker schedule |
+| `preview_prompt_tracker_run` | Preview Prompt Tracker run |
+| `create_prompt_tracker_run` | Create Prompt Tracker run |
+| `list_prompt_tracker_runs` | List Prompt Tracker runs |
+| `get_prompt_tracker_run` | Get Prompt Tracker run |
+| `list_prompt_tracker_samples` | List Prompt Tracker samples |
+| `cancel_prompt_tracker_run` | Cancel Prompt Tracker run |
+| `retry_prompt_tracker_run` | Retry Prompt Tracker run |
+| `get_prompt_tracker_history` | Get Prompt Tracker history |
+| `get_prompt_tracker_trends` | Get Prompt Tracker trends |
+| `export_prompt_tracker_evidence` | Export Prompt Tracker evidence |
+| `suggest_prompt_research_prompts` | Suggest Prompt Research prompts |
+| `accept_prompt_research_suggestions` | Accept Prompt Research suggestions |
+| `prompt_research_suggestions_preview` | Preview Prompt Research model generation |
+| `prompt_research_suggestions_generate` | Generate Prompt Research hypotheses |
+| `list_search_index_sitemaps` | List Page indexing sitemaps |
+| `get_search_index_sitemap` | Get a Page indexing sitemap |
+| `inspect_search_index_urls` | Inspect Page indexing URLs |
+| `get_page_indexing_report` | Get Page indexing report |
+| `list_page_indexing_urls` | List Page indexing URLs |
+| `get_page_indexing_settings` | Get Page indexing settings |
+| `update_page_indexing_settings` | Update Page indexing settings |

@@ -1,5 +1,7 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { persistQueuedSubmissionResult } from "@/lib/rank-check/queued-submit-persist";
+import { completeOwnedQueuedSubmission } from "./queued-submission-completion";
+import { admissionDeferral } from "./queued-submit-deferral";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -40,17 +42,10 @@ import { queuedRankPaymentSessions } from "./runs/payment-queued";
 
 const TERMINAL_STATES = new Set(["completed", "deferred", "failed"]);
 
-/** Own-key refusals keep their actionable message; the other refusals keep their reason codes. */
-function admissionDeferral(error: DeploymentAdmissionExhaustedError) {
-  if (error instanceof OwnProviderKeyRequiredError) return error.message;
-  return error.reason === "balance"
-    ? "credits_exhausted"
-    : `budget_exhausted:${error.surface ?? "app"}`;
-}
 export function submitQueuedRankCheckBatch(batchId: string) {
-  return submitBatch(batchId);
+  return completeOwnedQueuedSubmission(batchId, (ownClaim) => submitBatch(batchId, ownClaim));
 }
-async function submitBatch(batchId: string) {
+async function submitBatch(batchId: string, ownClaim: () => void) {
   const schedulerMode = rankCheckSchedulerMode();
   const existing = await prisma.queuedRankCheckBatch.findUniqueOrThrow({
     select: { state: true },
@@ -93,6 +88,7 @@ async function submitBatch(batchId: string) {
         )
       : { state: claimed.batch.state };
   }
+  ownClaim();
   const config = queuedRankCheckConfig();
   if (!config.enabled) {
     const progress = await deferQueuedRankCheckBatch(

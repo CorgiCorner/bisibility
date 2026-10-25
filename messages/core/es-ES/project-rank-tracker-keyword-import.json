@@ -570,7 +570,8 @@
           "position": "#{position, number}",
           "mixed": "mixto",
           "noDifficultyData": "Sin datos de dificultad",
-          "coverageUnknown": "Cobertura desconocida"
+          "coverageUnknown": "Cobertura desconocida",
+          "partialDepth": "Incompleto: comprobado hasta la posición {depth, number}"
         },
         "columns": {
           "keyword": "Palabra clave",

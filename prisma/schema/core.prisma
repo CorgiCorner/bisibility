@@ -68,6 +68,7 @@ enum ProviderCostFeature {
   ai_tracking
   ai_visibility
   prompt_explorer
+  prompt_research
   backlinks
   domain_overview
   keyword_metrics
@@ -142,6 +143,9 @@ enum NotificationType {
   import_done
   import_failed
   system
+  provider_incident
+  manual_run_summary
+  scheduled_window_summary
 }
 
 enum MigrationScope {
@@ -259,6 +263,8 @@ model User {
   auditLogs                    AuditLog[]               @relation("AuditActor")
   notifications                Notification[]
   notificationPreferences      NotificationPreference[]
+  weeklyDigestSends            WeeklyDigestSend[]
+  runTrayDismissals            RunTrayDismissal[]
   sentInvites                  Invite[]
   createdAlertRules            AlertRule[]
   alertRuleRecipients          AlertRuleRecipient[]
@@ -584,6 +590,7 @@ model Project {
   trackingScope                    String                           @default("country")
   writeMode                        ProjectWriteMode                 @default(active)
   writeModeChangedAt               DateTime?
+  providerIncidentsRetiredThrough DateTime?
   writeModeChangedById             String?
   writeModeChangedBy               User?                            @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
   defaultForUsers                  User[]                           @relation("UserDefaultProject")
@@ -636,11 +643,17 @@ model Project {
   signals                          Signal[]
   sitemapMonitoringEnabled         Boolean                          @default(true)
   sitemapSnapshots                 SitemapSnapshot[]
+  indexingDays                     PageIndexingDay[]
+  indexingSitemaps                 PageIndexingSitemap[]
+  urlPresenceChanges               UrlPresenceChange[]
   urlPresences                     UrlPresence[]
   webhookEndpoints                 WebhookEndpoint[]
   slackConnection                  SlackConnection?
   notifications                    Notification[]
   notificationPreferences          NotificationPreference[]
+  providerIncidents                ProviderIncident[]
+  providerIncidentDeliveryWatermark ProviderIncidentDeliveryWatermark?
+  weeklyDigestSends                WeeklyDigestSend[]
   savedViews                       SavedView[]
   surfacePreferences               UserProjectSurfacePreference[]
   savedViewCreationRequests         SavedViewCreationRequest[]
@@ -699,28 +712,36 @@ model Membership {
 }
 
 model ProjectDefaults {
-  id                         String             @id @default(cuid())
-  projectId                  String             @unique
-  project                    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id                         String               @id @default(cuid())
+  projectId                  String               @unique
+  project                    Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   locationKey                String?
-  locationRef                Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
+  locationRef                Location?            @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
   country                    String?
   city                       String?
   device                     Device?
-  serpDepth                  Int                @default(100)
-  serpStopOnMatch            Boolean            @default(true)
-  frequency                  RankCheckFrequency @default(daily)
+  serpDepth                  Int                  @default(100)
+  serpStopOnMatch            Boolean              @default(true)
+  frequency                  RankCheckFrequency   @default(daily)
   cronExpression             String?
-  timezone                   String             @default("UTC")
-  jitterMinutes              Int                @default(60)
-  inspectionDailyLimit       Int                @default(50)
+  timezone                   String               @default("UTC")
+  jitterMinutes              Int                  @default(60)
+  inspectionDailyLimit       Int                  @default(50)
+  inspectionBudgetMode       InspectionBudgetMode @default(fixed)
+  indexingSitemapProperty    String?
+  indexingSitemapReadAt      DateTime?
+  indexingSitemapAttemptAt   DateTime?
+  indexingSitemapLastError   String?
+  indexingSitemapLastErrorAt DateTime?
+  indexingDiscoveryAt        DateTime?
+  indexingDiscoveryComplete  Boolean              @default(false)
   searchSyncImportMonths     Int?
   searchSyncPace             String?
-  enabledExperimentalModules String[]           @default([])
+  enabledExperimentalModules String[]             @default([])
   lastCheckedAt              DateTime?
   nextCheckAt                DateTime?
-  createdAt                  DateTime           @default(now())
-  updatedAt                  DateTime           @updatedAt
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @updatedAt
 
   @@index([locationKey])
   @@map("project_defaults")
@@ -1029,6 +1050,11 @@ model RankCheck {
   scheduledAt          DateTime?
   startedAt            DateTime?
   finishedAt           DateTime?
+  /// Original terminal persistence time; never changed by recovery.
+  terminalPersistedAt  DateTime?
+  comparisonAllowed    Boolean?
+  /// Applied restore marker shared by notifications, tray and digest.
+  recoveryRestoredAt    DateTime?
   deferredReason       String?
   requestedDepth       Int?
   normalizationVersion String?              @default("v1")
@@ -1041,6 +1067,11 @@ model RankCheck {
   attempts             Json?
   viaFallback          Boolean              @default(false)
   degradedToCountry    Boolean              @default(false)
+  /// Finish time captured before recovery changes the check. Null on legacy rows.
+  preRecoveryFinishedAt DateTime?
+  /// Written when recovery is enqueued or a waiting candidate is stored. Null until then.
+  recoveryProvenance   Json?
+  partialEvidence      ProviderPartialEvidence[]
   attemptCount         Int                  @default(1)
   triggeredAlerts      TriggeredAlert[]
   queuedTask           QueuedRankCheckTask?
@@ -1116,6 +1147,7 @@ model RankCheckRun {
   orchestrationWorkflowId String?                @unique
   items                   RankCheckRunItem[]
   rankChecks              RankCheck[]
+  trayDismissals          RunTrayDismissal[]
   queuedRankCheckBatches  QueuedRankCheckBatch[]
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
@@ -1732,17 +1764,33 @@ model SitemapSnapshot {
 }
 
 model UrlPresence {
-  id            String    @id @default(cuid())
-  projectId     String
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  url           String
-  verdict       String?
-  coverageState String?
-  lastCrawlAt   DateTime?
-  canonicalOk   Boolean?
-  checkedAt     DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                     String            @id @default(cuid())
+  projectId              String
+  project                Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url                    String
+  verdict                String?
+  coverageState          String?
+  lastCrawlAt            DateTime?
+  canonicalOk            Boolean?
+  checkedAt              DateTime?
+  source                 UrlPresenceSource @default(keyword_target)
+  sitemapUrl             String?
+  googleCanonical        String?
+  userCanonical          String?
+  indexingState          String?
+  robotsTxtState         String?
+  pageFetchState         String?
+  crawledAs              String?
+  referringUrls          String[]          @default([])
+  sitemaps               String[]          @default([])
+  richResultsSummary     Json?
+  inspectionResultLink   String?
+  inspectionError        String?
+  inspectionFailedAt     DateTime?
+  fullInspectionRecorded Boolean           @default(false)
+  lastListedAt           DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
   @@unique([projectId, url])
   @@index([projectId, checkedAt])
@@ -2010,6 +2058,10 @@ model Notification {
   idempotencyKey String?
   readAt         DateTime?
   createdAt      DateTime         @default(now())
+  version        Int              @default(1)
+  updatedAt      DateTime         @default(now()) @updatedAt
+  withdrawnAt    DateTime?
+  checkSummary   CheckNotificationSummary?
 
   @@unique([userId, idempotencyKey])
   @@index([userId, readAt])
@@ -2030,6 +2082,14 @@ model NotificationPreference {
   alertPush   Boolean  @default(true)
   checkEmail  Boolean  @default(false)
   checkInApp  Boolean  @default(false)
+  /// Separate from checkInApp. On for a missing row and for every stored row.
+  providerIncidentInApp Boolean @default(true)
+  /// All, Important, or None. Existing rows are Important; checkInApp is unchanged.
+  checkNotificationSetting CheckNotificationSetting @default(important)
+  /// Top-N boundary for a significant rank move. Inclusive range 1-100.
+  checkNotificationTopN Int @default(10)
+  /// Position move that counts as significant. Inclusive range 1-100.
+  checkNotificationPositionMove Int @default(5)
   inviteEmail Boolean  @default(true)
   inviteInApp Boolean  @default(true)
   importEmail Boolean  @default(true)
@@ -2774,4 +2834,42 @@ model AchievementMail {
   @@unique([userId,epoch,awardDay])
   @@index([status,dueAt])
   @@map("achievement_mails")
+}
+
+enum InspectionBudgetMode {
+  off
+  fixed
+  available_quota
+}
+
+enum UrlPresenceSource {
+  keyword_target
+  sitemap
+  manual
+}
+
+model UrlPresenceChange {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  at        DateTime @default(now())
+  previous  Json
+  next      Json
+
+  @@index([projectId, url, at(sort: Desc)])
+  @@index([projectId, at(sort: Desc)])
+  @@map("url_presence_changes")
+}
+
+model InspectionPropertyQuota {
+  accountKey        String    @id
+  pacificDate       String
+  used              Int       @default(0)
+  last429Kind       String?
+  last429At         DateTime?
+  resetAt           DateTime?
+  dailyStoppedUntil DateTime?
+
+  @@map("inspection_property_quotas")
 }

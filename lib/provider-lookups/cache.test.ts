@@ -155,3 +155,13 @@ it("does not admit a timestamp-less project value without a finite Redis expiry"
   ttl.mockResolvedValue(-2);
   expect(await readProviderLookupCache(key)).toBeNull();
 });
+
+it("rejects shared Prompt Research evidence outside the current project's reuse window", async () => {
+  const { withProjectCachePolicy } = await import("./project-cache-policy");
+  const key = `ai:prompt-research-v2:${"c".repeat(64)}`;
+  const value = { result: { fetchedAt: new Date(Date.now() - 7200000).toISOString(), rows: [] } };
+  mocks.redisConfigured.mockReturnValue(true);
+  mocks.getRedisClient.mockResolvedValue({ get: vi.fn().mockResolvedValue(JSON.stringify(value)) });
+  expect(await withProjectCachePolicy(3600, () => readProviderLookupCache(key))).toBeNull();
+  expect(await withProjectCachePolicy(null, () => readProviderLookupCache(key))).toEqual(value);
+});

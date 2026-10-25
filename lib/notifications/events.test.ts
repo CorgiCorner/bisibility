@@ -94,7 +94,7 @@ describe("notification event producers", () => {
     expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
-  it("notifyRankCheckCompleted notifies members when position changed", async () => {
+  it("notifyRankCheckCompleted leaves changed positions to grouped summaries", async () => {
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       project: { domain: "example.com" },
       publicId: "kw_public_1",
@@ -110,19 +110,11 @@ describe("notification event producers", () => {
       rankCheckId: "rc_1",
     });
 
-    expect(mocks.createNotification).toHaveBeenCalledTimes(2);
-    expect(mocks.createNotification).toHaveBeenCalledWith(
-      expect.any(String),
-      "project_1",
-      NotificationType.check_complete,
-      "Rank check complete",
-      "rank tracker is #4.",
-      expect.objectContaining({ idempotencyKey: "rank-check:rc_1:complete" }),
-      "rank-check:rc_1:complete",
-    );
+    expect(mocks.createNotification).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.findUnique).not.toHaveBeenCalled();
   });
 
-  it("notifyRankCheckFailed preserves a check payload and directs it to Runs", async () => {
+  it("notifyRankCheckFailed leaves failures to grouped summaries", async () => {
     await notifyRankCheckFailed({
       code: "provider_billing",
       failedAt: new Date("2026-08-21T00:00:00.000Z"),
@@ -135,25 +127,10 @@ describe("notification event producers", () => {
       rankCheckId: "check_abcdefghijklmnopqrstuvwx",
     });
 
-    const expectedKey = "rank-check:keyword_1:failed:provider_billing:2026-08-21T00:00:00.000Z";
-    expect(mocks.createNotification).toHaveBeenCalledTimes(2);
-    expect(mocks.createNotification).toHaveBeenCalledWith(
-      expect.any(String),
-      "project_1",
-      NotificationType.check_failed,
-      "Rank check failed",
-      "rank tracker: rank data provider unavailable",
-      expect.objectContaining({
-        errorCode: "provider_billing",
-        href: "/app/prj_1/runs",
-        idempotencyKey: expectedKey,
-        rankCheckId: "check_abcdefghijklmnopqrstuvwx",
-      }),
-      expectedKey,
-    );
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
-  it("notifyRankCheckFailed directs a strict run ID to canonical details", async () => {
+  it("notifyRankCheckFailed suppresses legacy per-keyword delivery for run IDs", async () => {
     await notifyRankCheckFailed({
       code: "provider_billing",
       failedAt: new Date("2026-08-21T00:00:00.000Z"),
@@ -166,18 +143,7 @@ describe("notification event producers", () => {
       rankCheckId: "rcr_abcdefghijklmnopqrstuvwx",
     });
 
-    expect(mocks.createNotification).toHaveBeenCalledWith(
-      expect.any(String),
-      "project_1",
-      NotificationType.check_failed,
-      "Rank check failed",
-      "rank tracker: rank data provider unavailable",
-      expect.objectContaining({
-        href: "/app/prj_1/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx",
-        rankCheckId: "rcr_abcdefghijklmnopqrstuvwx",
-      }),
-      expect.any(String),
-    );
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("uses raw identities for alert notification persistence and public IDs in its payload", async () => {

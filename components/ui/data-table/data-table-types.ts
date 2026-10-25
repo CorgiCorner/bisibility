@@ -65,6 +65,7 @@ export type DataTableProps<TRow extends DataTableRowBase> = DataTableLayoutContr
   pending?: boolean;
   renderSection?: (row: TRow) => ReactNode;
   rowClassName?: (row: TRow) => string | undefined;
+  rowHeight?: (row: TRow) => number | undefined;
   rows: readonly TRow[];
   selectable?: (row: TRow) => boolean;
   selection?: ReadonlySet<string>;

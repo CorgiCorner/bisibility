@@ -7,20 +7,17 @@ import {
   writeCooldown,
 } from "@/lib/providers/rate-limit";
 import { googleResponseError } from "./google-failure";
+import {
+  type GoogleApiErrorPayload,
+  googleRateLimitScope,
+  googleRetryAfterMs,
+} from "./google-quota";
 
 // Shared runtime client for the Google analytics adapters (GSC + GA4). The OAuth
 // connect flow stores a refresh token; adapters mint short-lived access tokens on
 // demand here so no access token is ever persisted.
 
 export type GoogleProviderId = "gsc" | "ga4";
-
-type GoogleApiErrorPayload = {
-  error?: {
-    errors?: Array<{ reason?: unknown }>;
-    message?: unknown;
-    status?: unknown;
-  };
-};
 
 // Single chokepoint context: every GSC/GA4 data call passes provider + account
 // key so this module enforces one shared per-account budget.
@@ -48,20 +45,6 @@ export function googleAnalyticsScopes(provider: GoogleProviderId): readonly stri
 
 export function stringValue(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
-}
-
-function googleRateLimitScope(payload: GoogleApiErrorPayload | null) {
-  const reasons =
-    payload?.error?.errors
-      ?.map((error) => stringValue(error.reason)?.toLowerCase())
-      .filter((reason): reason is string => Boolean(reason)) ?? [];
-  const status = stringValue(payload?.error?.status)?.toLowerCase();
-  const signals = status ? [...reasons, status] : reasons;
-  if (signals.some((signal) => signal.includes("daily"))) return "daily" as const;
-  if (signals.some((signal) => signal.includes("ratelimitexceeded") || signal.includes("minute"))) {
-    return "minute" as const;
-  }
-  return "unknown" as const;
 }
 
 // Connect reuses the social-login OAuth client (GOOGLE_CLIENT_ID/SECRET) with extra scopes.
@@ -97,13 +80,19 @@ type GoogleTokenPayload = {
   error_description?: unknown;
 };
 
-async function postToken(body: URLSearchParams): Promise<GoogleTokenPayload | null> {
+async function postToken(
+  body: URLSearchParams,
+  signal?: AbortSignal,
+): Promise<GoogleTokenPayload | null> {
+  signal?.throwIfAborted();
   const response = await fetch(GOOGLE_TOKEN_URL, {
     body,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     method: "POST",
+    ...(signal ? { signal } : {}),
   });
   const payload = (await response.json().catch(() => null)) as GoogleTokenPayload | null;
+  signal?.throwIfAborted();
   if (!response.ok) {
     throw googleResponseError(response.status, payload);
   }
@@ -145,6 +134,7 @@ export async function googleAccountEmail(accessToken: string): Promise<string | 
 export async function refreshGoogleAccessToken(
   refreshToken: string | undefined,
   persistRefreshToken?: (refreshToken: string) => Promise<void>,
+  signal?: AbortSignal,
 ): Promise<string> {
   if (!refreshToken) {
     throw new ProviderAuthError(
@@ -159,6 +149,7 @@ export async function refreshGoogleAccessToken(
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),
+    signal,
   );
   const accessToken = stringValue(payload?.access_token);
   if (!accessToken) {
@@ -195,6 +186,7 @@ export async function googleApiFetch<T>(
     }
   }
 
+  init.signal?.throwIfAborted();
   const response = await fetch(url, {
     ...init,
     headers: {
@@ -204,6 +196,7 @@ export async function googleApiFetch<T>(
     },
   });
   const payload = (await response.json().catch(() => null)) as (T & GoogleApiErrorPayload) | null;
+  init.signal?.throwIfAborted();
   if (!response.ok) {
     if (response.status === 401) {
       throw googleResponseError(response.status, payload, context?.providerId);
@@ -213,6 +206,7 @@ export async function googleApiFetch<T>(
       throw new ProviderRateLimitedError(context.providerId, {
         accountKey: context.accountKey,
         resetAt,
+        retryAfterMs: googleRetryAfterMs(payload),
         scope: googleRateLimitScope(payload),
         source: "provider",
       });

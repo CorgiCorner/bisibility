@@ -160,13 +160,13 @@ export const SiteAudit: Story = {
 export const FailedAudit: Story = { args: { failed: true }, parameters: SiteAudit.parameters };
 export const Visibility: Story = {
   args: { module: "visibility" },
-  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/ai-visibility` } } },
+  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/brand-visibility` } } },
 };
-export const PromptExplorer: Story = {
+export const PromptPlayground: Story = {
   args: { module: "prompt" },
-  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/prompt-explorer` } } },
+  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/prompt-playground` } } },
 };
-export const PromptExplorerEngines: Story = {
+export const PromptPlaygroundEngines: Story = {
   args: {
     module: "prompt",
     engineOptions: [
@@ -176,12 +176,12 @@ export const PromptExplorerEngines: Story = {
       { engine: "perplexity", model: "sonar-pro" },
     ],
   },
-  parameters: PromptExplorer.parameters,
+  parameters: PromptPlayground.parameters,
 };
 
 export const LegacyPromptCatalogOutage: Story = {
   args: { module: "prompt", catalogUnavailable: true },
-  parameters: PromptExplorer.parameters,
+  parameters: PromptPlayground.parameters,
 };
 export const LegacyVisibilityCatalogOutage: Story = {
   args: { module: "visibility", catalogUnavailable: true },
@@ -190,15 +190,15 @@ export const LegacyVisibilityCatalogOutage: Story = {
 
 export const ActualCostUnknownReceipt: Story = {
   args: { module: "prompt", unknownCost: true },
-  parameters: PromptExplorer.parameters,
+  parameters: PromptPlayground.parameters,
 };
 
 export const ActualCostCredentialRotation: Story = {
   args: { module: "prompt", credentialRotation: true },
-  parameters: PromptExplorer.parameters,
+  parameters: PromptPlayground.parameters,
 };
 
 export const ChargedProviderFailure: Story = {
   args: { module: "prompt", chargedFailure: true },
-  parameters: PromptExplorer.parameters,
+  parameters: PromptPlayground.parameters,
 };

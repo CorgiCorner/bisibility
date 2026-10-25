@@ -7,6 +7,7 @@ const lookupKindKey = {
   domain_overview: "do:",
   keyword_metrics: "km:",
   keyword_research: "kr:",
+  prompt_research: "ai:prompt-research-v2:",
   prompt_explorer: "ai:",
   ranked_keywords: "rk:",
 } as const;

@@ -227,6 +227,7 @@
         "unknown": "Inna aktywność",
         "unknownMissing": "Inna aktywność",
         "updateDenied": "Odmówiono aktualizacji",
+        "urlInspectionAllowanceUpdated": "Zaktualizowano przydział inspekcji URL",
         "usageDisplayUpdated": "Zaktualizowano sposób wyświetlania zużycia",
         "webhookCreated": "Utworzono webhook",
         "webhookDeleted": "Usunięto webhook",

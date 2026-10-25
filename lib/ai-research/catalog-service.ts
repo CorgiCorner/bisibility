@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import { redactOpsText } from "@/lib/ops/redact-text";
 import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { resolveConnectionCredentials } from "@/lib/providers/connection-credentials";
@@ -59,14 +60,22 @@ export async function getAiResearchCatalog(projectId: string): Promise<AiCatalog
         `${source.connection.credentialSource}:${source.connection.credentialsEncrypted ?? ""}`,
       )
       .digest("hex");
-    const loaded = await withProviderLookupCache({
-      fresh: false,
-      key: `ai-catalog:v1:${projectId}:${source.connection.id}:${credentialIdentity}`,
-      ttlSeconds: AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS,
-      lockTtlSeconds: 30,
-      load: async () =>
-        (await fetchAiResearchCapabilities(credentials, Date.now() + 10_000)).catalog,
-    });
+    const read = () =>
+      withProviderLookupCache({
+        fresh: false,
+        key: `ai-catalog:v1:${projectId}:${source.connection.id}:${credentialIdentity}`,
+        ttlSeconds: AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS,
+        lockTtlSeconds: 30,
+        load: async () =>
+          (await fetchAiResearchCapabilities(credentials, Date.now() + 10_000)).catalog,
+      });
+    // A page request and its parallel render share this key. The waiter polls for about
+    // 10 seconds, as long as the holder's fetch deadline, so it can give up just before the
+    // holder writes the catalog. One more read picks up that result or takes the lock.
+    let loaded = await read();
+    if (loaded.status === "contended") loaded = await read();
+    if (loaded.status === "contended")
+      console.warn("[ai-research] catalog load still contended after retry", { projectId });
     return loaded.status === "contended"
       ? {
           ok: false,
@@ -87,6 +96,11 @@ export async function getAiResearchCatalog(projectId: string): Promise<AiCatalog
         reason: "no_source",
         message: "Connect a compatible provider in Integrations to load its AI catalog.",
       };
+    console.error("[ai-research] free catalog load failed", {
+      projectId,
+      name: error instanceof Error ? error.name : typeof error,
+      error: redactOpsText(error instanceof Error ? error.message : String(error), 500),
+    });
     return {
       ok: false,
       reason: "provider_unavailable",

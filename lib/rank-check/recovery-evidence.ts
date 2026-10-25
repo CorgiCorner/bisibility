@@ -5,50 +5,22 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { recoveryInstance } from "@/lib/metering/recovery/tokens";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { decryptSecret, encryptSecret } from "@/lib/providers/crypto";
-import { z } from "zod";
+import type { z } from "zod";
+import {
+  retainedRankResultEnvelope,
+  retainedRankResultEnvelopeV1,
+} from "./recovery-evidence-envelope";
 import type { RankCheckPersistTarget } from "./runner-persistence-types";
 import type { RankCheckRunResult } from "./runner-result";
 
 const DAY = 86400000;
-const envelope = z.object({
-  version: z.literal(1),
-  contextHash: z.string().regex(/^[a-f0-9]{64}$/),
-  target: z.object({
-    keywordId: z.string(),
-    projectId: z.string(),
-    queuedTaskId: z.string().nullable(),
-    expectedUrlAtCheck: z.string().nullable(),
-    attempts: z.array(z.object({ provider: z.string(), message: z.string() })),
-  }),
-  result: z
-    .object({
-      definitionBindingId: z.string().nullable().optional(),
-      rankCheck: z
-        .object({
-          keywordId: z.string(),
-          provider: z.string(),
-          checkedAt: z.iso.datetime(),
-          requestedDepth: z.union([z.literal(10), z.literal(20), z.literal(50), z.literal(100)]),
-          position: z.number().int().nullable(),
-          previousPosition: z.number().int().nullable(),
-          rankingUrl: z.string().nullable(),
-          normalizationVersion: z.string(),
-          organicRanks: z.array(z.object({ domain: z.string(), position: z.number() })).nullable(),
-          raw: z.record(z.string(), z.unknown()).nullable(),
-          observation: z.unknown().optional(),
-          billingUnits: z.number().nullable(),
-          costCents: z.number().nullable(),
-          estimatedCostCents: z.number().nullable(),
-        })
-        .passthrough(),
-    })
-    .passthrough(),
-});
-export type RetainedRankResult = z.infer<typeof envelope>;
+const envelope = retainedRankResultEnvelopeV1;
+export type RetainedRankResult = z.infer<typeof retainedRankResultEnvelopeV1>;
 function digest(body: string) {
   return createHash("sha256").update(body).digest("hex");
 }
 export class RetainedRankResultUnreadableError extends Error {}
+export class RetainedRankResultUnsupportedError extends Error {}
 
 /** Retain before the product transaction; a rollback must leave the result available. */
 export async function retainRankResult(target: RankCheckPersistTarget, result: RankCheckRunResult) {
@@ -89,11 +61,20 @@ export function decodeRankResult(row: {
   identityHash: string;
 }) {
   try {
-    if (row.schemaVersion !== 1) throw new Error();
     const body = decryptSecret(row.payloadEncrypted);
     if (digest(body) !== row.identityHash) throw new Error();
-    return envelope.parse(JSON.parse(body));
-  } catch {
+    const value = retainedRankResultEnvelope.parse(JSON.parse(body));
+    if (value.version !== row.schemaVersion) throw new Error();
+    if (
+      value.version === 2 &&
+      (value.completeness !== "complete" || !value.operationPk || !value.attemptId)
+    )
+      throw new RetainedRankResultUnsupportedError(
+        "Retained rank result version is not yet supported",
+      );
+    return value;
+  } catch (error) {
+    if (error instanceof RetainedRankResultUnsupportedError) throw error;
     throw new RetainedRankResultUnreadableError("Retained rank result is unreadable");
   }
 }

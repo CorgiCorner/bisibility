@@ -1,4 +1,6 @@
+import { fetchResearchQuestions } from "./prompt-research-provider";
 import type { ResearchAiPayment } from "./research-payment";
+import type { ResearchInput } from "./schema";
 import "server-only";
 import { paidProviderCall, preflightProviderBudget } from "@/lib/provider-lookups/paid-call";
 import { surfaceOf } from "@/lib/provider-usage/surface";
@@ -9,7 +11,7 @@ import type { requireAiSource } from "./context";
 import { assertAiDeadline } from "./deadline";
 import { researchFailure } from "./failure";
 import { fetchEnginePrompt, fetchObserved, fetchPrompt, supportedPromptModels } from "./provider";
-import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
+import type { AiResearchKind } from "./schema";
 import type { AiResearchContext } from "./service";
 import type { AiResearchResult, AiResearchRow } from "./types";
 
@@ -28,7 +30,7 @@ export async function executeResearch({
   payment?: ResearchAiPayment;
   context: AiResearchContext;
   kind: AiResearchKind;
-  input: PromptInput | VisibilityInput;
+  input: ResearchInput;
   source: Awaited<ReturnType<typeof requireAiSource>>;
   admitted: AiAdmission;
   deadlineAt: number;
@@ -49,7 +51,7 @@ export async function executeResearch({
       : "prompt" in input
         ? input.models.map((model) => ({ key: model, model }))
         : [];
-  const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
+  const evidence = kind !== "prompt_explorer" ? "observed_dataset" : "synthetic_prompt_test";
   await preflightProviderBudget({
     connectionId: source.connection.id,
     projectId: context.projectId,
@@ -155,7 +157,9 @@ export async function executeResearch({
         ...(context.execution ? { correlationId: context.execution.correlationId } : {}),
         rate: admissionRate(admitted, kind, estimate),
         call: (credentials, usage) =>
-          fetchObserved(credentials, input, usage.tag, deadlineAt, markDispatched),
+          "keyword" in input
+            ? fetchResearchQuestions(credentials, input, usage.tag, deadlineAt, markDispatched)
+            : fetchObserved(credentials, input, usage.tag, deadlineAt, markDispatched),
       });
       if (observations.providerRequestId) providerRequestIds.push(observations.providerRequestId);
       costCents = observations.costCents;

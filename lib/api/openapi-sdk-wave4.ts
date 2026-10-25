@@ -8,110 +8,110 @@ import type { SdkOperationExtensions } from "./openapi-sdk-operations";
  * enum path parameters and path-selected response types first.
  */
 const names = {
-  createAiTrackingPrompt: [
-    "aiTracking.prompts",
+  createPromptTrackerPrompt: [
+    "promptTracker.prompts",
     "create",
-    "createAiTrackingPrompt",
-    "create_ai_tracking_prompt",
-    "CreateAITrackingPrompt",
+    "createPromptTrackerPrompt",
+    "create_prompt_tracker_prompt",
+    "CreatePromptTrackerPrompt",
   ],
-  updateAiTrackingPrompt: [
-    "aiTracking.prompts",
+  updatePromptTrackerPrompt: [
+    "promptTracker.prompts",
     "update",
-    "updateAiTrackingPrompt",
-    "update_ai_tracking_prompt",
-    "UpdateAITrackingPrompt",
+    "updatePromptTrackerPrompt",
+    "update_prompt_tracker_prompt",
+    "UpdatePromptTrackerPrompt",
   ],
-  archiveAiTrackingPrompt: [
-    "aiTracking.prompts",
+  archivePromptTrackerPrompt: [
+    "promptTracker.prompts",
     "archive",
-    "archiveAiTrackingPrompt",
-    "archive_ai_tracking_prompt",
-    "ArchiveAITrackingPrompt",
+    "archivePromptTrackerPrompt",
+    "archive_prompt_tracker_prompt",
+    "ArchivePromptTrackerPrompt",
   ],
-  suggestAiTrackingPrompts: [
-    "aiTracking.prompts",
+  suggestPromptResearchPrompts: [
+    "promptResearch",
     "suggest",
-    "suggestAiTrackingPrompts",
-    "suggest_ai_tracking_prompts",
-    "SuggestAITrackingPrompts",
+    "suggestPromptResearchPrompts",
+    "suggest_prompt_research_prompts",
+    "SuggestPromptResearchPrompts",
   ],
-  listAiTrackingTopics: [
-    "aiTracking.topics",
+  listPromptTrackerTopics: [
+    "promptTracker.topics",
     "list",
-    "listAiTrackingTopics",
-    "list_ai_tracking_topics",
-    "ListAITrackingTopics",
+    "listPromptTrackerTopics",
+    "list_prompt_tracker_topics",
+    "ListPromptTrackerTopics",
   ],
-  createAiTrackingTopic: [
-    "aiTracking.topics",
+  createPromptTrackerTopic: [
+    "promptTracker.topics",
     "create",
-    "createAiTrackingTopic",
-    "create_ai_tracking_topic",
-    "CreateAITrackingTopic",
+    "createPromptTrackerTopic",
+    "create_prompt_tracker_topic",
+    "CreatePromptTrackerTopic",
   ],
-  updateAiTrackingTopic: [
-    "aiTracking.topics",
+  updatePromptTrackerTopic: [
+    "promptTracker.topics",
     "update",
-    "updateAiTrackingTopic",
-    "update_ai_tracking_topic",
-    "UpdateAITrackingTopic",
+    "updatePromptTrackerTopic",
+    "update_prompt_tracker_topic",
+    "UpdatePromptTrackerTopic",
   ],
-  archiveAiTrackingTopic: [
-    "aiTracking.topics",
+  archivePromptTrackerTopic: [
+    "promptTracker.topics",
     "archive",
-    "archiveAiTrackingTopic",
-    "archive_ai_tracking_topic",
-    "ArchiveAITrackingTopic",
+    "archivePromptTrackerTopic",
+    "archive_prompt_tracker_topic",
+    "ArchivePromptTrackerTopic",
   ],
-  listAiTrackingSchedules: [
-    "aiTracking.schedules",
+  listPromptTrackerSchedules: [
+    "promptTracker.schedules",
     "list",
-    "listAiTrackingSchedules",
-    "list_ai_tracking_schedules",
-    "ListAITrackingSchedules",
+    "listPromptTrackerSchedules",
+    "list_prompt_tracker_schedules",
+    "ListPromptTrackerSchedules",
   ],
-  createAiTrackingSchedule: [
-    "aiTracking.schedules",
+  createPromptTrackerSchedule: [
+    "promptTracker.schedules",
     "create",
-    "createAiTrackingSchedule",
-    "create_ai_tracking_schedule",
-    "CreateAITrackingSchedule",
+    "createPromptTrackerSchedule",
+    "create_prompt_tracker_schedule",
+    "CreatePromptTrackerSchedule",
   ],
-  updateAiTrackingSchedule: [
-    "aiTracking.schedules",
+  updatePromptTrackerSchedule: [
+    "promptTracker.schedules",
     "update",
-    "updateAiTrackingSchedule",
-    "update_ai_tracking_schedule",
-    "UpdateAITrackingSchedule",
+    "updatePromptTrackerSchedule",
+    "update_prompt_tracker_schedule",
+    "UpdatePromptTrackerSchedule",
   ],
-  archiveAiTrackingSchedule: [
-    "aiTracking.schedules",
+  archivePromptTrackerSchedule: [
+    "promptTracker.schedules",
     "archive",
-    "archiveAiTrackingSchedule",
-    "archive_ai_tracking_schedule",
-    "ArchiveAITrackingSchedule",
+    "archivePromptTrackerSchedule",
+    "archive_prompt_tracker_schedule",
+    "ArchivePromptTrackerSchedule",
   ],
-  listAiTrackingRuns: [
-    "aiTracking.runs",
+  listPromptTrackerRuns: [
+    "promptTracker.runs",
     "list",
-    "listAiTrackingRuns",
-    "list_ai_tracking_runs",
-    "ListAITrackingRuns",
+    "listPromptTrackerRuns",
+    "list_prompt_tracker_runs",
+    "ListPromptTrackerRuns",
   ],
-  cancelAiTrackingRun: [
-    "aiTracking.runs",
+  cancelPromptTrackerRun: [
+    "promptTracker.runs",
     "cancel",
-    "cancelAiTrackingRun",
-    "cancel_ai_tracking_run",
-    "CancelAITrackingRun",
+    "cancelPromptTrackerRun",
+    "cancel_prompt_tracker_run",
+    "CancelPromptTrackerRun",
   ],
-  retryAiTrackingRun: [
-    "aiTracking.runs",
+  retryPromptTrackerRun: [
+    "promptTracker.runs",
     "retry",
-    "retryAiTrackingRun",
-    "retry_ai_tracking_run",
-    "RetryAITrackingRun",
+    "retryPromptTrackerRun",
+    "retry_prompt_tracker_run",
+    "RetryPromptTrackerRun",
   ],
   addCompetitor: ["competitors", "add", "addCompetitor", "add_competitor", "AddCompetitor"],
   removeProjectCompetitor: [
@@ -190,9 +190,9 @@ const names = {
 } as const;
 
 const reads = new Set([
-  "listAiTrackingTopics",
-  "listAiTrackingSchedules",
-  "listAiTrackingRuns",
+  "listPromptTrackerTopics",
+  "listPromptTrackerSchedules",
+  "listPromptTrackerRuns",
   "searchLocations",
   "listRankedKeywordSuggestions",
   "getNotificationPreferences",
@@ -203,9 +203,9 @@ const reads = new Set([
 
 /** Cursor-paged lists: `limit` and `cursor` query parameters and `meta.next_cursor`. */
 const cursorPaged = new Set([
-  "listAiTrackingTopics",
-  "listAiTrackingSchedules",
-  "listAiTrackingRuns",
+  "listPromptTrackerTopics",
+  "listPromptTrackerSchedules",
+  "listPromptTrackerRuns",
 ]);
 
 export const sdkWave4Operations: Record<string, SdkOperationExtensions> = Object.fromEntries(
@@ -214,10 +214,10 @@ export const sdkWave4Operations: Record<string, SdkOperationExtensions> = Object
     {
       "x-bisibility-sdk": { group, method, legacy: { ts: [ts], python: [python], go: [go] } },
       // The router replays a repeated Idempotency-Key on any non-GET request (`idempotency.ts`);
-      // a retried run is planned under its key, so retry requires one, like createAiTrackingRun.
+      // a retried run is planned under its key, so retry requires one, like createPromptTrackerRun.
       "x-bisibility-idempotency": reads.has(id)
         ? "none"
-        : id === "retryAiTrackingRun"
+        : id === "retryPromptTrackerRun"
           ? "required"
           : "optional",
       "x-bisibility-pagination": cursorPaged.has(id)

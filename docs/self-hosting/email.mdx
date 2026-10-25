@@ -52,7 +52,8 @@ enable the schedule. Use `WEEKLY_DIGEST_CRON` to override its timing.
 A project report is sent only when:
 
 - the project has at least one completed or failed rank check from the preceding
-  seven days;
+  168 hours, excluding checks restored from retained evidence, or an incident
+  transition when the optional attention section is enabled;
 - at least one owner or member has a verified email address and keeps
   **Weekly report** email enabled in notification settings;
 - a report has not already been sent for the project during the preceding six
@@ -65,6 +66,34 @@ per project. To calculate ranking movers, bisibility compares the latest
 completed check from the seven-day reporting window with the most recent
 completed check before that window. A report can still be sent without that
 older baseline, but it will not include ranking movers.
+
+Set `PROVIDER_RECOVERY=on` to add an attention section for
+incidents with a new, changed, resolved or reopened transition in the period.
+It defaults off. With it enabled, a period with incident transitions and no new
+check activity sends only that section. Restored checks contribute only to
+incident attention counts, never to ranking quality, movers or the send gate.
+Unchanged incidents remain in the app. Each incident separates result and cost
+counts and links to the project's runs. We do not retry these checks automatically.
+Demo instances run no weekly digest, regardless of this switch.
+
+A local or development deployment (`DEPLOYMENT_ENV=development`, `dev` or `local`,
+with `NODE_ENV` other than `production`) without a mail provider logs the digest to
+the server console and records it as skipped. Every other deployment records a
+failure and the worker retries.
+
+Each recipient has a durable send record for the project and period. Immediately
+before transport handoff, the worker rechecks current ownership or membership,
+verified email, the weekly report preference and the current email address.
+Retries reuse the same period and skip recipients already sent. Definitive
+pre-handoff failures and provider 4xx rejections remain retryable. Network,
+timeout, 5xx and unknown outcomes are ambiguous: they are not automatically resent.
+A claim left by an interrupted attempt is also treated as ambiguous and reported
+to operations for reconciliation before any further delivery decision.
+
+The record's `sentAt` remains its creation time; `deliveredAt` records a successful
+transport handoff. This does not prove inbox delivery, and there is no SMTP or
+end-to-end exactly-once guarantee. Apply the accompanying database migration and
+run matching application and worker builds before using the new send records.
 
 ## Resend
 

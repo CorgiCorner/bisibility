@@ -1,3 +1,4 @@
+import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
 import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
@@ -52,6 +53,7 @@ export async function deleteProjectById(
       },
       tx,
     );
+    await closeProjectIncidentsSilently(tx, projectId);
     return tx.project.delete({ where: { id: projectId } });
   });
 }

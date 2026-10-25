@@ -36,6 +36,7 @@ import { loadSearchInsightsRows } from "@/lib/actions/search-insights-rows";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
+import { searchConsoleTab } from "@/lib/search-index/ui-model";
 import {
   getSearchInsightsContext,
   loadSearchInsightsScope,
@@ -49,6 +50,7 @@ import { createRenderPhaseRecorder } from "@/lib/search-insights/render-phases";
 import { loadSearchInsightsStatus } from "@/lib/search-insights/status-facts";
 import { loadSearchSyncPreflightPlan } from "@/lib/settings/search-sync-metrics";
 import { Suspense } from "react";
+import { PageIndexingView, SearchConsoleNavigation } from "./PageIndexingSection";
 import {
   SearchInsightsBodySection,
   SearchInsightsNoDataSection,
@@ -60,6 +62,7 @@ type SearchParamValue = string | string[] | undefined;
 type SearchInsightsPageProps = {
   params: Promise<{ project: string }>;
   searchParams: Promise<{
+    tab?: SearchParamValue;
     comparison?: SearchParamValue;
     google?: SearchParamValue;
     period?: SearchParamValue;
@@ -93,6 +96,21 @@ export default async function SearchInsightsPage({
     pageAriaLabel: t("projectSearchInsights.copy.searchInsightsPageLoading"),
   };
   const { publicId } = await resolveProjectAccess(project);
+  const navigation = (
+    <Suspense fallback={null}>
+      <SearchConsoleNavigation projectId={publicId} query={query} />
+    </Suspense>
+  );
+  if (searchConsoleTab(query.tab) === "page-indexing")
+    return (
+      <PageIndexingView
+        loadingLabel={loadingLabels.bodyAriaLabel}
+        messages={messages}
+        navigation={navigation}
+        projectId={publicId}
+        runtime={runtime}
+      />
+    );
   const comparison = first(query.comparison);
   const period = first(query.period);
   // Every latency figure this module has was measured per statement on a container shaped like the
@@ -195,6 +213,7 @@ export default async function SearchInsightsPage({
       timeZone={runtime.timeZone}
     >
       <PageContent variant="analytics">
+        {navigation}
         <SearchInsightsWorkspace
           cancelPropertySelectionAction={cancelGooglePropertySelection}
           completePropertySelectionAction={completeGooglePropertySelection}

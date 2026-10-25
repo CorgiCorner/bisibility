@@ -94,19 +94,24 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
 
   const researchSections = [
     [
-      "ai-tracking",
-      "AI Tracking",
+      "prompt-research",
+      "Prompt Research",
+      "Research dataset questions by keyword. ChatGPT · US English.",
+    ],
+    [
+      "prompt-tracker",
+      "Prompt Tracker",
       "Monitor AI answers, brand mentions and cited sources over time.",
     ],
     [
-      "ai-visibility",
-      "AI Visibility",
+      "brand-visibility",
+      "Brand Visibility",
       "Brand mentions and citations from available provider observations.",
     ],
     [
-      "prompt-explorer",
-      "Prompt Explorer",
-      "Compare synthetic prompt tests across supported models.",
+      "prompt-playground",
+      "Prompt Playground",
+      "Try one prompt on several models and compare their answers and citations.",
     ],
     ["site-audit", "Site Audit", "Crawl your project site and inspect issues by URL."],
     ["context", "Project Context", "Business, audience, products and goals for your agents."],

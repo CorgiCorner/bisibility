@@ -10,11 +10,6 @@ import {
   trackingWorkspaceFixture,
 } from "./fixtures";
 import {
-  oversizedGenerationActions,
-  staleGenerationActions,
-  unknownGenerationActions,
-} from "./generation-fixtures";
-import {
   boundedTrackingActions,
   pagedTrackingActions,
   pagedTrackingFixture,
@@ -22,7 +17,7 @@ import {
 import { TrackingAuditReportFixture } from "./TrackingAuditReportFixture";
 
 const meta = {
-  title: "AI Tracking/Workspace",
+  title: "Prompt Tracker/Workspace",
   component: AiTrackingWorkspace,
   decorators: [
     (Story) => (
@@ -84,28 +79,4 @@ export const PagedHistory: Story = {
 };
 export const BoundedExport: Story = {
   args: { initialTab: "runs", actions: boundedTrackingActions },
-};
-export const GenerationOversized: Story = {
-  args: { actions: { ...trackingFixtureActions, generation: oversizedGenerationActions } },
-};
-export const GenerationStale: Story = {
-  args: { actions: { ...trackingFixtureActions, generation: staleGenerationActions } },
-};
-export const GenerationUnknown: Story = {
-  args: { actions: { ...trackingFixtureActions, generation: unknownGenerationActions } },
-};
-export const GenerationUnavailable: Story = {
-  args: {
-    actions: {
-      ...trackingFixtureActions,
-      generation: {
-        ...unknownGenerationActions,
-        review: async () => {
-          throw new Error(
-            "Project context is temporarily unavailable. Try again after access is restored.",
-          );
-        },
-      },
-    },
-  },
 };

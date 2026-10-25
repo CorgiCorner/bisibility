@@ -21,6 +21,9 @@ model MeteringOperation {
   commands               MeteringCommand[]
   events                 MeteringEvent[]
   paidAttemptContext     MeteringPaidAttemptContext?
+  providerDispatchIdentity ProviderDispatchIdentity?
+  providerOperationEvidence ProviderOperationEvidence?
+  providerIncidentOperations ProviderIncidentOperation[]
   historyImports         MeteringHistoryImport[] @ignore
   historyReferences      MeteringHistoryReference[] @ignore
   historyCloseout        MeteringHistoryCloseout? @ignore
@@ -205,6 +208,9 @@ model MeteringPaidAttemptContext {
   dispatch_lease_id String?
   fenced_at         DateTime? @db.Timestamptz
   fenced_at_iso     String?
+  submissionCompletedAt DateTime? @map("submission_completed_at") @db.Timestamptz
+  completionAcknowledgedAt DateTime? @map("completion_acknowledged_at") @db.Timestamptz
+  ownershipSupersededAt DateTime? @map("ownership_superseded_at") @db.Timestamptz
   debit_id          String?
   operation         MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "metering_paid_attempt_operation_fk")
 

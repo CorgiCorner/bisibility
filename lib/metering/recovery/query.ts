@@ -24,7 +24,9 @@ export function recoveryCasesSql(namespace: string, to: Date) {
     FROM metering_operation o ${finalReceiptJoin}
     LEFT JOIN metering_paid_attempt_context c ON c.namespace=o.namespace AND c.operation_id=o.operation_id
     WHERE o.namespace=${namespace} AND o.created_at<=${to} AND (
-      ${unknownAccounting} OR EXISTS(SELECT 1 FROM rank_checks rc WHERE rc.id=${rankReference}
+      ${unknownAccounting} OR EXISTS(SELECT 1 FROM provider_operation_evidence pe
+        WHERE pe."operationPk"=o.operation_pk AND (pe.fulfillment IN ('partial','pending','provider_error','absent')
+          OR pe."recoveryState"='operator_review' OR pe.accounting='conflict')) OR EXISTS(SELECT 1 FROM rank_checks rc WHERE rc.id=${rankReference}
         AND rc.status IN ('running','deferred') AND rc."updatedAt"<(${new Date(to.getTime() - 15 * 60000)}::timestamptz AT TIME ZONE 'UTC'))
       OR EXISTS(SELECT 1 FROM rank_check_result_evidence re
         JOIN rank_checks rc ON rc.id=re."rankCheckId"
@@ -174,10 +176,15 @@ export async function readRecoveryRecords(
       if (!row.originalAuthorization) row.resumeAuthorized = false;
     }
   const gates = await readUncertaintyGates(tx, namespace);
-  for (const row of rows)
+  for (const row of rows) {
+    row.spendingGateEligible = {
+      project: row.projectId !== null && gates.eligibleProjects.has(row.projectId),
+      connection: row.connectionId !== null && gates.eligibleConnections.has(row.connectionId),
+    };
     row.spendingBlocked = {
       project: gates.projects.has(row.projectId),
       connection: gates.connections.has(row.connectionId),
     };
+  }
   return rows;
 }

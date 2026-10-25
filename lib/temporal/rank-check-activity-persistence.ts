@@ -1,5 +1,6 @@
+import { queueCheckSummary } from "../notifications/check-summaries/triggers";
+import { notificationTransaction } from "../notifications/transaction";
 import "server-only";
-
 import { definitionWorkerInvocation } from "@/lib/measurement-definitions/worker-claim";
 import { retainedDefinitionFailureIntent } from "@/lib/measurement-definitions/worker-failure";
 import { ApplicationFailure } from "@temporalio/common";
@@ -7,6 +8,7 @@ import { requiredPublicAuditId, writeAudit } from "../auth/audit";
 import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
 import { publishOperationChanged } from "../notifications/realtime";
+import { markRecoveryAttemptStopped } from "../provider-evidence/recovery/capture";
 import { isProviderErrorCode } from "../providers/provider-error-code";
 import { storedDeferralReason } from "../rank-check/deferral-reason";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
@@ -57,7 +59,7 @@ export async function createRunningRankCheckActivity(
   };
   let rankCheckId: string;
   try {
-    rankCheckId = await prisma.$transaction(async (tx) => {
+    rankCheckId = await notificationTransaction(async (tx) => {
       let runId: string | undefined;
       if (input.runItemId) {
         const item = await tx.rankCheckRunItem.findUnique({
@@ -161,13 +163,15 @@ export async function createRunningRankCheckActivity(
 }
 
 export async function discardRankCheckActivity(input: DiscardRankCheckActivityInput) {
-  const rankCheck = await prisma.$transaction(async (tx) => {
+  const rankCheck = await notificationTransaction(async (tx) => {
     const now = new Date();
     const closed = await tx.rankCheck.updateMany({
       data: {
         attemptCount: 0,
         degradedToCountry: false,
         deferredReason: storedDeferralReason(input.reason),
+        comparisonAllowed: false,
+        terminalPersistedAt: new Date(),
         finishedAt: now,
         normalizationVersion: null,
         status: "deferred",
@@ -176,6 +180,7 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
       where: { id: input.rankCheckId, status: "running" },
     });
     if (closed.count === 0) return null;
+    queueCheckSummary(tx, input.rankCheckId);
     const deferred = await tx.rankCheck.findUniqueOrThrow({
       select: {
         estimatedCostCents: true,
@@ -218,6 +223,7 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
 export async function failRankCheckActivity(
   input: FailRankCheckActivityInput,
 ): Promise<FailRankCheckActivityResult> {
+  if (input.rankCheckId) await markRecoveryAttemptStopped(input.rankCheckId, "retries_exhausted");
   // biome-ignore format: compact parallel query keeps this activity module under the line cap.
   const [keyword, running] = await Promise.all([
     prisma.keyword.findUnique({

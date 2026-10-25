@@ -30,7 +30,7 @@ describe("SDK wave 3 contract boundaries", () => {
   });
 
   it("requires explicit launch consent, matching revision fields and the idempotency header", () => {
-    const operation = operations.get("createAiTrackingRun") as unknown as {
+    const operation = operations.get("createPromptTrackerRun") as unknown as {
       requestBody: { content: { "application/json": { schema: object } } };
       parameters: object[];
     };

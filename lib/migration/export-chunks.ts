@@ -4,19 +4,13 @@ import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { requirePublicId } from "@/lib/db/public-id";
 import { CHUNK_MAX_HISTORY_ROWS, CHUNK_TARGET_KEYWORDS } from "@/lib/migration/limits";
+import {
+  exportNotificationPreferenceFields,
+  notificationPreferenceSelect,
+} from "@/lib/notifications/preference-defaults";
 import { requireRankNormalizationVersion } from "@/lib/rank-check/normalization-version";
 
-const preferenceSelect = {
-  alertEmail: true,
-  alertInApp: true,
-  checkEmail: true,
-  checkInApp: true,
-  importEmail: true,
-  importInApp: true,
-  inviteEmail: true,
-  inviteInApp: true,
-  reportEmail: true,
-};
+const preferenceSelect = notificationPreferenceSelect;
 
 type ExportKeywordChunkInput = {
   cursor?: string | null;
@@ -245,17 +239,7 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
       ...competitor,
       id: requirePublicId(publicId, "cmp"),
     })),
-    notification_preferences: notificationPreferences.map((item) => ({
-      alert_email: item.alertEmail,
-      alert_in_app: item.alertInApp,
-      check_email: item.checkEmail,
-      check_in_app: item.checkInApp,
-      import_email: item.importEmail,
-      import_in_app: item.importInApp,
-      invite_email: item.inviteEmail,
-      invite_in_app: item.inviteInApp,
-      report_email: item.reportEmail,
-    })),
+    notification_preferences: notificationPreferences.map(exportNotificationPreferenceFields),
     saved_views: savedViews.map(({ publicId, ...view }) => ({
       ...view,
       id: requirePublicId(publicId, "viw"),

@@ -2,6 +2,7 @@ import { ActionPaymentError } from "@/lib/action-payment/token";
 import type { SnapshotDefinitionSession } from "@/lib/measurement-definitions/snapshot-dispatch";
 import { assertSnapshotContinuationPreflight } from "@/lib/measurement-definitions/snapshot-preflight";
 import type { DefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
+import type { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
@@ -74,6 +75,7 @@ export async function runCheckWithFallback(
     | import("@/lib/providers/execution-extension-errors").DeploymentAdmissionExhaustedError
     | undefined;
   let rateLimitedOnly = true;
+  let fundingExhaustion: BudgetExhaustedError | undefined;
 
   for (const connection of input.connections) {
     const currentConnection =
@@ -101,6 +103,7 @@ export async function runCheckWithFallback(
       if (fallback) {
         attempts.push(fallback.attempt);
         admissionExhaustion = fallback.admission;
+        fundingExhaustion = fallback.funding ?? fundingExhaustion;
         if (!fallback.rateLimited) rateLimitedOnly = false;
         continue;
       }
@@ -159,6 +162,7 @@ export async function runCheckWithFallback(
       if (fallback) {
         attempts.push(fallback.attempt);
         admissionExhaustion = fallback.admission;
+        fundingExhaustion = fallback.funding ?? fundingExhaustion;
         if (!fallback.rateLimited) rateLimitedOnly = false;
         continue;
       }
@@ -172,5 +176,12 @@ export async function runCheckWithFallback(
     throw new ProviderRateLimitedError(input.connections[0].provider, { message: chainMsg });
   }
 
-  throw new ProviderChainError(attempts, admissionExhaustion);
+  // Every provider was refused by an exhausted funding source: keep the typed budget denial.
+  if (fundingExhaustion && attempts.every((attempt) => attempt.reason === "funding_exhausted"))
+    throw fundingExhaustion;
+  throw new ProviderChainError(
+    attempts,
+    admissionExhaustion,
+    attempts.at(-1)?.reason === "funding_exhausted" ? fundingExhaustion : undefined,
+  );
 }

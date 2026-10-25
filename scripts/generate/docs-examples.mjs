@@ -9,7 +9,7 @@ const examples = [
   {
     id: "ai-tracking-read-evidence",
     language: "bash",
-    page: "docs/guides/ai-tracking.mdx",
+    page: "docs/guides/prompt-tracker.mdx",
     source: "examples/ai-tracking/read-evidence.sh",
     mode: "file",
   },

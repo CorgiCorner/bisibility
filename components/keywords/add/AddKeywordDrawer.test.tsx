@@ -1,3 +1,4 @@
+import type { MarketDefinitionProps } from "@/components/markets/blocks/MarketDefinition";
 import { renderWithKeywordManagementMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -23,6 +24,37 @@ vi.mock("@/lib/actions/project-market-create", () => ({ createProjectMarket }));
 vi.mock("@/lib/actions/project-markets", () => ({
   addProjectMarkets: vi.fn(),
 }));
+// Validation variants seed the draft; the other flows exercise every real picker.
+vi.mock("@/components/markets/blocks/MarketDefinition", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/components/markets/blocks/MarketDefinition")>();
+  return {
+    ...actual,
+    MarketDefinition: (props: MarketDefinitionProps) => (
+      <>
+        <actual.MarketDefinition {...props} />
+        <button
+          onClick={() =>
+            props.onChange({
+              countryCode: "ES",
+              customName: "Spain search",
+              languageCode: "es",
+              location: {
+                canonicalKey: "ES",
+                countryCode: "ES",
+                displayName: "Spain",
+                kind: "country",
+              },
+            })
+          }
+          type="button"
+        >
+          Complete definition
+        </button>
+      </>
+    ),
+  };
+});
 
 const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }));
 vi.stubGlobal("fetch", fetchMock);
@@ -70,6 +102,13 @@ async function completeDefinition() {
       target: { value: "Spain search" },
     });
   });
+  clickControl("Devices");
+  clickControl("Desktop", "menuitem");
+  clickControl("Start empty", "radio");
+}
+
+function seedDefinition() {
+  clickControl("Complete definition");
   clickControl("Devices");
   clickControl("Desktop", "menuitem");
   clickControl("Start empty", "radio");
@@ -305,7 +344,7 @@ describe("AddKeywordDrawer", () => {
     const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
     await openMarketStep();
-    await completeDefinition();
+    seedDefinition();
     fireEvent.change(screen.getByLabelText("Custom name (optional)"), {
       target: { value: "a".repeat(121) },
     });
@@ -325,7 +364,7 @@ describe("AddKeywordDrawer", () => {
     );
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
     await openMarketStep();
-    await completeDefinition();
+    seedDefinition();
 
     await user.click(screen.getByRole("button", { name: "Create market" }));
 

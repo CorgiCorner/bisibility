@@ -2,7 +2,7 @@ import { z } from "zod";
 import { trackingTrendsQuerySchema } from "./ai-tracking-query";
 
 /**
- * App-owned REST parameters for AI tracking reads that an SDK generator consumes. These
+ * App-owned REST parameters for Prompt Tracker reads that an SDK generator consumes. These
  * operations no longer read the MCP tool input, which is built from the TS SDK and would close
  * the cycle SDK -> MCP -> spec -> SDK. `openapi-tracking-ownership.test.ts` checks that the MCP
  * tools still accept the same fields.
@@ -52,10 +52,10 @@ function zodQuery(schema: z.ZodObject) {
 }
 
 export const appOwnedTrackingParameters = {
-  getAiTrackingHistory: [projectId, ...page],
-  getAiTrackingTrends: [projectId, ...zodQuery(trackingTrendsQuerySchema)],
-  listAiTrackingPrompts: [projectId, ...page],
-  listAiTrackingTopics: [projectId, ...page],
-  listAiTrackingSchedules: [projectId, ...page],
-  listAiTrackingRuns: [projectId, ...page],
+  getPromptTrackerHistory: [projectId, ...page],
+  getPromptTrackerTrends: [projectId, ...zodQuery(trackingTrendsQuerySchema)],
+  listPromptTrackerPrompts: [projectId, ...page],
+  listPromptTrackerTopics: [projectId, ...page],
+  listPromptTrackerSchedules: [projectId, ...page],
+  listPromptTrackerRuns: [projectId, ...page],
 } as const satisfies Record<string, readonly object[]>;

@@ -5,6 +5,7 @@ import { AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
 import { appPath } from "@/lib/routing/app-path";
 import { SampleDataError } from "@/lib/sample-data/errors";
 import { installSampleDataset } from "@/lib/sample-data/install";
@@ -94,6 +95,7 @@ export async function removeSampleData(input: unknown) {
   }
 
   await prisma.$transaction(async (tx) => {
+    await closeProjectIncidentsSilently(tx, project.id);
     await tx.project.delete({ where: { id: project.id } });
     await writeAudit(
       {

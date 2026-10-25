@@ -1,3 +1,7 @@
+vi.mock("@/lib/provider-evidence/projection/read", () => ({
+  readCheckEvidence: vi.fn(async () => new Map()),
+}));
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { exportKeywords } from "./keyword-export-action";
 import { exportCloudImportPackage } from "./keyword-import-export";

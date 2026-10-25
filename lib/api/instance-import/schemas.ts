@@ -18,6 +18,7 @@ import {
   version7ImportKeywordSchema,
 } from "./keyword-schema";
 import { alertRuleTargetSchema } from "./location-identity-schema";
+import { notificationPreferenceSchema } from "./notification-preference-schema";
 
 export { importKeywordSchema } from "./keyword-schema";
 
@@ -105,30 +106,6 @@ const savedViewSchema = z
     surface: savedViewSurfaceSchema.optional(),
   })
   .strict();
-const notificationPreferenceSchema = z
-  .object({
-    alert_email: z.boolean().optional(),
-    alert_in_app: z.boolean().optional(),
-    check_email: z.boolean().optional(),
-    check_in_app: z.boolean().optional(),
-    import_email: z.boolean().optional(),
-    import_in_app: z.boolean().optional(),
-    invite_email: z.boolean().optional(),
-    invite_in_app: z.boolean().optional(),
-    report_email: z.boolean().optional(),
-  })
-  .strict()
-  .transform((value) => ({
-    alertEmail: value.alert_email ?? true,
-    alertInApp: value.alert_in_app ?? true,
-    checkEmail: value.check_email ?? false,
-    checkInApp: value.check_in_app ?? false,
-    importEmail: value.import_email ?? true,
-    importInApp: value.import_in_app ?? true,
-    inviteEmail: value.invite_email ?? true,
-    inviteInApp: value.invite_in_app ?? true,
-    reportEmail: value.report_email ?? true,
-  }));
 const bodyFields = new Set([
   "alert_rules",
   "competitors",

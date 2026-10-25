@@ -28,6 +28,9 @@ const preferences: NotificationPreferencesView = {
   alertWebhook: true,
   checkEmail: false,
   checkInApp: true,
+  checkNotificationSetting: "important",
+  checkNotificationTopN: 10,
+  checkNotificationPositionMove: 5,
   email: "owner@example.com",
   emailVerification: "verified",
   importEmail: true,
@@ -138,7 +141,7 @@ describe("NotificationPreferences", () => {
     mocks.updateNotificationPreferences.mockResolvedValue({ ...preferences, checkEmail: true });
     render(<NotificationPreferences canEdit preferences={preferences} />);
 
-    fireEvent.click(screen.getByLabelText("Check complete Email"));
+    fireEvent.click(screen.getByLabelText("Check notifications Email"));
 
     await waitFor(() => expect(mocks.updateNotificationPreferences).toHaveBeenCalled());
     expect(mocks.updateNotificationPreferences).toHaveBeenCalledWith(
@@ -154,13 +157,13 @@ describe("NotificationPreferences", () => {
     mocks.updateNotificationPreferences.mockRejectedValue(new Error("write failed"));
     render(<NotificationPreferences canEdit preferences={preferences} />);
 
-    const checkEmail = screen.getByLabelText("Check complete Email");
+    const checkEmail = screen.getByLabelText("Check notifications Email");
     expect(checkEmail).not.toBeChecked();
     fireEvent.click(checkEmail);
 
     await waitFor(() => expect(mocks.updateNotificationPreferences).toHaveBeenCalled());
     expect(await screen.findByText("Preferences could not be saved.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Check complete Email")).not.toBeChecked();
+    expect(screen.getByLabelText("Check notifications Email")).not.toBeChecked();
   });
 
   it("uses the injected locale for event labels, unavailable cells, and the delivery sentence", () => {

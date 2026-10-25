@@ -22,12 +22,12 @@ it("shows AI partial and cost-limit skips as readable historical runs with a rea
       skipAction={vi.fn()}
     />,
   );
-  expect(screen.getByRole("button", { name: "Run source" })).toHaveTextContent("AI Tracking");
+  expect(screen.getByRole("button", { name: "Run source" })).toHaveTextContent("Prompt Tracker");
   expect(screen.getByText("Cost limit exceeded")).toBeVisible();
   expect(screen.getByText("Partial")).toBeVisible();
   expect(screen.getByRole("radio", { name: "History" })).toBeVisible();
   fireEvent.click(
-    screen.getAllByRole("button", { name: "Actions for AI tracking measurement" })[0],
+    screen.getAllByRole("button", { name: "Actions for Prompt Tracker measurement" })[0],
   );
   fireEvent.click(screen.getByRole("menuitem", { name: "View details" }));
   expect(routerMock.push).toHaveBeenCalledWith(aiHistoryFixtures[0].href);

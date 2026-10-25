@@ -8,19 +8,43 @@
       "inApp": "アプリ内",
       "email": "メール",
       "alertFired": "アラート発生",
-      "checkComplete": "チェック完了",
+      "checkComplete": "チェック通知",
       "importFinished": "インポート完了",
       "invite": "招待",
       "weeklyReport": "週次レポート",
       "unavailable": "{label}は利用不可",
       "unavailableHelp": "ダッシュは、そのイベントにそのチャネルが存在しないことを示します。週次レポートはメールのみで、週に1回だけ配信されます。",
-      "saveError": "環境設定を保存できませんでした。"
+      "saveError": "環境設定を保存できませんでした。",
+      "providerIncident": "プロバイダーのインシデント"
     },
     "delivery": {
       "title": "配信先アドレス",
       "description": "通知メールを受け取るアドレスです。",
       "manageEmail": "メールを管理",
       "deliveredTo": "通知は <address>{email}</address> に配信されます。"
+    },
+    "checks": {
+      "mode": "チェック通知",
+      "modes": {
+        "all": "すべて",
+        "important": "重要のみ",
+        "none": "なし"
+      },
+      "descriptions": {
+        "all": "手動実行とすべての定期チェックの概要。",
+        "important": "手動実行の概要、重要な変動と失敗。",
+        "none": "チェックの概要を通知しません。インシデントは別に設定します。"
+      },
+      "checkNotificationTopN": "上位 N 位への出入り",
+      "checkNotificationPositionMove": "最小順位変動",
+      "thresholdError": "1～100 の整数を入力してください。",
+      "significantChange": "大きな変化",
+      "positions": "位",
+      "optionDescriptions": {
+        "all": "すべてのチェックのまとめ",
+        "important": "大きな変動と失敗のみ",
+        "none": "チェックのまとめを通知しない"
+      }
     }
   }
 }

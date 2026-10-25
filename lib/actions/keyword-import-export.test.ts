@@ -365,7 +365,7 @@ bad,not a url,tag,US,desktop`);
     const csv = serializeKeywordExportCsv([keywordFixture()], exportOptions({ scope: "history" }));
 
     expect(csv.split("\n")[0]).toBe(
-      "keyword,checked_at,position,ranking_url,provider,requested_depth,normalization_version",
+      "keyword,checked_at,position,ranking_url,provider,requested_depth,normalization_version,evidence_projection",
     );
     expect(csv).toContain(
       `"rank ""tracker""",${daysBeforeFixedNow(1).toISOString()},3,"https://example.com/rank,tracker",dataforseo,100,v1`,

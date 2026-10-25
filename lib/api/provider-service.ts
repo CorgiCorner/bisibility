@@ -1,7 +1,10 @@
 import "server-only";
 
 import { auditConnection, auditProviderMutation } from "@/lib/api/provider-audit";
-import { renumberProviderChain } from "@/lib/api/provider-chain-writer";
+import {
+  connectedProviderChainSettings,
+  renumberProviderChain,
+} from "@/lib/api/provider-chain-writer";
 import { withProviderCredentialDefaults } from "@/lib/api/provider-credential-defaults";
 import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verification";
 import { requireApiPublicId } from "@/lib/api/public-id";
@@ -126,22 +129,14 @@ export async function connectProviderConnection(
     ) {
       throw new Error("Please wait for accepted checks to finish, then try again.");
     }
-    const connections = await client.providerConnection.findMany({
-      select: { priority: true },
-      where: { kind: item.kind, projectId: context.projectId },
-    });
-    // An explicit priority wins; otherwise a reconnect keeps its place and a new
-    // connection appends to the fallback chain.
-    const priority =
-      input.priority ??
-      before?.priority ??
-      (connections.length === 0
-        ? 0
-        : Math.max(...connections.map((connection) => connection.priority)) + 1);
-    const enabled =
-      options.restoreStoredCredentials && stored
-        ? options.activateStoredCredentials === true || stored.enabled
-        : priority === 0 || input.enabled;
+    const { priority, enabled } = await connectedProviderChainSettings(
+      context.projectId,
+      item.kind,
+      before,
+      input,
+      options,
+      client,
+    );
     const firstSyncIntent = firstSyncIntentOnConnect(
       before,
       { enabled, kind: item.kind, status: "connected" },
@@ -173,7 +168,7 @@ export async function connectProviderConnection(
       where: { projectId_provider: { projectId: context.projectId, provider: item.id } },
     });
     if (!before) await initializeConnectionBudgets(client, connection, item, verification);
-    if (input.priority === 0) {
+    if ((before || item.kind !== "serp") && input.priority === 0) {
       await renumberProviderChain(context.projectId, item.kind, item.id, client);
     }
     if (cost !== null) {

@@ -32,6 +32,8 @@ export function DataSourcesSettingsContent({ canEdit, defaults, projectId }: Rea
         <UrlInspectionCard
           canEdit={canEdit}
           dailyLimit={defaults.inspectionDailyLimit}
+          budgetMode={defaults.inspectionBudgetMode}
+          selfHost={defaults.inspectionAvailableModes?.includes("available_quota") ?? false}
           projectId={projectId}
         />
       </div>

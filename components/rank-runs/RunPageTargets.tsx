@@ -139,6 +139,7 @@ export function RunPageTargets({
         layout="auto"
         onSortingChange={ignoreSorting}
         rows={items}
+        rowHeight={(row) => (row.rankCheck?.evidenceProjection ? 112 : undefined)}
         sorting={null}
       />
       <footer className="flex flex-wrap items-center gap-2.5 px-4 py-3">

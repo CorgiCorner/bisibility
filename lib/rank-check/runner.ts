@@ -166,21 +166,32 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
       throw error;
     if (error instanceof ProviderUsagePersistenceError) throw error;
     error = execution?.classifyFailure ? await execution.classifyFailure(error) : error;
-    if (execution && (!execution.started || execution.costCents === null)) {
+    if (
+      (execution &&
+        (!execution.started ||
+          execution.costCents === null ||
+          execution.lastRequestCostCents === null)) ||
+      (journal?.started && journal.lastRequestCostCents === null)
+    ) {
       throw new ProviderUsagePersistenceError({ cause: error });
     }
+    // A measured, charged response that still failed (partial, task error, unusable result)
+    // must not buy the same check again from the next provider in the chain.
+    const chargedCents = execution
+      ? Math.max(execution.costCents ?? 0, execution.lastRequestCostCents ?? 0)
+      : (journal?.lastRequestCostCents ?? null);
     if (isProviderThrottleError(error)) {
       writeCooldown(gate.accountKey);
       throw new RankCheckRunnerError(
         "provider_rate_limited",
         error instanceof Error ? error.message : "Provider rate limited the request.",
-        { cause: error },
+        { cause: error, chargedCents },
       );
     }
     throw new RankCheckRunnerError(
       "provider_failed",
       error instanceof Error ? error.message : "Rank check provider request failed.",
-      { cause: error },
+      { cause: error, chargedCents },
     );
   } finally {
     try {

@@ -194,21 +194,22 @@ describe("SidebarNav", () => {
     );
 
     expect(expanded.queryByText("Activity")).toBeNull();
-    expect(expanded.getByText("Tracking")).toBeInTheDocument();
-    expect(expanded.getByText("Research & audits")).toBeInTheDocument();
+    expect(expanded.getByText("SEO")).toBeInTheDocument();
+    expect(expanded.getByText("AI Search")).toBeInTheDocument();
     expect(expanded.getByText("Data & reports")).toBeInTheDocument();
     expect(expanded.getByText("Project")).toBeInTheDocument();
     expect(expanded.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
-      "/app/prj_1/ai-tracking",
-      "/app/prj_1/competitors",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
-      "/app/prj_1/ai-visibility",
-      "/app/prj_1/prompt-explorer",
       "/app/prj_1/site-audit",
+      "/app/prj_1/competitors",
+      "/app/prj_1/prompt-tracker",
+      "/app/prj_1/prompt-research",
+      "/app/prj_1/brand-visibility",
+      "/app/prj_1/prompt-playground",
       "/app/prj_1/search-console",
       "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
@@ -232,25 +233,25 @@ describe("SidebarNav", () => {
       />,
     );
     expect(collapsed.queryByText("Activity")).toBeNull();
-    expect(collapsed.queryByText("Tracking")).toBeNull();
     expect(collapsed.queryByText("Project")).toBeNull();
     expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-    expect(collapsed.getByText("TRACKING")).toHaveClass("w-20", "text-center");
-    expect(collapsed.getByText("RESEARCH")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("SEO")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("AI")).toHaveClass("w-20", "text-center");
     expect(collapsed.getByText("DATA")).toHaveClass("w-20", "text-center");
     expect(collapsed.getByText("PROJECT")).toHaveClass("w-20", "text-center");
     expect(collapsed.queryByText("beta")).toBeNull();
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
-      "/app/prj_1/ai-tracking",
-      "/app/prj_1/competitors",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
-      "/app/prj_1/ai-visibility",
-      "/app/prj_1/prompt-explorer",
       "/app/prj_1/site-audit",
+      "/app/prj_1/competitors",
+      "/app/prj_1/prompt-tracker",
+      "/app/prj_1/prompt-research",
+      "/app/prj_1/brand-visibility",
+      "/app/prj_1/prompt-playground",
       "/app/prj_1/search-console",
       "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
@@ -266,7 +267,7 @@ describe("SidebarNav", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     render(<SidebarNav projectRef="prj_1" />);
 
-    const heading = screen.getByText("Tracking");
+    const heading = screen.getByText("SEO");
 
     // A heading is a caption, not a destination: a focusable or role-bearing element here would
     // put three extra stops in the rail's tab order.
@@ -293,7 +294,7 @@ describe("SidebarNav", () => {
     render(<SidebarNav projectRef="prj_1" />);
 
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
-    const modules = screen.getByText("Tracking");
+    const modules = screen.getByText("SEO");
     const alerts = screen.getByRole("link", { name: "Alerts" });
     const project = screen.getByText("Project");
     const settings = screen.getByRole("link", { name: "Settings" });

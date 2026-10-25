@@ -1,10 +1,15 @@
+import {
+  CHECK_NOTIFICATION_POSITION_MOVE,
+  CHECK_NOTIFICATION_SETTINGS,
+  CHECK_NOTIFICATION_TOP_N,
+} from "@/lib/notifications/preference-defaults";
 import { alertRuleSchema, triggeredAlertSchema } from "./openapi-alert-response-components";
 import { competitorSchemas } from "./openapi-competitor-components";
 import { costEstimateSchema } from "./openapi-cost-estimate-components";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankRunSchemas } from "./openapi-rank-run-components";
 import { savedViewInputSchema, savedViewSchema } from "./openapi-saved-views";
-import { openEnum } from "./openapi-sdk-schema";
+import { closedEnum, openEnum } from "./openapi-sdk-schema";
 
 const dateTime = { format: "date-time", type: "string" } as const;
 
@@ -18,7 +23,32 @@ const notificationPreferenceProperties = {
   alert_slack: { type: "boolean" },
   alert_webhook: { type: "boolean" },
   check_email: { type: "boolean" },
-  check_in_app: { type: "boolean" },
+  check_in_app: {
+    deprecated: true,
+    description:
+      "Read-only compatibility value: false only for None, true otherwise. Ignored on writes; use check_notification_setting. Sending this field returns a Deprecation header and a warnings entry naming check_in_app.",
+    type: "boolean",
+  },
+  provider_incident_in_app: { type: "boolean", default: true },
+  check_notification_setting: {
+    description:
+      "Check summaries: all nonempty app windows, important changes only (default), or none. Manual app runs summarize under all and important.",
+    enum: CHECK_NOTIFICATION_SETTINGS,
+    type: "string",
+    ...openEnum("CheckNotificationSetting"),
+  },
+  check_notification_top_n: {
+    description: "Top-N entry or exit threshold. Default 10.",
+    type: "integer",
+    minimum: CHECK_NOTIFICATION_TOP_N.min,
+    maximum: CHECK_NOTIFICATION_TOP_N.max,
+  },
+  check_notification_position_move: {
+    description: "Inclusive position movement threshold. Default 5.",
+    type: "integer",
+    minimum: CHECK_NOTIFICATION_POSITION_MOVE.min,
+    maximum: CHECK_NOTIFICATION_POSITION_MOVE.max,
+  },
   import_email: { type: "boolean" },
   import_in_app: { type: "boolean" },
   invite_email: { type: "boolean" },
@@ -32,6 +62,9 @@ const notificationPreferenceRequired = [
   "alert_webhook",
   "check_email",
   "check_in_app",
+  "check_notification_setting",
+  "check_notification_top_n",
+  "check_notification_position_move",
   "import_email",
   "import_in_app",
   "invite_email",
@@ -73,12 +106,33 @@ export const resourceSchemas = {
     type: "object",
   },
   NotificationPreferencesPatch: {
-    properties: notificationPreferenceProperties,
+    properties: {
+      ...notificationPreferenceProperties,
+      check_notification_setting: {
+        ...notificationPreferenceProperties.check_notification_setting,
+        ...closedEnum("CheckNotificationSettingInput"),
+      },
+    },
     additionalProperties: false,
     type: "object",
   },
   NotificationPreferencesUpdated: {
     properties: {
+      warnings: {
+        description:
+          "Present when a deprecated check_in_app write was ignored. Also returned through MCP.",
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            code: { type: "string" },
+            field: { type: "string" },
+            message: { type: "string" },
+          },
+          required: ["code", "field", "message"],
+          "x-bisibility-name": "NotificationPreferenceWarning",
+        },
+      },
       ...notificationPreferenceProperties,
       project_id: publicIdSchema("prj"),
       report_email: { type: "boolean" },

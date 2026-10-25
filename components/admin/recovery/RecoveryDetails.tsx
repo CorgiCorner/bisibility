@@ -3,6 +3,7 @@ import { AppDrawer } from "@/components/ui/AppDrawer";
 import type { RecoveryCase } from "@/lib/metering/recovery/contract";
 import { useFormatter, useTranslations } from "next-intl";
 import { RecoveryAxes } from "./RecoveryAxes";
+import { RecoveryEvidence } from "./RecoveryEvidence";
 import { RecoveryTriageForm } from "./RecoveryTriageForm";
 
 export function RecoveryDetails({
@@ -24,6 +25,14 @@ export function RecoveryDetails({
             {row.project ?? t("retainedScope")} · {row.provider}
           </p>
           <RecoveryAxes row={row} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(["classification", "acceptance", "incident", "lookup"] as const).map((column) => (
+              <div key={column}>
+                <h3 className="m-0 mb-1 text-xs text-fg-muted">{t(`evidence.${column}`)}</h3>
+                <RecoveryEvidence value={row.evidence} column={column} />
+              </div>
+            ))}
+          </div>
           <dl className="grid gap-2 text-sm">
             <div>
               <dt className="text-fg-muted">{t("created")}</dt>

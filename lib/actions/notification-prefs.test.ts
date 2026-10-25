@@ -1,3 +1,7 @@
+import {
+  applyNotificationPreferences,
+  type NotificationPreferencesForm,
+} from "@/lib/notifications/preferences-update";
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateNotificationPreferences } from "./notification-prefs";
@@ -165,5 +169,86 @@ describe("notification preference actions", () => {
       data: { enabled: true },
       where: { projectId: "project_1" },
     });
+  });
+  it.each(["all", "important", "none"] as const)(
+    "ignores old form echoes for stored %s",
+    async (setting) => {
+      for (const legacy of [false, true]) {
+        const stored = {
+          checkInApp: !legacy,
+          checkNotificationSetting: setting,
+          checkNotificationTopN: 33,
+          checkNotificationPositionMove: 7,
+        };
+        mocks.prisma.notificationPreference.findUnique.mockResolvedValue(stored);
+        mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
+          Promise.resolve({ ...stored, ...update }),
+        );
+        const result = await updateNotificationPreferences(input({ checkInApp: legacy }));
+        expect(result).toMatchObject({
+          checkInApp: setting !== "none",
+          checkNotificationSetting: setting,
+          checkNotificationTopN: 33,
+          checkNotificationPositionMove: 7,
+          warnings: [expect.objectContaining({ field: "check_in_app" })],
+        });
+        const write = mocks.prisma.notificationPreference.upsert.mock.lastCall?.[0];
+        expect(write.create).not.toHaveProperty("checkInApp");
+        expect(write.update).not.toHaveProperty("checkInApp");
+        expect(write.update).not.toHaveProperty("checkNotificationSetting");
+        expect(write.update).not.toHaveProperty("checkNotificationTopN");
+        expect(write.update).not.toHaveProperty("checkNotificationPositionMove");
+      }
+    },
+  );
+  it("applies new setting and threshold fields while ignoring the legacy value", async () => {
+    const result = await updateNotificationPreferences(
+      input({
+        checkInApp: true,
+        checkNotificationSetting: "none",
+        checkNotificationTopN: 1,
+        checkNotificationPositionMove: 100,
+      }),
+    );
+    expect(result).toMatchObject({
+      checkInApp: false,
+      checkNotificationSetting: "none",
+      checkNotificationTopN: 1,
+      checkNotificationPositionMove: 100,
+    });
+  });
+  it.each(["checkNotificationTopN", "checkNotificationPositionMove"])(
+    "rejects invalid %s before any write",
+    async (field) => {
+      for (const value of [0, 101, 1.5]) {
+        await expect(updateNotificationPreferences(input({ [field]: value }))).rejects.toThrow();
+        expect(mocks.prisma.notificationPreference.upsert).not.toHaveBeenCalled();
+      }
+    },
+  );
+  it("validates new check preferences even for a direct shared-service caller", async () => {
+    const actor = {
+      id: "user_1",
+      memberships: [{ projectId: "project_1", role: "member" as const }],
+    };
+    for (const invalid of [
+      { checkNotificationTopN: 0 },
+      { checkNotificationPositionMove: 101 },
+      { checkNotificationSetting: "everything" },
+    ]) {
+      await expect(
+        applyNotificationPreferences(actor, input(invalid) as NotificationPreferencesForm),
+      ).rejects.toMatchObject({ name: "ZodError" });
+      expect(mocks.prisma.notificationPreference.upsert).not.toHaveBeenCalled();
+    }
+  });
+  it("saves the provider-incident setting through the shared service without a legacy check write", async () => {
+    await updateNotificationPreferences(
+      input({ providerIncidentInApp: false, checkNotificationSetting: "important" }),
+    );
+    const write = mocks.prisma.notificationPreference.upsert.mock.calls[0][0];
+    expect(write.create).toHaveProperty("providerIncidentInApp", false);
+    expect(write.update).toHaveProperty("providerIncidentInApp", false);
+    expect(write.update).not.toHaveProperty("checkInApp");
   });
 });

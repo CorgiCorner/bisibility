@@ -1,14 +1,16 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 
 import { evaluateKeywordAlerts } from "@/lib/alerts/evaluate";
 import { requiredPublicAuditId } from "@/lib/auth/audit";
 import { deriveCheckAttemptSummary } from "@/lib/checks/attempts";
-import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyRankCheckCompleted, notifyRankCheckFailed } from "@/lib/notifications/events";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { persistRankCheckObservation } from "@/lib/observation/persist";
+import { captureRecoveryCandidate } from "@/lib/provider-evidence/recovery/capture";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { emitSignal } from "@/lib/signals/emit";
@@ -58,6 +60,7 @@ export async function persistRankCheck(
   );
   const data = {
     ...rankCheckFields,
+    comparisonAllowed: result.comparisonAllowed,
     ...attemptSummary,
     error: null,
     errorCode: null,
@@ -69,14 +72,15 @@ export async function persistRankCheck(
     raw: rankCheckRawValue(result.rankCheck.raw),
     status: "completed",
   };
-  const rankCheck = await prisma.$transaction(async (tx) => {
+  const rankCheck = await notificationTransaction(async (tx) => {
     await target.persistenceGuard?.(tx);
+    const terminalData = { ...data, terminalPersistedAt: new Date() };
     const existing = target.existingRankCheckId
-      ? await updateRunningRankCheck(tx, target.existingRankCheckId, data)
+      ? await updateRunningRankCheck(tx, target.existingRankCheckId, terminalData)
       : null;
     const persisted =
       existing?.rankCheck ??
-      (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
+      (await tx.rankCheck.create({ data: { ...terminalData, publicId: makePublicId("check") } }));
     await persistRankCheckObservation(
       tx,
       observation,
@@ -133,8 +137,10 @@ export async function persistRankCheck(
     for (const signal of signals) {
       await emitSignal(signal, tx);
     }
+    await captureRecoveryCandidate(tx, persisted.id);
     await target.persistenceFinalize?.(tx);
     if (retained) await consumeRankResult(tx, persisted.id);
+    queueCheckSummary(tx, persisted.id);
     return persisted;
   }, target.transactionOptions);
   await publishOperationChanged({ projectId: target.projectId }).catch(() => undefined);
@@ -188,6 +194,8 @@ export async function persistFailedRankCheckInTransaction(
     errorCode: target.errorCode ?? null,
     estimatedCostCents: null,
     expectedUrlAtCheck: target.expectedUrlAtCheck ?? null,
+    comparisonAllowed: false,
+    terminalPersistedAt: new Date(),
     finishedAt: new Date(),
     attempts,
     keywordId: target.keywordId,
@@ -201,6 +209,8 @@ export async function persistFailedRankCheckInTransaction(
     status: "failed",
   };
   await target.persistenceGuard?.(tx);
+  if (target.existingRankCheckId)
+    await captureRecoveryCandidate(tx, target.existingRankCheckId, { finishedAt: data.finishedAt });
   const existing = target.existingRankCheckId
     ? await updateRunningRankCheck(tx, target.existingRankCheckId, data)
     : null;
@@ -223,10 +233,11 @@ export async function persistFailedRankCheckInTransaction(
     keywordPublicId: target.keywordPublicId,
   });
   await target.persistenceFinalize?.(tx);
+  queueCheckSummary(tx, persisted.id);
   return persisted;
 }
 export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
-  const rankCheck = await prisma.$transaction(
+  const rankCheck = await notificationTransaction(
     (tx) => persistFailedRankCheckInTransaction(tx, target),
     target.transactionOptions,
   );

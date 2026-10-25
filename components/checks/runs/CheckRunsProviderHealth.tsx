@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { type CheckRunsTranslations, rangeCaption, rangeWindow } from "./check-runs-format";
 
 type HealthProps = {
+  exactRange?: boolean;
   onFilterChange: (filter: CheckRunFilter) => void;
   range: CheckRange;
   reorderProvidersHref: string;
@@ -28,12 +29,18 @@ function rateLimitedProvider(providerHealth: ProviderHealthEntry[]) {
 }
 
 type BannerProps = {
+  exactRange?: boolean;
   onFilterChange: (filter: CheckRunFilter) => void;
   range: CheckRange;
   view: CheckRunsView;
 };
 
-export function RateLimitBanner({ onFilterChange, range, view }: Readonly<BannerProps>) {
+export function RateLimitBanner({
+  onFilterChange,
+  range,
+  view,
+  exactRange = false,
+}: Readonly<BannerProps>) {
   const t = useTranslations("projectRankTracker.checks");
   const skipped = view.deferredGroups.find((group) => group.reason === "rate_limited")?.count ?? 0;
   const provider = rateLimitedProvider(view.providerHealth);
@@ -59,7 +66,7 @@ export function RateLimitBanner({ onFilterChange, range, view }: Readonly<Banner
           affected,
           fallback: completedViaFallback,
           skipped,
-          window: rangeWindow(range, t),
+          window: exactRange ? t("evidence.customRangeWindow") : rangeWindow(range, t),
         })}
       </p>
       <button
@@ -147,6 +154,7 @@ function routeFlow(view: CheckRunsView, t: CheckRunsTranslations) {
 }
 
 export function ProviderHealth({
+  exactRange = false,
   onFilterChange,
   range,
   reorderProvidersHref,
@@ -161,12 +169,16 @@ export function ProviderHealth({
 
   return (
     <section
-      aria-label={t("checkDeliveryAria", { range: rangeCaption(range, t) })}
+      aria-label={t("checkDeliveryAria", {
+        range: exactRange ? t("evidence.customRangeCaption") : rangeCaption(range, t),
+      })}
       className="mx-4 mt-3 rounded-card border border-border bg-bg-sunken px-3.5 py-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="m-0 font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[.05em] text-fg-muted">
-          {t("checkDelivery", { range: rangeCaption(range, t) })}
+          {t("checkDelivery", {
+            range: exactRange ? t("evidence.customRangeCaption") : rangeCaption(range, t),
+          })}
         </h3>
         <HealthLink href={reorderProvidersHref} />
       </div>

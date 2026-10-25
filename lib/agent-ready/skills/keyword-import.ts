@@ -4,7 +4,7 @@ export const skill: TaskSkill = {
   slug: "keyword-import",
   title: "Keyword import",
   description:
-    "Reconcile a supplied keyword list with tracked identities, add missing keywords and apply requested metadata changes. Fresh paid checks require separate explicit approval. Use for importing or updating a project's keyword set.",
+    "Reconcile a supplied keyword list with tracked identities and apply requested metadata changes. Use when importing or updating a project keyword set. Do not use for keyword research, clustering or unapproved fresh rank checks.",
   compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
   version: "0.1.1",

@@ -19,8 +19,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingRuns",
-      "path": "/projects/{project_id}/ai-tracking/runs",
+      "operationId": "listPromptTrackerRuns",
+      "path": "/projects/{project_id}/prompt-tracker/runs",
       "status": 200
     },
     {
@@ -59,8 +59,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingSchedules",
-      "path": "/projects/{project_id}/ai-tracking/schedules",
+      "operationId": "listPromptTrackerSchedules",
+      "path": "/projects/{project_id}/prompt-tracker/schedules",
       "status": 200
     },
     {
@@ -82,8 +82,8 @@
       },
       "contentType": "application/json",
       "method": "GET",
-      "operationId": "listAiTrackingTopics",
-      "path": "/projects/{project_id}/ai-tracking/topics",
+      "operationId": "listPromptTrackerTopics",
+      "path": "/projects/{project_id}/prompt-tracker/topics",
       "status": 200
     },
     {
@@ -117,8 +117,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "suggestAiTrackingPrompts",
-      "path": "/projects/{project_id}/ai-tracking/suggestions",
+      "operationId": "suggestPromptResearchPrompts",
+      "path": "/projects/{project_id}/prompt-research/suggestions",
       "status": 200
     },
     {
@@ -178,8 +178,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "suggestAiTrackingPrompts",
-      "path": "/projects/{project_id}/ai-tracking/suggestions",
+      "operationId": "suggestPromptResearchPrompts",
+      "path": "/projects/{project_id}/prompt-research/suggestions",
       "status": 200
     },
     {
@@ -210,8 +210,8 @@
       },
       "contentType": "application/json",
       "method": "DELETE",
-      "operationId": "archiveAiTrackingPrompt",
-      "path": "/projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+      "operationId": "archivePromptTrackerPrompt",
+      "path": "/projects/{project_id}/prompt-tracker/prompts/{prompt_id}",
       "status": 200
     },
     {
@@ -242,8 +242,8 @@
       },
       "contentType": "application/json",
       "method": "PATCH",
-      "operationId": "updateAiTrackingPrompt",
-      "path": "/projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+      "operationId": "updatePromptTrackerPrompt",
+      "path": "/projects/{project_id}/prompt-tracker/prompts/{prompt_id}",
       "status": 200
     },
     {
@@ -270,8 +270,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "createAiTrackingPrompt",
-      "path": "/projects/{project_id}/ai-tracking/prompts",
+      "operationId": "createPromptTrackerPrompt",
+      "path": "/projects/{project_id}/prompt-tracker/prompts",
       "status": 201
     },
     {
@@ -288,8 +288,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "cancelAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/cancel",
+      "operationId": "cancelPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/cancel",
       "status": 200
     },
     {
@@ -306,8 +306,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "retryAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "operationId": "retryPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/retry",
       "status": 200
     },
     {
@@ -341,8 +341,8 @@
       },
       "contentType": "application/json",
       "method": "DELETE",
-      "operationId": "archiveAiTrackingSchedule",
-      "path": "/projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+      "operationId": "archivePromptTrackerSchedule",
+      "path": "/projects/{project_id}/prompt-tracker/schedules/{schedule_id}",
       "status": 200
     },
     {
@@ -376,8 +376,8 @@
       },
       "contentType": "application/json",
       "method": "PATCH",
-      "operationId": "updateAiTrackingSchedule",
-      "path": "/projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+      "operationId": "updatePromptTrackerSchedule",
+      "path": "/projects/{project_id}/prompt-tracker/schedules/{schedule_id}",
       "status": 200
     },
     {
@@ -411,8 +411,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "createAiTrackingSchedule",
-      "path": "/projects/{project_id}/ai-tracking/schedules",
+      "operationId": "createPromptTrackerSchedule",
+      "path": "/projects/{project_id}/prompt-tracker/schedules",
       "status": 201
     },
     {
@@ -429,8 +429,8 @@
       },
       "contentType": "application/json",
       "method": "DELETE",
-      "operationId": "archiveAiTrackingTopic",
-      "path": "/projects/{project_id}/ai-tracking/topics/{topic_id}",
+      "operationId": "archivePromptTrackerTopic",
+      "path": "/projects/{project_id}/prompt-tracker/topics/{topic_id}",
       "status": 200
     },
     {
@@ -447,8 +447,8 @@
       },
       "contentType": "application/json",
       "method": "PATCH",
-      "operationId": "updateAiTrackingTopic",
-      "path": "/projects/{project_id}/ai-tracking/topics/{topic_id}",
+      "operationId": "updatePromptTrackerTopic",
+      "path": "/projects/{project_id}/prompt-tracker/topics/{topic_id}",
       "status": 200
     },
     {
@@ -465,8 +465,8 @@
       },
       "contentType": "application/json",
       "method": "POST",
-      "operationId": "createAiTrackingTopic",
-      "path": "/projects/{project_id}/ai-tracking/topics",
+      "operationId": "createPromptTrackerTopic",
+      "path": "/projects/{project_id}/prompt-tracker/topics",
       "status": 201
     },
     {
@@ -480,8 +480,8 @@
       },
       "contentType": "application/problem+json",
       "method": "POST",
-      "operationId": "retryAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "operationId": "retryPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/retry",
       "status": 422
     },
     {
@@ -501,8 +501,8 @@
       },
       "contentType": "application/problem+json",
       "method": "POST",
-      "operationId": "retryAiTrackingRun",
-      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "operationId": "retryPromptTrackerRun",
+      "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/retry",
       "status": 422
     }
   ],
