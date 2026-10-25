@@ -1,11 +1,12 @@
+import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
 import "server-only";
 
 import { requiredPublicAuditId } from "@/lib/auth/audit";
 import { deriveCheckAttemptSummary } from "@/lib/checks/attempts";
-import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyRankCheckFailed } from "@/lib/notifications/events";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { positiveCostCents } from "./cost";
@@ -33,6 +34,8 @@ export async function persistFailedRankCheckInTransaction(
     error: target.error,
     errorCode: target.errorCode ?? null,
     estimatedCostCents: null,
+    comparisonAllowed: false,
+    terminalPersistedAt: new Date(),
     finishedAt: new Date(),
     attempts,
     keywordId: target.keywordId,
@@ -69,11 +72,12 @@ export async function persistFailedRankCheckInTransaction(
   });
 
   await target.persistenceFinalize?.(tx);
+  queueCheckSummary(tx, persisted.id);
   return persisted;
 }
 
 export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
-  const rankCheck = await prisma.$transaction(
+  const rankCheck = await notificationTransaction(
     (tx) => persistFailedRankCheckInTransaction(tx, target),
     target.transactionOptions,
   );

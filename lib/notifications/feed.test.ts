@@ -65,6 +65,8 @@ describe("notification feed", () => {
           time: "5m",
           title: "Rank check complete",
           type: "check_complete",
+          version: undefined,
+          withdrawnAt: null,
         },
       ],
       unreadCount: 1,

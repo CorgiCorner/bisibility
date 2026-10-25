@@ -32,7 +32,7 @@ test("the bounded-memory fixture fails instead of escaping its heap ceiling", ()
 test("the application image build uses the canonical bounded compiler configuration", () => {
   const dockerfile = readFileSync(new URL("../../Dockerfile", import.meta.url), "utf8");
   const builderStage = dockerfile.match(
-    /FROM node:22\.23\.1-alpine AS builder(?<body>[\s\S]*?)FROM builder AS migrate/,
+    /FROM node:22\.23\.4-alpine AS builder(?<body>[\s\S]*?)FROM builder AS migrate/,
   )?.groups?.body;
 
   assert.ok(builderStage, "Dockerfile must retain a distinct application builder stage");

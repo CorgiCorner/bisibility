@@ -19,7 +19,10 @@ type RenderWizardProps = Omit<Partial<OnboardingWizardProps>, "actions"> & {
   actions?: Partial<OnboardingWizardProps["actions"]>;
 };
 
-export function renderWizard({ actions: actionOverrides, ...props }: RenderWizardProps = {}) {
+export function renderWizard(
+  { actions: actionOverrides, ...props }: RenderWizardProps = {},
+  renderOptions?: Parameters<typeof render>[1],
+) {
   const actions: OnboardingWizardProps["actions"] = {
     addKeywordsAction: vi.fn(async () => ({
       created: 0,
@@ -93,5 +96,6 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
       providerConnected={false}
       {...props}
     />,
+    renderOptions,
   );
 }

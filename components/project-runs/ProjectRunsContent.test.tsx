@@ -367,7 +367,7 @@ describe("ProjectRunsContent", () => {
     expect(screen.queryByRole("radiogroup", { name: "Runs view" })).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        "Rank checks, AI tracking runs and Search Console imports will appear here.",
+        "Rank checks, Prompt Tracker runs and Search Console imports will appear here.",
       ),
     ).toBeInTheDocument();
 

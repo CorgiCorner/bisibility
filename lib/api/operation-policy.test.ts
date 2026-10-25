@@ -26,9 +26,12 @@ function readOnlyTrackingPost(method: string, path: string[]) {
   return (
     method === "POST" &&
     path[0] === "projects" &&
-    path[2] === "ai-tracking" &&
-    ((path[3] === "runs" && path[4] === "preview" && path.length === 5) ||
-      (path[3] === "suggestions" &&
+    ((path[2] === "prompt-tracker" &&
+      path[3] === "runs" &&
+      path[4] === "preview" &&
+      path.length === 5) ||
+      (path[2] === "prompt-research" &&
+        path[3] === "suggestions" &&
         (path.length === 4 || (path[4] === "preview" && path.length === 5))))
   );
 }
@@ -112,7 +115,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(141);
+    expect(before).toHaveLength(148);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -157,7 +160,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 17, read: 59, write: 65 });
+    expect(counts).toEqual({ admin: 17, read: 64, write: 67 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

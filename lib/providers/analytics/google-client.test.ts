@@ -63,8 +63,11 @@ describe("googleApiFetch provider gating", () => {
   });
 
   it.each([
+    // Documented shape, not captured.
     [{ error: { errors: [{ reason: "rateLimitExceeded" }] } }, "minute"],
+    // Documented shape, not captured.
     [{ error: { errors: [{ reason: "dailyLimitExceeded" }] } }, "daily"],
+    // Documented shape, not captured.
     [{ error: { status: "RESOURCE_EXHAUSTED" } }, "unknown"],
   ] as const)("classifies Google 429 payload %j as %s scope", async (payload, scope) => {
     vi.stubGlobal(

@@ -7,6 +7,11 @@ import { describe, expect, it } from "vitest";
 
 const routeCases = [
   {
+    path: appPath("prj_1", "runs", "summaries", "ntf_test"),
+    pattern: appPath("[project]", "runs", "summaries", "[notificationPublicId]"),
+    title: "Runs",
+  },
+  {
     path: appPath("prj_1", "settings", "business-locations"),
     pattern: appPath("[project]", "settings", "business-locations"),
     title: "Settings",
@@ -22,19 +27,24 @@ const routeCases = [
     title: "Settings",
   },
   {
-    path: appPath("prj_1", "ai-tracking"),
-    pattern: appPath("[project]", "ai-tracking"),
-    title: "AI Tracking",
+    path: appPath("prj_1", "prompt-research"),
+    pattern: appPath("[project]", "prompt-research"),
+    title: "Prompt Research",
   },
   {
-    path: appPath("prj_1", "ai-visibility"),
-    pattern: appPath("[project]", "ai-visibility"),
-    title: "AI Visibility",
+    path: appPath("prj_1", "prompt-tracker"),
+    pattern: appPath("[project]", "prompt-tracker"),
+    title: "Prompt Tracker",
   },
   {
-    path: appPath("prj_1", "prompt-explorer"),
-    pattern: appPath("[project]", "prompt-explorer"),
-    title: "Prompt Explorer",
+    path: appPath("prj_1", "brand-visibility"),
+    pattern: appPath("[project]", "brand-visibility"),
+    title: "Brand Visibility",
+  },
+  {
+    path: appPath("prj_1", "prompt-playground"),
+    pattern: appPath("[project]", "prompt-playground"),
+    title: "Prompt Playground",
   },
   {
     path: appPath("prj_1", "site-audit"),

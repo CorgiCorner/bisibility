@@ -16,7 +16,7 @@ import {
   LEGACY_PRICING_CHECKED_AT,
   legacyModelAdmissionBound,
 } from "./legacy";
-import type { AiResearchKind, PromptInput, VisibilityInput } from "./schema";
+import type { AiResearchKind, PromptInput, ResearchInput, VisibilityInput } from "./schema";
 import { AiResearchValidationError } from "./validation";
 
 export type AdmittedEngine = AiResponseExecution & {
@@ -38,7 +38,7 @@ export type AiAdmission =
 
 export async function loadAiAdmission(
   source: Awaited<ReturnType<typeof requireAiSource>>,
-  input: PromptInput | VisibilityInput,
+  input: ResearchInput,
   deadlineAt: number,
   cacheOnly = false,
 ): Promise<AiAdmission> {
@@ -63,7 +63,7 @@ export async function loadAiAdmission(
     const estimate = input.models.reduce((sum, model) => sum + legacyBound(model), 0);
     return { policy: "legacy_dated", estimate };
   }
-  if (!("prompt" in input) && isLegacyVisibility(input))
+  if (!("prompt" in input) && !("keyword" in input) && isLegacyVisibility(input))
     return { policy: "legacy_dated", estimate: 10 + input.limit * 0.1 };
   if ("prompt" in input && !actual && input.models.some((model) => !isLegacyModel(model)))
     throw new AiResearchValidationError(
@@ -240,7 +240,7 @@ export function admissionRate(
         costCents,
         feature: kind,
         providerId: "dataforseo",
-        sourceUrl: `https://dataforseo.com/pricing/ai-optimization/${kind === "ai_visibility" ? "llm-mentions" : "llm-responses"}`,
+        sourceUrl: `https://dataforseo.com/pricing/ai-optimization/${kind !== "prompt_explorer" ? "llm-mentions" : "llm-responses"}`,
       }
     : aiRate(kind, costCents, admission.capabilities.pricingCheckedAt);
 }

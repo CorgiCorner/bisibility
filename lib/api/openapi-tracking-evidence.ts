@@ -19,22 +19,22 @@ const nullable = (schema: object) => ({ oneOf: [schema, { type: "null" }] });
 const id = (prefix: string) => ({ type: "string", pattern: `^${prefix}_[a-z][a-z0-9]{23}$` });
 
 export const trackingSourceSchema = {
-  ...openEnum("AiTrackingSource"),
+  ...openEnum("PromptTrackerSource"),
   type: "string",
   enum: ["consumer_scrape", "model_api", "google_aio"],
 };
 export const trackingEngineSchema = {
-  ...openEnum("AiTrackingEngine"),
+  ...openEnum("PromptTrackerEngine"),
   type: "string",
   enum: ["chat_gpt", "gemini", "claude", "perplexity", "google"],
 };
 const measurement = {
-  ...openEnum("AiTrackingMeasurement"),
+  ...openEnum("PromptTrackerMeasurement"),
   type: "string",
   enum: ["answer_present", "aio_not_present", "partial", "unavailable", "failed", "unknown"],
 };
 const costState = {
-  ...openEnum("AiTrackingCostState"),
+  ...openEnum("PromptTrackerCostState"),
   type: "string",
   enum: ["unknown", "pending", "confirmed", "refund_pending", "derived"],
 };
@@ -46,7 +46,7 @@ const usd = {
     "Decimal USD string from the provider cost receipt, or null when unknown. Never an invented zero.",
 };
 const citation = named(
-  "AiTrackingCitation",
+  "PromptTrackerCitation",
   object({
     url: { type: "string", format: "uri" },
     title: nullableText,
@@ -64,7 +64,7 @@ export const trackingRawEvidenceSchema = {
 };
 const evidence = object({
   answer_text: nullableText,
-  raw: { $ref: "#/components/schemas/AiTrackingRawEvidence" },
+  raw: { $ref: "#/components/schemas/PromptTrackerRawEvidence" },
   answer_truncated: flag,
   raw_truncated: flag,
   search_results: array(citation),
@@ -79,7 +79,7 @@ const evidence = object({
   recorded_source: {
     type: "string",
     enum: ["fresh", "cache"],
-    ...openEnum("AiTrackingRecordedSource"),
+    ...openEnum("PromptTrackerRecordedSource"),
     description:
       "Cached evidence keeps its original observation time and cannot become a fresh tracker sample.",
   },
@@ -91,7 +91,7 @@ export const trackingSampleSchema = object({
   engine: trackingEngineSchema,
   prompt: text,
   prompt_revision_id: id("apr"),
-  evidence: { ...nullable(evidence), ...sdkName("AiTrackingEvidence") },
+  evidence: { ...nullable(evidence), ...sdkName("PromptTrackerEvidence") },
   citations: array(citation),
   cost_usd: usd,
   cost_state: costState,

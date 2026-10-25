@@ -231,3 +231,15 @@ describe("cloud import package versions", () => {
     ).toBe(false);
   });
 });
+
+it.each(["provider_connections", "providerConnections"])(
+  "rejects provider connection creation through instance import (%s)",
+  (field) => {
+    expect(
+      cloudImportPackageSchema.safeParse({
+        ...packageV5(),
+        [field]: [{ provider: "serpapi", enabled: true, priority: 0 }],
+      }).success,
+    ).toBe(false);
+  },
+);

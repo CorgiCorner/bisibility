@@ -12,32 +12,6 @@
       "body": {
         "data": [
           {
-            "checked_at": "2026-07-20T10:00:00.000Z",
-            "id": "check_a00000000000000000000000",
-            "keyword": "rank tracker",
-            "keyword_id": "kw_a00000000000000000000000",
-            "normalization_version": "fixture-v1",
-            "position": 4,
-            "previous_position": 7,
-            "provider": "synthetic",
-            "ranking_url": "https://example.com/rank",
-            "requested_depth": 100
-          }
-        ],
-        "meta": {
-          "next_cursor": null
-        }
-      },
-      "contentType": "application/json",
-      "method": "GET",
-      "operationId": "exportRankHistory",
-      "path": "/projects/{project_id}/exports/rank-history",
-      "status": 200
-    },
-    {
-      "body": {
-        "data": [
-          {
             "enabled": true,
             "id": "prj_a00000000000000000000000",
             "latest_snapshot": {
@@ -59,6 +33,33 @@
       "method": "GET",
       "operationId": "listSitemapMonitors",
       "path": "/projects/{project_id}/sitemap-monitors",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "evidence_projection": null,
+            "checked_at": "2026-07-20T10:00:00.000Z",
+            "id": "check_a00000000000000000000000",
+            "keyword": "rank tracker",
+            "keyword_id": "kw_a00000000000000000000000",
+            "normalization_version": "fixture-v1",
+            "position": 4,
+            "previous_position": 7,
+            "provider": "synthetic",
+            "ranking_url": "https://example.com/rank",
+            "requested_depth": 100
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportRankHistory",
+      "path": "/projects/{project_id}/exports/rank-history",
       "status": 200
     },
     {

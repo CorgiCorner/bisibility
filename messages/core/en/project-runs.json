@@ -18,7 +18,7 @@
       "searchConsole": "Search Console",
       "source": "Source:",
       "status": "Status:",
-      "aiTracking": "AI Tracking"
+      "aiTracking": "Prompt Tracker"
     },
     "content": {
       "activeDescription": "Review run history or choose another status to find completed work.",
@@ -26,7 +26,7 @@
       "clearFilters": "Clear filters",
       "filteredDescription": "Change or clear the filters to see other runs.",
       "filteredTitle": "No matching runs",
-      "historyDescription": "Rank checks, AI tracking runs and Search Console imports will appear here.",
+      "historyDescription": "Rank checks, Prompt Tracker runs and Search Console imports will appear here.",
       "historyTitle": "No runs yet",
       "loadError": "Runs could not be loaded",
       "manageSchedules": "Manage schedules",
@@ -87,7 +87,7 @@
       "reviewBlocker": "Review what is blocking this run",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {target} other {targets}}",
       "dayProgress": "{completed, number} / {total, number} {total, plural, one {finalized day} other {finalized days}}",
-      "aiTrackingRun": "AI tracking measurement",
+      "aiTrackingRun": "Prompt Tracker measurement",
       "sampleCount": "Samples: {count, number}",
       "sampleProgress": "{completed, number} / {total, number} samples",
       "costUnknown": "Cost not confirmed",
@@ -174,7 +174,7 @@
       }
     },
     "aiResults": {
-      "title": "AI tracking results",
+      "title": "Prompt Tracker results",
       "back": "Back to Runs",
       "next": "Next samples",
       "empty": "No samples were retained for this run.",
@@ -191,6 +191,26 @@
         "failed": "Failed",
         "unknown": "Unknown"
       }
+    },
+    "summary": {
+      "title": "Check summary",
+      "withdrawn": "This summary was withdrawn.",
+      "down": "Down",
+      "up": "Up",
+      "failed": "Failed",
+      "under_review": "Under review",
+      "quiet": "Unchanged / new",
+      "unavailable": "Unavailable check",
+      "openRuns": "Open on runs page",
+      "thresholds": "Top {topN}; move of {positionMove}+ positions",
+      "version": "Summary version {version}",
+      "keyword": "Keyword",
+      "market": "Market",
+      "positions": "Previous → current",
+      "incident": "{count, plural, one {# linked incident} other {# linked incidents}}",
+      "run": "Run {run}",
+      "classification": "Classification at read time: {classification}",
+      "noResult": "No result"
     }
   }
 }

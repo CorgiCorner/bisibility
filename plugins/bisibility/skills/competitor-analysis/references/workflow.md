@@ -22,6 +22,12 @@ Use the project `list_keywords` baseline and returned competitor keyword rows, k
 
 Only comparable source snapshots or history can establish a trend. Retain source_snapshot_at, fetched_at, previous_source_snapshot_at and per-module status when returned; retrieval time alone is not observation time. Historical index series is provider evidence, not a precise traffic trend. Without a compatible prior source snapshot, say trend unknown. Each action needs source evidence IDs, an owned target page or proposed page role, goal fit, effort, confidence, uncertainty and a manual/approved verification step. Explain the strongest deferred alternative.
 
+## Content format
+
+Classify each analyzed keyword or page as one of: guide/how-to, list, comparison/versus, review, product page, category page, tool/calculator, video, forum/community, news, other.
+
+A class taken from the title and URL only is preliminary. Confirm it only after the page content was actually read, either supplied by the user or fetched by the client within its own rules. Do not add a page-fetch tool. Report preliminary and confirmed formats in separate lists. Never base a recommendation solely on a preliminary format. A confirmed format may support a recommendation only together with ranking or overlap evidence.
+
 ## Optional link profile
 
 Only include backlinks if requested in the frozen plan. Confirm target, target_scope site/page, mode as_is/one_per_domain, include_subdomains and result_limit (100, 300, 500 or 1000). Quote with `estimate_backlinks_cost` (no estimate_only or fresh arguments), or with `analyze_backlinks` using estimate_only true and fresh false. Omit max_cost_cents for either free quote; a supplied cap must be strictly positive. Include the exact target/options, quote and all backlink calls in the single frozen plan total. Obtain approval of that exact plan and allocated positive best-effort backlink cap (may slightly exceed), then execute with that cap. Keep best-effort and server-enforced overview line items distinguishable; do not describe their sum as a guaranteed hard bound. No paid idempotency key is exposed.

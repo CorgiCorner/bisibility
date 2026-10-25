@@ -54,7 +54,7 @@ export function TrackingRunDrawer({
       location: String(saved?.parameters.location_name ?? "United States"),
       model: saved?.model ?? "",
       consent: false,
-      scheduleName: schedule?.name ?? "Weekly AI tracking",
+      scheduleName: schedule?.name ?? "Weekly Prompt Tracker",
       cron: schedule?.cron ?? "0 9 * * 1",
       timezone: schedule?.timezone ?? "UTC",
       enabled: schedule?.enabled ?? false,

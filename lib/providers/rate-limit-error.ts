@@ -4,6 +4,7 @@ export type ProviderRateLimitScope = "daily" | "minute" | "unknown";
 export class ProviderRateLimitedError extends Error {
   readonly accountKey: string;
   readonly resetAt: number;
+  readonly retryAfterMs: number | undefined;
   readonly scope: ProviderRateLimitScope;
   readonly source: ProviderRateLimitSource;
 
@@ -13,6 +14,7 @@ export class ProviderRateLimitedError extends Error {
       accountKey?: string;
       message?: string;
       resetAt?: number;
+      retryAfterMs?: number;
       scope?: ProviderRateLimitScope;
       source?: ProviderRateLimitSource;
     } = {},
@@ -21,6 +23,7 @@ export class ProviderRateLimitedError extends Error {
     this.name = "ProviderRateLimitedError";
     this.accountKey = options.accountKey ?? providerId;
     this.resetAt = options.resetAt ?? Date.now() + 60_000;
+    this.retryAfterMs = options.retryAfterMs;
     this.scope = options.scope ?? "unknown";
     this.source = options.source ?? "local";
   }

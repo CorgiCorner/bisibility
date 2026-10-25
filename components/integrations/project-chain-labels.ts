@@ -14,6 +14,7 @@ export function useProjectChainLabels() {
     enable: t("activateAction"),
     disable: t("pauseAction"),
     enabled: t("active"),
+    rankCheckSwitchName: (provider: string) => t("useForRankChecks", { provider }),
     disabled: t("pausedState"),
     first: t("first"),
     next: "",

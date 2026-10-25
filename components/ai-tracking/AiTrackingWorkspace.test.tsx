@@ -25,6 +25,16 @@ function workspace(props: Partial<Parameters<typeof AiTrackingWorkspace>[0]> = {
   );
 }
 describe("tracking approval and evidence UI", () => {
+  it("links to Prompt Research instead of rendering context suggestions", () => {
+    workspace({ researchHref: "/app/prj_1/prompt-research" });
+    expect(screen.queryByRole("button", { name: "Suggest from project context" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Review context and model" })).toBeNull();
+    expect(screen.queryByText("Generate prompt drafts")).toBeNull();
+    expect(screen.getByRole("link", { name: "Find prompts in Prompt Research" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/prompt-research",
+    );
+  });
   it("preserves the exact typed prompt and does not create a paid baseline when saving", async () => {
     const user = userEvent.setup();
     const save = vi.fn().mockResolvedValue(trackingWorkspaceFixture);

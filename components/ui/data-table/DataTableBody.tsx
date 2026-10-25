@@ -32,6 +32,7 @@ type DataTableBodyProps<TRow extends DataTableRowBase> = {
   renderSection?: (row: TRow) => ReactNode;
   rootId: string;
   rowClassName?: (row: TRow) => string | undefined;
+  rowHeight?: (row: TRow) => number | undefined;
   rows: Row<TRow>[];
   scrollElement: HTMLDivElement | null;
   selectable?: (row: TRow) => boolean;
@@ -78,6 +79,7 @@ function rowProps<TRow extends DataTableRowBase>(
     renderSection: props.renderSection,
     row,
     rowClassName: props.rowClassName,
+    rowHeight: props.rowHeight,
     rowIndex: index + 2,
     selectable: props.selectable,
     selection: props.selection,
@@ -136,7 +138,10 @@ function VirtualDataTableBody<TRow extends DataTableRowBase>(props: DataTableBod
     count: props.rows.length,
     estimateSize: (index) => {
       const row = props.rows[index];
-      return dataTableRowHeight(props.density, row?.original.kind ?? "row");
+      return (
+        (row && props.rowHeight?.(row.original)) ??
+        dataTableRowHeight(props.density, row?.original.kind ?? "row")
+      );
     },
     getItemKey: (index) => props.rows[index]?.id ?? index,
     getScrollElement: () => props.scrollElement,

@@ -11,6 +11,7 @@ describe("effective project lookup lifetime", () => {
   it("uses a project override for every lookup kind", () => {
     expect(effectiveProjectLookupTtl(2_592_000, "backlinks")).toBe(2_592_000);
     expect(effectiveProjectLookupTtl(3600, "keyword_metrics")).toBe(3600);
+    expect(effectiveProjectLookupTtl(3600, "prompt_research")).toBe(3600);
     expect(effectiveProjectLookupTtl(86_400, "ai_visibility")).toBe(86_400);
   });
 
@@ -28,5 +29,6 @@ describe("effective project lookup lifetime", () => {
     expect(effectiveProjectLookupTtl(null, "ranked_keywords")).toBe(43_200);
     expect(effectiveProjectLookupTtl(null, "ai_visibility")).toBe(43_200);
     expect(effectiveProjectLookupTtl(null, "prompt_explorer")).toBe(43_200);
+    expect(effectiveProjectLookupTtl(null, "prompt_research")).toBe(43_200);
   });
 });

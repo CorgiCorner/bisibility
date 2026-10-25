@@ -6,6 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { AiTrackingLoading } from "./AiTrackingLoading";
 import { AiVisibilityLoading } from "./AiVisibilityLoading";
 import { DashboardLoadingContent } from "./DashboardLoading";
+import { PromptResearchLoading } from "./PromptResearchLoading";
 
 type Props = {
   view:
@@ -17,6 +18,7 @@ type Props = {
     | "detail"
     | "ai-tracking"
     | "ai-visibility"
+    | "prompt-research"
     | "competitors";
   theme: "light" | "dark";
 };
@@ -38,6 +40,8 @@ function TrackingLoadingPreview({ view, theme }: Readonly<Props>) {
         <AiTrackingLoading />
       ) : view === "ai-visibility" ? (
         <AiVisibilityLoading />
+      ) : view === "prompt-research" ? (
+        <PromptResearchLoading />
       ) : view === "competitors" ? (
         <CompetitorsLoading />
       ) : (
@@ -72,4 +76,5 @@ export const RankTracker: Story = { args: { view: "tracker" } };
 export const KeywordDetail: Story = { args: { view: "detail" } };
 export const AiTracking: Story = { args: { view: "ai-tracking" } };
 export const AiVisibility: Story = { args: { view: "ai-visibility" } };
+export const PromptResearch: Story = { args: { view: "prompt-research" } };
 export const Competitors: Story = { args: { view: "competitors" } };

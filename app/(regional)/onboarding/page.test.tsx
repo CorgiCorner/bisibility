@@ -4,10 +4,15 @@ import { bindingBudgetFixture } from "@/lib/metering/binding-budget-test-fixture
 import { adoptedTimestampQuery, utcTimestampControl } from "@/lib/metering/read.test-fixture";
 import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
 
 const mocks = vi.hoisted(() => ({
+  accountDataSource: vi.fn(
+    async (children: ReactNode, _options?: { onboardingOffer?: boolean }) => children,
+  ),
+  demo: vi.fn(() => ({ kind: "disabled" })),
   projectBudgetCapCents: vi.fn(async (_projectId: string) => 5000),
   existingOnboardingPlaceLocationKeys: vi.fn(),
   explicitDeploymentDataRegionLabel: vi.fn(),
@@ -35,6 +40,11 @@ const mocks = vi.hoisted(() => ({
   listEligibleRankedKeywordConnections: vi.fn(),
   wizard: vi.fn((_props: unknown) => null),
 }));
+
+vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
+  renderAccountDataSourceExtension: mocks.accountDataSource,
+}));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
 
 vi.mock("@/components/onboarding/OnboardingWizard", () => ({
   OnboardingWizard: (props: unknown) => mocks.wizard(props),
@@ -126,6 +136,7 @@ const project = {
   domain: "example.com",
   id: "project_1",
   name: "Example",
+  ownerId: "owner",
   publicId: "prj_1",
 };
 
@@ -222,6 +233,7 @@ describe("OnboardingPage", () => {
   );
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.demo.mockReturnValue({ kind: "disabled" });
     mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.prisma.$executeRaw.mockImplementation(utcTimestampControl);
     mocks.explicitDeploymentDataRegionLabel.mockReturnValue(null);
@@ -230,7 +242,7 @@ describe("OnboardingPage", () => {
       throw new Error(`redirect:${href}`);
     });
     mocks.listWorkspaces.mockResolvedValue([{ publicId: "prj_1" }]);
-    mocks.requireReadableProject.mockResolvedValue({ project });
+    mocks.requireReadableProject.mockResolvedValue({ actor: { id: "owner" }, project });
     mocks.getIntegrationCategories.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
     mocks.existingOnboardingPlaceLocationKeys.mockResolvedValue(new Set<string>());
@@ -242,6 +254,44 @@ describe("OnboardingPage", () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.listEligibleRankedKeywordConnections.mockResolvedValue([]);
   });
+
+  it.each([
+    ["owner", { id: "owner", role: "owner" }, true],
+    ["member", { id: "member", role: "member" }, false],
+    [
+      "project admin",
+      { id: "admin", role: "member", memberships: [{ projectId: project.id, role: "admin" }] },
+      false,
+    ],
+    ["instance admin", { id: "instance_admin", role: "admin" }, false],
+  ])("scopes the account offer to the persisted owner for %s", async (_role, actor, allowed) => {
+    mocks.requireReadableProject.mockResolvedValue({ actor, project });
+    await OnboardingPage({ searchParams: Promise.resolve({ projectId: "prj_1", step: "2" }) });
+    expect(mocks.accountDataSource).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+      onboardingOffer: allowed,
+    });
+  });
+
+  it.each([{}, { new: "1" }, { website: "new.example.com" }])(
+    "keeps the self account offer ready before creating a project: %j",
+    async (params) => {
+      mocks.listWorkspaces.mockResolvedValue([]);
+      await OnboardingPage({ searchParams: Promise.resolve(params) });
+      expect(mocks.accountDataSource).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+        onboardingOffer: true,
+      });
+      expect(mocks.requireReadableProject).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["editable", "legacy-read-only"])(
+    "keeps the account offer out of %s demo",
+    async (kind) => {
+      mocks.demo.mockReturnValue({ kind });
+      await OnboardingPage({ searchParams: Promise.resolve({ projectId: "prj_1", step: "2" }) });
+      expect(mocks.accountDataSource).not.toHaveBeenCalled();
+    },
+  );
 
   it("restores saved keyword text and tracking defaults on the keyword step", async () => {
     mocks.getKeywordCount.mockResolvedValue(2);
@@ -341,6 +391,7 @@ describe("OnboardingPage", () => {
 
   it("stays on create-project when the first workspace has no domain yet", async () => {
     mocks.requireReadableProject.mockResolvedValue({
+      actor: { id: "owner" },
       project: { ...project, domain: null },
     });
     mocks.getKeywordCount.mockResolvedValue(0);
@@ -361,6 +412,7 @@ describe("OnboardingPage", () => {
 
   it("sends a domain-less project back to create-project from later steps", async () => {
     mocks.requireReadableProject.mockResolvedValue({
+      actor: { id: "owner" },
       project: { ...project, domain: null },
     });
     mocks.getKeywordCount.mockResolvedValue(0);

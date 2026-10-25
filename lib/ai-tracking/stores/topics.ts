@@ -1,11 +1,21 @@
 import { DEFAULT_TRACKING_LIMITS, type TrackingLimits } from "@/lib/ai-tracking/contract";
 import { topicInputSchema } from "@/lib/ai-tracking/schema";
 import { makePublicId } from "@/lib/db/public-id-resources";
-import { activeTrackingPromptWhere, lockTrackingProject, prisma, requireFound } from "./shared";
+import {
+  activeTrackingPromptWhere,
+  inTrackingTransaction,
+  lockTrackingProject,
+  prisma,
+  requireFound,
+  type TrackingTransaction,
+} from "./shared";
 import type { TopicInput } from "./signatures";
 
-export function listTopics(projectId: string) {
-  return prisma.aiTopic.findMany({
+export function listTopics(
+  projectId: string,
+  database: Pick<TrackingTransaction, "aiTopic"> = prisma,
+) {
+  return database.aiTopic.findMany({
     where: { projectId },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
@@ -14,9 +24,10 @@ export function createTopic(
   projectId: string,
   input: TopicInput,
   limits: TrackingLimits = DEFAULT_TRACKING_LIMITS,
+  transaction?: TrackingTransaction,
 ) {
   const { paused, ...data } = topicInputSchema.parse(input);
-  return prisma.$transaction(async (tx) => {
+  return inTrackingTransaction(transaction, async (tx) => {
     await lockTrackingProject(tx, projectId);
     if (
       !paused &&

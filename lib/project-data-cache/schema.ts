@@ -37,6 +37,7 @@ export type DataCacheEntry = {
     | "keywords"
     | "pages"
     | "ai_visibility"
+    | "prompt_research"
     | "prompt_explorer"
     | "site_audit";
   country: string;

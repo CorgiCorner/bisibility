@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     $executeRaw: vi.fn(),
     auditLog: { create: vi.fn() },
     analyticsPersonDeletion: { createMany: vi.fn() },
+    project: { findMany: vi.fn(async () => []) },
     user: {
       count: vi.fn(),
       delete: vi.fn(),

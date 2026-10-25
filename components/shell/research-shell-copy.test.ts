@@ -16,19 +16,24 @@ const locales = [
 
 const sections = [
   {
+    key: "promptResearch",
+    title: "Prompt Research",
+    subtitle: "Research dataset questions by keyword. ChatGPT · US English.",
+  },
+  {
     key: "aiTracking",
-    title: "AI Tracking",
+    title: "Prompt Tracker",
     subtitle: "Monitor AI answers, brand mentions and cited sources over time.",
   },
   {
     key: "aiVisibility",
-    title: "AI Visibility",
+    title: "Brand Visibility",
     subtitle: "Brand mentions and citations from available provider observations.",
   },
   {
     key: "promptExplorer",
-    title: "Prompt Explorer",
-    subtitle: "Compare synthetic prompt tests across supported models.",
+    title: "Prompt Playground",
+    subtitle: "Try one prompt on several models and compare their answers and citations.",
   },
   {
     key: "siteAudit",
@@ -66,7 +71,7 @@ describe.each(locales)("research shell copy in $locale", ({ locale, messages }) 
       expect(localized.subtitle).not.toBe(section.subtitle);
     }
   });
-  it("supplies all six command palette destinations", () => {
+  it("supplies command palette destinations", () => {
     const translator = createTranslator({
       locale,
       messages,

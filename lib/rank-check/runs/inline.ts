@@ -1,3 +1,4 @@
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -42,7 +43,7 @@ export async function runInlineRankCheck(input: RunInlineRankCheckInput) {
     // every later check would be refused with exactly the untruth this path exists to avoid.
     // Cancelling with the named reason costs nothing - the same call the claim loop makes - and
     // leaves the run finalized with a cause the run views already render.
-    await prisma.$transaction((tx) =>
+    await notificationTransaction((tx) =>
       cancelUnrunnableRunItem(tx, {
         itemId: item.id,
         now: new Date(),

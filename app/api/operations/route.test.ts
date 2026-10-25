@@ -4,21 +4,27 @@ import { GET } from "./route";
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
+  canReadStream: vi.fn(),
+  readRankDataRevision: vi.fn(),
   readOperationSnapshot: vi.fn(),
   resolveProjectAccess: vi.fn(),
 }));
 
+vi.mock("@/lib/realtime/stream-access", () => ({ canReadStream: mocks.canReadStream }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
+  readRankDataRevision: mocks.readRankDataRevision,
 }));
 
 describe("GET operations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
+    mocks.canReadStream.mockResolvedValue(true);
+    mocks.readRankDataRevision.mockResolvedValue("rank-revision");
+    mocks.getSession.mockResolvedValue({ session: { id: "session" }, user: { id: "user_1" } });
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
@@ -53,6 +59,7 @@ describe("GET operations", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     await expect(response.json()).resolves.toEqual({
+      rankDataRevision: "rank-revision",
       operations: [
         {
           capabilities: { pause: true, resume: false, retry: false },
@@ -70,7 +77,7 @@ describe("GET operations", () => {
       ],
     });
     expect(mocks.resolveProjectAccess).toHaveBeenCalledWith("prj_1");
-    expect(mocks.readOperationSnapshot).toHaveBeenCalledWith("project_1");
+    expect(mocks.readOperationSnapshot).toHaveBeenCalledWith("project_1", "user_1");
   });
 
   it("preserves the real framework not-found response for a foreign project", async () => {
@@ -80,6 +87,15 @@ describe("GET operations", () => {
       GET(new Request("https://example.com/api/operations?project=prj_foreign")),
     ).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
     expect(mocks.readOperationSnapshot).not.toHaveBeenCalled();
+  });
+
+  it.each(["before", "after"])("rejects revoked access %s the data read", async (when) => {
+    if (when === "before") mocks.canReadStream.mockResolvedValue(false);
+    else mocks.canReadStream.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    const response = await GET(new Request("https://example.com/api/operations?project=prj_1"));
+    expect(response.status).toBe(401);
+    expect(await response.text()).not.toContain("rank-revision");
+    expect(mocks.readRankDataRevision).toHaveBeenCalledTimes(when === "before" ? 0 : 1);
   });
 
   it("returns a non-cacheable degraded response when the snapshot cannot be read", async () => {

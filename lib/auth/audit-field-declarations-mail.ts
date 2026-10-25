@@ -4,6 +4,12 @@ type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void
 
 export function registerMailAuditDeclarations(declare: Declare) {
   const strings = (...names: string[]) => f.strings(...names);
+  declare(["report.weekly_digest_sent"], {
+    after: {
+      ...f.numbers("failedChecksCount", "recipients", "topMovers", "sent", "ambiguous", "skipped"),
+      ...strings("periodEnd"),
+    },
+  });
   declare(["instance_admin.mail_settings.clear"], {
     after: strings("result"),
     before: strings("provider"),

@@ -570,7 +570,8 @@
           "position": "#{position, number}",
           "mixed": "mixed",
           "noDifficultyData": "No difficulty data",
-          "coverageUnknown": "Coverage unknown"
+          "coverageUnknown": "Coverage unknown",
+          "partialDepth": "Incomplete: checked to position {depth, number}"
         },
         "columns": {
           "keyword": "Keyword",

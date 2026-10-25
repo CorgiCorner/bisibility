@@ -22,6 +22,7 @@ type DefaultsResourceRow = {
   cronExpression: string | null;
   frequency: string;
   jitterMinutes: number;
+  inspectionBudgetMode?: "off" | "fixed" | "available_quota";
   lastCheckedAt: Date | null;
   nextCheckAt: Date | null;
   serpDepth: number;
@@ -58,6 +59,7 @@ function defaultsResource(
     device: market.device,
     frequency: "manual",
     jitter_minutes: 0,
+    inspection_budget_mode: defaults.inspectionBudgetMode ?? "fixed",
     last_checked_at: iso(defaults.lastCheckedAt),
     location_key: market.locationKey,
     next_check_at: null,

@@ -117,13 +117,21 @@ export const providerSchemas = {
         type: "string",
       },
       connection_status: { enum: ["connected", "needs_reauth", "not_connected"], type: "string" },
-      enabled: { type: "boolean" },
+      enabled: {
+        description:
+          "Whether rank checks use this connection. A new SERP connection starts disabled unless no other SERP connection is enabled.",
+        type: "boolean",
+      },
       id: { description: "Natural provider catalog ID.", type: "string" },
       kind: { enum: ["serp", "analytics"], type: "string" },
       last_used_at: { format: "date-time", type: ["string", "null"] },
       name: { type: "string" },
       primary: { type: "boolean" },
-      priority: { type: "integer" },
+      priority: {
+        description:
+          "Order among connections of this kind, lowest first. A new SERP connection is placed after existing SERP connections.",
+        type: "integer",
+      },
       status: {
         description: "catalog state of the integration, not the connection; read connection_status",
         type: "string",

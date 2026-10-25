@@ -1,3 +1,5 @@
+import { recomputeSummaryForRun } from "../notifications/check-summaries/triggers";
+import { notificationTransaction } from "../notifications/transaction";
 import "server-only";
 import { ActionPaymentError } from "@/lib/action-payment/token";
 import { ApplicationFailure } from "@temporalio/common";
@@ -5,6 +7,7 @@ import { prisma } from "../db/prisma";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { isOperationAccessDeniedError } from "../operations/access-error";
 import { ProjectDomainRequiredError } from "../projects/tracked-domain";
+import { markRecoveryAttemptStopped } from "../provider-evidence/recovery/capture";
 import { ProviderCallError } from "../providers/call-error";
 import { preflightDeploymentRankExecution } from "../providers/execution-extension";
 import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
@@ -55,6 +58,7 @@ async function claimPaidCall(rankCheckId: string, inline: boolean) {
     claimDefinitionPaidCall(tx, rankCheckId, inline),
   );
   if (permit) return permit;
+  await markRecoveryAttemptStopped(rankCheckId, "non_retryable");
   const now = new Date();
   const blocked = await prisma.rankCheckRunItem.updateMany({
     data: {
@@ -78,7 +82,10 @@ async function claimPaidCall(rankCheckId: string, inline: boolean) {
     },
     where: { rankCheckId },
   });
-  if (item?.run) await finalizeRankCheckRun(prisma, { now, run: item.run });
+  if (item?.run) {
+    const result = await finalizeRankCheckRun(prisma, { now, run: item.run });
+    if (result.finalized) await recomputeSummaryForRun(item.run.id).catch(() => undefined);
+  }
   throw ApplicationFailure.create({
     message: "Paid provider execution was already attempted for this rank check.",
     nonRetryable: true,
@@ -114,7 +121,7 @@ async function guardPaidCall(input: RunRankCheckActivityInput) {
   const unrunnable = await unrunnableAutomaticReason(input.keywordId);
   if (!unrunnable) return;
   if (input.runItemId && input.rankCheckId) {
-    await prisma.$transaction((tx) =>
+    await notificationTransaction((tx) =>
       cancelUnrunnableRankCheckRunItem(tx, {
         rankCheckId: input.rankCheckId as string,
         reason: unrunnable,
@@ -245,9 +252,9 @@ export async function runRankCheckActivity(
       }
       const allocationExhausted =
         error.attempts.length > 0 &&
-        error.attempts.every((attempt) => attempt.reason === "allocation_exhausted");
-      if (allocationExhausted || error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError) {
-        if (input.inline && error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError) throw error;
+        error.attempts.every((attempt) => attempt.reason === "allocation_exhausted" || attempt.reason === "funding_exhausted");
+      if (allocationExhausted || error.fundingExhaustion || error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError) {
+        if (input.inline && (error.fundingExhaustion || error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError)) throw error;
         throw ApplicationFailure.create({
           message: error.message,
           nonRetryable: true,

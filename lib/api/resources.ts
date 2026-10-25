@@ -4,6 +4,7 @@ import {
   createKeywordMembershipProjector,
   keywordMembershipSchedule,
 } from "@/lib/keywords/schedule-membership";
+import { recoveryResultMetadata } from "@/lib/provider-evidence/recovery/result-metadata";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { keywordCheckScheduleSelect } from "@/lib/queries/keyword-row-types";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
@@ -288,6 +289,7 @@ export function rankCheckResource(
     id: requireApiPublicId(check.publicId, "check"),
     keyword_id: requireApiPublicId(check.keyword.publicId, "kw"),
     observation_completeness: normalizedObservationCompleteness(check.observationRun?.completeness),
+    ...recoveryResultMetadata(check.raw),
     position: check.position,
     previous_position: check.previousPosition,
     provider: check.provider,

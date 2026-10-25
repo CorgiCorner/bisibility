@@ -69,7 +69,7 @@
               "guides/saved-keywords",
               "guides/backlinks",
               "guides/domain-overview",
-              "guides/ai-tracking",
+              "guides/prompt-tracker",
               "guides/site-audit",
               "guides/research-workflows"
             ]
@@ -143,7 +143,7 @@
           {
             "group": "Analytics and monitoring",
             "expanded": false,
-            "pages": ["api/analytics", "api/signals", "api/sitemap-monitors"]
+            "pages": ["api/analytics", "api/search-index", "api/signals", "api/sitemap-monitors"]
           },
           {
             "group": "Alerts and webhooks",
@@ -187,34 +187,39 @@
         "openapi": "openapi.snapshot.json",
         "groups": [
           {
-            "group": "AI Tracking",
+            "group": "Prompt Tracker",
             "pages": [
-              "GET /projects/{project_id}/ai-tracking/export",
-              "GET /projects/{project_id}/ai-tracking/history",
-              "GET /projects/{project_id}/ai-tracking/prompts",
-              "POST /projects/{project_id}/ai-tracking/prompts",
-              "DELETE /projects/{project_id}/ai-tracking/prompts/{prompt_id}",
-              "PATCH /projects/{project_id}/ai-tracking/prompts/{prompt_id}",
-              "GET /projects/{project_id}/ai-tracking/runs",
-              "POST /projects/{project_id}/ai-tracking/runs",
-              "GET /projects/{project_id}/ai-tracking/runs/{run_id}",
-              "POST /projects/{project_id}/ai-tracking/runs/{run_id}/cancel",
-              "POST /projects/{project_id}/ai-tracking/runs/{run_id}/retry",
-              "GET /projects/{project_id}/ai-tracking/runs/{run_id}/samples",
-              "POST /projects/{project_id}/ai-tracking/runs/preview",
-              "GET /projects/{project_id}/ai-tracking/schedules",
-              "POST /projects/{project_id}/ai-tracking/schedules",
-              "DELETE /projects/{project_id}/ai-tracking/schedules/{schedule_id}",
-              "PATCH /projects/{project_id}/ai-tracking/schedules/{schedule_id}",
-              "POST /projects/{project_id}/ai-tracking/suggestions",
-              "POST /projects/{project_id}/ai-tracking/suggestions/accept",
-              "POST /projects/{project_id}/ai-tracking/suggestions/generate",
-              "POST /projects/{project_id}/ai-tracking/suggestions/preview",
-              "GET /projects/{project_id}/ai-tracking/topics",
-              "POST /projects/{project_id}/ai-tracking/topics",
-              "DELETE /projects/{project_id}/ai-tracking/topics/{topic_id}",
-              "PATCH /projects/{project_id}/ai-tracking/topics/{topic_id}",
-              "GET /projects/{project_id}/ai-tracking/trends"
+              "GET /projects/{project_id}/prompt-tracker/export",
+              "GET /projects/{project_id}/prompt-tracker/history",
+              "GET /projects/{project_id}/prompt-tracker/prompts",
+              "POST /projects/{project_id}/prompt-tracker/prompts",
+              "DELETE /projects/{project_id}/prompt-tracker/prompts/{prompt_id}",
+              "PATCH /projects/{project_id}/prompt-tracker/prompts/{prompt_id}",
+              "GET /projects/{project_id}/prompt-tracker/runs",
+              "POST /projects/{project_id}/prompt-tracker/runs",
+              "GET /projects/{project_id}/prompt-tracker/runs/{run_id}",
+              "POST /projects/{project_id}/prompt-tracker/runs/{run_id}/cancel",
+              "POST /projects/{project_id}/prompt-tracker/runs/{run_id}/retry",
+              "GET /projects/{project_id}/prompt-tracker/runs/{run_id}/samples",
+              "POST /projects/{project_id}/prompt-tracker/runs/preview",
+              "GET /projects/{project_id}/prompt-tracker/schedules",
+              "POST /projects/{project_id}/prompt-tracker/schedules",
+              "DELETE /projects/{project_id}/prompt-tracker/schedules/{schedule_id}",
+              "PATCH /projects/{project_id}/prompt-tracker/schedules/{schedule_id}",
+              "GET /projects/{project_id}/prompt-tracker/topics",
+              "POST /projects/{project_id}/prompt-tracker/topics",
+              "DELETE /projects/{project_id}/prompt-tracker/topics/{topic_id}",
+              "PATCH /projects/{project_id}/prompt-tracker/topics/{topic_id}",
+              "GET /projects/{project_id}/prompt-tracker/trends"
+            ]
+          },
+          {
+            "group": "Prompt Research",
+            "pages": [
+              "POST /projects/{project_id}/prompt-research/suggestions",
+              "POST /projects/{project_id}/prompt-research/suggestions/accept",
+              "POST /projects/{project_id}/prompt-research/suggestions/generate",
+              "POST /projects/{project_id}/prompt-research/suggestions/preview"
             ]
           },
           {
@@ -330,7 +335,7 @@
               "GET /projects/{project_id}/agent-reports",
               "POST /projects/{project_id}/agent-reports",
               "GET /projects/{project_id}/agent-reports/{report_id}",
-              "POST /projects/{project_id}/ai-visibility",
+              "POST /projects/{project_id}/brand-visibility",
               "POST /projects/{project_id}/prompt-explorer",
               "GET /projects/{project_id}/site-audits",
               "POST /projects/{project_id}/site-audits",
@@ -344,6 +349,13 @@
             "pages": [
               "GET /projects/{project_id}/overview",
               "GET /projects/{project_id}/analytics/query-stats",
+              "GET /projects/{project_id}/search-index/sitemaps",
+              "GET /projects/{project_id}/search-index/sitemaps/{path}",
+              "POST /projects/{project_id}/search-index/inspections",
+              "GET /projects/{project_id}/search-index/report",
+              "GET /projects/{project_id}/search-index/urls",
+              "GET /projects/{project_id}/search-index/settings",
+              "PATCH /projects/{project_id}/search-index/settings",
               "POST /projects/{project_id}/analytics/sync",
               "GET /projects/{project_id}/analytics/traffic-snapshots"
             ]
@@ -531,6 +543,10 @@
     {
       "source": "/guides/email",
       "destination": "/self-hosting/email"
+    },
+    {
+      "source": "/guides/ai-tracking",
+      "destination": "/guides/prompt-tracker"
     }
   ],
   "seo": {

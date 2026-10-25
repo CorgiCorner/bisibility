@@ -80,6 +80,24 @@ describe("notification actions", () => {
     expect(mocks.prisma.notification.updateMany).not.toHaveBeenCalled();
   });
 
+  it("IN-8 exposes the open-incidents filter through the authenticated bell action", async () => {
+    await refreshNotificationFeed("project_1", undefined, true);
+    expect(mocks.getNotificationBellData).toHaveBeenCalledWith("project_1", {
+      dateFormat: undefined,
+      openIncidents: true,
+    });
+  });
+
+  it.each(["yes", 0, null])(
+    "IN-8 rejects a malformed open-incidents filter (%s)",
+    async (value) => {
+      await expect(
+        refreshNotificationFeed("project_1", undefined, value as never),
+      ).rejects.toThrow();
+      expect(mocks.getNotificationBellData).not.toHaveBeenCalled();
+    },
+  );
+
   it("marks one current-user notification as read", async () => {
     const result = await markNotificationRead({
       notificationId: "ntf_a00000000000000000000000",
@@ -92,6 +110,7 @@ describe("notification actions", () => {
         publicId: "ntf_a00000000000000000000000",
         readAt: null,
         userId: "user_1",
+        withdrawnAt: null,
       },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app", "layout");
@@ -107,6 +126,7 @@ describe("notification actions", () => {
         OR: [{ projectId: null }, { projectId: "project_1" }],
         readAt: null,
         userId: "user_1",
+        withdrawnAt: null,
       },
     });
   });

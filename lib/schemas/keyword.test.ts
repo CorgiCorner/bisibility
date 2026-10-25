@@ -17,6 +17,29 @@ import { projectDefaultsSchema } from "./project";
 import { serpDepthDecreaseWarning } from "./serp-depth";
 
 describe("SERP keyword schemas", () => {
+  it("rejects oversized tag collections before validating their entries", () => {
+    const input = { keyword: "rank tracker", location: "US", projectId: "prj_1" };
+    const oversized = addKeywordSchema.safeParse({ ...input, tags: Array(13).fill("") });
+
+    expect(oversized.success).toBe(false);
+    if (oversized.success) throw new Error("Expected the tag collection limit to reject input.");
+    expect(oversized.error.issues).toHaveLength(1);
+    expect(oversized.error.issues[0]).toMatchObject({
+      code: "too_big",
+      maximum: 12,
+      origin: "array",
+      path: ["tags"],
+    });
+
+    const tags = Array.from({ length: 12 }, (_, index) => `  Tag ${index + 1}  `);
+    expect(addKeywordSchema.parse({ ...input, tags }).tags).toEqual(tags.map((tag) => tag.trim()));
+
+    const invalidEntry = addKeywordSchema.safeParse({ ...input, tags: [""] });
+    expect(invalidEntry.success).toBe(false);
+    if (invalidEntry.success) throw new Error("Expected an empty tag to reject input.");
+    expect(invalidEntry.error.issues).toMatchObject([{ code: "too_small", path: ["tags", 0] }]);
+  });
+
   it("accepts the bounded jitter range and preserves its default", () => {
     const schedule = { cronExpression: null, frequency: "daily", timezone: "UTC" } as const;
 

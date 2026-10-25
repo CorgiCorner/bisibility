@@ -72,6 +72,8 @@ const rankRun: RankCheckOperation = {
 describe("useAppRealtimeState", () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
     vi.stubGlobal("EventSource", MockEventSource);
     vi.stubGlobal(
       "fetch",
@@ -132,7 +134,7 @@ describe("useAppRealtimeState", () => {
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ operations: [] })));
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
-    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    await act(async () => vi.advanceTimersByTimeAsync(31_000));
     expect(refresh).toHaveBeenCalledOnce();
     await act(async () => vi.advanceTimersByTimeAsync(10_000));
     expect(refresh).toHaveBeenCalledOnce();
@@ -178,18 +180,19 @@ describe("useAppRealtimeState", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("polls operations within five seconds after the stream closes", async () => {
+  it("polls operations every thirty seconds after the stream closes", async () => {
     const { result, source } = renderRealtime();
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
 
     expect(result.current.status).toBe("offline");
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(30_000));
 
     expect(fetch).toHaveBeenCalledOnce();
     expect(fetch).toHaveBeenCalledWith("/api/operations?project=prj_1", {
       cache: "no-store",
       credentials: "same-origin",
+      signal: expect.any(AbortSignal),
     });
   });
 
@@ -202,17 +205,17 @@ describe("useAppRealtimeState", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("backs off fallback errors from fifteen to thirty seconds", async () => {
+  it("backs off fallback errors from thirty to sixty seconds", async () => {
     vi.mocked(fetch).mockRejectedValue(new Error("offline"));
     const { source } = renderRealtime();
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
 
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
-    expect(fetch).toHaveBeenCalledTimes(1);
-    await act(async () => vi.advanceTimersByTimeAsync(15_000));
-    expect(fetch).toHaveBeenCalledTimes(2);
     await act(async () => vi.advanceTimersByTimeAsync(30_000));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTimeAsync(30_000));
+    expect(fetch).toHaveBeenCalledTimes(2);
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 
@@ -222,7 +225,7 @@ describe("useAppRealtimeState", () => {
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
 
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(30_000));
 
     expect(result.current.operations).toEqual(activeOperations);
     expect(result.current.status).toBe("offline");
@@ -230,26 +233,31 @@ describe("useAppRealtimeState", () => {
 
   it("refreshes immediately when the hidden document becomes visible", async () => {
     Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
     const { source } = renderRealtime();
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(30_000));
     expect(fetch).not.toHaveBeenCalled();
 
     Object.defineProperty(document, "hidden", { configurable: true, value: false });
-    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
 
     expect(fetch).toHaveBeenCalledOnce();
   });
 
-  it("stops the fallback on reconnect and never polls without active operations", async () => {
-    const { source } = renderRealtime();
+  it("stops scheduled fallback on reconnect and polls even without active operations", async () => {
+    const { source, unmount } = renderRealtime();
     source.readyState = MockEventSource.CLOSED;
     act(() => source.onerror?.(new Event("error")));
     source.readyState = MockEventSource.CONNECTING;
     act(() => source.onopen?.(new Event("open")));
     await act(async () => vi.advanceTimersByTimeAsync(30_000));
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
+    unmount();
+    vi.mocked(fetch).mockClear();
 
     MockEventSource.instances = [];
     const empty = renderHook(() => useAppRealtimeState("prj_empty"));
@@ -257,7 +265,7 @@ describe("useAppRealtimeState", () => {
     emptySource.readyState = MockEventSource.CLOSED;
     act(() => emptySource.onerror?.(new Event("error")));
     await act(async () => vi.advanceTimersByTimeAsync(30_000));
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
     empty.unmount();
   });
 });

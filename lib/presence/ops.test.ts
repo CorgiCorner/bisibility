@@ -15,6 +15,7 @@ describe("presence inspection ops events", () => {
 
   it("uses only the stable property identifier when names are disabled", async () => {
     await notifyPresenceBudgetExhausted({
+      resetAt: new Date("2026-11-02T08:00:00Z"),
       deferred: 4,
       projectIds: ["project_1", "project_2"],
       property: "sc-domain:example.com",
@@ -26,6 +27,7 @@ describe("presence inspection ops events", () => {
         "Affected project count": 2,
         "Affected projects": "project_1, project_2",
         "Deferred URLs": 4,
+        "Quota reset at": "2026-11-02T08:00:00.000Z",
         "Property identifier": "gsc:0123456789abcdef:fedcba9876543210",
       },
       kind: "presence_inspection_budget",

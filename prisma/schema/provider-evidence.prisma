@@ -1,0 +1,327 @@
+// Additive provider evidence. Incidents project customer state from independent dimensions.
+// Partial and unresolved payloads live only in provider_partial_evidence,
+// which the retained-result maintenance query cannot address.
+
+enum ProviderAcceptance {
+  accepted
+  unconfirmed
+  rejected
+}
+
+enum ProviderFulfillment {
+  complete
+  partial
+  provider_error
+  pending
+  absent
+}
+
+enum ProviderAccounting {
+  measured
+  unknown
+  conflict
+}
+
+enum ProviderAccountingExhaustion {
+  pending
+  exhausted
+  not_applicable
+}
+
+enum ProviderRecoveryState {
+  not_needed
+  waiting_for_attempt_end
+  scheduled
+  attempting
+  resolved
+  operator_review
+}
+
+enum CheckNotificationSetting {
+  all
+  important
+  none
+}
+
+enum ProviderIncidentState {
+  open
+  resolved
+}
+
+enum ProviderIncidentTransitionKind {
+  linked
+  count_change
+  resolved
+  reopened
+}
+
+enum ProviderPartialEvidenceKind {
+  partial
+  unresolved
+}
+
+// One row per metering operation. Null dimensions are unclassified, not a guess.
+model ProviderOperationEvidence {
+  operationPk      String                        @id
+  operation        MeteringOperation             @relation(fields: [operationPk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  acceptance       ProviderAcceptance?
+  fulfillment      ProviderFulfillment?
+  returnedDepth    Int?
+  accounting       ProviderAccounting?
+  exhaustionStatus ProviderAccountingExhaustion?
+  exhaustionReason String?
+  recoveryState    ProviderRecoveryState?
+  lastAttemptAt    DateTime?
+  nextAttemptAt    DateTime?
+  recoveryReason   String?
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+
+  @@map("provider_operation_evidence")
+}
+
+// Separate from rank_check_result_evidence. Maintenance and console restore
+// select that table only, so a row here is never a completed restore candidate.
+model ProviderPartialEvidence {
+  id               String                      @id @default(cuid())
+  namespace        String
+  instanceId       String
+  rankCheckId      String
+  rankCheck        RankCheck                   @relation(fields: [rankCheckId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  kind             ProviderPartialEvidenceKind
+  schemaVersion    Int                         @default(1)
+  payloadEncrypted String
+  identityHash     String
+  returnedDepth    Int?
+  finishedAt       DateTime?
+  createdAt        DateTime                    @default(now())
+  expiresAt        DateTime
+
+  @@index([rankCheckId])
+  @@index([expiresAt], map: "provider_partial_evidence_expiry_idx")
+  @@map("provider_partial_evidence")
+}
+
+// openSlot is "open" while the incident is open and null after it resolves.
+// The project/cause key keeps the original row across resolution and reopening.
+model ProviderIncident {
+  id                       String                       @id @default(cuid())
+  projectId                String
+  project                  Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  cause                    String
+  state                    ProviderIncidentState        @default(open)
+  openSlot                 String?                      @default("open")
+  version                  Int                          @default(1)
+  resultUnderReviewCount   Int                          @default(0)
+  resultRecoveredCount     Int                          @default(0)
+  resultPartialCount       Int                          @default(0)
+  resultProviderErrorCount Int                          @default(0)
+  resultMissingCount       Int                          @default(0)
+  costMeasuredCount        Int                          @default(0)
+  costUnknownCount         Int                          @default(0)
+  costUnderReviewCount     Int                          @default(0)
+  openedAt                 DateTime                     @default(now())
+  resolvedAt               DateTime?
+  retiredAt                DateTime?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  operations               ProviderIncidentOperation[]
+  transitions              ProviderIncidentTransition[]
+
+  // Migration-only partial unique index keeps one non-retired generation per project/cause.
+  @@index([projectId, state])
+  @@map("provider_incidents")
+}
+
+model ProviderIncidentOperation {
+  incidentId  String
+  incident    ProviderIncident  @relation(fields: [incidentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  operationPk String
+  operation   MeteringOperation @relation(fields: [operationPk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  linkedAt    DateTime          @default(now())
+  // Last customer dimensions remain frozen if a fallback winner makes recovery accounting-only.
+  customerEvidence Json?
+
+  @@id([incidentId, operationPk])
+  @@unique([operationPk])
+  @@map("provider_incident_operations")
+}
+
+model ProviderIncidentTransition {
+  id         String                         @id @default(cuid())
+  incidentId String
+  incident   ProviderIncident               @relation(fields: [incidentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  version    Int
+  kind       ProviderIncidentTransitionKind
+  counts     Json
+  createdAt  DateTime                       @default(now())
+
+  @@unique([incidentId, version], map: "provider_incident_transitions_version")
+  @@map("provider_incident_transitions")
+}
+
+model ProviderIncidentDeliveryWatermark {
+  projectId        String    @id
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  deliveredThrough DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  @@map("provider_incident_delivery_watermarks")
+}
+
+model CheckNotificationSummary {
+  notificationId String       @id
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  checkIds       String[]
+  topN           Int
+  positionMove   Int
+  version        Int
+  withdrawn      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("check_notification_summaries")
+}
+
+enum WeeklyDigestSendStatus {
+  claimed
+  sent
+  failed
+  ambiguous
+  skipped
+}
+
+model WeeklyDigestSend {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  periodStart DateTime
+  periodEnd   DateTime
+  // Creation time retained for compatibility; deliveredAt records confirmed handoff.
+  sentAt      DateTime @default(now())
+  status      WeeklyDigestSendStatus @default(sent)
+  attempts    Int @default(1)
+  lastErrorKind String?
+  updatedAt   DateTime @default(now()) @db.Timestamptz(6)
+  deliveredAt DateTime? @db.Timestamptz(6)
+
+  @@unique([userId, projectId, periodEnd], map: "weekly_digest_sends_recipient_period")
+  @@index([projectId, periodEnd])
+  @@map("weekly_digest_sends")
+}
+
+model RunTrayDismissal {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  runId       String
+  run         RankCheckRun @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dismissedAt DateTime     @default(now())
+  expiresAt   DateTime
+
+  @@unique([userId, runId], map: "run_tray_dismissals_user_run")
+  @@index([expiresAt])
+  @@map("run_tray_dismissals")
+}
+
+// Frozen before intent, separate from possible-send authority and financial truth.
+model ProviderDispatchIdentity {
+  operationPk              String               @id
+  operation                MeteringOperation    @relation(fields: [operationPk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  namespace                String
+  instanceId               String
+  projectId                String
+  connectionId             String
+  publicConnectionId       String?
+  rankCheckId              String
+  rankCheckRunId           String?
+  rankCheckRunItemId       String?
+  queuedTaskId             String?
+  keywordId                String
+  keywordRevision          DateTime
+  executionMode            String
+  payerKind                String
+  principal                String
+  costOwner                String
+  payerAccountRef          String
+  providerCredentialVersion String
+  provider                 String
+  feature                  String
+  requestSource            String
+  requestSurface           String
+  nativeTag                String?
+  endpointPath             String
+  payloadSchemaVersion     Int                  @default(1)
+  payloadEncrypted         String
+  payloadHash              String
+  identityHash             String
+  createdAt                DateTime             @default(now())
+  expiresAt                DateTime
+
+  @@index([expiresAt], map: "provider_dispatch_identity_expiry_idx")
+  @@map("provider_dispatch_identities")
+}
+
+// Waiting is durable but carries no lookup lease or dispatch authority.
+model ProviderRecoveryCandidate {
+  namespace String
+  instanceId String
+  id String @id @default(cuid())
+  operationPk String
+  attemptId String
+  rankCheckId String
+  queuedTaskId String?
+  stopReason String?
+  pollingStoppedAt DateTime?
+  accountingOnly Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  intent ProviderRecoveryIntent?
+
+  @@unique([operationPk, attemptId])
+  @@index([rankCheckId])
+  @@map("provider_recovery_candidates")
+}
+
+model ProviderRecoveryIntent {
+  id String @id @default(cuid())
+  candidateId String @unique
+  candidate ProviderRecoveryCandidate @relation(fields: [candidateId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  operationPk String
+  attemptId String
+  state ProviderRecoveryState @default(scheduled)
+  leaseOwner String?
+  leaseExpiresAt DateTime?
+  attempts Int @default(0)
+  lastAttemptAt DateTime?
+  nextAttemptAt DateTime?
+  reason String?
+  accountingOnly Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([operationPk, attemptId])
+  @@index([state, nextAttemptAt])
+  @@map("provider_recovery_intents")
+}
+
+// Immutable verified observation, deduplicated by original upstream account/native id.
+model ProviderRecoveryProof {
+  id String @id
+  operationPk String
+  namespace String
+  instanceId String
+  provider String
+  accountId String
+  nativeId String
+  credentialVersion String
+  evidenceHash String
+  body Json
+  createdAt DateTime @default(now())
+
+  @@unique([namespace, instanceId, provider, accountId, nativeId], map: "provider_recovery_proofs_native_key")
+  @@index([operationPk])
+  @@map("provider_recovery_proofs")
+}

@@ -6,6 +6,7 @@ import {
   primaryLocationKeyDescription,
 } from "./legacy-market-input";
 import { defaultsReviewSchemas } from "./openapi-defaults-review";
+import { projectDefaultsInspectionBudgetModeSchema } from "./openapi-page-indexing-components";
 import { publicIdSchema } from "./openapi-public-id";
 import {
   jitterMinutesContractSchema,
@@ -112,6 +113,7 @@ export const projectSchemas = {
   },
   ProjectDefaults: {
     properties: {
+      inspection_budget_mode: projectDefaultsInspectionBudgetModeSchema,
       city: { type: ["string", "null"] },
       country: {
         description: "Persisted default country for new keywords.",

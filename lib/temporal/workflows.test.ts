@@ -68,6 +68,7 @@ vi.mock("@temporalio/workflow", () => ({
   proxyActivities: mocks.proxyActivities,
   workflowInfo: vi.fn(() => ({
     runId: mocks.runId,
+    startTime: new Date("2026-10-12T06:15:00Z"),
     typedSearchAttributes: {
       get: (key: { name: string }) => mocks.searchAttributes.get(key.name),
     },
@@ -151,7 +152,11 @@ describe("maintenance workflows", () => {
     await expect(workflow()).resolves.toEqual(expected);
 
     expect(activity).toHaveBeenCalledOnce();
-    expect(activity.mock.calls[0]).toEqual([]);
+    expect(activity.mock.calls[0]).toEqual(
+      workflow === sendWeeklyReportDigestWorkflow
+        ? [{ periodEnd: "2026-10-12T06:15:00.000Z" }]
+        : [],
+    );
   });
 
   it("configures the bounded raw-purge activity with heartbeat cancellation", () => {

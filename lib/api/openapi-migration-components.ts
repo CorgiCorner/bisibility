@@ -6,6 +6,11 @@ import {
   LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
   PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
 } from "@/lib/migration/package-version";
+import {
+  CHECK_NOTIFICATION_POSITION_MOVE,
+  CHECK_NOTIFICATION_SETTINGS,
+  CHECK_NOTIFICATION_TOP_N,
+} from "@/lib/notifications/preference-defaults";
 import { savedViewSurfaces } from "@/lib/saved-views/model";
 import {
   cloudImportKeywordAlertTargetSchema,
@@ -146,11 +151,28 @@ export const migrationSchemas = {
       alert_email: { type: "boolean" },
       alert_in_app: { type: "boolean" },
       check_email: { type: "boolean" },
-      check_in_app: { type: "boolean" },
+      check_in_app: {
+        type: "boolean",
+        deprecated: true,
+        description:
+          "Legacy stored value, preserved for portability. A legacy row always imports as Important regardless of this value.",
+      },
+      check_notification_position_move: {
+        maximum: CHECK_NOTIFICATION_POSITION_MOVE.max,
+        minimum: CHECK_NOTIFICATION_POSITION_MOVE.min,
+        type: "integer",
+      },
+      check_notification_setting: { enum: CHECK_NOTIFICATION_SETTINGS, type: "string" },
+      check_notification_top_n: {
+        maximum: CHECK_NOTIFICATION_TOP_N.max,
+        minimum: CHECK_NOTIFICATION_TOP_N.min,
+        type: "integer",
+      },
       import_email: { type: "boolean" },
       import_in_app: { type: "boolean" },
       invite_email: { type: "boolean" },
       invite_in_app: { type: "boolean" },
+      provider_incident_in_app: { type: "boolean" },
       report_email: { type: "boolean" },
     },
     type: "object",

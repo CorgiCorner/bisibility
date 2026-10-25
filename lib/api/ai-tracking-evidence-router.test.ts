@@ -48,9 +48,9 @@ const normalized = normalizeTrackingResponse(
 );
 
 async function read(resource: string) {
-  const path = ["projects", projectId, "ai-tracking", ...resource.split("?")[0].split("/")];
+  const path = ["projects", projectId, "prompt-tracker", ...resource.split("?")[0].split("/")];
   const response = await handleApiRequest(
-    new Request(`https://example.com/api/v1/projects/${projectId}/ai-tracking/${resource}`, {
+    new Request(`https://example.com/api/v1/projects/${projectId}/prompt-tracker/${resource}`, {
       headers: { Authorization: "Bearer bsb_key_test_evidence" },
     }),
     path,

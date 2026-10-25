@@ -1793,46 +1793,6 @@
       "text": "Email"
     },
     {
-      "anchor": "variable:rows",
-      "fingerprint": "409c839065f0e884c65db47a21532ce50a55feef707aa6448d49871732615c67",
-      "kind": "ui-property",
-      "path": "components/settings/notifications/NotificationChannelsCard.tsx",
-      "reason": "NotificationChannelsCard resolves channel.key through its scoped translator; the retained values are keys, not channel labels. Current consumer: variable:rows; retained value: \"invite\".",
-      "text": "invite"
-    },
-    {
-      "anchor": "variable:rows",
-      "fingerprint": "7354481d25efe6fac12c999c59378ab746c344e05a0f66a7ca101be964dcaaff",
-      "kind": "ui-property",
-      "path": "components/settings/notifications/NotificationChannelsCard.tsx",
-      "reason": "NotificationChannelsCard resolves channel.key through its scoped translator; the retained values are keys, not channel labels. Current consumer: variable:rows; retained value: \"importFinished\".",
-      "text": "importFinished"
-    },
-    {
-      "anchor": "variable:rows",
-      "fingerprint": "8110ed9e406265e027e1a246f48ade77cd9b68072c5e70bb2074d9a85a509c30",
-      "kind": "ui-property",
-      "path": "components/settings/notifications/NotificationChannelsCard.tsx",
-      "reason": "NotificationChannelsCard resolves channel.key through its scoped translator; the retained values are keys, not channel labels. Current consumer: variable:rows; retained value: \"weeklyReport\".",
-      "text": "weeklyReport"
-    },
-    {
-      "anchor": "variable:rows",
-      "fingerprint": "cf39194f2fbbdfa94ec49f8e43b7bc9e7bdba3926b2c5cd480608fafb1601cbc",
-      "kind": "ui-property",
-      "path": "components/settings/notifications/NotificationChannelsCard.tsx",
-      "reason": "NotificationChannelsCard resolves channel.key through its scoped translator; the retained values are keys, not channel labels. Current consumer: variable:rows; retained value: \"checkComplete\".",
-      "text": "checkComplete"
-    },
-    {
-      "anchor": "variable:rows",
-      "fingerprint": "edcb283375650d5cd8473cf5d9beb5af2cd436b607ea8dca61cd2cb3180da11b",
-      "kind": "ui-property",
-      "path": "components/settings/notifications/NotificationChannelsCard.tsx",
-      "reason": "NotificationChannelsCard resolves channel.key through its scoped translator; the retained values are keys, not channel labels. Current consumer: variable:rows; retained value: \"alertFired\".",
-      "text": "alertFired"
-    },
-    {
       "anchor": "function:CommandPalette",
       "fingerprint": "a59b993ab2fa4d9dd4451b209ddacde9b884fee25d03ae334bd3052e5b221183",
       "kind": "jsx-text",
@@ -2374,6 +2334,7 @@
       "app/(regional)/app/(workspace)/account/preferences/actions.ts",
       "app/(regional)/onboarding/actions.ts",
       "app/(regional)/onboarding/initial-first-check-candidates.ts",
+      "app/(regional)/onboarding/onboarding-data-source.ts",
       "app/(regional)/onboarding/onboarding-location-state.ts",
       "app/(regional)/onboarding/onboarding-provider-state.ts",
       "app/(regional)/onboarding/update-project.ts",
@@ -2618,7 +2579,9 @@
       "components/rank-runs/rank-run-copy.ts",
       "components/rank-runs/run-page-summary-presentation.ts",
       "components/rank-runs/runs-format.ts",
+      "components/rank-runs/useRunPageItems.ts",
       "components/rank-tracker/useProjectKeywordImportMessages.ts",
+      "components/realtime/useHeldRows.ts",
       "components/research/research-money.ts",
       "components/research/research-payment-estimates.ts",
       "components/research/research-relative-time.ts",
@@ -2651,6 +2614,11 @@
       "components/search-insights/drawers/useSearchInsightsDrawers.ts",
       "components/search-insights/drawers/useTrackFocus.ts",
       "components/search-insights/drawers/useVisitedMarks.ts",
+      "components/search-insights/page-indexing/history-presentation.ts",
+      "components/search-insights/page-indexing/inspection-label.ts",
+      "components/search-insights/page-indexing/use-indexing-date.ts",
+      "components/search-insights/page-indexing/use-indexing-urls.ts",
+      "components/search-insights/page-indexing/use-viewer-time-zone.ts",
       "components/search-insights/search-insights-copy.ts",
       "components/search-insights/search-insights-import-progress.ts",
       "components/search-insights/search-insights-property-match.ts",
@@ -2696,11 +2664,13 @@
       "components/shell/header-copy.ts",
       "components/shell/header-title.ts",
       "components/shell/keyword-search.ts",
+      "components/shell/operations-tray-copy.ts",
       "components/shell/operations-tray-gsc-copy.ts",
       "components/shell/set-theme.ts",
       "components/shell/types.ts",
       "components/shell/use-default-project.ts",
       "components/shell/use-keyword-search.ts",
+      "components/shell/use-viewer-time-zone.ts",
       "components/shell/user-menu-items.ts",
       "components/shell/workspace-labels.ts",
       "components/shell/workspace-menu-placement.ts",
@@ -2839,26 +2809,6 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/ai-tracking/loading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/ai-tracking/page.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/ai-visibility/loading.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/ai-visibility/page.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/alerts/loading.tsx",
       "status": "migrated"
     },
@@ -2876,6 +2826,16 @@
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/backlinks/page.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/brand-visibility/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/brand-visibility/page.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -3034,12 +2994,32 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/prompt-explorer/loading.tsx",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-playground/loading.tsx",
       "status": "pending"
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/prompt-explorer/page.tsx",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-playground/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-research/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-research/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-tracker/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/prompt-tracker/page.tsx",
       "status": "pending"
     },
     {
@@ -3134,6 +3114,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/runs/summaries/[notificationPublicId]/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/search-console/loading.tsx",
       "status": "migrated"
     },
@@ -3141,6 +3126,11 @@
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/search-console/page.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/search-console/PageIndexingSection.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -3586,6 +3576,11 @@
       "kind": "render",
       "path": "app/(regional)/onboarding/loading.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "app/(regional)/onboarding/onboarding-data-source.ts",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -4154,6 +4149,16 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/recovery/RecoveryEvidence.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryPartialEvidence.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/recovery/RecoveryPreviewDialog.tsx",
       "status": "pending"
     },
@@ -4333,6 +4338,46 @@
       "status": "pending"
     },
     {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchCells.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchClient.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchKeyword.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchMobile.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchReview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchSourcePanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchSources.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchTable.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/ai-tracking/tracking-run-configuration.ts",
       "status": "pending"
@@ -4425,11 +4470,6 @@
     {
       "kind": "render",
       "path": "components/ai-tracking/TrackingSourceControls.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/ai-tracking/TrackingSuggestions.tsx",
       "status": "pending"
     },
     {
@@ -5103,6 +5143,31 @@
     },
     {
       "kind": "render",
+      "path": "components/checks/runs/EvidenceProjectionBands.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/checks/runs/EvidenceRunsPage.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/checks/runs/EvidenceRunsWorkspace.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/checks/runs/ExactRangeControl.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/checks/runs/RankResultMarker.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/checks/runs/SkippedRunsView.tsx",
       "status": "excluded"
     },
@@ -5115,6 +5180,11 @@
       "kind": "ui-data",
       "path": "components/checks/runs/use-run-table-width.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/checks/summaries/CheckSummaryDetails.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -5897,6 +5967,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/install/CommandText.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/install/install-catalog.ts",
       "status": "migrated"
@@ -6069,6 +6144,11 @@
     {
       "kind": "render",
       "path": "components/integrations/ProviderCardFeedback.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/ProviderCardHeader.tsx",
       "status": "migrated"
     },
     {
@@ -8847,6 +8927,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/rank-runs/useRunPageItems.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/rank-runs/useRunPreflight.tsx",
       "status": "migrated"
@@ -8870,6 +8955,16 @@
       "kind": "ui-data",
       "path": "components/rank-tracker/useProjectKeywordImportMessages.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/realtime/NewResultsBanner.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/realtime/useHeldRows.ts",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -9350,6 +9445,111 @@
       "kind": "ui-data",
       "path": "components/search-insights/drawers/useVisitedMarks.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/history-presentation.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingHistoryStrip.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingInspect.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingOverview.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingReasons.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingSitemapChecks.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingSitemaps.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingStatus.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingStoredFacts.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingSummary.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingTable.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingTrend.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingTrendMarks.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingUrls.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/inspection-label.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/PageIndexingTab.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/SearchConsoleTabs.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/use-indexing-date.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/use-indexing-urls.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/use-viewer-time-zone.ts",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -9867,6 +10067,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/settings/notifications/CheckNotificationControls.tsx",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "components/settings/notifications/notification-card-layout.ts",
       "status": "migrated"
@@ -10282,6 +10487,21 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/shell/NotificationRow.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/OpenIncidentRows.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/shell/operations-tray-copy.ts",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "components/shell/operations-tray-gsc-copy.ts",
       "status": "migrated"
@@ -10325,6 +10545,16 @@
       "kind": "render",
       "path": "components/shell/ProjectWriteModeProvider.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/RealtimeIndicator.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/RecentTrayRuns.tsx",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -10395,6 +10625,11 @@
       "kind": "ui-data",
       "path": "components/shell/use-keyword-search.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/shell/use-viewer-time-zone.ts",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -10518,6 +10753,11 @@
     },
     {
       "kind": "render",
+      "path": "components/tracking-loading/PromptResearchLoading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/ui/AccentCtaLink.tsx",
       "status": "migrated"
     },
@@ -10599,6 +10839,11 @@
     {
       "kind": "render",
       "path": "components/ui/CheckStatusChipText.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/ChoiceGroup.tsx",
       "status": "migrated"
     },
     {

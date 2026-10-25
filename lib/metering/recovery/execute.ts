@@ -1,3 +1,4 @@
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { writeAudit } from "@/lib/auth/audit";
@@ -139,10 +140,11 @@ export async function processRecoveryCommands(
   let processed = 0;
   for (let index = 0; index < Math.min(4, Math.max(1, options.limit ?? 4)); index++) {
     try {
-      const advanced = await database.$transaction(
+      const advanced = await notificationTransaction(
         (tx) =>
           nextCase(tx, namespace, command.commandId, command.leaseId, scope, input, new Date()),
         { timeout: 30000 },
+        database,
       );
       if (!advanced) break;
       processed++;

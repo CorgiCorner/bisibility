@@ -1,64 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { aiTrackingOperationPolicy } from "./ai-tracking-policy";
-import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
+import { promptTrackerOperationPolicy } from "./ai-tracking-policy";
+import { promptResearchPolicies } from "./operation-policy-ai-tracking";
 
-describe("AI tracking operation scopes", () => {
+describe("Prompt Tracker operation scopes", () => {
   it("keeps previews, evidence exports and reads read scoped", () => {
     expect(
-      aiTrackingOperationPolicy("POST", ["projects", "prj", "ai-tracking", "runs", "preview"]),
-    ).toEqual({ name: "previewAiTrackingRun", scope: "read" });
+      promptTrackerOperationPolicy("POST", [
+        "projects",
+        "prj",
+        "prompt-tracker",
+        "runs",
+        "preview",
+      ]),
+    ).toEqual({ name: "previewPromptTrackerRun", scope: "read" });
     expect(
-      aiTrackingOperationPolicy("GET", ["projects", "prj", "ai-tracking", "export"])?.scope,
+      promptTrackerOperationPolicy("GET", ["projects", "prj", "prompt-tracker", "export"])?.scope,
     ).toBe("read");
   });
   it("declares read-only POST review and preview exceptions while generation remains write scoped", () => {
     expect(
-      aiTrackingOperationPolicy("POST", ["projects", "prj", "ai-tracking", "suggestions"]),
-    ).toEqual({ name: "suggestAiTrackingPrompts", scope: "read" });
+      promptTrackerOperationPolicy("POST", ["projects", "prj", "prompt-research", "suggestions"]),
+    ).toEqual({ name: "suggestPromptResearchPrompts", scope: "read" });
     expect(
-      aiTrackingOperationPolicy("POST", [
+      promptTrackerOperationPolicy("POST", [
         "projects",
         "prj",
-        "ai-tracking",
+        "prompt-research",
         "suggestions",
         "preview",
       ]),
-    ).toEqual({ name: "aiTrackingSuggestionsPreview", scope: "read" });
+    ).toEqual({ name: "promptResearchSuggestionsPreview", scope: "read" });
     expect(
-      aiTrackingOperationPolicy("POST", [
+      promptTrackerOperationPolicy("POST", [
         "projects",
         "prj",
-        "ai-tracking",
+        "prompt-research",
         "suggestions",
         "generate",
       ]),
-    ).toEqual({ name: "aiTrackingSuggestionsGenerate", scope: "write" });
-    expect(aiTrackingPolicies.suggestAiTrackingPrompts).toMatchObject({
+    ).toEqual({ name: "promptResearchSuggestionsGenerate", scope: "write" });
+    expect(promptResearchPolicies.suggestPromptResearchPrompts).toMatchObject({
       requiredScope: "read",
       projectAccess: "read",
     });
-    expect(aiTrackingPolicies.aiTrackingSuggestionsPreview).toMatchObject({
+    expect(promptResearchPolicies.promptResearchSuggestionsPreview).toMatchObject({
       requiredScope: "read",
       projectAccess: "read",
     });
-    expect(aiTrackingPolicies.aiTrackingSuggestionsGenerate).toMatchObject({
+    expect(promptResearchPolicies.promptResearchSuggestionsGenerate).toMatchObject({
       requiredScope: "write",
       projectAccess: "write",
     });
   });
   it("makes all execution and catalog mutation operations write scoped", () => {
     expect(
-      aiTrackingOperationPolicy("POST", ["projects", "prj", "ai-tracking", "runs"])?.scope,
+      promptTrackerOperationPolicy("POST", ["projects", "prj", "prompt-tracker", "runs"])?.scope,
     ).toBe("write");
     expect(
-      aiTrackingOperationPolicy("DELETE", ["projects", "prj", "ai-tracking", "prompts", "aip"])
-        ?.scope,
-    ).toBe("write");
-    expect(
-      aiTrackingOperationPolicy("GET", [
+      promptTrackerOperationPolicy("DELETE", [
         "projects",
         "prj",
-        "ai-tracking",
+        "prompt-tracker",
+        "prompts",
+        "aip",
+      ])?.scope,
+    ).toBe("write");
+    expect(
+      promptTrackerOperationPolicy("GET", [
+        "projects",
+        "prj",
+        "prompt-tracker",
         "prompts",
         "aip",
         "not-real",

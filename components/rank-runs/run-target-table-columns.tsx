@@ -1,4 +1,5 @@
 import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { RankResultMarker } from "@/components/checks/runs/RankResultMarker";
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
@@ -146,13 +147,22 @@ export function runTargetTableColumns({
     },
     {
       accessorFn: (item) => item.rankCheck?.position ?? null,
-      cell: ({ row }) => row.original.rankCheck?.position ?? t("unavailable"),
+      cell: ({ row }) =>
+        row.original.rankCheck?.evidenceProjection?.result === "partial" ||
+        row.original.rankCheck?.evidenceProjection?.result === "recovered" ? (
+          <RankResultMarker
+            evidence={row.original.rankCheck.evidenceProjection}
+            position={row.original.rankCheck.position}
+          />
+        ) : (
+          (row.original.rankCheck?.position ?? t("unavailable"))
+        ),
       enableSorting: false,
       header: t("table.position"),
       id: "position",
       meta: { align: "end", lockResize: true, title: t("table.position") },
-      minSize: 104,
-      size: 112,
+      minSize: 160,
+      size: 200,
     },
     {
       accessorFn: (item) => item.payment?.charge.value ?? "",

@@ -29,6 +29,7 @@ export type RecoveryRecord = {
   createdAt: Date;
   receipt: Prisma.JsonValue | null;
   proof: boolean;
+  spendingGateEligible?: { project: boolean; connection: boolean };
   spendingBlocked?: { project: boolean; connection: boolean };
   resultExpiresAt: Date | null;
   resultBlockedCode?: string | null;

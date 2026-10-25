@@ -46,15 +46,15 @@
         "new": "新機能"
       },
       "groups": {
-        "tracking": {
-          "label": "トラッキング",
-          "tag": "トラッキング",
-          "tooltip": "順位とAIの成果を継続して確認します。"
+        "seo": {
+          "label": "SEO",
+          "tag": "SEO",
+          "tooltip": "順位を追跡し、キーワード、ウェブサイト、バックリンク、サイトの健全性を調査します。"
         },
-        "research": {
-          "label": "調査と監査",
-          "tag": "調査",
-          "tooltip": "キーワード、ウェブサイト、AIの回答を調査します。"
+        "ai": {
+          "label": "AI検索",
+          "tag": "AI",
+          "tooltip": "AIの回答がブランドにどう言及するかを追跡し、調査します。"
         },
         "reports": {
           "label": "データとレポート",
@@ -81,12 +81,13 @@
         "runs": "実行",
         "searchConsole": "Search Console",
         "settings": "設定",
-        "aiVisibility": "AIでの可視性",
-        "promptExplorer": "プロンプト比較",
+        "aiVisibility": "ブランド可視性",
+        "promptResearch": "プロンプトリサーチ",
+        "promptExplorer": "プロンプトプレイグラウンド",
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
         "agentReports": "エージェントのレポート",
-        "aiTracking": "AIトラッキング"
+        "aiTracking": "プロンプトトラッカー"
       },
       "menu": "メニュー"
     },
@@ -94,7 +95,39 @@
       "empty": "通知はありません",
       "markAllRead": "すべて既読",
       "markReadError": "通知を既読にできませんでした。再試行してください。",
-      "title": "通知"
+      "title": "通知",
+      "incident": {
+        "title": "プロバイダーの証拠の確認",
+        "resolved": "プロバイダーの証拠の確認が完了しました。",
+        "noRepeat": "これらのチェックは自動で再試行していません。",
+        "counts": "{results}。{costs}。",
+        "resultUnderReviewCount": "{count, plural, other {確認中の結果 # 件}}",
+        "resultRecoveredCount": "{count, plural, other {復元済みの結果 # 件}}",
+        "resultPartialCount": "{count, plural, other {部分的な結果 # 件}}",
+        "resultProviderErrorCount": "{count, plural, other {プロバイダーエラー # 件}}",
+        "resultMissingCount": "{count, plural, other {欠落している結果 # 件}}",
+        "costMeasuredCount": "{count, plural, other {費用が測定済みのチェック # 件}}",
+        "costUnknownCount": "{count, plural, other {費用が不明のチェック # 件}}",
+        "costUnderReviewCount": "{count, plural, other {費用を確認中のチェック # 件}}",
+        "costConflictCount": "{count, plural, other {# 件のチェックで費用の不整合}}"
+      },
+      "summary": {
+        "manualTitle": "手動チェックの概要",
+        "scheduledTitle": "定期チェック: {window} UTC",
+        "down": "{count, plural, other {#件が下降}}",
+        "up": "{count, plural, other {#件が上昇}}",
+        "failed": "{count, plural, other {#件が失敗}}",
+        "under_review": "{count, plural, other {#件を確認中}}",
+        "unchanged": "{count, plural, other {#件が変化なし}}",
+        "new": "{count, plural, other {#件が新規}}",
+        "linkedIncidents": "{count, plural, other {#件の関連インシデント}}",
+        "clientScheduledTitle": "定期チェック: {window} ({timeZone})",
+        "viewRuns": "実行を表示",
+        "viewIncident": "インシデントを表示"
+      },
+      "openIncidents": "未解決のインシデント",
+      "allNotifications": "すべての通知",
+      "filterError": "インシデントを読み込めませんでした。"
     },
     "operations": {
       "actionError": "この処理を更新できませんでした。再読み込みして再試行してください。",
@@ -159,7 +192,22 @@
         "running": "実行中",
         "waiting": "待機中"
       },
-      "viewAll": "すべての実行を表示"
+      "viewAll": "すべての実行を表示",
+      "recent": {
+        "title": "最近の実行",
+        "pill": "最近",
+        "dismiss": "非表示",
+        "counts": "{completed, plural, other {#件完了}} · {up, plural, other {#件上昇}} · {down, plural, other {#件下降}} · {failed, plural, other {#件失敗}}",
+        "underReview": "{count, number} 件を確認中",
+        "incident": "インシデントを表示",
+        "outcomes": {
+          "succeeded": "完了",
+          "partial": "一部完了",
+          "failed": "失敗",
+          "deferred": "延期",
+          "unconfirmed": "未確認"
+        }
+      }
     },
     "planStatus": {
       "pro": "Pro",
@@ -226,12 +274,13 @@
         "keywordResearch": "追跡する価値のあるフレーズを、検索前に費用を確認しながら探せます。",
         "markets": "ロケーション、キーワードの既定値、市場のライフサイクルを管理します。",
         "preferences": "テーマと個人の既定値です。",
-        "runs": "このプロジェクトの順位チェック、AIトラッキング、Search Consoleのインポート。",
+        "runs": "このプロジェクトの順位チェック、プロンプトトラッカー、Search Consoleのインポート。",
         "searchConsole": "Google が報告したデータ、非開示のデータ、保持するデータを確認できます。",
         "security": "パスワード、セッション、アカウント保護です。",
         "timeline": "プロジェクトのシグナル、ページの変更、メモを時系列で表示します。",
         "aiVisibility": "利用可能なプロバイダーの観測データに基づくブランドへの言及と引用。",
-        "promptExplorer": "対応モデル間で合成プロンプトテストを比較します。",
+        "promptResearch": "市場について人々がAIに尋ねる質問をデータセットから見つけ、回答が引用するサイトを調べましょう。",
+        "promptExplorer": "1つのプロンプトを複数のモデルで試し、回答と引用を比較します。",
         "siteAudit": "プロジェクトのサイトをクロールし、URLごとに問題を確認します。",
         "projectContext": "エージェントに共有する事業、顧客、製品、目標。",
         "agentReports": "このプロジェクトのメンバーと共有する保存済み分析。",
@@ -263,12 +312,13 @@
         "security": "セキュリティ",
         "settings": "設定",
         "timeline": "タイムライン",
-        "aiVisibility": "AIでの可視性",
-        "promptExplorer": "プロンプト比較",
+        "aiVisibility": "ブランド可視性",
+        "promptResearch": "プロンプトリサーチ",
+        "promptExplorer": "プロンプトプレイグラウンド",
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
         "agentReports": "エージェントのレポート",
-        "aiTracking": "AIトラッキング"
+        "aiTracking": "プロンプトトラッカー"
       }
     },
     "footer": {
@@ -389,6 +439,11 @@
     },
     "announcements": {
       "learnMore": "詳細を見る"
+    },
+    "realtime": {
+      "live": "ライブ",
+      "reconnecting": "再接続中",
+      "connecting": "接続中"
     }
   }
 }

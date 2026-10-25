@@ -27,7 +27,7 @@ describe("SDK method parity", () => {
 
   it("separates unreleased source operations from released runnable workflows", () => {
     assert.equal(parseMethodsTable(methodsContent).length, 5);
-    assert.equal(parseMethodsTable(methodsContent, { includeSourceMethods: true }).length, 32);
+    assert.equal(parseMethodsTable(methodsContent, { includeSourceMethods: true }).length, 39);
     const reclassified = methodsContent.replace("| Source operation |", "| Workflow |");
     assert.ok(failures(reclassified).some((failure) => failure.includes("missing workflow get AI research Catalog")));
   });

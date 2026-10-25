@@ -29,21 +29,21 @@ import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { Icon } from "@phosphor-icons/react/lib";
-import { agentReportsNavEntry, aiTrackingNavEntry, researchModuleNavEntries } from "./research-nav";
+import {
+  agentReportsNavEntry,
+  aiSearchNavEntries,
+  aiTrackingNavEntry,
+  promptResearchNavEntry,
+  researchModuleNavEntries,
+} from "./research-nav";
 
-/**
- * One icon size for every tile in the sidebar rail. The logo mark, the workspace tile and the
- * nav rows used to carry three different values, which is what made the collapsed column read
- * as ragged rather than as a single column of 40px squares.
- */
+/** One icon size for every sidebar rail tile, so the collapsed column stays one width. */
 export const RAIL_ICON_SIZE = 18;
 
 export type NavBadge = "new" | "experimental";
 
-/**
- * Headed rail groups. Dashboard intentionally stays outside them at the top of every rail.
- */
-export type NavItemGroup = "tracking" | "research" | "reports" | "project";
+/** Headed rail groups. Dashboard stays outside them at the top of every rail. */
+export type NavItemGroup = "seo" | "ai" | "reports" | "project";
 
 /**
  * What a destination is scoped to.
@@ -118,16 +118,16 @@ export type NavItemGroupDescriptor = {
 
 export const navItemGroups = [
   {
-    id: "tracking",
-    label: "Tracking",
-    tag: "TRACKING",
-    tooltip: "Track rankings and AI performance over time.",
+    id: "seo",
+    label: "SEO",
+    tag: "SEO",
+    tooltip: "Track rankings and research keywords, websites, backlinks and site health.",
   },
   {
-    id: "research",
-    label: "Research & audits",
-    tag: "RESEARCH",
-    tooltip: "Explore keywords, websites and AI responses.",
+    id: "ai",
+    label: "AI Search",
+    tag: "AI",
+    tooltip: "Track and research how AI answers mention your brand.",
   },
   {
     id: "reports",
@@ -189,15 +189,30 @@ const railNavEntries = [
     icon: SquaresFour,
   },
   {
-    group: "tracking",
+    group: "seo",
     label: "Rank Tracker",
     scope: "market",
     segment: "rank-tracker",
     icon: Ranking,
   },
-  aiTrackingNavEntry,
   {
-    group: "tracking",
+    group: "seo",
+    label: "Keyword Research",
+    scope: "own-axis",
+    segment: "keyword-research",
+    icon: Binoculars,
+  },
+  {
+    group: "seo",
+    label: "Domain Overview",
+    scope: "own-axis",
+    segment: "domain-overview",
+    icon: Globe,
+  },
+  { group: "seo", label: "Backlinks", scope: "own-axis", segment: "backlinks", icon: Link },
+  ...researchModuleNavEntries,
+  {
+    group: "seo",
     label: "Competitors",
     scope: "market",
     segment: "competitors",
@@ -205,22 +220,9 @@ const railNavEntries = [
     badge: "experimental",
     experimentalModule: "competitors",
   },
-  {
-    group: "research",
-    label: "Keyword Research",
-    scope: "own-axis",
-    segment: "keyword-research",
-    icon: Binoculars,
-  },
-  {
-    group: "research",
-    label: "Domain Overview",
-    scope: "own-axis",
-    segment: "domain-overview",
-    icon: Globe,
-  },
-  { group: "research", label: "Backlinks", scope: "own-axis", segment: "backlinks", icon: Link },
-  ...researchModuleNavEntries,
+  aiTrackingNavEntry,
+  promptResearchNavEntry,
+  ...aiSearchNavEntries,
   {
     group: "reports",
     label: "Search Console",

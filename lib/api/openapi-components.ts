@@ -7,20 +7,24 @@ import {
 import { agentSchemas } from "./openapi-agent-components";
 import { alertRuleSchemas } from "./openapi-alert-components";
 import { apiKeySchemas } from "./openapi-api-key-components";
+import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { keywordPatchSchema } from "./openapi-keyword-patch";
 import { keywordResearchSchemas } from "./openapi-keyword-research-components";
 import { keywordCheckStateSchemas, keywordMatchSchemas } from "./openapi-keywords";
 import { migrationSchemas } from "./openapi-migration-components";
+import { pageIndexingSchemas } from "./openapi-page-indexing-components";
 import { personalAccessSchemas } from "./openapi-pat-components";
 import { projectSchemas } from "./openapi-project-components";
 import { providerSchemas } from "./openapi-provider-components";
 import { publicIdSchema } from "./openapi-public-id";
+import { recoveryResultProperties } from "./openapi-recovery-result";
 import { resourceSchemas } from "./openapi-resource-components";
 import {
   keywordScheduleResourceContractSchema,
   scheduleInputContractSchema,
 } from "./openapi-schedule-schema";
 import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
+import { searchIndexSchemas } from "./openapi-search-index-components";
 import { signalSchemas } from "./openapi-signal-components";
 
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string", ...openEnum("Device") };
@@ -60,6 +64,8 @@ const problemSchema = {
 };
 
 export const schemas = {
+  ...searchIndexSchemas,
+  ...pageIndexingSchemas,
   PublicIdV3: {
     description:
       "Opaque v3 public resource ID. Internal database IDs are never accepted or returned.",
@@ -193,6 +199,8 @@ export const schemas = {
   ...projectSchemas,
   RankCheck: {
     properties: {
+      evidence_projection: evidenceProjectionSchema,
+      ...recoveryResultProperties,
       usage: {
         description:
           "Confirmed provider usage; null quantity means unconfirmed and is never inferred from requested depth. Costs may take up to 15 minutes to update.",

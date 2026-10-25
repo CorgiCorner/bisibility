@@ -80,6 +80,7 @@ export type UrlPresenceView = {
   verdict: string | null;
 };
 export type KeywordRow = {
+  rankEvidence?: import("./rank-result-evidence").RankResultEvidence;
   bestPosition: number | null;
   clicks: number | null;
   cpc: string;

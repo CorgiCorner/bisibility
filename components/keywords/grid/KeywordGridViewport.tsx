@@ -86,6 +86,7 @@ export function KeywordGridViewport({
           paginationMode="server"
           pending={pending}
           rows={rows}
+          rowHeight={(row) => (row.rankEvidence ? 112 : undefined)}
           selection={selection}
           sorting={sorting}
           sortingMode="server"

@@ -1,11 +1,17 @@
 import { createHash } from "node:crypto";
 import { type SkillArchive, taskSkillSkillMd } from "./archive";
+import { generatedArchivePluginSlugs } from "./archive-plugin-skills";
 import frozenFiles from "./plugin-skill-files.generated.json";
 import { skillCatalog } from "./skill-catalog";
 import { taskSkills } from "./skills";
 import { buildZip } from "./zip";
 
 const cache = new Map<string, SkillArchive>();
+const generatedPluginSlugs = new Set<string>(generatedArchivePluginSlugs);
+
+function workflowInterface(slug: string, plugin: boolean) {
+  return plugin && !generatedPluginSlugs.has(slug) ? "MCP" : "REST API";
+}
 
 function skillFiles(slug: string) {
   const skill = skillCatalog.find((entry) => entry.slug === slug && entry.status !== "coming-soon");
@@ -50,7 +56,7 @@ export function getWorkflowSourceIndex(): string {
       .filter((entry) => entry.status !== "coming-soon")
       .map(
         (entry) =>
-          `- [${entry.title}](./${entry.slug}/SKILL.md) (${entry.channels.plugin ? "MCP" : "REST API"})`,
+          `- [${entry.title}](./${entry.slug}/SKILL.md) (${workflowInterface(entry.slug, entry.channels.plugin)})`,
       ),
     "",
   ].join("\n");

@@ -102,9 +102,32 @@ describe("AI catalog source failures", () => {
     expect(await getAiResearchCatalog("project")).toMatchObject({ ok: true });
   });
   it("keeps transport failures distinct without disclosing their private error", async () => {
-    mocks.fetch.mockRejectedValue(new Error("fictional-private-credential-detail"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.fetch.mockRejectedValue(new Error("upstream timed out"));
     const outcome = await getAiResearchCatalog("project");
     expect(outcome).toMatchObject({ ok: false, reason: "provider_unavailable" });
-    expect(JSON.stringify(outcome)).not.toContain("fictional-private-credential-detail");
+    expect(JSON.stringify(outcome)).not.toContain("upstream timed out");
+    expect(log).toHaveBeenCalledWith(
+      "[ai-research] free catalog load failed",
+      expect.objectContaining({ projectId: "project", name: "Error", error: "upstream timed out" }),
+    );
+    log.mockRestore();
+  });
+  it("reads once more when a parallel render still holds the catalog lock", async () => {
+    mocks.cache
+      .mockResolvedValueOnce({ status: "contended", resetAt: Date.now() + 1_000 })
+      .mockImplementationOnce(async ({ load }) => ({ status: "success", value: await load() }));
+    expect(await getAiResearchCatalog("project")).toMatchObject({ ok: true });
+    expect(mocks.cache).toHaveBeenCalledTimes(2);
+  });
+  it("reports contention after the second read and logs it", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.cache.mockResolvedValue({ status: "contended", resetAt: Date.now() + 1_000 });
+    expect(await getAiResearchCatalog("project")).toMatchObject({ ok: false, reason: "contended" });
+    expect(mocks.cache).toHaveBeenCalledTimes(2);
+    expect(log).toHaveBeenCalledWith("[ai-research] catalog load still contended after retry", {
+      projectId: "project",
+    });
+    log.mockRestore();
   });
 });

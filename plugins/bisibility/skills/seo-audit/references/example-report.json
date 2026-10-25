@@ -32,6 +32,7 @@
         "category": "technical",
         "action": "Restore /pricing or redirect it to the current buying page.",
         "urls": ["https://example.com/pricing"],
+        "evidence_class": "site_crawl",
         "evidence_ids": ["crawl-pricing"],
         "rationale": "The sampled pricing URL returned 404; its intended role is a fixture assumption.",
         "benefit": "Make this buying path available; traffic and revenue impact remain unknown.",
@@ -45,6 +46,7 @@
         "category": "content",
         "action": "Review the homepage headings for a clear audience and product promise.",
         "urls": ["https://example.com/"],
+        "evidence_class": "site_crawl",
         "evidence_ids": ["crawl-home"],
         "rationale": "The sampled title is only Example; this is a metadata signal, not proof of thin body content.",
         "benefit": "Clarify page intent for buyers after confirming the full page.",
@@ -60,8 +62,23 @@
         "decision": "Deferred: no observed dataset. This is the strongest alternative but its impact is unverified."
       }
     ],
+    "search_console_history": {
+      "state": "collected",
+      "period": { "start_date": "2026-09-01", "end_date": "2026-10-01" },
+      "aggregation": "All countries and devices. No country or device filter or dimension.",
+      "note": "Historical aggregate only. Not the current ranking."
+    },
+    "google_observation": {
+      "state": "collected",
+      "note": "One fictional saved rank check with its observation time, market and device."
+    },
+    "site_crawl": {
+      "state": "partial",
+      "crawl_id": "agr_b00000000000000000000000",
+      "note": "Bounded crawl sample. Not a ranking observation and not Search Console history."
+    },
     "visibility": {
-      "observed": "Unavailable; no recorded AI visibility report.",
+      "observed": "Unavailable; no recorded Brand Visibility report.",
       "synthetic": "Not run; synthetic answers are not observed visibility."
     },
     "costs": {
@@ -71,7 +88,32 @@
     },
     "evidence": [
       {
+        "id": "gsc-query",
+        "class": "search_console_history",
+        "type": "first_party",
+        "source_tool": "list_search_performance_query_stats",
+        "url": null,
+        "observed_at": null,
+        "retrieved_at": "2026-10-05T19:00:02.000Z",
+        "period": { "start_date": "2026-09-01", "end_date": "2026-10-01" },
+        "aggregation": "All countries and devices. No country or device filter or dimension.",
+        "fact": "Fictional historical aggregate: one query had impressions and a weak average position in that date range. This is not a current rank."
+      },
+      {
+        "id": "rank-home",
+        "class": "google_observation",
+        "type": "saved_ranking",
+        "source_tool": "list_keywords",
+        "url": "https://example.com/",
+        "market": "2840/en",
+        "device": "desktop",
+        "observed_at": "2026-10-05T12:00:00.000Z",
+        "retrieved_at": "2026-10-05T19:00:02.000Z",
+        "fact": "Fictional saved check: position 12 for one query at this observation time and market. Not Search Console history."
+      },
+      {
         "id": "crawl-pricing",
+        "class": "site_crawl",
         "type": "http_crawl",
         "source_tool": "get_site_audit",
         "report_id": "agr_b00000000000000000000000",
@@ -82,6 +124,7 @@
       },
       {
         "id": "crawl-home",
+        "class": "site_crawl",
         "type": "http_crawl",
         "source_tool": "get_site_audit",
         "report_id": "agr_b00000000000000000000000",
@@ -94,7 +137,7 @@
   },
   "provenance": {
     "skill": "seo-audit",
-    "skill_version": "0.4.0",
+    "skill_version": "0.5.0",
     "agent": "fixture-author (not a live agent run)",
     "audited_at": "2026-10-05T19:00:02.000Z",
     "instance": "https://bisibility.example",

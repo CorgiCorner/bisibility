@@ -10,7 +10,8 @@ import type { McpApiAuthorization } from "./rest-call";
 const ACTIVE_TOOLSETS = [
   "account",
   "ai-research",
-  "ai-tracking",
+  "prompt-research",
+  "prompt-tracker",
   "agent-reports",
   "project-context",
   "site-audit",

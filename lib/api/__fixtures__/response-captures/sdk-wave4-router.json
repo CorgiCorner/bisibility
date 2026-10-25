@@ -6,7 +6,36 @@
         "alert_in_app": true,
         "alert_push": false,
         "check_email": false,
+        "check_in_app": true,
+        "check_notification_setting": "important",
+        "check_notification_top_n": 10,
+        "check_notification_position_move": 5,
+        "import_email": true,
+        "import_in_app": true,
+        "invite_email": true,
+        "invite_in_app": true,
+        "report_email": true,
+        "provider_incident_in_app": false,
+        "alert_slack": false,
+        "alert_webhook": false,
+        "project_id": "prj_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 200
+    },
+    {
+      "body": {
+        "alert_email": true,
+        "alert_in_app": true,
+        "alert_push": true,
+        "check_email": false,
         "check_in_app": false,
+        "check_notification_setting": "none",
+        "check_notification_top_n": 100,
+        "check_notification_position_move": 1,
         "import_email": true,
         "import_in_app": true,
         "invite_email": true,
@@ -29,6 +58,42 @@
         "alert_push": true,
         "check_email": false,
         "check_in_app": false,
+        "check_notification_setting": "none",
+        "check_notification_top_n": 100,
+        "check_notification_position_move": 1,
+        "import_email": true,
+        "import_in_app": true,
+        "invite_email": true,
+        "invite_in_app": true,
+        "report_email": true,
+        "warnings": [
+          {
+            "code": "deprecated_field",
+            "field": "check_in_app",
+            "message": "check_in_app is read-only and ignored on writes. Use check_notification_setting instead."
+          }
+        ],
+        "alert_slack": false,
+        "alert_webhook": false,
+        "project_id": "prj_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 200
+    },
+    {
+      "body": {
+        "alert_email": true,
+        "alert_in_app": true,
+        "alert_push": true,
+        "provider_incident_in_app": true,
+        "check_email": false,
+        "check_in_app": false,
+        "check_notification_setting": "none",
+        "check_notification_top_n": 33,
+        "check_notification_position_move": 7,
         "import_email": true,
         "import_in_app": true,
         "invite_email": true,
@@ -512,6 +577,71 @@
       "operationId": "getStoredResearchReport",
       "path": "/projects/{project_id}/research/reports/{kind}",
       "status": 200
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/notification-preferences",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "checkNotificationPositionMove": ["Invalid input: expected int, received number"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/notification-preferences",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "checkNotificationSetting": [
+              "Invalid option: expected one of \"all\"|\"important\"|\"none\""
+            ]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/notification-preferences",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "checkNotificationTopN": ["Invalid input: expected int, received number"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 400
     },
     {
       "body": {

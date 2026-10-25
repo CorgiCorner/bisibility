@@ -3,13 +3,18 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { frozenConfiguredScope } from "@/lib/measurement-definitions/canonical";
 import { definitionBindingFixture } from "@/lib/measurement-definitions/fixtures";
 import { encryptSecret } from "@/lib/providers/crypto";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { rankRecoveryContext } from "./recovery-context";
-import { decodeRankResult } from "./recovery-evidence";
+import { decodeRankResult, RetainedRankResultUnsupportedError } from "./recovery-evidence";
+import { maintainRetainedRankResults } from "./recovery-maintenance";
 import { restoreRetainedRankResult } from "./recovery-restore";
 
-const sideEffects = vi.hoisted(() => ({ audit: vi.fn(), item: vi.fn() }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
+const sideEffects = vi.hoisted(() => ({
+  audit: vi.fn(),
+  item: vi.fn(),
+  prisma: {} as Record<string, unknown>,
+}));
+vi.mock("@/lib/db/prisma", () => ({ prisma: sideEffects.prisma }));
 vi.mock("@/lib/auth/audit", () => ({
   writeAudit: sideEffects.audit,
   requiredPublicAuditId: (value: string) => value,
@@ -21,11 +26,16 @@ vi.mock("@/lib/queries/rank-check-run-accounting", () => ({
   ledgerActualCostCents: () => null,
   ledgerActualUnits: () => null,
 }));
+vi.mock("./recovery-result-health", () => ({ saveResultRecoveryHealth: vi.fn() }));
 vi.mock("./recovery-run-item", () => ({ recoverRunItem: sideEffects.item }));
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.stubEnv("PROVIDER_RECOVERY", "on");
+});
+afterEach(() => vi.unstubAllEnvs());
 const now = new Date("2026-10-13T12:00:00Z");
-function fixture(bindingId: string | null | undefined) {
+function fixture(bindingId: string | null | undefined, completeness?: "complete" | "partial") {
   const binding = definitionBindingFixture();
   const keyword = {
     id: binding.keywordId,
@@ -39,7 +49,10 @@ function fixture(bindingId: string | null | undefined) {
     project: { domain: binding.source.target.domain ?? "" },
   };
   const body = JSON.stringify({
-    version: 1,
+    version: completeness ? 2 : 1,
+    ...(completeness
+      ? { completeness, finishedAt: "2026-10-13T10:00:00Z", returnedDepth: 40 }
+      : {}),
     contextHash: rankRecoveryContext(
       {
         ...keyword,
@@ -100,7 +113,7 @@ function fixture(bindingId: string | null | undefined) {
     },
   });
   const evidence = {
-    schemaVersion: 1,
+    schemaVersion: completeness ? 2 : 1,
     identityHash: createHash("sha256").update(body).digest("hex"),
     payloadEncrypted: encryptSecret(body),
     namespace: "test-namespace",
@@ -175,6 +188,38 @@ it.each([undefined, null, "foreign-binding"])(
     ).rejects.toThrow(/winning measurement attempt|Original measurement binding/);
     expect(tx.observationRun.create).not.toHaveBeenCalled();
     expect(tx.rankCheckResultEvidence.delete).not.toHaveBeenCalled();
+    expect(sideEffects.item).not.toHaveBeenCalled();
+    expect(sideEffects.audit).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["complete", "partial"] as const)(
+  "leaves unsupported v2 %s unchanged in direct restore and maintenance",
+  async (completeness) => {
+    const { binding, tx } = fixture("synthetic-binding-a", completeness);
+    await expect(
+      restoreRetainedRankResult(
+        tx as unknown as Prisma.TransactionClient,
+        binding.owner.rankCheckId,
+        null,
+        now,
+      ),
+    ).rejects.toThrow(RetainedRankResultUnsupportedError);
+    const evidence = {
+      deleteMany: vi.fn(),
+      findMany: vi.fn(async () => [{ rankCheckId: binding.owner.rankCheckId }]),
+      updateMany: vi.fn(),
+    };
+    Object.assign(sideEffects.prisma, {
+      $transaction: async (callback: (value: unknown) => Promise<unknown>) => callback(tx),
+      rankCheckResultEvidence: evidence,
+    });
+    await expect(maintainRetainedRankResults(now)).resolves.toEqual({ restored: 0 });
+    expect(evidence.updateMany).not.toHaveBeenCalled();
+    expect(tx.rankCheck.update).not.toHaveBeenCalled();
+    expect(tx.observationRun.create).not.toHaveBeenCalled();
+    expect(tx.rankCheckResultEvidence.delete).not.toHaveBeenCalled();
+    expect(tx.rankCheckResultEvidence.update).not.toHaveBeenCalled();
     expect(sideEffects.item).not.toHaveBeenCalled();
     expect(sideEffects.audit).not.toHaveBeenCalled();
   },

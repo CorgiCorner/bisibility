@@ -22,7 +22,7 @@ describe("navItems", () => {
     ).not.toContain("Timeline");
     expect(competitorsOnly.find((item) => item.label === "Competitors")).toMatchObject({
       badge: "experimental",
-      group: "tracking",
+      group: "seo",
       scope: "market",
     });
     expect(competitorsOnly.map((item) => item.label)).not.toContain("Timeline");
@@ -34,14 +34,15 @@ describe("navItems", () => {
     ).toEqual([
       "Dashboard",
       "Rank Tracker",
-      "AI Tracking",
-      "Competitors",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "AI Visibility",
-      "Prompt Explorer",
       "Site Audit",
+      "Competitors",
+      "Prompt Tracker",
+      "Prompt Research",
+      "Brand Visibility",
+      "Prompt Playground",
       "Search Console",
       "Agent Reports",
       "Markets",
@@ -56,26 +57,27 @@ describe("navItems", () => {
   it("groups existing destinations by purpose while keeping Dashboard standalone", () => {
     const items = navItems("prj_example", undefined, allExperimentalModules);
     expect(navItemGroups.map((group) => [group.id, group.label, group.tag])).toEqual([
-      ["tracking", "Tracking", "TRACKING"],
-      ["research", "Research & audits", "RESEARCH"],
+      ["seo", "SEO", "SEO"],
+      ["ai", "AI Search", "AI"],
       ["reports", "Data & reports", "DATA"],
       ["project", "Project", "PROJECT"],
     ]);
     expect(items.filter((item) => item.group === null).map((item) => item.label)).toEqual([
       "Dashboard",
     ]);
-    expect(items.filter((item) => item.group === "tracking").map((item) => item.label)).toEqual([
+    expect(items.filter((item) => item.group === "seo").map((item) => item.label)).toEqual([
       "Rank Tracker",
-      "AI Tracking",
-      "Competitors",
-    ]);
-    expect(items.filter((item) => item.group === "research").map((item) => item.label)).toEqual([
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "AI Visibility",
-      "Prompt Explorer",
       "Site Audit",
+      "Competitors",
+    ]);
+    expect(items.filter((item) => item.group === "ai").map((item) => item.label)).toEqual([
+      "Prompt Tracker",
+      "Prompt Research",
+      "Brand Visibility",
+      "Prompt Playground",
     ]);
     expect(items.filter((item) => item.group === "reports").map((item) => item.label)).toEqual([
       "Search Console",
@@ -89,7 +91,7 @@ describe("navItems", () => {
       "Install",
       "Settings",
     ]);
-    expect(items).toHaveLength(18);
+    expect(items).toHaveLength(19);
     expect(
       items.some((item) => item.label === "Project Context" || item.label === "Analytics"),
     ).toBe(false);
@@ -106,8 +108,8 @@ describe("navItems", () => {
       expect(group.tag.length).toBeLessThanOrEqual(8);
     }
     expect(navItemGroups.map((group) => group.tooltip)).toEqual([
-      "Track rankings and AI performance over time.",
-      "Explore keywords, websites and AI responses.",
+      "Track rankings and research keywords, websites, backlinks and site health.",
+      "Track and research how AI answers mention your brand.",
       "Review connected search data and saved reports.",
       "Project configuration and shared operations.",
     ]);
@@ -224,9 +226,10 @@ describe("navItems", () => {
       ),
     ).toEqual({
       Dashboard: "level",
-      "AI Visibility": "own-axis",
-      "Prompt Explorer": "own-axis",
-      "AI Tracking": "own-axis",
+      "Brand Visibility": "own-axis",
+      "Prompt Playground": "own-axis",
+      "Prompt Research": "own-axis",
+      "Prompt Tracker": "own-axis",
       "Site Audit": "own-axis",
       "Agent Reports": "project",
       Alerts: "project",

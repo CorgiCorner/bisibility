@@ -1,10 +1,11 @@
 import type { openApiTags } from "./openapi-tags";
-import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
+import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 
 type OpenApiTagName = (typeof openApiTags)[number]["name"];
 
 export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly string[]]> = [
-  ["ai-tracking", Object.keys(aiTrackingPolicies)],
+  ["prompt-research", Object.keys(promptResearchPolicies)],
+  ["prompt-tracker", Object.keys(promptTrackerPolicies)],
   [
     "discovery",
     [
@@ -103,7 +104,7 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "createAgentReport",
       "getAgentReport",
       "getAiResearchCatalog",
-      "analyzeAiVisibility",
+      "analyzeBrandVisibility",
       "compareAiPrompts",
       "runSiteAudit",
       "listSiteAudits",
@@ -115,6 +116,14 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
     [
       "getProjectOverview",
       "listSearchPerformanceQueryStats",
+      "listSearchIndexSitemaps",
+      "getSearchIndexSitemap",
+      "inspectSearchIndexUrls",
+      "getPageIndexingReport",
+      "listPageIndexingUrls",
+      "getPageIndexingSettings",
+      "updatePageIndexingSettings",
+
       "syncProjectTraffic",
       "listTrafficSnapshots",
     ],

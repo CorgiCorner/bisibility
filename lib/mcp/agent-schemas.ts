@@ -1,6 +1,8 @@
+import { pageIndexingToolSchemas } from "@/lib/mcp/page-indexing-contract";
 import { localMonitorToolSchemas } from "./local-monitor-tools";
 import { mcpPublicIdSchema } from "./public-id-schema";
 import { rankRunToolSchemas } from "./rank-run-tools";
+import { searchIndexToolSchemas } from "./search-index-contract";
 
 type JsonObject = Record<string, unknown>;
 
@@ -12,6 +14,8 @@ function objectSchema(properties: JsonObject = {}, required: string[] = []) {
 }
 
 export const agentMcpSchemas = {
+  ...searchIndexToolSchemas,
+  ...pageIndexingToolSchemas,
   ...localMonitorToolSchemas,
   ...rankRunToolSchemas,
   exportRankHistory: objectSchema(

@@ -81,7 +81,9 @@ function rankCheckPresentation(
             operation.status === "running" ||
             operation.status === "cancelling"
           ? "waiting"
-          : "terminal",
+          : operation.status === "blocked"
+            ? "attention"
+            : "terminal",
     meta: null,
     nextCheckAt: operation.nextCheckAt,
     now: operation.snapshotAt ?? null,

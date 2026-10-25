@@ -1,6 +1,7 @@
 import "server-only";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
+import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
 import type { HistoryExportAuthority } from "@/lib/rank-history/export-authority";
 import { historyExportReportOptions } from "@/lib/rank-history/export-host";
 import { rankHistoryCsvHeader, rankHistoryCsvLine } from "@/lib/rank-history/export-service";
@@ -51,6 +52,7 @@ function legacyJson(
   row: Awaited<ReturnType<typeof prepareRankHistoryExport>>["legacyRows"][number],
 ) {
   return {
+    evidence_projection: evidenceProjectionResource(row.evidenceProjection),
     checked_at: row.checkedAt.toISOString(),
     id: row.id,
     keyword: row.keyword,

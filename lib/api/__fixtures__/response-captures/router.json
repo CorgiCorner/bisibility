@@ -18,7 +18,221 @@
         "apiVersions": ["v1"],
         "data": [
           {
-            "description": "List AI tracking topics",
+            "description": "List Page indexing sitemaps",
+            "input_schema": {
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with an existing Search Console connection."
+                }
+              },
+              "required": ["project_id"],
+              "type": "object"
+            },
+            "mcp_tool": "list_search_index_sitemaps",
+            "name": "00000000000000000000000",
+            "operationId": "00000000000000000000000"
+          },
+          {
+            "description": "Get a Page indexing sitemap",
+            "input_schema": {
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with an existing Search Console connection."
+                },
+                "path": {
+                  "description": "Full sitemap URL within the connected property.",
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "type": "string"
+                }
+              },
+              "required": ["project_id", "path"],
+              "type": "object"
+            },
+            "mcp_tool": "get_search_index_sitemap",
+            "name": "000000000000000000000",
+            "operationId": "000000000000000000000"
+          },
+          {
+            "description": "Inspect Page indexing URLs",
+            "input_schema": {
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with an existing Search Console connection."
+                },
+                "urls": {
+                  "description": "1-10 HTTP(S) URLs within the connected property; URLs are normalized and duplicates after normalization count once.",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "minItems": 1,
+                  "maxItems": 10,
+                  "type": "array"
+                },
+                "idempotency_key": {
+                  "description": "Reuse this key to replay the response without another inspection.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "required": ["project_id", "urls"],
+              "type": "object"
+            },
+            "mcp_tool": "inspect_search_index_urls",
+            "name": "0000000000000000000000",
+            "operationId": "0000000000000000000000"
+          },
+          {
+            "description": "Read Page indexing report",
+            "input_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with a connected Search Console property."
+                }
+              },
+              "required": ["project_id"]
+            },
+            "mcp_tool": "get_page_indexing_report",
+            "name": "000000000000000000000",
+            "operationId": "000000000000000000000"
+          },
+          {
+            "description": "Read Page indexing settings",
+            "input_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with a connected Search Console property."
+                }
+              },
+              "required": ["project_id"]
+            },
+            "mcp_tool": "get_page_indexing_settings",
+            "name": "00000000000000000000000",
+            "operationId": "00000000000000000000000"
+          },
+          {
+            "description": "List Page indexing URLs",
+            "input_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with a connected Search Console property."
+                },
+                "group": {
+                  "type": "string",
+                  "enum": ["indexed", "not_indexed", "inspection_failed", "not_checked"],
+                  "description": "Stored result group."
+                },
+                "coverage_state": {
+                  "type": "string",
+                  "maxLength": 500,
+                  "description": "Exact Google coverage state; Unspecified matches a missing state in indexed/not_indexed groups. For inspection_failed and not_checked, filter by group alone."
+                },
+                "sitemap": {
+                  "type": "string",
+                  "maxLength": 2048,
+                  "description": "Sitemap that listed the URL."
+                },
+                "source": {
+                  "type": "string",
+                  "enum": ["keyword_target", "sitemap", "manual"],
+                  "description": "Candidate or inspection source. Manual-only URLs are included only when source=manual is explicitly requested."
+                },
+                "search": {
+                  "type": "string",
+                  "maxLength": 500,
+                  "description": "Case-insensitive URL substring."
+                },
+                "changed_since": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Include URLs with a stored tracked change at or after this timestamp, before pagination."
+                },
+                "cursor": {
+                  "type": "string",
+                  "maxLength": 2048,
+                  "description": "Opaque next_cursor from the previous page."
+                },
+                "limit": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 50,
+                  "description": "Maximum rows returned."
+                },
+                "history": {
+                  "type": "string",
+                  "enum": ["true", "false"],
+                  "default": "false",
+                  "description": "Include up to 100 recent changes per URL."
+                }
+              },
+              "required": ["project_id"]
+            },
+            "mcp_tool": "list_page_indexing_urls",
+            "name": "00000000000000000000",
+            "operationId": "00000000000000000000"
+          },
+          {
+            "description": "Update Page indexing settings",
+            "input_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with a connected Search Console property."
+                },
+                "budget_mode": {
+                  "type": "string",
+                  "enum": ["off", "fixed", "available_quota"],
+                  "description": "Background budget mode. available_quota is self-host only."
+                },
+                "inspection_daily_limit": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2000,
+                  "description": "Fixed project daily allowance, reset at Pacific midnight."
+                },
+                "idempotency_key": {
+                  "type": "string",
+                  "description": "Replay an update response with this key.",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "required": ["project_id"]
+            },
+            "mcp_tool": "update_page_indexing_settings",
+            "name": "00000000000000000000000000",
+            "operationId": "00000000000000000000000000"
+          },
+          {
+            "description": "List Prompt Tracker topics",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -43,12 +257,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "list_ai_tracking_topics",
-            "name": "00000000000000000000",
-            "operationId": "00000000000000000000"
+            "mcp_tool": "list_prompt_tracker_topics",
+            "name": "00000000000000000000000",
+            "operationId": "00000000000000000000000"
           },
           {
-            "description": "Create an AI tracking topic",
+            "description": "Create an Prompt Tracker topic",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -84,12 +298,12 @@
               "required": ["project_id", "name"],
               "additionalProperties": false
             },
-            "mcp_tool": "create_ai_tracking_topic",
-            "name": "000000000000000000000",
-            "operationId": "000000000000000000000"
+            "mcp_tool": "create_prompt_tracker_topic",
+            "name": "000000000000000000000000",
+            "operationId": "000000000000000000000000"
           },
           {
-            "description": "Update an AI tracking topic",
+            "description": "Update an Prompt Tracker topic",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -130,12 +344,12 @@
               "required": ["project_id", "topic_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "update_ai_tracking_topic",
-            "name": "000000000000000000000",
-            "operationId": "000000000000000000000"
+            "mcp_tool": "update_prompt_tracker_topic",
+            "name": "000000000000000000000000",
+            "operationId": "000000000000000000000000"
           },
           {
-            "description": "Archive an AI tracking topic",
+            "description": "Archive an Prompt Tracker topic",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -154,12 +368,12 @@
               "required": ["project_id", "topic_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "archive_ai_tracking_topic",
-            "name": "0000000000000000000000",
-            "operationId": "0000000000000000000000"
+            "mcp_tool": "archive_prompt_tracker_topic",
+            "name": "0000000000000000000000000",
+            "operationId": "0000000000000000000000000"
           },
           {
-            "description": "List AI tracking prompts",
+            "description": "List Prompt Tracker prompts",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -184,12 +398,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "list_ai_tracking_prompts",
-            "name": "000000000000000000000",
-            "operationId": "000000000000000000000"
+            "mcp_tool": "list_prompt_tracker_prompts",
+            "name": "000000000000000000000000",
+            "operationId": "000000000000000000000000"
           },
           {
-            "description": "Create an AI tracking prompt",
+            "description": "Create an Prompt Tracker prompt",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -223,7 +437,7 @@
                   "type": "object",
                   "properties": {
                     "report_id": {
-                      "description": "Trusted project AI visibility dataset report public ID.",
+                      "description": "Trusted project Brand Visibility dataset report public ID.",
                       "type": "string",
                       "pattern": "^agr_[a-z][a-z0-9]{23}$"
                     },
@@ -280,12 +494,12 @@
               "required": ["project_id", "text"],
               "additionalProperties": false
             },
-            "mcp_tool": "create_ai_tracking_prompt",
-            "name": "0000000000000000000000",
-            "operationId": "0000000000000000000000"
+            "mcp_tool": "create_prompt_tracker_prompt",
+            "name": "0000000000000000000000000",
+            "operationId": "0000000000000000000000000"
           },
           {
-            "description": "Revise an AI tracking prompt",
+            "description": "Revise an Prompt Tracker prompt",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -324,7 +538,7 @@
                   "type": "object",
                   "properties": {
                     "report_id": {
-                      "description": "Trusted project AI visibility dataset report public ID.",
+                      "description": "Trusted project Brand Visibility dataset report public ID.",
                       "type": "string",
                       "pattern": "^agr_[a-z][a-z0-9]{23}$"
                     },
@@ -381,12 +595,12 @@
               "required": ["project_id", "prompt_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "update_ai_tracking_prompt",
-            "name": "0000000000000000000000",
-            "operationId": "0000000000000000000000"
+            "mcp_tool": "update_prompt_tracker_prompt",
+            "name": "0000000000000000000000000",
+            "operationId": "0000000000000000000000000"
           },
           {
-            "description": "Archive an AI tracking prompt",
+            "description": "Archive an Prompt Tracker prompt",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -405,12 +619,12 @@
               "required": ["project_id", "prompt_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "archive_ai_tracking_prompt",
-            "name": "00000000000000000000000",
-            "operationId": "00000000000000000000000"
+            "mcp_tool": "archive_prompt_tracker_prompt",
+            "name": "00000000000000000000000000",
+            "operationId": "00000000000000000000000000"
           },
           {
-            "description": "List AI tracking schedules",
+            "description": "List Prompt Tracker schedules",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -435,12 +649,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "list_ai_tracking_schedules",
-            "name": "00000000000000000000000",
-            "operationId": "00000000000000000000000"
+            "mcp_tool": "list_prompt_tracker_schedules",
+            "name": "00000000000000000000000000",
+            "operationId": "00000000000000000000000000"
           },
           {
-            "description": "Create an AI tracking schedule",
+            "description": "Create an Prompt Tracker schedule",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -660,12 +874,12 @@
                 }
               }
             },
-            "mcp_tool": "create_ai_tracking_schedule",
-            "name": "000000000000000000000000",
-            "operationId": "000000000000000000000000"
+            "mcp_tool": "create_prompt_tracker_schedule",
+            "name": "000000000000000000000000000",
+            "operationId": "000000000000000000000000000"
           },
           {
-            "description": "Update an AI tracking schedule",
+            "description": "Update an Prompt Tracker schedule",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -889,12 +1103,12 @@
                 }
               }
             },
-            "mcp_tool": "update_ai_tracking_schedule",
-            "name": "000000000000000000000000",
-            "operationId": "000000000000000000000000"
+            "mcp_tool": "update_prompt_tracker_schedule",
+            "name": "000000000000000000000000000",
+            "operationId": "000000000000000000000000000"
           },
           {
-            "description": "Archive an AI tracking schedule",
+            "description": "Archive an Prompt Tracker schedule",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -913,12 +1127,12 @@
               "required": ["project_id", "schedule_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "archive_ai_tracking_schedule",
-            "name": "0000000000000000000000000",
-            "operationId": "0000000000000000000000000"
+            "mcp_tool": "archive_prompt_tracker_schedule",
+            "name": "0000000000000000000000000000",
+            "operationId": "0000000000000000000000000000"
           },
           {
-            "description": "Preview an AI tracking run",
+            "description": "Preview an Prompt Tracker run",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1037,12 +1251,12 @@
                 }
               }
             },
-            "mcp_tool": "preview_ai_tracking_run",
-            "name": "00000000000000000000",
-            "operationId": "00000000000000000000"
+            "mcp_tool": "preview_prompt_tracker_run",
+            "name": "00000000000000000000000",
+            "operationId": "00000000000000000000000"
           },
           {
-            "description": "Queue an AI tracking run",
+            "description": "Queue an Prompt Tracker run",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1215,12 +1429,12 @@
                 }
               }
             },
-            "mcp_tool": "create_ai_tracking_run",
-            "name": "0000000000000000000",
-            "operationId": "0000000000000000000"
+            "mcp_tool": "create_prompt_tracker_run",
+            "name": "0000000000000000000000",
+            "operationId": "0000000000000000000000"
           },
           {
-            "description": "List AI tracking runs",
+            "description": "List Prompt Tracker runs",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1245,12 +1459,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "list_ai_tracking_runs",
-            "name": "000000000000000000",
-            "operationId": "000000000000000000"
+            "mcp_tool": "list_prompt_tracker_runs",
+            "name": "000000000000000000000",
+            "operationId": "000000000000000000000"
           },
           {
-            "description": "Get an AI tracking run",
+            "description": "Get an Prompt Tracker run",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1269,12 +1483,12 @@
               "required": ["project_id", "run_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "get_ai_tracking_run",
-            "name": "0000000000000000",
-            "operationId": "0000000000000000"
+            "mcp_tool": "get_prompt_tracker_run",
+            "name": "0000000000000000000",
+            "operationId": "0000000000000000000"
           },
           {
-            "description": "List AI tracking samples",
+            "description": "List Prompt Tracker samples",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1304,12 +1518,12 @@
               "required": ["project_id", "run_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "list_ai_tracking_samples",
-            "name": "000000000000000000000",
-            "operationId": "000000000000000000000"
+            "mcp_tool": "list_prompt_tracker_samples",
+            "name": "000000000000000000000000",
+            "operationId": "000000000000000000000000"
           },
           {
-            "description": "Cancel an AI tracking run",
+            "description": "Cancel an Prompt Tracker run",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1328,12 +1542,12 @@
               "required": ["project_id", "run_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "cancel_ai_tracking_run",
-            "name": "0000000000000000000",
-            "operationId": "0000000000000000000"
+            "mcp_tool": "cancel_prompt_tracker_run",
+            "name": "0000000000000000000000",
+            "operationId": "0000000000000000000000"
           },
           {
-            "description": "Retry an AI tracking run",
+            "description": "Retry an Prompt Tracker run",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1512,12 +1726,12 @@
                 }
               }
             },
-            "mcp_tool": "retry_ai_tracking_run",
-            "name": "000000000000000000",
-            "operationId": "000000000000000000"
+            "mcp_tool": "retry_prompt_tracker_run",
+            "name": "000000000000000000000",
+            "operationId": "000000000000000000000"
           },
           {
-            "description": "Get AI tracking history",
+            "description": "Get Prompt Tracker history",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1542,12 +1756,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "get_ai_tracking_history",
-            "name": "00000000000000000000",
-            "operationId": "00000000000000000000"
+            "mcp_tool": "get_prompt_tracker_history",
+            "name": "00000000000000000000000",
+            "operationId": "00000000000000000000000"
           },
           {
-            "description": "Compare AI tracking periods",
+            "description": "Compare Prompt Tracker periods",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1582,12 +1796,12 @@
               "required": ["project_id", "run_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "get_ai_tracking_trends",
-            "name": "0000000000000000000",
-            "operationId": "0000000000000000000"
+            "mcp_tool": "get_prompt_tracker_trends",
+            "name": "0000000000000000000000",
+            "operationId": "0000000000000000000000"
           },
           {
-            "description": "Export AI tracking evidence",
+            "description": "Export Prompt Tracker evidence",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1623,12 +1837,12 @@
               "required": ["project_id", "run_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "export_ai_tracking_evidence",
-            "name": "000000000000000000000000",
-            "operationId": "000000000000000000000000"
+            "mcp_tool": "export_prompt_tracker_evidence",
+            "name": "000000000000000000000000000",
+            "operationId": "000000000000000000000000000"
           },
           {
-            "description": "Suggest AI tracking prompts",
+            "description": "Suggest Prompt Research prompts",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1642,12 +1856,12 @@
               "required": ["project_id"],
               "additionalProperties": false
             },
-            "mcp_tool": "suggest_ai_tracking_prompts",
-            "name": "000000000000000000000000",
-            "operationId": "000000000000000000000000"
+            "mcp_tool": "suggest_prompt_research_prompts",
+            "name": "0000000000000000000000000000",
+            "operationId": "0000000000000000000000000000"
           },
           {
-            "description": "Accept AI tracking suggestions",
+            "description": "Accept Prompt Research suggestions",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -1688,7 +1902,7 @@
                         "type": "object",
                         "properties": {
                           "report_id": {
-                            "description": "Trusted project AI visibility dataset report public ID.",
+                            "description": "Trusted project Brand Visibility dataset report public ID.",
                             "type": "string",
                             "pattern": "^agr_[a-z][a-z0-9]{23}$"
                           },
@@ -1749,9 +1963,9 @@
               "required": ["project_id", "drafts"],
               "additionalProperties": false
             },
-            "mcp_tool": "accept_ai_tracking_suggestions",
-            "name": "000000000000000000000000000",
-            "operationId": "000000000000000000000000000"
+            "mcp_tool": "accept_prompt_research_suggestions",
+            "name": "0000000000000000000000000000000",
+            "operationId": "0000000000000000000000000000000"
           },
           {
             "description": "Preview AI prompt model generation",
@@ -1891,9 +2105,9 @@
               "required": ["project_id", "configuration", "input_snapshot"],
               "additionalProperties": false
             },
-            "mcp_tool": "ai_tracking_suggestions_preview",
-            "name": "0000000000000000000000000000",
-            "operationId": "0000000000000000000000000000"
+            "mcp_tool": "prompt_research_suggestions_preview",
+            "name": "00000000000000000000000000000000",
+            "operationId": "00000000000000000000000000000000"
           },
           {
             "description": "Generate AI prompt hypotheses",
@@ -2120,9 +2334,9 @@
               "required": ["project_id", "preview", "consent", "idempotency_key"],
               "additionalProperties": false
             },
-            "mcp_tool": "ai_tracking_suggestions_generate",
-            "name": "00000000000000000000000000000",
-            "operationId": "00000000000000000000000000000"
+            "mcp_tool": "prompt_research_suggestions_generate",
+            "name": "000000000000000000000000000000000",
+            "operationId": "000000000000000000000000000000000"
           },
           {
             "description": "Get AI research catalog",
@@ -2328,7 +2542,7 @@
             "operationId": "getAgentReport"
           },
           {
-            "description": "Analyze AI visibility",
+            "description": "Analyze Brand Visibility",
             "input_schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "type": "object",
@@ -2433,9 +2647,9 @@
                 }
               ]
             },
-            "mcp_tool": "analyze_ai_visibility",
-            "name": "0000000000000000000",
-            "operationId": "0000000000000000000"
+            "mcp_tool": "analyze_brand_visibility",
+            "name": "0000000000000000000000",
+            "operationId": "0000000000000000000000"
           },
           {
             "description": "Compare AI prompts",
@@ -4171,7 +4385,7 @@
         "features": {
           "reviewed_project_defaults": "v1"
         },
-        "rank_check_scheduler_mode": "legacy",
+        "rank_check_scheduler_mode": "dispatcher",
         "scheduler_driver": "legacy-auto"
       },
       "contentType": "application/json",

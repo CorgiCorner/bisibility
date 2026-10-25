@@ -60,12 +60,12 @@ export function AiResearchWorkspace({
     defaultValues: researchDefaults(mode, domain, engineOptions),
   });
   const values = form.watch();
-  const { displayCatalog, freshCatalog, noticeReason, onCatalogInteract, status } =
+  const { displayCatalog, freshCatalog, noticeReason, onCatalogInteract, onCatalogRetry, status } =
     useAiResearchCatalogRefresh({ catalog, catalogError, catalogFailure, projectId });
   const legacy = legacyResearchInput(mode, values);
   const engineMode = "engines" in values && (values.engines?.length ?? 0) > 0;
   const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
-  const catalogSourceMissing = catalogFailure === "no_source";
+  const catalogSourceMissing = noticeReason === "no_source";
   const pricingUnavailable =
     mode === "prompt" &&
     !actual &&
@@ -112,7 +112,12 @@ export function AiResearchWorkspace({
           {t("catalogRefreshing")}
         </p>
       ) : status === "unavailable" ? (
-        <AiCatalogNotice mode={mode} projectId={projectId} reason={noticeReason} />
+        <AiCatalogNotice
+          mode={mode}
+          projectId={projectId}
+          reason={noticeReason}
+          onRetry={onCatalogRetry}
+        />
       ) : null}
       {pricingUnavailable && !engineMode ? (
         <Card role="alert" className="text-ui-body text-fg-muted">
@@ -126,96 +131,101 @@ export function AiResearchWorkspace({
         providers={supportingProviders}
         href={appPath(projectId, "integrations")}
       >
-        <Card>
-          <form
-            className="grid gap-4"
-            onChange={onCatalogInteract}
-            onFocus={onCatalogInteract}
-            onSubmit={(event) => {
-              event.preventDefault();
-              submit(true);
-            }}
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label htmlFor={"ai-brand"} className="grid gap-2 text-ui-body">
-                {t("brand")}
-                <Input id={"ai-brand"} {...form.register("brand")} placeholder="Acme" />
-              </label>
-              <label htmlFor={"ai-domain"} className="grid gap-2 text-ui-body">
-                {t("domain")}
-                <Input id={"ai-domain"} {...form.register("domain")} placeholder="acme.com" />
-              </label>
-              {mode === "visibility" ? (
-                <AiVisibilityFields form={form} catalog={displayCatalog} disabled={disabled} />
-              ) : (
-                <AiPromptFields
-                  form={form}
-                  catalog={displayCatalog}
-                  disabled={disabled}
-                  engineOptions={engineOptions}
-                />
-              )}
-              {mode === "visibility" ? <AiResearchCostCap form={form} /> : null}
-            </div>
-            {Object.values(form.formState.errors).length ? (
-              <p role="alert" className="text-ui-body text-red-text">
-                {t("validation")}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="submit"
-                variant="secondary"
-                loading={pending}
-                disabled={disabled || extendedUnavailable}
-              >
-                {t("estimateCost")}
-              </Button>
-              <Button
-                type="button"
-                href={!expired ? quoteAddCreditsHref(quote) : undefined}
-                onClick={() => submit(expired)}
-                loading={pending}
-                disabled={
-                  disabled ||
-                  extendedUnavailable ||
-                  (!expired && !quoteAddCreditsHref(quote) && !estimateAffordable)
-                }
-              >
-                {expired
-                  ? paymentT("refreshPrice")
-                  : quoteAddCreditsHref(quote)
-                    ? paymentT("addCredits")
-                    : t("runAnalysis")}
-                {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
-              </Button>
-              <span className="text-ui-xs text-fg-muted">
-                {t(actual ? "actualReplayHint" : "cacheHint")}
-              </span>
-            </div>
-            {retryBlocked ? (
-              <p role="alert" className="m-0 text-ui-body text-red-text">
-                {t("actualCostUsageReview")}
-              </p>
-            ) : null}
-            {completed ? (
-              <Button type="button" variant="secondary" onClick={newRequest}>
-                {t("newRequest")}
-              </Button>
-            ) : null}
-            {!noSource &&
-              canRun &&
-              !retryBlocked &&
-              !completed &&
-              (!estimateCurrent ? (
-                <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
-              ) : !estimateAffordable ? (
-                <p role="alert" className="m-0 text-ui-body text-red-text">
-                  {t(credentialsRejected ? "actualCostUnavailable" : "estimateAboveCap")}
+        {noSource && mode === "prompt" ? null : (
+          <Card>
+            <form
+              className="grid gap-4"
+              onChange={onCatalogInteract}
+              onFocus={onCatalogInteract}
+              onSubmit={(event) => {
+                event.preventDefault();
+                submit(true);
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label htmlFor={"ai-brand"} className="grid gap-2 text-ui-body">
+                  {t("brand")}
+                  <Input id={"ai-brand"} {...form.register("brand")} placeholder="Acme" />
+                </label>
+                <label htmlFor={"ai-domain"} className="grid gap-2 text-ui-body">
+                  {t("domain")}
+                  <Input id={"ai-domain"} {...form.register("domain")} placeholder="acme.com" />
+                </label>
+                {mode === "visibility" ? (
+                  <AiVisibilityFields form={form} catalog={displayCatalog} disabled={disabled} />
+                ) : (
+                  <AiPromptFields
+                    form={form}
+                    catalog={displayCatalog}
+                    disabled={disabled}
+                    engineOptions={engineOptions}
+                    onSelectionChange={() => {
+                      if (estimateCurrent) submit(true);
+                    }}
+                  />
+                )}
+                {mode === "visibility" ? <AiResearchCostCap form={form} /> : null}
+              </div>
+              {Object.values(form.formState.errors).length ? (
+                <p role="alert" className="text-ui-body text-red-text">
+                  {t("validation")}
                 </p>
-              ) : null)}
-          </form>
-        </Card>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  loading={pending}
+                  disabled={disabled || extendedUnavailable}
+                >
+                  {t("estimateCost")}
+                </Button>
+                <Button
+                  type="button"
+                  href={!expired ? quoteAddCreditsHref(quote) : undefined}
+                  onClick={() => submit(expired)}
+                  loading={pending}
+                  disabled={
+                    disabled ||
+                    extendedUnavailable ||
+                    (!expired && !quoteAddCreditsHref(quote) && !estimateAffordable)
+                  }
+                >
+                  {expired
+                    ? paymentT("refreshPrice")
+                    : quoteAddCreditsHref(quote)
+                      ? paymentT("addCredits")
+                      : t("runAnalysis")}
+                  {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
+                </Button>
+                <span className="text-ui-xs text-fg-muted">
+                  {t(actual ? "actualReplayHint" : "cacheHint")}
+                </span>
+              </div>
+              {retryBlocked ? (
+                <p role="alert" className="m-0 text-ui-body text-red-text">
+                  {t("actualCostUsageReview")}
+                </p>
+              ) : null}
+              {completed ? (
+                <Button type="button" variant="secondary" onClick={newRequest}>
+                  {t("newRequest")}
+                </Button>
+              ) : null}
+              {!noSource &&
+                canRun &&
+                !retryBlocked &&
+                !completed &&
+                (!estimateCurrent ? (
+                  <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
+                ) : !estimateAffordable ? (
+                  <p role="alert" className="m-0 text-ui-body text-red-text">
+                    {t(credentialsRejected ? "actualCostUnavailable" : "estimateAboveCap")}
+                  </p>
+                ) : null)}
+            </form>
+          </Card>
+        )}
       </ProviderAccessGate>
       <AiResearchWorkspaceOutcome
         actual={actual}

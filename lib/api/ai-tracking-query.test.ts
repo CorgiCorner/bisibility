@@ -4,7 +4,7 @@ import { getOpenApiDocument } from "./openapi";
 
 const runId = "air_a00000000000000000000000";
 
-describe("AI tracking trends query", () => {
+describe("Prompt Tracker trends query", () => {
   it("requires a public run ID and drops empty values", () => {
     const input = trackingQueryInput(new URLSearchParams(`run_id=${runId}&previous_run_id=`));
     expect(trackingTrendsQuerySchema.parse(input)).toEqual({ run_id: runId });
@@ -17,7 +17,7 @@ describe("AI tracking trends query", () => {
       string,
       Record<string, { parameters?: unknown }>
     >;
-    const operation = paths["/projects/{project_id}/ai-tracking/trends"].get;
+    const operation = paths["/projects/{project_id}/prompt-tracker/trends"].get;
     const parameters = operation.parameters as Array<{
       in?: string;
       name?: string;

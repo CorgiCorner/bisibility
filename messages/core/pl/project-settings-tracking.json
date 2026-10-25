@@ -127,12 +127,23 @@
     },
     "inspection": {
       "title": "Sprawdzanie adresów URL",
-      "description": "Codzienne sprawdzanie statusu indeksowania w Search Console dla śledzonych docelowych adresów URL.",
+      "description": "Częściowy raport indeksowania stron na podstawie zapisanego stanu Google, bez testu na żywo.",
       "dailyLimit": "Dzienny limit sprawdzeń",
-      "help": "Google pozwala na 2000 sprawdzeń dziennie na usługę, dzielonych ze wszystkimi narzędziami, które z niej korzystają. bisibility ogranicza to do 1000, aby zostawić miejsce innym narzędziom dzielącym limit usługi. Adresy URL ponad limit czekają do następnego dnia.",
+      "help": "Stały limit wynosi 0-2000 URL-i na dzień czasu pacyficznego. Projekty i inspekcje na żądanie współdzielą licznik usługi. Inne narzędzia też zużywają limit, więc licznik jest szacunkowy.",
       "readOnly": "Tylko do odczytu",
       "saveValidation": "Sprawdź wyróżnione ustawienia przed zapisaniem.",
-      "saveError": "Nie udało się zapisać limitu sprawdzania adresów URL."
+      "saveError": "Nie udało się zapisać limitu sprawdzania adresów URL.",
+      "modeLabel": "Tryb inspekcji w tle",
+      "modes": {
+        "off": "Wyłączone",
+        "fixed": "Stały limit dzienny",
+        "available_quota": "Wykorzystaj dostępny limit"
+      },
+      "modeHelp": {
+        "off": "Inspekcja w tle jest wyłączona. Inspekcje na żądanie pozostają dostępne.",
+        "fixed": "Sprawdzaj do dziennego limitu projektu, w ramach wspólnego limitu usługi.",
+        "available_quota": "Kontynuuj do zgłoszenia dziennego limitu przez Google, w ramach czasu przebiegu. Inne narzędzia mogą mieć mniej dostępnego limitu."
+      }
     },
     "measurementPolicy": {
       "title": "Polityka pomiarów",

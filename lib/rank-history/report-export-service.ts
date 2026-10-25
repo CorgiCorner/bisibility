@@ -2,6 +2,7 @@ import "server-only";
 import { decodeOffsetCursor, encodeOffsetCursor } from "@/lib/api/pagination";
 import { requirePublicId } from "@/lib/db/public-id-resources";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
+import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
 import type { RankTrackerReportOptions } from "@/lib/queries/rank-tracker-report-model";
 import type { RankReportDatabase } from "@/lib/rank-reports/access";
 import type { ReportCursorCodec } from "@/lib/rank-reports/cursor";
@@ -80,7 +81,10 @@ export async function prepareRankHistoryExport(
   };
   const names = new Map(snapshot.keywords.map((keyword) => [keyword.publicId, keyword.text]));
   const rows: Array<
-    | ((RankReportRecord | ExportObservation) & { keyword: string })
+    | ((RankReportRecord | ExportObservation) & {
+        keyword: string;
+        evidenceProjection: EvidenceProjection | null;
+      })
     | (HistoryRunRecord & { keyword?: string })
   > = [];
   for (const record of snapshot.records) {
@@ -88,6 +92,7 @@ export async function prepareRankHistoryExport(
     if (selected)
       rows.push({
         ...selected,
+        evidenceProjection: snapshot.evidenceProjections.get(selected.id) ?? null,
         keyword: names.get(selected.keywordId) ?? "",
         ...(input.stream === "observations"
           ? { normalizedItems: record.items, normalizedItemCount: record.items.length }

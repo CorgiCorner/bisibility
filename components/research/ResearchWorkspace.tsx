@@ -156,7 +156,7 @@ export function ResearchWorkspace({
   const runDeeper = () =>
     activeTab && hasProvider && void reviewDeeperResearch(activeTab, reviewRun, setResultLimit);
   return (
-    <section className="grid min-w-0 gap-4">
+    <section className="grid min-w-0 grid-cols-1 gap-4">
       <ProviderAccessGate
         blocked={!hasProvider}
         showNotice={hasResults}

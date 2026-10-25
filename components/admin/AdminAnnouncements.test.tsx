@@ -1,6 +1,6 @@
 import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
 import { renderWithInstanceAdminMessages as renderMessages } from "@/i18n/test-support/render-with-feature-messages";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -92,7 +92,9 @@ describe("announcement management", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Another administrator");
     expect(screen.getByLabelText("Message")).toHaveValue(`${first.message} updated`);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled());
     await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Delete" }));
     expect(mocks.mutate).toHaveBeenCalledTimes(1);
     mocks.mutate.mockResolvedValue({ status: "deleted", id: first.id });

@@ -1,6 +1,6 @@
 // Temporal sandbox module: no Prisma, client, Node built-ins, or side effects.
 // Only `@temporalio/workflow` and type-only activity imports are allowed.
-import { continueAsNew, proxyActivities } from "@temporalio/workflow";
+import { continueAsNew, proxyActivities, workflowInfo } from "@temporalio/workflow";
 import type {
   AlertHealthActivityResult,
   alertHealthActivity as alertHealthActivityImplementation,
@@ -41,7 +41,9 @@ type MaintenanceActivities = {
   purgeExpiredSessionsActivity(): Promise<PurgeExpiredSessionsActivityResult>;
   purgeQueuedRankCheckBatchesActivity(): Promise<PurgeQueuedRankCheckBatchesActivityResult>;
   releaseExpiredMigrationHoldsActivity(): Promise<ReleaseExpiredMigrationHoldsActivityResult>;
-  sendWeeklyReportDigestActivity(): Promise<SendWeeklyReportDigestActivityResult>;
+  sendWeeklyReportDigestActivity(input?: {
+    periodEnd: string;
+  }): Promise<SendWeeklyReportDigestActivityResult>;
   sweepRankCheckRawPurgeProgressActivity(): Promise<SweepRankCheckRawPurgeProgressActivityResult>;
   syncPresenceActivity(): Promise<SyncPresenceActivityResult>;
   syncSitemapsActivity(): Promise<SyncSitemapsActivityResult>;
@@ -285,7 +287,7 @@ export async function releaseExpiredMigrationHoldsWorkflow(): Promise<ReleaseExp
 }
 
 export async function sendWeeklyReportDigestWorkflow(): Promise<SendWeeklyReportDigestActivityResult> {
-  return sendWeeklyReportDigestActivity();
+  return sendWeeklyReportDigestActivity({ periodEnd: workflowInfo().startTime.toISOString() });
 }
 
 export async function syncSitemapsWorkflow(): Promise<SyncSitemapsActivityResult> {

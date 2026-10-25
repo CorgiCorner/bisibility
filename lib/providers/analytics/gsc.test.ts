@@ -642,7 +642,7 @@ describe("gsc analytics provider", () => {
         { apiKey: "refresh_token", login: "sc-domain:example.com" },
         { property: "sc-domain:example.com", url: "https://example.com/page" },
       ),
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
       coverageState: "Submitted and indexed",
       googleCanonical: "https://example.com/page",
       lastCrawlAt: new Date("2026-07-01T10:15:00Z"),

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   canReadStream: vi.fn(),
   notificationRealtimeRedisConfigured: vi.fn(),
   readOperationSnapshot: vi.fn(),
+  readRankDataRevision: vi.fn(),
   resolveProjectAccess: vi.fn(),
   subscribeToNotificationEvents: vi.fn(),
   subscribeToOperationEvents: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
+  readRankDataRevision: mocks.readRankDataRevision,
 }));
 
 function streamRequest() {
@@ -63,6 +65,7 @@ describe("notification stream route", () => {
     });
     mocks.getNotificationFeedForScope.mockResolvedValue({ items: [], unreadCount: 0 });
     mocks.readOperationSnapshot.mockResolvedValue([]);
+    mocks.readRankDataRevision.mockResolvedValue("revision");
     mocks.notificationRealtimeRedisConfigured.mockReturnValue(true);
     mocks.subscribeToNotificationEvents.mockReturnValue({
       close: vi.fn(),

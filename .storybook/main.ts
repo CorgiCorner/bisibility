@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { type Plugin, searchForWorkspaceRoot } from "vite";
 
+const aiResearchActionsStub = fileURLToPath(
+  new URL("./ai-research-action-stubs.ts", import.meta.url),
+);
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
 const announcementActionsStub = fileURLToPath(
   new URL("./instance-announcement-stubs.ts", import.meta.url),
@@ -21,6 +24,9 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/prompt-research": fileURLToPath(
+    new URL("./prompt-research-action-stubs.ts", import.meta.url),
+  ),
   "@/lib/actions/achievements": fileURLToPath(
     new URL("./achievement-action-stubs.ts", import.meta.url),
   ),
@@ -87,7 +93,7 @@ const serverActionAliases = [
 const serverActionPattern =
   /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|provider-ui|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
-  /[\\/](?:credential-source|credits-bonus)-actions(?:\.ts)?$/,
+  /[\\/](?:credential-source|credits-bonus|payment)-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
   /^@\/lib\/auth\/(auth|client|otp-resend|request-login-code|session)$/,
@@ -106,6 +112,7 @@ const prismaRuntimeStubPatterns = [
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
 const runtimeAliases = {
+  "@/lib/actions/run-tray": fileURLToPath(new URL("./run-tray-action-stubs.ts", import.meta.url)),
   "@/lib/actions/instance-announcements": announcementActionsStub,
   "@/lib/actions/metering-recovery": fileURLToPath(
     new URL("./recovery-action-stubs.ts", import.meta.url),
@@ -115,6 +122,7 @@ const runtimeAliases = {
     new URL("../tests/cost-estimate.ts", import.meta.url),
   ),
   ...Object.fromEntries(serverActionAliases.map((name) => [name, runtimeStubs])),
+  "@/lib/actions/ai-research": aiResearchActionsStub,
   ...keywordActionBoundaries,
   ...rankRunActionBoundaries,
   "@/components/shell/keyword-search": runtimeStubs,
@@ -193,6 +201,7 @@ const runtimeStubPlugin = {
   name: "storybook-runtime-stubs",
   enforce: "pre",
   resolveId(source, importer) {
+    if (source === "@/lib/actions/ai-research") return aiResearchActionsStub;
     if (source === "@/lib/actions/instance-announcements") return announcementActionsStub;
     const candidates = candidateModuleIds(source, importer);
     const cleanSource = source.split("?", 1)[0] ?? source;

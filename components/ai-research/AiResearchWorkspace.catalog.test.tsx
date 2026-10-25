@@ -1,4 +1,3 @@
-import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -37,6 +36,16 @@ describe("workspace without usable provider credentials", () => {
         screen.getByText("Choose a supported data source in Integrations to run a search."),
       ).toBeVisible();
       expect(screen.getAllByText("Supported providers: Fixture AI provider.")).toHaveLength(1);
+      if (mode === "prompt") {
+        expect(screen.queryByRole("textbox", { name: "brand" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "estimateCost" })).toBeNull();
+        expect(
+          screen.getByRole("link", { name: sharedMessages.shared.providerAccess.connectAction }),
+        ).toHaveAttribute("href", "/app/prj_example/integrations");
+        expect(screen.getByRole("link", { name: /Saved report/ })).toBeVisible();
+        expect(analyze).not.toHaveBeenCalled();
+        return;
+      }
       const emptyPanel = screen.getByRole("region", { name: "Choose a data source" });
       expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
       expect(

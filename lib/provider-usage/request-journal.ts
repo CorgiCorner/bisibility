@@ -43,6 +43,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
   let started = 0;
   let quantity: number | null = 0;
   let costCents: number | null = 0;
+  let lastRequestCostCents: number | null = null;
   const measurements = new Map<string, ProviderUsageReceipt>();
   const inFlight = new Set<string>();
   const grants = new Map<string, OwnAttemptGrant>();
@@ -161,6 +162,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
         grants.set(id, grant);
         consent.reserve(id, grant.pricedRequest?.estimate, input.estimate?.cents ?? "0");
       }
+      lastRequestCostCents = null;
       started += 1;
       inFlight.add(id);
       return id;
@@ -243,6 +245,8 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
           : new Prisma.Decimal(formatQuantity(budget)).times(receipt.quantity).toNumber()
         : receipt.costCents;
     consent.settle(id, duplicate ? 0 : valued);
+    // Unit receipts use the settled budget valuation, not their zero monetary cost.
+    lastRequestCostCents = duplicate ? 0 : valued;
     if (!duplicate) {
       measurements.set(id, receipt);
       const receipts = [...measurements.values()];
@@ -265,6 +269,9 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
     },
     get quantity() {
       return quantity;
+    },
+    get lastRequestCostCents() {
+      return lastRequestCostCents;
     },
     get costCents() {
       return costCents;

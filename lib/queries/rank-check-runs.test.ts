@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  evidence: vi.fn(async () => new Map()),
   checkSchedule: { findFirst: vi.fn(), findMany: vi.fn() },
   auditLog: { findMany: vi.fn() },
   itemFindMany: vi.fn(),
@@ -24,6 +25,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/rank-check/runs/budget-presentation", () => ({
   projectRunBudgetAmounts: mocks.budgetCap,
 }));
+vi.mock("@/lib/provider-evidence/projection/read", () => ({ readCheckEvidence: mocks.evidence }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -596,6 +598,8 @@ describe("rank-check run queries", () => {
 
   it("returns the persisted result depth and fractional cost within the requested project", async () => {
     mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+    const projection = { result: "partial", returnedDepth: 20 };
+    mocks.evidence.mockResolvedValueOnce(new Map([["check_1", projection]]));
     mocks.itemFindMany.mockResolvedValue([
       {
         ...item("item_1", new Date()),
@@ -621,6 +625,7 @@ describe("rank-check run queries", () => {
     expect(page.data[0]?.rankCheck).toMatchObject({
       costCents: null,
       observationCompleteness: "unknown",
+      evidenceProjection: projection,
       requestedDepth: 20,
       position: null,
     });

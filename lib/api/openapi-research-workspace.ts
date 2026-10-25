@@ -15,7 +15,7 @@ const titles = {
   listAgentReports: "List agent reports",
   createAgentReport: "Create agent report",
   getAgentReport: "Get agent report",
-  analyzeAiVisibility: "Analyze AI visibility",
+  analyzeBrandVisibility: "Analyze Brand Visibility",
   compareAiPrompts: "Compare AI prompts",
   runSiteAudit: "Run site audit",
   listSiteAudits: "List site audits",
@@ -52,7 +52,7 @@ export function researchWorkspacePaths() {
     const required = (input.required ?? []).filter(
       (name) => !["project_id", "report_id", "idempotency_key"].includes(name),
     );
-    const paid = ["analyzeAiVisibility", "compareAiPrompts"].includes(operationId);
+    const paid = ["analyzeBrandVisibility", "compareAiPrompts"].includes(operationId);
     if (paid) Object.assign(properties, paymentRequestFields);
     const responses = {
       [operationId === "createAgentReport" ? "201" : "200"]: {
@@ -109,7 +109,7 @@ export function researchWorkspacePaths() {
                   ? siteAuditRequest
                   : {
                       additionalProperties: false,
-                      ...(operationId === "analyzeAiVisibility" ? { allOf: input.allOf } : {}),
+                      ...(operationId === "analyzeBrandVisibility" ? { allOf: input.allOf } : {}),
                       properties,
                       required,
                       type: "object",

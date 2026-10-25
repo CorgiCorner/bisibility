@@ -1,6 +1,13 @@
-import { skillArchivePath, skillCatalog } from "@/lib/agent-ready/skill-catalog";
+import { skillCatalog, skillGroup } from "@/lib/agent-ready/skill-catalog";
 
 export const API_VERSION = "v1";
+const SKILLS_PACKAGE = "CorgiCorner/bisibility";
+
+export function skillsInstallCommand(slug?: string) {
+  return slug
+    ? `npx skills add ${SKILLS_PACKAGE} --skill ${slug}`
+    : `npx skills add ${SKILLS_PACKAGE}`;
+}
 
 export function curlExample(origin: string) {
   return `curl -H "Authorization: Bearer $BISIBILITY_API_KEY" \\\n  ${origin}/api/${API_VERSION}/keywords`;
@@ -60,7 +67,7 @@ export const SKILLS = [
   ...skillCatalog.filter((skill) => skill.status === "coming-soon"),
 ].map((skill) => ({
   name: skill.slug,
-  archivePath: skillArchivePath(skill),
   status: skill.status,
   plugin: skill.channels.plugin,
+  group: skillGroup(skill),
 }));

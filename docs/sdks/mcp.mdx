@@ -64,19 +64,21 @@ starts the server and calls `list_projects`.
 ## Track AI observations and save an analysis
 
 Start with `get_project_context` and `get_ai_research_catalog`, then inspect saved topics,
-prompts, runs and samples. `get_ai_tracking_history`, `get_ai_tracking_trends` and
-`export_ai_tracking_evidence` retain coverage, source identity and continuation metadata.
+prompts, runs and samples. `get_prompt_tracker_history`, `get_prompt_tracker_trends` and
+`export_prompt_tracker_evidence` retain coverage, source identity and continuation metadata.
 They read stored evidence without purchasing a new observation.
 
-`ai_tracking_suggestions_preview` reviews the complete context, competitors, model and
-market without paid work. `ai_tracking_suggestions_generate` requires write scope,
-the unchanged preview, explicit own-key actual-cost consent and a stable UUID retry key.
-The returned drafts are editable hypotheses. Accepting one preserves its verified
-generation reference and does not launch a baseline or activate a schedule.
+Prompt Research finds questions to track. Today that is model-generated suggestions to
+review. `prompt_research_suggestions_preview` reviews the complete context, competitors,
+model and market without paid work. `prompt_research_suggestions_generate` requires write
+scope, the unchanged preview, explicit own-key actual-cost consent and a stable UUID retry
+key. The returned drafts are editable hypotheses. Accepting one creates a Prompt Tracker
+prompt and preserves its verified generation reference. It does not launch a baseline or
+activate a schedule.
 
 Use `create_agent_report` to save an approved analysis with its sources and limitations.
 A read-only connection can review stored data but cannot save a report or generate drafts.
-See [AI Tracking](/guides/ai-tracking) and [Agent Reports](/guides/agent-reports).
+See [Prompt Tracker](/guides/prompt-tracker) and [Agent Reports](/guides/agent-reports).
 
 ## Interpret research results
 

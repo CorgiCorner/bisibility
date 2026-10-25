@@ -204,6 +204,15 @@ describe("maintenance schedule bootstrap", () => {
     );
   });
 
+  it("leaves the weekly digest timezone unspecified so Temporal evaluates the calendar in UTC", async () => {
+    const client = clientMock();
+    await ensureWeeklyDigestSchedule(client);
+    expect(client.create.mock.calls[0][0].spec).not.toHaveProperty("timeZoneName");
+    expect(client.create.mock.calls[0][0].spec).toEqual({
+      calendars: [{ dayOfWeek: "MONDAY", hour: 6, minute: 15 }],
+    });
+  });
+
   it("honors an interval override for the stale running-check sweep", async () => {
     vi.stubEnv("STALE_CHECKS_INTERVAL", "5 minutes");
     const client = clientMock();

@@ -276,3 +276,5 @@ export const MarketsPage: Story = {
 };
 
 export const MixedBudgets: Story = { args: { spend: "mixed" } };
+
+export const Reconnecting: Story = { args: { spend: "capped", status: "reconnecting" } };

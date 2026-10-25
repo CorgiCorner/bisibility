@@ -45,7 +45,7 @@
         "evidence_ids": ["rival-1", "tracked-1"],
         "rationale": "The rival has a sampled team-evaluation phrase absent from the tracked set.",
         "confidence": "low",
-        "uncertainty": "Project ranking for the untracked phrase and both pages contents are unverified.",
+        "uncertainty": "Project ranking for the untracked phrase and both pages contents are unverified. The preliminary format is not a basis for this action.",
         "verification": "Unexecuted: verify whether the proposed comparison URL exists, inspect its intent if present, and propose tracking only after separate confirmation.",
         "target_status": "proposed URL; existence and content unverified"
       }
@@ -151,6 +151,19 @@
       "candidate_gaps": ["rank tracking for teams"],
       "reason": "Gap is absent from the tracked set; project site ranking/content absence is unverified."
     },
+    "content_formats": {
+      "preliminary": [
+        {
+          "evidence_id": "rival-1",
+          "keyword": "rank tracking for teams",
+          "url": "https://example.org/teams",
+          "format": "other",
+          "basis": "URL only. Title and page content were not read.",
+          "status": "preliminary"
+        }
+      ],
+      "confirmed": []
+    },
     "top_pages": [
       {
         "domain": "example.org",
@@ -172,7 +185,7 @@
   },
   "provenance": {
     "skill": "competitor-analysis",
-    "skill_version": "0.4.0",
+    "skill_version": "0.5.0",
     "agent": "unknown",
     "source_origin": "fictional_fixture",
     "instance": "https://example.com",

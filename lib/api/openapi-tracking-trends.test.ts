@@ -22,13 +22,13 @@ vi.mock("./auth", async (importOriginal) => ({
 
 import { trackingSnakeizeKeys } from "./ai-tracking-keys";
 import { trackingTrends } from "./ai-tracking-trends";
-import { aiTrackingComponentSchemas } from "./openapi-tracking-schemas";
+import { promptTrackerComponentSchemas } from "./openapi-tracking-schemas";
 import { handleApiRequest } from "./router";
 
-// The REST response is `AiTrackingTrendsResponse`, `{ data: AiTrackingTrends }` with no other key.
+// The REST response is `PromptTrackerTrendsResponse`, `{ data: PromptTrackerTrends }` with no other key.
 const validate = new AjvJsonSchemaValidator().getValidator({
   additionalProperties: false,
-  properties: { data: aiTrackingComponentSchemas.AiTrackingTrends },
+  properties: { data: promptTrackerComponentSchemas.PromptTrackerTrends },
   required: ["data"],
   type: "object",
 } as never);
@@ -133,7 +133,7 @@ it("serves the trend comparison through the API router", async () => {
       updatedAt: new Date("2026-01-02T00:00:00.000Z"),
     },
   });
-  const path = ["projects", "prj_a00000000000000000000000", "ai-tracking", "trends"];
+  const path = ["projects", "prj_a00000000000000000000000", "prompt-tracker", "trends"];
 
   const routed = await handleApiRequest(
     new Request(

@@ -8,6 +8,7 @@ export function projectDefaultsConfig(defaults: ProjectDefaults) {
     device: defaults.device,
     frequency: defaults.frequency,
     inspectionDailyLimit: defaults.inspectionDailyLimit,
+    inspectionBudgetMode: defaults.inspectionBudgetMode,
     jitterMinutes: defaults.jitterMinutes,
     locationKey: defaults.locationKey,
     searchSyncImportMonths: defaults.searchSyncImportMonths,

@@ -127,12 +127,23 @@
     },
     "inspection": {
       "title": "URL inspection",
-      "description": "Daily Search Console index-status checks for tracked target URLs.",
+      "description": "Build a partial Page indexing report from Google's stored indexed state, not a live test.",
       "dailyLimit": "Daily inspection limit",
-      "help": "Google allows 2,000 inspections per day per property, shared across every tool using it. bisibility caps this at 1,000 to leave room for other tools sharing the property quota. URLs over the limit wait for the next day.",
+      "help": "The fixed limit is 0-2000 URLs per Pacific day. All projects and explicit inspections share the property counter. Other tools also consume quota, so the counter is an estimate.",
       "readOnly": "Read-only",
       "saveValidation": "Check the highlighted settings before saving.",
-      "saveError": "URL inspection limit could not be saved."
+      "saveError": "URL inspection limit could not be saved.",
+      "modeLabel": "Background inspection mode",
+      "modes": {
+        "off": "Off",
+        "fixed": "Fixed daily limit",
+        "available_quota": "Use available quota"
+      },
+      "modeHelp": {
+        "off": "Background inspection is off. Explicit inspections remain available.",
+        "fixed": "Inspect up to the project daily limit, within the shared property allowance.",
+        "available_quota": "Continue until Google reports a daily limit, within the run time budget. This may leave less quota for other tools."
+      }
     },
     "measurementPolicy": {
       "title": "Measurement policy",

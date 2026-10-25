@@ -28,7 +28,7 @@ export function urlPresenceView(
   presence:
     | {
         canonicalOk: boolean | null;
-        checkedAt: Date;
+        checkedAt: Date | null;
         coverageState: string | null;
         lastCrawlAt: Date | null;
         url: string;
@@ -37,7 +37,7 @@ export function urlPresenceView(
     | null
     | undefined,
 ): UrlPresenceView | null {
-  return presence
+  return presence?.checkedAt
     ? {
         canonicalOk: presence.canonicalOk,
         checkedAt: presence.checkedAt.toISOString(),

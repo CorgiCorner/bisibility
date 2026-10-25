@@ -33,13 +33,15 @@ export function checkRunStoredResultLines({
   const showGap = retrieved != null && depth != null && retrieved < depth;
   const prefix = `${run.id}-stored-results`;
   const summary =
-    stored.tier === "full"
-      ? typeof run.position === "number"
-        ? t("yourResult", { position: run.position })
-        : depth != null
-          ? t("notInTop", { depth })
-          : t("notFoundAtCheck")
-      : t("compactRecord");
+    run.evidenceProjection?.result === "partial" && run.position === null
+      ? t("partialNoMatch", { depth: run.evidenceProjection.returnedDepth ?? 0 })
+      : stored.tier === "full"
+        ? typeof run.position === "number"
+          ? t("yourResult", { position: run.position })
+          : depth != null
+            ? t("notInTop", { depth })
+            : t("notFoundAtCheck")
+        : t("compactRecord");
   const lines: CheckRunStoredResultLine[] = [
     {
       content: (

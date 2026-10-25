@@ -1,3 +1,7 @@
+vi.mock("@/lib/provider-evidence/projection/read", () => ({
+  readCheckEvidence: vi.fn(async () => new Map()),
+}));
+
 import ExcelJS from "exceljs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { exportKeywords } from "./keyword-export-action";

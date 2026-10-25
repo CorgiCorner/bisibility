@@ -37,7 +37,7 @@ describe.runIf(enabled)("tracking real Temporal workflow and history replay", ()
   beforeAll(async () => {
     vi.useRealTimers();
     startedAt = new Date().toISOString();
-    if (process.versions.node !== "22.23.1") throw new Error("Use the pinned Node 22.23.1 shim.");
+    if (process.versions.node !== "22.23.4") throw new Error("Use the pinned Node 22.23.4 shim.");
     namespace = process.env.AI_TRACKING_TEMPORAL_TEST_NAMESPACE ?? "";
     if (!namespace || namespace === "temporal-system")
       throw new Error("Explicit existing local fixture namespace is required.");

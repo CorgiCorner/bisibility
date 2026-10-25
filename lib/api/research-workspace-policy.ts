@@ -16,9 +16,9 @@ export const researchWorkspaceOperationPolicy = {
     create,
   ),
   getAgentReport: policy("GET", "/projects/{project_id}/agent-reports/{report_id}", "read"),
-  analyzeAiVisibility: policy(
+  analyzeBrandVisibility: policy(
     "POST",
-    "/projects/{project_id}/ai-visibility",
+    "/projects/{project_id}/brand-visibility",
     "write",
     "write",
     create,

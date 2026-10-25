@@ -1,6 +1,8 @@
 "use client";
 
+import { RankResultMarker } from "@/components/checks/runs/RankResultMarker";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useFormatter, useTranslations } from "next-intl";
 import { KeywordCellHelp } from "./KeywordCellHelp";
@@ -61,6 +63,13 @@ export function KeywordRankValue({
       : view.reason
         ? t("qualificationUnknown")
         : t(`freshness.${view.freshness}`);
+  if (row.rankEvidence && !marketGridParent(row))
+    return (
+      <RankResultMarker
+        evidence={row.rankEvidence.projection}
+        position={row.rankEvidence.position}
+      />
+    );
   if (compact) {
     const shortHistory = last
       ? t(view.isGroup ? "bestRetainedShort" : "lastKnownShort", {

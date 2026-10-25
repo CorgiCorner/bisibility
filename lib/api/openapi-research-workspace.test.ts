@@ -39,13 +39,13 @@ it("scopes the published provider domain limit to domain searches, including the
   const tools = getMcpToolDefinitions();
   const domain = `${"a".repeat(50)}.${"b".repeat(12)}.example.com`;
   for (const mode of ["visibility", "prompt"] as const) {
-    const path = mode === "visibility" ? "ai-visibility" : "prompt-explorer";
+    const path = mode === "visibility" ? "brand-visibility" : "prompt-explorer";
     const operation = paths[`/projects/{project_id}/${path}`].post as {
       requestBody: { content: { "application/json": { schema: object } } };
     };
     const tool = tools.find(
       (item) =>
-        item.name === (mode === "visibility" ? "analyze_ai_visibility" : "compare_ai_prompts"),
+        item.name === (mode === "visibility" ? "analyze_brand_visibility" : "compare_ai_prompts"),
     );
     if (!tool) throw new Error("Research tool missing");
     for (const [schema, project] of [

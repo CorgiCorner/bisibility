@@ -25,6 +25,38 @@ describe("RunPage", () => {
     vi.useRealTimers();
   });
 
+  it("updates persisted target results when refreshed server props arrive", () => {
+    const view = renderPage({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          keyword: {
+            ...runPageFixture.items[0].keyword,
+            text: "before-refresh",
+          },
+        },
+      ],
+    });
+    view.rerender(
+      <RunPage
+        {...runPageFixture}
+        canMutate
+        projectRef="prj_example"
+        items={[
+          {
+            ...runPageFixture.items[0],
+            keyword: {
+              ...runPageFixture.items[0].keyword,
+              text: "after-refresh",
+            },
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("after-refresh")).toBeInTheDocument();
+    expect(screen.queryByText("before-refresh")).toBeNull();
+  });
+
   it("implements four slots", () => {
     renderPage();
     for (const label of ["Selection", "Provider", "Cost", "Elapsed"]) {

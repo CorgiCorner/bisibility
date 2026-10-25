@@ -1,7 +1,7 @@
 import "server-only";
 import { instanceLookupTtl, unpackProjectCache } from "@/lib/provider-lookups/project-cache-policy";
 import { getRedisClient } from "@/lib/redis/redis";
-import { identifyProjectCacheKey } from "./key";
+import { identifyProjectCacheKey, sharedPromptResearchKey } from "./key";
 import type { DataCacheEntry, DataCachePage } from "./schema";
 
 const identify = identifyProjectCacheKey;
@@ -13,6 +13,7 @@ function patterns(projectId: string) {
     "rk:v2:",
     "bl:v3:",
     "do:v1:",
+    "ai:prompt-research-project-v2:",
     "ai:v1:",
     "ai:v2:",
     "ai:v3-engines:",
@@ -52,7 +53,11 @@ export async function listRedisDataCache(
       keys.map(async (key): Promise<DataCacheEntry | null> => {
         const info = identify(key, projectId);
         if (!info || info.module === "backlinks" || info.module === "domain_overview") return null;
-        const [raw, remaining] = await bounded(Promise.all([redis.get(key), redis.ttl(key)]));
+        const sharedKey = sharedPromptResearchKey(key);
+        const [raw, remaining] = await bounded(
+          Promise.all([redis.get(key), redis.ttl(sharedKey ?? key)]),
+        );
+        if (sharedKey && !(await bounded(redis.exists(sharedKey)))) return null;
         if (!raw || remaining <= 0) return null;
         let value: Record<string, unknown>;
         try {
@@ -110,6 +115,23 @@ export async function removeRedisDataCache(projectId: string, token: string) {
   try {
     const redis = await bounded(getRedisClient());
     if (!redis) return "unavailable" as const;
+    const sharedKey = sharedPromptResearchKey(key);
+    if (sharedKey) {
+      // The pointer must exist: a caller cannot forge a project token for another account's hash.
+      const result = Number(
+        await bounded(
+          redis.eval(
+            "if redis.call('exists', KEYS[1]) == 0 then return -2 end; if redis.call('exists', KEYS[3]) == 1 then return -1 end; redis.call('del', KEYS[2]); redis.call('del', KEYS[1]); return 1",
+            { keys: [key, sharedKey, `${sharedKey}:lock`], arguments: [] },
+          ),
+        ),
+      );
+      return result === -2
+        ? ("invalid" as const)
+        : result === -1
+          ? ("busy" as const)
+          : ("removed" as const);
+    }
     // Never remove an active lock or allow its in-flight paid result to be silently discarded.
     const result = await bounded(
       redis.eval(

@@ -1,6 +1,8 @@
 import { createReportCursorCodec } from "@/lib/rank-reports/cursor";
 import { reportAsOf, reportPolicy, reportProject } from "@/lib/rank-reports/report-test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { rankHistoryCsvLine } from "./export-service";
+import { reportHistoryCsv } from "./report-export-formats";
 import { prepareRankHistoryExport } from "./report-export-service";
 import { historyExportSnapshotFixture } from "./report-export-test-fixture";
 
@@ -217,4 +219,30 @@ describe("actual history export preparation contract", () => {
     ).rejects.toThrow();
     expect(mocks.snapshot).not.toHaveBeenCalled();
   });
+});
+
+it("DM-15 carries the frozen evidence projection into legacy and report exports", async () => {
+  const snapshot = historyExportSnapshotFixture();
+  const projection = {
+    acceptance: "accepted" as const,
+    fulfillment: "partial" as const,
+    returnedDepth: 8,
+    accounting: "unknown" as const,
+    recovery: null,
+    result: "partial" as const,
+    cost: "unknown" as const,
+    originalCheckedAt: "2026-10-12T10:00:00Z",
+  };
+  snapshot.evidenceProjections.set(snapshot.targets[0].checks[0].id, projection);
+  mocks.snapshot.mockResolvedValue(snapshot);
+  const prepared = await prepareRankHistoryExport(
+    context,
+    { range: "all", version: "2", stream: "observations" },
+    reportProject.publicId,
+    options,
+  );
+  expect(prepared.legacyRows[0].evidenceProjection).toEqual(projection);
+  expect(rankHistoryCsvLine(prepared.legacyRows[0])).toContain('""cost"":""unknown""');
+  expect(reportHistoryCsv(prepared)).toContain('""returned_depth"":8');
+  expect(prepared.reportRows[0]).toMatchObject({ evidenceProjection: projection });
 });

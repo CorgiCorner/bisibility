@@ -1,4 +1,5 @@
 import { paymentResponseFields } from "./openapi-action-payment";
+import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { publicIdSchema } from "./openapi-public-id";
 import { sdkName, usdCents } from "./openapi-sdk-schema";
 
@@ -8,6 +9,16 @@ export const rankRunSchemas = {
   RankCheckRunRead: {
     type: "object",
     properties: {
+      evidence_projections: {
+        type: ["array", "null"],
+        items: {
+          ...evidenceProjectionSchema,
+          ...sdkName("RankCheckRunEvidenceProjection"),
+          type: "object",
+          properties: { ...evidenceProjectionSchema.properties, check_id: publicIdSchema("check") },
+          required: [...evidenceProjectionSchema.required, "check_id"],
+        },
+      },
       payment: paymentResponseFields.payment,
       id: publicIdSchema("rcr"),
       project_id: publicIdSchema("prj"),

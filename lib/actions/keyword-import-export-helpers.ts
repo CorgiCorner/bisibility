@@ -1,3 +1,5 @@
+import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
+import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
 import { csvRow } from "@/lib/ui/csv";
 import { xlsxCellText } from "@/lib/ui/xlsx-cell-text";
 import ExcelJS from "exceljs";
@@ -36,6 +38,7 @@ export type KeywordExportRow = {
   device: "desktop" | "mobile";
   publicId: string;
   rankChecks: {
+    evidenceProjection?: EvidenceProjection | null;
     checkedAt: Date;
     normalizationVersion: string | null;
     position: number | null;
@@ -158,12 +161,16 @@ function historyRows(keywords: KeywordExportRow[], options: KeywordExportOptions
     "provider",
     "requested_depth",
     "normalization_version",
+    "evidence_projection",
   ];
   return {
     headers,
     rows: keywords.flatMap((row) =>
       selectedChecks(row, options).map((check) => ({
         checked_at: check.checkedAt,
+        evidence_projection: check.evidenceProjection
+          ? JSON.stringify(evidenceProjectionResource(check.evidenceProjection))
+          : "",
         keyword: row.text,
         normalization_version: check.normalizationVersion ?? "",
         position: check.position ?? "",

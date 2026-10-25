@@ -39,13 +39,13 @@ Keyword research, keyword metrics, backlinks, domain overview, and ranked
 keyword suggestions spend the project's own DataForSEO connection. They are
 bring-your-own-key lookups. See the API pages linked from each row.
 
-AI visibility can use either a bring-your-own-key connection or deployment
+Brand Visibility can use either a bring-your-own-key connection or deployment
 credits, and it requires an explicit cost cap. Prompt comparison needs a
 guaranteed hard cap or explicit actual-cost consent. Other models, reasoning,
 and search cannot run on credits. They need explicit own-key actual-cost
-consent. AI tracking generation uses the same own-key actual-cost consent.
+consent. Prompt Research generation uses the same own-key actual-cost consent.
 See [Research workspace](/api/research-workspace) and
-[AI tracking](/guides/ai-tracking).
+[Prompt Tracker](/guides/prompt-tracker).
 
 API, MCP, and SDK calls share the programmatic budget (API & agents). App
 schedules use the app budget. A monthly cap is separate from
@@ -68,9 +68,9 @@ deployment run the check immediately or queue it.
 | `research_keywords` | Keyword research on the project's own DataForSEO account. | `estimate_only` first, then `max_cost_cents` as a best-effort guard. Clickstream-refined volumes double the provider price. See [Keyword research](/api/keyword-research). |
 | `get_keyword_metrics` | Keyword metrics on that same DataForSEO account. | Same estimate, then best-effort cap. Clickstream doubles the provider price. See [Keyword metrics](/api/keyword-metrics). |
 | `list_ranked_keyword_suggestions` | Ranked keywords on the project's own DataForSEO account. | No `estimate_only` flag in the spend registry. `max_cost_cents` is a best-effort gate and returns `cost_limit_exceeded` when the page estimate is higher. See [Ranked keyword suggestions](/api/ranked-keyword-suggestions). |
-| `analyze_ai_visibility` | Provider-observed AI mentions and citations. | `estimate_only` is available. Requires bring-your-own-key or deployment credits, an explicit cost cap, and write scope. |
+| `analyze_brand_visibility` | Provider-observed brand mentions and citations. | `estimate_only` is available. Requires bring-your-own-key or deployment credits, an explicit cost cap, and write scope. |
 | `compare_ai_prompts` | Synthetic prompt comparison. | `estimate_only` is available. Requires a hard cap or explicit actual-cost consent, plus write scope. |
-| `ai_tracking_suggestions_generate` | AI tracking model work. | Inline spend. Generate only from the unchanged, unexpired preview, with explicit paid consent. The preview tool does not buy model work. |
+| `prompt_research_suggestions_generate` | Prompt Research model work. | Inline spend. Generate only from the unchanged, unexpired preview, with explicit paid consent. The preview tool does not buy model work. Accepted drafts become Prompt Tracker prompts. |
 
 The tool description carries the current per-source estimate from the
 maintained provider rates table. Actual provider cost can differ slightly from
@@ -80,7 +80,7 @@ the API documents a hard cap.
 Free estimate tools that are not in the spend registry include
 `estimate_backlinks_cost`, `estimate_keyword_research_cost`,
 `estimate_domain_overview_cost`, and `get_cost_estimate`.
-`preview_ai_tracking_run` and `ai_tracking_suggestions_preview` are previews,
+`preview_prompt_tracker_run` and `prompt_research_suggestions_preview` are previews,
 not purchases.
 
 ## Tools that queue spend
@@ -95,10 +95,10 @@ spend later.
 | `bulk_update_keywords` | Deferred rank-check spend. The tool can add or remove tags, set frequency, set a target URL, or delete. |
 | `set_keyword_target_url` | A schedule or frequency in the same change can enable recurring checks. |
 | `update_project_defaults` | The project default schedule applies to keywords that do not have their own. |
-| `create_ai_tracking_run` | Deferred AI tracking. Creating a run does not start an automatic paid baseline. Generation still needs the preview and explicit own-key actual-cost consent. |
-| `create_ai_tracking_schedule` | Deferred AI tracking when the schedule runs. |
-| `update_ai_tracking_schedule` | Deferred AI tracking when the updated schedule runs. |
-| `retry_ai_tracking_run` | Deferred AI tracking for the retry. |
+| `create_prompt_tracker_run` | Deferred Prompt Tracker. Creating a run does not start an automatic paid baseline. Generation still needs the preview and explicit own-key actual-cost consent. |
+| `create_prompt_tracker_schedule` | Deferred Prompt Tracker when the schedule runs. |
+| `update_prompt_tracker_schedule` | Deferred Prompt Tracker when the updated schedule runs. |
+| `retry_prompt_tracker_run` | Deferred Prompt Tracker for the retry. |
 
 Confirm the scope and the estimate before you approve queued work. Some
 provider caps are best effort. `run_rank_check` is the case where

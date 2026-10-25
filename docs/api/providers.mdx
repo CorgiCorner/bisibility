@@ -19,7 +19,7 @@ Provider-specific credential fields and fallback behavior are described in
 [Integrations](/integrations). Secret values are accepted on writes but are
 never returned by list responses.
 
-Connections use a priority-only fallback contract. Connect accepts an optional `priority`; when it is omitted, reconnecting preserves the connection's place and a new connection appends to the fallback chain. A priority of `0`, on connect or PATCH, promotes the provider and renumbers the chain; other priority values reorder it.
+New SERP connections append after existing providers and start switched off unless no other SERP connection is enabled. This initial placement and activation apply even when connect supplies `priority` or `enabled`. Use PATCH to activate or reorder the connection after saving it. Reconnecting with omitted `priority` preserves its place; `priority: 0` on reconnect or PATCH promotes the provider and renumbers the chain. Other explicit priority values reorder existing connections.
 
 For Plausible, `credentials.login` is the site domain configured in Plausible (its `site_id`, such as `example.com`) and defaults to the project domain when omitted; `credentials.api_key` is the Stats API token. A successful test returns `message: "Connected."` for SERP providers and `"Connected · <detail>."` for analytics providers.
 

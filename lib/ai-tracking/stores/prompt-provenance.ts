@@ -78,7 +78,11 @@ export async function resolvePromptProvenance(
     const { reportId, rowIndex } = input.providerDatasetReference;
     const report = requireFound(
       await tx.agentReport.findFirst({
-        where: { projectId, publicId: reportId, kind: "ai_visibility" },
+        where: {
+          projectId,
+          publicId: reportId,
+          kind: { in: ["ai_visibility", "prompt_research"] },
+        },
       }),
       "Provider dataset report",
     );

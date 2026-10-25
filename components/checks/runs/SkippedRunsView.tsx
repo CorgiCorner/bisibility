@@ -2,6 +2,7 @@
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import type { CheckRange, DeferredGroup, DeferredReason } from "@/lib/checks/contract";
+import type { ProjectionKey } from "@/lib/provider-evidence/projection/model";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
 import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
@@ -10,6 +11,7 @@ import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/s
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { type CheckRunsTranslations, deferredWindow, rangeCaption } from "./check-runs-format";
+import { EvidenceProjectionBands } from "./EvidenceProjectionBands";
 
 export type SkippedRunsLinks = {
   connectProviderHref: string;
@@ -82,6 +84,20 @@ function GroupCard({
   locale: string;
   t: CheckRunsTranslations;
 }>) {
+  const evidence = useTranslations("projectRankTracker.checks.evidence");
+  if (group.reason === "other")
+    return (
+      <article className="min-w-0 rounded-control border border-border px-3.5 py-3 text-ui-body">
+        <h3 className="m-0 text-ui-body font-semibold">
+          {evidence("other")} · {group.count}
+        </h3>
+        <p className="my-1 text-fg-muted">{evidence("otherDescription")}</p>
+        <code className="break-all text-ui-caption">{group.rawReason}</code>
+        <Link className="mt-2 block text-accent-text" href={links.timelineHref}>
+          {evidence("viewChecks")}
+        </Link>
+      </article>
+    );
   const meta = reasonMeta[group.reason];
   const Icon = meta.icon;
   const quantity =
@@ -113,6 +129,9 @@ function GroupCard({
 }
 
 type SkippedProps = {
+  exactRange?: boolean;
+  evidenceCounts?: Partial<Record<ProjectionKey, number>>;
+  onFilterChange?: (key: ProjectionKey) => void;
   groups: DeferredGroup[];
   links: SkippedRunsLinks;
   now: Date;
@@ -120,24 +139,41 @@ type SkippedProps = {
   timeZone: string;
 };
 
-export function SkippedRunsView({ groups, links, now, range, timeZone }: Readonly<SkippedProps>) {
+export function SkippedRunsView({
+  groups,
+  links,
+  now,
+  range,
+  timeZone,
+  evidenceCounts,
+  exactRange = false,
+  onFilterChange,
+}: Readonly<SkippedProps>) {
   const dateDisplay = useDateDisplay();
   const locale = useLocale();
   const t = useTranslations("projectRankTracker.checks");
+  const mixed =
+    groups.some((group) => group.reason === "other") ||
+    Object.values(evidenceCounts ?? {}).some(Boolean);
   return (
     <section
       aria-label={t("skippedChecks")}
       className="border-border border-t bg-bg-sunken/45 px-4 py-4"
     >
       <p className="m-0 text-[12.5px] leading-relaxed text-fg-muted">
-        {t("skippedRunsDescription", { range: rangeCaption(range, t) })}
+        {t(mixed ? "evidence.deferredDescription" : "skippedRunsDescription", {
+          range: exactRange ? t("evidence.customRangeCaption") : rangeCaption(range, t),
+        })}
       </p>
+      {onFilterChange ? (
+        <EvidenceProjectionBands counts={evidenceCounts} onFilterChange={onFilterChange} />
+      ) : null}
       <div className="mt-3 grid gap-2.5 lg:grid-cols-2">
         {groups.map((group) => (
           <GroupCard
             dateDisplay={dateDisplay}
             group={group}
-            key={group.reason}
+            key={group.rawReason ?? group.reason}
             links={links}
             now={now}
             timeZone={timeZone}

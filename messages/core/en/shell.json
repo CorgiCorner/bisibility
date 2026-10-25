@@ -46,15 +46,15 @@
         "new": "new"
       },
       "groups": {
-        "tracking": {
-          "label": "Tracking",
-          "tag": "TRACKING",
-          "tooltip": "Track rankings and AI performance over time."
+        "seo": {
+          "label": "SEO",
+          "tag": "SEO",
+          "tooltip": "Track rankings and research keywords, websites, backlinks and site health."
         },
-        "research": {
-          "label": "Research & audits",
-          "tag": "RESEARCH",
-          "tooltip": "Explore keywords, websites and AI responses."
+        "ai": {
+          "label": "AI Search",
+          "tag": "AI",
+          "tooltip": "Track and research how AI answers mention your brand."
         },
         "reports": {
           "label": "Data & reports",
@@ -81,12 +81,13 @@
         "runs": "Runs",
         "searchConsole": "Search Console",
         "settings": "Settings",
-        "aiVisibility": "AI Visibility",
-        "promptExplorer": "Prompt Explorer",
+        "aiVisibility": "Brand Visibility",
+        "promptResearch": "Prompt Research",
+        "promptExplorer": "Prompt Playground",
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
         "agentReports": "Agent Reports",
-        "aiTracking": "AI Tracking"
+        "aiTracking": "Prompt Tracker"
       },
       "menu": "Menu"
     },
@@ -94,7 +95,39 @@
       "empty": "No notifications",
       "markAllRead": "Mark all read",
       "markReadError": "Could not mark notifications as read. Please try again.",
-      "title": "Notifications"
+      "title": "Notifications",
+      "incident": {
+        "title": "Provider evidence review",
+        "resolved": "Provider evidence review resolved.",
+        "noRepeat": "We did not retry these checks automatically.",
+        "counts": "{results}; {costs}.",
+        "resultUnderReviewCount": "{count, plural, one {# result under review} other {# results under review}}",
+        "resultRecoveredCount": "{count, plural, one {# recovered result} other {# recovered results}}",
+        "resultPartialCount": "{count, plural, one {# partial result} other {# partial results}}",
+        "resultProviderErrorCount": "{count, plural, one {# provider error} other {# provider errors}}",
+        "resultMissingCount": "{count, plural, one {# missing result} other {# missing results}}",
+        "costMeasuredCount": "{count, plural, one {cost measured for # check} other {cost measured for # checks}}",
+        "costUnknownCount": "{count, plural, one {cost unknown for # check} other {cost unknown for # checks}}",
+        "costUnderReviewCount": "{count, plural, one {cost under review for # check} other {cost under review for # checks}}",
+        "costConflictCount": "{count, plural, one {cost conflict for # check} other {cost conflict for # checks}}"
+      },
+      "summary": {
+        "manualTitle": "Manual check summary",
+        "scheduledTitle": "Scheduled checks: {window} UTC",
+        "down": "{count, plural, one {# down} other {# down}}",
+        "up": "{count, plural, one {# up} other {# up}}",
+        "failed": "{count, plural, one {# failed} other {# failed}}",
+        "under_review": "{count, plural, one {# under review} other {# under review}}",
+        "unchanged": "{count, plural, one {# unchanged} other {# unchanged}}",
+        "new": "{count, plural, one {# new} other {# new}}",
+        "linkedIncidents": "{count, plural, one {# linked incident} other {# linked incidents}}",
+        "clientScheduledTitle": "Scheduled checks: {window} ({timeZone})",
+        "viewRuns": "View runs",
+        "viewIncident": "View incident"
+      },
+      "openIncidents": "Open incidents",
+      "allNotifications": "All notifications",
+      "filterError": "Could not load open incidents."
     },
     "operations": {
       "actionError": "Could not update this operation. Refresh and try again.",
@@ -159,7 +192,22 @@
         "running": "running",
         "waiting": "waiting"
       },
-      "viewAll": "View all runs"
+      "viewAll": "View all runs",
+      "recent": {
+        "title": "Recent runs",
+        "pill": "recent",
+        "dismiss": "Dismiss",
+        "counts": "{completed, plural, one {# completed} other {# completed}} · {up, plural, one {# up} other {# up}} · {down, plural, one {# down} other {# down}} · {failed, plural, one {# failed} other {# failed}}",
+        "underReview": "{count, number} under review",
+        "incident": "View incident",
+        "outcomes": {
+          "succeeded": "Completed",
+          "partial": "Partially completed",
+          "failed": "Failed",
+          "deferred": "Deferred",
+          "unconfirmed": "Unconfirmed"
+        }
+      }
     },
     "planStatus": {
       "pro": "Pro",
@@ -226,12 +274,13 @@
         "keywordResearch": "Find phrases worth tracking, with the cost visible before every lookup.",
         "markets": "Manage locations, keyword defaults, and market lifecycle.",
         "preferences": "Theme and personal defaults.",
-        "runs": "Rank checks, AI tracking and Search Console imports for this project.",
+        "runs": "Rank checks, Prompt Tracker and Search Console imports for this project.",
         "searchConsole": "What Google reported, what it withheld, and what you keep.",
         "security": "Password, sessions and account protection.",
         "timeline": "Project signals, page changes and notes over time.",
         "aiVisibility": "Brand mentions and citations from available provider observations.",
-        "promptExplorer": "Compare synthetic prompt tests across supported models.",
+        "promptResearch": "Find dataset questions people ask AI about your market and the sites the answers cite.",
+        "promptExplorer": "Try one prompt on several models and compare their answers and citations.",
         "siteAudit": "Crawl your project site and inspect issues by URL.",
         "projectContext": "Business, audience, products and goals for your agents.",
         "agentReports": "Saved analyses shared with members of this project.",
@@ -263,12 +312,13 @@
         "security": "Security",
         "settings": "Settings",
         "timeline": "Timeline",
-        "aiVisibility": "AI Visibility",
-        "promptExplorer": "Prompt Explorer",
+        "aiVisibility": "Brand Visibility",
+        "promptResearch": "Prompt Research",
+        "promptExplorer": "Prompt Playground",
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
         "agentReports": "Agent Reports",
-        "aiTracking": "AI Tracking"
+        "aiTracking": "Prompt Tracker"
       }
     },
     "footer": {
@@ -389,6 +439,11 @@
     },
     "announcements": {
       "learnMore": "Learn more"
+    },
+    "realtime": {
+      "live": "Live",
+      "reconnecting": "Reconnecting",
+      "connecting": "Connecting"
     }
   }
 }

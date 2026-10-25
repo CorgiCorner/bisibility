@@ -136,7 +136,9 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    await user.click(await within(dialog).findByRole("button", { name: /^Save schedule/ }));
+    const save = await within(dialog).findByRole("button", { name: /^Save schedule/ });
+    await waitFor(() => expect(save).toBeEnabled());
+    await user.click(save);
     await waitFor(() => expect(mocks.mutate).toHaveBeenCalledOnce());
     expect(mocks.preview).toHaveBeenCalledWith("prj_story", {
       promptIds: ["aip_neutral", "aip_branded"],

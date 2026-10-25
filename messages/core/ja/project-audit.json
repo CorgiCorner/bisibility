@@ -250,6 +250,7 @@
         "unknown": "その他のアクティビティ",
         "unknownMissing": "その他のアクティビティ",
         "updateDenied": "更新が拒否されました",
+        "urlInspectionAllowanceUpdated": "URL 検査枠を更新しました",
         "usageDisplayUpdated": "使用量の表示を更新しました",
         "webhookCreated": "Webhook を作成",
         "webhookDeleted": "Webhookを削除しました",

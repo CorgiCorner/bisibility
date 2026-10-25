@@ -74,6 +74,7 @@ shared.db = new PrismaClient({
 const db = shared.db;
 let namespace: string, owner: string, project: string, location: string;
 beforeEach(async () => {
+  vi.stubEnv("PROVIDER_RECOVERY", "on");
   namespace = `recovery-${randomUUID()}`;
   owner = randomUUID();
   project = randomUUID();
@@ -118,6 +119,7 @@ beforeEach(async () => {
   });
 });
 afterEach(async () => {
+  await db.meteringUsageEvidence.deleteMany({ where: { namespace } });
   await db.meteringRecoveryCommand.deleteMany({ where: { namespace } });
   await db.meteringRecoveryTriage.deleteMany({ where: { namespace } });
   for (const scopeNamespace of [namespace, `${namespace}-other`]) {

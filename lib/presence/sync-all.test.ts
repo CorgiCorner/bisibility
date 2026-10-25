@@ -1,40 +1,10 @@
+import "./sync.test-support";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { syncPresenceForAllProjects, syncPresenceForProject } from "./sync";
-
-const mocks = vi.hoisted(() => {
-  const tx = { urlPresence: { upsert: vi.fn() } };
-  return {
-    decryptProviderCredentials: vi.fn(),
-    emitSignal: vi.fn(),
-    markProviderNeedsReauth: vi.fn(),
-    notifyPresenceBudgetExhausted: vi.fn(),
-    prisma: {
-      $transaction: vi.fn(),
-      keyword: { findMany: vi.fn() },
-      project: { findFirst: vi.fn(), findMany: vi.fn() },
-      providerConnection: { findFirst: vi.fn() },
-      urlPresence: { findMany: vi.fn(), upsert: vi.fn() },
-    },
-    provider: { createUrlInspectionSession: vi.fn(), inspectUrl: vi.fn() },
-    tx,
-  };
-});
-
-vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/analytics/gsc", () => ({ gscAnalyticsProvider: mocks.provider }));
-vi.mock("@/lib/providers/auth-state", () => ({
-  markProviderNeedsReauth: mocks.markProviderNeedsReauth,
-}));
-vi.mock("@/lib/providers/crypto", () => ({
-  decryptProviderCredentials: mocks.decryptProviderCredentials,
-}));
-vi.mock("@/lib/signals/emit", () => ({ emitSignal: mocks.emitSignal }));
-vi.mock("./ops", () => ({
-  notifyPresenceBudgetExhausted: mocks.notifyPresenceBudgetExhausted,
-}));
+import { mocks } from "./sync.test-support";
+import { configurePresenceDatabase } from "./sync-database.test-support";
 
 const now = new Date("2026-07-04T03:45:00.000Z");
 const legacyKey = ["BISIBILITY", "GSC", "INSPECTION", "DAILY", "BUDGET"].join("_");
@@ -51,7 +21,12 @@ function inspection(verdict: string) {
 
 describe("presence sync across projects", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 50 });
+    mocks.reserveInspections.mockImplementation(async ({ urls }) => ({
+      admitted: urls.slice(0, (await mocks.getInspectionBudget()).remaining),
+      targetId: "prj_a00000000000000000000000",
+    }));
     process.env.REDIS_URL = "";
     mocks.decryptProviderCredentials.mockReturnValue({
       apiKey: "refresh_token",
@@ -66,6 +41,7 @@ describe("presence sync across projects", () => {
       id: "connection_1",
     });
     mocks.prisma.urlPresence.findMany.mockResolvedValue([]);
+    configurePresenceDatabase(mocks.prisma, mocks.tx);
     mocks.provider.inspectUrl.mockResolvedValue(inspection("PASS"));
     mocks.provider.createUrlInspectionSession.mockResolvedValue({
       inspectUrl: mocks.provider.inspectUrl,
@@ -101,6 +77,7 @@ describe("presence sync across projects", () => {
       status: "skipped",
     });
     expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(1);
+    expect(mocks.releaseInspections).toHaveBeenCalledWith(expect.objectContaining({ released: 1 }));
   });
 
   it("propagates deferred URL counts through the all-project summary", async () => {
@@ -122,6 +99,7 @@ describe("presence sync across projects", () => {
   });
 
   it("keeps project limits independent when the deprecated instance value is set", async () => {
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 2 });
     const previous = process.env[legacyKey];
     process.env[legacyKey] = "1";
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
@@ -138,7 +116,7 @@ describe("presence sync across projects", () => {
     try {
       await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
         checked: 4,
-        deferred: 0,
+        deferred: 2,
         failed: 0,
         projects: 2,
       });
@@ -149,35 +127,77 @@ describe("presence sync across projects", () => {
     }
   });
 
-  it.each(["daily", "unknown"] as const)(
-    "reports a %s-scope provider 429 without changing another project's limit",
-    async (scope) => {
-      mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
-      mocks.prisma.project.findFirst.mockImplementation(({ where }) => {
-        const id = where.OR[0].id;
-        return Promise.resolve({ defaults: { inspectionDailyLimit: 50 }, id });
-      });
-      mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
-      mocks.provider.inspectUrl.mockRejectedValueOnce(
-        new ProviderRateLimitedError("gsc", { scope, source: "provider" }),
-      );
+  it("shares daily exhaustion across grants and keeps a different property eligible", async () => {
+    const projects = ["project_1", "project_2", "project_3"];
+    mocks.prisma.project.findMany.mockResolvedValue(projects.map((id) => ({ id })));
+    mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
+      Promise.resolve({ defaults: { inspectionDailyLimit: 2 }, id: where.OR[0].id }),
+    );
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      { targetUrl: "https://example.com/a" },
+      { targetUrl: "https://example.com/b" },
+    ]);
+    const credentials = (apiKey: string) => ({ apiKey, login: "sc-domain:example.com" });
+    mocks.decryptProviderCredentials
+      .mockReturnValueOnce(credentials("first_grant"))
+      .mockReturnValueOnce(credentials("second_grant"))
+      .mockReturnValueOnce({ apiKey: "third_grant", login: "https://example.com/" });
+    mocks.provider.inspectUrl.mockRejectedValueOnce(
+      new ProviderRateLimitedError("gsc", { scope: "daily", source: "provider" }),
+    );
 
-      await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
-        checked: 1,
+    await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
+      checked: 2,
+      deferred: 4,
+      failed: 0,
+      projects: 3,
+    });
+    expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(3);
+    expect(mocks.provider.createUrlInspectionSession).toHaveBeenCalledTimes(2);
+    expect(mocks.notifyPresenceBudgetExhausted).toHaveBeenCalledTimes(1);
+    expect(mocks.notifyPresenceBudgetExhausted).toHaveBeenCalledWith({
+      deferred: 4,
+      projectIds: ["project_1", "project_2"],
+      property: "sc-domain:example.com",
+      propertyAccountKey: expect.stringMatching(/^gsc:/),
+      resetAt: new Date("2026-07-04T07:00:00Z"),
+    });
+
+    // A later run starts with fresh daily state.
+    await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
+      checked: 6,
+      deferred: 0,
+    });
+    expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(9);
+    expect(mocks.notifyPresenceBudgetExhausted).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the same daily reset for projects sharing run state", async () => {
+    mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
+      Promise.resolve({ defaults: null, id: where.OR[0].id }),
+    );
+    mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
+    mocks.provider.inspectUrl.mockRejectedValueOnce(
+      new ProviderRateLimitedError("gsc", { scope: "daily", source: "provider" }),
+    );
+    const options = { dailyExhaustions: new Map<string, Date>() };
+    const first = await syncPresenceForProject("project_1", now, mocks.provider, options);
+    const second = await syncPresenceForProject("project_2", now, mocks.provider, options);
+    for (const result of [first, second]) {
+      expect(result).toMatchObject({
+        status: "checked",
+        checked: 0,
         deferred: 1,
+        deferredReason: "daily_budget",
         failed: 0,
-        projects: 2,
+        resetAt: new Date("2026-07-04T07:00:00Z"),
       });
-
-      expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(2);
-      expect(mocks.notifyPresenceBudgetExhausted).toHaveBeenCalledWith({
-        deferred: 1,
-        projectIds: ["project_1"],
-        property: "sc-domain:example.com",
-        propertyAccountKey: expect.stringMatching(/^gsc:/),
-      });
-    },
-  );
+    }
+    expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(1);
+    expect(mocks.provider.createUrlInspectionSession).toHaveBeenCalledTimes(1);
+    // Standalone calls do not inherit the all-project run state.
+    await expect(syncPresenceForProject("project_2", now)).resolves.toMatchObject({ checked: 1 });
+  });
 
   it("keeps another project eligible after a minute-scope provider 429", async () => {
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
@@ -192,14 +212,16 @@ describe("presence sync across projects", () => {
       )
       .mockResolvedValueOnce(inspection("PASS"));
 
-    await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
-      checked: 1,
-      deferred: 1,
+    await expect(
+      syncPresenceForAllProjects(now, { sleep: vi.fn().mockResolvedValue(undefined) }),
+    ).resolves.toMatchObject({
+      checked: 2,
+      deferred: 0,
       failed: 0,
       projects: 2,
     });
 
-    expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(2);
+    expect(mocks.provider.inspectUrl).toHaveBeenCalledTimes(3);
     expect(mocks.notifyPresenceBudgetExhausted).not.toHaveBeenCalled();
   });
 
@@ -221,5 +243,16 @@ describe("presence sync across projects", () => {
       error: expect.any(Error),
       projectId: "project_1",
     });
+  });
+  it("does not notify ops for project allowance exhaustion alone", async () => {
+    mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }]);
+    mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/a" }]);
+    mocks.getInspectionBudget.mockResolvedValue({ remaining: 0 });
+    await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({
+      deferred: 1,
+      checked: 0,
+    });
+    expect(mocks.notifyPresenceBudgetExhausted).not.toHaveBeenCalled();
+    expect(mocks.provider.inspectUrl).not.toHaveBeenCalled();
   });
 });

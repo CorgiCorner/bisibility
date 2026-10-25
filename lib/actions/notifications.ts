@@ -20,11 +20,18 @@ function revalidateNotificationViews() {
   revalidatePath("/app", "layout");
 }
 
-export async function refreshNotificationFeed(projectId: string, dateFormat?: DateFormat) {
+export async function refreshNotificationFeed(
+  projectId: string,
+  dateFormat?: DateFormat,
+  openIncidents = false,
+) {
   const parsedProjectId = projectIdSchema.parse(projectId);
-  return dateFormat
-    ? getNotificationBellData(parsedProjectId, { dateFormat })
-    : getNotificationBellData(parsedProjectId);
+  const openOnly = z.boolean().parse(openIncidents);
+  if (!dateFormat && !openOnly) return getNotificationBellData(parsedProjectId);
+  return getNotificationBellData(parsedProjectId, {
+    dateFormat,
+    openIncidents: openOnly,
+  });
 }
 
 export async function markNotificationRead(input: unknown) {
@@ -38,6 +45,7 @@ export async function markNotificationRead(input: unknown) {
     where: {
       publicId: notificationId,
       readAt: null,
+      withdrawnAt: null,
       userId: actor.id,
     },
   });

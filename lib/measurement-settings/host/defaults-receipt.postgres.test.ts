@@ -28,6 +28,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("defaults receipt SQ
       confirmDefaults(quote),
       f.db,
     );
+    expect(result.value.inspectionBudgetMode).toBe("fixed");
     const source = await f.db.measurementSettingsMutation.findFirstOrThrow();
     async function insert(value: unknown, operation = "measurement_settings.defaults") {
       return f.client.query(
@@ -44,6 +45,8 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("defaults receipt SQ
         ],
       );
     }
+    const { inspectionBudgetMode: _mode, ...legacyValue } = result.value;
+    expect((await insert({ ...result, value: legacyValue })).rowCount).toBe(1);
     const epoch = "9007199254740993";
     const saved = await insert({ ...result, revision: epoch });
     expect(defaultsReceiptSchema.parse(saved.rows[0]?.result).revision).toBe(epoch);
@@ -54,6 +57,8 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("defaults receipt SQ
       { ...result, sourceHash: "0".repeat(64) },
       { ...result, value: { ...result.value, raw: { credential: "synthetic" } } },
       { ...result, market: null },
+      { ...result, value: { ...result.value, inspectionBudgetMode: "unlimited" } },
+      { ...result, value: { ...result.value, inspectionBudgetMode: null } },
       { ...result, timestamps: { ...result.timestamps, updatedAt: null } },
     ])
       await expect(insert(invalid)).rejects.toMatchObject({ code: "23514" });

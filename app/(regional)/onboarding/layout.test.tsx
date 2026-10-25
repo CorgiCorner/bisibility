@@ -9,11 +9,12 @@ const mocks = vi.hoisted(() => ({
   loadCoreMessages: vi.fn(),
   runtime: vi.fn(),
   requireSession: vi.fn(),
+  accountDataSource: vi.fn(async (children: ReactNode) => children),
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
 }));
 
 vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
-  renderAccountDataSourceExtension: vi.fn(async (children: React.ReactNode) => children),
+  renderAccountDataSourceExtension: mocks.accountDataSource,
 }));
 vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
   OnboardingLogoutButton: () => <span data-testid="logout-button">Log out</span>,
@@ -110,6 +111,12 @@ describe("onboarding setup-first gate", () => {
       expiresAt: new Date("2026-09-10T12:00:00.000Z"),
       userId: "user_1",
     });
+  });
+
+  it("leaves the account offer scope to the project-aware page", async () => {
+    const result = await OnboardingLayout({ children: <div>Onboarding content</div> });
+    expect(renderToStaticMarkup(result)).toContain("Onboarding content");
+    expect(mocks.accountDataSource).not.toHaveBeenCalled();
   });
 
   it("places the theme switch in a content-column footer after the signed-in header", async () => {

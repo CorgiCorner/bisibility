@@ -2,6 +2,11 @@ import type { ProjectDefaults } from "@/lib/generated/prisma/client";
 import type { SettingsSource } from "./source";
 export function defaultsRowForTest(values: Partial<ProjectDefaults> = {}): ProjectDefaults {
   return {
+    indexingSitemapProperty: null,
+    indexingSitemapReadAt: null,
+    indexingSitemapAttemptAt: null,
+    indexingSitemapLastError: null,
+    indexingSitemapLastErrorAt: null,
     enabledExperimentalModules: [],
     id: "synthetic-defaults",
     projectId: "project",
@@ -18,6 +23,9 @@ export function defaultsRowForTest(values: Partial<ProjectDefaults> = {}): Proje
     serpDepth: 100,
     serpStopOnMatch: true,
     inspectionDailyLimit: 50,
+    inspectionBudgetMode: "fixed",
+    indexingDiscoveryAt: null,
+    indexingDiscoveryComplete: false,
     searchSyncImportMonths: null,
     searchSyncPace: null,
     createdAt: new Date(0),

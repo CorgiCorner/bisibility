@@ -21,7 +21,11 @@ const mocks = vi.hoisted(() => {
       ? value === where
       : (!where.in || where.in.includes(value)) && !where.notIn?.includes(value);
   const prisma = {
-    $queryRaw: vi.fn(async () => []),
+    $queryRaw: vi.fn(async (query: unknown) =>
+      Array.isArray(query) && query.join("").includes("SELECT state,")
+        ? [{ state: state.task, persistenceLeaseOwner: null }]
+        : [],
+    ),
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     auditLog: { create: vi.fn(async () => ({ id: "audit_1" })) },
     providerCostEntry: {

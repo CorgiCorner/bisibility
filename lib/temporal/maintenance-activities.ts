@@ -7,7 +7,6 @@ import { Context } from "@temporalio/activity";
 import { flushAnalyticsPersonDeletions } from "../analytics/person-deletion";
 import { purgeAuditLogs } from "../audit/retention";
 import { purgeExpiredSessions } from "../auth/session-retention";
-import { prisma } from "../db/prisma";
 import { releaseExpiredMigrationHolds } from "../migration/stale-holds";
 import { markStaleImportJobs } from "../migration/stale-jobs";
 import { syncPresenceForAllProjects } from "../presence/sync";
@@ -20,7 +19,6 @@ import {
 } from "../rank-check/raw-retention";
 import { sweepRankCheckRawPurgeProgress } from "../rank-check/raw-retention-fences";
 import { markStaleRunningChecks } from "../rank-check/stale-checks";
-import { sendWeeklyDigestForProject } from "../reports/weekly-digest-send";
 import { syncSitemapForAllProjects } from "../sitemap/sync";
 
 // Activities run in the worker's Node.js process (NOT the workflow sandbox), so
@@ -238,39 +236,11 @@ export async function releaseExpiredMigrationHoldsActivity(): Promise<ReleaseExp
   return { released };
 }
 
-export type SendWeeklyReportDigestActivityResult = {
-  projects: number;
-  sent: number;
-  skipped: number;
-};
-
-export async function sendWeeklyReportDigestForAllProjects(
-  now: Date,
-): Promise<SendWeeklyReportDigestActivityResult> {
-  const projects = await prisma.project.findMany({ select: { id: true } });
-  let sent = 0;
-  let skipped = 0;
-
-  for (const project of projects) {
-    try {
-      const result = await sendWeeklyDigestForProject(project.id, now);
-      if (result.status === "sent") {
-        sent += 1;
-      } else {
-        skipped += 1;
-      }
-    } catch (error) {
-      skipped += 1;
-      console.error("[reports] weekly digest failed", { error, projectId: project.id });
-    }
-  }
-
-  return { projects: projects.length, sent, skipped };
-}
-
-export async function sendWeeklyReportDigestActivity(): Promise<SendWeeklyReportDigestActivityResult> {
-  return sendWeeklyReportDigestForAllProjects(new Date());
-}
+export type { SendWeeklyReportDigestActivityResult } from "./weekly-digest-activity";
+export {
+  sendWeeklyReportDigestActivity,
+  sendWeeklyReportDigestForAllProjects,
+} from "./weekly-digest-activity";
 
 export type SyncSitemapsActivityResult = Awaited<ReturnType<typeof syncSitemapForAllProjects>>;
 

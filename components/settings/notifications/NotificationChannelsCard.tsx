@@ -9,6 +9,13 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Switch } from "@/components/ui/Switch";
 import { updateNotificationPreferences } from "@/lib/actions/notification-prefs";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import {
+  CHECK_NOTIFICATION_POSITION_MOVE,
+  CHECK_NOTIFICATION_SETTING_DEFAULT,
+  CHECK_NOTIFICATION_TOP_N,
+  PROVIDER_INCIDENT_IN_APP_DEFAULT,
+} from "@/lib/notifications/preference-defaults";
+import { notificationSettingsFormSchema } from "@/lib/notifications/preference-schema";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import { classifyActionError } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
@@ -16,39 +23,42 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type Control, Controller, useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
+import {
+  CheckModeDescription,
+  CheckModeSelect,
+  CheckNotificationThresholds,
+} from "./CheckNotificationControls";
 
-const notificationPreferencesSchema = z.object({
-  alertEmail: z.boolean(),
-  alertInApp: z.boolean(),
-  alertSlack: z.boolean(),
-  alertWebhook: z.boolean(),
-  checkEmail: z.boolean(),
-  checkInApp: z.boolean(),
-  importEmail: z.boolean(),
-  importInApp: z.boolean(),
-  inviteEmail: z.boolean(),
-  inviteInApp: z.boolean(),
-  projectId: z.string().trim().min(1).max(120),
-  reportEmail: z.boolean(),
-});
-
-type NotificationPreferencesForm = z.infer<typeof notificationPreferencesSchema>;
-type PreferenceField = Exclude<keyof NotificationPreferencesForm, "projectId">;
+type NotificationPreferencesForm = z.infer<typeof notificationSettingsFormSchema>;
+type PreferenceField = Exclude<
+  keyof NotificationPreferencesForm,
+  | "projectId"
+  | "checkNotificationSetting"
+  | "checkNotificationTopN"
+  | "checkNotificationPositionMove"
+>;
 type ChannelKey = "email" | "inApp";
 
 type NotificationRow = {
-  email: PreferenceField;
+  email?: PreferenceField;
   inApp?: PreferenceField;
-  label: "alertFired" | "checkComplete" | "importFinished" | "invite" | "weeklyReport";
+  labelKey:
+    | "alertFired"
+    | "checkComplete"
+    | "importFinished"
+    | "invite"
+    | "weeklyReport"
+    | "providerIncident";
 };
 
 const rows: readonly NotificationRow[] = [
-  { email: "alertEmail", inApp: "alertInApp", label: "alertFired" },
-  { email: "checkEmail", inApp: "checkInApp", label: "checkComplete" },
-  { email: "importEmail", inApp: "importInApp", label: "importFinished" },
-  { email: "inviteEmail", inApp: "inviteInApp", label: "invite" },
-  { email: "reportEmail", label: "weeklyReport" },
+  { email: "alertEmail", inApp: "alertInApp", labelKey: "alertFired" },
+  { email: "checkEmail", labelKey: "checkComplete" },
+  { inApp: "providerIncidentInApp", labelKey: "providerIncident" },
+  { email: "importEmail", inApp: "importInApp", labelKey: "importFinished" },
+  { email: "inviteEmail", inApp: "inviteInApp", labelKey: "invite" },
+  { email: "reportEmail", labelKey: "weeklyReport" },
 ] satisfies readonly NotificationRow[];
 
 const channels = [
@@ -63,7 +73,12 @@ function formDefaults(preferences: NotificationPreferencesView): NotificationPre
     alertSlack: preferences.alertSlack,
     alertWebhook: preferences.alertWebhook,
     checkEmail: preferences.checkEmail,
-    checkInApp: preferences.checkInApp,
+    checkNotificationSetting:
+      preferences.checkNotificationSetting ?? CHECK_NOTIFICATION_SETTING_DEFAULT,
+    checkNotificationTopN: preferences.checkNotificationTopN ?? CHECK_NOTIFICATION_TOP_N.default,
+    checkNotificationPositionMove:
+      preferences.checkNotificationPositionMove ?? CHECK_NOTIFICATION_POSITION_MOVE.default,
+    providerIncidentInApp: preferences.providerIncidentInApp ?? PROVIDER_INCIDENT_IN_APP_DEFAULT,
     importEmail: preferences.importEmail,
     importInApp: preferences.importInApp,
     inviteEmail: preferences.inviteEmail,
@@ -133,7 +148,7 @@ export function NotificationChannelsCard({
   const form = useForm<NotificationPreferencesForm>({
     defaultValues: formDefaults(preferences),
     mode: "onChange",
-    resolver: zodResolver(notificationPreferencesSchema),
+    resolver: zodResolver(notificationSettingsFormSchema),
   });
   const router = useRouter();
   const sharedErrors = useSharedErrorMessages();
@@ -149,7 +164,7 @@ export function NotificationChannelsCard({
     try {
       await form.handleSubmit(async (values) => {
         const updated = await updateNotificationPreferences(values);
-        form.reset({ ...values, ...updated });
+        form.reset(notificationSettingsFormSchema.parse({ ...values, ...updated }));
         router.refresh();
       })();
     } catch (error: unknown) {
@@ -170,6 +185,20 @@ export function NotificationChannelsCard({
 
     const previousValues = form.getValues();
     change();
+    if (form.getValues("checkNotificationSetting") === "none") {
+      for (const name of ["checkNotificationTopN", "checkNotificationPositionMove"] as const) {
+        if (!notificationSettingsFormSchema.shape[name].safeParse(form.getValues(name)).success) {
+          form.setValue(
+            name,
+            form.formState.defaultValues?.[name] ??
+              (name === "checkNotificationTopN"
+                ? CHECK_NOTIFICATION_TOP_N.default
+                : CHECK_NOTIFICATION_POSITION_MOVE.default),
+          );
+          form.clearErrors(name);
+        }
+      }
+    }
     void savePreferences(previousValues);
   }
 
@@ -191,13 +220,13 @@ export function NotificationChannelsCard({
                 className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
                 label={t("eventsAndChannels")}
               />
-              <div className="mt-2 overflow-x-auto">
-                <div className="min-w-[420px] overflow-hidden rounded-control border border-border">
-                  <div className="grid grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] bg-bg-sunken text-center font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-                    <div className="px-3 py-2 text-left">{t("event")}</div>
+              <div className="mt-2">
+                <div className="min-w-0 rounded-control border border-border">
+                  <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(0,1fr))] bg-bg-sunken text-center font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+                    <div className="hidden px-3 py-2 text-left sm:block">{t("event")}</div>
                     {channels.map((channel) => (
                       <div className="px-2 py-2" key={channel.key}>
-                        <span className="inline-flex items-center justify-center whitespace-nowrap">
+                        <span className="inline-flex items-center justify-center">
                           {t(channel.key)}
                         </span>
                       </div>
@@ -205,22 +234,36 @@ export function NotificationChannelsCard({
                   </div>
                   {rows.map((row) => (
                     <div
-                      className="grid min-h-11 grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] items-center border-t border-border text-[13px]"
-                      key={row.label}
+                      className="grid min-h-11 grid-cols-2 sm:grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(0,1fr))] items-center border-t border-border text-[13px]"
+                      key={row.labelKey}
+                      data-notification-row={row.labelKey}
                     >
-                      <div className="px-3 font-semibold text-fg">{t(row.label)}</div>
+                      <div className="col-span-2 min-w-0 px-3 py-2 font-semibold text-fg sm:col-span-1">
+                        {t(row.labelKey)}
+                        {row.labelKey === "checkComplete" ? (
+                          <CheckModeDescription form={form} />
+                        ) : null}
+                      </div>
                       {channels.map((channel) => {
                         const name = row[channel.key as ChannelKey];
-                        const label = `${t(row.label)} ${t(channel.key)}`;
+                        const label = `${t(row.labelKey)} ${t(channel.key)}`;
                         return (
-                          <div className="flex justify-center px-2" key={channel.key}>
-                            <DeliveryToggle
-                              control={form.control}
-                              disabled={controlsDisabled}
-                              label={label}
-                              name={name}
-                              onValueChange={changePreference}
-                            />
+                          <div className="flex min-w-0 justify-center px-2 py-2" key={channel.key}>
+                            {row.labelKey === "checkComplete" && channel.key === "inApp" ? (
+                              <CheckModeSelect
+                                form={form}
+                                disabled={controlsDisabled}
+                                onChange={changePreference}
+                              />
+                            ) : (
+                              <DeliveryToggle
+                                control={form.control}
+                                disabled={controlsDisabled}
+                                label={label}
+                                name={name}
+                                onValueChange={changePreference}
+                              />
+                            )}
                           </div>
                         );
                       })}
@@ -231,6 +274,11 @@ export function NotificationChannelsCard({
               <p className="m-0 mt-2 text-[11.5px] leading-5 text-fg-muted">
                 {t("unavailableHelp")}
               </p>
+              <CheckNotificationThresholds
+                form={form}
+                disabled={controlsDisabled}
+                onSave={() => void savePreferences(form.getValues())}
+              />
             </SettingsField>
             {errorMessage ? (
               <p aria-live="polite" className={cn("m-0 mt-3 text-[11.5px] text-red-text")}>

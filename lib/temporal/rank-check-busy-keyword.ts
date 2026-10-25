@@ -1,7 +1,7 @@
+import { notificationTransaction } from "../notifications/transaction";
 import "server-only";
 
 import { ApplicationFailure } from "@temporalio/common";
-import { prisma } from "../db/prisma";
 import { deferRunItemForBusyKeyword } from "../rank-check/runs/items";
 import { isUniqueConstraintError } from "../rank-check/runs/launch-idempotency";
 
@@ -16,7 +16,7 @@ export async function throwIfRunItemKeywordBusy(
 ) {
   const runItemId = input.runItemId;
   if (!runItemId || !isUniqueConstraintError(error)) return;
-  const deferred = await prisma.$transaction((tx) =>
+  const deferred = await notificationTransaction((tx) =>
     deferRunItemForBusyKeyword(tx, { keywordId: input.keywordId, now: new Date(), runItemId }),
   );
   if (!deferred) return;

@@ -4,9 +4,10 @@ import type { useTranslations } from "next-intl";
 type HeaderTranslations = ReturnType<typeof useTranslations<"shell.header">>;
 
 const titleKeys = {
-  "AI Visibility": "titles.aiVisibility",
-  "AI Tracking": "titles.aiTracking",
-  "Prompt Explorer": "titles.promptExplorer",
+  "Brand Visibility": "titles.aiVisibility",
+  "Prompt Research": "titles.promptResearch",
+  "Prompt Tracker": "titles.aiTracking",
+  "Prompt Playground": "titles.promptExplorer",
   "Site Audit": "titles.siteAudit",
   "Project Context": "titles.projectContext",
   "Agent Reports": "titles.agentReports",
@@ -38,9 +39,11 @@ const titleKeys = {
 } as const;
 
 const subtitleKeys = {
+  "Research dataset questions by keyword. ChatGPT · US English.": "subtitles.promptResearch",
   "Monitor AI answers, brand mentions and cited sources over time.": "subtitles.aiTracking",
   "Brand mentions and citations from available provider observations.": "subtitles.aiVisibility",
-  "Compare synthetic prompt tests across supported models.": "subtitles.promptExplorer",
+  "Try one prompt on several models and compare their answers and citations.":
+    "subtitles.promptExplorer",
   "Crawl your project site and inspect issues by URL.": "subtitles.siteAudit",
   "Business, audience, products and goals for your agents.": "subtitles.projectContext",
   "Saved analyses shared with members of this project.": "subtitles.agentReports",

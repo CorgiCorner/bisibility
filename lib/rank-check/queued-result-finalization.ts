@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { acknowledgeQueuedRankAttempt } from "@/lib/provider-evidence/recovery/capture";
 import {
   claimQueuedPersistenceLease,
   type QueuedPersistenceLease,
@@ -19,5 +20,6 @@ export function claimQueuedResultTask(taskId: string) {
 export function terminalizeLease(lease: QueuedPersistenceLease, state: "completed" | "failed") {
   return async (tx: Prisma.TransactionClient) => {
     await transitionQueuedPersistenceLease(lease, ["persisting"], { state }, tx);
+    await acknowledgeQueuedRankAttempt(tx, lease.taskId);
   };
 }

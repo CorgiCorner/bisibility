@@ -242,6 +242,7 @@ export const providerChainLabels = {
   enable: "Enable",
   disable: "Disable",
   enabled: "Enabled",
+  rankCheckSwitchName: (provider: string) => `Use ${provider} for rank checks`,
   disabled: "Disabled",
   empty: "No fallback connections selected.",
   first: "First",

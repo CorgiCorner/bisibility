@@ -1,6 +1,6 @@
 import "server-only";
 import { dispatchAgentToolRoute } from "./agent-tool-routes";
-import { dispatchAiTrackingTool } from "./ai-tracking-tools";
+import { dispatchPromptTrackerTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
 import { dispatchExtendedToolRoute, providerSettingsBody } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
@@ -44,7 +44,7 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
   if (rankRunRoute) return rankRunRoute;
   const localRoute = dispatchLocalMonitorTool(name, input);
   if (localRoute) return localRoute;
-  const trackingRoute = dispatchAiTrackingTool(name, input);
+  const trackingRoute = dispatchPromptTrackerTool(name, input);
   if (trackingRoute) return trackingRoute;
   // biome-ignore format: compact dispatch keeps this registry under the file line cap.
   const directRoute = dispatchAgentToolRoute(name, input) ?? dispatchKeywordResearchTool(name, input);

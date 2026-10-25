@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 
 export type SearchInsightsRowsCardProps = {
   caption: ReactNode;
+  className?: string;
   /** The table. The function form draws it once per view, so the expanded copy can fill the modal. */
   children?: ExpandableCardContent;
   /** The window holds no rows at all, so the card explains why instead of showing a table. */
@@ -26,6 +27,7 @@ export type SearchInsightsRowsCardProps = {
 
 export function SearchInsightsRowsCard({
   caption,
+  className,
   children,
   empty,
   emptyReason,
@@ -34,7 +36,12 @@ export function SearchInsightsRowsCard({
   toolbar,
 }: Readonly<SearchInsightsRowsCardProps>) {
   return (
-    <ExpandableCard caption={caption} expandable={expandable && !empty} title={title}>
+    <ExpandableCard
+      className={className}
+      caption={caption}
+      expandable={expandable && !empty}
+      title={title}
+    >
       {(view) =>
         empty ? (
           <p className="m-0 border-t border-border px-4 py-5 text-ui-body text-fg-muted">

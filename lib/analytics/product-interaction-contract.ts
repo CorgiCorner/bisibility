@@ -28,5 +28,6 @@ export type NavigationClickSource = "sidebar" | "command_palette" | "getting_sta
 /** Read only the allowlisted section; project, market and resource IDs never leave the browser. */
 export function productModuleForPath(path: string): ProductModule | null {
   const section = /^\/app\/[^/?#]+\/(?:m\/[^/?#]+\/)?([^/?#]+)(?:[/?#]|$)/.exec(path)?.[1];
+  if (section === "prompt-playground") return "prompt-explorer";
   return PRODUCT_MODULES.find((module) => module === section) ?? null;
 }

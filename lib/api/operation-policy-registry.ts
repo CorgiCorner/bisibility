@@ -1,5 +1,5 @@
 import * as caps from "./operation-capabilities";
-import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
+import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 import { type OperationPolicy, policy } from "./operation-policy-helpers";
 import { localMonitorReadPolicies } from "./operation-policy-local-monitors";
 import { rankRunOperationPolicies } from "./operation-policy-rank-runs";
@@ -8,7 +8,8 @@ import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 export const operationPolicy = {
   ...localMonitorReadPolicies,
   ...rankRunOperationPolicies,
-  ...aiTrackingPolicies,
+  ...promptResearchPolicies,
+  ...promptTrackerPolicies,
   ...researchWorkspaceOperationPolicy,
   addCompetitor: policy("POST", "/projects/{project_id}/competitors", "write"),
   addKeywords: policy("POST", "/projects/{project_id}/keywords", "write"),
@@ -113,6 +114,25 @@ export const operationPolicy = {
     "read",
   ),
   listSignals: policy("GET", "/projects/{project_id}/signals", "read"),
+  getPageIndexingReport: policy("GET", "/projects/{project_id}/search-index/report", "read"),
+  listPageIndexingUrls: policy("GET", "/projects/{project_id}/search-index/urls", "read"),
+  getPageIndexingSettings: policy("GET", "/projects/{project_id}/search-index/settings", "read"),
+  updatePageIndexingSettings: policy(
+    "PATCH",
+    "/projects/{project_id}/search-index/settings",
+    "write",
+  ),
+  listSearchIndexSitemaps: policy("GET", "/projects/{project_id}/search-index/sitemaps", "read"),
+  getSearchIndexSitemap: policy(
+    "GET",
+    "/projects/{project_id}/search-index/sitemaps/{path}",
+    "read",
+  ),
+  inspectSearchIndexUrls: policy(
+    "POST",
+    "/projects/{project_id}/search-index/inspections",
+    "write",
+  ),
   listSitemapMonitors: policy("GET", "/projects/{project_id}/sitemap-monitors", "read"),
   listStoredResearchReports: policy("GET", "/projects/{project_id}/research/reports", "read"),
   listTeamInvites: policy("GET", "/projects/{project_id}/team/invites", "read"),

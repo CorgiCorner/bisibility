@@ -39,7 +39,16 @@ const projectCounts = {
   ),
 };
 const schedule = {
-  ...strings("city", "country", "cronExpression", "device", "frequency", "locationKey", "timezone"),
+  ...strings(
+    "city",
+    "country",
+    "cronExpression",
+    "device",
+    "frequency",
+    "locationKey",
+    "timezone",
+    "inspectionBudgetMode",
+  ),
   ...f.numbers("inspectionDailyLimit", "jitterMinutes", "serpDepth"),
   ...f.booleans("serpStopOnMatch"),
   ...f.dates("lastCheckedAt", "nextCheckAt"),

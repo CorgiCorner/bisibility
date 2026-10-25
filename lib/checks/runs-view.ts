@@ -7,6 +7,7 @@ import type {
   CheckRunRow,
   CheckRunsCursor,
   CheckRunsView,
+  CheckRunTriggerFilter,
   ProviderHealthEntry,
 } from "./contract";
 import { RANK_CHECK_STATUS } from "./status";
@@ -20,7 +21,10 @@ export type CheckRunsViewOptions = {
   provider?: string;
   range?: CheckRange;
   status?: CheckRunFilter;
-  trigger?: "all" | "manual" | "scheduled";
+  trigger?: CheckRunTriggerFilter;
+  incidentId?: string;
+  from?: string;
+  to?: string;
 };
 
 export type CheckRunSource = {
@@ -56,7 +60,7 @@ export type CheckRunSource = {
 
 export type CheckRunsSummary = Pick<
   CheckRunsView,
-  "counts" | "deferredGroups" | "providerHealth" | "spendCents"
+  "counts" | "deferredGroups" | "providerHealth" | "spendCents" | "evidenceCounts"
 >;
 
 export type ProviderCompletionGroup = {
@@ -102,7 +106,8 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
   if (
     source.status !== RANK_CHECK_STATUS.COMPLETED &&
     source.status !== RANK_CHECK_STATUS.FAILED &&
-    source.status !== RANK_CHECK_STATUS.RUNNING
+    source.status !== RANK_CHECK_STATUS.RUNNING &&
+    source.status !== RANK_CHECK_STATUS.DEFERRED
   ) {
     return null;
   }

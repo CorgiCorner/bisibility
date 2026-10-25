@@ -1,3 +1,4 @@
+import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
 import "server-only";
 
 import {
@@ -170,6 +171,11 @@ async function deleteInTransaction(
   );
   await onAccountDeletion(tx, userId, new Date());
   await queueAnalyticsPersonDeletion(tx, { id: userId, publicId: user.publicId });
+  const ownedProjects = await tx.project.findMany({
+    where: { ownerId: userId },
+    select: { id: true },
+  });
+  for (const project of ownedProjects) await closeProjectIncidentsSilently(tx, project.id);
   await tx.user.delete({ where: { id: userId } });
   return "deleted";
 }

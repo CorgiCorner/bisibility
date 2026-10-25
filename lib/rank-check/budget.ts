@@ -52,6 +52,7 @@ export type ConnectionLookupSpend = {
     | "ai_tracking"
     | "ai_visibility"
     | "prompt_explorer"
+    | "prompt_research"
     | "backlinks"
     | "domain_overview"
     | "keyword_metrics"

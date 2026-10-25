@@ -2,22 +2,17 @@ import "server-only";
 
 import { requireAvailableSession } from "@/lib/auth/session";
 import { getResolvedDateFormat } from "@/lib/dates/request";
+import { getNotificationFeedForScope, notificationFeedSignature } from "@/lib/notifications/feed";
 import {
-  getNotificationFeedForScope,
-  type NotificationFeedScope,
-  notificationFeedSignature,
-} from "@/lib/notifications/feed";
-import {
-  type NotificationRealtimeEvent,
   notificationRealtimeRedisConfigured,
   subscribeToNotificationEvents,
   subscribeToOperationEvents,
 } from "@/lib/notifications/realtime";
 import { getQueryActorForSession, resolveProjectAccessForActor } from "@/lib/queries/_auth";
-import { readOperationSnapshot } from "@/lib/rank-check/runs/snapshot";
 import { isHTTPAccessFallbackError } from "next/dist/client/components/http-access-fallback/http-access-fallback";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import type { NextRequest } from "next/server";
+import { readRealtimeOperations } from "./operations-data";
 import {
   createCoalescedTask,
   HEARTBEAT_INTERVAL_MS,
@@ -31,20 +26,7 @@ import {
   streamHeaders,
 } from "./sse";
 import { canReadStream } from "./stream-access";
-
-function temporarilyUnavailable() {
-  // EventSource treats non-200 responses as terminal, even with Retry-After.
-  return new Response(`retry: ${RECONNECT_RETRY_MS}\n\n`, {
-    headers: streamHeaders(),
-  });
-}
-
-function notificationVisible(scope: NotificationFeedScope, event: NotificationRealtimeEvent) {
-  return (
-    event.userId === scope.userId &&
-    (event.projectId === null || event.projectId === scope.activeProjectId)
-  );
-}
+import { notificationVisible, temporarilyUnavailable } from "./stream-response";
 
 export async function GET(req: NextRequest) {
   const deadline = performance.now() + STREAM_LIFETIME_MS;
@@ -75,19 +57,20 @@ export async function GET(req: NextRequest) {
 
   let initial: {
     feed: Awaited<ReturnType<typeof getNotificationFeedForScope>>;
-    operations: Awaited<ReturnType<typeof readOperationSnapshot>>;
+    operations: Awaited<ReturnType<typeof readRealtimeOperations>>["operations"];
+    rankDataRevision: string;
   };
   try {
     if (!(await canReadStream(session, access.projectId)))
       return new Response("Unauthorized", { status: 401 });
     ({ resolved: dateFormat } = await getResolvedDateFormat());
-    const [feed, operations] = await Promise.all([
+    const [feed, operationData] = await Promise.all([
       getNotificationFeedForScope(scope, { dateFormat }),
-      readOperationSnapshot(access.projectId),
+      readRealtimeOperations(access.projectId, scope.userId),
     ]);
     if (!(await canReadStream(session, access.projectId)))
       return new Response("Unauthorized", { status: 401 });
-    initial = { feed, operations };
+    initial = { feed, ...operationData };
   } catch {
     return temporarilyUnavailable();
   }
@@ -114,7 +97,10 @@ export async function GET(req: NextRequest) {
         let lifetimeTimer: ReturnType<typeof setTimeout> | null = null;
         let notificationSignature = notificationFeedSignature(initial.feed);
         let notificationQueue = Promise.resolve();
-        let operationSignature = JSON.stringify(initial.operations);
+        let operationSignature = JSON.stringify({
+          operations: initial.operations,
+          rankDataRevision: initial.rankDataRevision,
+        });
         let operationQueue = Promise.resolve();
         let poll: ReturnType<typeof setInterval> | null = null;
         let reconciliation: ReturnType<typeof setInterval> | null = null;
@@ -189,12 +175,12 @@ export async function GET(req: NextRequest) {
           operationQueue = operationQueue
             .then(async () => {
               if (!(await stillAuthorized())) return;
-              const operations = await readOperationSnapshot(access.projectId);
+              const operationData = await readRealtimeOperations(access.projectId, scope.userId);
               if (!(await stillAuthorized())) return;
-              const signature = JSON.stringify(operations);
+              const signature = JSON.stringify(operationData);
               if (force || signature !== operationSignature) {
                 operationSignature = signature;
-                enqueue(sseEvent("operations", { operations }));
+                enqueue(sseEvent("operations", operationData));
               }
             })
             .catch(() => undefined);
@@ -232,7 +218,12 @@ export async function GET(req: NextRequest) {
           enqueue(`retry: ${RECONNECT_RETRY_MS}\n\n`);
           enqueue(": connected\n\n");
           enqueue(sseEvent("notification", { feed: initial.feed }));
-          enqueue(sseEvent("operations", { operations: initial.operations }));
+          enqueue(
+            sseEvent("operations", {
+              operations: initial.operations,
+              rankDataRevision: initial.rankDataRevision,
+            }),
+          );
 
           if (notificationRealtimeRedisConfigured()) {
             const notificationSubscription = subscribeToNotificationEvents(scope.userId, {
@@ -277,7 +268,7 @@ export async function GET(req: NextRequest) {
           }, RECONCILIATION_INTERVAL_MS);
           heartbeat = setInterval(() => {
             void stillAuthorized().then((allowed) => {
-              if (allowed) enqueue(": heartbeat\n\n");
+              if (allowed) enqueue(sseEvent("heartbeat", null));
             });
           }, HEARTBEAT_INTERVAL_MS);
         } catch {

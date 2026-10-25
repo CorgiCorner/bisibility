@@ -11,10 +11,7 @@ const mocks = vi.hoisted(() => ({
   publishWorkerIntent: vi.fn(),
   readConsentFromCookies: vi.fn(),
   trackServerEvent: vi.fn(),
-  onAccountCreated: vi.fn(),
 }));
-
-vi.mock("./account-created-extension", () => ({ onAccountCreated: mocks.onAccountCreated }));
 
 vi.mock("@/lib/analytics/server", () => ({
   readConsentFromCookies: mocks.readConsentFromCookies,
@@ -92,8 +89,6 @@ describe("signup welcome sequence", () => {
 
     await handleCreatedUser({ id: "user_1" }, { path: "/sign-in/email-otp" });
 
-    expect(mocks.onAccountCreated).toHaveBeenCalledWith("user_1");
-
     expect(mocks.readConsentFromCookies).toHaveBeenCalledOnce();
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("user_signed_up", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
@@ -102,9 +97,8 @@ describe("signup welcome sequence", () => {
     });
   });
 
-  it("initializes the account even without a recognized analytics signup method", async () => {
+  it("does not emit a signup event without a recognized analytics method", async () => {
     await handleCreatedUser({ id: "new_account" }, null);
-    expect(mocks.onAccountCreated).toHaveBeenCalledWith("new_account");
     expect(mocks.trackServerEvent).not.toHaveBeenCalled();
   });
 

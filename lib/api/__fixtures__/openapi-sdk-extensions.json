@@ -3,9 +3,6 @@
     "problems": [
       "enum-without-kind /requestBody/application/json/properties/drafts/items/properties/category",
       "enum-without-kind /requestBody/application/json/properties/drafts/items/properties/provenance",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
       "unnamed /requestBody/application/json",
       "unnamed /requestBody/application/json/properties/drafts/items",
       "unnamed /requestBody/application/json/properties/drafts/items/properties/category",
@@ -15,50 +12,7 @@
       "unnamed /responses/201 application/json",
       "unnamed /responses/201 application/json/properties/data"
     ],
-    "subject": "operation acceptAiTrackingSuggestions"
-  },
-  {
-    "problems": [
-      "enum-without-kind /responses/200 application/json/properties/data/properties/cost_state",
-      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "money-without-kind /requestBody/application/json/properties/preview/properties/configuration/properties/advisory_cost_limit_cents",
-      "money-without-kind /requestBody/application/json/properties/preview/properties/estimated_cost_cents",
-      "money-without-kind /responses/200 application/json/properties/data/properties/cost_usd",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/preview",
-      "unnamed /requestBody/application/json/properties/preview/properties/configuration",
-      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot",
-      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/competitors/items",
-      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/context",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/cost_state",
-      "unnamed /responses/200 application/json/properties/data/properties/drafts/items",
-      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/category"
-    ],
-    "subject": "operation aiTrackingSuggestionsGenerate"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "money-without-kind /requestBody/application/json/properties/configuration/properties/advisory_cost_limit_cents",
-      "money-without-kind /responses/200 application/json/properties/data/properties/configuration/properties/advisory_cost_limit_cents",
-      "money-without-kind /responses/200 application/json/properties/data/properties/estimated_cost_cents",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/configuration",
-      "unnamed /requestBody/application/json/properties/input_snapshot",
-      "unnamed /requestBody/application/json/properties/input_snapshot/properties/competitors/items",
-      "unnamed /requestBody/application/json/properties/input_snapshot/properties/context",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/configuration"
-    ],
-    "subject": "operation aiTrackingSuggestionsPreview"
+    "subject": "operation acceptPromptResearchSuggestions"
   },
   {
     "problems": [
@@ -100,7 +54,7 @@
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items",
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/engine"
     ],
-    "subject": "operation analyzeAiVisibility"
+    "subject": "operation analyzeBrandVisibility"
   },
   {
     "problems": [
@@ -422,20 +376,6 @@
   {
     "problems": [
       "enum-without-kind /parameters/query/format/schema",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /parameters/query/format/schema",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/items/items",
-      "unnamed /responses/200 application/json/properties/data/properties/scope"
-    ],
-    "subject": "operation exportAiTrackingEvidence"
-  },
-  {
-    "problems": [
-      "enum-without-kind /parameters/query/format/schema",
       "enum-without-kind /parameters/query/version/schema",
       "enum-without-kind /responses/200 application/json/properties/freshnessPolicy/anyOf/0/properties/basis/anyOf/0",
       "enum-without-kind /responses/200 application/json/properties/grids/items/properties/reason",
@@ -457,6 +397,20 @@
       "unnamed /responses/200 application/json/properties/protocol"
     ],
     "subject": "operation exportLocalMonitorRun"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/format/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /parameters/query/format/schema",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/items/items",
+      "unnamed /responses/200 application/json/properties/data/properties/scope"
+    ],
+    "subject": "operation exportPromptTrackerEvidence"
   },
   {
     "problems": [
@@ -618,6 +572,7 @@
       "schema CloudImportFinalizeResponse",
       "schema CloudImportKeyword",
       "schema CloudImportKeywordAlertTarget",
+      "schema CloudImportNotificationPreference",
       "schema CloudImportPackage",
       "schema CloudImportRankingHistory",
       "schema CloudImportSavedView"
@@ -916,6 +871,43 @@
   },
   {
     "problems": [
+      "enum-without-kind /responses/200 application/json/properties/data/properties/cost_state",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
+      "money-without-kind /requestBody/application/json/properties/preview/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /requestBody/application/json/properties/preview/properties/estimated_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/cost_usd",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/preview",
+      "unnamed /requestBody/application/json/properties/preview/properties/configuration",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/competitors/items",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/context",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/cost_state",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/category"
+    ],
+    "subject": "operation promptResearchSuggestionsGenerate"
+  },
+  {
+    "problems": [
+      "money-without-kind /requestBody/application/json/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/estimated_cost_cents",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/configuration",
+      "unnamed /requestBody/application/json/properties/input_snapshot",
+      "unnamed /requestBody/application/json/properties/input_snapshot/properties/competitors/items",
+      "unnamed /requestBody/application/json/properties/input_snapshot/properties/context",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/configuration"
+    ],
+    "subject": "operation promptResearchSuggestionsPreview"
+  },
+  {
+    "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk"
@@ -1084,6 +1076,7 @@
       "schema CloudImportChunkResponse",
       "schema CloudImportKeyword",
       "schema CloudImportKeywordAlertTarget",
+      "schema CloudImportNotificationPreference",
       "schema CloudImportRankingHistory",
       "schema CloudImportSavedView",
       "schema CloudImportSourceKeyword",
@@ -1140,6 +1133,13 @@
   {
     "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
     "subject": "schema CloudImportKeywordAlertTarget"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/check_notification_setting",
+      "unnamed /properties/check_notification_setting"
+    ],
+    "subject": "schema CloudImportNotificationPreference"
   },
   {
     "problems": [

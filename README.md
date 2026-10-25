@@ -48,7 +48,7 @@ Use your own provider accounts, or use credits on the hosted service.
 - Domain overview: organic visibility, ranked keywords, and top pages; requires a
   bring-your-own DataForSEO connection; metered. The app and REST API are available.
   See [released client support](https://bisibility.com/docs/compatibility).
-- **AI Tracking:** Repeat selected prompts and compare saved answers
+- **Prompt Tracker:** Repeat selected prompts and compare saved answers
   and citations from supported sources over time.
 - **Site Audit:** Check a small sample of pages for HTTP errors
   and on-page SEO issues.
@@ -106,7 +106,7 @@ for real use.
   and pay for infrastructure and provider usage.
 
 BYOK rank tracking supports DataForSEO and SerpApi. Keyword, backlink,
-and domain research use DataForSEO; AI Tracking uses supported
+and domain research use DataForSEO; Prompt Tracker uses supported
 DataForSEO sources.
 
 See [provider setup and budget controls](https://bisibility.com/docs/integrations)

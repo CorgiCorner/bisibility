@@ -97,6 +97,7 @@ export function keywordRankView(row: KeywordRow) {
 }
 
 export function keywordRankMovement(row: KeywordRow): number | null {
+  if (row.rankEvidence) return null;
   const parent = marketGridParent(row);
   if (parent)
     return parent.aggregate.children.length === 1
@@ -113,6 +114,7 @@ export function keywordRankMovement(row: KeywordRow): number | null {
 }
 
 export function keywordRankEvent(row: KeywordRow) {
+  if (row.rankEvidence) return null;
   if (marketGridParent(row)) return null;
   const quality = keywordRankQuality(row);
   return quality?.comparison === "not_requested" ? null : (quality?.event ?? null);

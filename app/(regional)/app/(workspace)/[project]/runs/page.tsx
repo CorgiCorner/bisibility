@@ -1,3 +1,4 @@
+import { EvidenceRunsPage } from "@/components/checks/runs/EvidenceRunsPage";
 import {
   ProjectRunsContent,
   ProjectRunsLoadError,
@@ -43,6 +44,15 @@ function toUrlSearchParams(input: Record<string, SearchParamValue>) {
 export default async function RunsPage({ params, searchParams }: Readonly<RunsPageProps>) {
   const [{ project }, rawSearchParams] = await Promise.all([params, searchParams]);
   const access = await resolveProjectAccess(project);
+  if (
+    rawSearchParams.view === "checks" ||
+    rawSearchParams.from !== undefined ||
+    rawSearchParams.to !== undefined ||
+    rawSearchParams.trigger === "programmatic"
+  )
+    return (
+      <EvidenceRunsPage projectRef={access.publicId} search={toUrlSearchParams(rawSearchParams)} />
+    );
   let query: ProjectRunsQuery;
   try {
     query = parseProjectRunsQuery(toUrlSearchParams(rawSearchParams));

@@ -132,7 +132,7 @@ export async function fetchObserved(
     onDispatch,
   );
   if (!result.result || !Array.isArray(result.result.items))
-    throw new ProviderCallError("AI visibility response is incomplete.", result.costCents);
+    throw new ProviderCallError("Brand Visibility response is incomplete.", result.costCents);
   try {
     return {
       ...result,
@@ -141,7 +141,7 @@ export async function fetchObserved(
     };
   } catch {
     throw new ProviderCallError(
-      "AI visibility response could not be normalized.",
+      "Brand Visibility response could not be normalized.",
       result.costCents,
     );
   }

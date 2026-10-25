@@ -1,4 +1,4 @@
-FROM node:22.23.1-alpine AS deps
+FROM node:22.23.4-alpine AS deps
 # Keep the project root distinct from the app/ route directory. A /app root
 # makes production module identities collide for app/layout.tsx and app/app/layout.tsx.
 WORKDIR /workspace
@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/root/.npm npm install --prefix /seed-cli --no-sav
 FROM deps AS operator-runtime
 RUN npm prune --omit=dev --no-audit --no-fund
 
-FROM node:22.23.1-alpine AS builder
+FROM node:22.23.4-alpine AS builder
 WORKDIR /workspace
 ARG APP_REVISION
 ARG APP_VERSION
@@ -61,7 +61,7 @@ USER node
 
 CMD ["npm", "run", "db:migrate"]
 
-FROM node:22.23.1-alpine AS runner
+FROM node:22.23.4-alpine AS runner
 ARG APP_REVISION
 ARG APP_VERSION
 ARG SENTRY_RELEASE

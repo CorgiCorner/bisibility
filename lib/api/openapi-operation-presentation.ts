@@ -47,6 +47,27 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
     description: "Requires a migration token.",
     summary: "Run an instance import",
   },
+  listSearchIndexSitemaps: {
+    summary: "List Page indexing sitemaps",
+  },
+  getSearchIndexSitemap: {
+    summary: "Get a Page indexing sitemap",
+  },
+  inspectSearchIndexUrls: {
+    summary: "Inspect Page indexing URLs",
+  },
+  getPageIndexingReport: {
+    summary: "Read Page indexing report",
+  },
+  listPageIndexingUrls: {
+    summary: "List Page indexing URLs",
+  },
+  getPageIndexingSettings: {
+    summary: "Read Page indexing settings",
+  },
+  updatePageIndexingSettings: {
+    summary: "Update Page indexing settings",
+  },
   listSearchPerformanceQueryStats: { summary: "List search query statistics" },
   listSitemapMonitors: {
     description: "Returns the project sitemap monitor and its latest snapshot.",

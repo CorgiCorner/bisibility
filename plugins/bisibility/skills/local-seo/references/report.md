@@ -1,0 +1,13 @@
+# Optional AgentReport save
+
+Use kind local_seo for this external analysis. site_audit, ai_visibility and prompt_explorer, including case variants, are reserved. Save only on an explicit user request, exposed `create_agent_report` and writable project membership. Send only project_id, kind, title, body, provenance and idempotency_key. See [example-report.json](example-report.json): fictional data, never save it as a customer analysis.
+
+Title: 1-160 characters. body and provenance are JSON objects, at most 256 KiB and 32 KiB UTF-8 respectively, each depth at most 16 and 20,000 nodes. Keep the whole request under 320 KiB, preferably 64 KiB. Use plain text and bounded JSON, no HTML, remote assets, raw fetched pages or secrets. Use credential-free absolute HTTP(S) source/affected URLs; reject script/data/file schemes and never automatically fetch citations.
+
+Recommended body: version 1, summary, business context and assumptions, method and uncertainty, coverage (monitor id, run ids, grid counts, omitted points), evidence ids, zones, competitor wins, up to three prioritized actions, costs and limitations. Copy receipt financial state, accounting pending, freshness and coverage counts exactly as returned. Each action needs evidence_ids, rationale, confidence, uncertainty and a verification step. Profile suggestions, if any, are a separate list marked manual verification, not findings. provenance records skill/version (local-seo/0.1.0), method, source identities, evidence ids, observation and retrieval dates and limitations. Unknown agent identity stays unknown.
+
+State these limits in the report: Bisibility does not read the business profile (categories, hours, description, photos, posts, questions and answers, review text or completeness) and has no profile-management tool. Local monitor listings may omit website, Maps URL, rating and review count. Do not treat that omission as a measured gap.
+
+Use a stable save idempotency_key for the exact payload. After a timeout inspect available reports before an identical retry. Do not change keys to force duplicates. Claim saved only after create succeeds. Read back with `get_agent_report` using project_id and report_id from the returned id. A readback failure means saved but verification blocked. Denied writes mean return the analysis read-only with 'Not saved' and the blocker.
+
+The create response supplies id, not a URL. Construct `<configured-app-origin>/app/<project_id>/agent-reports/<returned-id>` only from the trusted configured HTTPS app origin and validated returned public ids. Hosted origin is https://bisibility.com. Self-hosted uses its configured origin. The report retains project access and is not public sharing.

@@ -3,6 +3,7 @@ import type { Actor } from "@/lib/auth/authorize";
 import { AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
+import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
 import type { RankTrackerReportOptions } from "@/lib/queries/rank-tracker-report-model";
 import type { RankReportDatabase } from "@/lib/rank-reports/access";
 import { csvRow } from "@/lib/ui/csv";
@@ -78,6 +79,7 @@ export function rankHistoryRows(
       weeks.add(key);
       return [
         {
+          evidenceProjection: check.evidenceProjection,
           checkedAt: check.checkedAt,
           id,
           keyword: keyword.text,
@@ -109,8 +111,11 @@ export function rankHistoryCsvLine(row: ReturnType<typeof rankHistoryRows>[numbe
     row.provider,
     row.requestedDepth,
     row.normalizationVersion,
+    row.evidenceProjection
+      ? JSON.stringify(evidenceProjectionResource(row.evidenceProjection))
+      : null,
   ]);
 }
 
 export const rankHistoryCsvHeader =
-  "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version";
+  "keyword_id,keyword,checked_at,position,previous_position,ranking_url,provider,requested_depth,normalization_version,evidence_projection";

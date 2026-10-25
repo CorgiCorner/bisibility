@@ -16,11 +16,21 @@ No `whoami`, `get_audit_status`, `get_audit_issues`, `get_audit_pages` or `save_
 - The crawler does not supply full body text, schema validation, a full backlink graph, JavaScript rendering or a comprehensive sitemap inventory. Use title/description/headings as limited intent signals. If the supplied evidence cannot establish originality, topical depth, thin content or conversion friction, make a page-specific manual review recommendation with low confidence. Do not fabricate word counts, duplicated body text or content gaps.
 - Content actions should specify the audience question, page section to inspect/change, information needed and acceptance check. Preserve pages whose successful rankings match the goal. Search volume is estimated demand, never measured visits or guaranteed gains. Do not invent conversions/revenue or sum overlapping query volumes.
 
-## Ranking and first-party evidence
+## Three evidence classes
 
-`list_keywords` is saved tracking evidence, not live SERP research. Read `latest_check`, `latest_successful_check`, market, device, depth and ranking URL before interpreting null position. A failed check means unknown; a successful out-of-depth result means absent only within that depth. Different dates/markets/depths are not a trend. `get_rank_history` with the returned `keyword_id` and project ID can resolve history; a single sample cannot prove a traffic loss.
+Keep these classes in separate report sections. Each finding names the one class that supports it. Do not merge them into one visibility claim.
 
-For connected first-party query stats, specify `start_date`/`end_date` and optional returned `connection_id`; use at most 100 rows initially. The rows aggregate countries/devices. Missing permissions, reauthorization or absent connection is a documented coverage gap. Never connect accounts or start analytics sync automatically. Retain queried period and source separately from retrieval time. A low CTR recommendation needs actual clicks and impressions plus intent/context; rank alone does not prove poor snippets.
+### Historical Search Console data
+
+`list_search_performance_query_stats` is first-party history for a required `start_date` and `end_date`. State that interval. Rows aggregate every country and device when no country or device filter is set and those dimensions are not requested. If you filter or group by country or device, say so. This class is not the current ranking. Missing permissions, reauthorization or an absent connection is a documented coverage gap. Never connect accounts or start analytics sync automatically. A low CTR note in this class needs actual clicks and impressions for that date range. It does not prove the current snippet.
+
+### Current Google observation
+
+`list_keywords` and `get_rank_history` are saved rank checks. Record the ranking URL, observation time, market and device. Read `latest_check`, `latest_successful_check`, depth and ranking URL before interpreting a null position. A failed check means unknown; a successful out-of-depth result means absent only within that depth. Different dates, markets or depths are not a trend. `get_rank_history` needs the returned `keyword_id` and project ID. A single sample cannot prove a traffic loss. Do not describe this class as Search Console history.
+
+### Crawl results
+
+The bounded site crawl is Bisibility's own HTTP sample of the project domain. Use it for access and metadata findings. It is not a ranking observation and not Search Console history. See the technical and content section for crawl limits.
 
 ## AI evidence and optional costs
 
@@ -28,7 +38,7 @@ Saved `ai_visibility` reports contain `result.evidence: observed_dataset`: a pro
 
 Keep brand matching and domain citation separate. Record prompt/query, platform/model, market, source observation time (`observedAt`, possibly null), retrieval time, citation URLs, `totalAvailable`, truncation, `failure` and `costStatus`. A missing/empty dataset is not proof that a brand is never visible. Synthetic citations are model-returned strings, not verified live links or evidence of consumer visibility. Example visibility action: review a specific observed question that cites a competitor, identify an answer section on a relevant owned page, add verifiable facts, then propose a separately approved later measurement. A synthetic answer can motivate a hypothesis/manual fact check, never a high-confidence observed visibility diagnosis.
 
-Estimates use the current tool response, not copied prices. For `analyze_ai_visibility` include platform, `target_type`, `location_code`, `language_code`, limit and brand/domain. For `compare_ai_prompts` include the same exact prompt and supported `models` (currently up to two: `gpt-4.1-mini`, `gpt-4.1-nano`). Do not assume the default US/en market matches the project. Missing source makes an estimate unavailable; continue the free audit and explain BYOK/credits setup is needed. Never collect or provision keys yourself. AI estimates themselves require write scope. BYOK still incurs provider cost. Bisibility provider estimates do not include the external client's model/token fees; describe those as unknown unless the client supplies usage. A zero provider cost is not a claim that the client's entire session is free. Cost caps are admission controls, not confirmed charges. Distinguish estimated cost, new-call cost and historical report cost, including unknown receipts and cached responses. A failure after dispatch can be billable: do not replay to resolve accounting uncertainty.
+Estimates use the current tool response, not copied prices. For `analyze_brand_visibility` include platform, `target_type`, `location_code`, `language_code`, limit and brand/domain. For `compare_ai_prompts` include the same exact prompt and supported `models` (currently up to two: `gpt-4.1-mini`, `gpt-4.1-nano`). Do not assume the default US/en market matches the project. Missing source makes an estimate unavailable; continue the free audit and explain BYOK/credits setup is needed. Never collect or provision keys yourself. AI estimates themselves require write scope. BYOK still incurs provider cost. Bisibility provider estimates do not include the external client's model/token fees; describe those as unknown unless the client supplies usage. A zero provider cost is not a claim that the client's entire session is free. Cost caps are admission controls, not confirmed charges. Distinguish estimated cost, new-call cost and historical report cost, including unknown receipts and cached responses. A failure after dispatch can be billable: do not replay to resolve accounting uncertainty.
 
 ## Prioritization and completion
 
@@ -46,7 +56,7 @@ Free quote with a zero cap:
 
 ```json mcp-call
 {
-  "tool": "analyze_ai_visibility",
+  "tool": "analyze_brand_visibility",
   "arguments": {
     "project_id": "prj_a00000000000000000000000",
     "brand": "Example",
@@ -67,7 +77,7 @@ Approved execution with a hard cap and a stable key for this exact operation:
 
 ```json mcp-call
 {
-  "tool": "analyze_ai_visibility",
+  "tool": "analyze_brand_visibility",
   "arguments": {
     "project_id": "prj_a00000000000000000000000",
     "brand": "Example",
@@ -80,7 +90,7 @@ Approved execution with a hard cap and a stable key for this exact operation:
     "fresh": false,
     "estimate_only": false,
     "max_cost_cents": 100,
-    "idempotency_key": "example-analyze_ai_visibility-approved-1"
+    "idempotency_key": "example-analyze_brand_visibility-approved-1"
   }
 }
 ```

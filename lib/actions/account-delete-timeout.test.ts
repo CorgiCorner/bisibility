@@ -54,6 +54,7 @@ function deletionDatabase(elapsedMs: number) {
         return { count: data.length };
       }),
     },
+    project: { findMany: vi.fn(async () => []) },
     user: {
       findUnique: vi.fn().mockResolvedValue({
         _count: { accounts: 0, memberships: 0, projects: 1, sessions: 1 },

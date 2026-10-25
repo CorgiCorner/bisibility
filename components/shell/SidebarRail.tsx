@@ -5,6 +5,7 @@
 // three hand-maintained copies: a row change had to land three times or the two live surfaces
 // silently drifted. Sidebar and SidebarNav now compose this; ShellSkeleton mirrors its boxes.
 
+import { compactBadgeClassName } from "@/components/ui/Pill";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { trackModuleNavigation } from "@/lib/analytics/product-interactions";
 import type { NavItem, NavItemGroupDescriptor } from "@/lib/nav/nav-items";
@@ -141,10 +142,7 @@ function SidebarRailBadge({
     <span
       // The decorative tag must not change the row's accessible name.
       aria-hidden
-      className={[
-        "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 text-[9.5px] font-semibold",
-        "bg-accent-soft text-accent-text",
-      ].join(" ")}
+      className={compactBadgeClassName}
     >
       {label}
     </span>
@@ -193,9 +191,10 @@ export type SidebarRailGroupsProps = {
 type LocalizedNavItem = NavItem & { badgeLabel?: string };
 
 const navigationItemKeys = {
-  "AI Visibility": "items.aiVisibility",
-  "AI Tracking": "items.aiTracking",
-  "Prompt Explorer": "items.promptExplorer",
+  "Brand Visibility": "items.aiVisibility",
+  "Prompt Research": "items.promptResearch",
+  "Prompt Tracker": "items.aiTracking",
+  "Prompt Playground": "items.promptExplorer",
   "Site Audit": "items.siteAudit",
   "Project Context": "items.projectContext",
   "Agent Reports": "items.agentReports",

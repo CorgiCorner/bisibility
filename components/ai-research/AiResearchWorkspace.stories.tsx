@@ -29,7 +29,7 @@ const meta = {
     domain: "acme.example",
     mode: "visibility",
     history: [
-      { id: "agr_example", title: "AI visibility: Acme", createdAt: "2026-10-02T12:00:00Z" },
+      { id: "agr_example", title: "Brand Visibility: Acme", createdAt: "2026-10-02T12:00:00Z" },
     ],
     analyzeAction: fixtureResearchAction,
   },
@@ -48,8 +48,14 @@ export const Visibility: Story = {
     },
   },
 };
-export const PromptExplorer: Story = {
+export const PromptPlayground: Story = {
   args: {
+    engineOptions: [
+      { engine: "chat_gpt", model: "gpt-5.6-luna" },
+      { engine: "claude", model: "claude-sonnet-5" },
+      { engine: "gemini", model: "gemini-4-argon" },
+      { engine: "perplexity", model: "sonar-pro" },
+    ],
     mode: "prompt",
     analyzeAction: fixtureResearchAction,
     history: [
@@ -79,5 +85,14 @@ export const PricingUnavailable: Story = {
       ...aiResearchCatalogFixture,
       models: aiResearchCatalogFixture.models.map((model) => ({ ...model, priceAvailable: false })),
     },
+  },
+};
+
+export const PlaygroundWithoutSource: Story = {
+  args: {
+    mode: "prompt",
+    catalog: undefined,
+    catalogFailure: "no_source",
+    supportingProviders: ["DataForSEO"],
   },
 };

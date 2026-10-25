@@ -1,3 +1,4 @@
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import { selectCandidates } from "./items-claim-query";
 import "server-only";
 
@@ -144,7 +145,7 @@ export async function claimDueRankCheckItems(
   const claimExpiresAt = new Date(now.getTime() + RANK_CHECK_ITEM_CLAIM_LEASE_MS);
   const limit = pageSize(options.pageSize);
   const perProjectCap = rankCheckDispatcherMaxKeywordsPerProject();
-  const outcome = await database.$transaction(async (tx) => {
+  const claimPage = async (tx: Prisma.TransactionClient) => {
     const selected = await selectCandidates(tx, now, limit, perProjectCap);
     const { cancelledProjectIds, runnable: candidates } = await cancelUnrunnableCandidates(
       tx,
@@ -218,7 +219,8 @@ export async function claimDueRankCheckItems(
         metrics: itemClaimMetrics(groups, activeIds.size, now, candidates),
       },
     };
-  });
+  };
+  const outcome = await notificationTransaction(claimPage, undefined, database);
   for (const projectId of outcome.blockedProjectIds) {
     await publishOperationChanged({ projectId }).catch(() => undefined);
   }

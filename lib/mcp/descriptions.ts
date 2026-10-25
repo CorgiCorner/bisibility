@@ -5,6 +5,8 @@ import {
   rankedKeywordPageRate,
 } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { pageIndexingDescriptions } from "./page-indexing-contract";
+import { searchIndexDescriptions } from "./search-index-contract";
 
 const rankedKeywordRate = rankedKeywordPageRate("dataforseo");
 const rankedKeywordCost = rankedKeywordRate
@@ -24,6 +26,8 @@ const metricsCost = metricsRate
   : "a paid metrics lookup";
 
 export const descriptions: Record<string, string> = {
+  ...searchIndexDescriptions,
+  ...pageIndexingDescriptions,
   listRankCheckRuns:
     "Read retained execution outcomes and cursors, including blocked and cancelled runs without observations. Never launches or retries a check.",
   getRankCheckRun:

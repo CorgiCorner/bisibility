@@ -5,9 +5,9 @@ import {
   matchingScopes,
   saveBudget,
 } from "@/lib/metering/store/budgets";
-import { createSql, Prisma as SQL } from "@/lib/metering/store/host-sql";
+import { createSql } from "@/lib/metering/store/host-sql";
 import type { Operation } from "@usagekit/core";
-import { finalReceiptJoin, unknownAccounting } from "./reconcile-state";
+import { uncertaintyScopeUnknownCount } from "./uncertainty-gate-state";
 
 /** The same scope lock excludes historical import and admission while a gate is superseded. */
 export async function reconcileSpendingGates(tx: Prisma.TransactionClient, operation: Operation) {
@@ -21,14 +21,7 @@ export async function reconcileSpendingGates(tx: Prisma.TransactionClient, opera
     const scope = budget.scope;
     if (scope.kind !== "group" && scope.kind !== "connection")
       throw new Error("Invalid uncertainty gate");
-    const constraint =
-      scope.kind === "group"
-        ? SQL.sql`o.input->'scope'->>'group'=${scope.group}`
-        : SQL.sql`o.input->'scope'->>'connection'=${scope.connection}`;
-    const [row] = await tx.$queryRaw<{ unknown: bigint }[]>(SQL.sql`
-      SELECT count(*) AS unknown FROM metering_operation o ${finalReceiptJoin}
-      WHERE o.namespace=${scope.namespace} AND ${constraint} AND ${unknownAccounting}`);
-    if (row?.unknown !== 0n) continue;
+    if ((await uncertaintyScopeUnknownCount(tx, scope.namespace, scope)) !== 0n) continue;
     const saved = await saveBudget(sql, { ...budget, version: budget.version + 1, limit: null });
     if (saved.outcome !== "saved") throw new Error("Uncertainty gate reconciliation conflict");
   }

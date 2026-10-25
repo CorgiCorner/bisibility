@@ -610,7 +610,57 @@
       "projectBlocked": "Project spending is blocked by unresolved accounting.",
       "connectionBlocked": "Connection spending is blocked by unresolved accounting.",
       "lastResultActivityAt": "Result recovery worker last made progress",
-      "noSpendShort": "Recovery checks existing evidence before taking action."
+      "noSpendShort": "Recovery checks existing evidence before taking action.",
+      "evidence": {
+        "classification": "Evidence classification",
+        "acceptance": "Acceptance / recovery",
+        "incident": "Incident",
+        "lookup": "Lookup attempts",
+        "result": "Result",
+        "cost": "Cost",
+        "unclassified": "Unclassified",
+        "age": "{minutes, number} min open",
+        "last": "Last attempt (UTC)",
+        "next": "Next attempt (UTC)",
+        "reason": "Reason",
+        "project": "Project / check",
+        "depth": "Checked depth",
+        "createdUtc": "Retained at (UTC)",
+        "partialTitle": "Partial and unresolved evidence",
+        "partialHelp": "Latest 50 retained records. Incomplete evidence cannot be restored as a complete result.",
+        "empty": "No partial or unresolved evidence.",
+        "results": {
+          "under_review": "Under review",
+          "recovered": "Recovered",
+          "partial": "Partial",
+          "provider_error": "Provider error",
+          "missing": "Missing"
+        },
+        "costs": {
+          "measured": "Measured",
+          "unknown": "Unknown",
+          "under_review": "Under review",
+          "conflict": "Conflict"
+        },
+        "acceptanceStates": {
+          "accepted": "Accepted",
+          "unconfirmed": "Unconfirmed",
+          "rejected": "Rejected"
+        },
+        "recoveryStates": {
+          "not_needed": "Not needed",
+          "waiting_for_attempt_end": "Waiting for attempt",
+          "scheduled": "Scheduled",
+          "attempting": "Looking up",
+          "resolved": "Resolved",
+          "operator_review": "Operator review"
+        },
+        "partialKinds": {
+          "partial": "Partial",
+          "unresolved": "Unresolved"
+        },
+        "utcTimestamp": "{timestamp} UTC"
+      }
     },
     "dangerousActions": {
       "notice": "Enable two-factor authentication to {action}.",

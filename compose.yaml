@@ -1,6 +1,7 @@
 x-app-env: &app-env
   ACHIEVEMENTS_ENABLED: ${ACHIEVEMENTS_ENABLED:-}
   ACHIEVEMENTS_EMAIL_ENABLED: ${ACHIEVEMENTS_EMAIL_ENABLED:-}
+  PROVIDER_RECOVERY: ${PROVIDER_RECOVERY:-off}
   ALERT_DELIVERY_FAILURE_RATE_THRESHOLD: ${ALERT_DELIVERY_FAILURE_RATE_THRESHOLD:-}
   ALERT_DELIVERY_MIN_ATTEMPTS: ${ALERT_DELIVERY_MIN_ATTEMPTS:-}
   ALERT_DELIVERY_SWEEP_ENABLED: ${ALERT_DELIVERY_SWEEP_ENABLED:-}
@@ -95,7 +96,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.41.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.42.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -106,7 +107,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.41.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.42.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

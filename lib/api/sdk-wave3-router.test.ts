@@ -178,7 +178,7 @@ describe("SDK wave 3 operations through the real router", () => {
       consentRevision: "c1",
       estimatedCostCents: 1.25,
     });
-    const preview = await call("POST", "ai-tracking/runs/preview", {
+    const preview = await call("POST", "prompt-tracker/runs/preview", {
       prompt_ids: ["aip_a00000000000000000000000"],
       configurations: [configuration],
     });
@@ -197,9 +197,9 @@ describe("SDK wave 3 operations through the real router", () => {
       deadline: now.toISOString(),
       consent: true,
     };
-    expect((await call("POST", "ai-tracking/runs", body)).status).toBe(400);
+    expect((await call("POST", "prompt-tracker/runs", body)).status).toBe(400);
     mocks.launch.mockResolvedValueOnce(run);
-    const created = await call("POST", "ai-tracking/runs", body, "launch-one");
+    const created = await call("POST", "prompt-tracker/runs", body, "launch-one");
     expect(created.status).toBe(201);
     expect((await created.json()).data).toMatchObject({
       id: runId,
@@ -220,7 +220,7 @@ describe("SDK wave 3 operations through the real router", () => {
   });
 
   it("reads a run and samples with null and retained JSON evidence", async () => {
-    expect((await call("GET", `ai-tracking/runs/${runId}`)).status).toBe(200);
+    expect((await call("GET", `prompt-tracker/runs/${runId}`)).status).toBe(200);
     const sample = {
       id: "sample-db",
       publicId: "asm_a00000000000000000000000",
@@ -233,7 +233,7 @@ describe("SDK wave 3 operations through the real router", () => {
       receipt: null,
     };
     mocks.samples.mockResolvedValue({ items: [sample], nextCursor: "next-page" });
-    const first = await call("GET", `ai-tracking/runs/${runId}/samples?limit=1`);
+    const first = await call("GET", `prompt-tracker/runs/${runId}/samples?limit=1`);
     expect(first.status).toBe(200);
     expect((await first.json()).data[0]).toMatchObject({ cost_usd: null, evidence: null });
     mocks.samples.mockResolvedValue({
@@ -262,7 +262,10 @@ describe("SDK wave 3 operations through the real router", () => {
       ],
       nextCursor: null,
     });
-    const second = await call("GET", `ai-tracking/runs/${runId}/samples?limit=1&cursor=next-page`);
+    const second = await call(
+      "GET",
+      `prompt-tracker/runs/${runId}/samples?limit=1&cursor=next-page`,
+    );
     expect(second.status).toBe(200);
     expect((await second.json()).data[0]).toMatchObject({
       cost_usd: "0.0125",

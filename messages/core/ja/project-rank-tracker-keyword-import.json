@@ -570,7 +570,8 @@
           "position": "{position, number}位",
           "mixed": "混在",
           "noDifficultyData": "難易度データなし",
-          "coverageUnknown": "取得範囲が不明"
+          "coverageUnknown": "取得範囲が不明",
+          "partialDepth": "不完全: {depth, number} 位まで確認済み"
         },
         "columns": {
           "keyword": "キーワード",

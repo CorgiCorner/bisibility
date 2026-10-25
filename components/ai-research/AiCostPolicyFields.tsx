@@ -1,6 +1,5 @@
 "use client";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { Input } from "@/components/ui/Input";
 import { MenuItem } from "@/components/ui/MenuItem";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { AiModelCapability, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
@@ -8,6 +7,7 @@ import { LEGACY_MODELS, LEGACY_OUTPUT_TOKENS } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
+import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchForm } from "./AiVisibilityFields";
 import { legacyModelOptions } from "./ai-research-presets";
 
@@ -90,19 +90,7 @@ export function AiCostPolicyFields({
           )}
         />
       ) : null}
-      <label htmlFor="ai-cost-limit" className="grid gap-2 text-ui-body">
-        {t(actual ? "estimatedCostLimit" : "costCap")}
-        <Input
-          id="ai-cost-limit"
-          type="number"
-          min={0}
-          max={1000}
-          disabled={disabled}
-          {...form.register(actual ? "estimated_cost_limit_cents" : "max_cost_cents", {
-            valueAsNumber: true,
-          })}
-        />
-      </label>
+      <AiResearchCostCap form={form} disabled={disabled} advisory={actual} />
     </>
   );
 }

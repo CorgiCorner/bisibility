@@ -1,6 +1,7 @@
 import "server-only";
 
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { checkPreferencePatch } from "@/lib/notifications/check-preferences";
 import {
   applyNotificationPreferences,
   type NotificationPreferencesForm,
@@ -26,7 +27,9 @@ export const preferencePatchSchema = z
     alertSlack: z.boolean().optional(),
     alertWebhook: z.boolean().optional(),
     checkEmail: z.boolean().optional(),
+    providerIncidentInApp: z.boolean().optional(),
     checkInApp: z.boolean().optional(),
+    ...checkPreferencePatch,
     importEmail: z.boolean().optional(),
     importInApp: z.boolean().optional(),
     inviteEmail: z.boolean().optional(),
@@ -67,7 +70,11 @@ export async function updateProjectNotificationPreferences(ctx: ApiContext, proj
     alertSlack: patch.alertSlack ?? current.alertSlack,
     alertWebhook: patch.alertWebhook ?? current.alertWebhook,
     checkEmail: patch.checkEmail ?? current.checkEmail,
-    checkInApp: patch.checkInApp ?? current.checkInApp,
+    providerIncidentInApp: patch.providerIncidentInApp,
+    checkInApp: patch.checkInApp,
+    checkNotificationSetting: patch.checkNotificationSetting,
+    checkNotificationTopN: patch.checkNotificationTopN,
+    checkNotificationPositionMove: patch.checkNotificationPositionMove,
     importEmail: patch.importEmail ?? current.importEmail,
     importInApp: patch.importInApp ?? current.importInApp,
     inviteEmail: patch.inviteEmail ?? current.inviteEmail,
@@ -89,6 +96,7 @@ export async function updateProjectNotificationPreferences(ctx: ApiContext, proj
   // The service takes the API actor directly; the app action wraps the same service around
   // the browser session, so both surfaces answer to one implementation.
   const preferences = await runDomain(() => applyNotificationPreferences(actor, input));
+  if (patch.checkInApp !== undefined) ctx.headers.set("Deprecation", "@1792800000");
 
   return resourceResponse(snakeizeKeys(preferences), { headers: ctx.headers });
 }

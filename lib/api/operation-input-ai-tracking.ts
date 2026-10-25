@@ -17,7 +17,7 @@ import { trackingPreviewSchema, trackingRunApiPlanSchema } from "./ai-tracking-r
 import { noInput, type OperationInput, rawInput, zodInput } from "./operation-input-helpers";
 
 /**
- * AI tracking, AI research and agent workspace operations. Tracking bodies are camelized with
+ * Prompt Tracker, AI research and agent workspace operations. Tracking bodies are camelized with
  * `trackingCamelizeKeys`, which matches `camelizeKeys` for every key the shape compares.
  */
 
@@ -32,65 +32,65 @@ const runServerKeys = [
 ];
 const scheduleServerKeys = runServerKeys.map((key) => `configuration.${key}`);
 
-export const aiTrackingOperationInputs = {
-  acceptAiTrackingSuggestions: { body: zodInput(trackingAcceptanceSchema) },
-  aiTrackingSuggestionsGenerate: {
+export const promptTrackerOperationInputs = {
+  acceptPromptResearchSuggestions: { body: zodInput(trackingAcceptanceSchema) },
+  promptResearchSuggestionsGenerate: {
     body: zodInput(modelSuggestionsGenerateInputSchema, {
       serverKeys: ["preview.paymentConsent", "preview.payment", "preview.paymentOptions"],
     }),
   },
-  aiTrackingSuggestionsPreview: { body: zodInput(modelSuggestionsPreviewInputSchema) },
-  analyzeAiVisibility: { body: zodInput(visibilitySchema, { keys: "wire" }) },
-  archiveAiTrackingPrompt: noInput,
-  archiveAiTrackingSchedule: noInput,
-  archiveAiTrackingTopic: noInput,
+  promptResearchSuggestionsPreview: { body: zodInput(modelSuggestionsPreviewInputSchema) },
+  analyzeBrandVisibility: { body: zodInput(visibilitySchema, { keys: "wire" }) },
+  archivePromptTrackerPrompt: noInput,
+  archivePromptTrackerSchedule: noInput,
+  archivePromptTrackerTopic: noInput,
   // The body is read and merged, but the cancel operation validates none of it.
-  cancelAiTrackingRun: noInput,
+  cancelPromptTrackerRun: noInput,
   compareAiPrompts: { body: zodInput(promptSchema, { keys: "wire" }) },
   createAgentReport: { body: zodInput(externalAgentReportSchema, { keys: "wire" }) },
-  createAiTrackingPrompt: { body: zodInput(trackingPromptForm) },
-  createAiTrackingRun: {
+  createPromptTrackerPrompt: { body: zodInput(trackingPromptForm) },
+  createPromptTrackerRun: {
     body: zodInput(trackingRunApiPlanSchema, { alsoReads: ["consent"], serverKeys: runServerKeys }),
   },
-  createAiTrackingSchedule: {
+  createPromptTrackerSchedule: {
     body: zodInput(scheduleInputSchema, {
       alsoReads: ["consent"],
       serverKeys: scheduleServerKeys,
     }),
   },
-  createAiTrackingTopic: { body: zodInput(trackingTopicForm) },
-  exportAiTrackingEvidence: { query: rawInput("cursor", "format", "limit", "run_id") },
+  createPromptTrackerTopic: { body: zodInput(trackingTopicForm) },
+  exportPromptTrackerEvidence: { query: rawInput("cursor", "format", "limit", "run_id") },
   getAgentReport: noInput,
   getAiResearchCatalog: noInput,
-  getAiTrackingHistory: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  getAiTrackingRun: noInput,
-  getAiTrackingTrends: { query: zodInput(trackingTrendsQuerySchema, { keys: "wire" }) },
+  getPromptTrackerHistory: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  getPromptTrackerRun: noInput,
+  getPromptTrackerTrends: { query: zodInput(trackingTrendsQuerySchema, { keys: "wire" }) },
   getProjectContext: noInput,
   listAgentReports: {
     query: zodInput(agentReportListSchema, { alsoReads: ["cursor"], keys: "wire" }),
   },
-  listAiTrackingPrompts: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  listAiTrackingRuns: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  listAiTrackingSamples: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  listAiTrackingSchedules: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  listAiTrackingTopics: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  previewAiTrackingRun: {
+  listPromptTrackerPrompts: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  listPromptTrackerRuns: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  listPromptTrackerSamples: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  listPromptTrackerSchedules: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  listPromptTrackerTopics: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
+  previewPromptTrackerRun: {
     body: zodInput(trackingPreviewSchema, { serverKeys: ["actorId", "entrySource"] }),
   },
-  retryAiTrackingRun: {
+  retryPromptTrackerRun: {
     body: zodInput(planTrackingRunSchema, { alsoReads: ["consent"], serverKeys: runServerKeys }),
   },
   // The body is read and camelized, but nothing in it is used.
-  suggestAiTrackingPrompts: noInput,
+  suggestPromptResearchPrompts: noInput,
   // Built at the call site in `mutateTrackingCatalog` (ai-tracking-service.ts).
-  updateAiTrackingPrompt: { body: zodInput(trackingPromptForm.partial()) },
-  updateAiTrackingSchedule: {
+  updatePromptTrackerPrompt: { body: zodInput(trackingPromptForm.partial()) },
+  updatePromptTrackerSchedule: {
     body: zodInput(scheduleInputSchema.partial(), {
       alsoReads: ["consent"],
       serverKeys: scheduleServerKeys,
     }),
   },
-  updateAiTrackingTopic: { body: zodInput(trackingTopicForm.partial()) },
+  updatePromptTrackerTopic: { body: zodInput(trackingTopicForm.partial()) },
   // Only `agent_rules` is renamed by hand; the other keys are single words.
   updateProjectContext: { body: zodInput(projectContextSchema) },
 } as const satisfies Record<string, OperationInput>;

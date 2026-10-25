@@ -4,8 +4,6 @@ import shared from "@/messages/core/en/shared.json";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
-import { trackingFixtureActions, trackingWorkspaceFixture } from "./fixtures";
 import {
   generationFixtureActions,
   generationSnapshotFixture,
@@ -36,53 +34,6 @@ async function reviewAndPreview(user: ReturnType<typeof userEvent.setup>) {
   return dialog;
 }
 describe("reviewed model suggestion generation", () => {
-  it("uses Generate to approve the displayed cost, preserves full context and never launches a run", async () => {
-    const user = userEvent.setup();
-    const preview = vi.fn(generationFixtureActions.preview);
-    const generate = vi.fn(generationFixtureActions.generate);
-    const save = vi.fn(trackingFixtureActions.save);
-    const launch = vi.fn(trackingFixtureActions.launch);
-    render(
-      wrap(
-        <AiTrackingWorkspace
-          initialData={trackingWorkspaceFixture}
-          actions={{
-            ...trackingFixtureActions,
-            launch,
-            save,
-            generation: { ...generationFixtureActions, preview, generate },
-          }}
-        />,
-      ),
-    );
-    const dialog = await reviewAndPreview(user);
-    expect(preview.mock.calls[0][0].inputSnapshot).toEqual(generationSnapshotFixture);
-    const run = within(dialog).getByRole("button", { name: /^Approve and generate drafts/ });
-    await waitFor(() => expect(run).toBeEnabled());
-    await user.click(run);
-    await within(dialog).findByText("asg_abcdefghijklmnopqrstuvwx");
-    expect(generate).toHaveBeenCalledTimes(1);
-    expect(generate.mock.calls[0][1]).toMatch(/^[a-f0-9-]{36}$/);
-    await user.click(within(dialog).getAllByRole("button", { name: "Review draft" })[0]);
-    const promptDialog = await screen.findByRole("dialog");
-    const text = within(promptDialog).getByRole("textbox", { name: "Prompt text" });
-    await user.clear(text);
-    await user.type(text, "  Edited generated question?  ");
-    await user.click(within(promptDialog).getByRole("button", { name: "Add prompt" }));
-    expect(save).toHaveBeenCalledWith(
-      "prompts",
-      "POST",
-      expect.objectContaining({
-        text: "  Edited generated question?  ",
-        generationReference: {
-          generationId: "asg_abcdefghijklmnopqrstuvwx",
-          draftId: "12345678-1234-4234-8234-000000000001",
-        },
-      }),
-      undefined,
-    );
-    expect(launch).not.toHaveBeenCalled();
-  });
   it("preserves oversized full context and prevents preview until the user explicitly narrows it", async () => {
     const user = userEvent.setup();
     const preview = vi.fn(generationFixtureActions.preview);

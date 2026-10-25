@@ -10,7 +10,13 @@ import {
   inputControlSizeClassName,
 } from "./input-styles";
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement>;
+export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+  density?: "default" | "compact";
+};
+const inputDensityClasses = {
+  default: inputControlSizeClassName,
+  compact: `${inputControlSizeClassName} ${compactInputClassName}`,
+};
 
 export {
   compactInputClassName,
@@ -20,14 +26,14 @@ export {
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, ...props },
+  { className, density = "default", ...props },
   ref,
 ) {
   return (
     <input
       className={cn(
         inputClassName,
-        inputControlSizeClassName,
+        inputDensityClasses[density],
         "w-full rounded-control font-medium normal-case tracking-normal",
         className,
       )}

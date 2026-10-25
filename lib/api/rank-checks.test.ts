@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  evidence: vi.fn(async () => new Map()),
   authenticateBearer: vi.fn(),
   enqueueAlertDeliveries: vi.fn(),
   keywordFindFirst: vi.fn(),
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   rankCheckFindUnique: vi.fn(),
 }));
 
+vi.mock("@/lib/provider-evidence/projection/read", () => ({ readCheckEvidence: mocks.evidence }));
 vi.mock("server-only", () => ({}));
 vi.mock("./router", async (importOriginal) =>
   (await import("./response-capture.test-support")).captureRouter(await importOriginal()),

@@ -53,8 +53,8 @@ it.each(viewports.flatMap((viewport) => themes.map((theme) => ({ ...viewport, th
     expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
     const headings = [...document.querySelectorAll<HTMLElement>("[data-rail-group-heading]")];
     expect(headings.map((heading) => heading.dataset.railGroupHeading)).toEqual([
-      "tracking",
-      "research",
+      "seo",
+      "ai",
       "reports",
       "project",
     ]);

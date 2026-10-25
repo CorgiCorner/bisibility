@@ -85,8 +85,9 @@
         "history": "Historial",
         "keywords": "Palabras clave",
         "pages": "Páginas",
-        "ai_visibility": "Visibilidad en IA",
-        "prompt_explorer": "Explorador de prompts",
+        "ai_visibility": "Visibilidad de marca",
+        "prompt_explorer": "Laboratorio de prompts",
+        "prompt_research": "Investigación de preguntas",
         "site_audit": "Auditoría web"
       },
       "notice": "Eliminar no inicia búsquedas. Una búsqueda posterior puede requerir una solicitud de pago.",
@@ -96,8 +97,9 @@
         "ranked_keywords": "Palabras posicionadas",
         "backlinks": "Enlaces entrantes",
         "domain_overview": "Resumen del dominio",
-        "ai_visibility": "Visibilidad en IA",
-        "prompt_explorer": "Explorador de prompts",
+        "ai_visibility": "Visibilidad de marca",
+        "prompt_explorer": "Laboratorio de prompts",
+        "prompt_research": "Investigación de preguntas",
         "site_audit": "Auditoría web"
       }
     }

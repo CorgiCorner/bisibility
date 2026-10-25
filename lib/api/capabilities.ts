@@ -1,3 +1,5 @@
+import { isSelfHost } from "@/lib/deployment/deployment";
+import { availableInspectionModes } from "@/lib/presence/budget-mode";
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
@@ -46,7 +48,19 @@ export function getCapabilities() {
 
     return {
       description: operations.get(operationId)?.summary ?? operationId,
-      input_schema: toolInputSchemas[name],
+      input_schema:
+        name === "updatePageIndexingSettings"
+          ? {
+              ...toolInputSchemas[name],
+              properties: {
+                ...toolInputSchemas[name].properties,
+                budget_mode: {
+                  ...toolInputSchemas[name].properties.budget_mode,
+                  enum: availableInspectionModes(isSelfHost),
+                },
+              },
+            }
+          : toolInputSchemas[name],
       mcp_tool: mcpToolNameByCapability[name],
       name,
       operationId,

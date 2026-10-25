@@ -89,19 +89,24 @@ function unreachableSettingsSources(
   allSources: string[],
   readImports: (source: string) => string[],
 ) {
-  // Pop settings entry points first; every production root remains eligible.
+  // Keep settings paths first; every production root and dependency stays eligible.
   const priority = (source: string) => Number(/\/(?:settings|integrations)\//.test(source));
-  const pending = allSources.filter(isProductionRoot).sort((a, b) => priority(a) - priority(b));
+  const pending: string[] = [];
+  const urgent: string[] = [];
+  const enqueue = (sources: Iterable<string>) => {
+    for (const source of sources) (priority(source) ? urgent : pending).push(source);
+  };
+  enqueue(allSources.filter(isProductionRoot));
   const reachable = new Set<string>();
   const remaining = new Set(
     allSources.filter((source) => source.startsWith("components/settings/")),
   );
-  while (pending.length > 0 && remaining.size > 0) {
-    const source = pending.pop();
+  while (pending.length + urgent.length > 0 && remaining.size > 0) {
+    const source = (urgent.length > 0 ? urgent : pending).pop();
     if (!source || reachable.has(source)) continue;
     reachable.add(source);
     remaining.delete(source);
-    if (remaining.size > 0) pending.push(...readImports(source));
+    if (remaining.size > 0) enqueue(readImports(source));
   }
   return [...remaining].sort();
 }
@@ -128,6 +133,28 @@ describe("settings production reachability", () => {
     ).toEqual([]);
     expect(parsed).not.toContain("lib/unrelated.ts");
     expect(parsed).not.toContain("app/page.tsx");
+  });
+
+  it("finishes pending settings paths before entering unrelated dependency graphs", () => {
+    const sources = [
+      "app/a/settings/page.tsx",
+      "app/z/settings/page.tsx",
+      "components/settings/One.ts",
+      "components/settings/Two.ts",
+      "lib/unrelated.ts",
+    ];
+    const edges: Record<string, string[]> = {
+      "app/a/settings/page.tsx": ["components/settings/Two.ts"],
+      "app/z/settings/page.tsx": ["lib/unrelated.ts", "components/settings/One.ts"],
+    };
+    const parsed: string[] = [];
+    expect(
+      unreachableSettingsSources(sources, (source) => {
+        parsed.push(source);
+        return edges[source] ?? [];
+      }),
+    ).toEqual([]);
+    expect(parsed).not.toContain("lib/unrelated.ts");
   });
 
   it("retains alias, relative, index, require and cycle edges while reporting an orphan", () => {

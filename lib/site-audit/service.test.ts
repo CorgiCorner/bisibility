@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   write: vi.fn(),
   policy: vi.fn(),
+  access: vi.fn(),
 }));
 vi.mock("@/lib/agent-reports/service", () => ({
   createAgentReport: mocks.create,
@@ -35,10 +36,12 @@ vi.mock("@/lib/redis/redis", () => ({
 }));
 vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/deployment/project-write-mode", () => ({ assertProjectWritable: mocks.write }));
+vi.mock("@/lib/operations/access-extension", () => ({ assertOperationAccess: mocks.access }));
 vi.mock("./crawl", () => ({ crawlSite: mocks.crawl }));
 
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { AuditRateLimitError } from "./errors";
-import { readSiteAudit, runSiteAudit } from "./service";
+import { listSiteAudits, readSiteAudit, runSiteAudit } from "./service";
 
 const context = {
   actor: { id: "user1", memberships: [{ projectId: "project1", role: "owner" as const }] },
@@ -61,6 +64,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.list.mockResolvedValue([]);
   mocks.policy.mockResolvedValue({ lookupCacheTtlSeconds: null });
+  mocks.access.mockResolvedValue(undefined);
   mocks.consume.mockResolvedValue({ success: true });
   mocks.crawl.mockResolvedValue(result);
   mocks.create.mockResolvedValue({ id: "agr_result", createdAt: result.completedAt });
@@ -102,7 +106,32 @@ describe("site audit service", () => {
       await expect(runSiteAudit(context, input)).rejects.toThrow();
     expect(mocks.crawl).not.toHaveBeenCalled();
   });
-  it("reuses a project-scoped matching recent report without consuming limits or provider credits", async () => {
+  it.each(["missing", "invalid", "different limits", "different target"])(
+    "denies new crawls before rate limits, HTTP or report writes when the cache is %s",
+    async (cache) => {
+      const denial = new OperationAccessDeniedError();
+      mocks.access.mockRejectedValue(denial);
+      if (cache !== "missing") {
+        mocks.list.mockResolvedValue([{ id: "agr_saved", createdAt: new Date().toISOString() }]);
+        mocks.get.mockResolvedValue({
+          kind: "site_audit",
+          body:
+            cache === "invalid"
+              ? { version: 1 }
+              : cache === "different target"
+                ? { ...result, target: "https://example.org/" }
+                : { ...result, limits: { ...result.limits, maxPages: 5 } },
+        });
+      }
+      await expect(runSiteAudit(context, {})).rejects.toBe(denial);
+      expect(mocks.access).toHaveBeenCalledExactlyOnceWith("project1");
+      expect(mocks.consume).not.toHaveBeenCalled();
+      expect(mocks.crawl).not.toHaveBeenCalled();
+      expect(mocks.create).not.toHaveBeenCalled();
+    },
+  );
+  it("reuses a matching cached report even when new operations would be denied", async () => {
+    mocks.access.mockRejectedValue(new OperationAccessDeniedError());
     const createdAt = new Date().toISOString();
     mocks.list.mockResolvedValue([{ id: "agr_saved", createdAt }]);
     mocks.get.mockResolvedValue({ kind: "site_audit", body: result });
@@ -111,8 +140,36 @@ describe("site audit service", () => {
       cached: true,
     });
     expect(mocks.get).toHaveBeenCalledWith({ projectId: "project1", reportId: "agr_saved" });
+    expect(mocks.access).not.toHaveBeenCalled();
     expect(mocks.consume).not.toHaveBeenCalled();
     expect(mocks.crawl).not.toHaveBeenCalled();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+  it("keeps report detail and history readable when new operations would be denied", async () => {
+    mocks.access.mockRejectedValue(new OperationAccessDeniedError());
+    mocks.get.mockResolvedValue({
+      id: "agr_saved",
+      createdAt: result.completedAt,
+      kind: "site_audit",
+      body: result,
+    });
+    const history = [{ id: "agr_saved", createdAt: result.completedAt }];
+    mocks.list.mockResolvedValue(history);
+    await expect(readSiteAudit("project1", "agr_saved")).resolves.toMatchObject({
+      id: "agr_saved",
+      cached: true,
+      result,
+    });
+    await expect(listSiteAudits("project1")).resolves.toEqual(history);
+    expect(mocks.list).toHaveBeenCalledWith({
+      projectId: "project1",
+      kind: "site_audit",
+      limit: 30,
+    });
+    expect(mocks.access).not.toHaveBeenCalled();
+    expect(mocks.consume).not.toHaveBeenCalled();
+    expect(mocks.crawl).not.toHaveBeenCalled();
+    expect(mocks.create).not.toHaveBeenCalled();
   });
   it("never treats an arbitrary agent report JSON body as a validated crawl", async () => {
     mocks.list.mockResolvedValue([{ id: "agr_saved", createdAt: new Date().toISOString() }]);
@@ -127,6 +184,11 @@ describe("site audit service", () => {
       cached: false,
       result,
     });
+    expect(mocks.access).toHaveBeenCalledExactlyOnceWith("project1");
+    expect(mocks.access.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.consume.mock.invocationCallOrder[0],
+    );
+    expect(mocks.crawl).toHaveBeenCalledExactlyOnceWith("example.com", 10);
     expect(mocks.consume).toHaveBeenCalledWith({
       prefix: "bisibility:site-audit",
       bucketKey: "project1",

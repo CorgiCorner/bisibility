@@ -12,8 +12,9 @@ const DOCUMENTED_NON_TOOLS = new Set([
   "get_audit_status",
   "get_audit_issues",
   "get_audit_pages",
-  // A reserved report kind; ai_* tools make its noun prefix a candidate too.
+  // Reserved report kinds; ai_* and prompt_* tools make their noun prefixes candidates too.
   "ai_visibility",
+  "prompt_explorer",
 ]);
 
 function schemaProperties(value: unknown): string[] {

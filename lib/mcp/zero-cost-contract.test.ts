@@ -12,7 +12,7 @@ const paidTools = [
   "get_keyword_metrics",
   "list_ranked_keyword_suggestions",
   "run_rank_check",
-  "analyze_ai_visibility",
+  "analyze_brand_visibility",
   "compare_ai_prompts",
   "analyze_domain_overview",
   "load_domain_overview_history",

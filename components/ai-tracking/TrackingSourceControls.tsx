@@ -1,6 +1,8 @@
 "use client";
+import { ChoiceGroup } from "@/components/ui/ChoiceGroup";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { AiCatalogOutcome } from "@/lib/ai-research/catalog-types";
+import { aiEngineLabel } from "@/lib/ai-research/engine-labels";
 import type { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
 import { useTranslations } from "next-intl";
 import { type Control, Controller } from "react-hook-form";
@@ -47,24 +49,20 @@ export function TrackingSourceControls({
           )}
         />
       </div>
-      <div className="text-sm">
-        <p className="mb-2 font-medium">{t("engine")}</p>
+      <div className="text-sm sm:col-span-2">
         <Controller
           name="engine"
           control={control}
           render={({ field }) => (
-            <MenuSelect
-              ariaLabel={t("engine")}
-              size="input"
+            <ChoiceGroup
+              mode="single"
+              label={t("engine")}
               value={engines.includes(field.value) ? field.value : engines[0]}
               onChange={(value) => {
                 field.onChange(value);
                 onInvalidate();
               }}
-              options={engines.map((engine) => ({
-                value: engine,
-                label: engine.replaceAll("_", " "),
-              }))}
+              options={engines.map((engine) => ({ value: engine, label: aiEngineLabel(engine) }))}
             />
           )}
         />

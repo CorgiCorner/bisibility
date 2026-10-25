@@ -68,3 +68,15 @@ it("expires engine answers when the project shortens its cache window", () => {
     ).toBe(false);
   });
 });
+
+it("applies current project policy to shared keyword research evidence", () => {
+  const key = `ai:prompt-research-v2:${"a".repeat(64)}`;
+  const now = Date.parse("2026-10-24T12:00:00Z");
+  const value = { result: { fetchedAt: "2026-10-24T10:00:00Z" } };
+  expect(withProjectCachePolicy(3600, () => projectCacheEntryCurrent(key, value, now))).toBe(false);
+  expect(withProjectCachePolicy(43200, () => projectCacheEntryCurrent(key, value, now))).toBe(true);
+  expect(withProjectCachePolicy(null, () => projectCacheEntryCurrent(key, value, now))).toBe(true);
+  expect(
+    projectCacheEntryCurrent(key, { result: { fetchedAt: "2026-10-23T20:00:00Z" } }, now),
+  ).toBe(false);
+});

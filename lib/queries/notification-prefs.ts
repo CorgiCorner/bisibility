@@ -2,16 +2,23 @@ import "server-only";
 
 import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
+import { checkPreferenceSelect, checkPreferenceView } from "@/lib/notifications/check-preferences";
+import type { CheckNotificationSettingValue } from "@/lib/notifications/preference-defaults";
+import { notificationPreferencesForMissingRow } from "@/lib/notifications/preference-defaults";
 import { getQueryActor } from "./_auth";
 
 export type NotificationPreferencesView = {
   alertEmail: boolean;
   alertInApp: boolean;
   alertPush: boolean;
+  providerIncidentInApp?: boolean;
   alertSlack: boolean;
   alertWebhook: boolean;
   checkEmail: boolean;
   checkInApp: boolean;
+  checkNotificationSetting: CheckNotificationSettingValue;
+  checkNotificationTopN: number;
+  checkNotificationPositionMove: number;
   email: string;
   emailVerification: "unverified" | "verified";
   importEmail: boolean;
@@ -24,25 +31,28 @@ export type NotificationPreferencesView = {
   webhookAvailable: boolean;
 };
 
+const missingPreferences = notificationPreferencesForMissingRow();
 const defaultPreferences = {
-  alertEmail: true,
-  alertInApp: true,
+  alertEmail: missingPreferences.alertEmail,
+  alertInApp: missingPreferences.alertInApp,
   alertPush: true,
-  checkEmail: false,
-  checkInApp: false,
-  importEmail: true,
-  importInApp: true,
-  inviteEmail: true,
-  inviteInApp: true,
-  reportEmail: true,
+  providerIncidentInApp: true,
+  checkEmail: missingPreferences.checkEmail,
+  ...checkPreferenceView(null),
+  importEmail: missingPreferences.importEmail,
+  importInApp: missingPreferences.importInApp,
+  inviteEmail: missingPreferences.inviteEmail,
+  inviteInApp: missingPreferences.inviteInApp,
+  reportEmail: missingPreferences.reportEmail,
 };
 
 const preferenceSelect = {
   alertEmail: true,
   alertInApp: true,
   alertPush: true,
+  providerIncidentInApp: true,
   checkEmail: true,
-  checkInApp: true,
+  ...checkPreferenceSelect,
   importEmail: true,
   importInApp: true,
   inviteEmail: true,
@@ -86,6 +96,7 @@ export async function readNotificationPreferencesFor(
   return {
     ...defaultPreferences,
     ...preference,
+    ...checkPreferenceView(preference),
     alertSlack: slackConnection?.enabled ?? false,
     alertWebhook: enabledWebhookCount > 0,
     email: user.email,

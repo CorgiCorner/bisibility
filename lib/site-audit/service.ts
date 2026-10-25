@@ -4,6 +4,7 @@ import { consume } from "@/lib/api/ratelimit";
 import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { crawlSite } from "./crawl";
 import { AuditRateLimitError } from "./errors";
@@ -62,6 +63,7 @@ export async function runSiteAudit(
       return { id: recent[0].id, createdAt: recent[0].createdAt, cached: true, result };
     }
   }
+  await assertOperationAccess(project.id);
   const allowed = await consume({
     prefix: "bisibility:site-audit",
     bucketKey: project.id,

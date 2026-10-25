@@ -1,4 +1,4 @@
-import { aiTrackingSchemas } from "@/lib/mcp/tracking-contract";
+import { promptTrackerSchemas } from "@/lib/mcp/tracking-contract";
 import { describe, expect, it } from "vitest";
 import { getOpenApiDocument } from "./openapi";
 import { appOwnedTrackingParameters } from "./openapi-tracking-parameters";
@@ -19,7 +19,7 @@ function operation(operationId: string) {
   throw new Error(`Missing operation ${operationId}`);
 }
 
-describe("app-owned AI tracking reads", () => {
+describe("app-owned Prompt Tracker reads", () => {
   const owned = Object.keys(
     appOwnedTrackingParameters,
   ) as (keyof typeof appOwnedTrackingParameters)[];
@@ -32,7 +32,7 @@ describe("app-owned AI tracking reads", () => {
   });
 
   it.each(owned)("%s accepts every app-owned field in its MCP tool too", (operationId) => {
-    const mcp = aiTrackingSchemas()[operationId].properties ?? {};
+    const mcp = promptTrackerSchemas()[operationId].properties ?? {};
     for (const parameter of appOwnedTrackingParameters[operationId]) {
       expect(mcp[parameter.name], parameter.name).toEqual(parameter.schema);
     }
@@ -45,9 +45,9 @@ describe("app-owned AI tracking reads", () => {
           content: { "application/json": { schema: { $ref?: string } } };
         }
       ).content["application/json"].schema.$ref;
-    expect(ref("listAiTrackingPrompts")).toBe("#/components/schemas/AiTrackingPromptPage");
-    expect(ref("getAiTrackingHistory")).toBe("#/components/schemas/AiTrackingRunPage");
-    expect(ref("getAiTrackingTrends")).toBe("#/components/schemas/AiTrackingTrendsResponse");
+    expect(ref("listPromptTrackerPrompts")).toBe("#/components/schemas/PromptTrackerPromptPage");
+    expect(ref("getPromptTrackerHistory")).toBe("#/components/schemas/PromptTrackerRunPage");
+    expect(ref("getPromptTrackerTrends")).toBe("#/components/schemas/PromptTrackerTrendsResponse");
     expect(ref("getHealth")).toBe("#/components/schemas/HealthStatus");
   });
 });

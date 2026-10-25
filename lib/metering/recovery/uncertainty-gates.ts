@@ -1,3 +1,4 @@
+import { uncertaintyScopeUnknownCount } from "@/lib/provider-usage/uncertainty-gate-state";
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 export async function readUncertaintyGates(tx: Prisma.TransactionClient, namespace: string) {
@@ -10,7 +11,23 @@ export async function readUncertaintyGates(tx: Prisma.TransactionClient, namespa
       AND b.limit_value IS NOT NULL AND b.on_exceed='block'
       AND NOT EXISTS(SELECT 1 FROM metering_budget newer WHERE newer.namespace=b.namespace
         AND newer.budget_id=b.budget_id AND newer.version>b.version)`;
+  const eligibleProjects = new Set<string>();
+  const eligibleConnections = new Set<string>();
+  for (const row of rows) {
+    const scope =
+      row.kind === "group" && row.project
+        ? { kind: "group" as const, group: row.project }
+        : row.kind === "connection" && row.connection
+          ? { kind: "connection" as const, connection: row.connection }
+          : null;
+    if (scope && (await uncertaintyScopeUnknownCount(tx, namespace, scope)) === 0n) {
+      if (scope.kind === "group") eligibleProjects.add(scope.group);
+      else eligibleConnections.add(scope.connection);
+    }
+  }
   return {
+    eligibleProjects,
+    eligibleConnections,
     projects: new Set(
       rows.filter((row) => row.kind === "group" && row.project).map((row) => row.project),
     ),

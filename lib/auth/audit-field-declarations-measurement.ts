@@ -6,6 +6,12 @@ import {
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 export function registerLocalMeasurementAuditDeclarations(declare: Declare) {
+  declare(["search_index.inspect"], {
+    after: {
+      ...f.numbers("requested", "admitted", "refused", "repeats", "released"),
+      ...f.dates("reservationAt"),
+    },
+  });
   declare(
     [
       "local_monitor.create",

@@ -1,10 +1,12 @@
 import "server-only";
 
 import { requireProjectScope } from "@/lib/actions/_shared";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { AuditRateLimitError } from "@/lib/site-audit/errors";
 import { siteAuditSchema } from "@/lib/site-audit/schema";
 import { listSiteAudits, readSiteAudit, runSiteAudit } from "@/lib/site-audit/service";
 import { type ApiContext, notFound, requireApiActor } from "./context";
+import { errorFromUnknown } from "./error-mapper";
 import { dataResponse, errorResponse } from "./responses";
 import { parseApiInput, readJsonBody, runDomain, scopedProject, snakeizeKeys } from "./surface";
 
@@ -21,6 +23,7 @@ export async function runSiteAuditRoute(ctx: ApiContext, projectId: string) {
         { headers: ctx.headers },
       );
     } catch (error) {
+      if (isOperationAccessDeniedError(error)) return errorFromUnknown(error, ctx.headers, ctx.url);
       if (!(error instanceof AuditRateLimitError)) throw error;
       const headers = new Headers(ctx.headers);
       const retryAfter = error.retryAfterSeconds;

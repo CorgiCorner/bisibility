@@ -99,6 +99,11 @@ of complete coverage and is not backfilled. A malformed
 provider payload fails the provider attempt and can use the configured fallback
 chain; it is not stored as a completed no-match.
 
+Retained responses can also include `result_completeness` (`complete`, `partial`
+or `unresolved`), `returned_depth` and `comparison_allowed: false`. These optional
+fields describe the retained evidence. A partial no-match covers only the returned
+depth; it does not establish absence across the full requested depth.
+
 ## Queued response and correlation
 
 When inline execution is unavailable, the request queues a rank-check run. The

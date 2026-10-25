@@ -1,3 +1,4 @@
+import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
 import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
@@ -185,6 +186,7 @@ export async function deleteProject(ctx: ApiContext, projectId: string) {
       },
       tx,
     );
+    await closeProjectIncidentsSilently(tx, before.id);
     await tx.project.delete({ where: { id: before.id } });
   });
 

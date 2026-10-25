@@ -3,12 +3,16 @@ import { ApiAuthError } from "./auth";
 import { ApiNotFoundError } from "./errors";
 
 const mocks = vi.hoisted(() => ({
+  evidence: vi.fn(async () => new Map()),
   authenticate: vi.fn(),
   readRun: vi.fn(),
   readRuns: vi.fn(),
   session: vi.fn(),
   project: vi.fn(),
   keyword: vi.fn(),
+}));
+vi.mock("@/lib/provider-evidence/projection/read-runs", () => ({
+  readRunEvidence: mocks.evidence,
 }));
 vi.mock("./router", async (importOriginal) =>
   (await import("./response-capture.test-support")).captureRouter(await importOriginal()),

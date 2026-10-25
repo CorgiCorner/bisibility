@@ -527,4 +527,24 @@ describe("heartbeat Slack digest", () => {
       "Counters unavailable · missed-catchup delta not evaluated",
     );
   });
+  it("prints evidence classifications instead of the broad deferral budget hint", () => {
+    const input = healthyInput();
+    input.database.rank.deferred = 2;
+    input.database.rank.evidenceCounts = {
+      under_review: 2,
+      recovered: 1,
+      partial: 1,
+      provider_error: 0,
+      missing: 0,
+      cost_conflict: 1,
+    };
+    input.database.rank.deferredReasons = { send_unconfirmed: 2 };
+    const event = buildHeartbeatEvent(input);
+    expect(event.fields?.["Needs attention"]).toContain(
+      "2 under review · 1 recovered · 1 partial · 1 cost conflict",
+    );
+    expect(event.fields?.["Needs attention"]).not.toContain(
+      "review provider limits and the project budget",
+    );
+  });
 });

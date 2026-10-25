@@ -119,6 +119,12 @@ remain separate opt-ins. Their complete worker configuration is
 `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON`,
 `SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON`, `PRESENCE_SYNC_ENABLED`, and
 `PRESENCE_SYNC_CRON`.
+The weekly digest calendar has no `timeZoneName`: Temporal evaluates Monday
+06:15 in UTC, independently of the server machine's timezone. `WEEKLY_DIGEST_CRON`
+keeps its existing override semantics. The digest reports the trailing 168 hours
+ending at the workflow's start time, using a half-open interval. Activity retries
+reuse that same period; delayed execution does not align the period to midnight.
+
 Alert digest delivery is independent of this maintenance gate. It is enabled by
 default and controlled by `ALERT_DIGEST_FLUSH_ENABLED` and
 `ALERT_DIGEST_FLUSH_INTERVAL`.

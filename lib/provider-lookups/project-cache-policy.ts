@@ -12,7 +12,7 @@ export function projectCacheTtl(fallback: number) {
   return scope.getStore() ?? fallback;
 }
 export function isProjectResultKey(key: string) {
-  return /^(kr:v2|km:v1|rk:v2|bl:v3|do:v1|ai:(?:v[12](?:-provider-domain-v1)?|v3-engines)):/.test(
+  return /^(kr:v2|km:v1|rk:v2|bl:v3|do:v1|ai:(?:v[12](?:-provider-domain-v1)?|v3-engines|prompt-research-v2)):/.test(
     key,
   );
 }
@@ -52,6 +52,7 @@ export function unpackProjectCache(value: unknown) {
   return { value, storedAt: cachedValueTime(value) };
 }
 
+/** All ai: lookups, including ai:prompt-research-v2:, share the 12-hour instance default. */
 export function instanceLookupTtl(key: string) {
   if (
     key.startsWith("do:") &&

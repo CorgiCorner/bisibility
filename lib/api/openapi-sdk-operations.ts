@@ -74,6 +74,45 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
   ...sdkWave2Operations,
   ...sdkWave3Operations,
   ...sdkWave4Operations,
+  acceptPromptResearchSuggestions: {
+    "x-bisibility-idempotency": "optional",
+    "x-bisibility-pagination": single,
+    "x-bisibility-sdk": {
+      group: "promptResearch",
+      method: "accept",
+      legacy: legacy(
+        "acceptPromptResearchSuggestions",
+        "accept_prompt_research_suggestions",
+        "AcceptPromptResearchSuggestions",
+      ),
+    },
+  },
+  promptResearchSuggestionsPreview: {
+    "x-bisibility-idempotency": "optional",
+    "x-bisibility-pagination": single,
+    "x-bisibility-sdk": {
+      group: "promptResearch",
+      method: "preview",
+      legacy: legacy(
+        "promptResearchSuggestionsPreview",
+        "prompt_research_suggestions_preview",
+        "PromptResearchSuggestionsPreview",
+      ),
+    },
+  },
+  promptResearchSuggestionsGenerate: {
+    "x-bisibility-idempotency": "required",
+    "x-bisibility-pagination": single,
+    "x-bisibility-sdk": {
+      group: "promptResearch",
+      method: "generate",
+      legacy: legacy(
+        "promptResearchSuggestionsGenerate",
+        "prompt_research_suggestions_generate",
+        "PromptResearchSuggestionsGenerate",
+      ),
+    },
+  },
   analyzeBacklinks: read(
     "backlinks",
     "analyze",
@@ -89,16 +128,16 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
     ),
     "x-bisibility-idempotency": "optional",
   },
-  getAiTrackingHistory: read(
-    "aiTracking",
+  getPromptTrackerHistory: read(
+    "promptTracker",
     "history",
-    legacy("getAiTrackingHistory", "get_ai_tracking_history", "GetAITrackingHistory"),
+    legacy("getPromptTrackerHistory", "get_prompt_tracker_history", "GetPromptTrackerHistory"),
     cursor(100),
   ),
-  getAiTrackingTrends: read(
-    "aiTracking",
+  getPromptTrackerTrends: read(
+    "promptTracker",
     "trends",
-    legacy("getAiTrackingTrends", "get_ai_tracking_trends", "GetAITrackingTrends"),
+    legacy("getPromptTrackerTrends", "get_prompt_tracker_trends", "GetPromptTrackerTrends"),
   ),
   getCapabilities: read(
     "system",
@@ -118,10 +157,10 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
     "get",
     legacy("getProjectOverview", "get_project_overview", "GetProjectOverview"),
   ),
-  listAiTrackingPrompts: read(
-    "aiTracking.prompts",
+  listPromptTrackerPrompts: read(
+    "promptTracker.prompts",
     "list",
-    legacy("listAiTrackingPrompts", "list_ai_tracking_prompts", "ListAITrackingPrompts"),
+    legacy("listPromptTrackerPrompts", "list_prompt_tracker_prompts", "ListPromptTrackerPrompts"),
     cursor(100),
   ),
   listAlertRules: read(
@@ -181,15 +220,15 @@ export const sdkFirstWaveOperationIds = [
   ...sdkWave4ReadyOperationIds,
   "analyzeBacklinks",
   "analyzeDomainOverview",
-  "getAiTrackingHistory",
-  "getAiTrackingTrends",
+  "getPromptTrackerHistory",
+  "getPromptTrackerTrends",
   "getCapabilities",
   "getCostEstimate",
   "getHealth",
   "getMe",
   "getProject",
   "getProjectOverview",
-  "listAiTrackingPrompts",
+  "listPromptTrackerPrompts",
   "listAlertRules",
   "listCompetitors",
   "listKeywords",

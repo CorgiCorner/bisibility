@@ -250,6 +250,7 @@
         "unknown": "Otra actividad",
         "unknownMissing": "Otra actividad",
         "updateDenied": "Actualización denegada",
+        "urlInspectionAllowanceUpdated": "Asignación de inspecciones de URL actualizada",
         "usageDisplayUpdated": "Visualización de uso actualizada",
         "webhookCreated": "Webhook creado",
         "webhookDeleted": "Webhook eliminado",

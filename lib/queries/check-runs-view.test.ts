@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkRunRowsWhere, getCheckRunsView } from "./check-runs-view";
 
 const mocks = vi.hoisted(() => ({
+  evidence: vi.fn(async () => new Map()),
+  triggerWhere: vi.fn(async (_project: string, trigger: string) =>
+    trigger && trigger !== "all" ? { trigger } : {},
+  ),
   getRequestSerpProviderChain: vi.fn(),
   storedResultsSummaries: vi.fn(async () => new Map()),
   prisma: {
@@ -18,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
 }));
 
+vi.mock("@/lib/provider-evidence/projection/read", () => ({ readCheckEvidence: mocks.evidence }));
+vi.mock("./check-run-trigger", () => ({ checkRunTriggerWhere: mocks.triggerWhere }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/queries/retrieved-results", () => ({
@@ -72,7 +78,11 @@ describe("check runs view query", () => {
       { provider: "dataforseo" },
       { provider: "serpapi" },
     ]);
-    mocks.prisma.rankCheck.findMany.mockResolvedValue([row("check_1")]);
+    mocks.prisma.rankCheck.findMany.mockImplementation(async (args) =>
+      args.select?.deferredReason
+        ? [row("stat1"), row("stat2"), { ...row("stat3"), viaFallback: false, status: "failed" }]
+        : [row("check_1")],
+    );
     mocks.prisma.keyword.count.mockResolvedValue(2);
     mocks.prisma.rankCheck.count.mockResolvedValue(1);
     mocks.prisma.rankCheck.groupBy
@@ -81,16 +91,7 @@ describe("check runs view query", () => {
         { _count: { _all: 1 }, status: "failed" },
       ])
       .mockResolvedValueOnce([{ _count: { _all: 1 }, provider: "serpapi", viaFallback: true }]);
-    mocks.prisma.$queryRaw
-      .mockResolvedValueOnce([{ total: "0.5" }])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          attempts: [{ message: "Provider rate limited (429)", provider: "dataforseo" }],
-          provider: "serpapi",
-          status: "completed",
-        },
-      ]);
+    mocks.prisma.$queryRaw.mockReset().mockResolvedValue([{ total: "0.5" }]);
   });
 
   it.each([
@@ -122,21 +123,27 @@ describe("check runs view query", () => {
       expect.objectContaining({
         take: 51,
         where: {
-          OR: [
-            { checkedAt: { lt: new Date(cursor.checkedAt) } },
-            { checkedAt: new Date(cursor.checkedAt), publicId: { lt: cursor.id } },
+          AND: [
+            {
+              OR: [
+                { checkedAt: { lt: new Date(cursor.checkedAt) } },
+                { checkedAt: new Date(cursor.checkedAt), publicId: { lt: cursor.id } },
+              ],
+              checkedAt: { gte: RANGE_START, lte: NOW },
+              keyword: { projectId: "project_1" },
+              provider: "serpapi",
+              status: "completed",
+              viaFallback: true,
+            },
+            { trigger: "manual" },
+            {},
+            {},
           ],
-          checkedAt: { gte: RANGE_START, lte: NOW },
-          keyword: { projectId: "project_1" },
-          provider: "serpapi",
-          status: "completed",
-          trigger: "manual",
-          viaFallback: true,
         },
       }),
     );
     expect(view).toMatchObject({
-      counts: { completed: 2, failed: 1, runs: 3, viaFallback: 1 },
+      counts: { completed: 2, failed: 1, runs: 3, viaFallback: 2 },
       spendCents: 0.5,
       staleCount: 2,
     });

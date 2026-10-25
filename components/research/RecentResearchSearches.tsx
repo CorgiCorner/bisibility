@@ -50,7 +50,7 @@ export function RecentResearchSearches({
   const hintId = disabled && disabledHint ? "recent-research-disabled-hint" : undefined;
   const now = new Date();
   return (
-    <section aria-label={t("section")}>
+    <section aria-label={t("section")} className="min-w-0">
       <div className="mb-2 flex items-center gap-1.5 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
         <Clock weight="regular" size={13} /> {t("section")}
       </div>

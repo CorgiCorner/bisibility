@@ -34,6 +34,7 @@ const itemSelect = {
   url: true,
 } as const;
 const checkSelect = {
+  recoveryRestoredAt: true,
   attemptCount: true,
   checkedAt: true,
   createdAt: true,
@@ -75,6 +76,7 @@ export async function loadRetainedRankReportTargets(
   metadata: ReadonlyMap<string, RankReportTargetMetadata>,
   includeItems: boolean,
   onlyCheckPublicId?: string,
+  options: { excludeRestored?: boolean } = {},
 ): Promise<RankReportTarget[]> {
   const ids = scope.keywords.map(({ id }) => id);
   if (ids.length > limits.maxTargets) throw new RankReportCapacityError();
@@ -84,6 +86,7 @@ export async function loadRetainedRankReportTargets(
     keywordId: { in: ids },
     keyword: { projectId: scope.project.id },
     ...(onlyCheckPublicId ? { publicId: onlyCheckPublicId } : {}),
+    ...(options.excludeRestored ? { recoveryRestoredAt: null } : {}),
   };
   const [count, itemCount] = await Promise.all([
     tx.rankCheck.count({ where }),

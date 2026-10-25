@@ -16,7 +16,7 @@ function notice(mode: "prompt" | "visibility", reason?: "no_source") {
 describe("module-specific catalog guidance", () => {
   it("offers connection setup instead of claiming available provider presets without credentials", () => {
     notice("visibility", "no_source");
-    expect(screen.getByRole("alert")).toHaveTextContent("Choose a DataForSEO source");
+    expect(screen.getByRole("alert")).toHaveTextContent("Connect DataForSEO in Integrations");
     expect(screen.getByRole("alert")).not.toHaveTextContent("mini/nano");
     expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
       "href",
@@ -37,12 +37,12 @@ describe("module-specific catalog guidance", () => {
   it("keeps the approved prompt preset selectable and exposes pricing limits on keyboard focus", async () => {
     const user = userEvent.setup();
     notice("prompt");
-    expect(screen.getByRole("alert")).toHaveTextContent("mini/nano preset");
+    expect(screen.getByRole("alert")).toHaveTextContent("quick check with GPT-4.1 mini and nano");
     expect(screen.getByRole("alert")).not.toHaveTextContent("United States");
     await user.tab();
     expect(screen.getByRole("button", { name: "About available AI settings" })).toHaveFocus();
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Extended settings require a fresh verified quote",
+      "Other settings need a new price check",
     );
   });
 });

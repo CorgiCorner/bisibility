@@ -1,12 +1,14 @@
-export interface AiTrackingOperationPolicy {
+export interface PromptTrackerOperationPolicy {
   name: string;
   scope: "read" | "write";
 }
-export function aiTrackingOperationPolicy(
+export function promptTrackerOperationPolicy(
   method: string,
   path: readonly string[],
-): AiTrackingOperationPolicy | null {
-  if (path[0] !== "projects" || path[2] !== "ai-tracking") return null;
+): PromptTrackerOperationPolicy | null {
+  if (path[0] !== "projects") return null;
+  if (path[2] === "prompt-research") return promptResearchOperationPolicy(method, path);
+  if (path[2] !== "prompt-tracker") return null;
   const resource = path[3];
   const member = path[4];
   const action = path[5];
@@ -14,25 +16,27 @@ export function aiTrackingOperationPolicy(
     resource as "topics" | "prompts" | "schedules"
   ];
   if (collection && path.length <= 5) {
-    if (method === "GET" && !member) return { name: `listAiTracking${collection}s`, scope: "read" };
+    if (method === "GET" && !member)
+      return { name: `listPromptTracker${collection}s`, scope: "read" };
     if (method === "POST" && !member)
-      return { name: `createAiTracking${collection}`, scope: "write" };
+      return { name: `createPromptTracker${collection}`, scope: "write" };
     if (method === "PATCH" && member)
-      return { name: `updateAiTracking${collection}`, scope: "write" };
+      return { name: `updatePromptTracker${collection}`, scope: "write" };
     if (method === "DELETE" && member)
-      return { name: `archiveAiTracking${collection}`, scope: "write" };
+      return { name: `archivePromptTracker${collection}`, scope: "write" };
   }
   if (resource === "runs" && path.length <= 6) {
     if (method === "POST" && member === "preview" && path.length === 5)
-      return { name: "previewAiTrackingRun", scope: "read" };
-    if (method === "POST" && !member) return { name: "createAiTrackingRun", scope: "write" };
-    if (method === "GET" && !member) return { name: "listAiTrackingRuns", scope: "read" };
-    if (method === "GET" && member && !action) return { name: "getAiTrackingRun", scope: "read" };
+      return { name: "previewPromptTrackerRun", scope: "read" };
+    if (method === "POST" && !member) return { name: "createPromptTrackerRun", scope: "write" };
+    if (method === "GET" && !member) return { name: "listPromptTrackerRuns", scope: "read" };
+    if (method === "GET" && member && !action)
+      return { name: "getPromptTrackerRun", scope: "read" };
     if (method === "GET" && action === "samples")
-      return { name: "listAiTrackingSamples", scope: "read" };
+      return { name: "listPromptTrackerSamples", scope: "read" };
     if (method === "POST" && ["cancel", "retry"].includes(action))
       return {
-        name: action === "cancel" ? "cancelAiTrackingRun" : "retryAiTrackingRun",
+        name: action === "cancel" ? "cancelPromptTrackerRun" : "retryPromptTrackerRun",
         scope: "write",
       };
   }
@@ -40,30 +44,31 @@ export function aiTrackingOperationPolicy(
     return {
       name:
         resource === "history"
-          ? "getAiTrackingHistory"
+          ? "getPromptTrackerHistory"
           : resource === "trends"
-            ? "getAiTrackingTrends"
-            : "exportAiTrackingEvidence",
+            ? "getPromptTrackerTrends"
+            : "exportPromptTrackerEvidence",
       scope: "read",
     };
-  if (
-    resource === "suggestions" &&
-    method === "POST" &&
-    path.length === 5 &&
-    ["preview", "generate"].includes(member)
-  )
+  return null;
+}
+
+function promptResearchOperationPolicy(
+  method: string,
+  path: readonly string[],
+): PromptTrackerOperationPolicy | null {
+  if (method !== "POST" || path[3] !== "suggestions") return null;
+  const member = path[4];
+  if ((member === "preview" || member === "generate") && path.length === 5)
     return {
-      name: member === "preview" ? "aiTrackingSuggestionsPreview" : "aiTrackingSuggestionsGenerate",
+      name:
+        member === "preview"
+          ? "promptResearchSuggestionsPreview"
+          : "promptResearchSuggestionsGenerate",
       scope: member === "preview" ? "read" : "write",
     };
-  if (
-    resource === "suggestions" &&
-    method === "POST" &&
-    ((!member && path.length === 4) || (member === "accept" && path.length === 5))
-  )
-    return {
-      name: member === "accept" ? "acceptAiTrackingSuggestions" : "suggestAiTrackingPrompts",
-      scope: member === "accept" ? "write" : "read",
-    };
+  if (!member && path.length === 4) return { name: "suggestPromptResearchPrompts", scope: "read" };
+  if (member === "accept" && path.length === 5)
+    return { name: "acceptPromptResearchSuggestions", scope: "write" };
   return null;
 }
