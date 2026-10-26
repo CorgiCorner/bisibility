@@ -2,12 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   inspect: vi.fn(),
+  readSitemaps: vi.fn(),
+  rate: vi.fn(),
   scope: vi.fn(),
   readable: vi.fn(),
   connection: vi.fn(),
   detail: vi.fn(),
   list: vi.fn(),
 }));
+vi.mock("@/lib/search-index/read-sitemaps", () => ({ readProjectSitemaps: mocks.readSitemaps }));
+vi.mock("@/lib/api/ratelimit", () => ({ consume: mocks.rate }));
 vi.mock("./_shared", () => ({
   getActionActor: async () => ({ id: "actor" }),
   requireProjectScope: mocks.scope,
@@ -22,12 +26,18 @@ vi.mock("@/lib/search-index/urls", () => ({ listPageIndexingUrls: mocks.list }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
-import { inspectPageIndexingUrls, loadPageIndexingDetail } from "./page-indexing";
+import {
+  inspectPageIndexingUrls,
+  loadPageIndexingDetail,
+  readPageIndexingSitemaps,
+} from "./page-indexing";
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.scope.mockResolvedValue({ id: "internal", publicId: "prj_test" });
-  mocks.readable.mockResolvedValue({ project: { id: "internal" } });
+  mocks.readable.mockResolvedValue({ project: { id: "internal", publicId: "prj_test" } });
+  mocks.rate.mockResolvedValue({ success: true });
+  mocks.readSitemaps.mockResolvedValue(undefined);
   mocks.connection.mockResolvedValue({ property: "sc-domain:example.com" });
   mocks.inspect.mockResolvedValue({ results: [{ url: "https://example.com", error: null }] });
 });
@@ -87,5 +97,31 @@ describe("inspection action boundary", () => {
     expect(
       await inspectPageIndexingUrls({ projectId: "prj_test", urls: ["https://example.com"] }),
     ).toEqual([{ url: "https://example.com", status }]);
+  });
+});
+
+describe("explicit sitemap read", () => {
+  it("uses the authorized internal project and does not run an inspection", async () => {
+    expect(await readPageIndexingSitemaps({ projectId: "prj_test" })).toEqual({ status: "ok" });
+    expect(mocks.readable).toHaveBeenCalledWith("prj_test");
+    expect(mocks.readSitemaps).toHaveBeenCalledWith("internal");
+    expect(mocks.inspect).not.toHaveBeenCalled();
+  });
+  it("does not call Google when access is denied", async () => {
+    mocks.readable.mockRejectedValueOnce(new Error("forbidden"));
+    await expect(readPageIndexingSitemaps({ projectId: "prj_test" })).rejects.toThrow("forbidden");
+    expect(mocks.readSitemaps).not.toHaveBeenCalled();
+    expect(mocks.rate).not.toHaveBeenCalled();
+  });
+  it("limits repeated reads before calling the provider", async () => {
+    mocks.rate.mockResolvedValueOnce({ success: false });
+    expect(await readPageIndexingSitemaps({ projectId: "prj_test" })).toEqual({
+      status: "rate_limited",
+    });
+    expect(mocks.readSitemaps).not.toHaveBeenCalled();
+  });
+  it("does not expose raw provider failures", async () => {
+    mocks.readSitemaps.mockRejectedValueOnce(new Error("private transport context"));
+    expect(await readPageIndexingSitemaps({ projectId: "prj_test" })).toEqual({ status: "error" });
   });
 });

@@ -154,10 +154,32 @@ hand.
 | `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
-| `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Advanced outbound request throttling. See [Provider rate limits](#provider-rate-limits). |
 | `WEBHOOK_ALLOW_PRIVATE_NETWORK` | Security-sensitive webhook SSRF override. Set to `1` only when a self-hosted instance must deliver webhooks to trusted private, LAN, or loopback services. See [Webhook SSRF and private-network delivery](/self-hosting/security#webhook-ssrf-and-private-network-delivery). |
 | `REDIS_TLS_CA_B64` | Base64-encoded PEM CA for TLS Redis endpoints using a private CA. |
 | `APP_HOST_PORT` | Host port for the app container in Compose. Defaults to `3000`. Set to map the app to a different host port. |
+
+### Provider rate limits
+
+These settings throttle outbound provider requests. They do not change the
+provider's own quotas, project budgets, or spending approvals. Use a shared
+Redis/Valkey limiter backend when the app and worker run in separate processes.
+
+| Request-budget variable | Default | Window variable | Default seconds |
+| - | - | - | - |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_PER_MINUTE` | `1800` | `BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_WINDOW_SECONDS` | `60` |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_GSC_PER_MINUTE` | `600` | `BISIBILITY_PROVIDER_RATE_LIMIT_GSC_WINDOW_SECONDS` | `60` |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_GA4_PER_MINUTE` | `60` | `BISIBILITY_PROVIDER_RATE_LIMIT_GA4_WINDOW_SECONDS` | `60` |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_PER_MINUTE` | `60` | `BISIBILITY_PROVIDER_RATE_LIMIT_SERPAPI_WINDOW_SECONDS` | `60` |
+| `BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_PER_MINUTE` | `10` | `BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_WINDOW_SECONDS` | `60` |
+
+Use positive integers. Missing, zero, negative, or invalid values fall back to
+the defaults. Despite the historical `_PER_MINUTE` name, the value is the request
+budget for the configured window: increasing the window does not multiply it.
+
+`BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED=1` bypasses this application throttle for
+local testing. Leave it unset in production; bypassing it does not remove remote
+provider limits or financial checks.
 
 ### Observability and integrations
 

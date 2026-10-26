@@ -152,6 +152,20 @@ describe("rank-check run preview", () => {
     expect(result.budget).toMatchObject({ blocked: true, reason: "budget_missing" });
   });
 
+  it("keeps the estimate available when unresolved usage blocks allocation", async () => {
+    mocks.assertAllocation.mockRejectedValueOnce(
+      new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 100,
+        spentCents: 20,
+        valuationIncomplete: true,
+      }),
+    );
+    const result = await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
+    expect(result.estimate.costCents).not.toBeNull();
+    expect(result.budget).toMatchObject({ blocked: true, reason: "usage_reconciliation_required" });
+  });
+
   it("rejects a sample project before calculating a preview", async () => {
     await expect(
       previewRankCheckRun({

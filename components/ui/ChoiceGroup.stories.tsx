@@ -11,7 +11,15 @@ const options = [
 const meta = {
   title: "UI/ChoiceGroup",
   component: ChoiceGroup,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Chip-style choices for selecting independent options, primarily multiple selections. Use SegmentedControl for mutually exclusive input methods or workflow modes.",
+      },
+    },
+  },
   args: { mode: "multiple", label: "AI engines", options, value: [], onChange: () => {} },
 } satisfies Meta<typeof ChoiceGroup>;
 export default meta;

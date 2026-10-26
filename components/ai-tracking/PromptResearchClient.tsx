@@ -19,6 +19,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PromptResearchKeyword } from "./PromptResearchKeyword";
+import { PromptResearchMarket } from "./PromptResearchMarket";
 
 export function PromptResearchClient({
   projectId,
@@ -94,7 +95,7 @@ export function PromptResearchClient({
             <p id="research-cost" className="m-0 text-ui-xs text-fg-muted">
               {costT("estimateRequired")}
             </p>
-            <p className="m-0 text-ui-xs text-fg-muted">{t("market")}</p>
+            <PromptResearchMarket />
           </form>
         </Card>
       </ProviderAccessGate>

@@ -71,6 +71,7 @@ export const roadmapMetadata: Metadata = buildPageMetadata({
   title: "Roadmap",
   description:
     "Explore the bisibility roadmap: feature concepts, early releases, beta capabilities, and ways to help shape what comes next.",
+  images: "file-convention",
   path: "/roadmap",
   socialTitle: "bisibility roadmap",
   socialDescription:

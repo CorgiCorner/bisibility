@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import messages from "@/messages/core/en/project-search-insights.json";
 import shared from "@/messages/core/en/shared.json";
@@ -51,8 +52,8 @@ it("the tab counter exposes not-indexed pages separately from the total", () => 
       />
     </FeatureMessagesProvider>,
   );
-  const link = screen.getByRole("link", { name: "Page indexing, alpha, 248 not indexed" });
-  expect(within(link).getByText("alpha").nextElementSibling).toHaveTextContent("248");
+  const link = screen.getByRole("link", { name: "Page indexing, beta, 248 not indexed" });
+  expect(within(link).getByText("beta").nextElementSibling).toHaveTextContent("248");
   expect(link).toHaveAttribute("aria-current", "page");
   expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
     "href",
@@ -180,6 +181,10 @@ it("keeps sitemap, search and menu focus when selecting a reason", async () => {
     expect(loadUrlsAction).toHaveBeenLastCalledWith({
       projectId: "prj_test",
       query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
         history: "true",
         group: "not_indexed",
         coverage_state: indexingUrl.coverageState,
@@ -197,7 +202,10 @@ it("puts tracked URLs and sitemaps before the secondary overview", () => {
   const t = messages.projectSearchInsights.indexing;
   const overview = screen.getByRole("region", { name: "Overview from our checks" });
   expect(overview.tagName).toBe("SECTION");
-  expect(within(overview).getByText("Likely to be removed")).toBeInTheDocument();
+  const feedback = within(overview).getByRole("link", { name: "Want to keep it? Email us" });
+  expect(feedback).toBeVisible();
+  expect(feedback.getAttribute("href")).toMatch(/^mailto:feedback@bisibility\.com\?subject=/);
+  expect(within(overview).getByText(t.overview.removalNotice)).toBeVisible();
   expect(within(overview).getByText(t.overview.note)).toBeInTheDocument();
   const urls = screen.getByRole("region", { name: t.urls });
   const sitemaps = screen.getByRole("heading", { name: t.sitemaps });
@@ -241,7 +249,15 @@ it("filters, focuses and scrolls to tracked URLs when an overview reason is sele
   await waitFor(() =>
     expect(loadUrlsAction).toHaveBeenLastCalledWith({
       projectId: "prj_test",
-      query: { history: "true", group: "not_indexed", coverage_state: indexingUrl.coverageState },
+      query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
+        history: "true",
+        group: "not_indexed",
+        coverage_state: indexingUrl.coverageState,
+      },
     }),
   );
   expect(urls).toHaveFocus();

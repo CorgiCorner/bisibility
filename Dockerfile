@@ -119,6 +119,7 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/lib ./lib
 # the packaged Prisma CLI/config above, applies schema changes, runs data
 # migrations, then applies the guarded schema contracts.
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/migrate.ts ./scripts/deploy/migrate.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/postgres-version.ts ./scripts/deploy/postgres-version.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/staged-data-migrations.ts ./scripts/deploy/staged-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/pre-data-migrations.ts ./scripts/deploy/pre-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/completed-data-migrations.ts ./scripts/deploy/completed-data-migrations.ts

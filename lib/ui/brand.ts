@@ -1,5 +1,5 @@
 // Geometry for the brand mark and the mark/wordmark lockup. It lives in lib because the
-// Open Graph images (lib/seo/og-image.tsx) must draw the same mark, and lib may not import
+// Open Graph images (lib/seo/og-brand-lockup.tsx) must draw the same mark, and lib may not import
 // components. components/ui/BrandMark and components/ui/BrandLockup re-export from here, so
 // there is still exactly one source for the paths and the scale.
 

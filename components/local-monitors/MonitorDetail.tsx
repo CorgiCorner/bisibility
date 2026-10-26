@@ -16,6 +16,7 @@ import {
   searchMonitorChoicesAction,
 } from "@/lib/local-monitors/session-actions";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
@@ -29,21 +30,32 @@ import { MonitorRecurringSchedule } from "./MonitorRecurringSchedule";
 import { MonitorRetryPanel } from "./MonitorRetryPanel";
 import { MonitorRunResults } from "./results/MonitorRunResults";
 
-export function MonitorDetail({
-  projectId,
-  monitor,
-  choices,
-  runHistory,
-  runResult,
-  resultUnavailable,
-}: {
+type MonitorDetailProps = {
   projectId: string;
   monitor: MonitorValue;
   choices: SetupChoices;
   runHistory: LocalMonitorRunHistory | null;
   runResult: LocalMonitorRunResult | null;
   resultUnavailable: boolean;
-}) {
+};
+
+export function MonitorDetail(props: MonitorDetailProps) {
+  const [queryClient] = useState(() => new QueryClient());
+  return (
+    <QueryClientProvider client={queryClient}>
+      <MonitorDetailContent {...props} />
+    </QueryClientProvider>
+  );
+}
+
+function MonitorDetailContent({
+  projectId,
+  monitor,
+  choices,
+  runHistory,
+  runResult,
+  resultUnavailable,
+}: MonitorDetailProps) {
   const t = useTranslations("shared.localMonitors");
   const format = useFormatter();
   const router = useRouter();
@@ -181,7 +193,7 @@ export function MonitorDetail({
       ) : null}
       {editing && choices.permissions.canWrite && current ? (
         <MonitorForm
-          key={`${monitor.id}:${monitor.version}`}
+          key={`${monitor.id}:${monitor.version}:edit`}
           projectId={projectId}
           current={monitor}
           choices={choices}
@@ -195,7 +207,7 @@ export function MonitorDetail({
         />
       ) : null}
       <MonitorManualLaunch
-        key={`${monitor.id}:${monitor.version}`}
+        key={`${monitor.id}:${monitor.version}:manual`}
         projectId={projectId}
         monitorId={monitor.id}
         version={monitor.version}
@@ -228,7 +240,7 @@ export function MonitorDetail({
       ) : null}
       <MonitorPoints monitor={monitor} />
       <MonitorHistory
-        key={`${monitor.id}:${monitor.revision}`}
+        key={`${monitor.id}:${monitor.revision}:history`}
         projectId={projectId}
         monitorId={monitor.id}
       />

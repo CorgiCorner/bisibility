@@ -140,8 +140,8 @@ Useful flags:
 - `npm run test:examples -- --require-all`: fail when any example is skipped
   because a toolchain or sibling SDK checkout is missing.
 - `npm run test:examples -- --sdk-integration`: after the examples pass, run the
-  sibling TypeScript, Go, Python, CLI, and MCP SDK integration suites against
-  the same local API.
+  configured sibling SDK integration suites against the same local API, plus
+  toolchain-specific build and test checks where available.
 - `npm run test:examples -- --sdk-integration --require-all`: full local gate
   for SDK release validation.
 

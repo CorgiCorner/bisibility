@@ -1,6 +1,7 @@
 export const SETUP_VIDEO_REFS = [
   "create-project",
   "connect-source",
+  "connect-credits",
   "add-keywords",
   "first-check",
   "confirm-competitors",
@@ -27,6 +28,13 @@ export const SETUP_VIDEO_MANIFEST: Partial<Record<SetupVideoRef, SetupVideoAsset
     durationSeconds: 16,
     poster: "/videos/setup/create-project-v1.webp",
     src: "https://media.bisibility.com/videos/setup/create-project-v2.mp4",
+  },
+  "connect-credits": {
+    height: 1080,
+    width: 1512,
+    durationSeconds: 42,
+    poster: "https://media.bisibility.com/videos/setup/set-up-credits-402b7484e27f.webp",
+    src: "https://media.bisibility.com/videos/setup/set-up-credits-a637308c0587.mp4",
   },
   "connect-source": {
     height: 1000,

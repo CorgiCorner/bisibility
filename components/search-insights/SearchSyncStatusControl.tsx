@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { StatusChip, type StatusChipTone } from "@/components/ui/StatusChip";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchSyncControlModel } from "@/lib/search-insights/sync/control-model";
 import { VIEWER_ASK_ADMIN_CONNECT } from "@/lib/ui/viewer-affordances";
@@ -32,6 +33,7 @@ export function SearchSyncStatusControl({
   onAction,
   reconnectHref,
   suppressPauseTooltip = false,
+  statusTone,
   variant = "full",
 }: Readonly<{
   actionNode?: React.ReactNode;
@@ -43,6 +45,7 @@ export function SearchSyncStatusControl({
   onAction?: () => void;
   reconnectHref?: string;
   suppressPauseTooltip?: boolean;
+  statusTone?: StatusChipTone;
   variant?: "compact" | "full";
 }>) {
   const baseAction =
@@ -88,11 +91,15 @@ export function SearchSyncStatusControl({
       className={
         variant === "compact"
           ? "inline-flex items-center gap-2"
-          : "flex w-full items-center justify-between gap-3"
+          : "flex w-full min-w-0 flex-wrap items-center justify-between gap-3"
       }
     >
-      <div>
-        <p className="m-0 text-[12px] font-semibold text-fg">{model.status}</p>
+      <div className="flex min-w-0 flex-col items-start gap-2">
+        {statusTone ? (
+          <StatusChip label={model.status} tone={statusTone} />
+        ) : (
+          <p className="m-0 text-[12px] font-semibold text-fg">{model.status}</p>
+        )}
         {model.supportingText ? (
           <p className="m-0 text-[11px] text-fg-muted">{model.supportingText}</p>
         ) : null}

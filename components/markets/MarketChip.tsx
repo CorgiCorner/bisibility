@@ -1,3 +1,4 @@
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { languageDisplayName, regionDisplayName } from "@/lib/i18n/display-names";
 import { cn } from "@/lib/ui/cn";
@@ -20,6 +21,7 @@ export type MarketChipProps = {
   languageLabel: string;
   locationLabel: string;
   size?: MarketChipSize;
+  showFlag?: boolean;
 };
 
 const deviceIcons = {
@@ -45,6 +47,7 @@ export function MarketChip({
   languageLabel,
   locationLabel,
   size = "sm",
+  showFlag = false,
 }: Readonly<MarketChipProps>) {
   const t = useTranslations("shared.markets");
   const locale = useLocale();
@@ -55,6 +58,9 @@ export function MarketChip({
 
   return (
     <span className={cn(quietChipVariants({ size }), className)}>
+      {showFlag && countryCode ? (
+        <CountryFlag code={countryCode} className="h-3 w-4 shrink-0 rounded-[2px]" />
+      ) : null}
       {/* The language is what keeps `Belgium / Dutch` apart from `Belgium / French`, so it
           is the half that has to survive a narrow row: the location takes essentially all
           the shrink pressure and loses its tail, which still reads. Both still ellipsize,

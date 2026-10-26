@@ -146,7 +146,7 @@ describe("shared reservation-based project daily inspection allowance", () => {
     expect(await getInspectionBudget(projectId, now)).toMatchObject({ used: 1, remaining: 2 });
   });
 
-  it("uses the fixed allowance by default but allows the self-host available quota mode", async () => {
+  it("uses the fixed allowance by default but allows the selected available quota mode", async () => {
     mocks.tx.auditLog.findMany.mockResolvedValue([{ after: { admitted: 2000 } }]);
     mocks.tx.project.findUniqueOrThrow.mockResolvedValue({
       publicId: targetId,

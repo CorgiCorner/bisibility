@@ -127,7 +127,7 @@
     "useEngines": "AIサービスを選ぶ",
     "engineLimit": "1回の確認で最大{max, number}サービスを選べます。",
     "modelLimit": "1回の確認で最大2モデルを比較できます。",
-    "quickCheck": "GPT-4.1 miniとnanoで簡単に確認します。料金には以前承認された単価を使います。モデルや支払い方法の変更は詳細設定を開いてください。",
+    "quickCheck": "質問を入力し、実行前に料金を確認します。",
     "maximumAmountHint": "この確認の利用上限：{amount}。実行前に料金を確認してください。",
     "advisoryAmountHint": "見積もりが{amount}を超えたら警告します。DataForSEOの最終請求額の上限にはなりません。",
     "resultsLabel": "回答と引用",

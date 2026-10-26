@@ -28,7 +28,11 @@ export type ChoiceGroupProps<T extends string> = SharedProps<T> &
     | { mode: "single"; value: T; onChange: (value: T) => void; max?: never; maxHint?: never }
   );
 
-/** Disabled choices remain focusable so their explanation is available to keyboard users. */
+/**
+ * Chip-style choices, primarily for selecting multiple independent options.
+ * Use SegmentedControl for mutually exclusive input methods or workflow modes.
+ * Disabled choices remain focusable so keyboard users can read their explanation.
+ */
 export function ChoiceGroup<T extends string>(props: Readonly<ChoiceGroupProps<T>>) {
   const id = useId();
   const selected = (value: T) =>

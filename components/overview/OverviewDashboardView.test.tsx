@@ -66,7 +66,7 @@ describe("OverviewDashboardView", () => {
     );
 
     expect(screen.queryByText("Aún no hay rankings")).not.toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "Run your first check" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Check your rankings" })).not.toBeInTheDocument();
     expect(screen.queryByText("Welcome to Acme")).not.toBeInTheDocument();
   });
 

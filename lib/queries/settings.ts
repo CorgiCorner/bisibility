@@ -4,7 +4,6 @@ import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import type { DateFormatPreference } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
-import { isSelfHost } from "@/lib/deployment/deployment";
 import { centsToDollars } from "@/lib/format/currency";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
 import { rankCheckBudgetCapCents } from "@/lib/metering/rank-check-budget-read";
@@ -202,7 +201,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       device: market.device === "mobile" ? "Mobile" : "Desktop",
       deviceCount: devices.size || 1,
       keywordCount: fullProject.keywords.length,
-      inspectionAvailableModes: availableInspectionModes(isSelfHost),
+      inspectionAvailableModes: availableInspectionModes(),
       inspectionBudgetMode: fullProject.defaults?.inspectionBudgetMode ?? "fixed",
       inspectionDailyLimit:
         fullProject.defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT,

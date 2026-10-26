@@ -385,8 +385,7 @@
       "navigation": "Search Console views",
       "performance": "Performance",
       "title": "Page indexing",
-      "alphaBadge": "alpha",
-      "notIndexedCount": "Page indexing, {alpha}, {count, plural, one {# not indexed} other {# not indexed}}",
+      "notIndexedCount": "Page indexing, {maturity}, {count, plural, one {# not indexed} other {# not indexed}}",
       "groups": {
         "indexed": "Indexed",
         "not_indexed": "Not indexed",
@@ -394,13 +393,12 @@
         "not_checked": "Not checked yet"
       },
       "modes": {
-        "off": "Mode: off",
-        "fixed": "Mode: fixed daily limit",
-        "available_quota": "Mode: use free quota"
+        "off": "Off",
+        "fixed": "Fixed daily limit",
+        "available_quota": "Use available quota"
       },
-      "denominator": "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}} from sitemaps and keyword targets.",
+      "denominator": "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}}.",
       "freshness": "Oldest result: {oldest}. As of: {newest}.",
-      "trustStrip": "Google's stored indexed state, not a live test. Today: {count, plural, one {# check} other {# checks}} (estimate). Daily quota resets at {reset} your time, midnight Pacific time.",
       "settings": "Inspection settings",
       "inspect": "Inspect URL",
       "dailyExhausted": "The daily inspection allowance or property quota is exhausted, possibly by other tools too. Checks can resume after {reset}. Stored results remain available.",
@@ -458,7 +456,7 @@
       "richCounts": "{items, plural, one {# item} other {# items}}, {issues, plural, one {# issue} other {# issues}}",
       "viewStored": "View stored result",
       "unspecifiedReason": "Unspecified",
-      "inspectDescription": "Request the stored indexing state for up to 10 URLs.",
+      "inspectDescription": "Check up to 10 URLs from your own list or a sitemap.",
       "enums": {
         "verdict": {
           "VERDICT_UNSPECIFIED": "Unspecified",
@@ -534,7 +532,7 @@
       "checksIndexed": "{indexed, number} of {total, number} indexed",
       "sitemapReadAt": "Read from Search Console {date}",
       "sitemapSnapshotCaption": "Submitted in Search Console. An index counts the URLs of its children. Our checks come from stored inspections.",
-      "sitemapsNotRead": "Sitemaps not read yet; the first background run reads them",
+      "sitemapsNotRead": "Sitemaps have not been read yet.",
       "noSitemapsSubmitted": "No sitemap is submitted for this property in Search Console.",
       "sitemapReadErrors": {
         "permission": "Permission denied reading sitemaps at {failed}. Last successful read: {success}. Showing stored rows.",
@@ -562,12 +560,41 @@
       "verdictInspectionFailed": "Inspection failed",
       "overview": {
         "title": "Overview from our checks",
-        "badge": "Likely to be removed",
-        "note": "Rebuilt from our inspections, so it can be partial or out of date. Search Console's Page indexing report is the complete version. This section will likely be removed in an upcoming release.",
+        "note": "Based on our inspections; coverage may be incomplete.",
         "openConsole": "Open the full report in Search Console",
-        "keepQuestion": "Want us to keep this section? Click to tell us by email.",
-        "keepSubject": "Keep the Page indexing overview"
-      }
+        "keepSubject": "Keep the Page indexing overview",
+        "removalNotice": "This section may be removed in a future update.",
+        "keepLink": "Want to keep it? Email us"
+      },
+      "noInspectionTargets": "No URLs to inspect yet.",
+      "noInspectionResults": "No inspection results yet. {total, number} URLs available.",
+      "sitemapNextRun": "Next background run: {date}, your time.",
+      "sitemapSchedule": {
+        "disabled": "Automatic URL inspection is off. Enable it in Data sources to read sitemaps in background runs.",
+        "paused": "Background URL inspection is paused. No next run is scheduled.",
+        "unavailable": "The next background run time could not be confirmed.",
+        "scheduled": "Background URL inspection is scheduled."
+      },
+      "readSitemaps": "Read sitemaps",
+      "refreshSitemaps": "Refresh sitemaps",
+      "sitemapReadFailed": "Could not read sitemaps. Check the Search Console connection and try again.",
+      "sitemapReadRateLimited": "Wait a minute before reading sitemaps again.",
+      "inspectionDetails": "Inspection details",
+      "modeLabel": "Automatic inspections",
+      "todayLabel": "Today",
+      "resetLabel": "Quota resets",
+      "checksToday": "{count, plural, one {# check} other {# checks}} (estimate)",
+      "quotaReset": "{reset} your time (midnight Pacific)",
+      "storedState": "Results reflect Google's last known indexing state.",
+      "maturityBadge": "beta",
+      "inspectSource": "Choose URLs",
+      "inspectManual": "Enter URLs",
+      "inspectFromSitemap": "From sitemap",
+      "inspectSelectSitemap": "Choose a sitemap",
+      "inspectSitemapHint": "Loads up to 10 stored URLs, starting with those not checked yet. You can edit the list before inspecting.",
+      "inspectSitemapEmpty": "No stored URLs in this sitemap. Read sitemaps again and retry.",
+      "inspectNoSitemaps": "Read sitemaps first to choose URLs from one.",
+      "inspectSitemapLoading": "Loading URLs..."
     }
   }
 }

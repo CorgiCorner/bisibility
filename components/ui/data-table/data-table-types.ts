@@ -53,6 +53,7 @@ export type DataTableProps<TRow extends DataTableRowBase> = DataTableLayoutContr
   footerStart?: ReactNode;
   id: string;
   layout?: "auto" | "fill";
+  measureRows?: boolean;
   onDensityChange?: (density: DataTableDensity) => void;
   onExpandedChange?: (next: ReadonlySet<string>) => void;
   onGroupRowClick?: (row: TRow) => void;

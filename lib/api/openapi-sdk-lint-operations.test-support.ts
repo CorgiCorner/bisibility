@@ -1,3 +1,4 @@
+import { providerIdSchema } from "@/lib/schemas/provider";
 import { documentOperations } from "./openapi-sdk-lint.test-support";
 import {
   isJson,
@@ -173,7 +174,22 @@ export function pathParameterProblems(document: SdkDocument, path: string, opera
     if (!placeholderName.test(name)) problems.push(`path-placeholder-not-snake-case ${name} ${id}`);
     if (parameter?.required !== true) {
       problems.push(`missing-path-parameter ${name} ${id}`);
-    } else if (/(^|_)id$/.test(name) && !schema?.["x-bisibility-public-id"]) {
+    } else if (
+      /(^|_)id$/.test(name) &&
+      !schema?.["x-bisibility-public-id"] &&
+      !(
+        name === "provider_id" &&
+        path.includes("/providers/{provider_id}") &&
+        schema?.type === "string" &&
+        Array.isArray(schema.enum) &&
+        schema.enum.length > 0 &&
+        schema.enum.every(
+          (value) =>
+            typeof value === "string" &&
+            providerIdSchema.options.includes(value as (typeof providerIdSchema.options)[number]),
+        )
+      )
+    ) {
       problems.push(`path-id-without-public-id ${name} ${id}`);
     }
   }

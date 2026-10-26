@@ -1,3 +1,6 @@
+import { withSearchInsightsMessages } from "@/.storybook/search-insights-messages";
+import { SearchConsoleTabs } from "@/components/search-insights/page-indexing/SearchConsoleTabs";
+import { PageContent } from "@/components/shell/PageContent";
 import { ToastProvider } from "@/components/ui/Toast";
 import { finalizedWindow } from "@/lib/search-insights/dates";
 import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
@@ -19,6 +22,7 @@ import {
 const meta = {
   component: SearchInsightsWorkspace,
   decorators: [
+    withSearchInsightsMessages,
     (Story) => (
       <ToastProvider>
         <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
@@ -148,4 +152,19 @@ export const PeriodChanging: Story = {
     await expect(canvas.getByRole("region", { name: "Search Console data loading" })).toBeVisible();
     await expect(canvas.getByRole("button", { name: /^Comparison window:/ })).toBeDisabled();
   },
+};
+
+export const PerformancePage: Story = {
+  args: common,
+  render: (args) => (
+    <PageContent className="flex flex-col gap-4">
+      <SearchConsoleTabs
+        active="performance"
+        base="/app/prj_story/search-console"
+        query=""
+        notIndexed={0}
+      />
+      <SearchInsightsWorkspace {...args} />
+    </PageContent>
+  ),
 };

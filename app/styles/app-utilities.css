@@ -138,6 +138,7 @@ body {
   -webkit-text-size-adjust: none;
   text-size-adjust: none;
 }
+/* 14px fields rely on viewport maximum-scale=1 to prevent iOS focus zoom; Android pinch zoom is blocked. */
 @media (max-width: 639px) {
   input:not(
     [type="button"],
@@ -152,7 +153,7 @@ body {
   ),
   select,
   textarea {
-    font-size: 16px;
+    font-size: 14px;
   }
   input.compact-text-12 {
     font-size: 12px;

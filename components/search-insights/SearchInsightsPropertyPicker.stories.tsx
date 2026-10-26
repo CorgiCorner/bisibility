@@ -1,3 +1,4 @@
+import { withSearchInsightsMessages } from "@/.storybook/search-insights-messages";
 import { ToastProvider } from "@/components/ui/Toast";
 import type { LoadSearchInsightsPropertiesAction } from "@/lib/actions/search-insights";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -26,6 +27,7 @@ const meta = {
   },
   component: SearchInsightsPropertyPicker,
   decorators: [
+    withSearchInsightsMessages,
     (Story) => (
       <ToastProvider>
         <div className="bg-bg p-6 text-fg">
@@ -81,7 +83,7 @@ async function assertOpenMenuGeometry(canvasElement: HTMLElement) {
   expect(option).not.toHaveTextContent("Active");
   const footer = button.closest('[data-slot="menu-action-footer"]');
   const divider = footer?.querySelector('[data-slot="menu-action-footer-divider"]');
-  const paper = footer?.closest(".MuiPaper-root");
+  const paper = footer?.closest("[data-ui-overlay]");
   if (
     !(
       footer instanceof HTMLElement &&

@@ -131,7 +131,8 @@ describe("action payment presentation", () => {
       />,
     );
     expect(screen.queryByText("≈ 4 tokens")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveClass("text-[12px]", "text-fg-muted");
+    expect(screen.getByRole("status")).toHaveTextContent("Checking price");
+    expect(screen.getByRole("status").querySelector("[data-payment-skeleton]")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
   });
 

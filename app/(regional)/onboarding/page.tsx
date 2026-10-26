@@ -55,6 +55,7 @@ import {
 } from "@/lib/queries/onboarding";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { listWorkspaces } from "@/lib/queries/workspaces";
+import { appPath } from "@/lib/routing/app-path";
 import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
@@ -124,6 +125,11 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const requestedStep = paramValue(params?.step);
   const currentStep = normalizeOnboardingStep(params?.step);
   const workspaces = await listWorkspaces();
+  // Use a project URL directly: /app can return unfinished accounts to onboarding.
+  const returnWorkspace =
+    workspaces.find((workspace) => workspace.isDefault) ??
+    workspaces.find((workspace) => workspace.onboardingCompletedAt) ??
+    workspaces[0];
   const requestedProjectId = paramValue(params?.projectId) ?? null;
   const gscJustConnected = gscCallbackSucceeded(params);
   // Explicit new-project and landing website handoffs must not resume an existing project.
@@ -257,6 +263,14 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   return renderOnboardingDataSourceExtension(
     <>
       <OnboardingPageHeading
+        backLink={
+          returnWorkspace
+            ? {
+                href: appPath(returnWorkspace.publicId, "dashboard"),
+                label: t("onboarding.page.backToProjects"),
+              }
+            : undefined
+        }
         title={t("onboarding.page.title")}
         description={t("onboarding.page.description")}
       />

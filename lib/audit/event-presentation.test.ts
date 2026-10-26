@@ -7,6 +7,10 @@ const auditEvents: Record<string, string> = auditMessages.projectAudit.presentat
 const advancedEvents: Record<string, string> = advancedMessages.projectSettingsAdvanced.audit.event;
 
 describe("auditEventMessageKeyFor", () => {
+  it("names indexing inspection activity explicitly", () => {
+    expect(auditEventMessageKeyFor("search_index.inspect")).toBe("urlInspectionAllowanceUpdated");
+  });
+
   // Sign-in is the most frequent entry in the log. Without a label the row fell through to the
   // generic fallback and showed the raw machine action id to the reader.
   it("labels the sign-in action instead of falling back to the raw action id", () => {

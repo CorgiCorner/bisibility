@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { isSelfHost } from "@/lib/deployment/deployment";
 import { effectiveInspectionMode } from "@/lib/presence/budget-mode";
 import {
   assertInspectionReservationCurrent,
@@ -125,7 +124,7 @@ export async function inspectSearchIndexUrls(
     ),
   ];
   const defaults = await prisma.projectDefaults.findUnique({ where: { projectId } });
-  const mode = effectiveInspectionMode(defaults?.inspectionBudgetMode, isSelfHost);
+  const mode = effectiveInspectionMode(defaults?.inspectionBudgetMode);
   const accountKey = propertyQuotaKey(selected.property);
   const admission = await reserveInspections({ projectId, actorId, urls });
   const admitted = new Set(admission.admitted);

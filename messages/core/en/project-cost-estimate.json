@@ -3,7 +3,7 @@
     "providerSpend": {
       "headerUnavailable": "Usage unavailable",
       "headerUsageUnknown": "Usage unknown",
-      "headerCapTooltip": "Budget usage, including reservations. Open Usage for details.",
+      "headerCapTooltip": "Open Usage for provider limits and details.",
       "headerNoCap": "No budget · Set one",
       "headerNoCapAria": "No budget, set one",
       "headerUsed": "{percent}% used",
@@ -13,7 +13,13 @@
       "headerExceeded": "Budget exceeded",
       "headerUsageAria": "Budget usage: {status}. View details",
       "headerNoLimit": "No limit",
-      "headerWarning": "Budget warning"
+      "headerWarning": "Budget warning",
+      "headerDetailsTitle": "Project spending",
+      "headerCredits": "Credits",
+      "headerOwnKeys": "Your keys",
+      "headerProject": "Project budget",
+      "headerPartialDetail": "Some usage is unconfirmed.",
+      "headerReviewRequired": "Usage needs review"
     },
     "status": {
       "unavailable": "Estimate unavailable.",

@@ -1,3 +1,4 @@
+import { RECENT_CHECK_FAILURE_WINDOW_MS } from "@/lib/rank-check/failure-window";
 import assert from "node:assert/strict";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { promoteFirstRunAdministrator } from "@/lib/auth/first-run-account";
@@ -158,6 +159,7 @@ try {
   const health = await loadCheckHealthStats(
     "schema_health_project",
     new Date(Date.now() - 24 * 60 * 60 * 1_000),
+    new Date(Date.now() - RECENT_CHECK_FAILURE_WINDOW_MS),
   );
   assert.equal(health.failedCount, 0);
   assert.equal(health.runningCount, 1);

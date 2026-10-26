@@ -1,6 +1,7 @@
 import { withDataSourcesSettingsMessages } from "@/.storybook/settings-shell-messages";
 import { DataSourcesSettingsContent } from "@/components/settings/data-sources/DataSourcesSettingsContent";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
+import type { SearchSyncControlFacts } from "@/lib/search-insights/sync/control-model";
 import type { DefaultsData } from "@/lib/settings/options";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -70,6 +71,23 @@ export const ClampedHistory: Story = {
         firstDataDate: "2026-05-12T00:00:00.000Z",
         firstDataDateLabel: "May 12, 2026",
       },
+    },
+    projectId,
+  },
+  render: ({ defaults: value }) => renderContent(value),
+};
+
+const completedSync: NonNullable<DefaultsData["searchSync"]> & SearchSyncControlFacts = {
+  ...searchSync,
+  state: "completed",
+  plannedRemaining: 0,
+};
+export const Completed: Story = {
+  args: {
+    canEdit: true,
+    defaults: {
+      ...defaults,
+      searchSync: completedSync,
     },
     projectId,
   },

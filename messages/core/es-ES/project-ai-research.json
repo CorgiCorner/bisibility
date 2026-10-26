@@ -127,7 +127,7 @@
     "useEngines": "Elegir servicios de IA",
     "engineLimit": "Elige hasta {max, number} servicios por consulta.",
     "modelLimit": "Compara hasta 2 modelos por consulta.",
-    "quickCheck": "Consulta rápida con GPT-4.1 mini y nano, con tarifas aprobadas anteriormente. Abre Opciones avanzadas para elegir otros modelos y cómo pagar.",
+    "quickCheck": "Haz una pregunta y comprueba el precio antes de empezar.",
     "maximumAmountHint": "Límite de gasto para esta consulta: {amount}. Consulta el precio antes de ejecutarla.",
     "advisoryAmountHint": "Avísame si la estimación supera {amount}. Esto no limita los cargos finales de DataForSEO.",
     "resultsLabel": "Respuestas y citas",

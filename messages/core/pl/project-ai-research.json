@@ -127,7 +127,7 @@
     "useEngines": "Wybierz usługi AI",
     "engineLimit": "Wybierz maksymalnie {max, number} usługi na jedno sprawdzenie.",
     "modelLimit": "Porównaj maksymalnie 2 modele w jednym sprawdzeniu.",
-    "quickCheck": "Szybkie sprawdzenie z GPT-4.1 mini i nano. Ceny według wcześniej zatwierdzonych stawek. Otwórz sekcję Zaawansowane, aby wybrać inne modele i sposób płatności.",
+    "quickCheck": "Zadaj pytanie i sprawdź cenę przed uruchomieniem.",
     "maximumAmountHint": "Limit wydatków na to sprawdzenie: {amount}. Sprawdź cenę przed uruchomieniem.",
     "advisoryAmountHint": "Ostrzeż mnie, jeśli szacunek przekroczy {amount}. Nie ogranicza to końcowych opłat DataForSEO.",
     "resultsLabel": "Odpowiedzi i cytowane strony",

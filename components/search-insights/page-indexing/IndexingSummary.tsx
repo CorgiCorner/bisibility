@@ -20,31 +20,34 @@ export function IndexingSummary({ report }: Readonly<{ report: IndexingReport }>
   const t = useTranslations("projectSearchInsights.indexing");
   const format = useFormatter();
   const percentages = groupPercentages(report.groups.map((group) => group.total));
+  const hasUrls = report.groups.some((group) => group.total > 0);
 
   return (
     <Card size="sm" className="@container flex min-w-0 flex-col gap-2">
-      <div
-        className="grid h-2.5 w-full gap-0.5 overflow-hidden rounded-[4px]"
-        style={{
-          gridTemplateColumns: report.groups
-            .filter((group) => group.total > 0)
-            .map((group) => `${group.total}fr`)
-            .join(" "),
-        }}
-      >
-        {report.groups.map((group, index) =>
-          group.total > 0 ? (
-            <Tooltip
-              key={group.group}
-              tone="surface"
-              content={`${t(`groups.${group.group}`)}: ${format.number(group.total)} (${percentages[index]})`}
-              wrapperClassName="min-w-0"
-            >
-              <span className="block h-full w-full" style={{ background: colors[group.group] }} />
-            </Tooltip>
-          ) : null,
-        )}
-      </div>
+      {hasUrls ? (
+        <div
+          className="grid h-2.5 w-full gap-0.5 overflow-hidden rounded-[4px]"
+          style={{
+            gridTemplateColumns: report.groups
+              .filter((group) => group.total > 0)
+              .map((group) => `${group.total}fr`)
+              .join(" "),
+          }}
+        >
+          {report.groups.map((group, index) =>
+            group.total > 0 ? (
+              <Tooltip
+                key={group.group}
+                tone="surface"
+                content={`${t(`groups.${group.group}`)}: ${format.number(group.total)} (${percentages[index]})`}
+                wrapperClassName="min-w-0"
+              >
+                <span className="block h-full w-full" style={{ background: colors[group.group] }} />
+              </Tooltip>
+            ) : null,
+          )}
+        </div>
+      ) : null}
       <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-2 @min-[640px]:grid-cols-4">
         {report.groups.map((group, index) => (
           <div key={group.group} className="min-w-0">
@@ -56,9 +59,14 @@ export function IndexingSummary({ report }: Readonly<{ report: IndexingReport }>
               />
               {t(`groups.${group.group}`)}
             </dt>
-            <dd className="m-0 tabular-nums text-ui-h2">
-              {format.number(group.total)}{" "}
-              <span className="text-ui-caption text-fg-muted">{percentages[index]}</span>
+            <dd className="m-0 flex flex-wrap items-baseline gap-x-2 tabular-nums">
+              <span className="text-ui-h2 font-semibold">{format.number(group.total)}</span>
+              {hasUrls ? (
+                <>
+                  {" "}
+                  <span className="text-ui-caption text-fg-muted">{percentages[index]}</span>
+                </>
+              ) : null}
             </dd>
           </div>
         ))}

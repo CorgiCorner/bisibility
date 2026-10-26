@@ -1,8 +1,12 @@
-import { compactInputClassName, inputClassName } from "@/components/ui/input-styles";
+import {
+  compactInputClassName,
+  inputClassName,
+  inputControlSizeClassName,
+} from "@/components/ui/input-styles";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 
 export const locationFieldClassByVariant = {
-  form: `${inputClassName} min-h-10 w-full rounded-control px-9 text-[13px] font-medium`,
+  form: `${inputClassName} ${inputControlSizeClassName} w-full rounded-control px-9 text-[13px] font-medium`,
   toolbar: `${inputClassName} ${compactInputClassName} w-full rounded-control px-9 font-medium`,
   research: `${inputClassName} min-h-[34px] w-full rounded-control bg-bg-elev px-9 py-1 compact-text-13 text-[13px] font-normal`,
 } as const;

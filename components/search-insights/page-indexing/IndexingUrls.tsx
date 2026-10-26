@@ -2,6 +2,7 @@
 
 import { SearchInsightsRowsCard } from "@/components/search-insights/SearchInsightsRowsCard";
 import { Button } from "@/components/ui/Button";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { InlineCallout } from "@/components/ui/InlineCallout";
 import { MenuSelect } from "@/components/ui/MenuSelect";
@@ -29,24 +30,28 @@ export function IndexingUrls({
   const date = (value: Date) =>
     format.dateTime(new Date(value), { timeZone, month: "short", day: "numeric" });
   const since = new Date(new Date(data.now ?? new Date()).getTime() - 7 * 86400000).toISOString();
-  const { rows, cursor, filters, error, pending, change } = list;
-  const reason =
-    filters.group && filters.coverage_state ? `${filters.group}:${filters.coverage_state}` : "";
+  const { rows, filters, error, pending, change } = list;
+  const reason = filters.group
+    ? filters.coverage_state
+      ? `${filters.group}:${filters.coverage_state}`
+      : filters.group
+    : "";
   const columns: DataTableColumn<IndexingUrl & { id: string }>[] = [
     {
       id: "url",
+      accessorFn: (row) => row.url,
       header: t("url"),
       size: 140,
       minSize: 140,
-      meta: { flex: 1, pin: "left", lockResize: true },
-      enableSorting: false,
+      meta: { flex: 1, lockResize: true },
+      enableSorting: true,
       cell: ({ row }) => (
         <Button
           id={`indexing-url-${encodeURIComponent(row.original.url)}`}
           size="sm"
           variant="ghost"
           type="button"
-          className="block w-full min-w-0 min-h-0 p-0 text-left text-ui-body font-normal underline decoration-border underline-offset-2 hover:bg-transparent hover:decoration-current"
+          className={`${dataLinkClassName} block w-full min-w-0 min-h-0 p-0 text-left text-ui-body font-normal hover:bg-transparent`}
           onClick={(event) => onOpen(row.original, event.currentTarget)}
         >
           <IndexingPath value={row.original.url} />
@@ -55,12 +60,13 @@ export function IndexingUrls({
     },
     {
       id: "state",
+      accessorFn: (row) => row.coverageState ?? row.group,
       header: t("coverageState"),
       size: 200,
       minSize: 200,
       maxSize: 200,
-      meta: { pin: "left", lockResize: true },
-      enableSorting: false,
+      meta: { lockResize: true },
+      enableSorting: true,
       cell: ({ row }) => (
         <div className="whitespace-normal break-words">
           {row.original.group === "inspection_failed" || row.original.group === "not_checked"
@@ -77,16 +83,20 @@ export function IndexingUrls({
     },
     {
       id: "crawl",
+      accessorFn: (row) => row.lastCrawlAt,
+      sortDescFirst: true,
       header: t("lastCrawl"),
       size: 112,
-      enableSorting: false,
+      enableSorting: true,
       cell: ({ row }) => (row.original.lastCrawlAt ? date(row.original.lastCrawlAt) : "-"),
     },
     {
       id: "change",
+      accessorFn: (row) => latestTrackedChange(row.history?.changes ?? [])?.at,
+      sortDescFirst: true,
       header: t("change"),
       size: 168,
-      enableSorting: false,
+      enableSorting: true,
       cell: ({ row }) => {
         const change = latestTrackedChange(row.original.history?.changes ?? []);
         return change ? (
@@ -117,12 +127,18 @@ export function IndexingUrls({
             onChange={(value) => {
               const separator = value.indexOf(":");
               change({
-                group: separator < 0 ? undefined : (value.slice(0, separator) as IndexingGroup),
+                group:
+                  separator < 0
+                    ? ((value || undefined) as IndexingGroup | undefined)
+                    : (value.slice(0, separator) as IndexingGroup),
                 coverage_state: separator < 0 ? undefined : value.slice(separator + 1),
               });
             }}
             options={[
               { value: "", label: t("allStates") },
+              ...(["indexed", "not_indexed", "inspection_failed", "not_checked"] as const).map(
+                (group) => ({ value: group, label: t(`groups.${group}`) }),
+              ),
               ...data.report.groups.flatMap((group) =>
                 group.reasons.flatMap((item) =>
                   item.coverageState
@@ -179,16 +195,14 @@ export function IndexingUrls({
           id="indexing-urls"
           label={t("urls")}
           columns={columns}
+          emptyState={<p className="m-0 text-ui-caption text-fg-muted">{t("noMatches")}</p>}
           rows={rows.map((row) => ({ ...row, id: row.url }))}
+          pagination={list.pagination}
+          sorting={list.sorting}
+          onPageChange={list.changePage}
+          onSortChange={list.changeSort}
+          pending={pending}
         />
-        {!rows.length ? (
-          <p className="px-3 text-ui-caption text-fg-muted">{t("noMatches")}</p>
-        ) : null}
-        {cursor ? (
-          <Button size="sm" variant="ghost" disabled={pending} onClick={list.more}>
-            {t("loadMore")}
-          </Button>
-        ) : null}
       </div>
     </SearchInsightsRowsCard>
   );

@@ -10154,6 +10154,11 @@
       },
       {
         "arguments": [],
+        "key": "onboarding.page.backToProjects",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "onboarding.page.description",
         "tags": []
       },
@@ -12783,6 +12788,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiTracking.research.scopeHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiTracking.research.search",
         "tags": []
       },
@@ -12834,6 +12844,11 @@
       {
         "arguments": [],
         "key": "projectAiTracking.research.sources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.research.startResearch",
         "tags": []
       },
       {
@@ -18389,6 +18404,16 @@
       },
       {
         "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerDetailsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectCostEstimate.providerSpend.headerExceeded",
         "tags": []
       },
@@ -18405,6 +18430,26 @@
       {
         "arguments": [],
         "key": "projectCostEstimate.providerSpend.headerNoLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerOwnKeys",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerPartialDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerProject",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerReviewRequired",
         "tags": []
       },
       {
@@ -20236,6 +20281,26 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.noData.budgetMissingDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.budgetMissingTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.budgetReviewDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.budgetReviewTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.noData.checkInProgress",
         "tags": []
       },
@@ -20252,6 +20317,11 @@
       {
         "arguments": [],
         "key": "projectDashboard.noData.firstCheckInProgressTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.firstCheckIntro.action",
         "tags": []
       },
       {
@@ -20352,6 +20422,21 @@
       {
         "arguments": [],
         "key": "projectDashboard.noData.readyToCheck",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.reviewUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.usageReviewDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.usageReviewTitle",
         "tags": []
       },
       {
@@ -24555,7 +24640,17 @@
       },
       {
         "arguments": [],
+        "key": "projectIntegrations.tabs.byokUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectIntegrations.tabs.connections",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.tabs.creditsUsage",
         "tags": []
       },
       {
@@ -37273,7 +37368,12 @@
         "tags": []
       },
       {
-        "arguments": [],
+        "arguments": [
+          [
+            "days",
+            1
+          ]
+        ],
         "key": "projectRankTracker.list.notices.failedTitle",
         "tags": []
       },
@@ -45350,11 +45450,6 @@
         "tags": []
       },
       {
-        "arguments": [],
-        "key": "projectSearchInsights.indexing.alphaBadge",
-        "tags": []
-      },
-      {
         "arguments": [
           [
             "count",
@@ -45467,6 +45562,16 @@
           ]
         ],
         "key": "projectSearchInsights.indexing.checksIndexed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.checksToday",
         "tags": []
       },
       {
@@ -45811,7 +45916,17 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectFromSitemap",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.indexing.inspectHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectionDetails",
         "tags": []
       },
       {
@@ -45832,6 +45947,41 @@
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.inspectionSucceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectManual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectNoSitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectSelectSitemap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectSitemapEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectSitemapHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectSitemapLoading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.inspectSource",
         "tags": []
       },
       {
@@ -45857,6 +46007,16 @@
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.loadMore",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.maturityBadge",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.modeLabel",
         "tags": []
       },
       {
@@ -45895,6 +46055,21 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.noInspectionResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.noInspectionTargets",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSearchInsights.indexing.noMatches",
         "tags": []
@@ -45917,12 +46092,12 @@
       {
         "arguments": [
           [
-            "alpha",
-            1
-          ],
-          [
             "count",
             6
+          ],
+          [
+            "maturity",
+            1
           ]
         ],
         "key": "projectSearchInsights.indexing.notIndexedCount",
@@ -45940,12 +46115,7 @@
       },
       {
         "arguments": [],
-        "key": "projectSearchInsights.indexing.overview.badge",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSearchInsights.indexing.overview.keepQuestion",
+        "key": "projectSearchInsights.indexing.overview.keepLink",
         "tags": []
       },
       {
@@ -45961,6 +46131,11 @@
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.overview.openConsole",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.overview.removalNotice",
         "tags": []
       },
       {
@@ -46014,6 +46189,21 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "reset",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.quotaReset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.readSitemaps",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSearchInsights.indexing.reason",
         "tags": []
@@ -46031,6 +46221,16 @@
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.referringPages",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.refreshSitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.resetLabel",
         "tags": []
       },
       {
@@ -46098,6 +46298,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSearchInsights.indexing.sitemapNextRun",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSearchInsights.indexing.sitemapOk",
         "tags": []
@@ -46152,12 +46362,42 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapReadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapReadRateLimited",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.indexing.sitemapRemoved",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.sitemaps",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapSchedule.disabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapSchedule.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapSchedule.scheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.sitemapSchedule.unavailable",
         "tags": []
       },
       {
@@ -46250,6 +46490,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectSearchInsights.indexing.storedState",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "end",
@@ -46282,6 +46527,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.indexing.todayLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.indexing.trendCaption",
         "tags": []
       },
@@ -46307,20 +46557,6 @@
       {
         "arguments": [],
         "key": "projectSearchInsights.indexing.trendTitle",
-        "tags": []
-      },
-      {
-        "arguments": [
-          [
-            "count",
-            6
-          ],
-          [
-            "reset",
-            1
-          ]
-        ],
-        "key": "projectSearchInsights.indexing.trustStrip",
         "tags": []
       },
       {
@@ -64599,6 +64835,11 @@
       },
       {
         "arguments": [],
+        "key": "shell.notifications.allTab",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.notifications.empty",
         "tags": []
       },
@@ -64724,6 +64965,11 @@
       {
         "arguments": [],
         "key": "shell.notifications.incident.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.incidentsTab",
         "tags": []
       },
       {

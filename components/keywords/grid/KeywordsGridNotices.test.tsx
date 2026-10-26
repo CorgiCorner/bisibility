@@ -40,9 +40,7 @@ describe("KeywordsGridNotices", () => {
       },
       checkStates: ["never_checked"],
     });
-    expect(
-      screen.queryByText("Rank checks failed to produce ranking data."),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Rank check failures in the last 7 days")).not.toBeInTheDocument();
     expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
   });
 
@@ -68,9 +66,7 @@ describe("KeywordsGridNotices", () => {
     );
     first.unmount();
     const next = render(notice("check_first"));
-    expect(
-      screen.queryByText("Rank checks failed to produce ranking data."),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Rank check failures in the last 7 days")).not.toBeInTheDocument();
     next.rerender(notice("check_new"));
     expect(screen.getByRole("button", { name: "Dismiss alert" })).toBeInTheDocument();
     next.rerender(notice("check_first", "prj_other"));
@@ -90,6 +86,7 @@ describe("KeywordsGridNotices", () => {
   it("shows failed-check copy instead of a connect-provider cause when a provider is connected", () => {
     renderNotices({
       checkHealth: {
+        currentFailures: { count: 2, latestCheckId: "check_current" },
         budget: { capCents: 1000, exhausted: false, spentCents: 100 },
         failed24h: {
           count: 1,
@@ -105,7 +102,7 @@ describe("KeywordsGridNotices", () => {
       checkStates: ["failed", "failed"],
     });
 
-    const title = screen.getByText("Rank checks failed to produce ranking data.");
+    const title = screen.getByText("Rank check failures in the last 7 days");
     expect(title).toBeInTheDocument();
     expect(title.closest("output")?.parentElement).not.toHaveClass("border-b");
     expect(screen.getByText("Some keyword positions could not be updated.")).toBeInTheDocument();

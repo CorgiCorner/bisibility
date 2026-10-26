@@ -92,15 +92,16 @@ describe("prompt engine picker", () => {
     const payload = await submit(analyze);
     expect(payload.models).toEqual(["gpt-4.1-mini", "gpt-4.1-nano"]);
     expect(payload).not.toHaveProperty("engines");
+    fireEvent.click(await screen.findByRole("button", { name: "cancel" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "useEngines" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "useEngines" }));
     expect(screen.getByRole("checkbox", { name: "ChatGPT" })).toBeChecked();
   });
-  it("presents the fallback as one quick check and hides its model controls", async () => {
+  it("shows the selected fallback models and keeps advanced token controls collapsed", async () => {
     const analyze = renderPrompt([]);
     expect(screen.queryByRole("checkbox", { name: "ChatGPT" })).toBeNull();
     expect(screen.getByText("quickCheck")).toBeVisible();
-    expect(screen.getByRole("button", { name: "firstModel" })).not.toBeVisible();
+    expect(screen.getByRole("button", { name: "firstModel" })).toBeVisible();
     expect(screen.getByLabelText("outputTokens")).not.toBeVisible();
     const payload = await submit(analyze);
     expect(payload.models).toEqual(["gpt-4.1-mini", "gpt-4.1-nano"]);
@@ -156,6 +157,7 @@ describe("prompt engine picker", () => {
     await submit(analyze);
     expect(analyze.mock.calls[0][2].max_cost_cents).toBe(75);
     await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "cancel" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Claude" }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(analyze.mock.calls[1][2]).toMatchObject({

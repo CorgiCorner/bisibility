@@ -46,17 +46,26 @@ export type SitemapSnapshot = {
 };
 export type IndexingGroup = IndexingReport["groups"][number]["group"];
 export type StoredSitemap = { id: string; total: number };
+export type IndexingBackgroundRun = {
+  state: "scheduled" | "paused" | "disabled" | "unavailable";
+  nextAt: string | null;
+};
 export type IndexingData = {
+  backgroundRun?: IndexingBackgroundRun;
   now?: Date;
   report: IndexingReport;
   settings: IndexingSettings;
   allowance: { limit: number; used: number; remaining: number };
   urls: IndexingUrl[];
   nextCursor: string | null;
+  totalUrls?: number;
   sitemaps: StoredSitemap[];
   sitemapSnapshot?: SitemapSnapshot;
   days?: IndexingDay[];
 };
+export type ReadSitemapsAction = (input: {
+  projectId: string;
+}) => Promise<{ status: "ok" | "rate_limited" | "error" }>;
 export type InspectionFeedback = { url: string; status: InspectionStatus };
 export type InspectionStatus = "success" | "outside" | "daily" | "minute" | "failure";
 export type InspectAction = (input: {
@@ -72,7 +81,14 @@ export type IndexingFilters = {
 };
 export type LoadUrlsAction = (input: {
   projectId: string;
-  query: IndexingFilters & { cursor?: string; history?: "true" };
+  query: IndexingFilters & {
+    cursor?: string;
+    history?: "true";
+    limit?: number;
+    page?: number;
+    sort_by?: "url" | "state" | "crawl" | "change";
+    sort_direction?: "asc" | "desc";
+  };
 }) => Promise<Awaited<ReturnType<typeof listPageIndexingUrls>>>;
 export type LoadDetailAction = (input: {
   projectId: string;

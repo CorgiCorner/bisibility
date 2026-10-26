@@ -1,7 +1,11 @@
 "use client";
 
 import { Input } from "@/components/ui/Input";
-import { compactInputClassName, inputClassName } from "@/components/ui/input-styles";
+import {
+  compactInputClassName,
+  inputClassName,
+  inputControlSizeClassName,
+} from "@/components/ui/input-styles";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
@@ -59,7 +63,8 @@ export const menuSelectTriggerClass = cn(
 
 export const menuSelectInputClass = cn(
   inputClassName,
-  "inline-flex min-h-10 w-full items-center gap-1.5 rounded-control px-[13px] py-[9px] text-ui-body font-medium",
+  inputControlSizeClassName,
+  "inline-flex w-full items-center gap-1.5 rounded-control font-medium",
 );
 
 function matchOption(option: MenuSelectOption, term: string): boolean {
@@ -158,7 +163,7 @@ export function MenuSearchField({
           aria-label={placeholder}
           className={cn(
             compactInputClassName,
-            "min-h-8 w-full rounded-control border border-border-control bg-bg-elev pl-8 pr-2.5 text-fg outline-none focus:border-accent",
+            "w-full rounded-control border border-border-control bg-bg-elev pl-8 pr-2.5 text-fg outline-none focus:border-accent",
           )}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={(event) => {

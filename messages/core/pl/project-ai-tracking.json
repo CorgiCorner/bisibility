@@ -238,7 +238,9 @@
       "keywordsHint": "Wybierz słowo kluczowe, aby zobaczyć pytania, które ludzie zadają AI na ten temat.",
       "promptCount": "{count, plural, one {# prompt} few {# prompty} many {# promptów} other {# promptu}}",
       "ownDomainCited": "Cytuje Twoją stronę",
-      "yourSite": "Twoja strona"
+      "yourSite": "Twoja strona",
+      "startResearch": "Zbadaj",
+      "scopeHint": "Do 100 pytań ze zbioru danych."
     }
   }
 }

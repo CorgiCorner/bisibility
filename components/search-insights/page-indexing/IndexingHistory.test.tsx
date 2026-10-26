@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import type { IndexingDay } from "@/lib/search-index/ui-model";
 import messages from "@/messages/core/en/project-search-insights.json";
@@ -238,9 +239,7 @@ it("preserves successful rows and shows both read timestamps after permission fa
 });
 it("distinguishes not yet read from a successfully read empty list", () => {
   const first = view(<IndexingSitemaps snapshot={{ ...snapshot, readAt: null, rows: [] }} />);
-  expect(
-    screen.getByText("Sitemaps not read yet; the first background run reads them"),
-  ).toBeInTheDocument();
+  expect(screen.getByText("Sitemaps have not been read yet.")).toBeInTheDocument();
   first.unmount();
   view(<IndexingSitemaps snapshot={{ ...snapshot, rows: [] }} />);
   expect(

@@ -65,7 +65,10 @@ export default async function IntegrationsPage({
   const t = createIntlTranslator(runtime.locale, messages, runtime);
   const { publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
-  if (readParam(params, "tab") === "usage") {
+  const showCredits = deploymentMode() === "cloud";
+  const usageTab =
+    !showCredits && readParam(params, "tab") === "usage" ? "byok" : readParam(params, "tab");
+  if (usageTab === "usage" || usageTab === "byok") {
     return (
       <FeatureMessagesProvider
         locale={runtime.locale}
@@ -73,13 +76,15 @@ export default async function IntegrationsPage({
         timeZone={runtime.timeZone}
       >
         <PageContent className="flex flex-col gap-5">
-          <IntegrationsTabs active="usage" projectRef={publicId} />
+          <IntegrationsTabs showCredits={showCredits} active={usageTab} projectRef={publicId} />
           <div
-            aria-labelledby="integrations-panel-usage-tab"
+            aria-labelledby={`integrations-panel-${usageTab}-tab`}
             id="integrations-panel"
             role="tabpanel"
           >
             <IntegrationUsagePanel
+              key={usageTab}
+              fundingSource={usageTab === "byok" ? "byok" : "platform"}
               editBudget={readParam(params, "budget") === "edit"}
               projectRef={publicId}
             />
@@ -126,7 +131,7 @@ export default async function IntegrationsPage({
       timeZone={runtime.timeZone}
     >
       <PageContent className="flex flex-col gap-5">
-        <IntegrationsTabs active="connections" projectRef={publicId} />
+        <IntegrationsTabs showCredits={showCredits} active="connections" projectRef={publicId} />
         <div
           aria-labelledby="integrations-panel-connections-tab"
           id="integrations-panel"

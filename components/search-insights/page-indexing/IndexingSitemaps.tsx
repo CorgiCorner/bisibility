@@ -1,10 +1,18 @@
 "use client";
 
 import { SearchInsightsRowsCard } from "@/components/search-insights/SearchInsightsRowsCard";
+import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { InlineCallout } from "@/components/ui/InlineCallout";
-import type { SitemapSnapshot, StoredSitemap } from "@/lib/search-index/ui-model";
+import { useToast } from "@/components/ui/toast-context";
+import type {
+  IndexingBackgroundRun,
+  SitemapSnapshot,
+  StoredSitemap,
+} from "@/lib/search-index/ui-model";
+import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
+import { useRef, useTransition } from "react";
 import { groupSitemaps } from "./history-presentation";
 import { IndexingSitemapChecks } from "./IndexingSitemapChecks";
 import { IndexingPath, IndexingTable } from "./IndexingTable";
@@ -15,7 +23,37 @@ type Row = ReturnType<typeof groupSitemaps>[number];
 export function IndexingSitemaps({
   rows = [],
   snapshot,
-}: Readonly<{ rows?: StoredSitemap[]; snapshot?: SitemapSnapshot }>) {
+  backgroundRun,
+  onRead,
+}: Readonly<{
+  onRead?: () => Promise<{ status: "ok" | "rate_limited" | "error" }>;
+  rows?: StoredSitemap[];
+  snapshot?: SitemapSnapshot;
+  backgroundRun?: IndexingBackgroundRun;
+}>) {
+  const router = useRouter();
+  const [reading, startRead] = useTransition();
+  const { showToast } = useToast();
+  const inFlight = useRef(false);
+  const read = () => {
+    if (!onRead || inFlight.current) return;
+    inFlight.current = true;
+    startRead(async () => {
+      try {
+        const result = await onRead();
+        if (result.status !== "ok")
+          showToast(
+            t(result.status === "rate_limited" ? "sitemapReadRateLimited" : "sitemapReadFailed"),
+            { severity: result.status === "rate_limited" ? "info" : "error" },
+          );
+      } catch {
+        showToast(t("sitemapReadFailed"), { severity: "error" });
+      } finally {
+        inFlight.current = false;
+      }
+      router.refresh();
+    });
+  };
   const t = useTranslations("projectSearchInsights.indexing");
   const format = useFormatter();
   const timeZone = useViewerTimeZone();
@@ -138,11 +176,20 @@ export function IndexingSitemaps({
       ) : null}
       <SearchInsightsRowsCard
         title={t("sitemaps")}
+        headerEnd={
+          onRead ? (
+            <Button loading={reading} size="xs" variant="secondary" onClick={read}>
+              {t(snapshot?.readAt ? "refreshSitemaps" : "readSitemaps")}
+            </Button>
+          ) : undefined
+        }
         caption={
           snapshot
             ? snapshot.readAt
               ? t("sitemapReadAt", { date: date(snapshot.readAt) })
-              : t("sitemapSnapshotCaption")
+              : backgroundRun?.state === "scheduled" && backgroundRun.nextAt
+                ? t("sitemapNextRun", { date: date(backgroundRun.nextAt) })
+                : t(`sitemapSchedule.${backgroundRun?.state ?? "unavailable"}`)
             : t("sitemapStoredOnly")
         }
         expandable={false}

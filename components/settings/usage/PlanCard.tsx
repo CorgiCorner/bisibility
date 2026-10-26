@@ -149,13 +149,13 @@ export function PlanCard({
                   <Input
                     {...form.register("monthlyPrice")}
                     aria-label={t("priceLabel")}
-                    className="h-[35px] min-h-[35px]"
                     id="hosted-monthly-price"
                     inputMode="numeric"
                     maxLength={4}
                   />
                 </SettingsField>
                 <Button
+                  size="input"
                   loading={form.formState.isSubmitting}
                   loadingLabel={t("sending")}
                   startIcon={<PaperPlaneTilt aria-hidden size={15} weight="regular" />}

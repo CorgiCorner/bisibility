@@ -127,7 +127,7 @@
     "useEngines": "Choose AI engines",
     "engineLimit": "Choose up to {max, number} engines per check.",
     "modelLimit": "Compare up to 2 models per check.",
-    "quickCheck": "Quick check with GPT-4.1 mini and nano. Prices use previously approved rates. Open Advanced to choose other models and how to pay.",
+    "quickCheck": "Ask a question and check the price before running.",
     "maximumAmountHint": "Spending limit for this check: {amount}. Check the price before you run it.",
     "advisoryAmountHint": "Warn me if the estimate exceeds {amount}. This does not cap DataForSEO's final charges.",
     "resultsLabel": "Answers and citations",

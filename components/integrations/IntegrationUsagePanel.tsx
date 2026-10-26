@@ -11,9 +11,11 @@ import { UsageSummary } from "./UsageSummary";
 export async function IntegrationUsagePanel({
   projectRef,
   editBudget,
+  fundingSource,
 }: Readonly<{
   projectRef: string;
   editBudget: boolean;
+  fundingSource?: "platform" | "byok";
 }>) {
   const [access, runtime, metering] = await Promise.all([
     readProjectProviderAccessScope(projectRef),
@@ -38,6 +40,7 @@ export async function IntegrationUsagePanel({
     usage: metering,
     canEditBudget,
     editBudget,
+    fundingSource,
   });
   return (
     <FeatureMessagesProvider
@@ -57,7 +60,7 @@ export async function IntegrationUsagePanel({
                 projectRef={projectRef}
                 data={metering}
               />
-              <UsageSummary data={metering} />
+              <UsageSummary data={metering} fundingSource={fundingSource} />
             </>
           )}
           {budgetExtension?.content}

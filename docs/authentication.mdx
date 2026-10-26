@@ -64,6 +64,30 @@ curl "$BISIBILITY_BASE_URL/projects/prj_a00000000000000000000000/api-keys" \
 
 See [API keys](/api/api-keys) for listing, creation, rotation, and revocation.
 
+## OAuth for MCP
+
+An MCP client can use browser sign-in instead of asking you to copy a PAT or
+project API key. It registers a redirect URI through dynamic client
+registration, then uses Authorization Code with PKCE S256. You approve the
+requested access on the consent screen. Delegated access still follows your
+project memberships and the token's permission level.
+
+For Cloud, the authorization server and token issuer is
+`https://eu.bisibility.com`; the MCP resource is
+`https://bisibility.com/api/mcp`. These are intentionally different addresses.
+The token's `aud` must include the MCP resource, not just the sign-in origin.
+The [MCP discovery table](/sdks/mcp#oauth-discovery-and-the-mcp-resource) links
+both metadata documents. A self-hosted client discovers the corresponding
+addresses on its own instance.
+
+MCP access tokens are sent directly to the MCP endpoint. General REST
+automation uses a PAT or project API key. The CLI's browser login exchanges
+its short-lived authorization for a PAT, which is the credential it stores.
+
+MCP access tokens currently expire after one hour. Revoking a refresh token
+prevents further refreshes; an already issued JWT access token remains usable
+until it expires. This differs from revoking a PAT or project API key.
+
 ## Make a request
 
 Set the API root and the credential you chose:
@@ -83,7 +107,7 @@ curl --fail-with-body "$BISIBILITY_BASE_URL/projects" \
 A successful request returns `200 OK` with a `data` array and
 `meta.next_cursor`. A project API key returns its one project; a PAT returns the
 projects available through the user's memberships. See
-[List projects](/api/projects#list-projects) for the complete response shape.
+[List projects](/api-reference/projects/list-projects-visible-to-this-api-key) for the complete response shape.
 
 For a self-hosted instance, replace `https://eu.bisibility.com` with the app
 origin.

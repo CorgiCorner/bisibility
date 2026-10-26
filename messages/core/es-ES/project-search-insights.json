@@ -385,8 +385,7 @@
       "navigation": "Vistas de Search Console",
       "performance": "Rendimiento",
       "title": "Indexación de páginas",
-      "alphaBadge": "alfa",
-      "notIndexedCount": "Indexación de páginas, {alpha}, {count, plural, one {# sin indexar} many {# sin indexar} other {# sin indexar}}",
+      "notIndexedCount": "Indexación de páginas, {maturity}, {count, plural, one {# sin indexar} many {# sin indexar} other {# sin indexar}}",
       "groups": {
         "indexed": "Indexadas",
         "not_indexed": "Sin indexar",
@@ -394,13 +393,12 @@
         "not_checked": "Aún sin comprobar"
       },
       "modes": {
-        "off": "Modo: desactivado",
-        "fixed": "Modo: límite diario fijo",
-        "available_quota": "Modo: usar la cuota disponible"
+        "off": "Desactivadas",
+        "fixed": "Límite diario fijo",
+        "available_quota": "Usar la cuota disponible"
       },
-      "denominator": "Se han comprobado {checked, number} de {total, plural, one {# URL} many {# URL} other {# URL}} de sitemaps y destinos de palabras clave.",
+      "denominator": "Se han comprobado {checked, number} de {total, plural, one {# URL} many {# URL} other {# URL}}.",
       "freshness": "Resultado más antiguo: {oldest}. Actualizado: {newest}.",
-      "trustStrip": "Estado de indexación guardado por Google, no una prueba en directo. Hoy: {count, plural, one {# comprobación} many {# comprobaciones} other {# comprobaciones}} (estimación). La cuota diaria se restablece a las {reset}, hora local, medianoche del Pacífico.",
       "settings": "Ajustes de inspección",
       "inspect": "Inspeccionar URL",
       "dailyExhausted": "Se ha agotado la asignación diaria de inspecciones o la cuota de la propiedad, posiblemente también por otras herramientas. Las comprobaciones podrán reanudarse después de {reset}. Los resultados guardados siguen disponibles.",
@@ -458,7 +456,7 @@
       "richCounts": "{items, plural, one {# elemento} many {# elementos} other {# elementos}}, {issues, plural, one {# problema} many {# problemas} other {# problemas}}",
       "viewStored": "Ver resultado almacenado",
       "unspecifiedReason": "Sin especificar",
-      "inspectDescription": "Consulta el estado de indexación guardado de hasta 10 URL.",
+      "inspectDescription": "Comprueba hasta 10 URL de tu lista o de un sitemap.",
       "enums": {
         "verdict": {
           "VERDICT_UNSPECIFIED": "Sin especificar",
@@ -534,7 +532,7 @@
       "checksIndexed": "{indexed, number} de {total, number} indexadas",
       "sitemapReadAt": "Leído de Search Console el {date}",
       "sitemapSnapshotCaption": "Enviados a Search Console. Un índice suma las URLs de sus hijos. Las comprobaciones provienen de inspecciones guardadas.",
-      "sitemapsNotRead": "Aún no se han leído los sitemaps; la primera ejecución en segundo plano los leerá",
+      "sitemapsNotRead": "Todavía no se han leído los sitemaps.",
       "noSitemapsSubmitted": "No se ha enviado ningún sitemap para esta propiedad en Search Console.",
       "sitemapReadErrors": {
         "permission": "Permiso denegado al leer los sitemaps el {failed}. Última lectura correcta: {success}. Se muestran las filas guardadas.",
@@ -562,12 +560,41 @@
       "verdictInspectionFailed": "Error de inspección",
       "overview": {
         "title": "Resumen de nuestras comprobaciones",
-        "badge": "Probablemente se eliminará",
-        "note": "Se reconstruye a partir de nuestras inspecciones, por lo que puede ser parcial o estar desactualizado. El informe de indexación de páginas de Search Console es la versión completa. Esta sección probablemente se eliminará en una próxima versión.",
+        "note": "Basado en nuestras inspecciones; los datos pueden estar incompletos.",
         "openConsole": "Abrir el informe completo en Search Console",
-        "keepQuestion": "¿Quieres que mantengamos esta sección? Haz clic y escríbenos.",
-        "keepSubject": "Mantener el resumen de indexación de páginas"
-      }
+        "keepSubject": "Mantener el resumen de indexación de páginas",
+        "removalNotice": "Esta sección podría desaparecer en una próxima actualización.",
+        "keepLink": "¿Quieres conservarla? Escríbenos"
+      },
+      "noInspectionTargets": "Todavía no hay URL para inspeccionar.",
+      "noInspectionResults": "Todavía no hay resultados de inspección. URL disponibles: {total, number}.",
+      "sitemapNextRun": "Próxima ejecución en segundo plano: {date}, hora local.",
+      "sitemapSchedule": {
+        "disabled": "La inspección automática de URL está desactivada. Actívala en Fuentes de datos para leer los sitemaps en segundo plano.",
+        "paused": "La inspección de URL en segundo plano está pausada. No hay una próxima ejecución programada.",
+        "unavailable": "No se pudo confirmar la hora de la próxima ejecución en segundo plano.",
+        "scheduled": "La inspección de URL en segundo plano está programada."
+      },
+      "readSitemaps": "Leer sitemaps",
+      "refreshSitemaps": "Actualizar sitemaps",
+      "sitemapReadFailed": "No se pudieron leer los sitemaps. Revisa la conexión con Search Console e inténtalo de nuevo.",
+      "sitemapReadRateLimited": "Espera un minuto antes de volver a leer los sitemaps.",
+      "inspectionDetails": "Detalles de inspección",
+      "modeLabel": "Inspecciones automáticas",
+      "todayLabel": "Hoy",
+      "resetLabel": "La cuota se restablece",
+      "checksToday": "{count, plural, one {# comprobación} many {# comprobaciones} other {# comprobaciones}} (estimación)",
+      "quotaReset": "{reset}, hora local (medianoche del Pacífico)",
+      "storedState": "Los resultados muestran el último estado de indexación conocido por Google.",
+      "maturityBadge": "beta",
+      "inspectSource": "Elegir URL",
+      "inspectManual": "Introducir URL",
+      "inspectFromSitemap": "Desde un sitemap",
+      "inspectSelectSitemap": "Elige un sitemap",
+      "inspectSitemapHint": "Carga hasta 10 URL guardadas, empezando por las que aún no se han comprobado. Puedes editar la lista antes de inspeccionarla.",
+      "inspectSitemapEmpty": "No hay URL guardadas de este sitemap. Vuelve a cargar los sitemaps e inténtalo de nuevo.",
+      "inspectNoSitemaps": "Primero carga los sitemaps para elegir sus URL.",
+      "inspectSitemapLoading": "Cargando URL..."
     }
   }
 }

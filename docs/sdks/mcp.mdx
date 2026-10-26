@@ -43,6 +43,32 @@ remain available for clients that manage bearer credentials directly. For how
 each client differs in tool visibility and approval, see
 [what each client exposes](/agents#what-each-client-exposes).
 
+### OAuth discovery and the MCP resource
+
+In Cloud, sign-in and tool requests use different origins:
+
+| Purpose | Address |
+| - | - |
+| Authorization server and token issuer | `https://eu.bisibility.com` |
+| Streamable HTTP MCP resource | `https://bisibility.com/api/mcp` |
+| Authorization server metadata | [OAuth discovery](https://eu.bisibility.com/.well-known/oauth-authorization-server) |
+| MCP protected resource metadata | [Resource discovery](https://bisibility.com/.well-known/oauth-protected-resource/api/mcp) |
+
+Start with the resource metadata and follow its `authorization_servers` value.
+The authorization server metadata supplies the registration, authorization,
+token and signing-key endpoints. Register the client's redirect URI, then use
+Authorization Code with **PKCE S256**. Public clients do not need a client secret.
+
+Request the advertised MCP URL as the OAuth `resource`. The access token's
+`aud` must include that resource; the issuer origin alone is not the audience.
+Send the access token to the MCP resource, and use the issuer's token endpoint
+to refresh it. The consent screen delegates `read`, `write` or `admin` access
+within the signed-in user's project permissions.
+
+Self-hosted instances use their own app origin for both sign-in and MCP. Discover
+their metadata instead of copying Cloud addresses. See
+[Authentication](/authentication#oauth-for-mcp) for the credential differences.
+
 ## Start the local server
 
 This copyable quickstart starts the docs-tested stdio server.

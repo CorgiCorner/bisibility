@@ -1,5 +1,5 @@
 "use client";
-import { Input } from "@/components/ui/Input";
+import { compactInputClassName, Input } from "@/components/ui/Input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useTranslations } from "next-intl";
 export function ResearchTextFilter({
@@ -17,7 +17,7 @@ export function ResearchTextFilter({
       />
       <Input
         aria-label={t("searchKeywords")}
-        className="min-h-[34px] py-1 pl-9 text-[12px]"
+        className={`${compactInputClassName} pl-9`}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t("searchKeywords")}
         type="search"

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { ListBulletsIcon } from "@phosphor-icons/react/dist/csr/ListBullets";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import type { DataSourceHealth, HighlightRow } from "./types";
 
 export function DataSourceNoDataPanel({ health }: Readonly<{ health: DataSourceHealth }>) {
@@ -39,11 +41,11 @@ export function RecentlyAddedCard({
   const t = useTranslations("projectDashboard.highlights");
   return (
     <Card
-      className="overflow-hidden"
+      className="flex min-w-0 flex-col overflow-hidden"
       size="md"
       style={{ borderRadius: UI_RADIUS_ROLES.card, padding: 0 }}
     >
-      <div className="px-4.5 pb-3 pt-[15px]">
+      <div className="shrink-0 px-4.5 pb-3 pt-[15px]">
         <div className="flex items-center text-sm font-semibold leading-normal text-fg">
           {t("recentlyAddedTitle")}
         </div>
@@ -51,6 +53,14 @@ export function RecentlyAddedCard({
           {t("recentlyAddedDescription")}
         </div>
       </div>
+      {rows.length === 0 ? (
+        <div className="relative min-h-[200px] flex-1">
+          <ChartNoDataOverlay
+            description={t("emptyRecentlyAddedDescription")}
+            icon={ListBulletsIcon}
+          />
+        </div>
+      ) : null}
       {rows.map((row) => (
         <Link
           className="flex items-center justify-between gap-2.5 border-t border-border px-4.5 py-[11px] hover:bg-bg-sunken"

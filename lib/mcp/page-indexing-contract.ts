@@ -18,7 +18,7 @@ export const pageIndexingDescriptions = {
   getPageIndexingReport: `Read the Page indexing report, reasons, completeness and freshness overall and per group, plus the estimated shared property usage and Pacific reset. ${state}`,
   listPageIndexingUrls: `List stored Page indexing URLs from current sitemaps and keyword targets; manual-only URLs are included only with source=manual. Synthetic groups have a null coverage_state reason; filter them by group alone. List with filters, cursor pagination and optional history (latest 100 changes per URL, with a completeness flag). ${state}`,
   getPageIndexingSettings: `Read Page indexing budget settings, deployment-supported modes and estimated shared property usage. ${state}`,
-  updatePageIndexingSettings: `Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota is self-host only and runs until a daily 429 within the run time budget. Manual and background calls share the property counter, reset at Pacific midnight. ${state}`,
+  updatePageIndexingSettings: `Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota runs until a daily 429 within the run time budget on Cloud and self-host. Manual and background calls share the property counter, reset at Pacific midnight. ${state}`,
 };
 
 export const pageIndexingToolSchemas = {
@@ -80,7 +80,7 @@ export const pageIndexingToolSchemas = {
       budget_mode: {
         type: "string",
         enum: ["off", "fixed", "available_quota"],
-        description: "Background budget mode. available_quota is self-host only.",
+        description: "Background budget mode. All modes are available on Cloud and self-host.",
       },
       inspection_daily_limit: {
         type: "integer",

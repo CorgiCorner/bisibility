@@ -100,8 +100,8 @@ export const OpenIncidents: Story = {
   args: { state: "incident" },
   play: async ({ canvasElement, userEvent }) => {
     await userEvent.click(
-      within(canvasElement.ownerDocument.body).getByRole("button", {
-        name: /Open incidents|Otwarte incydenty|未解決のインシデント|Incidentes abiertos/,
+      within(canvasElement.ownerDocument.body).getByRole("tab", {
+        name: /Incidents|Incydenty|インシデント|Incidentes/,
       }),
     );
   },

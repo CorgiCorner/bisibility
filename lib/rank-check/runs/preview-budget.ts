@@ -1,5 +1,7 @@
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
+import { isBudgetExhaustedError } from "@/lib/metering/admission-errors";
+import { type BudgetDenialReason, budgetDenialReason } from "@/lib/metering/budget-denial";
 import {
   assertProviderAllocationAvailable,
   ProviderAllocationExhaustedError,
@@ -10,7 +12,11 @@ import type { SerpDepth } from "@/lib/serp/constants";
 
 export type AllocationPreviewBudget =
   | { blocked: false; reason: null }
-  | { blocked: true; reason: "budget_exhausted"; surface: ProviderRequestSurface };
+  | {
+      blocked: true;
+      reason: "budget_exhausted" | BudgetDenialReason;
+      surface: ProviderRequestSurface;
+    };
 
 export async function allocationBudget(
   projectId: string,
@@ -38,7 +44,14 @@ export async function allocationBudget(
     );
     return { blocked: false, reason: null };
   } catch (error) {
+    if (isBudgetExhaustedError(error)) {
+      return { blocked: true, reason: budgetDenialReason(error) ?? "budget_exhausted", surface };
+    }
     if (!(error instanceof ProviderAllocationExhaustedError)) throw error;
-    return { blocked: true, reason: "budget_exhausted", surface: error.surface };
+    return {
+      blocked: true,
+      reason: error.budgetReason ?? "budget_exhausted",
+      surface: error.surface,
+    };
   }
 }

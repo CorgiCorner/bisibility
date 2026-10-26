@@ -35,7 +35,7 @@ export async function listSitemapMonitors(ctx: ApiContext, projectId: string) {
   const monitors = await runDomain(() =>
     listSitemapMonitorsCore({
       actor: ctx.actor as NonNullable<ApiContext["actor"]>,
-      projectId: ctx.auth.project.id,
+      projectId: ctx.auth.project.publicId,
     }),
   );
   return listResponse(
@@ -58,7 +58,7 @@ export async function updateSitemapMonitor(ctx: ApiContext, projectId: string, m
       auditActorId: ctx.actorId,
       enabled: input.enabled,
       monitorId,
-      projectId: ctx.auth.project.id,
+      projectId: ctx.auth.project.publicId,
     }),
   );
   return resourceResponse(snakeizeKeys(sitemapMonitorResource(monitor)), { headers: ctx.headers });

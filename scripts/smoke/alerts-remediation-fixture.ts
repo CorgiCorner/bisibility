@@ -84,7 +84,15 @@ export async function createAcceptanceFixture(prefix: string) {
 }
 
 function preference(id: string, userId: string, projectId: string, checkInApp: boolean) {
-  return { alertEmail: true, alertInApp: true, checkInApp, id, projectId, userId };
+  return {
+    alertEmail: true,
+    alertInApp: true,
+    checkInApp,
+    checkNotificationSetting: checkInApp ? "important" as const : "none" as const,
+    id,
+    projectId,
+    userId,
+  };
 }
 
 export async function createKeyword(

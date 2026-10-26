@@ -234,7 +234,7 @@ describe("ScheduleEditor", () => {
     renderEditor();
 
     await user.clear(screen.getByLabelText("Name"));
-    await user.type(screen.getByLabelText("Name"), "x".repeat(81));
+    await user.paste("x".repeat(81));
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
 
     expect(await screen.findByText("Schedule names are 80 characters or fewer.")).toBeVisible();

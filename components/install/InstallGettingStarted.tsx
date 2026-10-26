@@ -123,7 +123,7 @@ export function InstallGettingStarted({
             <p className="m-0 mt-1 text-[12px] leading-relaxed text-fg-muted">
               {t(isClaude ? "claude.addApp.description" : "addApp.description")}
             </p>
-            <div className="mt-2 flex min-w-0 items-center gap-1 rounded-control border border-border-control pl-2 pr-1">
+            <div className="mt-2 flex min-h-[34px] min-w-0 items-center gap-1 rounded-control border border-border-control pl-3 pr-1">
               <span className="min-w-0 flex-1 truncate text-[11.5px] text-fg-muted">{mcpUrl}</span>
               <CopyButton
                 label={t(isClaude ? "claude.addApp.copyMcpUrl" : "addApp.copyMcpUrl")}

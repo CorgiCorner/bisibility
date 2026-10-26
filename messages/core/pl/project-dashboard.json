@@ -101,10 +101,18 @@
       "viewCheckRuns": "Zobacz przebiegi sprawdzeń",
       "viewKeywords": "Zobacz słowa kluczowe",
       "firstCheckIntro": {
-        "title": "Sprawdź swoją pierwszą pozycję",
-        "description": "Zobacz, gdzie jesteś w wynikach. Pierwsze sprawdzenie ożywi ten dashboard.",
-        "dismiss": "Ukryj to wprowadzenie"
-      }
+        "title": "Sprawdź swoje pozycje",
+        "description": "Otwórz Rank Tracker, wybierz słowa kluczowe i uruchom sprawdzenie.",
+        "dismiss": "Ukryj to wprowadzenie",
+        "action": "Otwórz Rank Tracker"
+      },
+      "usageReviewTitle": "Sprawdzenia czekają na wyjaśnienie rozliczeń.",
+      "usageReviewDetail": "Wcześniejsze użycie dostawcy jest niepotwierdzone. Sprawdź szczegóły w Usage.",
+      "budgetMissingTitle": "Ustaw budżet projektu.",
+      "budgetMissingDetail": "Ustaw limit wydatków w Usage, aby rozpocząć sprawdzenia.",
+      "budgetReviewTitle": "Budżet projektu wstrzymuje sprawdzenia.",
+      "budgetReviewDetail": "Sprawdź limit wydatków w Usage.",
+      "reviewUsage": "Otwórz Usage"
     },
     "sampleProject": {
       "createProject": "Utwórz własny projekt",

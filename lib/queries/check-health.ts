@@ -1,3 +1,4 @@
+import { RECENT_CHECK_FAILURE_WINDOW_MS } from "@/lib/rank-check/failure-window";
 import "server-only";
 
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
@@ -26,7 +27,11 @@ type CheckHealthStatsRow = {
   runningCount: number;
 };
 
-export async function loadCheckHealthStats(projectId: string, since: Date) {
+export async function loadCheckHealthStats(
+  projectId: string,
+  since: Date,
+  recentFailureSince: Date,
+) {
   const [row] = await prisma.$queryRaw<CheckHealthStatsRow[]>`
     WITH scoped_keywords AS (
       SELECT id, text, "archivedAt" FROM "keywords" WHERE "projectId" = ${projectId}
@@ -41,7 +46,7 @@ export async function loadCheckHealthStats(projectId: string, since: Date) {
         FROM "rank_checks" rc WHERE rc."keywordId" = k.id
         ORDER BY rc."checkedAt" DESC, rc.id DESC LIMIT 1
       ) latest
-      WHERE k."archivedAt" IS NULL
+      WHERE k."archivedAt" IS NULL AND latest."checkedAt" >= ${recentFailureSince}
     )
     SELECT
       (SELECT COUNT(*)::int FROM current_checks WHERE status = 'failed') AS "currentFailedCount",
@@ -84,7 +89,11 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   const { project } = await requireReadableProject(projectId);
   const [reading, stats, provider] = await Promise.all([
     rankCheckBudgetAmounts(project.id, now),
-    loadCheckHealthStats(project.id, since),
+    loadCheckHealthStats(
+      project.id,
+      since,
+      new Date(now.getTime() - RECENT_CHECK_FAILURE_WINDOW_MS),
+    ),
     getRequestPrimarySerpProvider(project.id),
   ]);
   const { capCents, reservedCents, spentCents } = reading;

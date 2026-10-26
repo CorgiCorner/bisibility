@@ -212,7 +212,7 @@ export default async function SearchInsightsPage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent variant="analytics">
+      <PageContent className="flex flex-col gap-4" variant="analytics">
         {navigation}
         <SearchInsightsWorkspace
           cancelPropertySelectionAction={cancelGooglePropertySelection}

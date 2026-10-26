@@ -62,7 +62,7 @@ Projects without a stored defaults row return a market inferred from existing
 keywords, without creating a row. The `source` field is `explicit`, `derived`,
 or `fallback`. Responses also expose the stored `inspection_budget_mode` as a
 read-only field. Change it through [Page indexing settings](/api/search-index),
-which offer `available_quota` only on self-host.
+which offer `off`, `fixed`, and `available_quota` on every deployment.
 
 `updateProjectDefaults` changes these defaults without enrolling keywords in
 recurring checks. `location_key` is the primary location reference and can point

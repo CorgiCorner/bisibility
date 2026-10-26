@@ -161,6 +161,16 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/blog/how-to-choose-first-keywords-to-track",
+        destination: "https://medium.com/bisibility",
+        permanent: true,
+      },
+      {
+        source: "/blog/category/getting-started",
+        destination: "/blog",
+        permanent: true,
+      },
+      {
         destination: "https://github.com/CorgiCorner/bisibility/blob/main/CHANGELOG.md",
         permanent: true,
         source: "/changelog",

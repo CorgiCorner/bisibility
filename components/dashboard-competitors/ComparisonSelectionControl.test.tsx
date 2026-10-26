@@ -114,8 +114,11 @@ it("reloads a newer compatible CAS only on explicit review and requires a separa
   await screen.findByText('reviewRevision:{"revision":"9"}');
   expect(mocks.save).toHaveBeenCalledOnce();
   expect(routerMock.refresh).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "remember" }));
-  await waitFor(() => expect(mocks.save.mock.calls[1][0].expectedRevision).toBe(9));
+  const remember = screen.getByRole("button", { name: "remember" });
+  await waitFor(() => expect(remember).toBeEnabled());
+  fireEvent.click(remember);
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
+  expect(mocks.save.mock.calls[1][0].expectedRevision).toBe(9);
 });
 it.each(["foreign", "same", "unsupported"])(
   "refuses %s reload without a write or stale-revision replay",

@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import en from "@/messages/core/en/project-search-insights.json";
 import shared from "@/messages/core/en/shared.json";

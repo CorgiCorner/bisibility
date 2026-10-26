@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 
 export type SearchInsightsRowsCardProps = {
   caption: ReactNode;
+  headerEnd?: ReactNode;
   className?: string;
   /** The table. The function form draws it once per view, so the expanded copy can fill the modal. */
   children?: ExpandableCardContent;
@@ -32,6 +33,7 @@ export function SearchInsightsRowsCard({
   empty,
   emptyReason,
   expandable = true,
+  headerEnd,
   title,
   toolbar,
 }: Readonly<SearchInsightsRowsCardProps>) {
@@ -39,6 +41,7 @@ export function SearchInsightsRowsCard({
     <ExpandableCard
       className={className}
       caption={caption}
+      headerEnd={headerEnd}
       expandable={expandable && !empty}
       title={title}
     >

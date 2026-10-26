@@ -148,3 +148,18 @@ describe("Temporal heartbeat collection", () => {
     });
   });
 });
+
+it("publishes the inspection Schedule's own next actions independently of the fleet's earliest action", async () => {
+  const now = new Date("2026-10-25T12:00:00Z");
+  const { client } = scheduleClient({
+    "maintenance-presence-sync": description({
+      paused: true,
+      next: [new Date("2026-10-26T03:45:00Z")],
+    }),
+    other: description({ next: [new Date("2026-10-25T12:01:00Z")] }),
+  });
+  expect((await collectTemporalHeartbeat(now, client)).indexingSchedule).toEqual({
+    paused: true,
+    nextActionTimes: ["2026-10-26T03:45:00.000Z"],
+  });
+});

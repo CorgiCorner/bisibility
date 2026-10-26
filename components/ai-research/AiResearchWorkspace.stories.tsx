@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import aiMessages from "@/messages/core/en/project-ai-research.json";
 import sharedMessages from "@/messages/core/en/shared.json";
@@ -94,5 +95,43 @@ export const PlaygroundWithoutSource: Story = {
     catalog: undefined,
     catalogFailure: "no_source",
     supportingProviders: ["DataForSEO"],
+  },
+};
+
+export const OwnKeyLuna: Story = {
+  args: {
+    analyzeAction: async (...args) => {
+      const result = await fixtureResearchAction(...args);
+      return result.ok && result.estimate
+        ? {
+            ...result,
+            payment: paymentQuote({
+              charge: {
+                value: "0.12",
+                certainty: "estimate",
+                unit: { kind: "currency", code: "USD" },
+              },
+            }),
+          }
+        : result;
+    },
+    mode: "prompt",
+    engineOptions: [],
+    history: [],
+    catalog: {
+      ...aiResearchCatalogFixture,
+      models: [
+        ...aiResearchCatalogFixture.models,
+        {
+          ...aiResearchCatalogFixture.models[0],
+          id: "gpt-5.6-luna",
+          label: "GPT-5.6 Luna",
+          reasoning: true,
+          minOutputTokens: 1024,
+          admissionEnabled: false,
+          actualCostEnabled: true,
+        },
+      ],
+    },
   },
 };

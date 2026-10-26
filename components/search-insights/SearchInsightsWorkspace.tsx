@@ -76,19 +76,21 @@ export function SearchInsightsWorkspace({
             periodPending && trustStrip ? <SearchInsightsTrustStripLoading /> : trustStrip
           }
         >
-          <SearchInsightsPropertyPicker
-            key={`${projectId}:${context.connection.property.value}`}
-            connection={context.connection}
-            loadPropertiesAction={loadPropertiesAction}
-            projectDomain={projectDomain}
-            projectId={projectId}
-            preserveGa4OauthSelection={oauth.provider === "ga4" && oauth.setup?.provider === "ga4"}
-            selectPropertyAction={selectPropertyAction}
-            syncPlan={syncPlan}
-            viewedProperty={context.selectedProperty}
-          />
-          {context.window ? (
-            <>
+          <div className="flex min-w-0 flex-[1_1_36rem] flex-wrap items-center gap-2.5">
+            <SearchInsightsPropertyPicker
+              key={`${projectId}:${context.connection.property.value}`}
+              connection={context.connection}
+              loadPropertiesAction={loadPropertiesAction}
+              projectDomain={projectDomain}
+              projectId={projectId}
+              preserveGa4OauthSelection={
+                oauth.provider === "ga4" && oauth.setup?.provider === "ga4"
+              }
+              selectPropertyAction={selectPropertyAction}
+              syncPlan={syncPlan}
+              viewedProperty={context.selectedProperty}
+            />
+            {context.window ? (
               <SearchInsightsPeriodMenu
                 dateFormat={dateFormat}
                 importFacts={context.importState?.facts}
@@ -97,17 +99,19 @@ export function SearchInsightsWorkspace({
                 period={context.period}
                 window={context.window}
               />
-              <SearchInsightsActions
-                exportAction={exportAction}
-                importState={context.importState}
-                hasProperty
-                period={context.period.id}
-                projectId={projectId}
-                queryCount={context.counts.queries}
-                readOnly={context.view === "archived"}
-                syncAction={syncAction}
-              />
-            </>
+            ) : null}
+          </div>
+          {context.window ? (
+            <SearchInsightsActions
+              exportAction={exportAction}
+              importState={context.importState}
+              hasProperty
+              period={context.period.id}
+              projectId={projectId}
+              queryCount={context.counts.queries}
+              readOnly={context.view === "archived"}
+              syncAction={syncAction}
+            />
           ) : null}
         </SearchInsightsContextCard>
       ) : null}

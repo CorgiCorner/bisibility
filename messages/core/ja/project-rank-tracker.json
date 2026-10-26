@@ -45,7 +45,7 @@
       "notices": {
         "connectProvider": "データソースを選択",
         "failedDetail": "一部のキーワード順位を更新できませんでした。",
-        "failedTitle": "順位チェックで順位データを取得できませんでした。",
+        "failedTitle": "過去{days}日間の順位チェックの失敗",
         "firstCheckDetail": "{count, plural, =0 {順位追跡を始めるにはキーワードを追加してください。} other {#件のキーワードが最初の順位チェックの準備を完了しています。}}",
         "firstCheckTitle": "順位データはまだありません",
         "migrationHoldDetail": "移行保留が解除されるまで、順位チェックを開始できません。",

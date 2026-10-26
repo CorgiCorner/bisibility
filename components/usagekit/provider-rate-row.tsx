@@ -1,4 +1,5 @@
 "use client";
+import { inputActionSizeClassName } from "@/components/ui/input-styles";
 import { Button } from "@/components/usagekit/primitives/button";
 import { Input } from "@/components/usagekit/primitives/input";
 import { Label } from "@/components/usagekit/primitives/label";
@@ -251,12 +252,13 @@ export function ProviderRateRow({
                   aria-invalid={!!error}
                   aria-describedby={error ? `${id}-error` : undefined}
                 />
-                <Button type="submit" disabled={!editable}>
+                <Button className={inputActionSizeClassName} type="submit" disabled={!editable}>
                   {pendingRate && action.pending && <UsageSpinner />}
                   {labels.save}
                 </Button>
                 {manual && (
                   <Button
+                    className={inputActionSizeClassName}
                     type="button"
                     variant="outline"
                     disabled={!editable}

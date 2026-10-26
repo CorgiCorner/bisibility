@@ -8,6 +8,7 @@ import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IdChip } from "@/components/ui/IdChip";
+import { inputControlSizeClassName } from "@/components/ui/input-styles";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { lookupInstanceAdminAccount } from "@/lib/actions/instance-admin-account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -199,7 +200,9 @@ export function AdminAccountLookup() {
           {t("identifier")}
         </label>
         <div className="mt-1.5 flex flex-wrap items-start gap-2.5">
-          <span className="flex min-h-10 min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 focus-within:border-accent">
+          <span
+            className={`${inputControlSizeClassName} flex min-w-[240px] max-w-[420px] flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent focus-within:border-accent`}
+          >
             <MagnifyingGlass
               aria-hidden
               className="shrink-0 text-fg-muted"
@@ -208,7 +211,7 @@ export function AdminAccountLookup() {
             />
             <input
               aria-invalid={errors.identifier ? "true" : undefined}
-              className="min-w-0 flex-1 border-0 bg-transparent py-2 text-[12.5px] text-fg outline-none"
+              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[12.5px] leading-5 text-fg outline-none"
               id="admin-account-identifier"
               placeholder={t("placeholder")}
               spellCheck={false}
@@ -216,6 +219,7 @@ export function AdminAccountLookup() {
             />
           </span>
           <Button
+            size="input"
             disabled={pending}
             loading={pending}
             loadingLabel={controls("lookingUp")}

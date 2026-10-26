@@ -3,7 +3,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { bindingBudgetFixture } from "@/lib/metering/binding-budget-test-fixture";
 import { adoptedTimestampQuery, utcTimestampControl } from "@/lib/metering/read.test-fixture";
 import { redirect } from "@/tests/next-navigation";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
@@ -253,6 +253,38 @@ describe("OnboardingPage", () => {
     mocks.prisma.apiKey.findFirst.mockResolvedValue(null);
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.listEligibleRankedKeywordConnections.mockResolvedValue([]);
+  });
+
+  it.each([
+    [
+      [
+        { publicId: "prj_draft", onboardingCompletedAt: null },
+        { publicId: "prj_default", onboardingCompletedAt: null, isDefault: true },
+      ],
+      "/app/prj_default/dashboard",
+    ],
+    [
+      [
+        { publicId: "prj_draft", onboardingCompletedAt: null },
+        { publicId: "prj_ready", onboardingCompletedAt: new Date() },
+      ],
+      "/app/prj_ready/dashboard",
+    ],
+    [[{ publicId: "prj_draft", onboardingCompletedAt: null }], "/app/prj_draft/dashboard"],
+  ])(
+    "links back to an accessible project without the onboarding entry redirect",
+    async (workspaces, href) => {
+      mocks.listWorkspaces.mockResolvedValue(workspaces);
+      render(await OnboardingPage({ searchParams: Promise.resolve({ new: "1" }) }));
+      expect(screen.getByRole("link", { name: "Back to projects" })).toHaveAttribute("href", href);
+      expect(mocks.completeProjectOnboarding).not.toHaveBeenCalled();
+    },
+  );
+
+  it("omits project navigation when there is no project to return to", async () => {
+    mocks.listWorkspaces.mockResolvedValue([]);
+    render(await OnboardingPage({ searchParams: Promise.resolve({ new: "1" }) }));
+    expect(screen.queryByRole("link", { name: "Back to projects" })).not.toBeInTheDocument();
   });
 
   it.each([

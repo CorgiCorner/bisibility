@@ -67,6 +67,9 @@ export const Reader: Story = {
 
 export const NoKeywords: Story = { args: { data: { ...researchPageFixture, keywords: [] } } };
 export const Estimate: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Research" }));
+  },
   args: { keyword: "tools", data: { ...researchPageFixture, initial: researchQuoteFixture } },
 };
 export const NoSource: Story = {
@@ -98,4 +101,11 @@ export const ReviewDrawer: Story = {
       />
     </>
   ),
+};
+
+export const LoadingEstimate: Story = {
+  args: { keyword: "loading-preview", data: researchPageFixture },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Research" }));
+  },
 };

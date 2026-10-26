@@ -169,7 +169,7 @@ describe("SearchInsightsWorkspace", () => {
   it("puts the property, the window and both actions on one context bar", () => {
     renderWorkspace();
 
-    const bar = screen.getByRole("button", { name: "Search Console property" }).closest("div");
+    const bar = screen.getByRole("button", { name: "Search Console property" }).closest("section");
     expect(bar).not.toBeNull();
     const labels = [...(bar?.querySelectorAll("button") ?? [])].map((button) =>
       (button.getAttribute("aria-label") ?? button.textContent ?? "").trim(),

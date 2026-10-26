@@ -284,7 +284,8 @@
     },
     "page": {
       "description": "Unos pocos pasos para empezar a hacer seguimiento de tu sitio web.",
-      "title": "Configura tu proyecto"
+      "title": "Configura tu proyecto",
+      "backToProjects": "Volver a proyectos"
     },
     "projectOptions": {
       "importError": "No se ha podido abrir la importación del proyecto.",

@@ -29,7 +29,7 @@ type UrlInspectionCardProps = {
   canEdit: boolean;
   dailyLimit: number;
   budgetMode?: InspectionBudgetMode;
-  selfHost?: boolean;
+  availableModes?: InspectionBudgetMode[];
   projectId: string;
   updateInspectionBudget?: UpdateInspectionBudget;
 };
@@ -38,7 +38,7 @@ export function UrlInspectionCard({
   canEdit,
   dailyLimit,
   budgetMode = "fixed",
-  selfHost = false,
+  availableModes = availableInspectionModes(),
   projectId,
   updateInspectionBudget = updatePresenceInspectionBudget,
 }: Readonly<UrlInspectionCardProps>) {
@@ -49,7 +49,7 @@ export function UrlInspectionCard({
   const form = useForm<InspectionBudgetForm>({
     defaultValues: {
       inspectionDailyLimit: dailyLimit,
-      inspectionBudgetMode: effectiveInspectionMode(budgetMode, selfHost),
+      inspectionBudgetMode: effectiveInspectionMode(budgetMode),
       projectId,
     },
     mode: "onChange",
@@ -80,62 +80,72 @@ export function UrlInspectionCard({
       showSave={canEdit}
       title={t("title")}
     >
-      <form onSubmit={(event) => event.preventDefault()}>
-        <fieldset className="contents" disabled={!canEdit}>
-          <SettingsField width="field">
-            <FieldLabel
-              className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-              label={t("modeLabel")}
-            />
-            <MenuSelect
-              triggerWrapperClassName="mt-1.5"
-              ariaLabel={t("modeLabel")}
-              disabled={!canEdit}
-              value={form.watch("inspectionBudgetMode") ?? "fixed"}
-              options={availableInspectionModes(selfHost).map((value) => ({
-                value,
-                label: t(`modes.${value}`),
-              }))}
-              onChange={(value) =>
-                form.setValue("inspectionBudgetMode", inspectionBudgetModeSchema.parse(value), {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            />
-            <p className="m-0 mt-2 text-[12px] leading-[1.55] text-fg-muted">
-              {t(`modeHelp.${form.watch("inspectionBudgetMode") ?? "fixed"}`)}
-            </p>
-          </SettingsField>
-          <SettingsField width="field">
-            <FieldLabel
-              className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-              htmlFor="inspection-daily-limit"
-              label={t("dailyLimit")}
-            />
-            {canEdit ? (
-              <input
-                aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
-                className="mt-1.5 min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
-                id="inspection-daily-limit"
-                max={2000}
-                min={0}
-                type="number"
-                {...form.register("inspectionDailyLimit", { valueAsNumber: true })}
+      {({ markDirty }) => (
+        <form onSubmit={(event) => event.preventDefault()}>
+          <fieldset
+            className="m-0 grid min-w-0 grid-cols-1 gap-5 border-0 p-0 md:grid-cols-2"
+            disabled={!canEdit}
+          >
+            <SettingsField className="flex min-w-0 flex-col gap-2" width="field">
+              <FieldLabel
+                className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                label={t("modeLabel")}
               />
-            ) : (
-              <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">{dailyLimit}</p>
-            )}
-            {form.formState.errors.inspectionDailyLimit ? (
-              <p className="m-0 mt-1 text-[11.5px] text-red-text">
-                {form.formState.errors.inspectionDailyLimit.message}
+              <MenuSelect
+                size="input"
+                triggerWrapperClassName="w-full"
+                triggerClassName="w-full justify-between"
+                ariaLabel={t("modeLabel")}
+                disabled={!canEdit}
+                value={form.watch("inspectionBudgetMode") ?? "fixed"}
+                options={availableModes.map((value) => ({
+                  value,
+                  label: t(`modes.${value}`),
+                }))}
+                onChange={(value) => {
+                  form.setValue("inspectionBudgetMode", inspectionBudgetModeSchema.parse(value), {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                  markDirty();
+                }}
+              />
+              <p className="m-0 text-[12px] leading-[1.55] text-fg-muted">
+                {t(`modeHelp.${form.watch("inspectionBudgetMode") ?? "fixed"}`)}
               </p>
+            </SettingsField>
+            {form.watch("inspectionBudgetMode") !== "available_quota" ? (
+              <SettingsField className="flex min-w-0 flex-col gap-2" width="field">
+                <FieldLabel
+                  className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                  htmlFor="inspection-daily-limit"
+                  label={t("dailyLimit")}
+                />
+                {canEdit ? (
+                  <input
+                    aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
+                    className="min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
+                    id="inspection-daily-limit"
+                    max={2000}
+                    min={0}
+                    type="number"
+                    {...form.register("inspectionDailyLimit", { valueAsNumber: true })}
+                  />
+                ) : (
+                  <p className="m-0 text-[13px] font-medium text-fg">{dailyLimit}</p>
+                )}
+                {form.formState.errors.inspectionDailyLimit ? (
+                  <p className="m-0 mt-1 text-[11.5px] text-red-text">
+                    {form.formState.errors.inspectionDailyLimit.message}
+                  </p>
+                ) : null}
+              </SettingsField>
             ) : null}
-          </SettingsField>
-        </fieldset>
-        <p className="m-0 mt-4 text-[12px] leading-[1.55] text-fg-muted">{t("help")}</p>
-        {saveError ? <p className="m-0 mt-3 text-[12px] text-red-text">{saveError}</p> : null}
-      </form>
+          </fieldset>
+          <p className="m-0 mt-4 text-[12px] leading-[1.55] text-fg-muted">{t("help")}</p>
+          {saveError ? <p className="m-0 mt-3 text-[12px] text-red-text">{saveError}</p> : null}
+        </form>
+      )}
     </SettingsCard>
   );
 }

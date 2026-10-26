@@ -282,6 +282,21 @@ describe("x-bisibility path parameter rule", () => {
     expect(check("/projects/{project_id}", [project])).toEqual([]);
   });
 
+  it("accepts registered provider keys without confusing them with entity public IDs", () => {
+    const provider = {
+      in: "path",
+      name: "provider_id",
+      required: true,
+      schema: { type: "string", enum: ["dataforseo", "serpapi"] },
+    };
+    expect(check("/projects/{project_id}/providers/{provider_id}", [project, provider])).toEqual(
+      [],
+    );
+    expect(
+      check("/providers/{provider_id}", [{ ...provider, schema: { type: "string" } }]),
+    ).toEqual(["path-id-without-public-id provider_id getThing"]);
+  });
+
   it("rejects undeclared, misnamed, plain-string and extra path parameters", () => {
     expect(check("/projects/{project_id}", [])).toEqual([
       "missing-path-parameter project_id getThing",

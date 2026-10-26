@@ -7,6 +7,7 @@ import {
   inspectPageIndexingUrls,
   loadPageIndexingDetail,
   loadPageIndexingUrls,
+  readPageIndexingSitemaps,
 } from "@/lib/actions/page-indexing";
 import { searchConsolePath } from "@/lib/routing/app-path";
 import { searchConsolePreservedQuery, searchConsoleTab } from "@/lib/search-index/ui-model";
@@ -50,7 +51,7 @@ export function PageIndexingView({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent variant="analytics">
+      <PageContent className="flex flex-col gap-4" variant="analytics">
         {navigation}
         <Suspense fallback={<SearchInsightsBodyLoading ariaLabel={loadingLabel} />}>
           <PageIndexingSection projectId={projectId} />
@@ -68,6 +69,7 @@ async function PageIndexingSection({ projectId }: Readonly<{ projectId: string }
       canInspect={canInspect}
       projectId={projectId}
       inspectAction={inspectPageIndexingUrls}
+      readSitemapsAction={readPageIndexingSitemaps}
       loadDetailAction={loadPageIndexingDetail}
       loadUrlsAction={loadPageIndexingUrls}
     />

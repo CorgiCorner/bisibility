@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.43.0] - 2026-10-26
+
+- Add sitemap reads and URL selection; paginate and sort beta indexing results, clarify timing and status filters, and add notification tabs.
+
+- Review research prices in one dialog with verified Luna defaults; simplify Usage and recent-failure notices.
+
+- Fix monitor APIs, OpenAPI path types, MCP import preflight and proxy origins; include OAuth discovery and reject PostgreSQL below 16 before migrations.
+
+- Use 14px mobile fields with consistent controls, disable Android pinch zoom, and improve onboarding, first-check links, empty states and two-factor copy.
+
+- Restore Local monitor guides, fix API reference links and document skills CLI installation and provider rate limits.
+
 ## [0.42.0] - 2026-10-25
 
 - **Breaking:** use Prompt Tracker and Brand Visibility API/tool names; add US English keyword Prompt Research, engine choices and Prompt Playground UI (formerly Prompt Explorer).

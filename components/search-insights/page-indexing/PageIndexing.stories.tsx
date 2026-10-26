@@ -69,14 +69,20 @@ export const Default: Story = {};
 export const NoConnection: Story = { args: { data: null } };
 export const NoSitemaps: Story = { args: { data: { ...indexingData, sitemaps: [] } } };
 export const NothingInspected: Story = {
+  render: (args) => <HistoryTabStory {...args} />,
   args: {
+    loadUrlsAction: async () => ({ data: [], meta: { next_cursor: null } }),
     data: {
       ...indexingData,
       urls: [],
+      sitemapSnapshot: { readAt: null, lastError: null, lastErrorAt: null, rows: [] },
+      backgroundRun: { state: "unavailable", nextAt: null },
       report: {
         ...indexingData.report,
         checked: 0,
         total: 0,
+        oldestResultAt: null,
+        newestResultAt: null,
         groups: indexingData.report.groups.map((group) => ({ ...group, total: 0, reasons: [] })),
       },
     },
@@ -105,9 +111,17 @@ export const Sections: Story = {
     </>
   ),
 };
-function UrlsStory({ action }: { action: LoadUrlsAction }) {
-  const list = useIndexingUrls(indexingData, "prj_example", action);
-  return <IndexingUrls data={indexingData} list={list} onOpen={() => undefined} />;
+function UrlsStory({
+  action,
+  empty = false,
+  data = indexingData,
+}: {
+  action: LoadUrlsAction;
+  empty?: boolean;
+  data?: typeof indexingData;
+}) {
+  const list = useIndexingUrls(empty ? { ...data, urls: [] } : data, "prj_example", action);
+  return <IndexingUrls data={data} list={list} onOpen={() => undefined} />;
 }
 export const Urls: Story = {
   render: (args) => <UrlsStory action={args.loadUrlsAction} />,
@@ -269,7 +283,7 @@ export const TabFirstDayNarrow: Story = {
 function HistoryTabStory(args: ComponentProps<typeof PageIndexingTab>) {
   const data = args.data;
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-4">
       <SearchConsoleTabs
         active="page-indexing"
         base="/app/prj_example/search-console"
@@ -330,6 +344,32 @@ export const TrendChangesTooltip: Story = {
   render: () => (
     <IndexingTrendTooltip
       day={steadyDays.find((day) => day.date === "2026-10-20") ?? steadyDays[0]}
+    />
+  ),
+};
+
+export const UrlsWithoutMatches: Story = {
+  render: (args) => <UrlsStory action={args.loadUrlsAction} empty />,
+};
+
+const paginatedRows = Array.from({ length: 150 }, (_, i) => ({
+  ...indexingUrl,
+  url: `https://example.com/posts/${String(i).padStart(3, "0")}-${i % 3 ? "guide" : "a-long-guide-to-search-visibility-and-indexing"}`,
+}));
+export const UrlsPaginated: Story = {
+  render: () => (
+    <UrlsStory
+      data={{ ...indexingData, urls: paginatedRows.slice(0, 50), totalUrls: 150 }}
+      action={async ({ query }) => ({
+        data: (query.sort_direction === "desc"
+          ? [...paginatedRows].reverse()
+          : paginatedRows
+        ).slice(
+          ((query.page ?? 1) - 1) * (query.limit ?? 50),
+          (query.page ?? 1) * (query.limit ?? 50),
+        ),
+        meta: { next_cursor: null, total: 150, page: query.page ?? 1 },
+      })}
     />
   ),
 };

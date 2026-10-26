@@ -127,7 +127,9 @@
       },
       "openIncidents": "Open incidents",
       "allNotifications": "All notifications",
-      "filterError": "Could not load open incidents."
+      "filterError": "Could not load open incidents.",
+      "allTab": "All",
+      "incidentsTab": "Incidents"
     },
     "operations": {
       "actionError": "Could not update this operation. Refresh and try again.",

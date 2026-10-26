@@ -1,7 +1,12 @@
 "use client";
 
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import type { IndexingData, IndexingFilters, LoadUrlsAction } from "@/lib/search-index/ui-model";
 import { useCallback, useRef, useState, useTransition } from "react";
+
+type Page = { page: number; pageSize: number };
+const initialPage = { page: 1, pageSize: 50 };
+const initialSort = { field: "url", direction: "asc" } as const;
 
 export function useIndexingUrls(
   data: IndexingData | null,
@@ -9,13 +14,14 @@ export function useIndexingUrls(
   action: LoadUrlsAction,
 ) {
   const [filters, setFilters] = useState<IndexingFilters>({});
-  const currentFilters = useRef(filters);
+  const [page, setPage] = useState<Page>(initialPage);
+  const [sorting, setSorting] = useState<DataTableSort>(initialSort);
+  const current = useRef({ filters, page, sorting });
   const [rows, setRows] = useState(data?.urls ?? []);
-  const [cursor, setCursor] = useState(data?.nextCursor ?? null);
+  const [total, setTotal] = useState(data?.totalUrls ?? data?.report.total ?? 0);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
   const sequence = useRef(0);
-  const pages = useRef(1);
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attach = useCallback(
     () => () => {
@@ -24,7 +30,7 @@ export function useIndexingUrls(
     },
     [],
   );
-  const load = (query: IndexingFilters, next?: string, pageCount = 1) => {
+  function load(state = current.current) {
     clearTimeout(timeout.current);
     const request = ++sequence.current;
     setError(false);
@@ -32,51 +38,74 @@ export function useIndexingUrls(
       try {
         const result = await action({
           projectId,
-          query: { ...query, history: "true", ...(next ? { cursor: next } : {}) },
+          query: {
+            ...state.filters,
+            history: "true",
+            page: state.page.page,
+            limit: state.page.pageSize,
+            sort_by: state.sorting.field as "url" | "state" | "crawl" | "change",
+            sort_direction: state.sorting.direction,
+          },
         });
-        let loaded = result.data;
-        let after = result.meta.next_cursor;
-        let loadedPages = 1;
-        // Refresh the pages already opened after an inspection, retaining the full filter.
-        while (!next && after && loadedPages < pageCount && request === sequence.current) {
-          const page = await action({
-            projectId,
-            query: { ...query, history: "true", cursor: after },
-          });
-          loaded = [...loaded, ...page.data];
-          after = page.meta.next_cursor;
-          loadedPages += 1;
-        }
         if (request !== sequence.current) return;
-        setRows((previous) => (next ? [...previous, ...loaded] : loaded));
-        setCursor(after);
-        pages.current = next ? pages.current + 1 : loadedPages;
+        setRows(result.data);
+        setTotal(
+          result.meta.total ?? (state.page.page - 1) * state.page.pageSize + result.data.length,
+        );
+        if (result.meta.page && result.meta.page !== state.page.page) {
+          const next = { ...state.page, page: result.meta.page };
+          current.current = { ...state, page: next };
+          setPage(next);
+        }
       } catch {
         if (request === sequence.current) setError(true);
       }
     });
-  };
-  const change = (patch: Partial<IndexingFilters>, debounce = false) => {
-    const next = { ...currentFilters.current, ...patch };
-    currentFilters.current = next;
-    setFilters(next);
+  }
+  function change(patch: Partial<IndexingFilters>, debounce = false) {
+    const next = {
+      ...current.current,
+      filters: { ...current.current.filters, ...patch },
+      page: { ...current.current.page, page: 1 },
+    };
+    current.current = next;
+    setFilters(next.filters);
+    setPage(next.page);
     clearTimeout(timeout.current);
     sequence.current += 1;
     if (debounce) timeout.current = setTimeout(() => load(next), 300);
     else load(next);
-  };
+  }
+  function changePage(next: Page) {
+    current.current = { ...current.current, page: next };
+    setPage(next);
+    load();
+  }
+  function changeSort(next: DataTableSort | null) {
+    if (next && !["url", "state", "crawl", "change"].includes(next.field)) return;
+    const sort = next ?? initialSort;
+    current.current = {
+      ...current.current,
+      sorting: sort,
+      page: { ...current.current.page, page: 1 },
+    };
+    setSorting(sort);
+    setPage(current.current.page);
+    load();
+  }
   return {
     filters,
     rows,
-    cursor,
     error,
     pending,
     attach,
     change,
-    submitSearch: () => load(currentFilters.current),
-    refresh: () => load(currentFilters.current, undefined, pages.current),
-    more: () => cursor && load(currentFilters.current, cursor),
+    sorting,
+    pagination: { ...page, rowCount: total, pageSizeOptions: [25, 50, 100] },
+    changePage,
+    changeSort,
+    submitSearch: () => load(),
+    refresh: () => load(),
   };
 }
-
 export type IndexingUrlList = ReturnType<typeof useIndexingUrls>;

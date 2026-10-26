@@ -33,7 +33,7 @@ export function DataSourcesSettingsContent({ canEdit, defaults, projectId }: Rea
           canEdit={canEdit}
           dailyLimit={defaults.inspectionDailyLimit}
           budgetMode={defaults.inspectionBudgetMode}
-          selfHost={defaults.inspectionAvailableModes?.includes("available_quota") ?? false}
+          availableModes={defaults.inspectionAvailableModes}
           projectId={projectId}
         />
       </div>

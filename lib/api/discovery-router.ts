@@ -1,3 +1,4 @@
+import { getCloudImportCompatibility } from "./cloud-import-compatibility";
 import {
   capabilities,
   getHealth,
@@ -22,6 +23,14 @@ const discoveryRoutes = new Set([
 ]);
 
 export async function handleDiscovery(req: Request, path: string[], preauthenticated = false) {
+  if (
+    path.length === 3 &&
+    path[0] === "cloud" &&
+    path[1] === "import" &&
+    path[2] === "compatibility"
+  ) {
+    return getCloudImportCompatibility(req);
+  }
   if (path.length !== 1 || !discoveryRoutes.has(path[0])) {
     return null;
   }

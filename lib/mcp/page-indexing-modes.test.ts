@@ -12,7 +12,7 @@ it.each([false, true])("lists deployment-supported inspection modes (self-host=%
     (entry) => entry.name === "update_page_indexing_settings",
   );
   expect(tool?.inputSchema.properties).toMatchObject({
-    budget_mode: { enum: selfHost ? ["off", "fixed", "available_quota"] : ["off", "fixed"] },
+    budget_mode: { enum: ["off", "fixed", "available_quota"] },
   });
   expect(
     canonical.find((entry) => entry.name === tool?.name)?.inputSchema.properties,

@@ -41,6 +41,7 @@ export function useAiResearchSubmission({
         ? "complete"
         : "idle",
   );
+  const inFlight = useRef(false);
   const requestId = useRef<string | null>(null);
   const frozenInput = useRef<z.output<typeof promptSchema | typeof visibilitySchema> | null>(null);
   const values = form.watch();
@@ -103,10 +104,12 @@ export function useAiResearchSubmission({
       !canRun ||
       unavailable ||
       pending ||
+      inFlight.current ||
       execution !== "idle" ||
       (!estimateOnly && !estimateAffordable)
     )
       return;
+    inFlight.current = true;
     if (paymentOptionId) form.setValue("payment_option_id", paymentOptionId);
     form.setValue("estimate_only", estimateOnly);
     if (actual && !estimateOnly && outcome?.ok && outcome.estimate) {
@@ -114,59 +117,67 @@ export function useAiResearchSubmission({
       form.setValue("idempotency_key", requestId.current);
       form.setValue("estimate_credentials_ref", outcome.estimateCredentialsRef);
     }
-    void form.handleSubmit((input) =>
-      startTransition(async () => {
-        setError(false);
-        const submittedInput = researchInputFingerprint(mode, form.getValues(), catalog);
-        if (actual && !estimateOnly) setExecution("review");
-        try {
-          if (estimateOnly) frozenInput.current = structuredClone(input);
-          let request: unknown = { ...input, require_payment: true };
-          if (!estimateOnly) {
-            if (!quote || !frozenInput.current || expired) return;
-            request = {
-              ...frozenInput.current,
-              estimate_only: false,
-              require_payment: true,
-              payment_option_id: quote.option.id,
-              accepted_payment: { quote_token: quote.quoteToken },
-              ...(actual
-                ? {
-                    idempotency_key: requestId.current ?? undefined,
-                    estimate_credentials_ref:
-                      outcome?.ok && outcome.estimate ? outcome.estimateCredentialsRef : undefined,
-                  }
-                : {}),
-            };
-          }
-          const result = await analyzeAction(projectId, mode, request);
-          setOutcome(result);
-          if (
-            ("retryBlocked" in result && result.retryBlocked) ||
-            (!estimateOnly &&
-              result.payment &&
-              "state" in result.payment &&
-              (result.payment.state === "pending" || result.payment.state === "unknown"))
-          )
-            setExecution("review");
-          setEstimatedInput(result.ok && result.estimate ? submittedInput : null);
-          if (actual && !estimateOnly) {
-            if (!result.ok && result.safeToStartNewRequest && !result.retryBlocked)
-              setExecution("complete");
-            else if (
-              result.ok &&
-              !result.estimate &&
-              result.result.costStatus === "confirmed" &&
-              !result.retryBlocked
+    void form.handleSubmit(
+      (input) =>
+        startTransition(async () => {
+          setError(false);
+          const submittedInput = researchInputFingerprint(mode, form.getValues(), catalog);
+          if (actual && !estimateOnly) setExecution("review");
+          try {
+            if (estimateOnly) frozenInput.current = structuredClone(input);
+            let request: unknown = { ...input, require_payment: true };
+            if (!estimateOnly) {
+              if (!quote || !frozenInput.current || expired) return;
+              request = {
+                ...frozenInput.current,
+                estimate_only: false,
+                require_payment: true,
+                payment_option_id: quote.option.id,
+                accepted_payment: { quote_token: quote.quoteToken },
+                ...(actual
+                  ? {
+                      idempotency_key: requestId.current ?? undefined,
+                      estimate_credentials_ref:
+                        outcome?.ok && outcome.estimate
+                          ? outcome.estimateCredentialsRef
+                          : undefined,
+                    }
+                  : {}),
+              };
+            }
+            const result = await analyzeAction(projectId, mode, request);
+            setOutcome(result);
+            if (
+              ("retryBlocked" in result && result.retryBlocked) ||
+              (!estimateOnly &&
+                result.payment &&
+                "state" in result.payment &&
+                (result.payment.state === "pending" || result.payment.state === "unknown"))
             )
-              setExecution("complete");
+              setExecution("review");
+            setEstimatedInput(result.ok && result.estimate ? submittedInput : null);
+            if (actual && !estimateOnly) {
+              if (!result.ok && result.safeToStartNewRequest && !result.retryBlocked)
+                setExecution("complete");
+              else if (
+                result.ok &&
+                !result.estimate &&
+                result.result.costStatus === "confirmed" &&
+                !result.retryBlocked
+              )
+                setExecution("complete");
+            }
+          } catch {
+            setEstimatedInput(null);
+            setError(true);
+            if (!estimateOnly) setExecution("review");
+          } finally {
+            inFlight.current = false;
           }
-        } catch {
-          setEstimatedInput(null);
-          setError(true);
-          if (!estimateOnly) setExecution("review");
-        }
-      }),
+        }),
+      () => {
+        inFlight.current = false;
+      },
     )();
   }
   return {

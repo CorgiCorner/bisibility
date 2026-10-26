@@ -48,7 +48,7 @@ export function ChatGptIconDownload({ origin }: Readonly<{ origin: string }>) {
         >
           {t("download")}
         </Button>
-        <div className="flex min-w-0 flex-1 basis-[240px] items-center gap-1 rounded-control border border-border-control pl-3 pr-1">
+        <div className="flex min-h-[34px] min-w-0 flex-1 basis-[240px] items-center gap-1 rounded-control border border-border-control pl-3 pr-1">
           <a
             className="min-w-0 flex-1 truncate text-[12px] text-fg-muted hover:text-fg hover:underline"
             href={iconUrl}

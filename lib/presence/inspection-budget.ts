@@ -1,6 +1,5 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { isSelfHost } from "@/lib/deployment/deployment";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { pacificDay } from "@/lib/providers/pacific-reset";
 import { effectiveInspectionMode } from "./budget-mode";
@@ -59,7 +58,7 @@ export async function getInspectionBudget(
         : auditCount(row.after, "released");
     return total + auditCount(row.after, "admitted") - released;
   }, 0);
-  const mode = effectiveInspectionMode(project.defaults?.inspectionBudgetMode, isSelfHost);
+  const mode = effectiveInspectionMode(project.defaults?.inspectionBudgetMode);
   const limit =
     mode === "available_quota"
       ? Number.MAX_SAFE_INTEGER

@@ -3,7 +3,7 @@
     "providerSpend": {
       "headerUnavailable": "使用量を取得できません",
       "headerUsageUnknown": "使用量不明",
-      "headerCapTooltip": "予約分を含む予算の使用状況。詳細は使用状況画面で確認できます。",
+      "headerCapTooltip": "プロバイダー上限と詳細は使用状況で確認できます。",
       "headerNoCap": "予算なし · 予算を設定",
       "headerNoCapAria": "予算なし、予算を設定",
       "headerUsed": "{percent}% 使用済み",
@@ -13,7 +13,13 @@
       "headerExceeded": "予算超過",
       "headerUsageAria": "予算の使用状況: {status}。詳細を表示",
       "headerNoLimit": "上限なし",
-      "headerWarning": "予算の警告"
+      "headerWarning": "予算の警告",
+      "headerDetailsTitle": "プロジェクトの支出",
+      "headerCredits": "クレジット",
+      "headerOwnKeys": "独自キー",
+      "headerProject": "プロジェクト予算",
+      "headerPartialDetail": "一部の使用量は未確認です。",
+      "headerReviewRequired": "使用状況の確認が必要"
     },
     "status": {
       "unavailable": "見積もりを取得できません。",

@@ -28,6 +28,33 @@ const entry: AuditEntry = {
 
 describe("localized audit event presentation", () => {
   it.each([
+    ["en", "URL inspection allowance updated"],
+    ["pl", "Zaktualizowano przydział inspekcji URL"],
+    ["es-ES", "Asignación de inspecciones de URL actualizada"],
+    ["ja", "URL 検査枠を更新しました"],
+  ] as const)("names indexing inspection activity in both %s views", (locale, expected) => {
+    const directory = resolve(import.meta.dirname, "../../messages/core", locale);
+    const audit = JSON.parse(readFileSync(resolve(directory, "project-audit.json"), "utf8"));
+    const advanced = JSON.parse(
+      readFileSync(resolve(directory, "project-settings-advanced.json"), "utf8"),
+    );
+    const dateDisplay = { dateFormat: "day_first" as const, locale, timeZone: "UTC" };
+    const inspection = {
+      ...entry,
+      action: "search_index.inspect",
+      providerSourceChange: undefined,
+    };
+    const t = createTranslator({ locale, messages: audit, namespace: "projectAudit.presentation" });
+    const recentT = createTranslator({
+      locale,
+      messages: advanced,
+      namespace: "projectSettingsAdvanced.audit",
+    });
+    expect(presentAuditEntry(inspection, dateDisplay, t).eventName).toBe(expected);
+    expect(presentRecentAuditEntry(inspection, dateDisplay, recentT).eventName).toBe(expected);
+  });
+
+  it.each([
     ["en", "Provider source changed: DataForSEO → credits"],
     ["pl", "Zmieniono źródło dostawcy: DataForSEO → kredyty"],
     ["es-ES", "Origen del proveedor cambiado: DataForSEO → créditos"],

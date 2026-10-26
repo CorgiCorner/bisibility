@@ -5,7 +5,7 @@ import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/Caret
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { flexRender, type Row } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
-import type { CSSProperties, ReactNode, SyntheticEvent } from "react";
+import type { CSSProperties, ReactNode, Ref, SyntheticEvent } from "react";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
 import { dataTableRowHeight } from "./data-table-density";
@@ -35,6 +35,8 @@ type DataTableRowProps<TRow extends DataTableRowBase> = {
   selectable?: (row: TRow) => boolean;
   selection?: ReadonlySet<string>;
   virtualStyle?: CSSProperties;
+  virtualIndex?: number;
+  measureRef?: Ref<HTMLDivElement>;
 };
 
 function stopRowClick(event: SyntheticEvent) {
@@ -60,6 +62,8 @@ export function DataTableRow<TRow extends DataTableRowBase>({
   selectable,
   selection,
   virtualStyle,
+  virtualIndex,
+  measureRef,
 }: Readonly<DataTableRowProps<TRow>>) {
   const t = useTranslations("shared.controls.dataTable");
   const original = row.original;
@@ -92,6 +96,8 @@ export function DataTableRow<TRow extends DataTableRowBase>({
     return (
       // biome-ignore lint/a11y/useSemanticElements: Virtualized rows require a div-based ARIA row.
       <div
+        ref={measureRef}
+        data-index={virtualIndex}
         aria-rowindex={rowIndex}
         className={cn(
           "group flex border-b border-border-soft",
@@ -120,6 +126,8 @@ export function DataTableRow<TRow extends DataTableRowBase>({
   return (
     // biome-ignore lint/a11y/useSemanticElements: Virtualized rows require a div-based ARIA row.
     <div
+      ref={measureRef}
+      data-index={virtualIndex}
       aria-rowindex={rowIndex}
       className={cn("group flex", clickable && "cursor-pointer", rowClassName?.(original))}
       data-depth={row.depth}

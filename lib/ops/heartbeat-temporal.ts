@@ -1,5 +1,6 @@
 import "server-only";
 
+import { PRESENCE_SYNC_SCHEDULE_ID } from "@/lib/temporal/maintenance-schedule-bootstrap";
 import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { Client, ScheduleDescription } from "@temporalio/client";
 
@@ -12,6 +13,7 @@ export type TemporalScheduleIssue = {
 };
 
 export type TemporalHeartbeat = {
+  indexingSchedule?: { paused: boolean; nextActionTimes: string[] } | null;
   inspectionErrors: number;
   issueSchedules: string[];
   missedCatchupTotal: number;
@@ -46,11 +48,17 @@ export async function collectTemporalHeartbeat(
   const issueSchedules: string[] = [];
   const scheduleIssues: TemporalScheduleIssue[] = [];
   let inspectionErrors = 0;
+  let indexingSchedule: TemporalHeartbeat["indexingSchedule"] = null;
 
   for await (const summary of scheduleClient.list()) {
     try {
       const description = await scheduleClient.getHandle(summary.scheduleId).describe();
       descriptions.push(description);
+      if (summary.scheduleId === PRESENCE_SYNC_SCHEDULE_ID)
+        indexingSchedule = {
+          paused: description.state.paused,
+          nextActionTimes: description.info.nextActionTimes.map((date) => date.toISOString()),
+        };
       const missed = description.info.numActionsMissedCatchupWindow;
       const skipped = description.info.numActionsSkippedOverlap;
       if (missed > 0 || skipped > 0) {
@@ -73,6 +81,7 @@ export async function collectTemporalHeartbeat(
   }
 
   return {
+    indexingSchedule,
     inspectionErrors,
     issueSchedules,
     missedCatchupTotal: descriptions.reduce(

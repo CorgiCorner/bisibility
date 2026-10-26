@@ -2,13 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { collectNavigationPageIds } from "./doc-navigation.mjs";
-
-function slug(value) {
-  return value
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-|-$/g, "");
-}
+import { slug } from "./api-reference-paths.mjs";
 
 export function deployedOpenApiMatches(expected, actual) {
   return isDeepStrictEqual(expected, actual);

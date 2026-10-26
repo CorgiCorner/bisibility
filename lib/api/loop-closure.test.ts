@@ -99,7 +99,13 @@ describe("loop-closure API routes", () => {
     mocks.prisma.apiKey.findMany.mockImplementation(() => Promise.resolve([authRow()]));
     mocks.prisma.apiKey.findFirst.mockImplementation(() => Promise.resolve(authRow()));
     mocks.prisma.apiKey.update.mockResolvedValue({ id: "api_key_1" });
-    mocks.prisma.project.findFirst.mockResolvedValue(project());
+    mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
+      Promise.resolve(
+        typeof where.publicId === "string" && where.publicId !== project().publicId
+          ? null
+          : project(),
+      ),
+    );
     mocks.prisma.project.update.mockImplementation(({ data }) =>
       Promise.resolve({ ...project(), sitemapMonitoringEnabled: data.sitemapMonitoringEnabled }),
     );
@@ -231,6 +237,7 @@ describe("loop-closure API routes", () => {
   });
 
   it("lists one project-derived sitemap monitor with its latest snapshot", async () => {
+    expect(project().id).not.toBe(project().publicId);
     const response = await call("GET", "/projects/prj_abcdefghijklmnopqrstuvwx/sitemap-monitors");
     expect(response.status).toBe(200);
     expect(response.headers.get("ratelimit-remaining")).toBeTruthy();
@@ -245,6 +252,9 @@ describe("loop-closure API routes", () => {
       ],
       meta: { next_cursor: null },
     });
+    expect(mocks.prisma.project.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { publicId: project().publicId } }),
+    );
   });
 
   it("updates the project-derived sitemap monitor and audits the state change", async () => {
@@ -259,7 +269,15 @@ describe("loop-closure API routes", () => {
     expect(response.headers.get("ratelimit-remaining")).toBeTruthy();
     await expect(response.json()).resolves.toMatchObject({ enabled: false, status: "disabled" });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "sitemap_monitor.disable", actorId: null }),
+      expect.objectContaining({
+        action: "sitemap_monitor.disable",
+        actorId: null,
+        projectId: project().id,
+        targetId: project().publicId,
+      }),
+    );
+    expect(mocks.prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: project().id } }),
     );
   });
 

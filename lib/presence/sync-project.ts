@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { isSelfHost } from "@/lib/deployment/deployment";
 import { type GscUrlInspectionSession, gscAnalyticsProvider } from "@/lib/providers/analytics/gsc";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
@@ -105,7 +104,7 @@ export async function syncPresenceForProject(
   });
   if (!project) return { projectId, reason: "project_not_found", status: "skipped" };
   const dailyLimit = project.defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT;
-  const mode = effectiveInspectionMode(project.defaults?.inspectionBudgetMode, isSelfHost);
+  const mode = effectiveInspectionMode(project.defaults?.inspectionBudgetMode);
   const connection = await gscConnection(project.id);
   const finish = async (result: SyncPresenceForProjectResult) => {
     let stop: "quota" | "off" | null = null;

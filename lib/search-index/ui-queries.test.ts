@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   snapshot: vi.fn(),
 }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.readable }));
+vi.mock("./ui-schedule", () => ({
+  indexingBackgroundRun: vi.fn(async () => ({ state: "unavailable", nextAt: null })),
+}));
 vi.mock("./service", () => ({
   connectionForProject: mocks.connection,
   SearchIndexConnectionError: class extends Error {},
@@ -42,6 +45,7 @@ beforeEach(() => {
   });
   mocks.connection.mockResolvedValue({ property: "sc-domain:example.com" });
   mocks.count.mockResolvedValue(248);
+  mocks.settings.mockResolvedValue({ budgetMode: "fixed", inspectionDailyLimit: 50 });
 });
 it("the tab counter reads only the stored not-indexed count", async () => {
   expect(await loadNotIndexedCount("prj_test")).toBe(248);

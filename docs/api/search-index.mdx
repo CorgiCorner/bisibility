@@ -168,9 +168,8 @@ estimate: other tools also consume the property's Google quota.
   the fixed project allowance.
 - `fixed` (default): up to the project limit (0-2000 URLs per Pacific day), within
   the shared local property ceiling of 2000 provider attempts.
-- `available_quota`: self-host only. Continue until Google reports daily quota
-  exhaustion, bounded by the run time and retry budgets. Cloud rejects this mode;
-  an imported setting using it behaves as `fixed`.
+- `available_quota`: continue until Google reports daily quota exhaustion, bounded
+  by the run time and retry budgets. Available on Cloud and self-host.
 
 All projects using the same property account and explicit inspections share the
 persistent counter. Provider retries consume property attempts; a retried URL

@@ -14,8 +14,10 @@ import {
 } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import { Controller } from "react-hook-form";
-import { AiCostPolicyFields, AiModelSelect } from "./AiCostPolicyFields";
+import { AiActualCostConsent } from "./AiActualCostConsent";
+import { AiCostPolicyFields } from "./AiCostPolicyFields";
 import { AiEngineFields, type AiEngineOption } from "./AiEngineFields";
+import { AiPromptModels } from "./AiPromptModels";
 import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchForm } from "./AiVisibilityFields";
 import { legacyResearchInput } from "./ai-research-presets";
@@ -112,7 +114,6 @@ export function AiPromptFields({
       form.setValue("country_iso_code", undefined);
     }
   }
-
   return (
     <>
       <AiEngineFields
@@ -123,6 +124,18 @@ export function AiPromptFields({
       />
       {!engineMode && legacy ? (
         <p className="m-0 text-ui-body sm:col-span-2">{t("quickCheck")}</p>
+      ) : null}
+      {!engineMode ? (
+        <>
+          <AiPromptModels
+            catalog={catalog}
+            actual={actual}
+            disabled={disabled}
+            models={models}
+            onChange={chooseModel}
+          />
+          {actual ? <AiActualCostConsent form={form} disabled={disabled} /> : null}
+        </>
       ) : null}
       <label htmlFor="ai-prompt" className="grid gap-2 text-ui-body sm:col-span-2">
         {t("prompt")}
@@ -253,21 +266,6 @@ export function AiPromptFields({
               ) : null}
             </div>
           )}
-          {engineMode
-            ? null
-            : [0, 1].map((index) => (
-                <div className="grid gap-2 text-ui-body" key={index}>
-                  <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
-                  <AiModelSelect
-                    catalog={catalog}
-                    actual={actual}
-                    disabled={disabled}
-                    index={index}
-                    models={models}
-                    onChange={(value) => chooseModel(index, value)}
-                  />
-                </div>
-              ))}
           {engineMode ? null : (
             <label htmlFor="ai-output-tokens" className="grid gap-2 text-ui-body">
               {t("outputTokens")}
@@ -289,7 +287,12 @@ export function AiPromptFields({
           {engineMode ? (
             <AiResearchCostCap form={form} disabled={disabled} />
           ) : (
-            <AiCostPolicyFields form={form} catalog={catalog} disabled={disabled} />
+            <AiCostPolicyFields
+              form={form}
+              catalog={catalog}
+              disabled={disabled}
+              showConsent={false}
+            />
           )}
         </div>
       </Disclosure>

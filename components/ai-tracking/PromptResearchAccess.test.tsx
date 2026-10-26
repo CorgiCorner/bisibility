@@ -73,6 +73,7 @@ it("uses the same gate for an initial no_source outcome", () => {
 it("locks search and results when an in-flow estimate returns no_source", async () => {
   lookup.mockResolvedValue(noSource);
   view();
+  await userEvent.click(screen.getByRole("button", { name: "Research" }));
   await screen.findByText("Supported providers: DataForSEO.");
   expectGate();
   expect(lookup).toHaveBeenCalledTimes(1);
@@ -84,7 +85,8 @@ it("locks search and results when an in-flow estimate returns no_source", async 
 it("locks the same gate if the source disappears after the estimate", async () => {
   lookup.mockResolvedValueOnce(researchQuoteFixture).mockResolvedValueOnce(noSource);
   view();
-  await userEvent.click(await screen.findByRole("button", { name: /Confirm research/ }));
+  await userEvent.click(screen.getByRole("button", { name: "Research" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Start" }));
   await screen.findByText("Supported providers: DataForSEO.");
   expectGate();
   expect(lookup).toHaveBeenCalledTimes(2);

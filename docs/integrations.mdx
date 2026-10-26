@@ -312,7 +312,7 @@ quotas tab; an HTTP `429` response is the runtime backstop.
 
 The project limit controls how many target URLs that project may inspect per
 Pacific day. Fixed mode accepts 0-2,000 URLs within the shared property counter.
-Self-host can also use available quota; Cloud offers off and fixed modes. Google's
+Cloud and self-host both offer off, fixed and available quota modes. Google's
 daily `429` blocks the property until Pacific midnight. Other tools also consume quota.
 
 For `N` tracked target URLs and a project limit `L` greater than zero, each URL

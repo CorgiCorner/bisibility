@@ -1798,6 +1798,7 @@ export type CoreMessages = {
       readonly viewDashboard: "View dashboard";
     };
     readonly page: {
+      readonly backToProjects: "Back to projects";
       readonly description: "A few quick steps to start tracking your website.";
       readonly title: "Set up your project";
     };
@@ -2093,7 +2094,7 @@ export type CoreMessages = {
     readonly promptEmpty: "Try your first question";
     readonly promptPlaceholder: "Which tools help small businesses track search visibility?";
     readonly promptTitle: "Prompt Playground";
-    readonly quickCheck: "Quick check with GPT-4.1 mini and nano. Prices use previously approved rates. Open Advanced to choose other models and how to pay.";
+    readonly quickCheck: "Ask a question and check the price before running.";
     readonly readOnly: "You can view saved reports, but your project or role does not allow paid checks.";
     readonly reasoningModel: "Works through complex questions";
     readonly recentReports: "Recent reports";
@@ -2324,6 +2325,7 @@ export type CoreMessages = {
       readonly reviewAttempt: "Review this attempt and its charge before starting another lookup.";
       readonly reviewHint: "Choose or type a topic. Saving prompts does not start a paid tracking run.";
       readonly reviewTitle: "Review prompts to track";
+      readonly scopeHint: "Up to 100 dataset rows.";
       readonly search: "Search";
       readonly selectAll: "Select all untracked prompts";
       readonly selected: "{count} selected";
@@ -2331,6 +2333,7 @@ export type CoreMessages = {
       readonly showSources: "Show sources for {prompt}";
       readonly sourceCount: "{count, plural, one {# source} other {# sources}}";
       readonly sources: "Sources";
+      readonly startResearch: "Research";
       readonly topic: "Topic (choose above or type a new one)";
       readonly topicRequired: "Enter a topic (up to 200 characters).";
       readonly tracked: "Tracked";
@@ -3326,11 +3329,17 @@ export type CoreMessages = {
     readonly providerSpend: {
       readonly headerAtLeastUnderOne: "At least some usage";
       readonly headerAtLeastUsed: "At least {percent}% used";
-      readonly headerCapTooltip: "Budget usage, including reservations. Open Usage for details.";
+      readonly headerCapTooltip: "Open Usage for provider limits and details.";
+      readonly headerCredits: "Credits";
+      readonly headerDetailsTitle: "Project spending";
       readonly headerExceeded: "Budget exceeded";
       readonly headerNoCap: "No budget · Set one";
       readonly headerNoCapAria: "No budget, set one";
       readonly headerNoLimit: "No limit";
+      readonly headerOwnKeys: "Your keys";
+      readonly headerPartialDetail: "Some usage is unconfirmed.";
+      readonly headerProject: "Project budget";
+      readonly headerReviewRequired: "Usage needs review";
       readonly headerUnavailable: "Usage unavailable";
       readonly headerUnderOne: "Less than 1% used";
       readonly headerUsageAria: "Budget usage: {status}. View details";
@@ -3638,14 +3647,19 @@ export type CoreMessages = {
     };
     readonly noData: {
       readonly addKeywords: "Add keywords";
+      readonly budgetMissingDetail: "Set a spending limit in Usage to start rank checks.";
+      readonly budgetMissingTitle: "A project budget is needed.";
+      readonly budgetReviewDetail: "Review the spending limit in Usage.";
+      readonly budgetReviewTitle: "Rank checks are paused by the project budget.";
       readonly checkInProgress: "check in progress";
       readonly connect: "Choose a data source";
       readonly firstCheckInProgressDetail: "Rankings will appear here when the current check finishes.";
       readonly firstCheckInProgressTitle: "First rank check in progress.";
       readonly firstCheckIntro: {
-        readonly description: "Find out where you rank. Your first check brings this dashboard to life.";
+        readonly action: "Open Rank Tracker";
+        readonly description: "Open Rank Tracker, choose your keywords and run a check.";
         readonly dismiss: "Dismiss this introduction";
-        readonly title: "Run your first check";
+        readonly title: "Check your rankings";
       };
       readonly manageProvider: "Manage provider";
       readonly migrationHoldDetail: "This project is on migration hold. Rank tracking will resume when the hold ends.";
@@ -3662,6 +3676,9 @@ export type CoreMessages = {
       readonly providerNotConnected: "source not configured";
       readonly readyDetail: "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}";
       readonly readyToCheck: "ready to check";
+      readonly reviewUsage: "Open Usage";
+      readonly usageReviewDetail: "Some earlier provider usage is unconfirmed. Review it in Usage.";
+      readonly usageReviewTitle: "Rank checks are paused pending a usage review.";
       readonly viewCheckRuns: "View check runs";
       readonly viewerAskAdmin: "Ask a project admin to choose a data source before checks can start.";
       readonly viewKeywords: "View keywords";
@@ -4508,7 +4525,9 @@ export type CoreMessages = {
     };
     readonly tabs: {
       readonly aria: "Integrations sections";
+      readonly byokUsage: "BYOK usage";
       readonly connections: "Connections";
+      readonly creditsUsage: "Credits usage";
       readonly usage: "Usage";
     };
   };
@@ -6679,7 +6698,7 @@ export type CoreMessages = {
       readonly notices: {
         readonly connectProvider: "Choose a data source";
         readonly failedDetail: "Some keyword positions could not be updated.";
-        readonly failedTitle: "Rank checks failed to produce ranking data.";
+        readonly failedTitle: "Rank check failures in the last {days} days";
         readonly firstCheckDetail: "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}";
         readonly firstCheckTitle: "No rankings yet";
         readonly migrationHoldDetail: "Rank checks cannot start until the migration hold is released.";
@@ -8201,7 +8220,6 @@ export type CoreMessages = {
       readonly allChanges: "All changes";
       readonly allSitemaps: "All sitemaps";
       readonly allStates: "All indexing states";
-      readonly alphaBadge: "alpha";
       readonly andMore: "and {count, number} more";
       readonly asOf: "As of";
       readonly change: "Change";
@@ -8216,11 +8234,12 @@ export type CoreMessages = {
       readonly checkedAt: "Last inspected";
       readonly checksBreakdown: "{indexed, number} indexed, {notIndexed, number} not indexed, {failed, number} failed inspections, {notChecked, number} not checked";
       readonly checksIndexed: "{indexed, number} of {total, number} indexed";
+      readonly checksToday: "{count, plural, one {# check} other {# checks}} (estimate)";
       readonly coverageState: "Indexing state";
       readonly crawledAs: "Crawled as";
       readonly dailyExhausted: "The daily inspection allowance or property quota is exhausted, possibly by other tools too. Checks can resume after {reset}. Stored results remain available.";
       readonly dailyExhaustedPartial: "Daily inspection quota exhausted. The report is still partial. Checks can resume after {reset}.";
-      readonly denominator: "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}} from sitemaps and keyword targets.";
+      readonly denominator: "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}}.";
       readonly discoveredUrls: "Discovered URLs";
       readonly enums: {
         readonly crawledAs: {
@@ -8286,39 +8305,52 @@ export type CoreMessages = {
       readonly historyTransition: "{date}: {previous} -> {next}";
       readonly indexingState: "Indexing permission";
       readonly inspect: "Inspect URL";
-      readonly inspectDescription: "Request the stored indexing state for up to 10 URLs.";
+      readonly inspectDescription: "Check up to 10 URLs from your own list or a sitemap.";
       readonly inspectedThatDay: "Inspected that day: {count, number}";
+      readonly inspectFromSitemap: "From sitemap";
       readonly inspectHelp: "Enter 1-10 URLs, one per line. This requests Google's indexed state and uses the property quota. It is not a live page test.";
+      readonly inspectionDetails: "Inspection details";
       readonly inspectionFailedAt: "Our inspection failed at {date}. The strip retains the last known Google state.";
       readonly inspectionStatus: "Inspection status";
       readonly inspectionSucceeded: "Inspection saved";
+      readonly inspectManual: "Enter URLs";
+      readonly inspectNoSitemaps: "Read sitemaps first to choose URLs from one.";
+      readonly inspectSelectSitemap: "Choose a sitemap";
+      readonly inspectSitemapEmpty: "No stored URLs in this sitemap. Read sitemaps again and retry.";
+      readonly inspectSitemapHint: "Loads up to 10 stored URLs, starting with those not checked yet. You can edit the list before inspecting.";
+      readonly inspectSitemapLoading: "Loading URLs...";
+      readonly inspectSource: "Choose URLs";
       readonly invalidBatch: "Enter between 1 and 10 URLs, at most 2048 characters each.";
       readonly last90Days: "Last 90 days";
       readonly lastCrawl: "Last crawl";
       readonly loadFailed: "Stored results could not be loaded. Try again.";
       readonly loadMore: "Load more URLs";
+      readonly maturityBadge: "beta";
+      readonly modeLabel: "Automatic inspections";
       readonly modes: {
-        readonly available_quota: "Mode: use free quota";
-        readonly fixed: "Mode: fixed daily limit";
-        readonly off: "Mode: off";
+        readonly available_quota: "Use available quota";
+        readonly fixed: "Fixed daily limit";
+        readonly off: "Off";
       };
       readonly navigation: "Search Console views";
       readonly next: "Next";
       readonly noConnection: "Connect a Search Console property in project integrations to view page indexing.";
       readonly noHistory: "No recorded changes.";
+      readonly noInspectionResults: "No inspection results yet. {total, number} URLs available.";
+      readonly noInspectionTargets: "No URLs to inspect yet.";
       readonly noMatches: "No URLs match these filters.";
       readonly noSitemaps: "No stored sitemap URLs. Submit a sitemap in Search Console and wait for discovery. This does not confirm that no sitemap is submitted.";
       readonly noSitemapsSubmitted: "No sitemap is submitted for this property in Search Console.";
       readonly nothingInspected: "No URL has been inspected yet. Stored results will appear after the first inspection.";
-      readonly notIndexedCount: "Page indexing, {alpha}, {count, plural, one {# not indexed} other {# not indexed}}";
+      readonly notIndexedCount: "Page indexing, {maturity}, {count, plural, one {# not indexed} other {# not indexed}}";
       readonly openConsole: "Open in Search Console";
       readonly ourChecks: "Our checks";
       readonly overview: {
-        readonly badge: "Likely to be removed";
-        readonly keepQuestion: "Want us to keep this section? Click to tell us by email.";
+        readonly keepLink: "Want to keep it? Email us";
         readonly keepSubject: "Keep the Page indexing overview";
-        readonly note: "Rebuilt from our inspections, so it can be partial or out of date. Search Console's Page indexing report is the complete version. This section will likely be removed in an upcoming release.";
+        readonly note: "Based on our inspections; coverage may be incomplete.";
         readonly openConsole: "Open the full report in Search Console";
+        readonly removalNotice: "This section may be removed in a future update.";
         readonly title: "Overview from our checks";
       };
       readonly pageCount: "{count, plural, one {# page} other {# pages}}";
@@ -8328,10 +8360,14 @@ export type CoreMessages = {
       readonly pausedRange: "No inspections {dates}: mode off";
       readonly performance: "Performance";
       readonly previous: "Previous";
+      readonly quotaReset: "{reset} your time (midnight Pacific)";
+      readonly readSitemaps: "Read sitemaps";
       readonly reason: "Reason";
       readonly reasonsCaption: "Grouped like Search Console. Select a reason to filter URLs.";
       readonly reasonsTitle: "Why pages are or are not indexed";
       readonly referringPages: "Referring pages";
+      readonly refreshSitemaps: "Refresh sitemaps";
+      readonly resetLabel: "Quota resets";
       readonly richCounts: "{items, plural, one {# item} other {# items}}, {issues, plural, one {# issue} other {# issues}}";
       readonly richResults: "Rich results";
       readonly robots: "robots.txt state";
@@ -8341,6 +8377,7 @@ export type CoreMessages = {
       readonly sitemapChild: "In index";
       readonly sitemapErrors: "{count, plural, one {# error} other {# errors}}";
       readonly sitemapIndex: "Index of {count, number}";
+      readonly sitemapNextRun: "Next background run: {date}, your time.";
       readonly sitemapOk: "OK";
       readonly sitemapPending: "Pending";
       readonly sitemapPlain: "Sitemap";
@@ -8349,10 +8386,18 @@ export type CoreMessages = {
         readonly permission: "Permission denied reading sitemaps at {failed}. Last successful read: {success}. Showing stored rows.";
         readonly unavailable: "Search Console was unavailable at {failed}. Last successful read: {success}. Showing stored rows.";
       };
+      readonly sitemapReadFailed: "Could not read sitemaps. Check the Search Console connection and try again.";
+      readonly sitemapReadRateLimited: "Wait a minute before reading sitemaps again.";
       readonly sitemapRemoved: "No longer submitted";
       readonly sitemaps: "Sitemaps";
+      readonly sitemapSchedule: {
+        readonly disabled: "Automatic URL inspection is off. Enable it in Data sources to read sitemaps in background runs.";
+        readonly paused: "Background URL inspection is paused. No next run is scheduled.";
+        readonly scheduled: "Background URL inspection is scheduled.";
+        readonly unavailable: "The next background run time could not be confirmed.";
+      };
       readonly sitemapSnapshotCaption: "Submitted in Search Console. An index counts the URLs of its children. Our checks come from stored inspections.";
-      readonly sitemapsNotRead: "Sitemaps not read yet; the first background run reads them";
+      readonly sitemapsNotRead: "Sitemaps have not been read yet.";
       readonly sitemapStatus: "Status";
       readonly sitemapStoredOnly: "Discovered sitemap files and URL counts from stored data. These are not Search Console submitted totals or the sitemap index hierarchy.";
       readonly sitemapTotal: "{count, number} total";
@@ -8367,13 +8412,14 @@ export type CoreMessages = {
         readonly quota: "Daily quota reached";
       };
       readonly storedDescription: "Google's stored indexed state, not a live test. Opening this drawer makes no Google request.";
+      readonly storedState: "Results reflect Google's last known indexing state.";
       readonly stripSummary: "{start} to {end}: {indexed, number} indexed days, {notIndexed, number} not indexed days, {notChecked, number} not checked days.";
       readonly title: "Page indexing";
+      readonly todayLabel: "Today";
       readonly trendCaption: "Counts are from our inspections, so early days cover fewer URLs.";
       readonly trendChecked: "Checked {checked, number} of {total, number} URLs";
       readonly trendEmpty: "Nothing inspected yet. History starts with the first inspection; there is no backfill.";
       readonly trendTitle: "Page indexing over time";
-      readonly trustStrip: "Google's stored indexed state, not a live test. Today: {count, plural, one {# check} other {# checks}} (estimate). Daily quota resets at {reset} your time, midnight Pacific time.";
       readonly unspecifiedReason: "Unspecified";
       readonly url: "URL";
       readonly urlNotOnGoogle: "URL is not on Google";
@@ -9570,7 +9616,7 @@ export type CoreMessages = {
     readonly inspection: {
       readonly dailyLimit: "Daily inspection limit";
       readonly description: "Build a partial Page indexing report from Google's stored indexed state, not a live test.";
-      readonly help: "The fixed limit is 0-2000 URLs per Pacific day. All projects and explicit inspections share the property counter. Other tools also consume quota, so the counter is an estimate.";
+      readonly help: "Quota is shared across projects and tools. It resets at midnight Pacific time. Remaining quota is an estimate.";
       readonly modeHelp: {
         readonly available_quota: "Continue until Google reports a daily limit, within the run time budget. This may leave less quota for other tools.";
         readonly fixed: "Inspect up to the project daily limit, within the shared property allowance.";
@@ -9633,7 +9679,7 @@ export type CoreMessages = {
     };
     readonly searchSync: {
       readonly actionError: "Search data sync action failed. Refresh the page and try again.";
-      readonly configuredPace: "configured pace: {count, number} request sets/hour";
+      readonly configuredPace: "Import rate: {count, number} request sets/hour";
       readonly control: {
         readonly actionAria: "{action} Search Console sync";
         readonly allPlannedRunning: "All planned days are imported. Import is still running.";
@@ -9669,19 +9715,19 @@ export type CoreMessages = {
         readonly waitingForDataSupport: "Google has not reported finalized search data for this property yet.";
         readonly waitingForGoogle: "Waiting for Google";
       };
-      readonly depthChange: "Increasing depth extends the running import; decreasing depth keeps what is already imported.";
+      readonly depthChange: "More history extends the import. Imported data stays.";
       readonly description: "Control historical Search Console import depth and import speed.";
       readonly historyClamped: "This property's Google history starts {date} - deeper retention has nothing more to import.";
       readonly importDepth: "Import depth";
       readonly importSpeed: "Import speed";
       readonly months: "{count, number} months";
       readonly pauseError: "Search data sync could not be paused. Refresh the page and try again.";
-      readonly plannedRemaining: "planned remaining: {count, number}";
+      readonly plannedRemaining: "Planned remaining: {count, number}";
       readonly preflightEstimate: "Importing {months, number} months takes about {requests, number} requests to Google. First view in ~{firstViewMinutes, number} min; full history in ~{duration, number} {durationUnit, select, hours {hr} days {days} other {hr}} at {pace} speed.";
-      readonly quota: "This quota is shared with other tools using the same property.";
+      readonly quota: "Google's quota is shared with other tools.";
       readonly readOnly: "Read-only";
       readonly reduced: "Reduced";
-      readonly requests: "requests in current window: {count, number}";
+      readonly requests: "Requests in current window: {count, number}";
       readonly resumeError: "Search data sync could not be resumed. Refresh the page and try again.";
       readonly retryError: "Search data sync could not be retried. Refresh the page and try again.";
       readonly saveError: "Search data sync settings could not be saved.";
@@ -12482,6 +12528,7 @@ export type CoreMessages = {
     };
     readonly notifications: {
       readonly allNotifications: "All notifications";
+      readonly allTab: "All";
       readonly empty: "No notifications";
       readonly filterError: "Could not load open incidents.";
       readonly incident: {
@@ -12499,6 +12546,7 @@ export type CoreMessages = {
         readonly resultUnderReviewCount: "{count, plural, one {# result under review} other {# results under review}}";
         readonly title: "Provider evidence review";
       };
+      readonly incidentsTab: "Incidents";
       readonly markAllRead: "Mark all read";
       readonly markReadError: "Could not mark notifications as read. Please try again.";
       readonly openIncidents: "Open incidents";

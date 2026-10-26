@@ -21,7 +21,7 @@ it("floats outside a transformed page without starting a check", () => {
       </div>
     </ProjectDashboardMessages>,
   );
-  const intro = screen.getByRole("region", { name: "Run your first check" });
+  const intro = screen.getByRole("region", { name: "Check your rankings" });
   expect(container).not.toContainElement(intro);
   expect(document.body).toContainElement(intro);
   expect(intro.closest("[data-floating-intro-stack]")).not.toBeNull();
@@ -53,7 +53,7 @@ it("dismisses the portal per project across remounts without starting work", () 
   expect(document.querySelector("[data-floating-intro-stack]")).toBeNull();
   again.unmount();
   mount("project-two");
-  expect(screen.getByRole("region", { name: "Run your first check" })).toBeVisible();
+  expect(screen.getByRole("region", { name: "Check your rankings" })).toBeVisible();
   expect(run).not.toHaveBeenCalled();
 });
 
@@ -86,8 +86,8 @@ it("keeps the project intro when dashboard content rerenders", () => {
     </ProjectDashboardMessages>
   );
   const { rerender } = render(view(1));
-  const intro = screen.getByRole("region", { name: "Run your first check" });
+  const intro = screen.getByRole("region", { name: "Check your rankings" });
   rerender(view(2));
-  expect(screen.getByRole("region", { name: "Run your first check" })).toBe(intro);
+  expect(screen.getByRole("region", { name: "Check your rankings" })).toBe(intro);
   expect(intro.closest("[data-floating-intro-stack]")?.parentElement).toBe(document.body);
 });

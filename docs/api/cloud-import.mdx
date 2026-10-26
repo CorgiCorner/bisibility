@@ -23,12 +23,15 @@ POST /api/v1/cloud/import/sessions/{sessionId}/finalize
 
 ## Authentication
 
-Instance import uses a migration token, not a `bsb_key_live_...` API key. Every import
-endpoint requires Bearer authentication:
+Import POST and PUT requests use a migration token, not a `bsb_key_live_...` API
+key. These writes require Bearer authentication:
 
 ```text
 Authorization: Bearer mig_...
 ```
+
+GET `/api/v1/cloud/import/compatibility` is anonymous and rate limited. Do not send
+a migration token for this preflight.
 
 Invalid, expired, or already-used tokens return `419` with an `unauthorized`
 problem response. Missing or malformed tokens return `401`.

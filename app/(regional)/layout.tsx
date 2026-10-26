@@ -1,11 +1,17 @@
 import { DocumentShell } from "@/components/layout/DocumentShell";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { rootMetadata } from "@/lib/seo/jsonld";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "@/app/globals.css";
 
 export const metadata: Metadata = rootMetadata;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 /** Owns the document for auth, app, onboarding, and other regional routes. */
 export default async function RegionalDocumentLayout({

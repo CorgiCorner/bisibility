@@ -121,7 +121,7 @@ export function AliasPills({
         <form className="flex w-full min-w-0 items-center gap-1" onSubmit={handleSubmit(addAlias)}>
           <Input
             aria-label={t("newBrandAlias")}
-            className="h-8 min-h-8 min-w-0 flex-1 px-2 py-1 text-[12px]"
+            className="h-8 min-h-8 max-sm:min-h-8 min-w-0 flex-1 px-2 py-1 text-[12px]"
             {...register("alias")}
           />
           <Button

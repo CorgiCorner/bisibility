@@ -33,12 +33,13 @@ export function SearchConsoleTabs({
         aria-label={
           notIndexed === null
             ? undefined
-            : t("notIndexedCount", { alpha: t("alphaBadge"), count: notIndexed })
+            : t("notIndexedCount", { maturity: t("maturityBadge"), count: notIndexed })
         }
         className={tabTriggerClassName(active === "page-indexing")}
         href={searchConsoleTabHref(base, query, "page-indexing")}
       >
-        <span>{t("title")}</span> <span className={compactBadgeClassName}>{t("alphaBadge")}</span>
+        <span>{t("title")}</span>{" "}
+        <span className={compactBadgeClassName}>{t("maturityBadge")}</span>
         {notIndexed !== null ? (
           <span className={tabCountClassName} title={t("groups.not_indexed")}>
             {format.number(notIndexed)}

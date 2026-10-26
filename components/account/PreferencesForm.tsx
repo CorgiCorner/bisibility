@@ -224,6 +224,7 @@ export function PreferencesForm({
               <span>{t("date.label")}</span>
               <input type="hidden" {...register("dateFormat")} />
               <MenuSelect
+                size="input"
                 ariaLabel={t("date.ariaLabel")}
                 onChange={(value) => persist("dateFormat", value as UserPreferences["dateFormat"])}
                 options={formatOptions}
@@ -235,6 +236,7 @@ export function PreferencesForm({
               <span>{t("landing.label")}</span>
               <input type="hidden" {...register("landing")} />
               <MenuSelect
+                size="input"
                 ariaLabel={t("landing.ariaLabel")}
                 onChange={(value) => persist("landing", value as UserPreferences["landing"])}
                 options={landingOptions}
@@ -250,6 +252,7 @@ export function PreferencesForm({
                 {t("language.description")}
               </span>
               <MenuSelect
+                size="input"
                 ariaLabel={t("language.label")}
                 disabled={isPending}
                 onChange={persistLocale}

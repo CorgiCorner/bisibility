@@ -102,17 +102,15 @@ describe("UI-1 evidence bell", () => {
   it("switches to the uncapped open-incident feed and back", async () => {
     mocks.feed = null;
     render(<NotificationBellClient {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open incidents" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Incidents" }));
     await waitFor(() => expect(props.refreshNotificationFeed).toHaveBeenCalledWith(true));
-    expect(await screen.findByRole("button", { name: "Open incidents" })).toHaveAttribute(
-      "aria-pressed",
+    expect(await screen.findByRole("tab", { name: "Incidents" })).toHaveAttribute(
+      "aria-selected",
       "true",
     );
     expect(screen.getByText("No notifications")).toBeVisible();
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Open incidents" })).toBeEnabled(),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Open incidents" }));
+    await waitFor(() => expect(screen.getByRole("tab", { name: "Incidents" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("tab", { name: "All" }));
     expect(await screen.findByRole("link", { name: /Scheduled checks/ })).toBeVisible();
   });
   it.each(["manual_run_summary", "provider_incident"] as const)(

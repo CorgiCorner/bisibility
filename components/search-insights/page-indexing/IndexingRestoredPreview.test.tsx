@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import messages from "@/messages/core/en/project-search-insights.json";
 import shared from "@/messages/core/en/shared.json";
@@ -38,7 +39,7 @@ function Urls() {
   const list = useIndexingUrls(data, "p", action);
   return <IndexingUrls data={data} list={list} onOpen={() => undefined} />;
 }
-it("restores crawl/change columns with pinned URL/state and sends the 7-day filter to the server", async () => {
+it("restores sortable crawl/change columns and sends the 7-day filter to the server", async () => {
   view(<Urls />);
   const table = screen.getByRole("table", { name: "URLs" });
   expect(within(table).getByRole("columnheader", { name: "Last crawl" })).toBeInTheDocument();
@@ -46,13 +47,20 @@ it("restores crawl/change columns with pinned URL/state and sends the 7-day filt
   expect(within(table).getByText(/Dropped out Oct 20/)).toBeInTheDocument();
   expect(
     within(table).getByRole("button", { name: drawerDropped.url }).closest('[role="cell"]'),
-  ).toHaveStyle({ position: "sticky", left: "var(--dt-pin-url)" });
+  ).not.toHaveStyle({ position: "sticky" });
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Change" }));
   await user.click(screen.getByRole("menuitem", { name: "Changed in the last 7 days" }));
   expect(action).toHaveBeenLastCalledWith({
     projectId: "p",
-    query: { history: "true", changed_since: "2026-10-16T06:00:00.000Z" },
+    query: {
+      page: 1,
+      limit: 50,
+      sort_by: "url",
+      sort_direction: "asc",
+      history: "true",
+      changed_since: "2026-10-16T06:00:00.000Z",
+    },
   });
 });
 it("uses the same change in the chart marker, tooltip, drawer and URL fixture", () => {
@@ -124,7 +132,7 @@ it.each([
   expect(screen.getByText("Verdict").nextElementSibling).toHaveTextContent(label);
 });
 
-it("fills a desktop card and preserves both pinned columns in a mobile viewport", () => {
+it("fills the desktop card and keeps columns unpinned in a mobile viewport", () => {
   const observers = stubResizeObserver();
   view(<Urls />);
   const table = screen.getByRole("table", { name: "URLs" });
@@ -132,15 +140,16 @@ it("fills a desktop card and preserves both pinned columns in a mobile viewport"
     act(() => {
       Object.defineProperty(table, "clientWidth", { configurable: true, value: width });
       for (const observer of observers)
-        observer.trigger([{ contentRect: { width } } as ResizeObserverEntry]);
+        observer.trigger([
+          { target: table, contentRect: { width, height: 500 } } as unknown as ResizeObserverEntry,
+        ]);
     });
   resize(1440);
   expect(table).toHaveStyle("--dt-col-url: 960px; --dt-table-width: 1440px");
   resize(343);
   expect(table).toHaveStyle("--dt-col-url: 140px; --dt-col-state: 200px; --dt-table-width: 620px");
-  expect(within(table).getByRole("columnheader", { name: "Indexing state" })).toHaveStyle({
+  expect(within(table).getByRole("columnheader", { name: "Indexing state" })).not.toHaveStyle({
     position: "sticky",
-    left: "var(--dt-pin-state)",
   });
 });
 it("distinguishes a filled change diamond from a quota tick without color", () => {

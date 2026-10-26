@@ -60,10 +60,16 @@ describe("workspace without usable provider credentials", () => {
         "/app/prj_example/integrations",
       );
       expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+      expectExecutionBlocked();
       expect(screen.getByRole("link", { name: /Saved report/ })).toBeVisible();
       fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
       expect(analyze).not.toHaveBeenCalled();
     },
   );
 });
+
+function expectExecutionBlocked() {
+  const button = screen.queryByRole("button", { name: /^runAnalysis/ });
+  if (button) expect(button).toBeDisabled();
+  else expect(button).not.toBeInTheDocument();
+}

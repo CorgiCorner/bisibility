@@ -101,10 +101,18 @@
       "viewCheckRuns": "Ver las ejecuciones de comprobación",
       "viewKeywords": "Ver las palabras clave",
       "firstCheckIntro": {
-        "title": "Ejecuta tu primera comprobación",
-        "description": "Descubre tu posición. Tu primera comprobación dará vida a este panel.",
-        "dismiss": "Ocultar esta introducción"
-      }
+        "title": "Comprueba tus posiciones",
+        "description": "Abre Rank Tracker, elige las palabras clave y ejecuta una comprobación.",
+        "dismiss": "Ocultar esta introducción",
+        "action": "Abrir Rank Tracker"
+      },
+      "usageReviewTitle": "Las comprobaciones esperan una revisión de uso.",
+      "usageReviewDetail": "Parte del uso anterior del proveedor no está confirmado. Revísalo en Uso.",
+      "budgetMissingTitle": "Falta el presupuesto del proyecto.",
+      "budgetMissingDetail": "Configura un límite de gasto en Uso para iniciar las comprobaciones.",
+      "budgetReviewTitle": "El presupuesto del proyecto ha pausado las comprobaciones.",
+      "budgetReviewDetail": "Revisa el límite de gasto en Uso.",
+      "reviewUsage": "Abrir Uso"
     },
     "sampleProject": {
       "createProject": "Crear tu proyecto real",

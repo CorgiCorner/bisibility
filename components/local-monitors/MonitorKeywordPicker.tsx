@@ -96,7 +96,7 @@ export function MonitorKeywordPicker({
         <Button
           type="button"
           variant="outline"
-          className="min-h-10"
+          size="input"
           disabled={pending || disabled}
           onClick={() => void load()}
         >

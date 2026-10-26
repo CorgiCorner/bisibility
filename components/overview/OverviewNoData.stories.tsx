@@ -124,6 +124,25 @@ export const ReadyForFirstCheck: Story = {
   args: { budgetExhausted: false, ...actionArgs, overview: readyOverview, runningCheckCount: 0 },
 };
 
+export const NoRecentlyAddedKeywords: Story = {
+  args: {
+    budgetExhausted: false,
+    ...actionArgs,
+    overview: { ...readyOverview, highlights: [{ kind: "recentlyAdded", rows: [] }] },
+    runningCheckCount: 0,
+  },
+};
+
 export const FirstCheckRunning: Story = {
   args: { budgetExhausted: false, ...actionArgs, overview: readyOverview, runningCheckCount: 1 },
+};
+
+export const UsageNeedsReview: Story = {
+  args: {
+    ...actionArgs,
+    budgetExhausted: true,
+    budgetReason: "usage_reconciliation_required",
+    overview: readyOverview,
+    runningCheckCount: 0,
+  },
 };

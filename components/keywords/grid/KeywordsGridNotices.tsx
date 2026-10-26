@@ -9,6 +9,7 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { AlertBannerStack } from "@/components/ui/AlertBannerStack";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
+import { RECENT_CHECK_FAILURE_DAYS } from "@/lib/rank-check/failure-window";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -57,7 +58,7 @@ function emptyRankNotice({
       },
       detail: t("failedDetail"),
       tint: "red",
-      title: t("failedTitle"),
+      title: t("failedTitle", { days: String(RECENT_CHECK_FAILURE_DAYS) }),
     };
   }
   if (checkStates.includes("running")) {
@@ -106,9 +107,7 @@ export function KeywordsGridNotices({
     failureIdentity !== null && isInRankRunNoticeDismissalSnapshot(dismissed, failureIdentity);
   const rankNotice = emptyRankNotice({
     checkStates,
-    failedCount:
-      checkHealth?.currentFailures?.count ??
-      checkStates.filter((state) => state === "failed").length,
+    failedCount: checkHealth?.currentFailures?.count ?? 0,
     projectRef: projectId,
     readOnly,
     t,

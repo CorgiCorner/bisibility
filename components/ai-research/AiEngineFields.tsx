@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/Button";
 import { ChoiceGroup } from "@/components/ui/ChoiceGroup";
+import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import { aiEngineLabel } from "@/lib/ai-research/engine-labels";
 import { AI_ENGINES, type AiEngine, isAiEngine } from "@/lib/ai-research/engines";
 import { LEGACY_MODELS, LEGACY_OUTPUT_TOKENS } from "@/lib/ai-research/legacy";
@@ -18,11 +19,30 @@ export function researchDefaults(
   mode: "prompt" | "visibility",
   domain: string,
   engineOptions: readonly AiEngineOption[],
+  catalog?: AiResearchCatalog,
 ): ResearchDefaults {
   const defaults = aiResearchDefaults(mode, domain);
-  if (mode !== "prompt" || engineOptions.length === 0 || !("prompt" in defaults)) return defaults;
-  const { models: _models, max_output_tokens: _tokens, ...rest } = defaults;
-  return { ...rest, engines: defaultSelectedEngines(engineOptions) } as ResearchDefaults;
+  if (mode !== "prompt" || !("prompt" in defaults)) return defaults;
+  if (engineOptions.length) {
+    const { models: _models, max_output_tokens: _tokens, ...rest } = defaults;
+    return { ...rest, engines: defaultSelectedEngines(engineOptions) } as ResearchDefaults;
+  }
+  const model = ["gpt-6-luna", "gpt-5.6-luna"]
+    .map((id) =>
+      catalog?.models.find(
+        (entry) => entry.id === id && entry.priceAvailable && entry.actualCostEnabled,
+      ),
+    )
+    .find(Boolean);
+  if (!catalog?.actualCostAvailable || !model) return defaults;
+  const { max_cost_cents: _cap, ...rest } = defaults;
+  return {
+    ...rest,
+    models: [model.id],
+    cost_policy: "provider_actual_cost",
+    max_output_tokens: Math.max(1024, model.minOutputTokens),
+    estimated_cost_limit_cents: 60,
+  } as ResearchDefaults;
 }
 export function AiEngineFields({
   form,

@@ -113,12 +113,7 @@ export function TwoFactorChallengeForm({
 
   return (
     <div aria-busy={submitting} className="w-full max-w-[380px]">
-      <span className="grid h-[46px] w-[46px] place-items-center rounded-card border border-border bg-bg-elev text-fg">
-        <ShieldCheck aria-hidden size={23} weight="regular" />
-      </span>
-      <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
-        {t("title")}
-      </h1>
+      <h1 className="m-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">{t("title")}</h1>
       <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">{t("description")}</p>
 
       <fieldset className="mt-6 grid grid-cols-2 gap-2 border-0 p-0">

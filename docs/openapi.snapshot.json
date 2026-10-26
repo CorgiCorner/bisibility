@@ -23674,7 +23674,7 @@
             "type": "string"
           },
           "inspection_budget_mode": {
-            "description": "Stored background inspection mode; available_quota is offered on self-host only. Use Page indexing settings to change it.",
+            "description": "Stored background inspection mode. All modes are available in Page indexing settings.",
             "enum": ["off", "fixed", "available_quota"],
             "readOnly": true,
             "type": "string",
@@ -41150,6 +41150,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "description": "Public API key ID.",
+              "example": "key_a00000000000000000000000",
+              "pattern": "^key_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "key"
+            }
+          },
+          {
             "$ref": "#/components/parameters/ProjectHeader"
           },
           {
@@ -42042,6 +42054,18 @@
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ApiVersion"
+            }
+          },
+          {
+            "in": "path",
+            "name": "competitor_id",
+            "required": true,
+            "schema": {
+              "description": "Public competitor ID.",
+              "example": "cmp_a00000000000000000000000",
+              "pattern": "^cmp_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "cmp"
             }
           },
           {
@@ -46179,6 +46203,17 @@
             }
           },
           {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "example": "pat_a00000000000000000000000",
+              "pattern": "^pat_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "pat"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -46280,6 +46315,17 @@
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ApiVersion"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "example": "ferry_a00000000000000000000000",
+              "pattern": "^ferry_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "ferry"
             }
           },
           {
@@ -59861,6 +59907,17 @@
             }
           },
           {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "example": "ferry_a00000000000000000000000",
+              "pattern": "^ferry_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "ferry"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -73324,6 +73381,17 @@
             }
           },
           {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ProviderId"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -73441,6 +73509,17 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ProviderId"
             }
           },
           {
@@ -73573,6 +73652,17 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ProviderId"
             }
           },
           {
@@ -73709,6 +73799,17 @@
             }
           },
           {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ProviderId"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -73838,6 +73939,17 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ProviderId"
             }
           },
           {
@@ -77410,6 +77522,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "view_id",
+            "required": true,
+            "schema": {
+              "description": "Public saved view ID.",
+              "example": "viw_a00000000000000000000000",
+              "pattern": "^viw_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "viw"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -77724,7 +77848,7 @@
                 }
               }
             },
-            "description": "Invalid Page indexing filters or settings; available_quota is self-host only."
+            "description": "Invalid Page indexing filters or settings."
           },
           "401": {
             "content": {
@@ -77860,7 +77984,7 @@
                 }
               }
             },
-            "description": "Invalid Page indexing filters or settings; available_quota is self-host only."
+            "description": "Invalid Page indexing filters or settings."
           },
           "401": {
             "content": {
@@ -77944,7 +78068,7 @@
         }
       },
       "patch": {
-        "description": "Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota is self-host only and runs until a daily 429 within the run time budget. Manual and background calls share the property counter, reset at Pacific midnight. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+        "description": "Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota runs until a daily 429 within the run time budget on Cloud and self-host. Manual and background calls share the property counter, reset at Pacific midnight. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
         "operationId": "updatePageIndexingSettings",
         "parameters": [
           {
@@ -78007,7 +78131,7 @@
                 }
               }
             },
-            "description": "Invalid Page indexing filters or settings; available_quota is self-host only."
+            "description": "Invalid Page indexing filters or settings."
           },
           "401": {
             "content": {
@@ -78567,7 +78691,7 @@
                 }
               }
             },
-            "description": "Invalid Page indexing filters or settings; available_quota is self-host only."
+            "description": "Invalid Page indexing filters or settings."
           },
           "401": {
             "content": {
@@ -80178,6 +80302,17 @@
             }
           },
           {
+            "in": "path",
+            "name": "monitor_id",
+            "required": true,
+            "schema": {
+              "example": "prj_a00000000000000000000000",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "prj"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -80579,6 +80714,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "description": "Public team invitation ID.",
+              "example": "inv_a00000000000000000000000",
+              "pattern": "^inv_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "inv"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -80695,6 +80842,18 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "description": "Public team invitation ID.",
+              "example": "inv_a00000000000000000000000",
+              "pattern": "^inv_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "inv"
             }
           },
           {
@@ -80960,6 +81119,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "description": "Public team member ID.",
+              "example": "mbr_a00000000000000000000000",
+              "pattern": "^mbr_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "mbr"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -81075,6 +81246,18 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "description": "Public team member ID.",
+              "example": "mbr_a00000000000000000000000",
+              "pattern": "^mbr_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "mbr"
             }
           },
           {
@@ -81930,6 +82113,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "description": "Public webhook endpoint ID.",
+              "example": "we_a00000000000000000000000",
+              "pattern": "^we_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "we"
+            }
+          },
+          {
             "$ref": "#/components/parameters/SourceHeader"
           }
         ],
@@ -82044,6 +82239,18 @@
               "pattern": "^prj_[a-z][a-z0-9]{23}$",
               "type": "string",
               "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "description": "Public webhook endpoint ID.",
+              "example": "we_a00000000000000000000000",
+              "pattern": "^we_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "we"
             }
           },
           {
@@ -82429,6 +82636,18 @@
             }
           },
           {
+            "in": "path",
+            "name": "view_id",
+            "required": true,
+            "schema": {
+              "description": "Public saved view ID.",
+              "example": "viw_a00000000000000000000000",
+              "pattern": "^viw_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "viw"
+            }
+          },
+          {
             "$ref": "#/components/parameters/ProjectHeader"
           },
           {
@@ -82678,6 +82897,18 @@
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ApiVersion"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "description": "Public team invitation ID.",
+              "example": "inv_a00000000000000000000000",
+              "pattern": "^inv_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "inv"
             }
           },
           {

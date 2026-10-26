@@ -3,7 +3,9 @@
     "tabs": {
       "aria": "連携のセクション",
       "connections": "接続",
-      "usage": "利用状況"
+      "usage": "利用状況",
+      "creditsUsage": "クレジット使用量",
+      "byokUsage": "BYOK 使用量"
     },
     "page": {
       "googleConnectError": "Google との接続が完了しませんでした。再試行し、プロパティにアクセスできるアカウントを選択してください。"

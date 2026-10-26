@@ -67,7 +67,7 @@ export function AccountEmailConfirmation({
           disabled={!canConfirm}
           loading={confirming}
           onClick={onConfirm}
-          size="sm"
+          size="input"
           type="button"
         >
           {t("confirm")}

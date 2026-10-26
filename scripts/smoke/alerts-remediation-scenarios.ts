@@ -4,10 +4,16 @@ import { flushAlertDigests } from "@/lib/alerts/digest";
 import type { AlertDigestJob } from "@/lib/alerts/digest-types";
 import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
 import { notifyRankCheckCompleted } from "@/lib/notifications/events";
+import { recomputeCheckSummary, summaryKey } from "@/lib/notifications/check-summaries/deliver";
+import { checkNotificationSummariesEnabled } from "@/lib/notifications/check-summaries/switch";
+import { checkWindow, type SummaryWindow } from "@/lib/notifications/check-summaries/window";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
 import { alertDeliveryWorkflowId } from "@/lib/temporal/alert-delivery-client";
 import { makePublicId } from "@/lib/db/public-id";
 import {
   type AcceptanceFixture,
+  cleanupAcceptanceFixture,
+  createAcceptanceFixture,
   createKeyword,
   persistAcceptanceCheck,
   prisma,
@@ -202,6 +208,108 @@ export async function runStatefulScenario(fixture: AcceptanceFixture) {
 }
 
 export async function runNotificationScenario(fixture: AcceptanceFixture) {
+  assert(checkNotificationSummariesEnabled(), "the smoke must start with default grouped summaries");
+  const grouped = await createAcceptanceFixture(`${fixture.prefix}-summaries`);
+  try {
+    await runGroupedNotificationScenario(grouped);
+  } finally {
+    await cleanupAcceptanceFixture(grouped);
+  }
+
+  const demoEnvironment = {
+    READ_ONLY_DEMO: "1",
+    DEMO_MODE: "",
+    DEMO_USER_ID: fixture.owner.publicId,
+    DEMO_PROJECT_ID: fixture.project.publicId,
+    DEMO_FIXED_OTP: "",
+    ALLOW_INSECURE_FIXED_OTP: "",
+  };
+  const previous = Object.fromEntries(
+    Object.keys(demoEnvironment).map((key) => [key, process.env[key]]),
+  );
+  try {
+    Object.assign(process.env, demoEnvironment);
+    assert(!checkNotificationSummariesEnabled(), "legacy delivery requires explicit demo mode");
+    await runLegacyNotificationScenario(fixture);
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+  assert(checkNotificationSummariesEnabled(), "the default strategy must be restored");
+}
+
+async function runGroupedNotificationScenario(fixture: AcceptanceFixture) {
+  const checks = [];
+  const baselineAt = new Date(checkWindow({ checkedAt: new Date(), finishedAt: null }).start.getTime() - 60_000);
+  for (let index = 0; index < 2; index++) {
+    const keyword = await createKeyword(fixture, `grouped-${index}`);
+    await prisma.rankCheck.create({
+      data: {
+        publicId: makePublicId("check"),
+        keywordId: keyword.id,
+        checkedAt: baselineAt,
+        finishedAt: baselineAt,
+        terminalPersistedAt: baselineAt,
+        status: "completed",
+        provider: "acceptance-fake",
+        position: 20,
+        requestedDepth: 100,
+        normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
+      },
+    });
+    checks.push(await persistAcceptanceCheck(fixture, {
+      checkedAt: new Date(), keyword, position: 4 + index, previousPosition: 20,
+      trigger: "scheduled",
+    }, { enqueueDeliveries: async () => { assert.fail("summary fixture has no alert rules"); } }));
+  }
+  assert.equal(await checkNotificationCount(fixture), 0, "default strategy suppresses per-check bells");
+  assert.equal(await prisma.notification.count({ where: { projectId: fixture.project.id } }), 0);
+
+  // Use the persisted finish time, including a possible hour boundary between writes.
+  const windows = new Map<string, { window: SummaryWindow; ids: string[] }>();
+  for (const check of checks) {
+    const window = checkWindow(check);
+    const key = window.start.toISOString();
+    const group = windows.get(key) ?? { window, ids: [] };
+    group.ids.push(check.id);
+    windows.set(key, group);
+  }
+  for (const { window, ids } of windows.values()) {
+    const target = { kind: "scheduled" as const, projectId: fixture.project.id, window };
+    assert.equal(await recomputeCheckSummary(target, { now: new Date(window.end.getTime() - 1) }), 0);
+    const options = { now: new Date(window.end.getTime() + 60_000) };
+    assert.equal(await recomputeCheckSummary(target, options), 2);
+    const rows = await prisma.notification.findMany({
+      where: { projectId: fixture.project.id, idempotencyKey: summaryKey(target) },
+      include: { checkSummary: true },
+      orderBy: { id: "asc" },
+    });
+    assert.equal(rows.length, 2);
+    assert.deepEqual(new Set(rows.map((row) => row.userId)), new Set([fixture.owner.id, fixture.optedIn.id]));
+    for (const row of rows) {
+      assert.equal(row.type, "scheduled_window_summary");
+      assert.equal(row.version, 1);
+      assert.deepEqual([...(row.checkSummary?.checkIds ?? [])].sort(), [...ids].sort());
+      assert(row.payload && typeof row.payload === "object" && !Array.isArray(row.payload));
+      assert.deepEqual(row.payload.counts, {
+        down: 0, up: ids.length, failed: 0, under_review: 0, unchanged: 0, new: 0,
+      });
+    }
+    const replays = await Promise.all(Array.from({ length: 8 }, () => recomputeCheckSummary(target, options)));
+    assert(replays.every((writes) => writes === 0), "parallel replays must be no-ops");
+    assert.deepEqual(await prisma.notification.findMany({
+      where: { projectId: fixture.project.id, idempotencyKey: summaryKey(target) },
+      orderBy: { id: "asc" }, select: { id: true, version: true },
+    }), rows.map(({ id, version }) => ({ id, version })));
+  }
+  assert.equal(await checkNotificationCount(fixture), 0);
+  assert.equal(await prisma.notification.count({ where: { projectId: fixture.project.id, userId: fixture.optedOut.id } }), 0);
+  console.log(`grouped notifications: ${checks.length} persisted checks, 2 opted-in recipients per window, no legacy bells or replay writes`);
+}
+
+async function runLegacyNotificationScenario(fixture: AcceptanceFixture) {
   const keyword = await createKeyword(fixture, "notification");
   await prisma.notification.deleteMany({
     where: { projectId: fixture.project.id, type: "check_complete" },
@@ -233,7 +341,7 @@ export async function runNotificationScenario(fixture: AcceptanceFixture) {
   );
   assert(rows.every(({ idempotencyKey }) => idempotencyKey === expectedKey));
   assert(!rows.some(({ userId }) => userId === fixture.optedOut.id));
-  console.log(`notifications: unchanged 0, changed 2 opted-in, replay 2, idempotencyKey ${expectedKey}`);
+  console.log(`legacy notifications (explicit demo): unchanged 0, changed 2 opted-in, replay 2, idempotencyKey ${expectedKey}`);
 }
 
 async function checkNotificationCount(fixture: AcceptanceFixture) {

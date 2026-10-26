@@ -61,6 +61,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     <span
       className={cn(
         "relative inline-grid size-4 shrink-0 place-items-center",
+        // Centre the 16px box on the 20px first line of an adjacent label.
+        (label || description) && "mt-0.5",
         disabled && "opacity-55",
         controlClassName,
       )}

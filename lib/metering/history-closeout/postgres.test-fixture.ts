@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
 import { makePublicId } from "@/lib/db/public-id";
 import { type Prisma, PrismaClient } from "@/lib/generated/prisma/client";
@@ -15,7 +16,7 @@ import pg from "pg";
 import { type CloseoutManifest, closeoutPolicy, historyMigration } from "./manifest";
 import { applyCloseout, previewCloseout } from "./service";
 
-export async function closeoutPostgresFixture() {
+export async function closeoutPostgresFixture({ migrationsRoot = "prisma/migrations" } = {}) {
   const adminUrl = testDatabaseUrl();
   if (!["127.0.0.1", "localhost"].includes(new URL(adminUrl).hostname))
     throw new Error("Closeout proof requires owned loopback PostgreSQL.");
@@ -64,9 +65,10 @@ export async function closeoutPostgresFixture() {
     await admin.query(`CREATE DATABASE "${database}"`);
     await client.connect();
     await client.query("SET TIME ZONE 'UTC'");
-    const migrations = readdirSync("prisma/migrations")
+    const migrations = readdirSync(migrationsRoot)
       .filter((name) => /^\d{14}_/.test(name))
       .sort();
+    const appliedMigrations: string[] = [];
     for (const migration of migrations) {
       if (migration === "20261011020000_accounting_history_snapshot") {
         await client.query(
@@ -111,7 +113,8 @@ export async function closeoutPostgresFixture() {
           log: () => {},
         });
       }
-      await client.query(readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"));
+      await client.query(readFileSync(join(migrationsRoot, migration, "migration.sql"), "utf8"));
+      appliedMigrations.push(migration);
     }
     await createPostgresStore({ prisma: db, clock: { now: () => new Date() } });
     const manifest = async (cohort: string, suffixes = ["a"]): Promise<CloseoutManifest> => {
@@ -171,7 +174,7 @@ export async function closeoutPostgresFixture() {
       apply,
       close,
       definition,
-      migrationCount: migrations.length,
+      appliedMigrations,
       statements: () => statements,
     };
   } catch (error) {

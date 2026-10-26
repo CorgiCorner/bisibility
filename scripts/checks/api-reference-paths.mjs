@@ -4,6 +4,7 @@ import { join } from "node:path";
 export function slug(value) {
   return value
     .toLowerCase()
+    .replaceAll(/['’‘]/g, "")
     .replaceAll(/[^a-z0-9]+/g, "-")
     .replaceAll(/^-|-$/g, "");
 }

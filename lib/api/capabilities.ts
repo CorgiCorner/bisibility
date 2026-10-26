@@ -1,4 +1,3 @@
-import { isSelfHost } from "@/lib/deployment/deployment";
 import { availableInspectionModes } from "@/lib/presence/budget-mode";
 import {
   DEFAULT_SERP_DEPTH,
@@ -56,7 +55,7 @@ export function getCapabilities() {
                 ...toolInputSchemas[name].properties,
                 budget_mode: {
                   ...toolInputSchemas[name].properties.budget_mode,
-                  enum: availableInspectionModes(isSelfHost),
+                  enum: availableInspectionModes(),
                 },
               },
             }

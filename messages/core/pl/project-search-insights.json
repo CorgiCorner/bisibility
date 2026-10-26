@@ -385,8 +385,7 @@
       "navigation": "Widoki Search Console",
       "performance": "Skuteczność",
       "title": "Indeksowanie stron",
-      "alphaBadge": "alfa",
-      "notIndexedCount": "Indeksowanie stron, {alpha}, {count, plural, one {# niezindeksowana strona} few {# niezindeksowane strony} many {# niezindeksowanych stron} other {# niezindeksowanej strony}}",
+      "notIndexedCount": "Indeksowanie stron, {maturity}, {count, plural, one {# niezindeksowana strona} few {# niezindeksowane strony} many {# niezindeksowanych stron} other {# niezindeksowanej strony}}",
       "groups": {
         "indexed": "Zindeksowane",
         "not_indexed": "Niezindeksowane",
@@ -394,13 +393,12 @@
         "not_checked": "Jeszcze niesprawdzone"
       },
       "modes": {
-        "off": "Tryb: wyłączony",
-        "fixed": "Tryb: stały limit dzienny",
-        "available_quota": "Tryb: wykorzystaj wolny limit"
+        "off": "Wyłączone",
+        "fixed": "Stały limit dzienny",
+        "available_quota": "Wykorzystaj dostępny limit"
       },
-      "denominator": "Sprawdzono {checked, number} z {total, plural, one {# adresu URL} few {# adresów URL} many {# adresów URL} other {# adresu URL}} z map witryny i celów słów kluczowych.",
+      "denominator": "Sprawdzono {checked, number} z {total, plural, one {# adresu URL} few {# adresów URL} many {# adresów URL} other {# adresu URL}}.",
       "freshness": "Najstarszy wynik: {oldest}. Stan na: {newest}.",
-      "trustStrip": "Zapisany stan indeksowania w Google, a nie test na żywo. Dzisiaj: {count, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}} (szacunek). Dzienny limit odnawia się o {reset} w Twojej strefie, o północy czasu pacyficznego.",
       "settings": "Ustawienia inspekcji",
       "inspect": "Sprawdź URL",
       "dailyExhausted": "Wyczerpano dzienny przydział sprawdzeń lub limit usługi, być może także przez inne narzędzia. Sprawdzenia można wznowić po {reset}. Zapisane wyniki pozostają dostępne.",
@@ -458,7 +456,7 @@
       "richCounts": "{items, plural, one {# element} few {# elementy} many {# elementów} other {# elementu}}, {issues, plural, one {# problem} few {# problemy} many {# problemów} other {# problemu}}",
       "viewStored": "Pokaż zapisany wynik",
       "unspecifiedReason": "Nieokreślona przyczyna",
-      "inspectDescription": "Sprawdź zapisany stan indeksowania maksymalnie 10 adresów URL.",
+      "inspectDescription": "Sprawdź do 10 adresów z własnej listy lub sitemapy.",
       "enums": {
         "verdict": {
           "VERDICT_UNSPECIFIED": "Nieokreślony",
@@ -534,7 +532,7 @@
       "checksIndexed": "{indexed, number} z {total, number} zindeksowanych",
       "sitemapReadAt": "Odczytano z Search Console: {date}",
       "sitemapSnapshotCaption": "Przesłane w Search Console. Indeks sumuje adresy URL map podrzędnych. Nasze sprawdzenia pochodzą z zapisanych inspekcji.",
-      "sitemapsNotRead": "Mapy witryny nie zostały jeszcze odczytane; odczyta je pierwsze zadanie w tle",
+      "sitemapsNotRead": "Mapy witryny nie zostały jeszcze odczytane.",
       "noSitemapsSubmitted": "W Search Console nie przesłano mapy witryny dla tej usługi.",
       "sitemapReadErrors": {
         "permission": "Brak uprawnień do odczytu map: {failed}. Ostatni udany odczyt: {success}. Pokazujemy zapisane wiersze.",
@@ -562,12 +560,41 @@
       "verdictInspectionFailed": "Inspekcja nie powiodła się",
       "overview": {
         "title": "Przegląd z naszych kontroli",
-        "badge": "Prawdopodobnie do usunięcia",
-        "note": "Odtworzony z naszych kontroli, więc może być niepełny lub nieaktualny. Pełną wersją jest raport indeksowania stron w Search Console. Ta sekcja prawdopodobnie zniknie w jednym z najbliższych wydań.",
+        "note": "Na podstawie naszych inspekcji; dane mogą być niepełne.",
         "openConsole": "Otwórz pełny raport w Search Console",
-        "keepQuestion": "Chcesz, żebyśmy zostawili tę sekcję? Kliknij i napisz do nas.",
-        "keepSubject": "Zostawcie podgląd indeksowania stron"
-      }
+        "keepSubject": "Zostawcie podgląd indeksowania stron",
+        "removalNotice": "Ta sekcja może zniknąć w jednej z kolejnych aktualizacji.",
+        "keepLink": "Chcesz ją zachować? Napisz do nas"
+      },
+      "noInspectionTargets": "Nie ma jeszcze adresów do inspekcji.",
+      "noInspectionResults": "Nie ma jeszcze wyników inspekcji. Dostępne adresy: {total, number}.",
+      "sitemapNextRun": "Następne uruchomienie w tle: {date}, Twój czas.",
+      "sitemapSchedule": {
+        "disabled": "Automatyczna inspekcja adresów jest wyłączona. Włącz ją w Źródłach danych, aby odczytywać mapy witryny w tle.",
+        "paused": "Inspekcja adresów w tle jest wstrzymana. Nie zaplanowano następnego uruchomienia.",
+        "unavailable": "Nie udało się potwierdzić terminu następnego uruchomienia w tle.",
+        "scheduled": "Zaplanowano inspekcję adresów w tle."
+      },
+      "readSitemaps": "Wczytaj mapy witryny",
+      "refreshSitemaps": "Odśwież mapy witryny",
+      "sitemapReadFailed": "Nie udało się wczytać map witryny. Sprawdź połączenie z Search Console i spróbuj ponownie.",
+      "sitemapReadRateLimited": "Poczekaj minutę przed ponownym wczytaniem map witryny.",
+      "inspectionDetails": "Szczegóły inspekcji",
+      "modeLabel": "Automatyczne inspekcje",
+      "todayLabel": "Dzisiaj",
+      "resetLabel": "Odnowienie limitu",
+      "checksToday": "{count, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}} (szacunek)",
+      "quotaReset": "{reset} w Twojej strefie (północ czasu pacyficznego)",
+      "storedState": "Wyniki pokazują ostatni znany Google stan indeksowania.",
+      "maturityBadge": "beta",
+      "inspectSource": "Wybierz adresy URL",
+      "inspectManual": "Wpisz adresy URL",
+      "inspectFromSitemap": "Z sitemapy",
+      "inspectSelectSitemap": "Wybierz sitemapę",
+      "inspectSitemapHint": "Wczytuje do 10 zapisanych adresów, zaczynając od jeszcze niesprawdzonych. Możesz zmienić listę przed inspekcją.",
+      "inspectSitemapEmpty": "Brak zapisanych adresów w tej sitemapie. Wczytaj sitemapy ponownie i spróbuj jeszcze raz.",
+      "inspectNoSitemaps": "Najpierw wczytaj sitemapy, aby wybrać z nich adresy.",
+      "inspectSitemapLoading": "Wczytywanie adresów..."
     }
   }
 }

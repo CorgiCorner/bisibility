@@ -57,6 +57,13 @@ describe("form primitives", () => {
     expect(screen.getByText("Enter")).toHaveClass("sr-only");
   });
 
+  it("keeps a bare checkbox free of label alignment offset", () => {
+    render(<Checkbox aria-label="Select row" />);
+    expect(screen.getByRole("checkbox", { name: "Select row" }).parentElement).not.toHaveClass(
+      "mt-0.5",
+    );
+  });
+
   it("renders and toggles a native checkbox", () => {
     render(<Checkbox label="All subdomains" name="includeSubdomains" />);
 
@@ -68,7 +75,8 @@ describe("form primitives", () => {
     expect(checkbox).toHaveClass("col-start-1", "row-start-1", "m-0");
     expect(checkbox.nextElementSibling).toHaveClass("col-start-1", "row-start-1");
     expect(checkbox.parentElement).toHaveClass("place-items-center");
-    expect(checkbox.parentElement).not.toHaveClass("mt-0.5");
+    // A labelled box sits 2px down so its 16px square centres on the 20px first label line.
+    expect(checkbox.parentElement).toHaveClass("mt-0.5");
     expect(checkbox.nextElementSibling).not.toHaveClass(
       "absolute",
       "left-1/2",

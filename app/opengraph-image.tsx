@@ -1,16 +1,17 @@
 import { OpenGraphBrandLockup } from "@/lib/seo/og-brand-lockup";
+import { defaultSocialImage } from "@/lib/seo/page-metadata";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { ImageResponse } from "next/og";
 
-export const alt = "Open-source SEO platform";
+export const alt = defaultSocialImage.alt;
 export const contentType = "image/png";
 export const runtime = "nodejs";
 export const size = {
-  height: 630,
-  width: 1200,
+  height: defaultSocialImage.height,
+  width: defaultSocialImage.width,
 };
 
-const MUTED = "#6b6657";
+const MUTED = "#585858";
 const PHRASE_ROW = {
   alignItems: "center",
   color: MUTED,
@@ -48,8 +49,8 @@ export default function Image() {
     <div
       style={{
         alignItems: "center",
-        background: "#fcf7ed",
-        color: "#1a1813",
+        background: "#f5f5f5",
+        color: "#202020",
         display: "flex",
         height: "100%",
         justifyContent: "center",
@@ -59,7 +60,7 @@ export default function Image() {
     >
       <div
         style={{
-          border: "2px solid #ddd8cc",
+          border: "2px solid #d6d6d6",
           borderRadius: UI_RADIUS_ROLES.card,
           display: "flex",
           flexDirection: "column",
@@ -85,13 +86,12 @@ export default function Image() {
           >
             Open-source SEO platform
           </div>
-
-          <PhraseRow items={["Track rankings", "Research keywords", "Inspect backlinks"]} />
+          <div style={{ color: MUTED, display: "flex", fontSize: 30 }}>
+            Rank tracking and AI visibility for your sites.
+          </div>
         </div>
 
-        <PhraseRow
-          items={["Free self-hosting or Cloud", "Cloud: $3/month after a free trial", "MCP-ready"]}
-        />
+        <PhraseRow items={["Self-host free", "Your own provider keys", "MCP-ready"]} />
       </div>
     </div>,
     size,

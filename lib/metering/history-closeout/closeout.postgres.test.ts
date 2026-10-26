@@ -23,7 +23,9 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 let f: Awaited<ReturnType<typeof closeoutPostgresFixture>>;
 beforeAll(async () => {
-  f = await closeoutPostgresFixture();
+  f = await closeoutPostgresFixture({
+    migrationsRoot: process.env.BISIBILITY_TEST_MIGRATIONS_ROOT,
+  });
   shared.db = f.db;
 }, 30000);
 afterAll(async () => {
@@ -37,7 +39,15 @@ const ledger = async () =>
   ).rows;
 
 it("runs the full migration chain, preserves exact originals and uses normal money/paid-attempt counters", async () => {
-  expect(f.migrationCount).toBeGreaterThan(120);
+  expect(f.appliedMigrations).toEqual(
+    expect.arrayContaining([
+      "20261011010000_shared_paid_attempt_context",
+      "20261011020000_accounting_history_snapshot",
+      "20261011040000_retire_accounting",
+      "20261011050000_drop_project_spending_cap",
+      "20261018190000_historical_financial_closeout",
+    ]),
+  );
   const manifest = await f.manifest("normal");
   const original = (
     await f.client.query("SELECT payload FROM metering_legacy_usage_source ORDER BY source_id")

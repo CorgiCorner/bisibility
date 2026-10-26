@@ -74,6 +74,10 @@ See [deployment options](https://bisibility.com/docs/deployment-options)
 for hosted limits and infrastructure requirements. Self-hosted scheduling
 also requires the worker and Temporal.
 
+Self-hosted databases require PostgreSQL 16 or newer. Compose includes PostgreSQL
+16, the tested major version. The migration command rejects older servers before
+applying any migrations.
+
 ### Try locally
 
 Requires Git, Docker with Compose, and OpenSSL. The local demo includes

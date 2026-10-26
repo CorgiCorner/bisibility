@@ -45,7 +45,7 @@
       "notices": {
         "connectProvider": "Elige una fuente de datos",
         "failedDetail": "No se han podido actualizar las posiciones de algunas palabras clave.",
-        "failedTitle": "Las comprobaciones de posiciones han terminado sin datos.",
+        "failedTitle": "Comprobaciones fallidas en los últimos {days} días",
         "firstCheckDetail": "{count, plural, =0 {Añade palabras clave para empezar el seguimiento de posiciones.} one {# palabra clave está lista para la primera comprobación.} other {# palabras clave están listas para la primera comprobación.}}",
         "firstCheckTitle": "Todavía no hay posiciones",
         "migrationHoldDetail": "Las comprobaciones de posiciones no pueden empezar hasta que se libere la retención por migración.",

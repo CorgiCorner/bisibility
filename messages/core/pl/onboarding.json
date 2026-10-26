@@ -284,7 +284,8 @@
     },
     "page": {
       "description": "Kilka szybkich kroków, aby zacząć śledzić swoją witrynę.",
-      "title": "Skonfiguruj projekt"
+      "title": "Skonfiguruj projekt",
+      "backToProjects": "Wróć do projektów"
     },
     "projectOptions": {
       "importError": "Nie udało się otworzyć importu projektu.",

@@ -6,7 +6,10 @@ const mocks = vi.hoisted(() => ({
   find: vi.fn(),
   upsert: vi.fn(),
   quota: vi.fn(),
+  project: vi.fn(),
+  audit: vi.fn(),
 }));
+vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.audit }));
 vi.mock("@/lib/deployment/deployment", () => ({ isSelfHost: false }));
 vi.mock("./service", () => ({
   connectionForProject: async () => ({
@@ -15,7 +18,12 @@ vi.mock("./service", () => ({
   }),
 }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { projectDefaults: { findUnique: mocks.find, upsert: mocks.upsert } },
+  prisma: {
+    projectDefaults: { findUnique: mocks.find, upsert: mocks.upsert },
+    project: { findUniqueOrThrow: mocks.project },
+    $transaction: async (fn: (tx: unknown) => unknown) =>
+      fn({ projectDefaults: { findUnique: mocks.find, upsert: mocks.upsert } }),
+  },
 }));
 vi.mock("@/lib/presence/property-quota", async (original) => ({
   ...(await original<typeof import("@/lib/presence/property-quota")>()),
@@ -29,22 +37,36 @@ beforeEach(() => {
     inspectionDailyLimit: 50,
   });
   mocks.quota.mockResolvedValue({ todayCount: 0 });
+  mocks.project.mockResolvedValue({ publicId: "prj_test" });
+  mocks.upsert.mockResolvedValue({
+    inspectionDailyLimit: 50,
+    inspectionBudgetMode: "available_quota",
+  });
 });
 describe("Cloud Page indexing modes", () => {
-  it("treats an imported available quota mode as fixed and lists only supported modes", async () => {
+  it("retains available quota and lists all modes on Cloud", async () => {
     expect(await getPageIndexingSettings("project")).toMatchObject({
-      budgetMode: "fixed",
-      availableModes: ["off", "fixed"],
+      budgetMode: "available_quota",
+      availableModes: ["off", "fixed", "available_quota"],
     });
     expect(mocks.quota).toHaveBeenCalledWith(
       propertyQuotaKey("sc-domain:example.com"),
       expect.any(Date),
     );
   });
-  it("rejects available quota before any write", async () => {
-    await expect(
-      updatePageIndexingSettings("project", { budget_mode: "available_quota" }, null),
-    ).rejects.toThrow("self-host");
-    expect(mocks.upsert).not.toHaveBeenCalled();
+  it("accepts available quota on Cloud and writes the audited setting", async () => {
+    expect(
+      await updatePageIndexingSettings("project", { budget_mode: "available_quota" }, "actor"),
+    ).toMatchObject({ budgetMode: "available_quota" });
+    expect(mocks.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { inspectionBudgetMode: "available_quota" } }),
+    );
+    expect(mocks.audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: "actor",
+        after: { inspectionDailyLimit: 50, inspectionBudgetMode: "available_quota" },
+      }),
+      expect.anything(),
+    );
   });
 });

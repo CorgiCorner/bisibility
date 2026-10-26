@@ -1,6 +1,8 @@
 "use client";
+
 import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { Card } from "@/components/ui/Card";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import { aiEngineLabel } from "@/lib/ai-research/engine-labels";
@@ -109,7 +111,7 @@ export function AiResearchResults({
                     href={citation.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="break-words text-ui-body text-accent-text underline underline-offset-4"
+                    className={`${dataLinkClassName} break-words text-ui-body`}
                   >
                     {citation.title}
                     {citation.targetDomain ? ` · ${t("yourDomain")}` : ""}

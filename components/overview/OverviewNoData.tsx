@@ -5,6 +5,7 @@ import type {
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { ByMarketRollup } from "./ByMarketRollup";
+import { OverviewBudgetNotice } from "./OverviewBudgetNotice";
 import { DataSourceNoDataPanel } from "./OverviewNoDataBottom";
 import { NoDataBanner, NoDataCharts, NoDataKpiRow } from "./OverviewNoDataTop";
 import type { OverviewView } from "./types";
@@ -55,6 +56,9 @@ export function OverviewNoData({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      {budgetExhausted && overview.serpProviderState === "ready" && !overview.projectReadOnly ? (
+        <OverviewBudgetNotice reason={budgetReason} projectRef={projectRef} />
+      ) : null}
       {bannerState !== "ready" || showFirstCheckIntro ? (
         <NoDataBanner
           canCreateKeyword={canCreateKeyword}

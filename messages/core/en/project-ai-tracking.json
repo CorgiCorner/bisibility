@@ -238,7 +238,9 @@
       "keywordsHint": "Select a keyword to see the prompts people ask AI about it.",
       "promptCount": "{count, plural, one {# prompt} other {# prompts}}",
       "ownDomainCited": "Cites your site",
-      "yourSite": "Your site"
+      "yourSite": "Your site",
+      "startResearch": "Research",
+      "scopeHint": "Up to 100 dataset rows."
     }
   }
 }

@@ -5,6 +5,7 @@ import { PaymentQuoteSummary } from "@/components/action-payment/PaymentQuoteSum
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Card } from "@/components/ui/Card";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
@@ -22,6 +23,9 @@ type Submission = ReturnType<typeof useAiResearchSubmission>;
 
 export function AiResearchWorkspaceOutcome({
   actual,
+  hideEstimate = false,
+  hideError = false,
+  onNewRequest,
   catalogSourceMissing,
   freshCatalog,
   history,
@@ -32,6 +36,9 @@ export function AiResearchWorkspaceOutcome({
   supportingProviders,
 }: Readonly<{
   actual: boolean;
+  hideEstimate?: boolean;
+  hideError?: boolean;
+  onNewRequest?: () => void;
   catalogSourceMissing: boolean;
   freshCatalog?: AiResearchCatalog;
   history: AiResearchHistoryEntry[];
@@ -57,7 +64,7 @@ export function AiResearchWorkspaceOutcome({
   } = submission;
   return (
     <>
-      {error || (outcome && !outcome.ok && outcome.reason !== "no_source") ? (
+      {!hideError && (error || (outcome && !outcome.ok && outcome.reason !== "no_source")) ? (
         <Card role="alert" className="text-ui-body text-red-text">
           {error
             ? t("requestFailure")
@@ -69,7 +76,7 @@ export function AiResearchWorkspaceOutcome({
       {outcome && !outcome.ok && outcome.payment ? (
         <PaymentChargeLine payment={outcome.payment} />
       ) : null}
-      {estimateCurrent && outcome?.ok && outcome.estimate ? (
+      {!hideEstimate && estimateCurrent && outcome?.ok && outcome.estimate ? (
         <Card className="text-ui-body">
           <PaymentQuoteSummary
             quote={quote}
@@ -99,7 +106,7 @@ export function AiResearchWorkspaceOutcome({
             originalPayment={outcome.originalPayment}
           />
           <Link
-            className="text-ui-body text-accent-text underline"
+            className={`${dataLinkClassName} text-ui-body`}
             href={`/app/${projectId}/agent-reports/${outcome.reportId}`}
           >
             {t("openReport")}
@@ -123,7 +130,7 @@ export function AiResearchWorkspaceOutcome({
         </Card>
       ) : null}
       {sourceRetryAvailable && !catalogSourceMissing && freshCatalog ? (
-        <AiSourceRetry onRetry={newRequest} />
+        <AiSourceRetry onRetry={onNewRequest ?? newRequest} />
       ) : null}
       <AiResearchHistory history={history} projectId={projectId} />
     </>

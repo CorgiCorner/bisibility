@@ -45,7 +45,7 @@
       "notices": {
         "connectProvider": "Choose a data source",
         "failedDetail": "Some keyword positions could not be updated.",
-        "failedTitle": "Rank checks failed to produce ranking data.",
+        "failedTitle": "Rank check failures in the last {days} days",
         "firstCheckDetail": "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}",
         "firstCheckTitle": "No rankings yet",
         "migrationHoldDetail": "Rank checks cannot start until the migration hold is released.",

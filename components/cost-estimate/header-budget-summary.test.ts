@@ -1,12 +1,41 @@
 import { budgetFixture } from "@/lib/metering/shared-view-fixtures";
 import { describe, expect, it } from "vitest";
-import { headerBudgetFigure, headerBudgetSummary } from "./header-budget-summary";
+import { headerBudgetFigure, headerBudgetSummary, headerDetailRows } from "./header-budget-summary";
 
 const base = budgetFixture();
 const figure = (text: string, certainty: "measured" | "estimated" = "measured") => ({
   text,
   unit: "cents",
   certainty,
+});
+
+it("replaces duplicate unbounded project totals with the explicit limit without mixing credits", () => {
+  const money = {
+    ...base,
+    id: "legacy",
+    unit: "budget_cents",
+    used: { ...figure("20"), unit: "budget_cents" },
+    reserved: { ...figure("0"), unit: "budget_cents" },
+    limit: "unlimited" as const,
+  };
+  const bounded = { ...money, id: "byok", limit: { ...figure("5000"), unit: "budget_cents" } };
+  const credits = {
+    ...money,
+    id: "credits",
+    unit: "customer_cents",
+    used: { ...figure("0"), unit: "customer_cents" },
+  };
+  expect(headerDetailRows([money, bounded, credits]).map((row) => row.id)).toEqual([
+    "byok",
+    "credits",
+  ]);
+  expect(
+    headerDetailRows([
+      bounded,
+      { ...bounded, id: "different", used: { ...figure("40"), unit: "budget_cents" } },
+    ]),
+  ).toHaveLength(2);
+  expect(headerDetailRows([money, { ...bounded, window: "provider_cycle" }])).toHaveLength(2);
 });
 
 describe("header budget summary", () => {

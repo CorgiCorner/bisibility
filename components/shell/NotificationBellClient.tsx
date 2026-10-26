@@ -1,7 +1,7 @@
 "use client";
 
 import { Popup as Popover } from "@/components/ui/Popup";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
+import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/toast-context";
 import {
   type NotificationTransport,
@@ -197,13 +197,18 @@ function NotificationBellView({
             {t("markAllRead")}
           </button>
         </div>
-        <div className="border-b border-border px-4 py-2">
-          <ToggleGroup
-            type="multiple"
-            value={openIncidents ? ["incidents"] : []}
-            disabled={isPending}
-            onValueChange={() => {
-              if (openIncidents) {
+        <div className="border-b border-border px-4" aria-busy={isPending}>
+          <Tabs
+            ariaLabel={t("title")}
+            panelId="notification-bell-panel"
+            value={openIncidents ? "incidents" : "all"}
+            options={[
+              { value: "all", label: t("allTab") },
+              { value: "incidents", label: t("incidentsTab") },
+            ]}
+            onChange={(value) => {
+              if (isPending || (value === "incidents") === openIncidents) return;
+              if (value === "all") {
                 setOpenIncidents(false);
                 return;
               }
@@ -216,11 +221,14 @@ function NotificationBellView({
                 }
               });
             }}
-          >
-            <ToggleGroupItem value="incidents">{t("openIncidents")}</ToggleGroupItem>
-          </ToggleGroup>
+          />
         </div>
-        <div className="max-h-[380px] overflow-y-auto">
+        <div
+          id="notification-bell-panel"
+          role="tabpanel"
+          aria-labelledby={`notification-bell-panel-${openIncidents ? "incidents" : "all"}-tab`}
+          className="max-h-[380px] overflow-y-auto"
+        >
           {openIncidents && incidentFeed ? (
             <OpenIncidentRows
               initialFeed={incidentFeed}

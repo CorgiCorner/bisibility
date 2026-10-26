@@ -151,7 +151,7 @@ describe("AI workspace product states", () => {
       />,
     );
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+    expectExecutionBlocked();
     expect(screen.getByRole("link", { name: /Saved report/ })).toHaveAttribute(
       "href",
       "/app/prj_example/agent-reports/agr_example",
@@ -270,7 +270,7 @@ describe("AI catalog and cost preflight", () => {
         evidence: "synthetic_prompt_test",
       }),
     );
-    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+    expectExecutionBlocked();
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
     expect(analyze).toHaveBeenCalledWith(
@@ -284,7 +284,7 @@ describe("AI catalog and cost preflight", () => {
       }),
     );
     fireEvent.change(screen.getByLabelText("outputTokens"), { target: { value: "2048" } });
-    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+    expectExecutionBlocked();
   });
   it("runs with the exact displayed quote and opaque payer selection", async () => {
     const payment = paymentQuote();
@@ -299,8 +299,8 @@ describe("AI catalog and cost preflight", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
-    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toHaveTextContent("≈ 4 tokens");
-    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
+    expect(screen.getByRole("dialog")).toHaveTextContent("≈ 4 tokens");
+    clickRun();
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(analyze).toHaveBeenLastCalledWith(
       "prj_example",
@@ -327,7 +327,7 @@ describe("AI catalog and cost preflight", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("estimateAboveCap"));
-    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+    expectExecutionBlocked();
   });
   it("preserves saved reports when the provider catalog is unavailable", () => {
     render(
@@ -368,7 +368,7 @@ it("keeps the approved legacy preset available when fresh model prices are missi
   );
   expect(screen.getByRole("alert")).toHaveTextContent("pricingUnavailableLegacy");
   expect(screen.getByRole("button", { name: "estimateCost" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  expectExecutionBlocked();
 });
 
 it("searches current model names and keeps unknown-price models unselectable", async () => {
@@ -440,7 +440,7 @@ it("does not authorize changed settings from an estimate that finishes later", a
       evidence: "synthetic_prompt_test",
     }),
   );
-  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  expectExecutionBlocked();
   expect(screen.getByText("estimateRequired")).toBeVisible();
 });
 
@@ -466,7 +466,7 @@ it("explains missing verified pricing without enabling a paid run", async () => 
   });
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("pricingUnavailable"));
-  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  expectExecutionBlocked();
 });
 
 it.each([
@@ -523,7 +523,7 @@ it.each([
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
     expect(screen.getAllByText(/≈ \$0\.12/).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
+    clickRun();
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(analyze).toHaveBeenLastCalledWith(
       "prj_example",
@@ -602,7 +602,8 @@ it("requires fresh bounded metadata for extended output and invalidates legacy e
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
   await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
   fireEvent.change(screen.getByLabelText("outputTokens"), { target: { value: "4096" } });
-  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  expectExecutionBlocked();
+  fireEvent.click(screen.getByRole("button", { name: "cancel" }));
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
   await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
   expect(analyze).toHaveBeenLastCalledWith(
@@ -662,5 +663,16 @@ it("budget regression: shows shared guidance for a returned missing budget", asy
     "role",
     "alert",
   );
-  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  expectExecutionBlocked();
 });
+
+function expectExecutionBlocked() {
+  const button = screen.queryByRole("button", { name: /^runAnalysis/ });
+  if (button) expect(button).toBeDisabled();
+  else expect(button).not.toBeInTheDocument();
+}
+
+function clickRun() {
+  const button = screen.queryByRole("button", { name: /^runAnalysis/ });
+  if (button) fireEvent.click(button);
+}

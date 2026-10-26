@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.42.0",
+  "version": "0.43.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -119,7 +119,8 @@
     "check:quickstart": "node scripts/checks/check-quickstart.mjs",
     "check:hosted-limits": "node --test scripts/checks/hosted-limits-contract.test.mjs && node scripts/checks/hosted-limits-contract.mjs -- --env-file .env.example",
     "check:docs": "node --test scripts/checks/doc-link-helpers.test.mjs && node scripts/checks/check-doc-links.mjs",
-    "check:docs-deploy-parity": "node --test scripts/checks/docs-inventory.test.mjs && node scripts/checks/check-docs-deploy-parity.mjs",
+    "check:docs-deploy-parity": "node --test scripts/checks/docs-inventory.test.mjs scripts/checks/check-docs-deploy-parity.test.mjs && node scripts/checks/check-docs-deploy-parity.mjs",
+    "check:docs-deployed": "node scripts/checks/check-docs-deploy-parity.mjs --require-live",
     "check:docs-terms": "node scripts/checks/check-docs-terms.mjs",
     "check:docs-external-links": "node scripts/checks/check-docs-external-links.mjs",
     "check:doc-content": "node --test scripts/checks/doc-content-helpers.test.mjs scripts/checks/legacy-upgrade-contract.test.mjs scripts/checks/api-reference-paths.test.mjs scripts/checks/rest-guide-links.test.mjs && node scripts/checks/check-doc-content.mjs && npm run check:docs-ecosystem",

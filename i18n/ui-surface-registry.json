@@ -3904,6 +3904,11 @@
     },
     {
       "kind": "render",
+      "path": "components/action-payment/ActionPaymentLoading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/action-payment/ActionPaymentModal.tsx",
       "status": "migrated"
     },
@@ -4249,6 +4254,11 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-research/AiActualCostConsent.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-research/AiCatalogNotice.tsx",
       "status": "migrated"
     },
@@ -4264,7 +4274,22 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-research/AiEngineIdentity.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-research/AiPromptFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiPromptModels.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiPromptPaymentReview.tsx",
       "status": "pending"
     },
     {
@@ -4351,6 +4376,11 @@
       "kind": "render",
       "path": "components/ai-tracking/PromptResearchKeyword.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/PromptResearchMarket.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -5450,6 +5480,11 @@
       "kind": "ui-data",
       "path": "components/cost-estimate/header-budget-summary.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/cost-estimate/HeaderBudgetDetails.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -8483,6 +8518,11 @@
     },
     {
       "kind": "render",
+      "path": "components/overview/OverviewBudgetNotice.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/overview/OverviewChartHeader.tsx",
       "status": "migrated"
     },
@@ -9464,6 +9504,11 @@
     {
       "kind": "render",
       "path": "components/search-insights/page-indexing/IndexingInspect.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingInspectSource.tsx",
       "status": "pending"
     },
     {

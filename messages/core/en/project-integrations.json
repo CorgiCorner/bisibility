@@ -3,7 +3,9 @@
     "tabs": {
       "aria": "Integrations sections",
       "connections": "Connections",
-      "usage": "Usage"
+      "usage": "Usage",
+      "creditsUsage": "Credits usage",
+      "byokUsage": "BYOK usage"
     },
     "page": {
       "googleConnectError": "Google connection was not completed. Try again and choose the account that has access to the property."

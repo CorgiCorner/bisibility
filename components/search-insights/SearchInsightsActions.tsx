@@ -117,11 +117,9 @@ export function SearchInsightsActions({
   }
 
   return (
-    <>
-      {/* The bar wraps below the desktop breakpoint; the spacer is a margin so it does not
-          survive the wrap as an empty column. */}
+    <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:ml-auto sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
       <Button
-        className="lg:ml-auto"
+        className="col-span-2 w-full sm:w-auto"
         loading={exporting}
         onClick={() => void exportCsv()}
         size="sm"
@@ -131,6 +129,7 @@ export function SearchInsightsActions({
         {t("exportCsv", { count: queryCount })}
       </Button>
       <Button
+        className={readOnly ? "col-span-2 w-full sm:w-auto" : "w-full sm:w-auto"}
         aria-label={t("refreshAriaLabel")}
         loading={refreshing}
         loadingIndicator={
@@ -145,11 +144,13 @@ export function SearchInsightsActions({
       </Button>
       {readOnly ? null : (
         <Tooltip
+          wrapperClassName="w-full sm:w-auto"
           content={syncTitle(sync, t, importState?.plannedRetentionMonths ?? 16)}
           semantics="description"
         >
-          <span>
+          <span className="block w-full sm:w-auto">
             <Button
+              className="w-full sm:w-auto"
               disabled={sync.disabled}
               onClick={() => void runSync()}
               size="sm"
@@ -161,7 +162,7 @@ export function SearchInsightsActions({
           </span>
         </Tooltip>
       )}
-    </>
+    </div>
   );
 }
 

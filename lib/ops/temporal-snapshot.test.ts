@@ -87,3 +87,40 @@ describe("Temporal snapshot", () => {
     consoleError.mockRestore();
   });
 });
+
+it("retains only the safe per-inspection schedule fields in the read model", async () => {
+  vi.clearAllMocks();
+  mocks.getRedisClient.mockResolvedValue({ get: mocks.get, set: mocks.set });
+  const indexingSchedule = { paused: false, nextActionTimes: ["2026-10-26T03:45:00Z"] };
+  const inspect = vi.fn().mockResolvedValue({
+    ...heartbeat,
+    indexingSchedule: { ...indexingSchedule, privatePayload: "must-not-persist" },
+  });
+  expect(await publishTemporalSnapshot(now, inspect)).toBe(true);
+  const raw = mocks.set.mock.calls[0][1] as string;
+  expect(JSON.parse(raw).heartbeat.indexingSchedule).toEqual(indexingSchedule);
+});
+
+it.each([
+  { paused: "yes", nextActionTimes: [] },
+  { paused: false, nextActionTimes: ["invalid-date"] },
+  { paused: false, nextActionTimes: Array.from({ length: 101 }, () => now.toISOString()) },
+])(
+  "rejects malformed inspection schedule metadata without replacing the last snapshot",
+  async (indexingSchedule) => {
+    vi.clearAllMocks();
+    mocks.getRedisClient.mockResolvedValue({ get: mocks.get, set: mocks.set });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(
+        await publishTemporalSnapshot(
+          now,
+          async () => ({ ...heartbeat, indexingSchedule }) as unknown as TemporalHeartbeat,
+        ),
+      ).toBe(false);
+      expect(mocks.set).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  },
+);

@@ -8,6 +8,7 @@ import type {
   InspectAction,
   LoadDetailAction,
   LoadUrlsAction,
+  ReadSitemapsAction,
 } from "@/lib/search-index/ui-model";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -26,6 +27,7 @@ export function PageIndexingTab({
   inspectAction,
   loadUrlsAction,
   loadDetailAction,
+  readSitemapsAction,
 }: Readonly<{
   data: IndexingData | null;
   projectId: string;
@@ -33,6 +35,7 @@ export function PageIndexingTab({
   inspectAction: InspectAction;
   loadUrlsAction: LoadUrlsAction;
   loadDetailAction: LoadDetailAction;
+  readSitemapsAction?: ReadSitemapsAction;
 }>) {
   const t = useTranslations("projectSearchInsights.indexing");
   const list = useIndexingUrls(data, projectId, loadUrlsAction);
@@ -89,7 +92,12 @@ export function PageIndexingTab({
           onOpen={(row: IndexingUrl, button) => open(row.url, button)}
         />
       </section>
-      <IndexingSitemaps rows={data.sitemaps} snapshot={data.sitemapSnapshot} />
+      <IndexingSitemaps
+        rows={data.sitemaps}
+        snapshot={data.sitemapSnapshot}
+        backgroundRun={data.backgroundRun}
+        onRead={readSitemapsAction ? () => readSitemapsAction({ projectId }) : undefined}
+      />
       <IndexingOverview
         report={data.report}
         days={data.days}
@@ -113,6 +121,8 @@ export function PageIndexingTab({
       {inspecting ? (
         <IndexingInspect
           projectId={projectId}
+          sitemaps={data.sitemaps}
+          loadUrlsAction={loadUrlsAction}
           inspectAction={inspectAction}
           onSubmitted={list.refresh}
           onStoredResult={(url) => {

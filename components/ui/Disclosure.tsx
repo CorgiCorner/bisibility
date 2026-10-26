@@ -13,9 +13,11 @@ export type DisclosureProps = {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
-  /** Rendered open in the server HTML. Items never close each other; each one toggles alone. */
+  /** Rendered open in the server HTML. Use name to group mutually exclusive items. */
   defaultOpen?: boolean;
   headingLevel?: DisclosureHeadingLevel;
+  /** Native exclusive group; unrelated disclosures remain independent. */
+  name?: string;
   summaryClassName?: string;
   title: ReactNode;
   variant?: "panel" | "inline";
@@ -33,6 +35,7 @@ export function Disclosure({
   defaultOpen = false,
   headingLevel: Heading = "h3",
   summaryClassName,
+  name,
   title,
   variant = "panel",
 }: Readonly<DisclosureProps>) {
@@ -44,6 +47,7 @@ export function Disclosure({
         className,
       )}
       open={defaultOpen}
+      name={name}
     >
       <summary
         className={cn(

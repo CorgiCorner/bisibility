@@ -114,6 +114,9 @@ test.each(["group", "connection"] as const)(
     ];
     await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
       code: kind === "group" ? "budget_exhausted" : "provider_allocation_exhausted",
+      ...(kind === "group"
+        ? { budget: { reason: "usage_reconciliation_required" } }
+        : { budgetReason: "usage_reconciliation_required" }),
     });
   },
 );

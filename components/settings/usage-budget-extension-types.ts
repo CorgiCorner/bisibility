@@ -17,6 +17,8 @@ export type UsageBudgetExtensionInput = {
   canEditBudget: boolean;
   /** Deep link that opens provider budget editing. */
   editBudget: boolean;
+  /** Display a single payment source without changing accounting or shared limits. */
+  fundingSource?: "platform" | "byok";
 };
 
 /** Deployments without credits return null: the budget surfaces show own keys only. */

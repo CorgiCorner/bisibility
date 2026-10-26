@@ -385,8 +385,7 @@
       "navigation": "Search Console の表示",
       "performance": "検索パフォーマンス",
       "title": "ページのインデックス登録",
-      "alphaBadge": "アルファ",
-      "notIndexedCount": "ページのインデックス登録、{alpha}、{count, plural, other {# ページが未登録}}",
+      "notIndexedCount": "ページのインデックス登録、{maturity}、{count, plural, other {# ページが未登録}}",
       "groups": {
         "indexed": "インデックス登録済み",
         "not_indexed": "未登録",
@@ -394,13 +393,12 @@
         "not_checked": "未検査"
       },
       "modes": {
-        "off": "モード: オフ",
-        "fixed": "モード: 固定の日次上限",
-        "available_quota": "モード: 利用可能な割り当てを使用"
+        "off": "オフ",
+        "fixed": "固定の日次上限",
+        "available_quota": "利用可能な割り当てを使用"
       },
-      "denominator": "サイトマップとキーワードの対象 {total, plural, other {# 件の URL}} のうち {checked, number} 件を検査済みです。",
+      "denominator": "{total, plural, other {# URL}} のうち {checked, number} URL を検査済み。",
       "freshness": "最も古い結果: {oldest}。最新: {newest}。",
-      "trustStrip": "Google の保存済みインデックス登録状態であり、ライブテストではありません。本日: {count, plural, other {# 回の検査}}（推定）。日次割り当てはお使いの時間帯の {reset}（太平洋時間の午前 0 時）にリセットされます。",
       "settings": "検査設定",
       "inspect": "URL を検査",
       "dailyExhausted": "日次検査枠またはプロパティの割り当てを使い切りました。他のツールによる使用も考えられます。{reset} 以降に検査を再開できます。保存済みの結果は引き続き利用できます。",
@@ -458,7 +456,7 @@
       "richCounts": "{items, plural, other {# 件のアイテム}}、{issues, plural, other {# 件の問題}}",
       "viewStored": "保存済みの結果を表示",
       "unspecifiedReason": "理由未指定",
-      "inspectDescription": "最大 10 件の URL の保存済みインデックス登録状態を確認します。",
+      "inspectDescription": "入力したリストまたはサイトマップから最大10件のURLを確認します。",
       "enums": {
         "verdict": {
           "VERDICT_UNSPECIFIED": "未指定",
@@ -534,7 +532,7 @@
       "checksIndexed": "{total, number} 件中 {indexed, number} 件が登録済み",
       "sitemapReadAt": "Search Console からの読み取り: {date}",
       "sitemapSnapshotCaption": "Search Console に送信されたサイトマップです。インデックスは子の URL 数を合計します。検査数は保存済みの検査結果に基づきます。",
-      "sitemapsNotRead": "サイトマップは未読み取りです。最初のバックグラウンド実行で読み取ります",
+      "sitemapsNotRead": "サイトマップはまだ読み込まれていません。",
       "noSitemapsSubmitted": "このプロパティのサイトマップは Search Console に送信されていません。",
       "sitemapReadErrors": {
         "permission": "{failed} のサイトマップ読み取りで権限が拒否されました。最終成功: {success}。保存済みの行を表示しています。",
@@ -562,12 +560,41 @@
       "verdictInspectionFailed": "検査に失敗しました",
       "overview": {
         "title": "当サービスのチェックに基づく概要",
-        "badge": "今後削除される可能性あり",
-        "note": "当サービスの検査結果から再構成しているため、情報が不完全または古い場合があります。完全な情報は Search Console のページのインデックス登録レポートで確認できます。このセクションは今後のリリースで削除される可能性があります。",
+        "note": "当社の検査に基づくため、データが不完全な場合があります。",
         "openConsole": "Search Console で完全なレポートを開く",
-        "keepQuestion": "このセクションを残してほしいですか？クリックしてメールでお知らせください。",
-        "keepSubject": "ページのインデックス登録の概要を残してほしい"
-      }
+        "keepSubject": "ページのインデックス登録の概要を残してほしい",
+        "removalNotice": "このセクションは今後の更新で削除される可能性があります。",
+        "keepLink": "残してほしい場合はメールでお知らせください"
+      },
+      "noInspectionTargets": "検査する URL はまだありません。",
+      "noInspectionResults": "検査結果はまだありません。検査可能な URL: {total, number}。",
+      "sitemapNextRun": "次回のバックグラウンド実行: {date}（現地時間）。",
+      "sitemapSchedule": {
+        "disabled": "URL の自動検査はオフです。データソースで有効にすると、バックグラウンド実行でサイトマップが読み込まれます。",
+        "paused": "バックグラウンドの URL 検査は一時停止中です。次回の実行予定はありません。",
+        "unavailable": "次回のバックグラウンド実行時刻を確認できませんでした。",
+        "scheduled": "バックグラウンドの URL 検査が予定されています。"
+      },
+      "readSitemaps": "サイトマップを読み込む",
+      "refreshSitemaps": "サイトマップを更新",
+      "sitemapReadFailed": "サイトマップを読み込めませんでした。Search Console の接続を確認し、再試行してください。",
+      "sitemapReadRateLimited": "サイトマップを再読み込みする前に1分お待ちください。",
+      "inspectionDetails": "検査の詳細",
+      "modeLabel": "自動検査",
+      "todayLabel": "今日",
+      "resetLabel": "割り当てのリセット",
+      "checksToday": "{count, plural, other {# 回の検査}}（推定）",
+      "quotaReset": "{reset}（現地時間、太平洋時間の午前0時）",
+      "storedState": "結果は Google が最後に確認したインデックス登録の状態を示します。",
+      "maturityBadge": "ベータ",
+      "inspectSource": "URLを選択",
+      "inspectManual": "URLを入力",
+      "inspectFromSitemap": "サイトマップから",
+      "inspectSelectSitemap": "サイトマップを選択",
+      "inspectSitemapHint": "未確認のURLを優先し、保存済みURLを最大10件読み込みます。検査前にリストを編集できます。",
+      "inspectSitemapEmpty": "このサイトマップのURLは保存されていません。サイトマップを再読み込みしてください。",
+      "inspectNoSitemaps": "まずサイトマップを読み込むと、URLを選択できます。",
+      "inspectSitemapLoading": "URLを読み込み中..."
     }
   }
 }

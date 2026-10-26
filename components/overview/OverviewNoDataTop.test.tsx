@@ -1,7 +1,8 @@
 import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { OverviewBudgetNotice } from "./OverviewBudgetNotice";
 import { OverviewNoData } from "./OverviewNoData";
 import { RecentlyAddedCard } from "./OverviewNoDataBottom";
 import { NoDataBanner, type NoDataBannerState, NoDataKpiRow } from "./OverviewNoDataTop";
@@ -104,21 +105,17 @@ describe("NoDataBanner", () => {
     );
   });
 
-  it("confirms through the quoted preflight before starting one first check when a SERP provider is ready", async () => {
-    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "running" });
-    renderBanner("ready", runCheckNowAction);
+  it("links the first-check introduction to Rank Tracker without starting paid work", () => {
+    const runCheckNowAction = vi.fn();
+    const getPlan = vi.fn();
+    renderBanner("ready", runCheckNowAction, undefined, 2, KEYWORD_ID, getPlan);
 
-    fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
-
-    await waitFor(() =>
-      expect(firstCheckPreflight.request).toHaveBeenCalledWith(
-        expect.objectContaining({
-          depth: 100,
-          spec: { kind: "single", keywordId: KEYWORD_ID, v: 1 },
-          title: "Run first check",
-        }),
-      ),
+    expect(screen.getByRole("link", { name: "Open Rank Tracker" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker",
     );
+    expect(getPlan).not.toHaveBeenCalled();
+    expect(firstCheckPreflight.request).not.toHaveBeenCalled();
     expect(runCheckNowAction).not.toHaveBeenCalled();
   });
 
@@ -135,7 +132,7 @@ describe("NoDataBanner", () => {
 
   it("does not offer a first check without a keyword", () => {
     renderBanner("ready", vi.fn(), vi.fn(), 0, null);
-    expect(screen.queryByRole("region", { name: "Run your first check" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Check your rankings" })).not.toBeInTheDocument();
     expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
   });
 
@@ -143,9 +140,9 @@ describe("NoDataBanner", () => {
     const runCheckNowAction = vi.fn();
     renderBanner("ready", runCheckNowAction);
     fireEvent.click(screen.getByRole("button", { name: "Dismiss this introduction" }));
-    expect(screen.queryByRole("region", { name: "Run your first check" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Check your rankings" })).not.toBeInTheDocument();
     renderBanner("ready", runCheckNowAction);
-    expect(screen.queryByRole("region", { name: "Run your first check" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Check your rankings" })).not.toBeInTheDocument();
     expect(runCheckNowAction).not.toHaveBeenCalled();
   });
 
@@ -160,28 +157,32 @@ describe("NoDataBanner", () => {
     );
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
   });
-
-  it("keeps stale Server Action details out of a failed first-check plan load", async () => {
-    const runCheckNowAction = vi.fn();
-    renderBanner(
-      "ready",
-      runCheckNowAction,
-      undefined,
-      2,
-      KEYWORD_ID,
-      vi.fn().mockRejectedValue(new Error('Server Action "deadbeef" was not found on the server.')),
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Run details could not be loaded.");
-    expect(screen.queryByText(/deadbeef/)).not.toBeInTheDocument();
-    expect(firstCheckPreflight.request).not.toHaveBeenCalled();
-    expect(runCheckNowAction).not.toHaveBeenCalled();
-  });
 });
 
 describe("NoDataKpiRow", () => {
+  it("keeps the usage problem outside the tracked-keywords metric", () => {
+    renderDashboard(
+      <>
+        <OverviewBudgetNotice reason="usage_reconciliation_required" projectRef="prj_example" />
+        <NoDataKpiRow
+          budgetExhausted
+          budgetReason="usage_reconciliation_required"
+          keywordCount={1}
+          projectReadOnly={false}
+          runningCheckCount={0}
+          serpProviderState="ready"
+          visibilityCoverage={{ limited: false, measured: 0, total: 1 }}
+        />
+      </>,
+    );
+    const metrics = screen.getByText("Tracked keywords").closest("section");
+    expect(metrics?.textContent).not.toMatch(/unconfirmed|budget|reconcil/i);
+    expect(screen.getByText("Rank checks are paused pending a usage review.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Open Usage" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/integrations?tab=usage",
+    );
+  });
   const states: Array<{
     budgetExhausted: boolean;
     expected: string;
@@ -193,13 +194,6 @@ describe("NoDataKpiRow", () => {
       budgetExhausted: true,
       expected: "paused - migration hold",
       projectReadOnly: true,
-      runningCheckCount: 1,
-      serpProviderState: "ready",
-    },
-    {
-      budgetExhausted: true,
-      expected: "monthly budget exhausted",
-      projectReadOnly: false,
       runningCheckCount: 1,
       serpProviderState: "ready",
     },
@@ -337,11 +331,17 @@ describe("first-check intro eligibility", () => {
         runCheckNowAction={vi.fn()}
       />,
     );
-    expect(Boolean(screen.queryByRole("region", { name: "Run your first check" }))).toBe(visible);
+    expect(Boolean(screen.queryByRole("region", { name: "Check your rankings" }))).toBe(visible);
   });
 });
 
 describe("RecentlyAddedCard", () => {
+  it("explains an empty recent period instead of leaving the card blank", () => {
+    renderDashboard(<RecentlyAddedCard projectRef="prj_1" rows={[]} />);
+    expect(screen.getByText("No keywords were added in the last 7 days.")).toBeVisible();
+    expect(screen.getByText("No data to display")).toBeVisible();
+  });
+
   it("renders the note and position text supplied by the overview builder", () => {
     renderDashboard(
       <RecentlyAddedCard

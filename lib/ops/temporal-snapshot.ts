@@ -55,7 +55,26 @@ function sanitizeHeartbeat(value: unknown): TemporalHeartbeat | null {
     return null;
   }
 
+  const indexing = heartbeat.indexingSchedule;
+  if (
+    indexing !== undefined &&
+    indexing !== null &&
+    (typeof indexing.paused !== "boolean" ||
+      !Array.isArray(indexing.nextActionTimes) ||
+      indexing.nextActionTimes.length > 100 ||
+      !indexing.nextActionTimes.every(validTimestamp))
+  )
+    return null;
+
   return {
+    ...(indexing === undefined
+      ? {}
+      : {
+          indexingSchedule:
+            indexing === null
+              ? null
+              : { paused: indexing.paused, nextActionTimes: [...indexing.nextActionTimes] },
+        }),
     inspectionErrors: heartbeat.inspectionErrors,
     issueSchedules: [...heartbeat.issueSchedules],
     missedCatchupTotal: heartbeat.missedCatchupTotal,

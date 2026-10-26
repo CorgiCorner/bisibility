@@ -67,7 +67,11 @@ it("shows free keyboard-reachable keywords, validates blank input and navigates 
 it("gets a free quote and requires explicit confirmation before the paid lookup", async () => {
   const user = userEvent.setup();
   view("tools");
-  const confirm = await screen.findByRole("button", { name: /Confirm research/ });
+  expect(mocks.lookup).not.toHaveBeenCalled();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Research" }));
+  const dialog = await screen.findByRole("dialog", { name: "Review cost" });
+  const confirm = await within(dialog).findByRole("button", { name: "Start" });
   expect(mocks.lookup).toHaveBeenCalledWith(
     "prj_public",
     expect.objectContaining({ estimate_only: true }),
@@ -119,7 +123,11 @@ it("renders empty results and honest dataset/market copy", () => {
   view("tools", { ...researchResultFixture, prompts: [] });
   expect(screen.getByText("No prompts found for “tools”")).toBeVisible();
   expect(screen.getByText("Try a shorter, broader term.")).toBeVisible();
-  expect(screen.getByText("ChatGPT · United States · English")).toBeVisible();
+  const market = screen.getByText("ChatGPT").closest("[data-prompt-research-market]");
+  expect(market?.querySelector('[data-ai-engine="chat_gpt"]')).toBeInTheDocument();
+  expect(market?.querySelector('[data-country-flag="US"]')).toBeInTheDocument();
+  expect(screen.getByText("United States")).toBeVisible();
+  expect(screen.getByText("/ English")).toBeVisible();
   expect(screen.getByText(/They are not logged ChatGPT prompts/)).toBeVisible();
 });
 it("renders loading and shared missing-budget errors", async () => {
@@ -131,7 +139,11 @@ it("renders loading and shared missing-budget errors", async () => {
       }),
   );
   view("tools");
-  expect(screen.getByRole("status")).toHaveTextContent("Preparing a free cost estimate");
+  await userEvent.click(screen.getByRole("button", { name: "Research" }));
+  const loading = screen.getByRole("status");
+  expect(loading).toHaveTextContent("Preparing a free cost estimate");
+  expect(loading.querySelector("[data-payment-skeleton]")).toBeInTheDocument();
+  expect(loading.closest('[role="dialog"]')).toBeInTheDocument();
   finish({ ok: false, reason: "budget_missing", message: "raw" });
   expect(await screen.findByRole("alert")).toHaveTextContent(shared.shared.errors.budgetMissing);
 });
@@ -154,14 +166,51 @@ it("does not describe a charged provider failure as an empty dataset", () => {
   expect(screen.queryByText("No prompts found for “tools”")).not.toBeInTheDocument();
 });
 
-it.each(["12 hours", "7 days", "2 weeks"])(
-  "renders the effective cache duration: %s",
-  async (duration) => {
-    view("tools", undefined, duration);
+it.each([
+  ["12 hours", 43200],
+  ["7 days", 604800],
+  ["2 weeks", 1209600],
+] as const)(
+  "renders the quoted cache duration inside the shared modal: %s",
+  async (duration, seconds) => {
+    mocks.lookup.mockResolvedValue({
+      ...researchQuoteFixture,
+      payment: {
+        ...researchQuoteFixture.payment,
+        cache: { state: "miss", freeUntil: null, windowSeconds: seconds },
+      },
+    });
+    view("tools");
+    expect(screen.queryByText(/Result stays free/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Research" }));
+    const dialog = await screen.findByRole("dialog", { name: "Review cost" });
     expect(
-      await screen.findByText(
-        `Up to 100 dataset rows. Revisiting this keyword is free for ${duration}.`,
-      ),
+      await within(dialog).findByText(`Result stays free to reopen for ${duration}`, {
+        exact: false,
+      }),
     ).toBeVisible();
+    expect(screen.queryByText(/Up to 100 dataset rows.*Revisiting/)).not.toBeInTheDocument();
   },
 );
+
+it("closing the estimate never starts a paid lookup", async () => {
+  const user = userEvent.setup();
+  view("tools");
+  await user.click(screen.getByRole("button", { name: "Research" }));
+  const dialog = await screen.findByRole("dialog", { name: "Review cost" });
+  await within(dialog).findByRole("button", { name: "Start" });
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mocks.lookup).toHaveBeenCalledTimes(1);
+  expect(mocks.lookup.mock.calls[0][1]).toMatchObject({ estimate_only: true });
+});
+
+it("cached evidence returned by the free lookup needs no payment confirmation", async () => {
+  mocks.lookup.mockResolvedValue(researchResultFixture);
+  view("tools");
+  await userEvent.click(screen.getByRole("button", { name: "Research" }));
+  expect(await screen.findByText("Best tools?")).toBeVisible();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mocks.lookup).toHaveBeenCalledTimes(1);
+  expect(mocks.lookup.mock.calls[0][1]).toMatchObject({ estimate_only: true });
+});

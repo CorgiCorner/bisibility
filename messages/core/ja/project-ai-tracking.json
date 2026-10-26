@@ -238,7 +238,9 @@
       "keywordsHint": "キーワードを選択して、そのテーマについて人々がAIに尋ねる質問を確認しましょう。",
       "promptCount": "{count, plural, other {#件のプロンプト}}",
       "ownDomainCited": "あなたのサイトを引用",
-      "yourSite": "あなたのサイト"
+      "yourSite": "あなたのサイト",
+      "startResearch": "リサーチ",
+      "scopeHint": "データセットから最大100行。"
     }
   }
 }

@@ -127,7 +127,9 @@
       },
       "openIncidents": "Otwarte incydenty",
       "allNotifications": "Wszystkie powiadomienia",
-      "filterError": "Nie udało się wczytać incydentów."
+      "filterError": "Nie udało się wczytać incydentów.",
+      "allTab": "Wszystkie",
+      "incidentsTab": "Incydenty"
     },
     "operations": {
       "actionError": "Nie udało się zaktualizować tej operacji. Odśwież stronę i spróbuj ponownie.",

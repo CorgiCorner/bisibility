@@ -2,6 +2,7 @@
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { Modal } from "@/components/ui/Modal";
 import type {
   ActionPaymentBatchAssessment,
@@ -13,6 +14,7 @@ import { appPath } from "@/lib/routing/app-path";
 import { useFormatDuration } from "@/lib/ui/use-format-duration";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { ActionPaymentLoading } from "./ActionPaymentLoading";
 import { ActionPaymentOptionPicker } from "./ActionPaymentOptionPicker";
 import { usePaymentQuoteExpiry } from "./usePaymentQuoteExpiry";
 
@@ -26,7 +28,11 @@ export type PaymentReviewItem = {
 export function ActionPaymentReview({
   items,
   loading,
+  loadingLabel,
+  confirmLabel,
+  confirmDisabled = false,
   failed,
+  failureMessage,
   assessment,
   onClose,
   onConfirm,
@@ -37,7 +43,11 @@ export function ActionPaymentReview({
   children?: ReactNode;
   items: PaymentReviewItem[];
   loading: boolean;
+  loadingLabel?: string;
+  confirmLabel?: string;
+  confirmDisabled?: boolean;
   failed: boolean;
+  failureMessage?: string;
   assessment?: ActionPaymentBatchAssessment;
   onRefresh?: () => void;
   onClose: () => void;
@@ -51,6 +61,7 @@ export function ActionPaymentReview({
     Math.min(...items.map(({ quote }) => Date.parse(quote.expiresAt))),
   );
   const blocked =
+    confirmDisabled ||
     loading ||
     failed ||
     !items.length ||
@@ -92,7 +103,7 @@ export function ActionPaymentReview({
             <Button href={addCreditsHref}>{t("addCredits")}</Button>
           ) : (
             <Button disabled={blocked} onClick={onConfirm}>
-              {t("confirm")}
+              {confirmLabel ?? t("confirm")}
             </Button>
           )}
         </>
@@ -100,12 +111,10 @@ export function ActionPaymentReview({
     >
       <div className="grid gap-4" aria-busy={loading}>
         {children}
-        {loading ? (
-          <p className="m-0 text-[12px] text-fg-muted" role="status">
-            {t("loading")}
-          </p>
+        {loading ? <ActionPaymentLoading label={loadingLabel ?? t("loading")} /> : null}
+        {failed || expired ? (
+          <p role="alert">{expired ? t("expired") : (failureMessage ?? t("unavailable"))}</p>
         ) : null}
-        {failed || expired ? <p role="alert">{t(expired ? "expired" : "unavailable")}</p> : null}
         {!loading &&
           !failed &&
           items.map(({ key, label, quote, options }) => (
@@ -216,7 +225,7 @@ function CacheWindowLine({
       {settingsHref ? (
         <>
           {" · "}
-          <a className="underline" href={settingsHref} rel="noopener" target="_blank">
+          <a className={dataLinkClassName} href={settingsHref} rel="noopener" target="_blank">
             {t("changeCache")}
           </a>
         </>
@@ -225,7 +234,7 @@ function CacheWindowLine({
         <>
           {" · "}
           <button
-            className="border-0 bg-transparent p-0 text-[12px] text-inherit underline"
+            className={`${dataLinkClassName} border-0 bg-transparent p-0 text-[12px]`}
             onClick={onRefresh}
             type="button"
           >

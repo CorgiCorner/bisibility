@@ -12,11 +12,13 @@ import type { AiResearchOutcome } from "@/lib/ai-research/service";
 import { appPath } from "@/lib/routing/app-path";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AiCatalogNotice } from "./AiCatalogNotice";
 import { type AiEngineOption, researchDefaults } from "./AiEngineFields";
 import { AiPromptFields } from "./AiPromptFields";
+import { AiPromptPaymentReview } from "./AiPromptPaymentReview";
 import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchHistoryEntry } from "./AiResearchHistory";
 import { AiResearchWorkspaceOutcome } from "./AiResearchWorkspaceOutcome";
@@ -51,13 +53,14 @@ export function AiResearchWorkspace({
   supportingProviders?: readonly string[];
   engineOptions?: readonly AiEngineOption[];
 }>) {
+  const [reviewOpen, setReviewOpen] = useState(false);
   const paymentT = useTranslations("shared.actionPayment");
   const locale = useLocale();
   const t = useTranslations("projectAiResearch");
   const schema = mode === "visibility" ? visibilitySchema : promptSchema;
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: researchDefaults(mode, domain, engineOptions),
+    defaultValues: researchDefaults(mode, domain, engineOptions, catalog),
   });
   const values = form.watch();
   const { displayCatalog, freshCatalog, noticeReason, onCatalogInteract, onCatalogRetry, status } =
@@ -139,7 +142,15 @@ export function AiResearchWorkspace({
               onFocus={onCatalogInteract}
               onSubmit={(event) => {
                 event.preventDefault();
-                submit(true);
+                if (mode === "prompt") {
+                  form.setValue("estimate_only", true);
+                  void form.trigger().then((valid) => {
+                    if (valid) {
+                      setReviewOpen(true);
+                      submit(true);
+                    }
+                  });
+                } else submit(true);
               }}
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -180,24 +191,26 @@ export function AiResearchWorkspace({
                 >
                   {t("estimateCost")}
                 </Button>
-                <Button
-                  type="button"
-                  href={!expired ? quoteAddCreditsHref(quote) : undefined}
-                  onClick={() => submit(expired)}
-                  loading={pending}
-                  disabled={
-                    disabled ||
-                    extendedUnavailable ||
-                    (!expired && !quoteAddCreditsHref(quote) && !estimateAffordable)
-                  }
-                >
-                  {expired
-                    ? paymentT("refreshPrice")
-                    : quoteAddCreditsHref(quote)
-                      ? paymentT("addCredits")
-                      : t("runAnalysis")}
-                  {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
-                </Button>
+                {mode === "visibility" ? (
+                  <Button
+                    type="button"
+                    href={!expired ? quoteAddCreditsHref(quote) : undefined}
+                    onClick={() => submit(expired)}
+                    loading={pending}
+                    disabled={
+                      disabled ||
+                      extendedUnavailable ||
+                      (!expired && !quoteAddCreditsHref(quote) && !estimateAffordable)
+                    }
+                  >
+                    {expired
+                      ? paymentT("refreshPrice")
+                      : quoteAddCreditsHref(quote)
+                        ? paymentT("addCredits")
+                        : t("runAnalysis")}
+                    {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
+                  </Button>
+                ) : null}
                 <span className="text-ui-xs text-fg-muted">
                   {t(actual ? "actualReplayHint" : "cacheHint")}
                 </span>
@@ -208,7 +221,15 @@ export function AiResearchWorkspace({
                 </p>
               ) : null}
               {completed ? (
-                <Button type="button" variant="secondary" onClick={newRequest}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={() => {
+                    setReviewOpen(false);
+                    newRequest();
+                  }}
+                >
                   {t("newRequest")}
                 </Button>
               ) : null}
@@ -216,6 +237,7 @@ export function AiResearchWorkspace({
                 canRun &&
                 !retryBlocked &&
                 !completed &&
+                !(mode === "prompt" && reviewOpen) &&
                 (!estimateCurrent ? (
                   <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
                 ) : !estimateAffordable ? (
@@ -227,7 +249,25 @@ export function AiResearchWorkspace({
           </Card>
         )}
       </ProviderAccessGate>
+      {mode === "prompt" && reviewOpen && !noSource ? (
+        <AiPromptPaymentReview
+          actual={actual}
+          submission={submission}
+          onClose={() => setReviewOpen(false)}
+          onConfirm={() => {
+            if (!estimateAffordable || disabled || extendedUnavailable) return;
+            setReviewOpen(false);
+            submit(false);
+          }}
+        />
+      ) : null}
       <AiResearchWorkspaceOutcome
+        onNewRequest={() => {
+          setReviewOpen(false);
+          newRequest();
+        }}
+        hideEstimate={mode === "prompt"}
+        hideError={mode === "prompt" && reviewOpen && !noSource}
         actual={actual}
         catalogSourceMissing={catalogSourceMissing}
         freshCatalog={freshCatalog}

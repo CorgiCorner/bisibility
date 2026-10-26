@@ -5,7 +5,7 @@ import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
 import { EyeSlashIcon as EyeSlash } from "@phosphor-icons/react/dist/csr/EyeSlash";
 import { useTranslations } from "next-intl";
 import { forwardRef, type InputHTMLAttributes, useState } from "react";
-import { inputClassName } from "./input-styles";
+import { inputClassName, inputControlSizeClassName } from "./input-styles";
 
 export type PasswordInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   wrapperClassName?: string;
@@ -20,7 +20,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       <span className={cn("relative block", wrapperClassName)}>
         <input
           autoComplete="off"
-          className={cn(inputClassName, "w-full pr-12", className)}
+          className={cn(inputClassName, inputControlSizeClassName, "w-full pr-12", className)}
           disabled={disabled}
           ref={ref}
           type={showValue ? "text" : "password"}

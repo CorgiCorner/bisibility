@@ -3,7 +3,7 @@
     "providerSpend": {
       "headerUnavailable": "Uso no disponible",
       "headerUsageUnknown": "Consumo desconocido",
-      "headerCapTooltip": "Uso de presupuestos, incluidas las reservas. Abre Uso para ver los detalles.",
+      "headerCapTooltip": "Abre Uso para ver los límites de proveedores y los detalles.",
       "headerNoCap": "Sin presupuesto · Definir uno",
       "headerNoCapAria": "Sin presupuesto, definir uno",
       "headerUsed": "{percent}% usado",
@@ -13,7 +13,13 @@
       "headerExceeded": "Presupuesto excedido",
       "headerUsageAria": "Uso del presupuesto: {status}. Ver detalles",
       "headerNoLimit": "Sin límite",
-      "headerWarning": "Alerta de presupuesto"
+      "headerWarning": "Alerta de presupuesto",
+      "headerDetailsTitle": "Gasto del proyecto",
+      "headerCredits": "Créditos",
+      "headerOwnKeys": "Tus claves",
+      "headerProject": "Presupuesto del proyecto",
+      "headerPartialDetail": "Parte del uso no está confirmado.",
+      "headerReviewRequired": "Uso pendiente de revisión"
     },
     "status": {
       "unavailable": "Estimación no disponible.",

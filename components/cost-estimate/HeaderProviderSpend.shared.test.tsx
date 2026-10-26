@@ -103,8 +103,8 @@ it("renders exact reserved project usage through the shared bound projection and
   expect(screen.getByRole("link")).toHaveFocus();
   expect(screen.getByRole("link")).toHaveTextContent("Less than 1% used");
   const tooltip = await screen.findByRole("tooltip");
-  expect(within(tooltip).getByRole("columnheader", { name: "Reserved" })).toBeInTheDocument();
-  expect(within(tooltip).getAllByRole("cell", { name: "1 Units" })).toHaveLength(2);
+  expect(tooltip).toHaveTextContent("Reserved:");
+  expect(within(tooltip).getAllByText("1 Units")).toHaveLength(2);
   expect(await screen.findByRole("tooltip")).toBeInTheDocument();
 });
 it("offers budget editing without a fabricated spend for an unbounded project", () => {
@@ -391,12 +391,12 @@ it("distinguishes app and programmatic traffic within their own provider budget 
   );
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  const app = within(tooltip).getByRole("row", { name: /App and schedules/ });
-  const agents = within(tooltip).getByRole("row", { name: /API and agents/ });
+  const app = within(tooltip).getByText("App and schedules").closest("li");
+  const agents = within(tooltip).getByText("API and agents").closest("li");
   expect(app).not.toHaveTextContent("API and agents");
   expect(agents).not.toHaveTextContent("App and schedules");
-  expect(within(app).getByRole("cell", { name: "1,000 Units / month" })).toBeInTheDocument();
-  expect(within(agents).getByRole("cell", { name: "1,000 Units / month" })).toBeInTheDocument();
+  expect(app).toHaveTextContent("1,000 Units / month");
+  expect(agents).toHaveTextContent("1,000 Units / month");
 });
 
 it("keeps no-limit viewer chrome informational without a budget-edit action", () => {

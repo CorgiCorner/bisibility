@@ -36,9 +36,7 @@ export function pageIndexingPaths(input: {
       description: pageIndexingDescriptions[id],
       responses: {
         ...(base as { responses: object }).responses,
-        "400": problemResponse(
-          "Invalid Page indexing filters or settings; available_quota is self-host only.",
-        ),
+        "400": problemResponse("Invalid Page indexing filters or settings."),
         "404": problemResponse("No connected Search Console property."),
       },
     };

@@ -238,7 +238,9 @@
       "keywordsHint": "Selecciona una palabra clave para ver las preguntas que las personas hacen a la IA sobre ella.",
       "promptCount": "{count, plural, one {# prompt} other {# prompts}}",
       "ownDomainCited": "Cita tu sitio",
-      "yourSite": "Tu sitio"
+      "yourSite": "Tu sitio",
+      "startResearch": "Investigar",
+      "scopeHint": "Hasta 100 filas del conjunto de datos."
     }
   }
 }

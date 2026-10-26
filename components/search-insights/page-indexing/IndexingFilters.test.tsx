@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import type { IndexingData } from "@/lib/search-index/ui-model";
 import messages from "@/messages/core/en/project-search-insights.json";
@@ -45,7 +46,14 @@ it("five quick search changes load once, and Enter flushes the next change", asy
   expect(action).toHaveBeenCalledTimes(1);
   expect(action).toHaveBeenLastCalledWith({
     projectId: "p",
-    query: { history: "true", search: "hello" },
+    query: {
+      page: 1,
+      limit: 50,
+      sort_by: "url",
+      sort_direction: "asc",
+      history: "true",
+      search: "hello",
+    },
   });
   fireEvent.change(input, { target: { value: "world" } });
   fireEvent.keyDown(input, { key: "Enter" });
@@ -53,7 +61,14 @@ it("five quick search changes load once, and Enter flushes the next change", asy
   expect(action).toHaveBeenCalledTimes(2);
   expect(action).toHaveBeenLastCalledWith({
     projectId: "p",
-    query: { history: "true", search: "world" },
+    query: {
+      page: 1,
+      limit: 50,
+      sort_by: "url",
+      sort_direction: "asc",
+      history: "true",
+      search: "world",
+    },
   });
 });
 it("cancels a pending search on unmount", async () => {
@@ -87,7 +102,15 @@ it("qualifies the same coverage state by group and sends Unspecified literally",
   await waitFor(() =>
     expect(action).toHaveBeenLastCalledWith({
       projectId: "p",
-      query: { history: "true", group: "not_indexed", coverage_state: "Unspecified" },
+      query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
+        history: "true",
+        group: "not_indexed",
+        coverage_state: "Unspecified",
+      },
     }),
   );
   await user.click(screen.getByRole("button", { name: "Indexing state" }));
@@ -97,7 +120,15 @@ it("qualifies the same coverage state by group and sends Unspecified literally",
   await waitFor(() =>
     expect(action).toHaveBeenLastCalledWith({
       projectId: "p",
-      query: { history: "true", group: "indexed", coverage_state: "Unspecified" },
+      query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
+        history: "true",
+        group: "indexed",
+        coverage_state: "Unspecified",
+      },
     }),
   );
 });
@@ -123,9 +154,9 @@ it("reason clicks and inspection refresh preserve filters and loaded pages", asy
   const user = userEvent.setup();
   const second = { ...indexingUrl, url: "https://example.com/second" };
   action.mockImplementation(async ({ query }) =>
-    query.cursor
-      ? { data: [second], meta: { next_cursor: null } }
-      : { data: [indexingUrl], meta: { next_cursor: indexingUrl.url } },
+    query.page === 2
+      ? { data: [second], meta: { next_cursor: null, total: 75, page: 2 } }
+      : { data: [indexingUrl], meta: { next_cursor: null, total: 75, page: 1 } },
   );
   tab();
   await user.click(screen.getByRole("button", { name: "Sitemap" }));
@@ -136,6 +167,10 @@ it("reason clicks and inspection refresh preserve filters and loaded pages", asy
   });
   await user.click(within(reasons).getByText(indexingUrl.coverageState ?? ""));
   const query = {
+    page: 1,
+    limit: 50,
+    sort_by: "url",
+    sort_direction: "asc",
     history: "true" as const,
     group: "not_indexed",
     coverage_state: indexingUrl.coverageState,
@@ -143,20 +178,16 @@ it("reason clicks and inspection refresh preserve filters and loaded pages", asy
     search: "example",
   };
   await waitFor(() => expect(action).toHaveBeenLastCalledWith({ projectId: "p", query }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "Load more URLs" })).toBeEnabled());
-  await user.click(screen.getByRole("button", { name: "Load more URLs" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled());
+  await user.click(screen.getByRole("button", { name: "Next page" }));
   await screen.findByRole("button", { name: second.url });
   await user.click(screen.getByRole("button", { name: "Inspect URL" }));
   const dialog = screen.getByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("URLs"), { target: { value: indexingUrl.url } });
   action.mockClear();
   await user.click(within(dialog).getByRole("button", { name: "Inspect URL" }));
-  await waitFor(() => expect(action).toHaveBeenCalledTimes(2));
-  expect(action).toHaveBeenNthCalledWith(1, { projectId: "p", query });
-  expect(action).toHaveBeenNthCalledWith(2, {
-    projectId: "p",
-    query: { ...query, cursor: indexingUrl.url },
-  });
+  await waitFor(() => expect(action).toHaveBeenCalledOnce());
+  expect(action).toHaveBeenCalledWith({ projectId: "p", query: { ...query, page: 2 } });
   await user.keyboard("{Escape}");
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(screen.getByRole("button", { name: second.url })).toBeInTheDocument();
@@ -174,7 +205,14 @@ it("keeps a reason click when a debounced search completes between press and rel
   await waitFor(() =>
     expect(action).toHaveBeenCalledWith({
       projectId: "p",
-      query: { history: "true", search: "example" },
+      query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
+        history: "true",
+        search: "example",
+      },
     }),
   );
   await user.pointer({ keys: "[/MouseLeft]" });
@@ -182,10 +220,77 @@ it("keeps a reason click when a debounced search completes between press and rel
     expect(action).toHaveBeenLastCalledWith({
       projectId: "p",
       query: {
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "asc",
         history: "true",
         search: "example",
         group: "not_indexed",
         coverage_state: indexingUrl.coverageState,
+      },
+    }),
+  );
+});
+
+it("keeps the small URL table scrollable without overlapping pinned columns", () => {
+  tab();
+  const table = screen.getByRole("table", { name: "URLs" });
+  expect(within(table).getByRole("columnheader", { name: "URL" })).not.toHaveStyle({
+    position: "sticky",
+  });
+  expect(within(table).getByRole("columnheader", { name: "Indexing state" })).not.toHaveStyle({
+    position: "sticky",
+  });
+});
+
+it("pages and sorts the filtered dataset instead of appending rows", async () => {
+  const user = userEvent.setup();
+  action.mockImplementation(async ({ query }) => ({
+    data: [{ ...indexingUrl, url: `https://example.com/page-${query.page}` }],
+    meta: { next_cursor: null, total: 120, page: query.page },
+  }));
+  tab({ ...indexingData, totalUrls: 120 });
+  const table = screen.getByRole("table", { name: "URLs" });
+  expect(table).toHaveAttribute("data-layout", "fill");
+  expect(screen.queryByRole("button", { name: "Load more URLs" })).not.toBeInTheDocument();
+  await user.click(within(table).getByRole("button", { name: "Next page" }));
+  await waitFor(() =>
+    expect(action).toHaveBeenLastCalledWith({
+      projectId: "p",
+      query: { history: "true", page: 2, limit: 50, sort_by: "url", sort_direction: "asc" },
+    }),
+  );
+  await user.click(
+    within(screen.getByRole("table", { name: "URLs" })).getByRole("button", {
+      name: "Sort URL descending",
+    }),
+  );
+  await waitFor(() =>
+    expect(action).toHaveBeenLastCalledWith({
+      projectId: "p",
+      query: { history: "true", page: 1, limit: 50, sort_by: "url", sort_direction: "desc" },
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Indexing state" }));
+  for (const name of [
+    "Indexed",
+    "Not indexed",
+    "Inspection failed (not from Google)",
+    "Not checked yet",
+  ])
+    expect(screen.getByRole("menuitem", { name })).toBeVisible();
+  await user.click(screen.getByRole("menuitem", { name: "Not checked yet" }));
+  await waitFor(() =>
+    expect(action).toHaveBeenLastCalledWith({
+      projectId: "p",
+      query: {
+        history: "true",
+        page: 1,
+        limit: 50,
+        sort_by: "url",
+        sort_direction: "desc",
+        group: "not_checked",
       },
     }),
   );

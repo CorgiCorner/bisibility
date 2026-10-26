@@ -149,5 +149,5 @@ export const projectDefaultsInspectionBudgetModeSchema = {
   ...openEnum("ProjectDefaultsInspectionBudgetMode"),
   readOnly: true,
   description:
-    "Stored background inspection mode; available_quota is offered on self-host only. Use Page indexing settings to change it.",
+    "Stored background inspection mode. All modes are available in Page indexing settings.",
 };

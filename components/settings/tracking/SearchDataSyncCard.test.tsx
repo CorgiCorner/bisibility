@@ -198,22 +198,22 @@ describe("SearchDataSyncCard", () => {
     expect(card).toHaveClass("p-5");
     expect(formContent).toHaveClass("mt-3");
     expect(formContent).not.toHaveClass("mt-5");
-    expect(form).toHaveClass("-mx-5");
-    expect(settingsFieldset).toHaveClass("grid", "grid-cols-1", "gap-4", "px-4");
+    expect(form).not.toHaveClass("-mx-5");
+    expect(settingsFieldset).toHaveClass("grid", "grid-cols-1", "gap-5", "md:grid-cols-2");
     expect(settingsFieldset).not.toHaveClass("p-5", "px-5", "sm:grid-cols-2");
-    expect(importDepth.closest("[data-settings-field-width]")).not.toHaveClass("max-w-[340px]");
-    expect(importSpeed.closest("[data-settings-field-width]")).not.toHaveClass("max-w-[340px]");
-    expect(importDepth).toHaveClass("mt-1.5", "w-full");
-    expect(importSpeed).toHaveClass("mt-1.5", "w-full");
+    expect(importDepth.closest("[data-settings-field-width]")).toHaveClass("max-w-[340px]");
+    expect(importSpeed.closest("[data-settings-field-width]")).toHaveClass("max-w-[340px]");
+    expect(importDepth).toHaveClass("w-full");
+    expect(importSpeed).toHaveClass("w-full");
     expect(
       screen.getByText(searchSyncPreflightEstimate({ pace: "normal", retentionMonths: 16 })),
     ).toBeInTheDocument();
     expect(screen.queryByText("Sync pace")).not.toBeInTheDocument();
     expect(screen.queryByText("Normal")).not.toBeInTheDocument();
     expect(screen.queryByText("Gentle")).not.toBeInTheDocument();
-    expect(screen.getByText("requests in current window: 28")).toBeInTheDocument();
-    expect(screen.getByText("configured pace: 42 request sets/hour")).toBeInTheDocument();
-    expect(screen.getByText("planned remaining: 1,200")).toBeInTheDocument();
+    expect(screen.getByText("Requests in current window: 28")).toBeInTheDocument();
+    expect(screen.getByText("Import rate: 42 request sets/hour")).toBeInTheDocument();
+    expect(screen.getByText("Planned remaining: 1,200")).toBeInTheDocument();
     expect(screen.getByText(/shared with other tools/i)).toBeInTheDocument();
   });
 
@@ -321,9 +321,7 @@ describe("SearchDataSyncCard", () => {
       screen.getByText(searchSyncPreflightEstimate({ pace: "normal", retentionMonths: 16 })),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Increasing depth extends the running import; decreasing depth keeps what is already imported.",
-      ),
+      screen.getByText(/More history extends the import\. Imported data stays\./),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Import depth" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: "6 months" }));
@@ -332,7 +330,7 @@ describe("SearchDataSyncCard", () => {
     expect(
       screen.getByText(searchSyncPreflightEstimate({ pace: "gentle", retentionMonths: 6 })),
     ).toBeInTheDocument();
-    expect(screen.getByText("configured pace: 42 request sets/hour")).toBeInTheDocument();
+    expect(screen.getByText("Import rate: 42 request sets/hour")).toBeInTheDocument();
     expect(updateSettings).not.toHaveBeenCalled();
     expect(screen.queryByText("Gentle")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Save" }));

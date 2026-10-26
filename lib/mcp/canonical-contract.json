@@ -4580,7 +4580,7 @@
   {
     "name": "test_provider_connection",
     "title": "Test provider connection",
-    "description": "Test provider credentials or the saved provider connection. For Plausible, credentials.login is the site domain configured in Plausible (site_id) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A successful test returns message \"Connected.\" or \"Connected \u00b7 <detail>.\" for analytics providers.",
+    "description": "Test provider credentials or the saved provider connection. For Plausible, credentials.login is the site domain configured in Plausible (site_id) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A successful test returns message \"Connected.\" or \"Connected · <detail>.\" for analytics providers.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -8871,7 +8871,7 @@
   {
     "name": "update_page_indexing_settings",
     "title": "Update Page indexing settings",
-    "description": "Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota is self-host only and runs until a daily 429 within the run time budget. Manual and background calls share the property counter, reset at Pacific midnight. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
+    "description": "Update Page indexing background inspection settings. off disables background inspection; fixed uses a project daily limit of 0-2000; available_quota runs until a daily 429 within the run time budget on Cloud and self-host. Manual and background calls share the property counter, reset at Pacific midnight. Stored results are Google's indexed state, not a live test, and may be partial. This operation never calls Google.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -8881,7 +8881,7 @@
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
         "budget_mode": {
-          "description": "Background budget mode. available_quota is self-host only.",
+          "description": "Background budget mode. All modes are available on Cloud and self-host.",
           "type": "string",
           "enum": ["off", "fixed", "available_quota"]
         },

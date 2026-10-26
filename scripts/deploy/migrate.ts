@@ -9,6 +9,7 @@ import { runDataMigrations } from "../data-migrations/run";
 import { completedDataMigrations } from "./completed-data-migrations";
 import { activeDataMigrationManifest } from "../../lib/data-migrations/manifest";
 import { runStagedMigrationPipeline } from "./staged-data-migrations";
+import { assertMigrationPostgresVersion } from "./postgres-version";
 
 type PrismaRuntime = {
   cli: string;
@@ -84,7 +85,11 @@ export async function runMigrationPipeline(pipeline: MigrationPipeline) {
   await pipeline.contracts?.();
 }
 
-export async function runMigrations({ prisma = runPrismaMigrateDeploy } = {}) {
+export async function runMigrations({
+  prisma = runPrismaMigrateDeploy,
+  preflight = assertMigrationPostgresVersion,
+} = {}) {
+  await preflight();
   const projectRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
   const runtime = await resolvePrismaRuntime(projectRoot);
   await runStagedMigrationPipeline({

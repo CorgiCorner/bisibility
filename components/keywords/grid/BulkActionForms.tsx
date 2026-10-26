@@ -7,7 +7,7 @@ import {
   splitTagInput,
 } from "@/components/keywords/action-utils";
 import { Button } from "@/components/ui/Button";
-import { inputClassName } from "@/components/ui/input-styles";
+import { inputClassName, inputControlSizeClassName } from "@/components/ui/input-styles";
 import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type BulkKeywordTagInput, bulkKeywordTagSchema } from "@/lib/schemas/keyword";
@@ -27,7 +27,7 @@ type BulkTagFormProps = BulkFormChrome & {
 
 const labelClass =
   "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const inputClass = `${inputClassName} min-h-10 rounded-control px-3 font-sans tabular-nums text-[13px] normal-case tracking-normal`;
+const inputClass = `${inputClassName} ${inputControlSizeClassName} rounded-control px-3 font-sans tabular-nums text-[13px] normal-case tracking-normal`;
 
 const noopUndo = () => undefined;
 
@@ -92,7 +92,7 @@ export function BulkTagForm({
         {tagMessage ? <span className="text-red-text">{t("tagInvalid")}</span> : null}
       </label>
       {hideSubmit ? null : (
-        <Button disabled={isSubmitting} size="sm" style={{ minHeight: 40 }} type="submit">
+        <Button disabled={isSubmitting} size="input" type="submit">
           {isSubmitting ? t("adding") : t("applyTag")}
         </Button>
       )}

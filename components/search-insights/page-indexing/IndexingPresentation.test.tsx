@@ -1,3 +1,4 @@
+import "./virtual-table-test-setup";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import en from "@/messages/core/en/project-search-insights.json";
 import shared from "@/messages/core/en/shared.json";
@@ -11,6 +12,7 @@ import { expect, it } from "vitest";
 import { IndexingDrawer } from "./IndexingDrawer";
 import { IndexingReasons } from "./IndexingReasons";
 import { IndexingStatus } from "./IndexingStatus";
+import { IndexingSummary } from "./IndexingSummary";
 import { IndexingUrls } from "./IndexingUrls";
 import { indexingData, indexingUrl } from "./indexing.test-support";
 import { SearchConsoleTabs } from "./SearchConsoleTabs";
@@ -27,6 +29,31 @@ function wrapper(children: ReactNode, polish = false) {
     </FeatureMessagesProvider>
   );
 }
+it("shows one zero per group without percentages when no URLs exist", () => {
+  const report = {
+    ...indexingData.report,
+    groups: indexingData.report.groups.map((group) => ({ ...group, total: 0 })),
+  };
+  const view = render(wrapper(<IndexingSummary report={report} />));
+  const counts = view.container.querySelectorAll("dd");
+  expect(counts).toHaveLength(4);
+  for (const count of counts) expect(count.textContent?.trim()).toBe("0");
+});
+
+it("retains meaningful group percentages when URLs exist", () => {
+  const report = {
+    ...indexingData.report,
+    groups: indexingData.report.groups.map((group, index) => ({
+      ...group,
+      total: index === 0 ? 3 : index === 1 ? 1 : 0,
+    })),
+  };
+  const view = render(wrapper(<IndexingSummary report={report} />));
+  const counts = view.container.querySelectorAll("dd");
+  expect(counts[0]).toHaveTextContent("3 75%");
+  expect(counts[1]).toHaveTextContent("1 25%");
+});
+
 it("translates every documented enum in the Polish drawer including history and rich results", () => {
   const history = {
     verdict: "NEUTRAL",
@@ -114,7 +141,7 @@ it("status, drawer and history format the same instant in the viewer zone", () =
     hour: "numeric",
     minute: "2-digit",
   }).format(instant);
-  expect(screen.getByText(/Today:/)).toHaveTextContent(`resets at ${shortDate} your time`);
+  expect(screen.getByText(/midnight Pacific/)).toHaveTextContent(`${shortDate} your time`);
   const historyDate = new Intl.DateTimeFormat("en", {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     dateStyle: "medium",
@@ -140,16 +167,16 @@ it("omits an unknown count from the tab including its accessible name", () => {
       />,
     ),
   );
-  const link = screen.getByRole("link", { name: "Page indexing alpha" });
-  expect(within(link).getByText("alpha")).toBeVisible();
+  const link = screen.getByRole("link", { name: "Page indexing beta" });
+  expect(within(link).getByText("beta")).toBeVisible();
   expect(link).not.toHaveAttribute("aria-label");
 });
 it.each([
-  ["en", en, "alpha"],
-  ["es-ES", es, "alfa"],
-  ["ja", ja, "アルファ"],
-  ["pl", pl, "alfa"],
-] as const)("includes the visible alpha badge in the %s tab name", (locale, catalog, label) => {
+  ["en", en, "beta"],
+  ["es-ES", es, "beta"],
+  ["ja", ja, "ベータ"],
+  ["pl", pl, "beta"],
+] as const)("includes the visible beta badge in the %s tab name", (locale, catalog, label) => {
   render(
     <FeatureMessagesProvider locale={locale} timeZone="UTC" messages={{ ...shared, ...catalog }}>
       <SearchConsoleTabs
@@ -211,7 +238,7 @@ it.each([
   });
   for (const [index, count] of [1, 2, 5].entries())
     expect(t("pageCount", { count })).toBe(expected[index]);
-  expect(t("trustStrip", { count: 1, reset: "09:00" })).toContain(singular);
+  expect(t("checksToday", { count: 1 })).toContain(singular);
 });
 
 it.each([
@@ -236,4 +263,28 @@ it.each([
   const freshness = screen.getByText(locale === "en" ? /Oldest result/ : /Najstarszy wynik/);
   expect(freshness).toHaveTextContent(locale === "en" ? "8:00 AM" : "08:00");
   if (locale === "en") expect(freshness).not.toHaveTextContent("08:00 AM");
+});
+
+it("replaces an empty inspection report and absent dates with a useful empty state", () => {
+  render(
+    wrapper(
+      <IndexingStatus
+        data={{
+          ...indexingData,
+          report: {
+            ...indexingData.report,
+            checked: 0,
+            total: 0,
+            oldestResultAt: null,
+            newestResultAt: null,
+          },
+        }}
+        projectId="p"
+        canInspect
+        onInspect={() => undefined}
+      />,
+    ),
+  );
+  expect(screen.getByText("No URLs to inspect yet.")).toBeInTheDocument();
+  expect(screen.queryByText(/Checked 0 of 0|Oldest result: -|As of: -/)).not.toBeInTheDocument();
 });

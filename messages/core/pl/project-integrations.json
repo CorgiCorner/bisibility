@@ -3,7 +3,9 @@
     "tabs": {
       "aria": "Sekcje integracji",
       "connections": "Połączenia",
-      "usage": "Zużycie"
+      "usage": "Zużycie",
+      "creditsUsage": "Użycie Credits",
+      "byokUsage": "Użycie BYOK"
     },
     "page": {
       "googleConnectError": "Połączenie z Google nie zostało ukończone. Spróbuj ponownie i wybierz konto, które ma dostęp do usługi."

@@ -1,7 +1,6 @@
 "use client";
 
-import { PillBadge } from "@/components/ui/Pill";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { IndexingData, IndexingFilters } from "@/lib/search-index/ui-model";
 import { FEEDBACK_URL } from "@/lib/site/site";
 import { useTranslations } from "next-intl";
@@ -34,23 +33,22 @@ export function IndexingOverview({
           <h2 id={headingId} className="m-0 text-ui-body-relaxed font-semibold">
             {t("title")}
           </h2>
-          <Tooltip tone="surface" content={t("keepQuestion")} semantics="description">
-            <a className="rounded-full" href={keepUrl}>
-              <PillBadge size="xs" className="hover:text-fg">
-                {t("badge")}
-              </PillBadge>
-            </a>
-          </Tooltip>
         </div>
         <p className="m-0 text-ui-caption text-fg-muted">
           {t("note")}{" "}
           <a
-            className="text-fg underline"
+            className={dataLinkClassName}
             href={reportUrl.toString()}
             target="_blank"
             rel="noopener noreferrer"
           >
             {t("openConsole")}
+          </a>
+        </p>
+        <p className="m-0 text-ui-caption text-fg-muted">
+          {t("removalNotice")}{" "}
+          <a className={dataLinkClassName} href={keepUrl}>
+            {t("keepLink")}
           </a>
         </p>
       </div>

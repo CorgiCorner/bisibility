@@ -101,10 +101,18 @@
       "viewCheckRuns": "チェック実行を表示",
       "viewKeywords": "キーワードを表示",
       "firstCheckIntro": {
-        "title": "最初の順位チェックを実行",
-        "description": "検索順位を確認しましょう。最初のチェックでダッシュボードに結果が表示されます。",
-        "dismiss": "この案内を非表示にする"
-      }
+        "title": "検索順位を確認しましょう",
+        "description": "Rank Tracker でキーワードを選び、順位チェックを実行しましょう。",
+        "dismiss": "この案内を非表示にする",
+        "action": "Rank Tracker を開く"
+      },
+      "usageReviewTitle": "使用状況の確認が必要なため順位チェックを停止しています。",
+      "usageReviewDetail": "過去のプロバイダー使用状況が未確認です。使用状況で詳細を確認してください。",
+      "budgetMissingTitle": "プロジェクト予算を設定してください。",
+      "budgetMissingDetail": "順位チェックを開始するには、使用状況で支出上限を設定してください。",
+      "budgetReviewTitle": "プロジェクト予算により順位チェックを停止しています。",
+      "budgetReviewDetail": "使用状況で支出上限を確認してください。",
+      "reviewUsage": "使用状況を開く"
     },
     "sampleProject": {
       "createProject": "実際のプロジェクトを作成",

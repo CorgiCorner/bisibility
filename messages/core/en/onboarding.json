@@ -284,7 +284,8 @@
     },
     "page": {
       "description": "A few quick steps to start tracking your website.",
-      "title": "Set up your project"
+      "title": "Set up your project",
+      "backToProjects": "Back to projects"
     },
     "projectOptions": {
       "importError": "Import project could not be opened.",

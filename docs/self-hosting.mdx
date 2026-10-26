@@ -8,6 +8,12 @@ Redis-compatible endpoint). This page is the operator landing: choose a
 deployment, understand the required services, and see what you own. Detailed
 procedures live on the linked pages.
 
+The database requires **PostgreSQL 16 or newer**. PostgreSQL 16 is the tested
+major version and is included in Compose. For an external or managed database,
+check its server version before installation; validate newer major versions in
+your environment before upgrading. The migration command refuses PostgreSQL 15
+and older before applying any migration.
+
 ## Choose your deployment
 
 | Goal | Use | Temporal | Learn more |
@@ -64,7 +70,7 @@ provider, stores its credentials, and pays the provider directly. See
 | Provider credentials and provider charges | [Integrations](/integrations) |
 | PostgreSQL backups and tested restores | [Backup and restore](/self-hosting/backup-restore) |
 | Upgrades | [Upgrades](/self-hosting/upgrades) |
-| Proposed closeout policy for irrecoverable known-cost imports | [Historical financial closeout](/self-hosting/historical-financial-closeout) |
+| Operator closeout of incomplete historical BYOK imports | [Historical financial closeout](/self-hosting/historical-financial-closeout) |
 | Monitoring | [Operator observability](/self-hosting/operations#operator-observability-optional) |
 | Startup troubleshooting | [Troubleshooting](/self-hosting/troubleshooting) |
 | Worker and Temporal operations (when scheduling is enabled) | [Temporal](/self-hosting/temporal) |

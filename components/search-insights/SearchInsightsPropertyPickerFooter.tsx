@@ -6,7 +6,7 @@ import { propertyConnectionSettingsHref } from "./SearchInsightsPropertyPickerGr
 export function SearchInsightsPropertyPickerFooter({ projectId }: { projectId: string }) {
   const t = useTranslations("projectSearchInsights.copy");
   return (
-    <MenuActionFooter>
+    <MenuActionFooter className="!-mb-1.5">
       <Button
         className="w-full"
         href={propertyConnectionSettingsHref(projectId)}

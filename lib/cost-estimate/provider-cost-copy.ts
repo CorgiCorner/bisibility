@@ -44,4 +44,5 @@ export function serpApiFreeMonthlySearches() {
   return freePlan.includedChecks;
 }
 
-export const OWN_PROVIDER_KEY_COST_EXPLANATION = `bisibility does not scrape Google. You connect a data provider (like DataForSEO) with your own API key - a check costs from about ${DATAFORSEO_LIVE_RANK_CHECK_COST}.`;
+export const OWN_PROVIDER_KEY_COST_EXPLANATION =
+  "On Cloud, use Credits without a provider account, or connect your own provider key. With your own key, the provider bills you directly. Compare costs before running a check.";

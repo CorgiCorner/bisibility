@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { Button } from "./Button";
 import { Input } from "./Input";
 import {
   compactInputClassName,
@@ -42,7 +43,7 @@ describe("Input", () => {
     expect(compactInputTypographyClassName).toContain("compact-text-12");
     expect(compactInputTypographyClassName).toContain("text-[12px]");
     expect(compactInputTypographyClassName).toContain("placeholder:leading-4");
-    expect(compactInputGeometryClassName).toBe("min-h-[34px] py-1");
+    expect(compactInputGeometryClassName).toBe("min-h-[34px] max-sm:min-h-[34px] py-1");
     expect(compactInputClassName).toContain(compactInputTypographyClassName);
   });
 
@@ -57,9 +58,30 @@ describe("Input", () => {
       "normal-case",
       "tracking-normal",
       "min-h-10",
+      "max-sm:min-h-11",
+      "leading-5",
       "w-full",
     );
     expect(input).toHaveClass("px-" + "[13px]");
     expect(input).toHaveClass("py-" + "[9px]");
+  });
+
+  it("matches an adjacent input action while preserving the compact size override", () => {
+    render(
+      <>
+        <Input aria-label="Standard" />
+        <Button size="input">Search</Button>
+        <Input aria-label="Compact" className={compactInputClassName} />
+      </>,
+    );
+    for (const control of [
+      screen.getByRole("textbox", { name: "Standard" }),
+      screen.getByRole("button", { name: "Search" }),
+    ]) {
+      expect(control).toHaveClass("min-h-10", "max-sm:min-h-11", "leading-5", "py-[9px]");
+    }
+    const compact = screen.getByRole("textbox", { name: "Compact" });
+    expect(compact).toHaveClass("min-h-[34px]", "max-sm:min-h-[34px]", "leading-4");
+    expect(compact).not.toHaveClass("max-sm:min-h-11");
   });
 });

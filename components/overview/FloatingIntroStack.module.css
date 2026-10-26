@@ -2,14 +2,15 @@
 @layer components {
   .stack {
     position: fixed;
-    left: 24px;
+    right: max(20px, env(safe-area-inset-right));
     bottom: max(20px, env(safe-area-inset-bottom));
-    z-index: 30;
+    /* Stay above the support messenger; app dialogs take precedence below. */
+    z-index: 2147483647;
     width: min(300px, calc(100vw - 32px));
     isolation: isolate;
     opacity: 1;
     transform: translateY(0) scale(1);
-    transform-origin: bottom left;
+    transform-origin: bottom right;
     transition:
       opacity var(--motion-modal-enter) var(--ease-out),
       transform var(--motion-modal-enter) var(--ease-out);
@@ -41,18 +42,9 @@
       transform: translateY(8px) scale(0.97);
     }
   }
-  @media (min-width: 1024px) {
-    .stack[data-sidebar="expanded"] {
-      left: calc(270px + 24px);
-    }
-    .stack[data-sidebar="collapsed"] {
-      left: calc(80px + 24px);
-    }
-  }
-  @media (max-width: 639px) {
-    .stack {
-      left: 16px;
-    }
+  body:has([data-ui-overlay][data-state="open"]) .stack {
+    visibility: hidden;
+    pointer-events: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .stack,

@@ -8,6 +8,7 @@ import { getPageIndexingReport } from "./report";
 import { connectionForProject, SearchIndexConnectionError } from "./service";
 import { getPageIndexingSettings } from "./settings";
 import { storedIndexingDays, storedSitemapSnapshot } from "./ui-history";
+import { indexingBackgroundRun } from "./ui-schedule";
 import { storedIndexingSitemaps, storedNotIndexedCount } from "./ui-storage";
 import { listPageIndexingUrls } from "./urls";
 
@@ -31,7 +32,11 @@ export async function loadPageIndexing(projectRef: string) {
     const [settings, urls, sitemaps, { limit, used, remaining }, days, sitemapSnapshot] =
       await Promise.all([
         getPageIndexingSettings(project.id),
-        listPageIndexingUrls(project.id, { history: "true" }),
+        listPageIndexingUrls(
+          project.id,
+          { history: "true" },
+          { page: 1, sort_by: "url", sort_direction: "asc" },
+        ),
         storedIndexingSitemaps(project.id, report.property),
         getInspectionBudget(project.id, new Date()),
         storedIndexingDays(project.id, report.property),
@@ -41,10 +46,15 @@ export async function loadPageIndexing(projectRef: string) {
       canInspect,
       data: {
         report,
+        backgroundRun: await indexingBackgroundRun(
+          settings.budgetMode !== "off" &&
+            (settings.budgetMode === "available_quota" || settings.inspectionDailyLimit > 0),
+        ),
         settings,
         allowance: { limit, used, remaining },
         urls: urls.data,
         nextCursor: urls.meta.next_cursor,
+        totalUrls: urls.meta.total ?? report.total,
         sitemaps,
         days,
         sitemapSnapshot,

@@ -1,5 +1,7 @@
 "use client";
+
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { buildDomainIconUrl } from "@/components/ui/domain-icon-url";
 import type { ResearchedPrompt } from "@/lib/ai-research/prompt-research-projection";
 import { cn } from "@/lib/ui/cn";
@@ -35,7 +37,7 @@ export function PromptResearchSources({ prompt }: Readonly<{ prompt: ResearchedP
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-w-0 break-words text-accent-text underline decoration-border-control underline-offset-2 hover:decoration-current"
+                    className={`${dataLinkClassName} min-w-0 break-words`}
                   >
                     {source.title}
                   </a>

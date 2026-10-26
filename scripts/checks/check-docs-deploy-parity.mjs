@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 import { deployedOpenApiMatches, diffDocsInventory, expectedDocsInventory, parseLlmsTxt } from "./docs-inventory.mjs";
 
 const root = process.cwd();
-const docsRoot = join(root, "docs");
+const docsRoot = process.env.DOCS_SOURCE_ROOT ? resolve(root, process.env.DOCS_SOURCE_ROOT) : join(root, "docs");
 const origin = process.env.DOCS_DEPLOY_ORIGIN?.replace(/\/+$/, "");
+const requireLive = process.argv.includes("--require-live");
 const failures = [];
 
 const expected = expectedDocsInventory({ docsRoot });
@@ -51,28 +51,36 @@ if (origin) {
     failures.push("Deployed OpenAPI differs from this checkout; compare against the intended published release.");
   }
 
-  const samplePages = ["/", "/quickstart", "/versioning", "/hosted-quickstart", "/api/quickstart", "/api/checks", "/api/domain-overview", "/markets"];
-  for (const page of samplePages) {
+  const authoredPages = [...new Set(expected.authored.map((page) => page === "index" ? "/" : `/${page}`))];
+  async function verifyPage(page) {
     const url = `${origin}${page === "/" ? "" : page}`;
     const pageResponse = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(15000) });
     if (!pageResponse.ok) {
       failures.push(`${url} returned HTTP ${pageResponse.status}`);
-      continue;
+      return;
     }
     const html = await pageResponse.text();
     const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]*>/i)?.[0] ?? "";
     const href = canonical.match(/href=["']([^"']+)["']/i)?.[1] ?? "";
     if (!href) {
       failures.push(`${url} is missing a canonical link`);
-      continue;
+      return;
     }
-    if (href === `${origin}` || href === `${origin}/` || href.endsWith("/docs") || href.endsWith("/docs/")) {
-      if (page !== "/") failures.push(`${url} canonical collapsed to docs root: ${href}`);
-    }
-    if (page !== "/" && href.replace(/\/$/, "").endsWith(page) === false && !href.includes(page)) {
+    if (href.replace(/\/$/, "") !== url.replace(/\/$/, "")) {
       failures.push(`${url} canonical does not match the page: ${href}`);
     }
   }
+  // Bound concurrent reads while covering every authored navigation destination.
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(6, authoredPages.length) }, async () => {
+    while (next < authoredPages.length) {
+      const page = authoredPages[next++];
+      try { await verifyPage(page); }
+      catch (error) { failures.push(`${origin}${page}: ${error.message}`); }
+    }
+  }));
+} else if (requireLive) {
+  failures.push("DOCS_DEPLOY_ORIGIN is required for deployed documentation validation.");
 } else {
   console.log(
     "DOCS_DEPLOY_ORIGIN is unset; checked source inventory only. Set it to the deployed docs origin for live llms.txt and canonical HTML checks.",

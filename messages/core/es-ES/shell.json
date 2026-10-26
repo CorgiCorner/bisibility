@@ -127,7 +127,9 @@
       },
       "openIncidents": "Incidentes abiertos",
       "allNotifications": "Todas las notificaciones",
-      "filterError": "No se pudieron cargar los incidentes."
+      "filterError": "No se pudieron cargar los incidentes.",
+      "allTab": "Todas",
+      "incidentsTab": "Incidentes"
     },
     "operations": {
       "actionError": "No se ha podido actualizar esta operación. Actualiza la página e inténtalo de nuevo.",

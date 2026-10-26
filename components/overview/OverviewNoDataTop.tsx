@@ -1,14 +1,12 @@
 "use client";
 import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
-import {
-  FirstCheckBannerAction,
-  type GetFirstCheckRunPlanAction,
-  type RunFirstCheckAction,
+import type {
+  GetFirstCheckRunPlanAction,
+  RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { Card } from "@/components/ui/Card";
 import { ProviderAccessActions } from "@/components/ui/ProviderAccessActions";
-import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
@@ -72,12 +70,10 @@ function bannerText(
 export function NoDataBanner({
   canManageProviders = true,
   canRunChecks = true,
-  getFirstCheckRunPlanAction,
   keywordCount,
   keywordId,
   projectId,
   projectRef,
-  runCheckNowAction,
   state,
 }: Readonly<{
   canCreateKeyword?: boolean;
@@ -99,12 +95,9 @@ export function NoDataBanner({
         key={projectId}
         projectId={projectId}
         action={
-          <FirstCheckBannerAction
-            getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-            keywordId={keywordId}
-            projectId={projectId}
-            projectRef={projectRef}
-            runCheckNowAction={runCheckNowAction}
+          <FirstCheckBannerLink
+            href={appPath(projectRef, "rank-tracker")}
+            label={t("firstCheckIntro.action")}
           />
         }
       />
@@ -162,7 +155,7 @@ function trackedKeywordSubline(
   t: ReturnType<typeof useTranslations<"projectDashboard.noData">>,
 ) {
   if (projectReadOnly) return t("pausedMigrationHold");
-  if (budgetExhausted) return t("monthlyBudgetExhausted");
+  if (budgetExhausted) return "";
   if (serpProviderState === "missing") return t("providerNotConnected");
   if (serpProviderState === "needs_attention") return t("providerNeedsAttention");
   if (runningCheckCount > 0) return t("checkInProgress");
@@ -175,13 +168,7 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
   const kpiT = useTranslations("projectDashboard.kpis");
   const dashboardT = useTranslations("projectDashboard.dashboard");
   const { keywordCount } = props;
-  const errors = useSharedErrorMessages();
-  const keywordSubline =
-    props.budgetReason === "budget_missing"
-      ? errors.budgetMissing()
-      : props.budgetReason === "usage_reconciliation_required"
-        ? errors.usageReconciliationRequired()
-        : trackedKeywordSubline(props, t);
+  const keywordSubline = trackedKeywordSubline(props, t);
 
   return (
     <section

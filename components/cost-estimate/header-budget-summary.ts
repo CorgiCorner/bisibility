@@ -11,6 +11,29 @@ import { parseProviderDecimal } from "@usagekit/views";
 
 const rank = { ok: 0, warning: 1, exceeded: 2 };
 
+/** The header summarizes project spending; per-provider controls remain in Usage. */
+export function headerDetailRows(rows: readonly BudgetRow[]) {
+  const visible = rows.filter((row) => !row.redacted && row.unit !== "paid_attempts");
+  const project = visible.filter((row) => row.kind === "group");
+  const selected: BudgetRow[] = [];
+  for (const row of project.length ? project : visible) {
+    const duplicate = selected.findIndex(
+      (prior) =>
+        prior.unit === row.unit &&
+        prior.target === row.target &&
+        prior.window === row.window &&
+        JSON.stringify(prior.boundary) === JSON.stringify(row.boundary) &&
+        JSON.stringify(prior.traffic) === JSON.stringify(row.traffic) &&
+        JSON.stringify(prior.used) === JSON.stringify(row.used) &&
+        JSON.stringify(prior.reserved) === JSON.stringify(row.reserved) &&
+        (prior.limit === "unlimited" || row.limit === "unlimited"),
+    );
+    if (duplicate < 0) selected.push(row);
+    else if (selected[duplicate].limit === "unlimited") selected[duplicate] = row;
+  }
+  return selected;
+}
+
 /** Compare independent bounds; amounts with different units are never added. */
 export function headerBudgetSummary(rows: readonly BudgetRow[]) {
   const visible = rows.filter((row) => !row.redacted && row.level !== "unavailable");

@@ -125,6 +125,7 @@ export function TrackingCheckFields({
         <FieldLabel className={labelClass} label={t("device")} />
         <input type="hidden" {...form.register("device")} />
         <MenuSelect
+          size="input"
           ariaLabel={t("device")}
           onChange={setDevice}
           options={deviceOptions}
@@ -138,6 +139,7 @@ export function TrackingCheckFields({
         <FieldLabel className={labelClass} label={t("serpDepth")} />
         <input type="hidden" {...form.register("serpDepth", { valueAsNumber: true })} />
         <MenuSelect
+          size="input"
           ariaLabel={t("serpDepth")}
           onChange={setDepth}
           options={depthOptions}
@@ -172,6 +174,7 @@ export function TrackingCheckFields({
           render={({ field }) => (
             <>
               <MenuSelect
+                size="input"
                 ariaDescribedBy={collectionHelpId}
                 ariaLabel={t("resultsCollection")}
                 disabled={!canEdit || depth === VISIBILITY_HORIZON}

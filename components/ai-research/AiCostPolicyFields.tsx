@@ -1,12 +1,11 @@
 "use client";
-import { Checkbox } from "@/components/ui/Checkbox";
 import { MenuItem } from "@/components/ui/MenuItem";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { AiModelCapability, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import { LEGACY_MODELS, LEGACY_OUTPUT_TOKENS } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Controller } from "react-hook-form";
+import { AiActualCostConsent } from "./AiActualCostConsent";
 import { AiResearchCostCap } from "./AiResearchCostCap";
 import type { AiResearchForm } from "./AiVisibilityFields";
 import { legacyModelOptions } from "./ai-research-presets";
@@ -15,10 +14,12 @@ export function AiCostPolicyFields({
   form,
   catalog,
   disabled,
+  showConsent = true,
 }: Readonly<{
   form: AiResearchForm;
   catalog?: AiResearchCatalog;
   disabled: boolean;
+  showConsent?: boolean;
 }>) {
   const t = useTranslations("projectAiResearch");
   const values = form.watch();
@@ -71,24 +72,11 @@ export function AiCostPolicyFields({
           </span>
         ) : null}
       </div>
-      {actual ? (
-        <Controller
-          name="actual_cost_acknowledgement"
-          control={form.control}
-          render={({ field }) => (
-            <Checkbox
-              containerClassName="sm:col-span-2"
-              label={t("actualCostAcknowledgement")}
-              aria-label={t("actualCostAcknowledgement")}
-              description={t("actualCostRisk")}
-              checked={field.value === "non_guaranteed_estimate_v1"}
-              disabled={disabled}
-              onChange={(event) =>
-                field.onChange(event.target.checked ? "non_guaranteed_estimate_v1" : undefined)
-              }
-            />
-          )}
-        />
+      {actual && showConsent ? (
+        <AiActualCostConsent form={form} disabled={disabled} detailed />
+      ) : null}
+      {actual && !showConsent ? (
+        <p className="m-0 text-ui-xs text-fg-muted sm:col-span-2">{t("actualCostRisk")}</p>
       ) : null}
       <AiResearchCostCap form={form} disabled={disabled} advisory={actual} />
     </>

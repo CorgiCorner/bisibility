@@ -17,6 +17,8 @@ describe("MenuSelect input size", () => {
 
     expect(screen.getByRole("button", { name: "Schedule day" })).toHaveClass(
       "min-h-10",
+      "max-sm:min-h-11",
+      "leading-5",
       "px-[13px]",
       "py-[9px]",
       "text-ui-body",

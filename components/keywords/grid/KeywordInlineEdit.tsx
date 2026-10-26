@@ -14,6 +14,7 @@ import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { MarketCombobox } from "@/components/markets/MarketCombobox";
 import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
+import { inputControlSizeClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -206,6 +207,7 @@ export function KeywordInlineEdit({
             <FieldLabel help={t("inlineDeviceHelp")} label={t("inlineDevice")} />
             <input type="hidden" {...register("device")} />
             <MenuSelect
+              size="input"
               ariaLabel={t("inlineDevice")}
               onChange={handleDeviceChange}
               options={deviceOptions}
@@ -227,7 +229,7 @@ export function KeywordInlineEdit({
                   catalogMarkets={[]}
                   onChange={handleDrawerMarketChange}
                   trackedMarkets={drawerMarketList}
-                  triggerClassName="min-h-10 w-full rounded-control px-3 text-[13px] normal-case tracking-normal"
+                  triggerClassName={`${inputControlSizeClassName} w-full rounded-control px-3 text-[13px] normal-case tracking-normal`}
                   value={selectedLocationKey}
                 />
                 {drawerMarketError ? (
@@ -277,12 +279,7 @@ export function KeywordInlineEdit({
           className={cn("flex flex-col justify-end gap-2", layout === "inline" && "md:col-span-3")}
         >
           {!hideSubmit ? (
-            <Button
-              disabled={isSubmitting}
-              style={{ minHeight: 40 }}
-              type="submit"
-              variant="primary"
-            >
+            <Button disabled={isSubmitting} size="input" type="submit" variant="primary">
               {isSubmitting ? t("inlineSaving") : t("inlineSave")}
             </Button>
           ) : null}

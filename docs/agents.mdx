@@ -21,6 +21,18 @@ The [skills catalog](https://bisibility.com/skills) describes available workflow
 Its chat examples are illustrations: Send plays the example, without contacting
 providers or changing a project. Expand the tool trace to inspect the calls.
 
+Install the workflow skills in Claude Code, Codex and other coding agents with
+the [skills CLI](https://skills.sh):
+
+```bash
+npx skills add CorgiCorner/bisibility
+```
+
+Connect the client through [MCP](#connect-through-mcp), or provide a scoped API key
+for workflows that use the REST API. Each skill describes its supported connection.
+Claude Code can also install the plugin as shown in
+[Run and save an SEO audit](#run-and-save-an-seo-audit).
+
 Project setup starts with your domain, business and audience, then proposes a
 plan. Saving changes requires approval of that plan. Provider secrets belong in
 secure connection settings, never in the chat. A project API key cannot create a
@@ -185,7 +197,7 @@ Use the free bounded crawl and saved ranking/AI evidence. Do not spend on provid
 Give me the report link and the first action.
 ```
 
-For Codex and other Agent Skills clients, install the complete `plugins/bisibility/skills/seo-audit` directory from the [release repository](https://github.com/CorgiCorner/bisibility/tree/main/plugins/bisibility/skills/seo-audit), including its references and validation script. For Codex, place it in `~/.codex/skills/seo-audit`, connect MCP as shown above, and invoke `$seo-audit` with the same request. This plugin skill is distributed from the repository; the instance's generated tool-reference catalog is a separate discovery surface.
+For Codex and other Agent Skills clients, run the skills CLI command from [Use a workflow](#use-a-workflow), or install the complete `plugins/bisibility/skills/seo-audit` directory from the [release repository](https://github.com/CorgiCorner/bisibility/tree/main/plugins/bisibility/skills/seo-audit), including its references and validation script. For Codex, place it in `~/.codex/skills/seo-audit`, connect MCP as shown above, and invoke `$seo-audit` with the same request. This plugin skill is distributed from the repository; the instance's generated tool-reference catalog is a separate discovery surface.
 
 The workflow uses `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. It requires v0.28.0 or newer with these tools visible in the client's tool snapshot. A fresh crawl and report save need write scope plus project membership that allows writes. A read-only client can analyze stored data but must report that it could not crawl or save.
 

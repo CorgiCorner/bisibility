@@ -39,8 +39,8 @@ export function SearchInsightsMenu({
       open={Boolean(anchorEl)}
       listProps={{ "aria-label": ariaLabel, className: "p-0", role: "listbox" }}
       contentProps={{
-        className: cn(surfaceClass, wide ? "min-w-85" : "min-w-75"),
-        style: { minWidth: anchorEl?.getBoundingClientRect().width },
+        className: cn(surfaceClass, "max-w-[calc(100vw-2rem)]"),
+        style: { width: Math.max(wide ? 340 : 300, anchorEl?.getBoundingClientRect().width ?? 0) },
       }}
     >
       {children}

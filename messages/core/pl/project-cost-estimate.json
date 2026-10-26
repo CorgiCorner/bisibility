@@ -3,7 +3,7 @@
     "providerSpend": {
       "headerUnavailable": "Zużycie niedostępne",
       "headerUsageUnknown": "Zużycie nieznane",
-      "headerCapTooltip": "Zużycie budżetów z uwzględnieniem rezerwacji. Szczegóły w widoku Zużycie.",
+      "headerCapTooltip": "Limity dostawców i szczegóły znajdziesz w Usage.",
       "headerNoCap": "Brak budżetu · Ustaw",
       "headerNoCapAria": "Brak budżetu, ustaw go",
       "headerUsed": "Wykorzystano {percent}%",
@@ -13,7 +13,13 @@
       "headerExceeded": "Przekroczono budżet",
       "headerUsageAria": "Zużycie budżetów: {status}. Zobacz szczegóły",
       "headerNoLimit": "Bez limitu",
-      "headerWarning": "Ostrzeżenie budżetu"
+      "headerWarning": "Ostrzeżenie budżetu",
+      "headerDetailsTitle": "Wydatki projektu",
+      "headerCredits": "Kredyty",
+      "headerOwnKeys": "Własne klucze",
+      "headerProject": "Budżet projektu",
+      "headerPartialDetail": "Część zużycia nie jest potwierdzona.",
+      "headerReviewRequired": "Rozliczenie do sprawdzenia"
     },
     "status": {
       "unavailable": "Szacowany koszt jest niedostępny.",

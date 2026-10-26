@@ -1,0 +1,44 @@
+---
+title: "Schedule local checks"
+description: "Approve a bounded schedule for a Local monitor and review its retained results."
+---
+
+Local monitor schedules are available only when recurring Local execution is
+enabled on the instance. They require a running worker and a supported provider
+connection. Creating a monitor or opening its page does not start a paid check.
+
+## Approve a schedule
+
+1. Open the monitor under **Settings → Business locations**.
+2. Choose a calendar and your provider connection.
+3. Set the maximum cost per occurrence, total approved cost, maximum number of
+   measurements, and approval end date.
+4. Preview the scope and current quote, then confirm the schedule.
+
+You need write access to approve or pause a schedule. Project and connection
+budgets still apply in addition to the schedule's limits.
+
+The total approval limit counts issued quotes conservatively. It is separate
+from settled provider charges: an issued quote can still consume that approval
+when a check does not finish. Unknown acceptance or cost is never treated as zero.
+
+## Changes and pauses
+
+Changing the monitored targets, provider credentials, calendar, or pricing
+requires a new review. Expired approval does not authorize another occurrence.
+Completely elapsed calendar intervals are skipped rather than purchased as a
+backlog.
+
+Pausing prevents future submissions. Already accepted work can still finish
+collection and accounting. Refreshing the page reads retained results; it does
+not purchase another check.
+
+## Review results
+
+Choose the last 7, 28, or 90 days, or all retained history. The interval uses the
+original observation time. Narrow a large interval if the page asks you to;
+an incomplete result is not presented as complete history.
+
+For setup, see [Local providers](/local-search-provider) and
+[worker topologies](/self-hosting/docker#compose-topology-commands). For failed
+points, see [Retry local checks](/local-monitor-retry).

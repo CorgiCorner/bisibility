@@ -39,6 +39,7 @@ function useDataTableContainer() {
 export function DataTable<TRow extends DataTableRowBase>({
   ariaLabel,
   bordered = true,
+  measureRows = false,
   columnPinning,
   columnOrder,
   columns,
@@ -180,6 +181,7 @@ export function DataTable<TRow extends DataTableRowBase>({
           table={table}
         />
         <DataTableBody
+          measureRows={measureRows}
           columnDefinitions={columns}
           columnPinning={columnPinningState}
           density={density}

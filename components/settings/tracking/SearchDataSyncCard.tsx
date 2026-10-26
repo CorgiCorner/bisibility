@@ -175,10 +175,16 @@ export function SearchDataSyncCard({
       title={t("title")}
     >
       {({ markDirty }) => (
-        <form className="-mx-5" onSubmit={(event) => event.preventDefault()}>
-          <fieldset className="grid grid-cols-1 gap-4 px-4" disabled={!canEdit}>
-            <SettingsField className="max-w-none" width="field">
-              <FieldLabel label={t("importDepth")} />
+        <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
+          <fieldset
+            className="m-0 grid min-w-0 grid-cols-1 gap-5 border-0 p-0 md:grid-cols-2"
+            disabled={!canEdit}
+          >
+            <SettingsField className="flex min-w-0 flex-col gap-2" width="field">
+              <FieldLabel
+                className="font-sans text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                label={t("importDepth")}
+              />
               {canEdit ? (
                 <Controller
                   control={form.control}
@@ -192,28 +198,33 @@ export function SearchDataSyncCard({
                         markDirty();
                       }}
                       options={depthOptions}
-                      triggerClassName="mt-1.5 w-full justify-between"
+                      size="input"
+                      triggerWrapperClassName="w-full"
+                      triggerClassName="w-full justify-between"
                       value={String(field.value)}
                     />
                   )}
                 />
               ) : (
-                <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
+                <p className="m-0 text-[13px] font-medium text-fg">
                   {t("months", { count: retentionMonths })}
                 </p>
               )}
               {historyHelp ? (
-                <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{historyHelp}</p>
+                <p className="m-0 text-[11px] leading-[1.45] text-fg-muted">{historyHelp}</p>
               ) : null}
             </SettingsField>
-            <SettingsField className="max-w-none" width="field">
-              <FieldLabel label={t("importSpeed")} />
+            <SettingsField className="flex min-w-0 flex-col gap-2" width="field">
+              <FieldLabel
+                className="font-sans text-[10px] uppercase tracking-[0.5px] text-fg-muted"
+                label={t("importSpeed")}
+              />
               {canEdit ? (
                 <Controller
                   control={form.control}
                   name="pace"
                   render={({ field }) => (
-                    <div>
+                    <div className="flex min-w-0 flex-col gap-2">
                       <MenuSelect
                         ariaLabel={t("importSpeed")}
                         disabled={!canEdit}
@@ -222,60 +233,62 @@ export function SearchDataSyncCard({
                           markDirty();
                         }}
                         options={paceOptions}
-                        triggerClassName="mt-1.5 w-full justify-between"
+                        size="input"
+                        triggerWrapperClassName="w-full"
+                        triggerClassName="w-full justify-between"
                         value={field.value}
                       />
-                      <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">
-                        {estimate}
-                      </p>
+                      <p className="m-0 text-[11px] leading-[1.45] text-fg-muted">{estimate}</p>
                     </div>
                   )}
                 />
               ) : (
                 <div>
-                  <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
+                  <p className="m-0 text-[13px] font-medium text-fg">
                     {pace === "gentle" ? t("reduced") : t("standard")}
                   </p>
-                  <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{estimate}</p>
+                  <p className="m-0 text-[11px] leading-[1.45] text-fg-muted">{estimate}</p>
                 </div>
               )}
             </SettingsField>
           </fieldset>
-          <div className="mt-4 px-4">
-            <div className="rounded-md border border-border px-3 py-2">
-              <SearchSyncStatusControl
-                busy={pauseBusy}
-                disabled={!canEdit}
-                labels={{
-                  actionAriaLabel: (action) =>
-                    t("control.actionAria", {
-                      action:
-                        action === "pause"
-                          ? t("control.pause")
-                          : action === "resume"
-                            ? t("control.resume")
-                            : t("control.retry"),
-                    }),
-                  askAdminToConnect: t("control.askAdminToConnect"),
-                  pauseTooltip: t("control.pauseTooltip"),
-                }}
-                model={localizedControl}
-                onAction={runContextAction}
-                reconnectHref={reconnectHref}
-                suppressPauseTooltip
-              />
+          <div className="space-y-3 border-t border-border pt-4">
+            <SearchSyncStatusControl
+              busy={pauseBusy}
+              disabled={!canEdit}
+              labels={{
+                actionAriaLabel: (action) =>
+                  t("control.actionAria", {
+                    action:
+                      action === "pause"
+                        ? t("control.pause")
+                        : action === "resume"
+                          ? t("control.resume")
+                          : t("control.retry"),
+                  }),
+                askAdminToConnect: t("control.askAdminToConnect"),
+                pauseTooltip: t("control.pauseTooltip"),
+              }}
+              model={localizedControl}
+              onAction={runContextAction}
+              reconnectHref={reconnectHref}
+              suppressPauseTooltip
+              statusTone={
+                control.semanticState === "complete"
+                  ? "positive"
+                  : control.semanticState === "running"
+                    ? "info"
+                    : "attention"
+              }
+            />
+            <div className="grid grid-cols-1 gap-2 font-sans tabular-nums text-ui-caption text-fg-muted sm:grid-cols-3">
+              <span>{t("requests", { count: metrics.requestsToday })}</span>
+              <span>{t("configuredPace", { count: searchSyncRequestSetsPerHour(pace) })}</span>
+              <span>{t("plannedRemaining", { count: metrics.plannedRemaining })}</span>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 px-4 font-sans tabular-nums text-[11px] text-fg-muted">
-            <span>{t("requests", { count: metrics.requestsToday })}</span>
-            <span aria-hidden>·</span>
-            <span>{t("configuredPace", { count: searchSyncRequestSetsPerHour(pace) })}</span>
-            <span aria-hidden>·</span>
-            <span>{t("plannedRemaining", { count: metrics.plannedRemaining })}</span>
-          </div>
-          <p className="m-0 mt-4 px-4 text-[12px] leading-[1.55] text-fg-muted">{t("quota")}</p>
-          <p className="m-0 mt-1 px-4 text-[12px] leading-[1.55] text-fg-muted">
-            {t("depthChange")}
+          <p className="m-0 text-[12px] leading-[1.55] text-fg-muted">
+            {t("quota")} {t("depthChange")}
           </p>
         </form>
       )}

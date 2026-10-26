@@ -119,16 +119,17 @@ function createdBearerOperation(
 }
 
 export function getOpenApiDocument() {
+  const parameterComponents = {
+    ...idempotencyParameterComponents,
+    ...pageParameterComponents,
+    ...projectSelectionParameterComponents,
+    ...sourceHeaderParameterComponents,
+  };
   return withAppOAuth(
     withSdkCost(
       withPublicIdExtensions({
         components: {
-          parameters: {
-            ...idempotencyParameterComponents,
-            ...pageParameterComponents,
-            ...projectSelectionParameterComponents,
-            ...sourceHeaderParameterComponents,
-          },
+          parameters: parameterComponents,
           schemas: {
             AccountAnalyticsConsent: accountAnalyticsConsentSchema,
             ...schemas,
@@ -154,140 +155,143 @@ export function getOpenApiDocument() {
         paths: withSourceHeaderParameter(
           withProjectSelectionParameters(
             tagOpenApiPaths(
-              withDeclaredPathParameters({
-                ...accountAnalyticsConsentPaths,
-                ...apiKeyPaths({
-                  bearer: bearerOperation,
-                  created: createdBearerOperation,
-                  list,
-                  ref: (name) => ref(name as keyof typeof schemas),
-                }),
-                ...personalAccess.personalAccessPaths({
-                  bearer: bearerOperation,
-                  created: createdBearerOperation,
-                  list,
-                  ref: (name) => ref(name as keyof typeof schemas),
-                }),
-                ...resourcePaths({
-                  bearer: bearerOperation,
-                  list,
-                  ref: (name) => ref(name as keyof typeof schemas),
-                }),
-                ...publicPaths,
-                ...researchWorkspacePaths(),
-                ...promptTrackerPaths(),
-                ...locationSearchPaths({ bearer: bearerOperation, ref }),
-                ...keywordResearchPaths({ bearer: bearerOperation, ref }),
-                ...loopClosurePaths({ bearer: bearerOperation, ref }),
-                ...localMonitorResultPaths(bearerOperation),
-                ...migrationPaths,
-                "/keywords/{keyword_id}/checks": {
-                  post: runRankCheckOperation({
-                    problemResponses,
-                    rankCheckRef: ref("RankCheck"),
-                    rankCheckRunRef: ref("RankCheckRunQueued"),
-                    security: personalAccess.apiCredentialSecurity,
+              withDeclaredPathParameters(
+                {
+                  ...accountAnalyticsConsentPaths,
+                  ...apiKeyPaths({
+                    bearer: bearerOperation,
+                    created: createdBearerOperation,
+                    list,
+                    ref: (name) => ref(name as keyof typeof schemas),
                   }),
-                },
-                "/keywords/{keyword_id}/rank-checks": {
-                  get: bearerOperation(
-                    "List rank checks for a keyword",
-                    "listRankChecks",
-                    list(ref("RankCheck")),
-                    undefined,
-                    rankCheckListParameters,
-                  ),
-                },
-                "/projects": {
-                  get: bearerOperation(
-                    "List projects visible to this API key",
-                    "listProjects",
-                    list(ref("Project")),
-                    undefined,
-                    pageParameters,
-                  ),
-                  post: {
-                    parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }],
-                    ...createdBearerOperation(
-                      "Create a project with a personal access token",
-                      "createProject",
-                      ref("Project"),
-                      ref("ProjectCreate"),
-                      personalAccess.personalAccessTokenSecurity,
+                  ...personalAccess.personalAccessPaths({
+                    bearer: bearerOperation,
+                    created: createdBearerOperation,
+                    list,
+                    ref: (name) => ref(name as keyof typeof schemas),
+                  }),
+                  ...resourcePaths({
+                    bearer: bearerOperation,
+                    list,
+                    ref: (name) => ref(name as keyof typeof schemas),
+                  }),
+                  ...publicPaths,
+                  ...researchWorkspacePaths(),
+                  ...promptTrackerPaths(),
+                  ...locationSearchPaths({ bearer: bearerOperation, ref }),
+                  ...keywordResearchPaths({ bearer: bearerOperation, ref }),
+                  ...loopClosurePaths({ bearer: bearerOperation, ref }),
+                  ...localMonitorResultPaths(bearerOperation),
+                  ...migrationPaths,
+                  "/keywords/{keyword_id}/checks": {
+                    post: runRankCheckOperation({
+                      problemResponses,
+                      rankCheckRef: ref("RankCheck"),
+                      rankCheckRunRef: ref("RankCheckRunQueued"),
+                      security: personalAccess.apiCredentialSecurity,
+                    }),
+                  },
+                  "/keywords/{keyword_id}/rank-checks": {
+                    get: bearerOperation(
+                      "List rank checks for a keyword",
+                      "listRankChecks",
+                      list(ref("RankCheck")),
+                      undefined,
+                      rankCheckListParameters,
                     ),
                   },
-                },
-                "/projects/{project_id}": {
-                  delete: bearerOperation("Delete a project", "deleteProject", ref("Project")),
-                  get: bearerOperation("Get one project", "getProject", ref("Project")),
-                  patch: bearerOperation(
-                    "Update a project",
-                    "updateProject",
-                    ref("Project"),
-                    ref("ProjectPatch"),
-                    [{ $ref: "#/components/parameters/IdempotencyKey" }],
-                  ),
-                },
-                ...reviewedDefaultsPaths({
-                  bearer: bearerOperation,
-                  ref,
-                  response,
-                  problemResponse,
-                  problemResponses,
-                }),
-                ...keywordPaths({
-                  bearer: bearerOperation,
-                  keywordListParameters,
-                  list,
-                  ref,
-                }),
-                ...projectOverviewPaths({ bearer: bearerOperation, ref }),
-                ...rankedKeywordSuggestionPaths({ bearer: bearerOperation, ref }),
-                ...analyticsPaths({ bearer: bearerOperation, ref }),
-                ...searchIndexPaths({ bearer: bearerOperation, ref }),
-                ...pageIndexingPaths({ bearer: bearerOperation, ref }),
-                ...backlinksPaths({ bearer: bearerOperation }),
-                ...domainOverviewPaths({ bearer: bearerOperation }),
-                ...researchReportsPaths({ bearer: bearerOperation }),
-                ...savedKeywordPaths(list, bearerOperation, createdBearerOperation),
-                "/projects/{project_id}/saved-views": savedViewOperations(
-                  list,
-                  bearerOperation,
-                  createdBearerOperation,
-                ),
-                "/projects/{project_id}/signals": {
-                  get: bearerOperation(
-                    "List project signals",
-                    "listSignals",
-                    list(ref("Signal")),
-                    undefined,
-                    signalListParameters,
-                  ),
-                },
-                ...teamMutationPaths({ bearer: bearerOperation, ref }),
-                "/rank-checks/{check_id}": {
-                  get: bearerOperation(
-                    "Get one rank check",
-                    "getRankCheckResult",
-                    ref("RankCheck"),
-                    undefined,
-                    [
-                      {
-                        in: "path",
-                        name: "check_id",
-                        required: true,
-                        schema: publicIdSchema("check"),
-                      },
-                    ],
-                  ),
-                },
-                "/signals": {
-                  post: createSignalOperation({
+                  "/projects": {
+                    get: bearerOperation(
+                      "List projects visible to this API key",
+                      "listProjects",
+                      list(ref("Project")),
+                      undefined,
+                      pageParameters,
+                    ),
+                    post: {
+                      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }],
+                      ...createdBearerOperation(
+                        "Create a project with a personal access token",
+                        "createProject",
+                        ref("Project"),
+                        ref("ProjectCreate"),
+                        personalAccess.personalAccessTokenSecurity,
+                      ),
+                    },
+                  },
+                  "/projects/{project_id}": {
+                    delete: bearerOperation("Delete a project", "deleteProject", ref("Project")),
+                    get: bearerOperation("Get one project", "getProject", ref("Project")),
+                    patch: bearerOperation(
+                      "Update a project",
+                      "updateProject",
+                      ref("Project"),
+                      ref("ProjectPatch"),
+                      [{ $ref: "#/components/parameters/IdempotencyKey" }],
+                    ),
+                  },
+                  ...reviewedDefaultsPaths({
+                    bearer: bearerOperation,
+                    ref,
+                    response,
+                    problemResponse,
                     problemResponses,
-                    security: personalAccess.apiCredentialSecurity,
                   }),
+                  ...keywordPaths({
+                    bearer: bearerOperation,
+                    keywordListParameters,
+                    list,
+                    ref,
+                  }),
+                  ...projectOverviewPaths({ bearer: bearerOperation, ref }),
+                  ...rankedKeywordSuggestionPaths({ bearer: bearerOperation, ref }),
+                  ...analyticsPaths({ bearer: bearerOperation, ref }),
+                  ...searchIndexPaths({ bearer: bearerOperation, ref }),
+                  ...pageIndexingPaths({ bearer: bearerOperation, ref }),
+                  ...backlinksPaths({ bearer: bearerOperation }),
+                  ...domainOverviewPaths({ bearer: bearerOperation }),
+                  ...researchReportsPaths({ bearer: bearerOperation }),
+                  ...savedKeywordPaths(list, bearerOperation, createdBearerOperation),
+                  "/projects/{project_id}/saved-views": savedViewOperations(
+                    list,
+                    bearerOperation,
+                    createdBearerOperation,
+                  ),
+                  "/projects/{project_id}/signals": {
+                    get: bearerOperation(
+                      "List project signals",
+                      "listSignals",
+                      list(ref("Signal")),
+                      undefined,
+                      signalListParameters,
+                    ),
+                  },
+                  ...teamMutationPaths({ bearer: bearerOperation, ref }),
+                  "/rank-checks/{check_id}": {
+                    get: bearerOperation(
+                      "Get one rank check",
+                      "getRankCheckResult",
+                      ref("RankCheck"),
+                      undefined,
+                      [
+                        {
+                          in: "path",
+                          name: "check_id",
+                          required: true,
+                          schema: publicIdSchema("check"),
+                        },
+                      ],
+                    ),
+                  },
+                  "/signals": {
+                    post: createSignalOperation({
+                      problemResponses,
+                      security: personalAccess.apiCredentialSecurity,
+                    }),
+                  },
                 },
-              }),
+                parameterComponents,
+              ),
             ),
           ),
         ),

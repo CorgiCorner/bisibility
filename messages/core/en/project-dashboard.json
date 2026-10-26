@@ -101,10 +101,18 @@
       "viewCheckRuns": "View check runs",
       "viewKeywords": "View keywords",
       "firstCheckIntro": {
-        "title": "Run your first check",
-        "description": "Find out where you rank. Your first check brings this dashboard to life.",
-        "dismiss": "Dismiss this introduction"
-      }
+        "title": "Check your rankings",
+        "description": "Open Rank Tracker, choose your keywords and run a check.",
+        "dismiss": "Dismiss this introduction",
+        "action": "Open Rank Tracker"
+      },
+      "usageReviewTitle": "Rank checks are paused pending a usage review.",
+      "usageReviewDetail": "Some earlier provider usage is unconfirmed. Review it in Usage.",
+      "budgetMissingTitle": "A project budget is needed.",
+      "budgetMissingDetail": "Set a spending limit in Usage to start rank checks.",
+      "budgetReviewTitle": "Rank checks are paused by the project budget.",
+      "budgetReviewDetail": "Review the spending limit in Usage.",
+      "reviewUsage": "Open Usage"
     },
     "sampleProject": {
       "createProject": "Create your real project",

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   absoluteSiteUrl,
@@ -12,8 +14,10 @@ import {
   githubUrl,
   linkedinUrl,
   resolveSiteUrl,
+  rootMetadata,
   serializeJsonLd,
 } from "./jsonld";
+import { defaultSocialImage } from "./page-metadata";
 
 const origin = "https://rank.example";
 
@@ -119,5 +123,34 @@ describe("JSON-LD builders", () => {
     } finally {
       restoreEnv("SITE_URL", previousSiteUrl);
     }
+  });
+
+  it("points the default social image at the root Open Graph route without conflicts", () => {
+    const appRoot = resolve(import.meta.dirname, "../../app");
+
+    expect(new URL(defaultSocialImage.url, origin).pathname).toBe("/opengraph-image");
+    expect(defaultSocialImage).toMatchObject({ height: 630, type: "image/png", width: 1200 });
+    expect(rootMetadata.openGraph?.images).toEqual([defaultSocialImage]);
+    expect(rootMetadata.twitter).toMatchObject({
+      card: "summary_large_image",
+      images: [
+        {
+          alt: defaultSocialImage.alt,
+          height: defaultSocialImage.height,
+          url: defaultSocialImage.url,
+          width: defaultSocialImage.width,
+        },
+      ],
+    });
+    // One generated root image; a static or twitter-specific file would compete with it.
+    expect(existsSync(resolve(appRoot, "opengraph-image.tsx"))).toBe(true);
+    for (const name of ["opengraph-image", "twitter-image"]) {
+      for (const extension of ["ts", "js", "png", "jpg", "jpeg", "gif"]) {
+        expect(existsSync(resolve(appRoot, `${name}.${extension}`)), `${name}.${extension}`).toBe(
+          false,
+        );
+      }
+    }
+    expect(existsSync(resolve(appRoot, "twitter-image.tsx"))).toBe(false);
   });
 });

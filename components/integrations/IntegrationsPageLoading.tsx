@@ -31,21 +31,30 @@ function ProviderFrame() {
 export function IntegrationsPageLoading({
   connectionsLabel,
   usageLabel,
+  byokLabel,
   active: activeOverride,
-}: Readonly<{ connectionsLabel: string; usageLabel: string; active?: "connections" | "usage" }>) {
+}: Readonly<{
+  connectionsLabel: string;
+  usageLabel?: string;
+  byokLabel?: string;
+  active?: "connections" | "usage" | "byok";
+}>) {
   const search = useSearchParams();
-  const active = activeOverride ?? (search.get("tab") === "usage" ? "usage" : "connections");
+  const active =
+    activeOverride ??
+    (["usage", "byok"].includes(search.get("tab") ?? "") ? search.get("tab") : "connections");
   return (
     <PageContent aria-busy="true" className="flex flex-col gap-5">
       <div
         aria-hidden
-        className="flex gap-0.5 border-b border-border"
+        className="flex min-w-0 gap-0.5 overflow-x-auto border-b border-border"
         data-integrations-loading-tabs=""
       >
         {(
           [
             { id: "connections", label: connectionsLabel },
-            { id: "usage", label: usageLabel },
+            ...(usageLabel ? [{ id: "usage", label: usageLabel }] : []),
+            ...(byokLabel ? [{ id: "byok", label: byokLabel }] : []),
           ] as const
         ).map((tab) => (
           <span
@@ -64,7 +73,7 @@ export function IntegrationsPageLoading({
         className="flex min-w-0 flex-col gap-5"
         data-integrations-loading-panel={active}
       >
-        {active === "usage" ? (
+        {active !== "connections" ? (
           <div className="w-full max-w-[760px] space-y-4 rounded-card border border-border bg-bg-elev p-5">
             <Bar className="h-5 w-40" />
             <Bar className="h-10 w-32" />

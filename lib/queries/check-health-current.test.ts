@@ -9,6 +9,7 @@ vi.mock("./_auth", () => ({}));
 vi.mock("./workspace-request-data", () => ({}));
 let db: PGlite;
 const since = new Date("2026-09-21T12:00:00Z");
+const recentSince = new Date("2026-09-15T12:00:00Z");
 
 beforeAll(() => {
   db = new PGlite();
@@ -37,7 +38,20 @@ beforeEach(async () => {
 });
 
 it("reports only current failures of tracked keywords in this project", async () => {
-  expect(await loadCheckHealthStats("project", since)).toMatchObject({
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
+    currentFailedCount: 1,
+    latestCurrentFailedCheckId: "check_old",
+  });
+});
+
+it("stops showing an unresolved failure outside the recent window", async () => {
+  await db.exec(`UPDATE rank_checks SET "checkedAt"='2026-09-15T11:59:59Z' WHERE id='a'`);
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
+    currentFailedCount: 0,
+    latestCurrentFailedCheckId: null,
+  });
+  await db.exec(`UPDATE rank_checks SET "checkedAt"='2026-09-15T12:00:00Z' WHERE id='a'`);
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
     currentFailedCount: 1,
     latestCurrentFailedCheckId: "check_old",
   });
@@ -46,7 +60,7 @@ it("reports only current failures of tracked keywords in this project", async ()
 it("clears a recovered failure while retaining the historical daily count", async () => {
   await db.exec(`INSERT INTO rank_checks VALUES
     ('d', 'check_success', 'active', '2026-09-22T10:00Z', 'completed', NULL, NULL, 'serpapi')`);
-  expect(await loadCheckHealthStats("project", since)).toMatchObject({
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
     currentFailedCount: 0,
     latestCurrentFailedCheckId: null,
     failedCount: 2,
@@ -55,7 +69,7 @@ it("clears a recovered failure while retaining the historical daily count", asyn
 
 it("clears removed keywords and identifies a new failure after recovery", async () => {
   await db.exec(`DELETE FROM keywords WHERE id = 'active'`);
-  expect(await loadCheckHealthStats("project", since)).toMatchObject({
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
     currentFailedCount: 0,
     latestCurrentFailedCheckId: null,
   });
@@ -63,7 +77,7 @@ it("clears removed keywords and identifies a new failure after recovery", async 
     INSERT INTO rank_checks VALUES
       ('d', 'check_success', 'active', '2026-09-22T10:00Z', 'completed', NULL, NULL, 'serpapi'),
       ('e', 'check_new', 'active', '2026-09-22T11:00Z', 'failed', NULL, NULL, 'serpapi')`);
-  expect(await loadCheckHealthStats("project", since)).toMatchObject({
+  expect(await loadCheckHealthStats("project", since, recentSince)).toMatchObject({
     currentFailedCount: 1,
     latestCurrentFailedCheckId: "check_new",
   });

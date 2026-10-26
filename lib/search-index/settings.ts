@@ -1,6 +1,5 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { isSelfHost } from "@/lib/deployment/deployment";
 import {
   availableInspectionModes,
   effectiveInspectionMode,
@@ -23,9 +22,9 @@ async function settingsForConnection(
   const defaults = await prisma.projectDefaults.findUnique({ where: { projectId } });
   return {
     property: selected.property,
-    budgetMode: effectiveInspectionMode(defaults?.inspectionBudgetMode, isSelfHost),
+    budgetMode: effectiveInspectionMode(defaults?.inspectionBudgetMode),
     inspectionDailyLimit: defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT,
-    availableModes: availableInspectionModes(isSelfHost),
+    availableModes: availableInspectionModes(),
     ...(await readPropertyQuota(propertyQuotaKey(selected.property), now)),
   };
 }
@@ -36,7 +35,7 @@ export async function updatePageIndexingSettings(
   actorId: string | null,
 ) {
   const input = pageIndexingSettingsPatchSchema.parse(body);
-  validateInspectionMode(input.budget_mode, isSelfHost);
+  validateInspectionMode(input.budget_mode);
   const selected = await connectionForProject(projectId);
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },

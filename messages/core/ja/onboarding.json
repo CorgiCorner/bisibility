@@ -284,7 +284,8 @@
     },
     "page": {
       "description": "数ステップでウェブサイトの追跡を開始できます。",
-      "title": "プロジェクトをセットアップ"
+      "title": "プロジェクトをセットアップ",
+      "backToProjects": "プロジェクトに戻る"
     },
     "projectOptions": {
       "importError": "プロジェクトのインポートを開けませんでした。",

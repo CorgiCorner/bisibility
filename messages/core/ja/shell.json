@@ -127,7 +127,9 @@
       },
       "openIncidents": "未解決のインシデント",
       "allNotifications": "すべての通知",
-      "filterError": "インシデントを読み込めませんでした。"
+      "filterError": "インシデントを読み込めませんでした。",
+      "allTab": "すべて",
+      "incidentsTab": "インシデント"
     },
     "operations": {
       "actionError": "この処理を更新できませんでした。再読み込みして再試行してください。",

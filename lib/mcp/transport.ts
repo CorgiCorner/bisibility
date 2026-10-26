@@ -3,6 +3,7 @@ import "server-only";
 import { type ApiAuth, ApiAuthError, authenticateBearer } from "@/lib/api/auth";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, methodNotAllowed } from "@/lib/api/responses";
+import { MCP_RESOURCE_URL } from "@/lib/auth/auth";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticateMcpOAuthRequest, isApiCredential, requireBearerToken } from "./oauth-auth";
 import type { McpApiAuthorization } from "./rest-call";
@@ -18,7 +19,7 @@ function hasInvalidOrigin(req: Request) {
   const origin = req.headers.get("origin");
   if (!origin) return false;
   try {
-    return new URL(origin).origin !== new URL(req.url).origin;
+    return new URL(origin).origin !== new URL(MCP_RESOURCE_URL).origin;
   } catch {
     return true;
   }

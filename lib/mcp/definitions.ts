@@ -1,6 +1,5 @@
 import "server-only";
 
-import { isSelfHost } from "@/lib/deployment/deployment";
 import { availableInspectionModes } from "@/lib/presence/budget-mode";
 import canonicalContract from "./canonical-contract.json";
 import type { McpToolDefinition } from "./types";
@@ -12,6 +11,6 @@ export function getMcpToolDefinitions(): McpToolDefinition[] {
   const settings = tools.find((tool) => tool.name === "update_page_indexing_settings");
   const mode = (settings?.inputSchema.properties as Record<string, { enum?: string[] }> | undefined)
     ?.budget_mode;
-  if (mode) mode.enum = availableInspectionModes(isSelfHost);
+  if (mode) mode.enum = availableInspectionModes();
   return tools;
 }

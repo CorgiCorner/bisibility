@@ -97,6 +97,7 @@ export async function assertProviderAllocationAvailable(
     const available = amount(current.remaining);
     if (available !== null && value > available) {
       const resetAt = current.epoch?.endsAt ? new Date(current.epoch.endsAt) : null;
+      const unresolved = budget.unit === "paid_attempts" && budget.limit.value === 0n;
       const funding = parseProjectFundingBudgetId(budget.id);
       if (budget.scope.kind === "group" || funding)
         throw new BudgetExhaustedError({
@@ -105,9 +106,15 @@ export async function assertProviderAllocationAvailable(
           capCents: amount(budget.limit) ?? 0,
           spentCents: amount(current.used) ?? 0,
           reservedCents: amount(current.reserved) ?? 0,
-          resetAt,
+          valuationIncomplete: unresolved,
+          resetAt: unresolved ? null : resetAt,
         });
-      throw new ProviderAllocationExhaustedError(input.connectionId, input.surface, resetAt);
+      throw new ProviderAllocationExhaustedError(
+        input.connectionId,
+        input.surface,
+        unresolved ? null : resetAt,
+        unresolved ? "usage_reconciliation_required" : undefined,
+      );
     }
     if (
       budget.scope.kind !== "group" &&

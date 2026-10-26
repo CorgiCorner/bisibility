@@ -13,6 +13,10 @@ before choosing a Compose path.
 Use a repository checkout for the local demo. Production Compose downloads
 immutable assets and published images, so the server needs no checkout.
 
+Compose includes PostgreSQL 16. An external database must run **PostgreSQL 16 or
+newer**; PostgreSQL 16 is the tested major version. Run `SHOW server_version;`
+on that database to check its version before installing.
+
 | Path | Sign-in | Starting data | Use it for |
 | - | - | - | - |
 | [Local demo](#local-demo) | Fixed code `000000`, no email provider needed | Seeded sample projects and rank history | Evaluating the app on a throwaway install |

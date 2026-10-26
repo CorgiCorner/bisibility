@@ -45,7 +45,7 @@
       "notices": {
         "connectProvider": "Wybierz źródło danych",
         "failedDetail": "Nie udało się zaktualizować pozycji części słów kluczowych.",
-        "failedTitle": "Sprawdzenia pozycji nie zwróciły danych o pozycjach.",
+        "failedTitle": "Nieudane sprawdzenia z ostatnich {days} dni",
         "firstCheckDetail": "{count, plural, =0 {Dodaj słowa kluczowe, aby zacząć monitorowanie pozycji.} one {# słowo kluczowe jest gotowe do pierwszego sprawdzenia pozycji.} few {# słowa kluczowe są gotowe do pierwszego sprawdzenia pozycji.} many {# słów kluczowych jest gotowych do pierwszego sprawdzenia pozycji.} other {# słowa kluczowego jest gotowe do pierwszego sprawdzenia pozycji.}}",
         "firstCheckTitle": "Brak pozycji",
         "migrationHoldDetail": "Sprawdzenia pozycji nie ruszą, dopóki wstrzymanie na czas migracji nie zostanie zdjęte.",

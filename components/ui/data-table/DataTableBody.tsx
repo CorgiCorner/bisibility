@@ -24,6 +24,7 @@ type DataTableBodyProps<TRow extends DataTableRowBase> = {
   density: DataTableDensity;
   emptyState?: ReactNode;
   layout: "auto" | "fill";
+  measureRows: boolean;
   onExpandedToggle: (row: TRow) => void;
   onGroupRowClick?: (row: TRow) => void;
   onRowClick?: (row: TRow) => void;
@@ -170,6 +171,8 @@ function VirtualDataTableBody<TRow extends DataTableRowBase>(props: DataTableBod
             <DataTableRow
               {...rowProps(props, row, item.index)}
               key={row.id}
+              measureRef={props.measureRows ? virtualizer.measureElement : undefined}
+              virtualIndex={item.index}
               virtualStyle={{
                 left: 0,
                 position: "absolute",

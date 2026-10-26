@@ -114,6 +114,7 @@ describe("check health query", () => {
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.[0].join(" ")).toContain('rc."errorCode"');
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.slice(1)).toEqual([
       "project_1",
+      new Date("2026-07-07T12:00:00.000Z"),
       new Date("2026-07-13T12:00:00.000Z"),
       new Date("2026-07-13T12:00:00.000Z"),
     ]);

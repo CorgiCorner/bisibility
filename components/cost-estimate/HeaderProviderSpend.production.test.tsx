@@ -49,23 +49,12 @@ it("shows an authoritative reservation without presenting it as a lower bound", 
   expect(screen.getByRole("link")).not.toHaveTextContent("At least");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  const table = within(tooltip).getByRole("table", {
-    name: "Budget usage, including reservations. Open Usage for details.",
-  });
-  const columns = within(table).getAllByRole("columnheader");
-  ["Budget", "Used", "Reserved", "Remaining", "Limit"].forEach((label, index) => {
-    expect(columns[index]).toHaveAccessibleName(label);
-  });
-  for (const column of columns) expect(column).toHaveAttribute("scope", "col");
-  const project = within(table).getByRole("row", { name: /Project/ });
-  expect(within(project).getByRole("rowheader")).toHaveAttribute("scope", "row");
-  expect(
-    within(project)
-      .getAllByRole("cell")
-      .map((cell) => cell.textContent),
-  ).toEqual(["$0.00", "≈ $0.10", "≈ $0.90", "$1.00 / month"]);
-  expect(table.querySelector("input,select,[role='checkbox']")).toBeNull();
-  expect(within(table).queryByRole("button", { name: "Set limit" })).toBeNull();
+  expect(within(tooltip).queryByRole("table")).toBeNull();
+  const project = within(tooltip).getByRole("listitem");
+  expect(project).toHaveTextContent("Your keys");
+  expect(project).toHaveTextContent("$0.00 / $1.00");
+  expect(project).toHaveTextContent("Reserved: ≈ $0.10");
+  expect(project.querySelector("input,select,[role='checkbox']")).toBeNull();
   expect(tooltip).not.toHaveTextContent("≥");
 });
 it("recognizes a real unlimited budget with the mapper's reservation semantics", () => {

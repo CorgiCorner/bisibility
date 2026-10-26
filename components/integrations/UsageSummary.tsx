@@ -15,7 +15,13 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { usageFundingDetails, usageFundingSummary } from "./usage-funding-details";
 
-export function UsageSummary({ data }: { data: ProjectUsageViews }) {
+export function UsageSummary({
+  data,
+  fundingSource,
+}: {
+  data: ProjectUsageViews;
+  fundingSource?: "platform" | "byok";
+}) {
   const t = useTranslations("projectSettingsUsage.meter");
   const p = useUsagePresentation();
   const summary = usageFundingSummary(data.summary);
@@ -31,10 +37,13 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
   const page = position.data === data ? position.page : 0;
   const setPage = (page: number) => setPosition({ data, page });
   const count = 25;
+  const visibleRows = data.detail.rows.filter(
+    (row) => !fundingSource || row.fundingSource === fundingSource,
+  );
   const detail = {
     ...data.detail,
-    rows: data.detail.rows.slice(page * count, (page + 1) * count),
-    nextCursor: (page + 1) * count < data.detail.rows.length ? String(page + 1) : null,
+    rows: visibleRows.slice(page * count, (page + 1) * count),
+    nextCursor: (page + 1) * count < visibleRows.length ? String(page + 1) : null,
   };
   if (data.status === "restricted") return null;
   if (data.status === "unavailable")
@@ -54,19 +63,21 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
     );
   return (
     <section id="meter-usage" className="min-w-0 space-y-4">
-      {summaries.map(({ source, hasMeasurements }) => (
-        <UsageSummaryCards
-          hideMeasured
-          key={source}
-          view={summary}
-          variant={hasMeasurements ? "card" : "plain"}
-          fundingSource={source}
-          labels={{ ...p.summary, title: p.cost[source] }}
-          measurementLabels={p.measurement}
-          formatFigure={p.figure}
-          formatUnit={p.unit}
-        />
-      ))}
+      {summaries
+        .filter((row) => !fundingSource || row.source === fundingSource)
+        .map(({ source, hasMeasurements }) => (
+          <UsageSummaryCards
+            hideMeasured
+            key={source}
+            view={summary}
+            variant={hasMeasurements ? "card" : "plain"}
+            fundingSource={source}
+            labels={{ ...p.summary, title: p.cost[source] }}
+            measurementLabels={p.measurement}
+            formatFigure={p.figure}
+            formatUnit={p.unit}
+          />
+        ))}
       {!data.summary.funding.length && (
         <UsageSummaryCards
           hideMeasured
@@ -78,19 +89,20 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
         />
       )}
 
-      {data.summary.funding.some((row) => row.fundingSource === "byok") && (
-        <CostSummaryCard
-          hideMeasured
-          view={data.summary}
-          labels={p.cost}
-          measurementLabels={p.measurement}
-          fundingSource="byok"
-          showCostOwner={false}
-          showFunding={false}
-          formatFigure={p.figure}
-          formatUnit={p.unit}
-        />
-      )}
+      {fundingSource !== "platform" &&
+        data.summary.funding.some((row) => row.fundingSource === "byok") && (
+          <CostSummaryCard
+            hideMeasured
+            view={data.summary}
+            labels={p.cost}
+            measurementLabels={p.measurement}
+            fundingSource="byok"
+            showCostOwner={false}
+            showFunding={false}
+            formatFigure={p.figure}
+            formatUnit={p.unit}
+          />
+        )}
       <Disclosure
         title={t("detailsTitle")}
         headingLevel="h3"
@@ -126,26 +138,28 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           </p>
         )}
         {data.truncated && <p role="status">{t("truncated")}</p>}
-        {usageFundingDetails(detail).map(({ fundingSource, view }) => (
-          <div key={fundingSource} className="space-y-2">
-            <h4 className="text-xs font-medium">{p.cost[fundingSource]}</h4>
-            <UsageTable
-              hideMeasured
-              view={view}
-              labels={{ ...p.table, title: p.cost[fundingSource] }}
-              dimensionLabels={p.dimensions}
-              formatDimension={(key, value) =>
-                key === "connection" && /^conn_[a-zA-Z0-9]+$/.test(value) ? (
-                  <IdChip size="xs" truncate="middle" value={value} />
-                ) : (
-                  p.dimension(key, value)
-                )
-              }
-              formatFigure={p.figure}
-              formatUnit={p.unit}
-            />
-          </div>
-        ))}
+        {usageFundingDetails(detail)
+          .filter((row) => !fundingSource || row.fundingSource === fundingSource)
+          .map(({ fundingSource, view }) => (
+            <div key={fundingSource} className="space-y-2">
+              <h4 className="text-xs font-medium">{p.cost[fundingSource]}</h4>
+              <UsageTable
+                hideMeasured
+                view={view}
+                labels={{ ...p.table, title: p.cost[fundingSource] }}
+                dimensionLabels={p.dimensions}
+                formatDimension={(key, value) =>
+                  key === "connection" && /^conn_[a-zA-Z0-9]+$/.test(value) ? (
+                    <IdChip size="xs" truncate="middle" value={value} />
+                  ) : (
+                    p.dimension(key, value)
+                  )
+                }
+                formatFigure={p.figure}
+                formatUnit={p.unit}
+              />
+            </div>
+          ))}
         {!detail.rows.length && (
           <UsageTable
             hideMeasured

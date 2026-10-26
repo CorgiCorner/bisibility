@@ -125,3 +125,25 @@ export const TrafficChannels: Story = {
     },
   },
 };
+
+export const UsageNeedsReview: Story = {
+  args: {
+    summary: {
+      ...headerFixture([
+        {
+          ...budgetFixture("0.2", "cents"),
+          id: "own",
+          limit: { text: "5000", unit: "cents", certainty: "measured" },
+        },
+        { ...budgetFixture("0", "customer_cents"), id: "credits", limit: "unlimited" },
+        {
+          ...budgetFixture("0", "paid_attempts"),
+          id: "uncertain",
+          used: "unavailable",
+          level: "unavailable",
+        },
+      ]),
+      paidWorkBlocked: true,
+    },
+  },
+};
