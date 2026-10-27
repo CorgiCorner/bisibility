@@ -410,7 +410,9 @@
       "budgetsHeading": "Current budgets",
       "scope": "Project / connection",
       "status": "Status",
-      "exceptionsHeading": "Needs attention"
+      "exceptionsHeading": "Needs attention",
+      "historyBlocked": "Paid checks paused",
+      "historyBlockedHint": "Historical costs need verification."
     },
     "announcements": {
       "heading": "User announcements",

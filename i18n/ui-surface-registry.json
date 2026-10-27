@@ -489,38 +489,6 @@
       "text": "https://${domain}"
     },
     {
-      "anchor": "function:CostEstimateLine",
-      "fingerprint": "2c450a78f7a6e93b37606064d228e67286ace63377175d811a5a99dc26ed86a7",
-      "kind": "jsx-expression",
-      "path": "components/cost-estimate/CostEstimateLine.tsx",
-      "reason": "CostEstimateLine is imported only by CostEstimateLine.stories.tsx and CostEstimateLine.test.tsx. No production component imports it, so this compatibility export is unmounted in the application.",
-      "text": "${formatEstimateCents(budget.spentCents)} of ${formatEstimateCents(budget.capCents)} this month"
-    },
-    {
-      "anchor": "function:CostEstimateLine",
-      "fingerprint": "cbae995b8cb73e433e1888cea837cda1821c55095297357c53d99518fe3cad89",
-      "kind": "jsx-expression",
-      "path": "components/cost-estimate/CostEstimateLine.tsx",
-      "reason": "CostEstimateLine is imported only by CostEstimateLine.stories.tsx and CostEstimateLine.test.tsx. No production component imports it, so this compatibility export is unmounted in the application.",
-      "text": "${formatEstimateCents(budget.spentCents)} this month"
-    },
-    {
-      "anchor": "function:CostEstimateLine",
-      "fingerprint": "d60bd2b1528432e90378b7ef6fe18e49120c06fd3391481d116ab1ba06c7235f",
-      "kind": "jsx-text",
-      "path": "components/cost-estimate/CostEstimateLine.tsx",
-      "reason": "CostEstimateLine is imported only by CostEstimateLine.stories.tsx and CostEstimateLine.test.tsx. No production component imports it, so this compatibility export is unmounted in the application.",
-      "text": "checks/mo"
-    },
-    {
-      "anchor": "function:CostEstimateLine",
-      "fingerprint": "e94426c00a7a89911ab0c66dbf385131a25960df66fe0c5dd9ab4241fe9162c4",
-      "kind": "jsx-text",
-      "path": "components/cost-estimate/CostEstimateLine.tsx",
-      "reason": "CostEstimateLine is imported only by CostEstimateLine.stories.tsx and CostEstimateLine.test.tsx. No production component imports it, so this compatibility export is unmounted in the application.",
-      "text": "/mo"
-    },
-    {
       "anchor": "function:DomainOverviewKeywordsTable",
       "fingerprint": "406fabc142fbd6e566f64fb45812adec20d40ef1d5dec5867749ba7709767b89",
       "kind": "jsx-text",
@@ -649,54 +617,6 @@
       "text": "MCP server card"
     },
     {
-      "anchor": "function:KeywordContextPartial",
-      "fingerprint": "bf1245cc2ebbc21886b4d61b0bfe0e3758e0b480442d0bc993dcac9b5d3ddba5",
-      "kind": "ui-property",
-      "path": "components/keyword-detail/empty/KeywordContextPartial.tsx",
-      "reason": "Current consumer function:KeywordContextPartial in components/keyword-detail/empty/KeywordContextPartial.tsx resolves the symbolic selector \"Medium\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "Medium"
-    },
-    {
-      "anchor": "variable:stateMeta",
-      "fingerprint": "1da297392b95a3402ed14997cbaddf47beac0849ac92e0ad712e5caafa95110e",
-      "kind": "validation-message",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "reason": "Current consumer variable:stateMeta in components/keyword-detail/shared/KeywordDetailStatePill.tsx resolves the symbolic selector \"notRanked\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "notRanked"
-    },
-    {
-      "anchor": "variable:stateMeta",
-      "fingerprint": "28a4fca08536e22463fd397c7df712ab96d42b039f94840d61e51262156b4823",
-      "kind": "validation-message",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "reason": "Current consumer variable:stateMeta in components/keyword-detail/shared/KeywordDetailStatePill.tsx resolves the symbolic selector \"running\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "running"
-    },
-    {
-      "anchor": "variable:stateMeta",
-      "fingerprint": "93acbe9da9aaa592ba27e6ccafa41c4dfce502030ebe8c926b0c6d3920ba8c44",
-      "kind": "validation-message",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "reason": "Current consumer variable:stateMeta in components/keyword-detail/shared/KeywordDetailStatePill.tsx resolves the symbolic selector \"neverChecked\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "neverChecked"
-    },
-    {
-      "anchor": "variable:stateMeta",
-      "fingerprint": "d502e5f051aa2302f3742c4a2eed011f3ac7e737385f09c793a7007678f751f1",
-      "kind": "validation-message",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "reason": "Current consumer variable:stateMeta in components/keyword-detail/shared/KeywordDetailStatePill.tsx resolves the symbolic selector \"failed\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "failed"
-    },
-    {
-      "anchor": "variable:stateMeta",
-      "fingerprint": "eb44f065f88c4f00c21bdd4721853d6ffef79c75e4b72f6e8ced3239f6738708",
-      "kind": "validation-message",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "reason": "Current consumer variable:stateMeta in components/keyword-detail/shared/KeywordDetailStatePill.tsx resolves the symbolic selector \"ranked\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "ranked"
-    },
-    {
       "anchor": "function:KeywordDetailStoryThemes",
       "fingerprint": "6118850f5fea1821239879281eeba4741a49da62e448edb58cc7ab66daa3acde",
       "kind": "jsx-text",
@@ -809,52 +729,12 @@
       "text": "is required."
     },
     {
-      "anchor": "function:MapStep",
-      "fingerprint": "08744b80f8ec19ea4b2c8656ce726611a22db2776284273b8ae48ebe6ddf366e",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:MapStep; retained value: \"Map columns\".",
-      "text": "Map columns"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "08c2cae83d9784c16b6d2f5b844bfeaff87389984bd21b5ecfda28184436eb62",
-      "kind": "jsx-expression",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Skip\".",
-      "text": "Skip"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "21ba1dc323dd3b8d202b406400406fb30f0bfcfd7ddb35ffb044238397a8cab2",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"acme-keywords-q2.csv\".",
-      "text": "acme-keywords-q2.csv"
-    },
-    {
-      "anchor": "function:MapStep",
-      "fingerprint": "44bd55fe21efd3380e767ad6f6324332495c3ee7595c14798136ad4c3b3405d7",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:MapStep; retained value: \"We matched your columns automatically.\".",
-      "text": "We matched your columns automatically."
-    },
-    {
       "anchor": "function:TemplateStep",
       "fingerprint": "5838e2d19e8bf04d15256b0566f7e6dd5d9a5f8cbab72074995b92087a83e489",
       "kind": "jsx-text",
       "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
       "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:TemplateStep; retained value: \"Start from the template\".",
       "text": "Start from the template"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "5f1d9b744b6936deb88bf445ecbd900010808844d6788b06f817ae05ab27ca81",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"or\".",
-      "text": "or"
     },
     {
       "anchor": "function:TemplateStep",
@@ -871,22 +751,6 @@
       "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
       "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:TemplateStep; retained value: \"UTF-8\".",
       "text": "UTF-8"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "7796587d13afdb86e46c4f9fc10fd21a2725537eaca8b909553be56150ac514c",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Geo\".",
-      "text": "Geo"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "7799a4f392082a2cd09db71514e027d19cfebb9f0e2292d9a0e1abbcf91f1f30",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"Parsed\".",
-      "text": "Parsed"
     },
     {
       "anchor": "variable:item",
@@ -913,22 +777,6 @@
       "text": "Download template.csv"
     },
     {
-      "anchor": "function:UploadStep",
-      "fingerprint": "809bf5a9818bf7db86a1e5f0d2e90de2addb31b0c1a08af11edede6285ad61e4",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"Drag and drop your CSV here\".",
-      "text": "Drag and drop your CSV here"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "815a897b2d823d2fdee85aa649f8de898c549a4b3ad265e222d4e9226a12ef4b",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Keyword\".",
-      "text": "Keyword"
-    },
-    {
       "anchor": "function:TemplateStep",
       "fingerprint": "99b90e8bbe2942e1a11349979cd37ed0dff53d4c5504c30d2decfc57269ec79f",
       "kind": "jsx-text",
@@ -937,132 +785,12 @@
       "text": "keyword"
     },
     {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "9d8e771c82d649b77fa37e44c4bc04b53233375cfb128c3515c50c74fe6964c8",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Review and confirm\".",
-      "text": "Review and confirm"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "a2b7668b29956385bec255a68f34fca97a15f9e90cf45eebebbd798ff862a16d",
-      "kind": "jsx-expression",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Overwrite\".",
-      "text": "Overwrite"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "b2b2ef522b27986630839c73731fec91144f762fcf2f88172085a57bb3a48389",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"248 rows · 5 columns · 18 KB\".",
-      "text": "248 rows · 5 columns · 18 KB"
-    },
-    {
-      "anchor": "function:MapStep",
-      "fingerprint": "b9b7f51d8e64132f4a8aae03760905a94ae455d76cd1afed5fbfd4ad44c240ff",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:MapStep; retained value: \"bisibility field\".",
-      "text": "bisibility field"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "bd5c0e493bcd131ae22bf303760112fb9514de6992f69ab78a9c93cfd8ef7696",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"245 new\".",
-      "text": "245 new"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "c2e24b1294ee7aa0985a9f67c92952ba18d06cba786e0700be2a1c387a7b062e",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"Upload your file\".",
-      "text": "Upload your file"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "c7ea8ef481da5b021d89ca232c889b5086cbb5b2b9e42848c35cb4278732d788",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"3 duplicates\".",
-      "text": "3 duplicates"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "cd9cf690cfd2e080c3ec5903fa11ec4141fcf8c00ccb62a7b7a90816ba18fa57",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"History is not back-filled.\".",
-      "text": "History is not back-filled."
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "d5c33a1592de40117eaae4bc7d0489f979ece5a8a42c0e5ffe790059c8d291da",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"+ 244 more rows\".",
-      "text": "+ 244 more rows"
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "d66bbc7557b8091c12736c066a9d793aecb9c16242a9364a5d3b7022ffd9cd9f",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"CSV or XLSX. CSV must be UTF-8 and cannot contain replacement characters (�).\".",
-      "text": "CSV or XLSX. CSV must be UTF-8 and cannot contain replacement characters (�)."
-    },
-    {
-      "anchor": "function:UploadStep",
-      "fingerprint": "dc1f0a9e83409ea709b165be0ba97c9951d54b6b6723da39d52060c4e071aeb6",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:UploadStep; retained value: \"Browse files\".",
-      "text": "Browse files"
-    },
-    {
-      "anchor": "function:MapStep",
-      "fingerprint": "e58f843cbcfdbe77a63a3d6aebf667e85961d85a7515c0bdc9bb9d78616eb58b",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:MapStep; retained value: \"All required fields mapped\".",
-      "text": "All required fields mapped"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "e79cee307b822bf6f61560845bb4943ae149282f1ed1c8e3103cbe33ceb1cc53",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Duplicates:\".",
-      "text": "Duplicates:"
-    },
-    {
       "anchor": "function:TemplateStep",
       "fingerprint": "f333562024a74f4d9df8a330cf2281b135422e7a978c41f49a45345c0b2e9f30",
       "kind": "jsx-text",
       "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
       "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:TemplateStep; retained value: \"Blank columns are ignored. Tags are semicolon-separated.\".",
       "text": "Blank columns are ignored. Tags are semicolon-separated."
-    },
-    {
-      "anchor": "function:MapStep",
-      "fingerprint": "f9c189d24f9cf94d8f42fbcfcf806e1cd748b5a68a2bc180d67d7407e0a69103",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:MapStep; retained value: \"CSV column\".",
-      "text": "CSV column"
-    },
-    {
-      "anchor": "function:ReviewStep",
-      "fingerprint": "fbc729fb94d29b9b5b17ada1f6d5e1d6dce33dcb2b63583ca5fb228dafa28c3b",
-      "kind": "jsx-text",
-      "path": "components/keywords/import/ImportCsvWizardSteps.tsx",
-      "reason": "ImportCsvWizardFrame imports only the translated ImportStepper. Production wizard panels come from ImportCsvWizardPanels through ImportCsvWizardBody; these legacy template/demo exports have no production importer. Current consumer: function:ReviewStep; retained value: \"Target URL\".",
-      "text": "Target URL"
     },
     {
       "anchor": "module",
@@ -1119,30 +847,6 @@
       "path": "components/keywords/KeywordHeaderCard.test-utils.tsx",
       "reason": "KeywordHeaderCard test-utils provides unmounted test controls only. Current consumer: module; retained value: \"Run check (Top 20)\".",
       "text": "Run check (Top 20)"
-    },
-    {
-      "anchor": "function:TargetReferenceLine",
-      "fingerprint": "85fa5f884092b06fd22e830f022fd2f31b96241b80922fe7e2abd539b1eb75cb",
-      "kind": "accessible-attribute",
-      "path": "components/keywords/PositionHistoryAnnotations.tsx",
-      "reason": "TargetReferenceLine values are chart placement and CSS tokens, not reader-facing strings. Current consumer: function:TargetReferenceLine; retained value: \"insideBottomLeft\".",
-      "text": "insideBottomLeft"
-    },
-    {
-      "anchor": "function:TargetReferenceLine",
-      "fingerprint": "c5a077482e815475aee7a3325e28bc4efc39feff60dc5d9c856fa7c826caf797",
-      "kind": "accessible-attribute",
-      "path": "components/keywords/PositionHistoryAnnotations.tsx",
-      "reason": "TargetReferenceLine values are chart placement and CSS tokens, not reader-facing strings. Current consumer: function:TargetReferenceLine; retained value: \"insideTopLeft\".",
-      "text": "insideTopLeft"
-    },
-    {
-      "anchor": "function:TargetReferenceLine",
-      "fingerprint": "deed9eb8e0d24b4be4c5d8c033889ff2a7fb850c051d9ef256248e22c2d5e000",
-      "kind": "accessible-attribute",
-      "path": "components/keywords/PositionHistoryAnnotations.tsx",
-      "reason": "TargetReferenceLine values are chart placement and CSS tokens, not reader-facing strings. Current consumer: function:TargetReferenceLine; retained value: \"var(--fg-muted)\".",
-      "text": "var(--fg-muted)"
     },
     {
       "anchor": "function:screenshotRows",
@@ -1215,46 +919,6 @@
       "path": "components/local-monitors/MonitorRecurringSchedule.tsx",
       "reason": "ISO 4217 currency code USD identifies the stored schedule ceiling denomination; it is intentionally language-independent, not English reader prose. Exact retained value: \"USD\".",
       "text": "USD"
-    },
-    {
-      "anchor": "function:MarketPicker",
-      "fingerprint": "1a63312dd23050581b11115739d5bde123e512526a290328fc172b94f058096f",
-      "kind": "jsx-expression",
-      "path": "components/markets/MarketPicker.tsx",
-      "reason": "Current consumer function:MarketPicker in components/markets/MarketPicker.tsx resolves the symbolic selector \"suggested\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "suggested"
-    },
-    {
-      "anchor": "function:MarketPicker",
-      "fingerprint": "7a7765abdc8586cf6f310fe9c94e801ab13af8233b0709748a10464a4a9853e2",
-      "kind": "jsx-expression",
-      "path": "components/markets/MarketPicker.tsx",
-      "reason": "Current consumer function:MarketPicker in components/markets/MarketPicker.tsx resolves the symbolic selector \"all\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "all"
-    },
-    {
-      "anchor": "variable:explicitReviewSchema",
-      "fingerprint": "00574e5a9dd4d47366b178bb90e0b13001869c8032ab61abfd8f4c01177bb6ae",
-      "kind": "validation-message",
-      "path": "components/measurement-settings/form.ts",
-      "reason": "Internal consent validation code; commands.ts consumes only safeParse.success and the UI renders translated mode-specific consent labels, never this raw failure code. Exact retained value: \"confirm_required\".",
-      "text": "confirm_required"
-    },
-    {
-      "anchor": "function:MeasurementConflictReview",
-      "fingerprint": "9a15aff0a147cd718f92529d5bc72886e994e25663d7a2b808ef760f2230c622",
-      "kind": "ui-property",
-      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
-      "reason": "Immutable comparison label selector; MeasurementConflictReview renders it through the proven reviewed host MeasurementTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"current\".",
-      "text": "current"
-    },
-    {
-      "anchor": "function:MeasurementConflictReview",
-      "fingerprint": "e03b18b33a0d19d840fb935d8b3a0290d65927738f676556f51a68e9f2dc3371",
-      "kind": "ui-property",
-      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
-      "reason": "Immutable comparison label selector; MeasurementConflictReview renders it through the proven reviewed host MeasurementTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"yourDraft\".",
-      "text": "yourDraft"
     },
     {
       "anchor": "function:MeasurementPolicySettingsCard",
@@ -1335,14 +999,6 @@
       "path": "components/onboarding/steps/StepConnectProvider.test-utils.tsx",
       "reason": "StepConnectProvider test renderer is an unmounted fixture. Current consumer: function:renderProviderStep; retained value: \"Continue\".",
       "text": "Continue"
-    },
-    {
-      "anchor": "function:GhostKpiRow",
-      "fingerprint": "a80264003a3dadb9e80563c796f7de63b8e8ebae6d6f10ea04e79413c52564c9",
-      "kind": "jsx-text",
-      "path": "components/overview/GhostKpiRow.tsx",
-      "reason": "Current consumer function:GhostKpiRow in components/overview/GhostKpiRow.tsx resolves the symbolic selector \"&ndash;\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "&ndash;"
     },
     {
       "anchor": "function:plannedDateParts",
@@ -1687,70 +1343,6 @@
       "path": "components/search-insights/search-insights-workspace-model.ts",
       "reason": "syncView returns durable state codes; SearchInsights workspace consumers resolve them through presentSearchSync and projectSearchInsights.copy. Current consumer: function:syncView; retained value: \"backfill\".",
       "text": "backfill"
-    },
-    {
-      "anchor": "function:change",
-      "fingerprint": "046dfcb2f63956e7624e9f823a656ba911d6f018c29d49a0310a5da02be99a1a",
-      "kind": "ui-feedback",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Search data sync action failed. Refresh the page and try again."
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "59c1d23005d48dc5e689a600f56ef1d3ddbd738416076368514576716eaecdf9",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Pause"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "80b2a10ea1b6d3f7a367560f305514b406e1430a9e0e779ef470a7b977b362e5",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Resume"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "aa423af4ab1c5fdb483324907392577e04a903bdea6b125418cdcd947f8a61fa",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Retry"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "d1037ffc2d8aa55cb4afb7d09ec746e0c94cfef5dec9fe7f39981087e4fa0aa4",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Resume"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "d89afe355790374c546c06b6f085d45a43e9d7ca1e1fc14e7d77c65b7b306451",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Pause"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "da0c516a4f59ea21f2a24167d80eaaa9c1dff454c89f954b130376cba4348740",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "${intent === \"retry\" ? \"Retry\" : intent === \"resume\" ? \"Resume\" : \"Pause\"} Search Console import"
-    },
-    {
-      "anchor": "function:SearchImportPauseControl",
-      "fingerprint": "dee5ee24e1904befb2b75e824c1a6bf51c69627149ed91c92c4ae0b67a0e9a59",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "reason": "SearchImportPauseControl has no production importer. Its defaults are reachable only from SearchImportPauseControl.test.tsx and SearchImportPauseControl.toast.test.tsx, not the Search Insights workspace.",
-      "text": "Retry"
     },
     {
       "anchor": "variable:baseAction",
@@ -2352,12 +1944,11 @@
       "components/action-payment/useActionPaymentReview.ts",
       "components/action-payment/usePaymentQuoteExpiry.ts",
       "components/admin/admin-action-error.ts",
+      "components/admin/recovery/recovery-sorting.ts",
       "components/ai-research/ai-research-failure-copy.ts",
       "components/ai-research/ai-research-presets.ts",
       "components/ai-research/useAiResearchCatalogRefresh.ts",
       "components/ai-research/useAiResearchSubmission.ts",
-      "components/ai-tracking/fixtures.ts",
-      "components/ai-tracking/generation-fixtures.ts",
       "components/ai-tracking/tracking-run-configuration.ts",
       "components/ai-tracking/useTrackingHistory.ts",
       "components/ai-tracking/useTrackingWorkspace.ts",
@@ -2395,7 +1986,6 @@
       "components/checks/runs/use-auto-load-more.ts",
       "components/checks/runs/use-run-table-width.ts",
       "components/checks/upcoming/upcoming-format.ts",
-      "components/checks/use-upcoming-display-mode.ts",
       "components/cloud/cloud-token.ts",
       "components/cloud/package-content.ts",
       "components/cloud/package-transfer-helpers.ts",
@@ -2483,10 +2073,12 @@
       "components/keywords/grid/keyword-rank-quality-view.ts",
       "components/keywords/grid/keyword-scope-summary.ts",
       "components/keywords/grid/keywords-grid-initial-state.ts",
+      "components/keywords/grid/keywords-grid-projection.ts",
       "components/keywords/grid/run-check-depth.ts",
       "components/keywords/grid/schedule-monthly-delta.ts",
       "components/keywords/grid/set-schedule-model.ts",
       "components/keywords/grid/set-schedule-request.ts",
+      "components/keywords/grid/use-filter-chip-edges.ts",
       "components/keywords/grid/use-flat-rank-tracker-navigation.ts",
       "components/keywords/grid/use-keywords-grid-view-state.ts",
       "components/keywords/grid/use-personal-keyword-layout.ts",
@@ -2503,8 +2095,6 @@
       "components/keywords/location-field-value.ts",
       "components/keywords/location-key-handler.ts",
       "components/keywords/location-picker-data.ts",
-      "components/keywords/position-history-layout.ts",
-      "components/keywords/position-history-series.ts",
       "components/keywords/rank-tracker-cost-context.ts",
       "components/keywords/retrieved-results-picker-model.ts",
       "components/keywords/safe-action-error.ts",
@@ -2522,13 +2112,6 @@
       "components/markets/sheet/new-market-creator-copy.ts",
       "components/markets/sheet/new-market-creator-model.ts",
       "components/measurement-help/translate.ts",
-      "components/measurement-settings/commands.ts",
-      "components/measurement-settings/draft-validation.ts",
-      "components/measurement-settings/draft.ts",
-      "components/measurement-settings/editor-validation.ts",
-      "components/measurement-settings/form.ts",
-      "components/measurement-settings/translate.ts",
-      "components/measurement-settings/use-measurement-actions.ts",
       "components/metering/usage-display-context.ts",
       "components/metering/usage-number-format.ts",
       "components/metering/use-usage-display-settings.ts",
@@ -2562,7 +2145,6 @@
       "components/onboarding/use-onboarding-sources.ts",
       "components/onboarding/use-reviewed-onboarding-defaults.ts",
       "components/overview/data-source-status.ts",
-      "components/overview/getting-started.ts",
       "components/project-runs/project-runs-actions.ts",
       "components/project-runs/project-runs-presentation.ts",
       "components/project-runs/project-runs-status-menu.ts",
@@ -2572,7 +2154,6 @@
       "components/provider-management/provider-ui-fixtures.ts",
       "components/provider-management/use-allocation-form.ts",
       "components/rank-runs/RunPageModel.ts",
-      "components/rank-runs/budget-notices-model.ts",
       "components/rank-runs/notice-dismissals.ts",
       "components/rank-runs/preflight-contracts.ts",
       "components/rank-runs/preflight-presentation.ts",
@@ -2657,7 +2238,6 @@
       "components/settings/usage/__tests__/BudgetEditModal.fixtures.ts",
       "components/shell/OperationsTrayModel.ts",
       "components/shell/OperationsTrayPillModel.ts",
-      "components/shell/cloud-backup-action-error.ts",
       "components/shell/command-keyboard.ts",
       "components/shell/command-palette-copy.ts",
       "components/shell/command-palette-groups.ts",
@@ -2701,12 +2281,14 @@
       "components/ui/quiet-chip-styles.ts",
       "components/ui/status-chip-mapping.ts",
       "components/ui/table-header-styles.ts",
+      "components/ui/table-sorting.ts",
       "components/ui/tag-chip-styles.ts",
       "components/ui/toast-context.ts",
       "components/ui/toast-lifecycle.ts",
       "components/ui/toggle-control-styles.ts",
       "components/ui/toolbar-control-styles.ts",
       "components/ui/useLiveNow.ts",
+      "components/usagekit/figure-sorting.ts",
       "components/usagekit/provider-rate-labels.ts",
       "components/usagekit/usage-table-format.ts"
     ]
@@ -4074,6 +3656,11 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AdminProjectLabel.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/AdminProviderHealth.tsx",
       "status": "migrated"
     },
@@ -4140,6 +3727,11 @@
     {
       "kind": "render",
       "path": "components/admin/recovery/AdminRecoveryConsole.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/recovery/recovery-sorting.ts",
       "status": "pending"
     },
     {
@@ -4353,16 +3945,6 @@
       "status": "pending"
     },
     {
-      "kind": "ui-data",
-      "path": "components/ai-tracking/fixtures.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/ai-tracking/generation-fixtures.ts",
-      "status": "pending"
-    },
-    {
       "kind": "render",
       "path": "components/ai-tracking/PromptResearchCells.tsx",
       "status": "migrated"
@@ -4414,11 +3996,6 @@
     },
     {
       "kind": "render",
-      "path": "components/ai-tracking/TrackingAuditReportFixture.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
       "path": "components/ai-tracking/TrackingBulkActions.tsx",
       "status": "pending"
     },
@@ -4430,21 +4007,6 @@
     {
       "kind": "render",
       "path": "components/ai-tracking/TrackingEvidenceDrawer.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/ai-tracking/TrackingGeneration.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/ai-tracking/TrackingGenerationDrawer.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/ai-tracking/TrackingGenerationFields.tsx",
       "status": "pending"
     },
     {
@@ -4491,11 +4053,6 @@
       "kind": "render",
       "path": "components/ai-tracking/TrackingSavedConfiguration.tsx",
       "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/ai-tracking/TrackingSchedules.tsx",
-      "status": "pending"
     },
     {
       "kind": "render",
@@ -4878,11 +4435,6 @@
       "status": "migrated"
     },
     {
-      "kind": "render",
-      "path": "components/backlinks/AnalyzePricingPopover.tsx",
-      "status": "migrated"
-    },
-    {
       "kind": "ui-data",
       "path": "components/backlinks/backlinks-append-state.ts",
       "status": "migrated"
@@ -5113,11 +4665,6 @@
     },
     {
       "kind": "render",
-      "path": "components/checks/ChecksWorkspace.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/checks/runs/AsOfDatePopover.tsx",
       "status": "migrated"
     },
@@ -5217,38 +4764,8 @@
       "status": "pending"
     },
     {
-      "kind": "render",
-      "path": "components/checks/upcoming/BudgetForecastNote.tsx",
-      "status": "migrated"
-    },
-    {
       "kind": "ui-data",
       "path": "components/checks/upcoming/upcoming-format.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/checks/upcoming/UpcomingBlockedAlerts.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/checks/upcoming/UpcomingDayRollups.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/checks/upcoming/UpcomingSection.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/checks/upcoming/UpcomingStrip.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/checks/use-upcoming-display-mode.ts",
       "status": "migrated"
     },
     {
@@ -5428,11 +4945,6 @@
     },
     {
       "kind": "render",
-      "path": "components/competitors/set/AliasPills.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/competitors/set/competitor-set-columns.tsx",
       "status": "migrated"
     },
@@ -5465,11 +4977,6 @@
       "kind": "ui-data",
       "path": "components/cost-estimate/cost-estimate-store.ts",
       "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/cost-estimate/CostEstimateLine.tsx",
-      "status": "excluded"
     },
     {
       "kind": "render",
@@ -5764,11 +5271,6 @@
     {
       "kind": "render",
       "path": "components/domain-overview/DomainOverviewPerformanceChart.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/domain-overview/DomainOverviewPricingPopover.tsx",
       "status": "migrated"
     },
     {
@@ -6108,11 +5610,6 @@
     },
     {
       "kind": "render",
-      "path": "components/integrations/IntegrationsByoNote.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/integrations/IntegrationsPageLoading.tsx",
       "status": "migrated"
     },
@@ -6288,11 +5785,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keyword-detail-history/LegacyPositionHistoryPlot.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keyword-detail-history/ObservationHistoryTable.tsx",
       "status": "migrated"
     },
@@ -6318,78 +5810,8 @@
     },
     {
       "kind": "render",
-      "path": "components/keyword-detail/empty/empty-state-primitives.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/FirstCheckNoData.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/KeywordContextAllUnknown.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/KeywordContextPartial.tsx",
-      "status": "excluded"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/PositionHistoryNoChecksInRange.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/PositionHistoryOneCheck.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/SchedulePausedBudgetExhausted.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/SearchPerformanceAwaitingFirstSync.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/SearchPerformanceNotConnected.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/empty/TargetMismatchCannibalization.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/shared/KeywordDetailCheckSplitButton.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/shared/KeywordDetailContextPills.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/shared/KeywordDetailFreeActionButton.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keyword-detail/shared/KeywordDetailPageSkeleton.tsx",
       "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
-      "status": "excluded"
     },
     {
       "kind": "render",
@@ -6498,17 +5920,7 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/add/AddKeywordTrackingPanel.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/add/KeywordManagementMessagesBoundary.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/add/ProjectMarketsSelector.tsx",
       "status": "migrated"
     },
     {
@@ -6560,11 +5972,6 @@
       "kind": "render",
       "path": "components/keywords/CompetitorSnapshotCard.tsx",
       "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/DegradedPositionMarkers.tsx",
-      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -6817,6 +6224,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/keywords/grid/keywords-grid-projection.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/keywords/grid/KeywordsEmptyState.tsx",
       "status": "migrated"
@@ -6908,11 +6320,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/grid/LastCheckedCell.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/grid/market-grid-cells.tsx",
       "status": "migrated"
     },
@@ -6933,17 +6340,22 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/grid/research-grid-columns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/ResearchMetricCells.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/grid/RowActionsCell.tsx",
       "status": "migrated"
     },
     {
       "kind": "ui-data",
       "path": "components/keywords/grid/run-check-depth.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/grid/RunChecksConfirmationModal.tsx",
       "status": "migrated"
     },
     {
@@ -6994,6 +6406,11 @@
     {
       "kind": "render",
       "path": "components/keywords/grid/TargetRankingCell.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/grid/use-filter-chip-edges.ts",
       "status": "migrated"
     },
     {
@@ -7198,11 +6615,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/KeywordFirstCheckModal.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/KeywordHeaderActions.tsx",
       "status": "migrated"
     },
@@ -7238,11 +6650,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/KeywordPendingDeleteButton.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/KeywordPendingDetail.tsx",
       "status": "migrated"
     },
@@ -7254,6 +6661,11 @@
     {
       "kind": "render",
       "path": "components/keywords/KeywordPendingModules.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/KeywordResearchAction.tsx",
       "status": "migrated"
     },
     {
@@ -7328,52 +6740,7 @@
     },
     {
       "kind": "ui-data",
-      "path": "components/keywords/position-history-layout.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/keywords/position-history-series.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/PositionHistoryAnnotations.tsx",
-      "status": "excluded"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/PositionHistoryCard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/PositionHistoryHeader.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/PositionHistoryMarketLegend.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
       "path": "components/keywords/rank-tracker-cost-context.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/RankCheckRunModal.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/RankingUrlExternalLink.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/RankingUrlHistory.tsx",
       "status": "migrated"
     },
     {
@@ -7735,11 +7102,6 @@
     },
     {
       "kind": "render",
-      "path": "components/markets/MarketPicker.tsx",
-      "status": "excluded"
-    },
-    {
-      "kind": "render",
       "path": "components/markets/page/ArchiveMarketDialog.tsx",
       "status": "migrated"
     },
@@ -7879,53 +7241,6 @@
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/commands.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/draft-validation.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/draft.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/editor-validation.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/form.ts",
-      "status": "excluded",
-      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementActionStatus.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementCapabilityEvidence.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
-      "status": "excluded",
-      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementIntentActions.tsx",
-      "status": "migrated"
-    },
-    {
       "kind": "render",
       "path": "components/measurement-settings/MeasurementPolicySettingsCard.tsx",
       "status": "excluded",
@@ -7934,56 +7249,6 @@
     {
       "kind": "render",
       "path": "components/measurement-settings/MeasurementPolicySettingsSection.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementQuoteReview.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementRunReceipt.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementScheduleFields.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementScopeSummary.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementSelectionFields.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementSettingsEditor.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementSettingsHost.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/measurement-settings/MeasurementSettingsHostSection.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/translate.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/measurement-settings/use-measurement-actions.ts",
       "status": "migrated"
     },
     {
@@ -8487,16 +7752,6 @@
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/overview/getting-started.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/overview/GhostKpiRow.tsx",
-      "status": "excluded"
-    },
-    {
       "kind": "render",
       "path": "components/overview/HighlightLists.tsx",
       "status": "migrated"
@@ -8504,16 +7759,6 @@
     {
       "kind": "render",
       "path": "components/overview/KpiCard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/overview/OnboardingCard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/overview/OnboardingStages.tsx",
       "status": "migrated"
     },
     {
@@ -8539,11 +7784,6 @@
     {
       "kind": "render",
       "path": "components/overview/OverviewDashboardView.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/overview/OverviewEmpty.tsx",
       "status": "migrated"
     },
     {
@@ -8742,16 +7982,6 @@
       "status": "excluded"
     },
     {
-      "kind": "render",
-      "path": "components/provider-comparison/ComparisonResults.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/provider-comparison/ProviderComparisonCard.tsx",
-      "status": "pending"
-    },
-    {
       "kind": "ui-data",
       "path": "components/provider-management/allocation-labels.ts",
       "status": "pending"
@@ -8813,32 +8043,12 @@
     },
     {
       "kind": "render",
-      "path": "components/rank-check/FirstCheckRunModal.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/rank-runs/budget-notices-model.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/rank-runs/BudgetNotices.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/rank-runs/deferral-reason-copy.tsx",
       "status": "migrated"
     },
     {
       "kind": "ui-data",
       "path": "components/rank-runs/notice-dismissals.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/rank-runs/PlannedSection.tsx",
       "status": "migrated"
     },
     {
@@ -8879,11 +8089,6 @@
     {
       "kind": "ui-data",
       "path": "components/rank-runs/rank-run-copy.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/rank-runs/RankTrackerRunsTab.tsx",
       "status": "migrated"
     },
     {
@@ -8954,11 +8159,6 @@
     {
       "kind": "render",
       "path": "components/rank-runs/runs-table-columns.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/rank-runs/RunsSection.tsx",
       "status": "migrated"
     },
     {
@@ -9109,11 +8309,6 @@
     {
       "kind": "render",
       "path": "components/research/ResearchPaymentReview.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/research/ResearchPricingPopover.tsx",
       "status": "migrated"
     },
     {
@@ -9613,6 +8808,11 @@
     },
     {
       "kind": "render",
+      "path": "components/search-insights/search-insights-metric-column.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/search-insights/search-insights-pages-columns.tsx",
       "status": "migrated"
     },
@@ -9665,11 +8865,6 @@
       "kind": "ui-data",
       "path": "components/search-insights/search-sync-presentation.ts",
       "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/search-insights/SearchImportPauseControl.tsx",
-      "status": "excluded"
     },
     {
       "kind": "render",
@@ -9729,11 +8924,6 @@
     {
       "kind": "render",
       "path": "components/search-insights/SearchInsightsOauthReturn.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/search-insights/SearchInsightsOauthSelection.tsx",
       "status": "migrated"
     },
     {
@@ -10414,16 +9604,6 @@
     {
       "kind": "render",
       "path": "components/shell/AppThemeRoot.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/shell/cloud-backup-action-error.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/shell/CloudBackupModal.tsx",
       "status": "migrated"
     },
     {
@@ -11298,11 +10478,6 @@
     },
     {
       "kind": "render",
-      "path": "components/ui/primitives/dialog.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/ui/primitives/menu.tsx",
       "status": "migrated"
     },
@@ -11427,9 +10602,19 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/ui/table-sorting.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/ui/TableCardHeader.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/TableSortButton.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -11563,7 +10748,17 @@
     },
     {
       "kind": "render",
+      "path": "components/usagekit/exceptions-list-view.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/usagekit/exceptions-list.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/usagekit/figure-sorting.ts",
       "status": "pending"
     },
     {
@@ -11710,6 +10905,11 @@
       "kind": "ui-data",
       "path": "components/usagekit/usage-table-format.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-table-view.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",

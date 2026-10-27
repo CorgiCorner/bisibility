@@ -38,6 +38,30 @@ describe("ExperimentalModulesForm", () => {
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
+  it("requires explicit activation of Prompt Playground and persists it", async () => {
+    const user = userEvent.setup();
+    const updateExperimentalModules = vi
+      .fn()
+      .mockResolvedValue({ enabledExperimentalModules: ["promptPlayground"] });
+    render(
+      <ExperimentalModulesForm
+        canEdit
+        enabledExperimentalModules={[]}
+        projectId="prj_1"
+        updateExperimentalModules={updateExperimentalModules}
+      />,
+    );
+    const playground = screen.getByRole("switch", { name: "Prompt Playground" });
+    expect(playground).not.toBeChecked();
+    await user.click(playground);
+    await waitFor(() =>
+      expect(updateExperimentalModules).toHaveBeenCalledWith({
+        projectId: "prj_1",
+        enabledExperimentalModules: ["promptPlayground"],
+      }),
+    );
+  });
+
   it("persists both changes when the first rapid toggle saves slowly", async () => {
     const user = userEvent.setup();
     const firstSave = deferred<void>();

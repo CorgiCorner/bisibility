@@ -42,7 +42,8 @@ live test, and may be partial.
 `get_page_indexing_settings` lists available modes and Pacific reset information.
 `update_page_indexing_settings` changes `budget_mode` and/or
 `inspection_daily_limit` (0-2000). `off` disables background checks, `fixed` caps
-project usage, and `available_quota` is self-host only. Shared property usage also
+project usage, and `available_quota` runs until a daily 429 within the run time
+budget on Cloud and self-host. Shared property usage also
 includes explicit inspections and retries; other tools' use is unobservable.
 
 The report excludes manual-only URLs; list them explicitly with `source=manual`.

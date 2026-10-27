@@ -4,7 +4,8 @@
     "description": "Activa un módulo experimental para este proyecto. Los módulos desactivados no aparecen en la navegación.",
     "module": {
       "competitors": "Competidores",
-      "timeline": "Cronología"
+      "timeline": "Cronología",
+      "promptPlayground": "Laboratorio de prompts"
     },
     "saveError": "No se han podido guardar los módulos experimentales."
   }

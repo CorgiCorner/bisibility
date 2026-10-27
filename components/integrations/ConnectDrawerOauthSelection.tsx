@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
 import { PillBadge } from "@/components/ui/Pill";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
 import {
   googlePropertyDisplayName,
@@ -24,7 +24,6 @@ import {
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useForm } from "react-hook-form";
 import { ga4DiscoveryFailure } from "./ConnectDrawerOauthSelection.ga4-failure";
 import { GooglePropertyDetails } from "./ConnectDrawerScopes";
 import { Ga4PropertyManualEntry } from "./Ga4PropertyManualEntry";
@@ -107,9 +106,8 @@ export function ConnectDrawerOauthSelection({
 }: Readonly<ConnectDrawerOauthSelectionProps>) {
   const t = useTranslations("projectIntegrations.oauth");
   const { pace = "normal", retentionMonths = 3 } = syncPlan ?? {};
-  const form = useForm<SearchSyncSelection>({
+  const form = useZodForm<SearchSyncSelection>(searchSyncSelectionSchema, {
     defaultValues: { pace, retentionMonths },
-    resolver: zodResolver(searchSyncSelectionSchema),
   });
   const selectedPlan = form.watch();
   const estimate = isGa4 ? null : searchSyncPreflightEstimate(selectedPlan);

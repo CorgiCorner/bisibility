@@ -11,6 +11,13 @@ const expressions: Record<RankTrackerSortField, Prisma.Sql> = {
   change: Prisma.sql`d."positionBaseline" - d.position`,
   volume: Prisma.sql`d.volume`,
   difficulty: Prisma.sql`d.difficulty`,
+  // Research fields force the exact in-memory selector after loading snapshot data.
+  researchVolume: Prisma.sql`lower(k.text)`,
+  researchDifficulty: Prisma.sql`lower(k.text)`,
+  researchCpc: Prisma.sql`lower(k.text)`,
+  researchIntent: Prisma.sql`lower(k.text)`,
+  researchSource: Prisma.sql`lower(k.text)`,
+  researchAt: Prisma.sql`lower(k.text)`,
   sparkline: Prisma.sql`d.position`,
   clicks: Prisma.sql`(d.traffic->>'clicks')::int`,
   impressions: Prisma.sql`(d.traffic->>'impressions')::int`,

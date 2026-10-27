@@ -53,7 +53,13 @@ function partialCoverage(sources: KeywordResearchSourceDiagnostic[]) {
 }
 
 function parseStoredSnapshot(snapshot: { rows: unknown; sources: unknown }) {
-  const rows = z.array(rowSchema).safeParse(snapshot.rows);
+  const visibleRows = Array.isArray(snapshot.rows)
+    ? snapshot.rows.filter(
+        (row) =>
+          !row || typeof row !== "object" || !("_trackedSeed" in row) || row._trackedSeed !== true,
+      )
+    : snapshot.rows;
+  const rows = z.array(rowSchema).safeParse(visibleRows);
   const sources = z.array(sourceDiagnosticSchema).safeParse(snapshot.sources);
   if (!rows.success || !sources.success) return null;
   return {

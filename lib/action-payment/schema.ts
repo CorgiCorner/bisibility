@@ -112,12 +112,14 @@ export const actionPaymentQuoteSchema = z
       .object({
         state: z.enum(["hit", "miss", "mixed", "not_applicable"]),
         freeUntil: z.iso.datetime({ offset: true }).nullable(),
+        /** How long a paid fetch stays reusable. Null for a cache hit or when caching does not apply. */
         windowSeconds: z.number().int().positive().nullable(),
       })
       .strict(),
     availability: z
       .object({ allowed: z.boolean(), reason: text.nullable(), remedyHref: localHref.optional() })
       .strict(),
+    /** Server includes wallet details only with the existing owner-only billing permission. */
     wallet: z
       .object({
         available: paymentAmountSchema,
@@ -159,6 +161,7 @@ export const actionPaymentReceiptSchema = z
   .object({
     actionId: id,
     quoteId: id.nullable(),
+    /** Retained execution identity, never today's connection configuration. */
     option: actionPaymentOptionSchema,
     state: z.enum(["settled", "pending", "unknown", "free"]),
     charge: paymentAmountSchema,

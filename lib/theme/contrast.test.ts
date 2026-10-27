@@ -76,11 +76,10 @@ const interactiveBoundarySourcePaths = [
   "components/keywords/filters/FiltersDrawer.tsx",
   "components/marketing/calculator/EstimateBreakdown.tsx",
   "components/marketing/calculator/PlanLadder.tsx",
-  "components/markets/MarketPicker.tsx",
+  "components/markets/blocks/MarketDefinition.tsx",
   "components/research/RecentResearchSearches.tsx",
   "components/research/ResearchDetailSaveAction.tsx",
   "components/research/ResearchSearchCard.tsx",
-  "components/shell/CloudBackupModal.tsx",
   "components/shell/CommandPalette.tsx",
 ] as const;
 

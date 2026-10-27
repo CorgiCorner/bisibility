@@ -159,6 +159,7 @@ export const persistTrackingResultSchema = z.object({
     )
     .max(100),
   receipt: z.object({
+    /** Host-proven refusal before a transport barrier; carries exact zero only. */
     noDispatch: z.literal(true).optional(),
     operationRef: z
       .object({
@@ -168,6 +169,7 @@ export const persistTrackingResultSchema = z.object({
       })
       .nullable()
       .optional(),
+    /** Historical input alias; runtime accounting resolves only Store operations. */
     providerCostEntryId: z.string().nullable(),
     amountUsd: z
       .string()

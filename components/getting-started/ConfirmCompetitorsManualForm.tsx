@@ -2,11 +2,10 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type ConfirmCompetitorsManualFormProps = Readonly<{
@@ -47,9 +46,8 @@ export function ConfirmCompetitorsManualForm({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
-  } = useForm<ManualCompetitorForm>({
+  } = useZodForm<ManualCompetitorForm>(schema, {
     defaultValues: { aliases: "", domain: "" },
-    resolver: zodResolver(schema),
   });
 
   async function saveManualCompetitor(values: ManualCompetitorForm) {

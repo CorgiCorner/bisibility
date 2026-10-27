@@ -38,7 +38,7 @@ describe("KeywordDetailHeaderChrome", () => {
     render(<KeywordDetailHeaderChrome actions={null} keyword={keyword} timeZone="UTC" />);
 
     expect(screen.queryByText("Keyword", { exact: true })).not.toBeInTheDocument();
-    expect(screen.getByText("kw_3f9a2c1").parentElement).toHaveAttribute("title", keyword.id);
+    expect(screen.getByText("kw_3f9a2c1d7e").parentElement).toHaveAttribute("title", keyword.id);
     expect(screen.getByRole("button", { name: "Copy ID" })).toBeInTheDocument();
   });
 

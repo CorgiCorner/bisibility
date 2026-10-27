@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { domainSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const domainChangeSchema = z.object({
@@ -46,10 +45,9 @@ export function DomainChangeConfirmation({
   const validationT = useTranslations("projectSettingsGeneral.validation");
   const renderedCurrentDomain = currentDomain?.trim() ?? "";
   const hasCurrentDomain = renderedCurrentDomain.length > 0;
-  const form = useForm<DomainChangeForm>({
+  const form = useZodForm<DomainChangeForm>(domainChangeSchema, {
     defaultValues: { confirmationDomain: "", newDomain: renderedCurrentDomain },
     mode: "onChange",
-    resolver: zodResolver(domainChangeSchema),
   });
   const requestedDomain = form.watch("newDomain")?.trim() ?? "";
   const confirmationDomain = form.watch("confirmationDomain")?.trim() ?? "";

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { externalAgentReportSchema } from "@/lib/agent-reports/model";
 import fixture from "@/plugins/bisibility/skills/seo-audit/references/example-report.json";
 import {
@@ -54,8 +54,6 @@ describe("installable SEO audit skill contract", () => {
       "get_agent_report",
       "create_agent_report",
       "list_search_performance_query_stats",
-      "analyze_brand_visibility",
-      "compare_ai_prompts",
     ]) {
       expect(skill).toContain(`\`${name}\``);
       expect(definitions.find((tool) => tool.name === name)).toBeDefined();
@@ -68,6 +66,117 @@ describe("installable SEO audit skill contract", () => {
     expect(Object.keys(save?.inputSchema.properties ?? {})).toEqual(
       expect.arrayContaining(Object.keys(fixture)),
     );
+  });
+
+  it("keeps every shipped SEO audit file free of paid research and quote flows", () => {
+    const readTree = (directory: string): string =>
+      readdirSync(directory, { withFileTypes: true })
+        .map((entry) =>
+          entry.isDirectory()
+            ? readTree(`${directory}${entry.name}/`)
+            : readFileSync(`${directory}${entry.name}`, "utf8"),
+        )
+        .join("\n");
+    expect(readTree(root)).not.toMatch(
+      /analyze_brand_visibility|compare_ai_prompts|estimate_only|max_cost_cents/,
+    );
+    const skill = readFileSync(`${root}SKILL.md`, "utf8");
+    expect(skill).toContain("coverage gap");
+    expect(skill).toContain("/ai-visibility-audit");
+    expect(skill).toContain("Do not run paid provider tools");
+    for (const file of readdirSync("scripts/skill-evals/scenarios/seo-audit")) {
+      const scenario = JSON.parse(
+        readFileSync(`scripts/skill-evals/scenarios/seo-audit/${file}`, "utf8"),
+      );
+      for (const name of Object.keys(scenario.tools))
+        expect(name).not.toMatch(
+          /^(analyze_|estimate_|load_domain_overview_|research_)|compare_ai_prompts|run_rank_check/,
+        );
+    }
+  });
+
+  it.each([
+    ["observed_dataset", "observed_ai"],
+    ["synthetic_prompt_test", "synthetic_prompt"],
+  ])("accepts saved %s evidence only through report reads", (type, evidenceClass) => {
+    const payload = copy();
+    Object.assign(payload.body.evidence[0], {
+      type,
+      class: evidenceClass,
+      source_tool: "get_agent_report",
+      report_id: "agr_d00000000000000000000000",
+    });
+    Object.assign(payload.provenance, {
+      source_tools: ["get_project_context", "list_agent_reports", "get_agent_report"],
+      sources: [{ source_tool: "get_page_indexing_report" }],
+    });
+    expect(() => validateReport(payload)).not.toThrow();
+  });
+
+  it.each([
+    "analyze_brand_visibility",
+    "compare_ai_prompts",
+    "compareAiPrompts",
+    "mcp__bisibility__compare_ai_prompts",
+  ])("rejects unsupported body source fields and aliases for %s", (tool) => {
+    const payload = copy();
+    Object.assign(payload.body.evidence[2], { source_tools: [tool] });
+    expect(() => validateReport(payload)).toThrow("Unsupported source tool");
+    const nested = copy();
+    Object.assign(nested.body.visibility, { observed: { sources: [{ source_tool: tool }] } });
+    expect(() => validateReport(nested)).toThrow("Unsupported source tool");
+    const provenance = copy();
+    Object.assign(provenance.provenance, { sources: [{ source_tool: tool }] });
+    expect(() => validateReport(provenance)).toThrow("Unsupported provenance tool");
+  });
+
+  describe.each([
+    ["observed_dataset", "observed_ai"],
+    ["synthetic_prompt_test", "synthetic_prompt"],
+  ])("saved %s identifiers", (type, evidenceClass) => {
+    it.each([undefined, "", "agr_bad", "prj_a00000000000000000000000", null, 42])(
+      "rejects missing or invalid report_id %s",
+      (reportId) => {
+        const payload = copy();
+        Object.assign(payload.body.evidence[0], {
+          type,
+          class: evidenceClass,
+          source_tool: "get_agent_report",
+        });
+        if (reportId !== undefined)
+          Object.assign(payload.body.evidence[0], { report_id: reportId });
+        expect(() => validateReport(payload)).toThrow("Invalid saved AI report ID");
+      },
+    );
+  });
+
+  it("accepts canonical body source fields with ordinary source parameters", () => {
+    const payload = copy();
+    Object.assign(payload.body.visibility, {
+      observed: {
+        source_tools: ["list_agent_reports", "get_agent_report"],
+        sources: [{ source_tool: "get_project_context", params: { limit: 10, source: "saved" } }],
+      },
+    });
+    expect(() => validateReport(payload)).not.toThrow();
+  });
+
+  it.each([
+    ["analyze_brand_visibility", "observed_dataset", "observed_ai"],
+    ["compare_ai_prompts", "synthetic_prompt_test", "synthetic_prompt"],
+    ["research_keywords", "first_party", "search_console_history"],
+    ["analyze_backlinks", "first_party", "search_console_history"],
+    ["analyze_domain_overview", "first_party", "search_console_history"],
+    ["run_rank_check", "saved_ranking", "google_observation"],
+  ])("rejects paid tool %s as evidence or provenance", (tool, type, evidenceClass) => {
+    const payload = copy();
+    Object.assign(payload.body.evidence[0], { type, class: evidenceClass, source_tool: tool });
+    expect(() => validateReport(payload)).toThrow("Unsupported evidence type/tool");
+    const provenance = copy();
+    Object.assign(provenance.provenance, { source_tools: [tool] });
+    expect(() => validateReport(provenance)).toThrow("Unsupported provenance tool");
+    Object.assign(provenance.provenance, { source_tools: [], sources: [{ source_tool: tool }] });
+    expect(() => validateReport(provenance)).toThrow("Unsupported provenance tool");
   });
 
   it("packages references and versions consistently with documented installation", () => {

@@ -4,7 +4,7 @@ import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type CreateSavedViewInput,
   type KeywordSavedView,
@@ -18,7 +18,6 @@ import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { presentBulkActionError } from "./bulk-action-error";
 
 type SaveViewModalProps = {
@@ -48,9 +47,8 @@ export function SaveViewModal({
     register,
     setError,
     watch,
-  } = useForm<SavedViewFormValues>({
+  } = useZodForm<SavedViewFormValues>(savedViewNameSchema, {
     defaultValues: { name: "" },
-    resolver: zodResolver(savedViewNameSchema),
   });
   const previewName = watch("name").trim() || t("fallbackName");
 

@@ -154,11 +154,12 @@ describe("BulkActionBar", () => {
       "Add tag",
       "Change target URL",
       "Set schedule",
-      "Delete",
+      "Remove",
       "Clear",
     ]) {
       expect(screen.getByRole("button", { name })).toHaveAttribute("data-size", "xs");
     }
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("data-size", "xs");
   });
 
   it("offers Connect a SERP provider instead of the depth picker when disconnected", () => {

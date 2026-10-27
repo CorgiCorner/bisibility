@@ -12,7 +12,7 @@ import {
   drawerManual,
   drawerSteady,
   drawerToday,
-} from "./history-drawer-fixtures";
+} from "./history-drawer.test-support";
 import {
   fillingDays,
   firstDays,
@@ -24,7 +24,7 @@ import {
   steadyDays,
   thirdDays,
 } from "./history-fixtures";
-import { historyTab } from "./history-tab-fixtures";
+import { historyTab } from "./history-tab.test-support";
 import { IndexingDrawer } from "./IndexingDrawer";
 import { IndexingOverview } from "./IndexingOverview";
 import { IndexingSitemaps } from "./IndexingSitemaps";

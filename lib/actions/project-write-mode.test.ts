@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cancelMigration } from "./project-write-mode";
+import { cancelMigration, enableMigrationHold, releaseMigrationHold } from "./project-write-mode";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -18,9 +18,13 @@ const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(),
   revalidatePath: vi.fn(),
   writeAudit: vi.fn(),
+  writeAuditFailure: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
+vi.mock("@/lib/auth/audit", () => ({
+  writeAudit: mocks.writeAudit,
+  writeAuditFailure: mocks.writeAuditFailure,
+}));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
@@ -60,6 +64,7 @@ describe("project migration cancellation", () => {
     mocks.prisma.migrationImportChunk.deleteMany.mockResolvedValue({ count: 2 });
     mocks.prisma.project.update.mockResolvedValue({ ...heldProject, writeMode: "active" });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
+    mocks.writeAuditFailure.mockResolvedValue({ id: "denied_1" });
   });
 
   it("fails the held nonterminal job, clears chunks, audits, and releases in one transaction", async () => {
@@ -169,4 +174,52 @@ describe("project migration cancellation", () => {
     expect(mocks.prisma.migrationImportChunk.deleteMany).not.toHaveBeenCalled();
     expect(mocks.prisma.project.update).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["enable", enableMigrationHold, "migration_hold", "project.migration_hold.enable"],
+    ["release", releaseMigrationHold, "active", "project.migration_hold.release"],
+  ] as const)(
+    "keeps the active %s hold action audited and scoped to a public project",
+    async (_label, action, writeMode, auditAction) => {
+      mocks.prisma.project.update.mockResolvedValue({ ...heldProject, writeMode });
+      await expect(action({ projectId: publicProjectId })).resolves.toEqual({
+        projectId: publicProjectId,
+        writeMode,
+      });
+      expect(mocks.prisma.project.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: heldProject.id },
+          data: expect.objectContaining({ writeMode, writeModeChangedById: "user_1" }),
+        }),
+      );
+      expect(mocks.writeAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: auditAction,
+          targetId: publicProjectId,
+          projectId: heldProject.id,
+        }),
+      );
+    },
+  );
+
+  it.each([enableMigrationHold, releaseMigrationHold])(
+    "refuses hold changes without manage permission",
+    async (action) => {
+      mocks.prisma.user.findUnique.mockResolvedValue({
+        memberships: [{ projectId: "project_1", role: "viewer" }],
+        role: "member",
+      });
+      await expect(action({ projectId: publicProjectId })).rejects.toMatchObject({
+        name: "AuthorizationError",
+        code: "forbidden",
+      });
+      expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+      expect(mocks.writeAuditFailure).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "authorization.manage.forbidden",
+        }),
+      );
+    },
+  );
 });

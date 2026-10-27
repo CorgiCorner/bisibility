@@ -33637,6 +33637,12 @@
             "format": "date-time",
             "type": "string"
           },
+          "created_by_id": {
+            "example": "usr_a00000000000000000000000",
+            "pattern": "^usr_[a-z][a-z0-9]{23}$",
+            "type": ["string", "null"],
+            "x-bisibility-public-id": "usr"
+          },
           "definition": {
             "anyOf": [
               {
@@ -34157,6 +34163,12 @@
                           "change",
                           "volume",
                           "difficulty",
+                          "researchVolume",
+                          "researchDifficulty",
+                          "researchCpc",
+                          "researchIntent",
+                          "researchSource",
+                          "researchAt",
                           "sparkline",
                           "clicks",
                           "impressions",
@@ -34385,6 +34397,7 @@
           "name",
           "surface",
           "created_at",
+          "created_by_id",
           "can_delete",
           "definition",
           "revision",
@@ -75688,6 +75701,12 @@
                             "format": "date-time",
                             "type": "string"
                           },
+                          "created_by_id": {
+                            "example": "usr_a00000000000000000000000",
+                            "pattern": "^usr_[a-z][a-z0-9]{23}$",
+                            "type": ["string", "null"],
+                            "x-bisibility-public-id": "usr"
+                          },
                           "definition": {
                             "anyOf": [
                               {
@@ -76234,6 +76253,12 @@
                                           "change",
                                           "volume",
                                           "difficulty",
+                                          "researchVolume",
+                                          "researchDifficulty",
+                                          "researchCpc",
+                                          "researchIntent",
+                                          "researchSource",
+                                          "researchAt",
                                           "sparkline",
                                           "clicks",
                                           "impressions",
@@ -76462,6 +76487,7 @@
                           "name",
                           "surface",
                           "created_at",
+                          "created_by_id",
                           "can_delete",
                           "definition",
                           "revision",
@@ -76640,6 +76666,12 @@
                     "created_at": {
                       "format": "date-time",
                       "type": "string"
+                    },
+                    "created_by_id": {
+                      "example": "usr_a00000000000000000000000",
+                      "pattern": "^usr_[a-z][a-z0-9]{23}$",
+                      "type": ["string", "null"],
+                      "x-bisibility-public-id": "usr"
                     },
                     "definition": {
                       "anyOf": [
@@ -77175,6 +77207,12 @@
                                     "change",
                                     "volume",
                                     "difficulty",
+                                    "researchVolume",
+                                    "researchDifficulty",
+                                    "researchCpc",
+                                    "researchIntent",
+                                    "researchSource",
+                                    "researchAt",
                                     "sparkline",
                                     "clicks",
                                     "impressions",
@@ -77403,6 +77441,7 @@
                     "name",
                     "surface",
                     "created_at",
+                    "created_by_id",
                     "can_delete",
                     "definition",
                     "revision",

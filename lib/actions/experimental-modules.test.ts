@@ -62,6 +62,19 @@ describe("setExperimentalModules", () => {
     expect(mocks.revalidateExperimentalModuleViews).toHaveBeenCalledOnce();
   });
 
+  it("persists and revalidates an explicit Prompt Playground activation", async () => {
+    mocks.prisma.projectDefaults.upsert.mockResolvedValue({
+      enabledExperimentalModules: ["promptPlayground"],
+    });
+    await expect(
+      setExperimentalModules({ enabledExperimentalModules: ["promptPlayground"], projectId }),
+    ).resolves.toEqual({ enabledExperimentalModules: ["promptPlayground"] });
+    expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { enabledExperimentalModules: ["promptPlayground"] } }),
+    );
+    expect(mocks.revalidateExperimentalModuleViews).toHaveBeenCalledOnce();
+  });
+
   it("rejects unauthorized requests before persistence or audit", async () => {
     mocks.requireProjectScope.mockRejectedValue(new Error("forbidden"));
 

@@ -14,11 +14,11 @@ import {
   type InstanceMailFormValues,
   instanceMailFormSchema,
 } from "@/lib/email/instance-mail-schema";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Controller, type UseFormRegisterReturn, useForm, useWatch } from "react-hook-form";
+import { Controller, type UseFormRegisterReturn, useWatch } from "react-hook-form";
 
 const fieldClassName =
   "mt-1.5 flex h-10 w-full max-w-md items-center rounded-control border border-border-control bg-transparent px-3 focus-within:border-accent";
@@ -109,13 +109,12 @@ export function InstanceMailSettings({
     handleSubmit,
     register,
     reset,
-  } = useForm<InstanceMailFormValues>({
+  } = useZodForm<InstanceMailFormValues>(schema, {
     defaultValues: {
       provider: settings.provider ?? "resend",
       sender: settings.sender,
       ...emptySecrets,
     },
-    resolver: zodResolver(schema),
   });
   const provider = useWatch({ control, name: "provider" });
   function onSave(values: InstanceMailFormValues) {

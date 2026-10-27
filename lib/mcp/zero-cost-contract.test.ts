@@ -1,7 +1,6 @@
 import { getOpenApiDocument } from "@/lib/api/openapi";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getMcpToolDefinitions } from "./definitions";
-import { keywordResearchMcpSchemas } from "./keyword-research-schemas";
 
 vi.mock("server-only", () => ({}));
 
@@ -34,10 +33,13 @@ describe("zero-cost discovery contract", () => {
     if (!name.includes("domain_overview"))
       expect(tool?.description).toContain("0 = cached result only");
   });
-  it.each(Object.values(keywordResearchMcpSchemas))(
-    "keeps local research schemas nonnegative",
-    (schema) => {
-      expect(schema.properties.max_cost_cents.minimum).toBe(0);
+  it.each(["get_keyword_metrics", "research_keywords"])(
+    "%s advertises a nonnegative cap in the runtime research schema",
+    (name) => {
+      const schema = tools.find((tool) => tool.name === name)?.inputSchema;
+      expect(schema).toBeDefined();
+      const properties = schema?.properties as Record<string, { minimum?: number }>;
+      expect(properties.max_cost_cents.minimum).toBe(0);
     },
   );
   it("keeps every priced OpenAPI cost cap nonnegative", () => {

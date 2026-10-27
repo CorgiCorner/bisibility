@@ -1,3 +1,4 @@
+import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import {
   projectRankTrackerFeatureTestMessages,
   renderWithProjectRankTrackerMessages as render,
@@ -109,6 +110,65 @@ afterEach(() => {
 });
 
 describe("SavedKeywordsTable", () => {
+  it("sorts the entire filtered collection before paging and retains sorting between pages", () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      ...rows[0],
+      publicId: `skw_${i}`,
+      text: `term ${String(i).padStart(2, "0")}`,
+      volume: i === 11 ? null : i,
+    }));
+    renderTable({ rows: many, total: many.length });
+    const table = screen.getByRole("table", { name: "Saved keywords" });
+    expect(within(table).getByText("term 10")).toBeInTheDocument();
+    expect(within(table).queryByText("term 00")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sort Volume ascending" }));
+    expect(within(table).getByText("term 00")).toBeInTheDocument();
+    expect(within(table).queryByText("term 10")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(within(table).getByText("term 10")).toBeInTheDocument();
+    expect(within(table).getByText("term 11")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /Volume/ })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sort Keyword ascending" }));
+    expect(within(table).getByText("term 00")).toBeInTheDocument();
+    expect(within(table).queryByText("term 10")).not.toBeInTheDocument();
+  });
+
+  it("disables saved mutations with an explanation in a read-only project", () => {
+    const remove = vi.fn();
+    const add = vi.fn();
+    render(
+      <ProjectWriteModeProvider
+        projectRef="prj_1"
+        writeMode="migration_hold"
+        reasons={{ migrated: "Moved", migration_hold: "Project is read only during migration." }}
+      >
+        <SavedKeywordsTable
+          addKeywordsAction={add}
+          canCreateKeyword
+          canDeleteKeyword
+          costContext={costContext}
+          defaultDevice="desktop"
+          projectId="prj_1"
+          removeSavedKeywordsAction={remove}
+          rows={rows}
+          total={rows.length}
+        />
+      </ProjectWriteModeProvider>,
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: `Select ${rows[0].text}` }));
+    for (const name of ["Track 1", "Remove"]) {
+      const button = screen.getByRole("button", { name });
+      expect(button).toHaveAttribute("aria-disabled", "true");
+      expect(button).toHaveAccessibleDescription("Project is read only during migration.");
+      fireEvent.click(button);
+    }
+    expect(remove).not.toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
+  });
+
   it("uses the DataTable header checkbox for the visible saved-keyword page", () => {
     renderTable();
 
@@ -153,7 +213,7 @@ describe("SavedKeywordsTable", () => {
       "aria-disabled",
       "true",
     );
-    fireEvent.click(screen.getByRole("button", { name: "Track 3 $0.90/mo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Track 3" }));
 
     expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveValue(
       rows.map((row) => row.text).join("\n"),
@@ -194,8 +254,8 @@ describe("SavedKeywordsTable", () => {
     expect(
       screen.getByText("tracking all 3 adds 900 operations/mo at daily checks"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Track 3, 900 operations/mo" })).toBeInTheDocument();
-    expect(screen.getByText("~900 operations/mo")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Track 3" })).toBeInTheDocument();
+    expect(screen.queryByText("~900 operations/mo")).not.toBeInTheDocument();
     expect(
       screen.getByRole("toolbar", { name: "Actions for selected keywords" }).textContent,
     ).not.toMatch(/\$/);
@@ -240,7 +300,7 @@ describe("SavedKeywordsTable", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
     }
 
-    fireEvent.click(screen.getByRole("button", { name: "Track 2 $0.60/mo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Track 2" }));
     const us = screen.getByRole("button", { name: /United States \/ English/ });
     const es = screen.getByRole("button", { name: /Spain \/ English/ });
     expect(us).toHaveAttribute("aria-pressed", "true");

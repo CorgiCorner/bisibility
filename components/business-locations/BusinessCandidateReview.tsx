@@ -5,9 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
 import { BusinessActionStatus } from "./BusinessActionStatus";
 import { BusinessMatchProvenance } from "./BusinessMatchProvenance";
 import type {
@@ -52,14 +51,16 @@ export function BusinessCandidateReview({
     ...command,
     idempotencyKey,
   }));
-  const form = useForm<{ reason: string; action: "confirm" | "reject"; confirmed: boolean }>({
-    defaultValues: {
-      reason: "",
-      action: isReviewableCandidate(decision) ? "confirm" : "reject",
-      confirmed: false,
+  const form = useZodForm<{ reason: string; action: "confirm" | "reject"; confirmed: boolean }>(
+    candidatePromptSchema,
+    {
+      defaultValues: {
+        reason: "",
+        action: isReviewableCandidate(decision) ? "confirm" : "reject",
+        confirmed: false,
+      },
     },
-    resolver: zodResolver(candidatePromptSchema),
-  });
+  );
   const sameItem =
     projectId === base.projectId &&
     decision.locationId === base.decision.locationId &&

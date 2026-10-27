@@ -26,6 +26,14 @@ export type RankTrackerReportOptions = {
   /** Active markets/unarchived targets by default; pause execution retains history. */
   pausedSchedules?: "include_retained" | "exclude";
   policyAt: (asOf: Date) => RankReportPolicy;
+  loadResearch?: (
+    tx: Prisma.TransactionClient,
+    projectId: string,
+    rows: readonly KeywordRow[],
+    asOf: Date,
+  ) => Promise<
+    ReadonlyMap<string, import("@/lib/keyword-research/tracked-research").TrackedResearchMetrics>
+  >;
   loadMetadata: (
     tx: Prisma.TransactionClient,
     project: { id: string; publicId: string },

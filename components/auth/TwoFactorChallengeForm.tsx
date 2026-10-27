@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
@@ -14,7 +14,6 @@ import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/S
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type KeyboardEvent, useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const challengeSchema = z.discriminatedUnion("method", [
@@ -59,10 +58,9 @@ export function TwoFactorChallengeForm({
   const [message, setMessage] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [navigating, setNavigating] = useState(false);
-  const form = useForm<ChallengeValues>({
+  const form = useZodForm<ChallengeValues>(challengeSchema, {
     defaultValues: { method: "totp", code: "" },
     mode: "onSubmit",
-    resolver: zodResolver(challengeSchema),
   });
   const method = form.watch("method");
   const submitting = form.formState.isSubmitting || navigating;

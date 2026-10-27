@@ -1,16 +1,9 @@
 import type { AnalyzeDomainOverviewAction } from "@/lib/actions/domain-overview";
 import type { DomainOverviewEstimate } from "@/lib/domain-overview/types";
+import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useDomainOverviewEstimate } from "./useDomainOverviewEstimate";
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((next) => {
-    resolve = next;
-  });
-  return { promise, resolve };
-}
 
 function serverEstimate(target: string, costCents: number): DomainOverviewEstimate {
   return {

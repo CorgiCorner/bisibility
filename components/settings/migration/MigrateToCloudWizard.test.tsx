@@ -222,6 +222,9 @@ describe("MigrateToCloudWizard", () => {
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: /^Export$/ }));
     await waitFor(() => expect(mocks.exportCloudImportPackage).toHaveBeenCalledTimes(1));
+    expect(mocks.exportCloudImportPackage).toHaveBeenCalledWith({
+      projectId: defaultPublicProjectId,
+    });
     await waitFor(() =>
       expect(mocks.downloadWorkspacePackage).toHaveBeenCalledWith(defaultPackageFile),
     );
@@ -241,6 +244,22 @@ describe("MigrateToCloudWizard", () => {
 
     expect(await screen.findByText("Awaiting external confirmation")).toBeInTheDocument();
     expect(screen.queryByText(/import complete/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps failed package exports private and does not mark the download complete", async () => {
+    mocks.exportCloudImportPackage.mockRejectedValueOnce(
+      new Error("Project export is unavailable. provider=internal"),
+    );
+    renderWizard();
+    await continueToTransfer();
+    fireEvent.click(screen.getByRole("radio", { name: /Download/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Export$/ }));
+
+    expect(await screen.findByText("Instance import package export failed.")).toBeInTheDocument();
+    expect(screen.queryByText(/provider=internal/)).not.toBeInTheDocument();
+    expect(mocks.downloadWorkspacePackage).not.toHaveBeenCalled();
+    expect(screen.getByRole("checkbox", { name: /await confirmation/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
   it("asks how to handle the migration hold before closing mid-flow", async () => {

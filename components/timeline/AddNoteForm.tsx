@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Textarea } from "@/components/ui/Textarea";
 import { addSignalNote } from "@/lib/actions/signals";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { CreateSignalNoteInput } from "@/lib/timeline/types";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
@@ -15,7 +15,6 @@ import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { createTimelineNoteFormSchema } from "./timeline-note-form-schema";
 
 type AddNoteFormProps = {
@@ -64,10 +63,9 @@ function AddNoteFormControls({
     reset,
     setValue,
     watch,
-  } = useForm<CreateSignalNoteInput>({
+  } = useZodForm<CreateSignalNoteInput>(schema, {
     defaultValues: defaultValues(projectId),
     mode: "onChange",
-    resolver: zodResolver(schema),
   });
   const severity = watch("severity");
 

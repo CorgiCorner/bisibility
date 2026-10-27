@@ -1,3 +1,4 @@
+import { operationPath } from "./operation-path";
 import type { JsonObject } from "./types";
 
 type ResearchToolCall = {
@@ -52,18 +53,18 @@ export function dispatchKeywordResearchTool(
     return null;
   }
   const id = projectId(input);
-  const base = `/projects/${encodeURIComponent(id)}`;
+  const selection = { project_id: id };
   if (name === "research_keywords") {
     return {
       method: "GET",
-      path: `${base}/keyword-research${query(input)}`,
+      path: `${operationPath("researchKeywords", selection)}${query(input)}`,
       projectId: id,
     };
   }
   if (name === "estimateKeywordResearchCost") {
     return {
       method: "GET",
-      path: `${base}/keyword-research${estimateQuery(input)}`,
+      path: `${operationPath("researchKeywords", selection)}${estimateQuery(input)}`,
       projectId: id,
     };
   }
@@ -71,7 +72,7 @@ export function dispatchKeywordResearchTool(
     return {
       body: Object.fromEntries(Object.entries(input).filter(([key]) => key !== "project_id")),
       method: "POST",
-      path: `${base}/keyword-metrics`,
+      path: `${operationPath("getKeywordMetrics", selection)}`,
       projectId: id,
     };
   }

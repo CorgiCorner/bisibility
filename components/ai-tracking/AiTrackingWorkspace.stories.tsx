@@ -14,7 +14,6 @@ import {
   pagedTrackingActions,
   pagedTrackingFixture,
 } from "./history-fixtures";
-import { TrackingAuditReportFixture } from "./TrackingAuditReportFixture";
 
 const meta = {
   title: "Prompt Tracker/Workspace",
@@ -48,7 +47,6 @@ export const History: Story = {
   args: { initialTab: "runs", initialSamples: trackingSampleFixtures },
 };
 export const SchedulesLink: Story = { args: { schedulesHref: "/app/prj_fixture/runs/schedules" } };
-export const EvidenceAuditReport: Story = { render: () => <TrackingAuditReportFixture /> };
 
 export const BlockedPreview: Story = {
   args: {

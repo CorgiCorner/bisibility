@@ -32,8 +32,20 @@ const tools = new Set([
   "get_rank_history",
   "list_search_performance_query_stats",
   "get_agent_report",
-  "analyze_brand_visibility",
-  "compare_ai_prompts",
+]);
+const sourceTools = new Set([
+  ...tools,
+  "list_projects",
+  "get_project",
+  "get_project_context",
+  "list_site_audits",
+  "list_agent_reports",
+  "list_search_index_sitemaps",
+  "get_search_index_sitemap",
+  "inspect_search_index_urls",
+  "get_page_indexing_report",
+  "list_page_indexing_urls",
+  "get_page_indexing_settings",
 ]);
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -90,6 +102,19 @@ function validateUrlFields(object) {
   }
 }
 
+function validateSourceTools(object, message = "Unsupported source tool") {
+  for (const [key, value] of Object.entries(object)) {
+    if (key === "source_tool") assert(sourceTools.has(value), message);
+    if (key === "source_tools") {
+      assert(
+        Array.isArray(value) && value.every((tool) => sourceTools.has(tool)),
+        message,
+      );
+    }
+    if (value && typeof value === "object") validateSourceTools(value, message);
+  }
+}
+
 export function validateReport(payload) {
   assert(payload && typeof payload === "object", "Expected payload object");
   const allowed = ["project_id", "kind", "title", "body", "provenance", "idempotency_key"];
@@ -106,6 +131,7 @@ export function validateReport(payload) {
   boundedObject(payload.provenance, 32 * 1024);
   validateUrlFields(payload.body);
   validateUrlFields(payload.provenance);
+  validateSourceTools(payload.provenance, "Unsupported provenance tool");
   assert(Buffer.byteLength(JSON.stringify(payload)) <= 320 * 1024, "Request byte limit exceeded");
   const body = payload.body;
   assert(body.version === 1 && text(body.summary), "Missing report version/summary");
@@ -158,18 +184,21 @@ export function validateReport(payload) {
     assert(date(row.retrieved_at) && text(row.fact), "Missing retrieval date/fact");
     if (row.type === "synthetic_prompt_test") {
       assert(
-        ["get_agent_report", "compare_ai_prompts"].includes(row.source_tool),
+        row.source_tool === "get_agent_report",
         "Synthetic source mismatch",
       );
     }
     if (row.type === "observed_dataset") {
       assert(
-        ["get_agent_report", "analyze_brand_visibility"].includes(row.source_tool),
+        row.source_tool === "get_agent_report",
         "Observed source mismatch",
       );
     }
+    if (["observed_dataset", "synthetic_prompt_test"].includes(row.type))
+      assert(publicId("agr", row.report_id), "Invalid saved AI report ID");
     evidence.set(row.id, row);
   }
+  validateSourceTools(body);
   assert(
     Array.isArray(body.recommendations) && body.recommendations.length <= 3,
     "Expected up to three actions",

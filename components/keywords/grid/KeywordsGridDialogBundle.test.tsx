@@ -26,10 +26,6 @@ vi.mock("./KeywordsGridDialogs", () => ({
   ),
 }));
 
-vi.mock("./RunChecksConfirmationModal", () => ({
-  RunChecksConfirmationModal: () => null,
-}));
-
 vi.mock("./useRankTrackerCommands", () => ({
   RankTrackerCommandMarker: () => null,
 }));

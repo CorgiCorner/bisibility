@@ -11,7 +11,7 @@ export type IdChipProps = {
   value: string;
 };
 
-const idChipVariants = cva("inline-flex items-center", {
+const idChipVariants = cva("inline-flex shrink-0 items-center whitespace-nowrap", {
   variants: {
     size: {
       xs: "h-[22px] gap-[5px] rounded-control px-2 py-[3px]",
@@ -43,7 +43,7 @@ export function shortId(value: string, truncate: "prefix" | "middle" = "prefix")
 export function IdChip({
   value,
   copyLabel,
-  truncate = "prefix",
+  truncate = "middle",
   size = "sm",
   className,
   copyClassName,
@@ -57,7 +57,9 @@ export function IdChip({
       )}
       title={value}
     >
-      <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>
+      <span
+        className={cn("whitespace-nowrap font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}
+      >
         {shortId(value, truncate)}
       </span>
       <IdChipCopyButton

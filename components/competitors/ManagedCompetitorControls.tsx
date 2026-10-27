@@ -6,7 +6,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { removeManagedCompetitor, renameManagedCompetitor } from "@/lib/actions/competitors";
 import type { ManagedCompetitor, RenameManagedCompetitorInput } from "@/lib/competitors/types";
 import { renameManagedCompetitorSchema } from "@/lib/competitors/types";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
@@ -14,7 +14,6 @@ import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { presentCompetitorValidationMessage } from "./competitor-validation-presentation";
 
 type ManagedCompetitorControlsProps = {
@@ -44,13 +43,12 @@ export function ManagedCompetitorControls({
     handleSubmit,
     register,
     reset,
-  } = useForm<RenameManagedCompetitorInput>({
+  } = useZodForm<RenameManagedCompetitorInput>(renameManagedCompetitorSchema, {
     defaultValues: {
       competitorId: competitor.id,
       label: competitor.label,
       projectId,
     },
-    resolver: zodResolver(renameManagedCompetitorSchema),
   });
 
   function closeEdit() {

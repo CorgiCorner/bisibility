@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { inputControlSizeClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { UpdateKeywordInput } from "@/lib/schemas/keyword";
@@ -25,7 +25,6 @@ import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { KeywordInlineEditLocationField } from "./KeywordInlineEditLocationField";
 import { KeywordInlineEditTextField } from "./KeywordInlineEditTextField";
 import {
@@ -78,7 +77,7 @@ export function KeywordInlineEdit({
     register,
     setValue,
     watch,
-  } = useForm<InlineEditInput>({
+  } = useZodForm<InlineEditInput>(inlineEditSchema, {
     defaultValues: {
       city: locationValue.kind === "city" ? (locationValue.cityName ?? null) : null,
       device: deviceValue(keyword.device),
@@ -91,7 +90,6 @@ export function KeywordInlineEdit({
       topic: keyword.topic ?? "",
       intent: keyword.intent ?? "",
     },
-    resolver: zodResolver(inlineEditSchema),
   });
   const tagMessage = inlineEditTagsError(errors, t);
   const device = watch("device");

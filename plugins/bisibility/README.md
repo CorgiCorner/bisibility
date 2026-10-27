@@ -66,7 +66,7 @@ The external client's model performs the analysis. Bisibility provides MCP data 
 
 The skills CLI installs each complete skill directory, including references. Connect MCP using the [agent setup guide](https://bisibility.com/docs/agents), then invoke `$seo-audit` with the same prompt. The marketplace commands above apply only to Claude Code. Do not install just the SKILL.md without its references.
 
-Core tools are `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. Optional tools include `get_rank_history`, `list_search_performance_query_stats`, `analyze_brand_visibility` and `compare_ai_prompts`; the latter two require estimate-first spending approval. See the skill's [workflow](skills/seo-audit/references/workflow.md) and [report contract](skills/seo-audit/references/report.md). Client namespaces may prefix tool names.
+Core tools are `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. Optional tools include `get_rank_history` and `list_search_performance_query_stats`. This skill only reads already-saved AI reports; it never runs paid provider research. Missing AI reports are a coverage gap with a pointer to the separate `/ai-visibility-audit` workflow. See the skill's [workflow](skills/seo-audit/references/workflow.md) and [report contract](skills/seo-audit/references/report.md). Client namespaces may prefix tool names.
 
 ## Architecture
 

@@ -14,7 +14,7 @@ import {
   drawerManual,
   drawerSteady,
   drawerToday,
-} from "./history-drawer-fixtures";
+} from "./history-drawer.test-support";
 import {
   fillingDays,
   firstDays,
@@ -27,7 +27,7 @@ import {
   thirdDays,
 } from "./history-fixtures";
 import { groupSitemaps, historyStrip, trendDays, trendTicks } from "./history-presentation";
-import { historyTab } from "./history-tab-fixtures";
+import { historyTab } from "./history-tab.test-support";
 import { IndexingDrawer } from "./IndexingDrawer";
 import { IndexingHistoryStrip } from "./IndexingHistoryStrip";
 import { IndexingSitemaps } from "./IndexingSitemaps";

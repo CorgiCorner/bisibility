@@ -85,6 +85,7 @@ export const canonicalSavedViewSelect = {
   config: true,
   createdAt: true,
   createdById: true,
+  createdBy: { select: { publicId: true } },
   id: true,
   name: true,
   ownerId: true,

@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { archiveCheckScheduleSchema } from "@/lib/schemas/check-schedule-lifecycle";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { scheduleLifecycleRequest } from "./ScheduleLifecycleActions";
 import type { ScheduleListRow } from "./SchedulesList";
 
@@ -40,9 +39,8 @@ export function ArchiveScheduleModal({
   const router = useRouter();
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
-  const form = useForm<{ destinationScheduleId: string | null }>({
+  const form = useZodForm<{ destinationScheduleId: string | null }>(formSchema, {
     defaultValues: { destinationScheduleId: null },
-    resolver: zodResolver(formSchema),
   });
   const destination = form.watch("destinationScheduleId");
   const options = [

@@ -17,10 +17,11 @@ import {
   paymentResource,
 } from "./action-payment";
 import { backlinksFailureResponse } from "./backlinks-failure-response";
-import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import { commonLookupFailureResponse } from "./lookup-failure-response";
 import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
+import { retryHeaders } from "./retry-headers";
 import { readJsonBody, scopedProject, snakeizeKeys } from "./surface";
 
 const falseParam = z
@@ -76,20 +77,12 @@ function analyzeQuery(ctx: ApiContext) {
   });
 }
 
-function retryHeaders(ctx: ApiContext, resetAt: number | undefined, fallbackMs: number) {
-  const headers = new Headers(ctx.headers);
-  const retryAfter = String(
-    Math.max(1, Math.ceil(((resetAt ?? Date.now() + fallbackMs) - Date.now()) / 1_000)),
-  );
-  headers.set("Retry-After", retryAfter);
-  headers.set("RateLimit-Reset", retryAfter);
-  return headers;
-}
-
 function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
   return paymentFailureResponse(lookupErrorBase(ctx, outcome), outcome);
 }
 function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
+  const commonFailure = commonLookupFailureResponse(ctx, outcome);
+  if (commonFailure) return commonFailure;
   const common = { headers: ctx.headers, instance: ctx.instance };
   if (outcome.reason.startsWith("payment_"))
     return errorResponse(
@@ -106,26 +99,6 @@ function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
       common,
     );
   }
-  if (outcome.reason === "budget_exhausted") {
-    return budgetExhaustedResponse(ctx, {
-      reason: outcome.budgetReason,
-      surface: "programmatic",
-      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
-    });
-  }
-  if (outcome.reason === "cost_limit_exceeded") {
-    return errorResponse(
-      "cost_limit_exceeded",
-      "The estimated provider cost exceeds max_cost_cents.",
-      422,
-      {
-        ...common,
-        ...(outcome.estimatedCostCents === undefined
-          ? {}
-          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
-      },
-    );
-  }
   if (outcome.reason === "in_progress") {
     return errorResponse(
       "lookup_in_progress",
@@ -136,12 +109,6 @@ function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
         instance: ctx.instance,
       },
     );
-  }
-  if (outcome.reason === "rate_limited") {
-    return errorResponse("rate_limited", "Provider rate limit reached. Try again shortly.", 429, {
-      headers: retryHeaders(ctx, outcome.resetAt, 1_000),
-      instance: ctx.instance,
-    });
   }
   return errorResponse(
     "provider_unavailable",

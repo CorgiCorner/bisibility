@@ -1,49 +1,17 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
-import type {
-  CheckRange,
-  CheckRunFilter,
-  CheckRunProviderOption,
-  CheckRunsView,
-  CheckRunTriggerFilter,
-} from "@/lib/checks/contract";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
+import type { CheckRunsSectionProps } from "@/lib/checks/section-contract";
 import { useState } from "react";
 import { CheckRunFilters, CheckRunStats, CheckRunsHeader } from "./CheckRunsControls";
 import { ProviderHealth, RateLimitBanner } from "./CheckRunsProviderHealth";
-import { type CheckRunsBudget, CheckRunsStatusBands } from "./CheckRunsStatusBands";
+import { CheckRunsStatusBands } from "./CheckRunsStatusBands";
 import { CheckRunsTable } from "./CheckRunsTable";
 import { EvidenceProjectionBands } from "./EvidenceProjectionBands";
-import { type SkippedRunsLinks, SkippedRunsView } from "./SkippedRunsView";
+import { SkippedRunsView } from "./SkippedRunsView";
 
-export type CheckRunsSectionProps = SkippedRunsLinks & {
-  exactRange?: boolean;
-  hideAsOfDate?: boolean;
-  hideProvider?: boolean;
-  asOfDate: string;
-  budget: CheckRunsBudget;
-  budgetSettingsHref: string;
-  filter: CheckRunFilter;
-  initialExpandedRunIds?: readonly string[];
-  keywordHref: (keywordPublicId: string) => string;
-  now?: Date;
-  onAsOfDateChange: (date: string) => void;
-  onFilterChange: (filter: CheckRunFilter) => void;
-  onLoadMore: () => void;
-  onProviderChange: (provider: string) => void;
-  onRangeChange: (range: CheckRange) => void;
-  onRetryFailed?: () => void;
-  onRetryStale?: () => void;
-  onTriggerChange: (trigger: CheckRunTriggerFilter) => void;
-  provider: string;
-  providerOptions: readonly CheckRunProviderOption[];
-  range: CheckRange;
-  reorderProvidersHref: string;
-  timeZone: string;
-  trigger: CheckRunTriggerFilter;
-  view: CheckRunsView;
-};
+export type { CheckRunsSectionProps } from "@/lib/checks/section-contract";
 
 export function CheckRunsSection({
   exactRange,

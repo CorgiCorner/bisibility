@@ -6,6 +6,17 @@ description: "Create rank-change rules with in-app, email, and signed webhook de
 Alerts are evaluated after a completed rank check. Creating a rule does not
 immediately query a SERP provider or evaluate historical checks.
 
+## Check summaries
+
+Check summaries are separate from alert rules and their email or webhook
+digests. Manual runs have grouped summaries; scheduled app checks are grouped
+into hourly windows. A scheduled summary is prepared after its window closes,
+so completing one check does not mean its summary is ready yet.
+
+[Check summary preferences](/api/notification-preferences#check-summaries)
+control which summaries you receive. They do not change alert-rule matching
+or the `alert.digest` webhook contract below.
+
 ## Create a rule
 
 1. Open **Alerts** and select **New rule**.

@@ -8,7 +8,7 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Switch } from "@/components/ui/Switch";
 import { updateNotificationPreferences } from "@/lib/actions/notification-prefs";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   CHECK_NOTIFICATION_POSITION_MOVE,
   CHECK_NOTIFICATION_SETTING_DEFAULT,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { type Control, Controller, useForm } from "react-hook-form";
+import { type Control, Controller } from "react-hook-form";
 import type { z } from "zod";
 import {
   CheckModeDescription,
@@ -145,10 +145,9 @@ export function NotificationChannelsCard({
   canEdit,
   preferences,
 }: Readonly<NotificationChannelsCardProps>) {
-  const form = useForm<NotificationPreferencesForm>({
+  const form = useZodForm<NotificationPreferencesForm>(notificationSettingsFormSchema, {
     defaultValues: formDefaults(preferences),
     mode: "onChange",
-    resolver: zodResolver(notificationSettingsFormSchema),
   });
   const router = useRouter();
   const sharedErrors = useSharedErrorMessages();

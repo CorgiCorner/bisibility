@@ -2,7 +2,7 @@
 
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { Switch } from "@/components/ui/Switch";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type ExperimentalModuleKey,
   type ExperimentalModulesInput,
@@ -14,7 +14,6 @@ import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 
 export type UpdateExperimentalModules = (
   input: ExperimentalModulesInput,
@@ -42,10 +41,9 @@ export function ExperimentalModulesForm({
     projectId,
   });
   const saveQueue = useRef(Promise.resolve());
-  const form = useForm<ExperimentalModulesInput>({
+  const form = useZodForm<ExperimentalModulesInput>(experimentalModulesSchema, {
     defaultValues: { enabledExperimentalModules: [...enabledExperimentalModules], projectId },
     mode: "onChange",
-    resolver: zodResolver(experimentalModulesSchema),
   });
 
   function saveModules(values: ExperimentalModulesInput, revision: number) {

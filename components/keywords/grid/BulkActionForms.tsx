@@ -9,11 +9,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import { inputClassName, inputControlSizeClassName } from "@/components/ui/input-styles";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { type BulkKeywordTagInput, bulkKeywordTagSchema } from "@/lib/schemas/keyword";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { presentBulkActionError } from "./bulk-action-error";
 import { type BulkFormChrome, runBulkFormBusy } from "./bulk-form-chrome";
 
@@ -49,9 +48,8 @@ export function BulkTagForm({
     formState: { errors, isSubmitting },
     handleSubmit,
     setValue,
-  } = useForm<BulkKeywordTagInput>({
+  } = useZodForm<BulkKeywordTagInput>(bulkKeywordTagSchema, {
     defaultValues: { keywordIds: selectedIds, projectId, tags: [] },
-    resolver: zodResolver(bulkKeywordTagSchema),
   });
   const tagMessage = Array.isArray(errors.tags) ? errors.tags[0]?.message : errors.tags?.message;
 

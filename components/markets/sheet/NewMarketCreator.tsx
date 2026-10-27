@@ -12,7 +12,7 @@ import {
   marketDefinitionSelection,
 } from "@/components/markets/blocks/market-definition-selection";
 import { catalogMarketDefinitionSource } from "@/components/markets/blocks/market-definition-source";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type NewMarketCreateInput,
   type NewMarketCreateResult,
@@ -22,7 +22,6 @@ import type { MarketScheduleContext } from "@/lib/markets/schedule-context";
 import { DEFAULT_SERP_DEPTH, type SerpDevice } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { NewMarketCreationFields } from "./NewMarketCreationFields";
 import { type ExistingMarketDeviceTracking, NewMarketExisting } from "./NewMarketExisting";
 import type { NewMarketSource } from "./NewMarketKeywordMethod";
@@ -118,9 +117,8 @@ export function NewMarketCreator({
       ? { devices: [...definitionOnly.devices], method: { kind: "empty" as const } }
       : {}),
   };
-  const form = useForm<NewMarketCreateInput>({
+  const form = useZodForm<NewMarketCreateInput>(newMarketCreateSchema, {
     defaultValues: defaultValues as never,
-    resolver: zodResolver(newMarketCreateSchema),
   });
   const canonicalKey = form.watch("canonicalKey");
   const formDevices = form.watch("devices");

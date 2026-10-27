@@ -57,17 +57,6 @@ export function scheduleView(
     timezone: schedule.timezone,
   };
 }
-export function fallbackSchedule(): KeywordSchedule {
-  return {
-    cron_expression: null,
-    frequency: "manual",
-    jitter_minutes: 0,
-    last_checked_at: null,
-    next_check_at: null,
-    serp_depth: null,
-    timezone: "UTC",
-  };
-}
 export function isCompletedCheck(check: { status?: string }) {
   return check.status === undefined || check.status === "completed";
 }

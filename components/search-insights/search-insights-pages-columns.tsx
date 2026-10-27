@@ -1,13 +1,12 @@
 import {
   formatRowCount,
   formatRowCtr,
-  formatRowPosition,
-  positionClassName,
 } from "@/components/search-insights/search-insights-rows-model";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { pageHref, type SearchInsightsPageRow } from "@/lib/search-insights/queries/top-rows-model";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import type { useTranslations } from "next-intl";
+import { searchInsightsMetricColumn } from "./search-insights-metric-column";
 
 export type SearchInsightsPageDataTableRow = SearchInsightsPageRow & { id: string };
 
@@ -67,20 +66,7 @@ export function searchInsightsPageColumns({
       minSize: 160,
       size: 200,
     },
-    {
-      accessorKey: "clicks",
-      cell: ({ row }) => (
-        <span className={`${NUMBER} font-semibold`}>
-          {formatRowCount(row.original.clicks, locale)}
-        </span>
-      ),
-      header: t("clicks"),
-      id: "clicks",
-      meta: { align: "end", sortField: "clicks", sortable, title: t("clicks") },
-      minSize: 80,
-      size: 80,
-      sortDescFirst: true,
-    },
+    searchInsightsMetricColumn("clicks", locale, sortable, t),
   ];
   if (showTraffic) {
     columns.push(
@@ -140,39 +126,13 @@ export function searchInsightsPageColumns({
         size: 92,
       });
     } else {
-      columns.push(positionColumn(locale, sortable, t));
+      columns.push(searchInsightsMetricColumn("position", locale, sortable, t));
     }
   } else {
     columns.push(
-      {
-        accessorKey: "impressions",
-        cell: ({ row }) => (
-          <span className={`${NUMBER} text-fg-muted`}>
-            {formatRowCount(row.original.impressions, locale)}
-          </span>
-        ),
-        header: t("impressionsShort"),
-        id: "impressions",
-        meta: { align: "end", sortField: "impressions", sortable, title: t("impressions") },
-        minSize: 72,
-        size: 72,
-        sortDescFirst: true,
-      },
-      {
-        accessorKey: "ctr",
-        cell: ({ row }) => (
-          <span className={`${NUMBER} text-fg-muted`}>
-            {formatRowCtr(row.original.ctr, locale)}
-          </span>
-        ),
-        header: t("ctr"),
-        id: "ctr",
-        meta: { align: "end", sortField: "ctr", sortable, title: t("ctr") },
-        minSize: 64,
-        size: 64,
-        sortDescFirst: true,
-      },
-      positionColumn(locale, sortable, t),
+      searchInsightsMetricColumn("impressions", locale, sortable, t),
+      searchInsightsMetricColumn("ctr", locale, sortable, t),
+      searchInsightsMetricColumn("position", locale, sortable, t),
     );
   }
   columns.push({
@@ -185,24 +145,4 @@ export function searchInsightsPageColumns({
     size: 96,
   });
   return columns;
-}
-
-function positionColumn(
-  locale: string,
-  sortable: boolean,
-  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
-): DataTableColumn<SearchInsightsPageDataTableRow> {
-  return {
-    accessorKey: "position",
-    cell: ({ row }) => (
-      <span className={`${NUMBER} ${positionClassName(row.original.position)}`}>
-        {formatRowPosition(row.original.position, locale)}
-      </span>
-    ),
-    header: t("averagePosition"),
-    id: "position",
-    meta: { align: "end", sortField: "position", sortable, title: t("avgPositionTip") },
-    minSize: 88,
-    size: 88,
-  };
 }

@@ -5,13 +5,11 @@ import {
 import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import type { visibilitySchema } from "@/lib/ai-research/schema";
 import type { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
-import type { modelSuggestionsPreviewInputSchema } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import type { z } from "zod";
-import { TrackingGenerationFields } from "./TrackingGenerationFields";
 import { TrackingMarketControls } from "./TrackingMarketControls";
 
 vi.mock("next-intl", () => ({
@@ -27,37 +25,6 @@ function MarketHarness({ changed }: { changed: (location: string) => void }) {
     <TrackingMarketControls
       control={form.control}
       onChange={() => changed(form.getValues("location"))}
-    />
-  );
-}
-
-function GenerationHarness({ changed }: { changed: (country?: string) => void }) {
-  const form = useForm<
-    z.input<typeof modelSuggestionsPreviewInputSchema>,
-    unknown,
-    z.output<typeof modelSuggestionsPreviewInputSchema>
-  >({
-    defaultValues: {
-      configuration: {
-        provider: "dataforseo",
-        engine: "chat_gpt",
-        model: "gpt-4.1-mini",
-        languageCode: "en",
-        maxOutputTokens: 512,
-        advisoryCostLimitCents: 10,
-      },
-      inputSnapshot: {
-        context: { business: "", audience: "", products: "", goals: "", agentRules: "" },
-        competitors: [],
-      },
-    },
-  });
-  return (
-    <TrackingGenerationFields
-      control={form.control}
-      register={form.register}
-      competitors={[]}
-      onInvalidate={() => changed(form.getValues("configuration.countryIsoCode"))}
     />
   );
 }
@@ -144,37 +111,6 @@ describe("AI country controls", () => {
     await chooseCountry(user, "location", "PL", "Poland");
     expect(changed).toHaveBeenCalledExactlyOnceWith("Poland");
     expect(flag(screen.getByRole("button", { name: "location" }), "PL")).toBeInTheDocument();
-  });
-
-  it("keeps generation ISO values and clears optional country without assigning a flag", async () => {
-    const user = userEvent.setup();
-    const changed = vi.fn();
-    render(<GenerationHarness changed={changed} />);
-    expect(
-      screen
-        .getByRole("button", { name: "generationCountry" })
-        .querySelector("[data-country-flag]"),
-    ).toBeNull();
-    await user.click(screen.getByRole("button", { name: "generationCountry" }));
-    await user.click(screen.getByRole("textbox", { name: "searchPlaceholder" }));
-    await user.paste("Polska");
-    const poland = screen.getByRole("menuitem", { name: "Poland" });
-    expect(flag(poland, "PL")).toBeInTheDocument();
-    await user.click(poland);
-    expect(changed).toHaveBeenLastCalledWith("PL");
-    await user.click(screen.getByRole("button", { name: "generationCountry" }));
-    const none = screen.getByRole("menuitem", { name: "generationNoCountry" });
-    expect(none.querySelector("[data-country-flag]")).toBeNull();
-    await user.click(none);
-    expect(changed).toHaveBeenLastCalledWith(undefined);
-    expect(
-      screen
-        .getByRole("button", { name: "generationCountry" })
-        .querySelector("[data-country-flag]"),
-    ).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "languageCode" }).querySelector("[data-country-flag]"),
-    ).toBeNull();
   });
 
   it("preserves provider-supported numeric locations, local-name search and country languages", async () => {

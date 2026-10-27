@@ -1,8 +1,10 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import buttonStyles from "@/components/ui/Button.module.css";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { activeLocaleValues } from "@/i18n/config";
 import messages from "@/messages/core/en/project-rank-tracker.json";
-import { fireEvent, render as renderDom, screen } from "@testing-library/react";
+import { act, fireEvent, render as renderDom, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
@@ -113,7 +115,7 @@ describe("KeywordsFilterBar", () => {
     expect(row).not.toHaveClass("flex-nowrap");
   });
 
-  it("refreshes the table from the context row", () => {
+  it("refreshes the table from the action row", () => {
     const onRefresh = vi.fn();
     render(
       <KeywordsFilterBar
@@ -132,6 +134,20 @@ describe("KeywordsFilterBar", () => {
     );
     fireEvent.click(refresh);
     expect(onRefresh).toHaveBeenCalledOnce();
+  });
+
+  it("keeps refresh in the actions row and disables it while busy", () => {
+    const onRefresh = vi.fn();
+    const { container } = render(
+      <KeywordsFilterBar {...baseProps} onRefresh={onRefresh} refreshing />,
+    );
+    const refresh = screen.getByRole("button", { name: "Refresh table" });
+    expect(refresh).toBeDisabled();
+    expect(refresh).toHaveAttribute("aria-busy", "true");
+    expect(refresh.closest("[data-keywords-toolbar-context]")).toBeNull();
+    expect(container.querySelector("[data-keywords-toolbar-context]")).toBeNull();
+    fireEvent.click(refresh);
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 
   it("applies the wider xl search grid template (min 320px)", () => {
@@ -238,4 +254,72 @@ it("only renders the chip row while search, filters or a mobile scope need it", 
     </ProjectRankTrackerMessages>,
   );
   expect(container.querySelector("[data-keywords-filter-chips]")).toBeNull();
+});
+
+describe("real rank tracker message loading", () => {
+  for (const locale of activeLocaleValues) {
+    it(`renders the toolbar using the app catalog slice for ${locale}`, async () => {
+      const catalog = await loadCoreMessages(locale, [
+        "shared",
+        "projectMarkets",
+        "projectRankTracker",
+        "projectRuns",
+      ]);
+      const list = catalog.projectRankTracker.list;
+      const { container } = renderDom(
+        <FeatureMessagesProvider locale={locale} messages={catalog} timeZone="UTC">
+          <KeywordsFilterBar
+            {...baseProps}
+            filterCount={1}
+            filterChips={[{ key: "change", label: "Example" }]}
+          />
+        </FeatureMessagesProvider>,
+      );
+      expect(screen.getByRole("button", { name: list.filterBar.refreshTable })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: list.toolbar.filters })).toBeInTheDocument();
+      expect(screen.getByText(list.filterBar.activeFilters)).toBeInTheDocument();
+      expect(screen.getByText(list.filterBar.clearAll)).toBeInTheDocument();
+      expect(container.textContent).not.toMatch(/projectRankTracker\./);
+      expect(list.toolbar.export).not.toMatch(/projectRankTracker\./);
+      expect(catalog.projectRankTracker.keywordImport.management.saved.researchTrend).toBeTruthy();
+    });
+  }
+});
+
+it("updates edge fades when the filter row scrolls and content size changes", () => {
+  const original = globalThis.ResizeObserver;
+  let notifyResize: (() => void) | undefined;
+  globalThis.ResizeObserver = class {
+    constructor(callback: ResizeObserverCallback) {
+      notifyResize = () => callback([], this as unknown as ResizeObserver);
+    }
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  } as typeof ResizeObserver;
+  try {
+    const { container } = render(<KeywordsFilterBar {...baseProps} filterCount={1} />);
+    const row = container.querySelector<HTMLElement>("[data-keywords-filter-chips]");
+    if (!row) throw new Error("Missing filter row");
+    let scrollLeft = 0;
+    let scrollWidth = 300;
+    Object.defineProperties(row, {
+      clientWidth: { configurable: true, get: () => 100 },
+      scrollWidth: { configurable: true, get: () => scrollWidth },
+      scrollLeft: { configurable: true, get: () => scrollLeft },
+    });
+    fireEvent.scroll(row);
+    expect(container.querySelector('[data-filter-fade="start"]')).toBeNull();
+    expect(container.querySelector('[data-filter-fade="end"]')).toBeInTheDocument();
+    scrollLeft = 200;
+    fireEvent.scroll(row);
+    expect(container.querySelector('[data-filter-fade="start"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-filter-fade="end"]')).toBeNull();
+    scrollLeft = 0;
+    scrollWidth = 100;
+    act(() => notifyResize?.());
+    expect(container.querySelector("[data-filter-fade]")).toBeNull();
+  } finally {
+    globalThis.ResizeObserver = original;
+  }
 });

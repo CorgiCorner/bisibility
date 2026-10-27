@@ -4,12 +4,11 @@ import { useTeamActionError } from "@/components/settings/team/useTeamActionErro
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Modal } from "@/components/ui/Modal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { cn } from "@/lib/ui/cn";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const inviteSchema = z.object({
@@ -48,10 +47,9 @@ export function InviteModal({
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const invitesAvailable = Boolean(inviteMember && projectId);
-  const form = useForm<InviteForm>({
+  const form = useZodForm<InviteForm>(inviteSchema, {
     defaultValues: { email: "", role: "member" },
     mode: "onChange",
-    resolver: zodResolver(inviteSchema),
   });
   const primaryDisabled =
     !invitesAvailable || !form.formState.isValid || form.formState.isSubmitting || sent;

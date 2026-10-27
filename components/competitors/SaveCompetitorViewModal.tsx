@@ -6,14 +6,13 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import type { CompetitorSavedViewConfig } from "@/lib/competitors/saved-view-model";
 import { competitorSavedViewHref } from "@/lib/competitors/saved-view-model";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { type SavedViewFormValues, savedViewNameSchema } from "@/lib/keywords/saved-view-model";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { CreateProjectSavedViewInput, SavedViewResource } from "@/lib/saved-views/model";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 
 type SaveCompetitorViewModalProps = {
   config: CompetitorSavedViewConfig;
@@ -43,9 +42,8 @@ export function SaveCompetitorViewModal({
     handleSubmit,
     register,
     setError,
-  } = useForm<SavedViewFormValues>({
+  } = useZodForm<SavedViewFormValues>(savedViewNameSchema, {
     defaultValues: { name: "" },
-    resolver: zodResolver(savedViewNameSchema),
   });
 
   async function submit(values: SavedViewFormValues) {

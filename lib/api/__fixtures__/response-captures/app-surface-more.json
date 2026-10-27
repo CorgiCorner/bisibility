@@ -64,6 +64,7 @@
           "version": 1
         },
         "created_at": "2026-01-01T00:00:00.000Z",
+        "created_by_id": null,
         "definition": {
           "filters": {
             "change": "any",
@@ -117,6 +118,7 @@
           "version": 1
         },
         "created_at": "2026-01-01T00:00:00.000Z",
+        "created_by_id": null,
         "definition": {
           "filters": {
             "excluded_keyword_ids": ["kw_a00000000000000000000000"],
@@ -191,6 +193,7 @@
               "version": 1
             },
             "created_at": "2026-01-01T00:00:00.000Z",
+            "created_by_id": null,
             "definition": {
               "filters": {
                 "change": "any",
@@ -251,6 +254,7 @@
               "version": 1
             },
             "created_at": "2026-01-01T00:00:00.000Z",
+            "created_by_id": null,
             "definition": {
               "filters": {
                 "excluded_keyword_ids": [],

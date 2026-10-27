@@ -2,19 +2,16 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { alertsEmailFrom } from "@/lib/email/from";
-import { EmailBudgetExceededError, EmailSendError, sendEmail } from "@/lib/email/send";
+import { sendEmail } from "@/lib/email/send";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyTriggeredAlertDelivered } from "@/lib/notifications/events";
 import {
-  classifyPermanentDeliveryFailure,
+  classifyDeliveryFailure,
   deliveryFailureMessage,
   deliveryStateForOutcomes,
-  nonRetryableFailure,
-  rateLimitedFailure,
 } from "@/lib/temporal/delivery-failures";
 import {
   type AlertDeliveryChannel,
-  DeliveryHttpError,
   postSignedBody,
   sendSlackMessage,
   stampWebhookDelivery,
@@ -23,7 +20,6 @@ import { renderAlertDigest } from "./digest-render";
 import type { AlertDigestJob } from "./digest-types";
 import type { AlertEmailRecipient } from "./recipients";
 import { deliverableAlertWhere } from "./transitions";
-import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "./webhook-target";
 
 export type AlertDigestDeliveryOutcome = {
   channel: AlertDeliveryChannel;
@@ -104,20 +100,7 @@ export async function deliverAlertDigestEmailActivity(input: {
     return true;
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
-    if (error instanceof EmailBudgetExceededError) {
-      throw nonRetryableFailure(errorMessage, "email_budget_exceeded");
-    }
-    if (error instanceof EmailSendError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    if (error instanceof EmailSendError) {
-      const classified = classifyPermanentDeliveryFailure(error, {
-        message: errorMessage,
-        status: error.status,
-      });
-      if (classified) throw classified;
-    }
-    throw error;
+    throw classifyDeliveryFailure(error, "email", errorMessage);
   }
 }
 
@@ -130,16 +113,7 @@ export async function deliverAlertDigestSlackActivity(job: AlertDigestJob) {
     return delivered;
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
-    if (error instanceof DeliveryHttpError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    const classified = classifyPermanentDeliveryFailure(error, {
-      message: errorMessage,
-      permanentMessage: errorMessage.startsWith("Slack alert send failed:"),
-      ...(error instanceof DeliveryHttpError ? { status: error.status } : {}),
-    });
-    if (classified) throw classified;
-    throw error;
+    throw classifyDeliveryFailure(error, "slack", errorMessage);
   }
 }
 
@@ -160,16 +134,7 @@ export async function deliverAlertDigestWebhookActivity(input: {
     return true;
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
-    if (error instanceof DeliveryHttpError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    const classified = classifyPermanentDeliveryFailure(error, {
-      message: errorMessage,
-      permanentMessage: errorMessage.includes(PRIVATE_NETWORK_WEBHOOK_ERROR),
-      ...(error instanceof DeliveryHttpError ? { status: error.status } : {}),
-    });
-    if (classified) throw classified;
-    throw error;
+    throw classifyDeliveryFailure(error, "webhook", errorMessage);
   }
 }
 

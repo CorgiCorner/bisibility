@@ -34,7 +34,7 @@ import { ConnectionRatePanel } from "@/components/provider-management/Connection
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type {
   IntegrationProviderData,
   ProviderActionHandlers,
@@ -44,7 +44,6 @@ import type { ProjectRef } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 export type ConnectDrawerProps = {
   actions?: ProviderActionHandlers;
@@ -97,9 +96,8 @@ export function ConnectDrawer({
     providerId: provider.id as ConnectFormValues["providerId"],
     secret: provider.drawer.defaults.secret,
   };
-  const form = useForm<ConnectFormValues>({
+  const form = useZodForm<ConnectFormValues>(drawerFormSchema, {
     defaultValues: formDefaults,
-    resolver: zodResolver(drawerFormSchema),
   });
   const errors = form.formState.errors;
   const busy = pendingAction !== null;

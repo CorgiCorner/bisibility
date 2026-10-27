@@ -82,6 +82,33 @@ afterEach(() => {
 });
 
 describe("KeywordsGrid actions", () => {
+  it("offers Research for one tracked keyword and explains multi-selection", async () => {
+    const rows = pendingRows(2);
+    renderPendingGrid({ rows });
+    for (const row of rows) {
+      const keywordRow = (await screen.findByText(row.keyword)).closest(
+        '[role="row"]',
+      ) as HTMLElement;
+      fireEvent.click(within(keywordRow).getByRole("checkbox"));
+      if (row === rows[0]) {
+        const research = screen.getByRole("link", { name: "Research" });
+        expect(research).toHaveAttribute(
+          "href",
+          expect.stringContaining(`seed=${encodeURIComponent(row.keyword).replace(/%20/g, "+")}`),
+        );
+        expect(research).toHaveAttribute(
+          "href",
+          expect.stringContaining(`location=${encodeURIComponent(row.location.canonicalKey)}`),
+        );
+      }
+    }
+    expect(screen.getByRole("button", { name: "Research" })).toHaveAccessibleDescription(
+      "Research one keyword at a time.",
+    );
+    const bar = screen.getByRole("toolbar", { name: "Actions for selected keywords" });
+    expect(within(bar).getAllByRole("button").at(-2)).toHaveTextContent("Remove");
+  });
+
   it("deletes a pending keyword through normal bulk actions", async () => {
     const [row] = pendingRows(1);
     const actions = renderPendingGrid({ rows: [row] });
@@ -96,7 +123,7 @@ describe("KeywordsGrid actions", () => {
         "1 selected",
       ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Delete keyword" })).toBeEnabled(),
     );
@@ -144,8 +171,9 @@ describe("KeywordsGrid actions", () => {
     expect(
       await screen.findByText("Export 1 selected keyword", {}, { timeout: 10_000 }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("CPC")).not.toBeInTheDocument();
-    expect(screen.queryByText("Search volume")).not.toBeInTheDocument();
+    const exportDialog = screen.getByRole("dialog");
+    expect(within(exportDialog).queryByText("CPC")).not.toBeInTheDocument();
+    expect(within(exportDialog).queryByText("Search volume")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
 
     await waitFor(() =>

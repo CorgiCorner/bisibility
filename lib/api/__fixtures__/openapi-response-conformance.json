@@ -95,6 +95,7 @@
       "missing-required /can_delete",
       "missing-required /config",
       "missing-required /created_at",
+      "missing-required /created_by_id",
       "missing-required /definition",
       "missing-required /id",
       "missing-required /name",
@@ -251,11 +252,11 @@
       "type-mismatch /data/*/definition/filters/position must be string",
       "type-mismatch /data/*/definition/filters/tag must be string",
       "type-mismatch /data/*/definition/lens/location_id must be string",
-      "... 3 more"
+      "... 5 more"
     ],
     "kinds": ["missing-required", "type-mismatch", "value-mismatch"],
     "operation": "listSavedViews",
-    "sources": ["lib/api/app-surface-more.test.ts"],
+    "sources": ["lib/api/app-surface-more.test.ts", "lib/api/router-saved-view-identity.test.ts"],
     "status": "200"
   },
   {

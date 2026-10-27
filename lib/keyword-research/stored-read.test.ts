@@ -82,6 +82,18 @@ describe("stored keyword research", () => {
     });
   });
 
+  it("keeps the retained tracked seed out of the visible suggestions", async () => {
+    mocks.findUnique.mockResolvedValue({
+      ...snapshot,
+      rows: [...snapshot.rows, { ...snapshot.rows[0], keyword: "seed", _trackedSeed: true }],
+    });
+    const result = await findStoredKeywordResearch({
+      projectId: "project_1",
+      requestKey: snapshot.requestKey,
+    });
+    expect(result?.rows.map((row) => row.keyword)).toEqual(["Saved keyword"]);
+  });
+
   it("returns null for an unknown request and metadata without snapshot IDs", async () => {
     mocks.findUnique.mockResolvedValue(null);
     await expect(

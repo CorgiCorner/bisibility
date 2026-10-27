@@ -274,7 +274,7 @@ async function dispatchApiRequest(
   const execute = async () => {
     try {
       const response = await withPracticeRequest(ctx, declaredOperation.operationId, () =>
-        dispatchRoute(ctx),
+        dispatchRoute(ctx, declaredOperation.operationId),
       );
       return response ?? routeNotFound({ headers: ctx.headers, instance: ctx.instance });
     } catch (error) {

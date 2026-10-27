@@ -2,6 +2,7 @@
 
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { type MarketScope, marketRunPartition } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
@@ -40,16 +41,19 @@ export function BulkRunChecksControls({
   selectedRows,
 }: Readonly<Props>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
+  const bulkT = useTranslations("projectRankTracker.keywordImport.management.bulk");
   if (!providerConnected) {
     return (
-      <Button
-        component={Link}
-        endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
-        href={appPath(projectId, "integrations")}
-        size="xs"
-      >
-        {t("connectProvider")}
-      </Button>
+      <Tooltip content={bulkT("providerTooltip")} semantics="description">
+        <Button
+          component={Link}
+          endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
+          href={appPath(projectId, "integrations")}
+          size="xs"
+        >
+          {t("connectProvider")}
+        </Button>
+      </Tooltip>
     );
   }
 
@@ -73,15 +77,17 @@ export function BulkRunChecksControls({
         />
       ) : null}
       {crossMarketIds ? (
-        <ProjectReadOnlyTooltip>
-          <Button
-            disabled={readOnly || checksRunning}
-            onClick={() => onRunChecks(crossMarketIds)}
-            size="xs"
-            variant="ghost"
-          >
-            {t("runAllMarkets")}
-          </Button>
+        <ProjectReadOnlyTooltip focusable>
+          <Tooltip content={bulkT("runAllTooltip")} semantics="description" disabled={readOnly}>
+            <Button
+              disabled={readOnly || checksRunning}
+              onClick={() => onRunChecks(crossMarketIds)}
+              size="xs"
+              variant="ghost"
+            >
+              {t("runAllMarkets")}
+            </Button>
+          </Tooltip>
         </ProjectReadOnlyTooltip>
       ) : null}
     </>

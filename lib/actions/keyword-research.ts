@@ -7,7 +7,9 @@ import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { ProviderCallError } from "@/lib/providers/call-error";
+import { appPath } from "@/lib/routing/app-path";
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 import { withLookupBudgetResult } from "./lookup-budget-result";
@@ -42,7 +44,7 @@ export async function researchKeywordsAction(input: unknown) {
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
 
   try {
-    return await withAchievementUse(actor.id, "researchKeywords", data.estimateOnly, () =>
+    const outcome = await withAchievementUse(actor.id, "researchKeywords", data.estimateOnly, () =>
       withLookupBudgetResult(() =>
         researchKeywords({
           ...data,
@@ -53,6 +55,8 @@ export async function researchKeywordsAction(input: unknown) {
         }),
       ),
     );
+    if (outcome.ok && !data.estimateOnly) revalidatePath(appPath(project.publicId, "rank-tracker"));
+    return outcome;
   } catch (error) {
     if (error instanceof ProviderCallError && error.code === "provider_account_restricted") {
       return {

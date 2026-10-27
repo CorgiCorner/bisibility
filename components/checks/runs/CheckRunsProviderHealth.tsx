@@ -1,24 +1,14 @@
 "use client";
 
-import type {
-  CheckRange,
-  CheckRunFilter,
-  CheckRunsView,
-  ProviderHealthEntry,
-} from "@/lib/checks/contract";
+import type { CheckRunsView, ProviderHealthEntry } from "@/lib/checks/contract";
+import type { CheckRunsSectionProps } from "@/lib/checks/section-contract";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type CheckRunsTranslations, rangeCaption, rangeWindow } from "./check-runs-format";
 
-type HealthProps = {
-  exactRange?: boolean;
-  onFilterChange: (filter: CheckRunFilter) => void;
-  range: CheckRange;
-  reorderProvidersHref: string;
-  view: CheckRunsView;
-};
+type HealthProps = BannerProps & Pick<CheckRunsSectionProps, "reorderProvidersHref">;
 
 function rateLimitedProvider(providerHealth: ProviderHealthEntry[]) {
   return providerHealth.reduce<ProviderHealthEntry | null>(
@@ -28,12 +18,7 @@ function rateLimitedProvider(providerHealth: ProviderHealthEntry[]) {
   );
 }
 
-type BannerProps = {
-  exactRange?: boolean;
-  onFilterChange: (filter: CheckRunFilter) => void;
-  range: CheckRange;
-  view: CheckRunsView;
-};
+type BannerProps = Pick<CheckRunsSectionProps, "exactRange" | "onFilterChange" | "range" | "view">;
 
 export function RateLimitBanner({
   onFilterChange,

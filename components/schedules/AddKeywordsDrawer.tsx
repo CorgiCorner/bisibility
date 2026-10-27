@@ -3,10 +3,9 @@
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   ScheduleAssignmentDestination,
@@ -90,9 +89,8 @@ export function AddKeywordsDrawer({
   const [selectedIds, setSelectedIds] = useState<string[]>([...initialSelectedKeywordIds]);
   const [tag, setTag] = useState(initialFilters?.tag ?? "all");
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const form = useForm<SelectedKeywordsForm>({
+  const form = useZodForm<SelectedKeywordsForm>(selectedKeywordsSchema, {
     defaultValues: { keywordIds: [...initialSelectedKeywordIds] },
-    resolver: zodResolver(selectedKeywordsSchema),
   });
   const tags = [...new Set(candidates.flatMap((candidate) => candidate.tags))].sort();
   const markets = [...new Set(candidates.map((candidate) => candidate.market))].sort();

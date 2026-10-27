@@ -1,9 +1,5 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import {
-  RunChecksConfirmationModal,
-  type RunChecksFlow,
-} from "@/components/keywords/grid/RunChecksConfirmationModal";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -64,35 +60,6 @@ const actionArgs = {
   updateKeywordAction: async () => undefined,
 };
 
-function flow(step: RunChecksFlow["step"]): RunChecksFlow {
-  return {
-    completed: step === "success" ? 1 : 0,
-    failures:
-      step === "failed"
-        ? [{ code: "sample_project", message: "This check could not start.", rankCheckId: null }]
-        : [],
-    pending: { depth: 20, keywordIds: [keyword.id] },
-    rankCheckIds: step === "running" ? ["check_story"] : [],
-    step,
-  };
-}
-
-function HeaderWithCheckModal({ step }: Readonly<{ step: RunChecksFlow["step"] }>) {
-  return (
-    <>
-      <KeywordHeaderCard {...actionArgs} keyword={keyword} />
-      <RunChecksConfirmationModal
-        flow={flow(step)}
-        onClose={() => undefined}
-        onConfirm={() => undefined}
-        onRetry={() => undefined}
-        projectId="proj_demo"
-        rows={[keyword]}
-      />
-    </>
-  );
-}
-
 const meta = {
   title: "Keywords/KeywordHeaderCard",
   component: KeywordHeaderCard,
@@ -142,23 +109,6 @@ export const RankstateNotRanked: Story = {
 export const RankstateNoData: Story = {
   args: { ...actionArgs, keyword: { ...keyword, hasRankData: false } },
 };
-export const CheckmodalstateConfirm: Story = {
-  args: { ...actionArgs, keyword },
-  render: () => <HeaderWithCheckModal step="confirm" />,
-};
-export const CheckmodalstateRunning: Story = {
-  args: { ...actionArgs, keyword },
-  render: () => <HeaderWithCheckModal step="running" />,
-};
-export const CheckmodalstateSuccess: Story = {
-  args: { ...actionArgs, keyword },
-  render: () => <HeaderWithCheckModal step="success" />,
-};
-export const CheckmodalstateFailed: Story = {
-  args: { ...actionArgs, keyword },
-  render: () => <HeaderWithCheckModal step="failed" />,
-};
-
 export const MoremenuopenTrue: Story = {
   args: { ...actionArgs, keyword },
   play: async ({ canvasElement }) => {

@@ -221,6 +221,26 @@ describe("keyword research service", () => {
     mocks.ideas.mockResolvedValue({ costCents: 3, rows: [row("Gamma")] });
   });
 
+  it("reports a storage failure without discarding a completed Research result or replaying payment", async () => {
+    mocks.snapshot.mockRejectedValueOnce(new Error("storage unavailable"));
+    await expect(run({ mode: "related" })).resolves.toMatchObject({
+      ok: true,
+      storageWarning: true,
+      rows: [{ keyword: "Alpha" }],
+    });
+    expect(mocks.paidCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains the provider-returned seed for tracked metrics without adding a provider call", async () => {
+    await run({ mode: "related" });
+    expect(mocks.snapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        seedResult: expect.objectContaining({ keyword: "seed", source: "related" }),
+      }),
+    );
+    expect(mocks.paidCall).toHaveBeenCalledTimes(1);
+  });
+
   it("auto cascades, excludes the seed, deduplicates, and stops at the limit", async () => {
     await expect(run()).resolves.toMatchObject({
       cached: false,

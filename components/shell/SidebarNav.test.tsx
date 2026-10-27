@@ -190,7 +190,10 @@ describe("SidebarNav", () => {
   it("keeps Dashboard alone before purpose groups in expanded and collapsed drawers", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     const expanded = render(
-      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
+      <SidebarNav
+        enabledExperimentalModules={["timeline", "competitors", "promptPlayground"]}
+        projectRef="prj_1"
+      />,
     );
 
     expect(expanded.queryByText("Activity")).toBeNull();
@@ -228,7 +231,7 @@ describe("SidebarNav", () => {
     const collapsed = render(
       <SidebarNav
         collapsed
-        enabledExperimentalModules={["timeline", "competitors"]}
+        enabledExperimentalModules={["timeline", "competitors", "promptPlayground"]}
         projectRef="prj_1"
       />,
     );

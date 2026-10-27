@@ -1,64 +1,41 @@
 "use client";
 
 import { KeywordsScopeControls } from "@/components/keywords/KeywordsScopeControls";
-import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
 import type { ReactNode } from "react";
+import { pickGridProps } from "./keywords-grid-projection";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { SavedViewsControl } from "./SavedViewsControl";
 
-type Props = {
-  activeFiltersSummary: string;
-  activeViewId: string | null;
-  config: Parameters<typeof SavedViewsControl>[0]["config"];
-  createSavedViewAction: KeywordsGridProps["createSavedViewAction"];
-  deletableSavedViewIds: KeywordsGridProps["deletableSavedViewIds"];
-  deleteSavedViewAction: KeywordsGridProps["deleteSavedViewAction"];
-  keywordsPath: string;
-  lens: ActiveLens;
-  locationOptions: LensLocationOption[];
-  projectId: string;
-  onQueryNavigation?: () => void;
-  query?: KeywordsGridProps["query"];
-  savedViews: NonNullable<KeywordsGridProps["savedViews"]>;
-};
+const savedViewProps = [
+  "activeFiltersSummary",
+  "activeViewId",
+  "config",
+  "createSavedViewAction",
+  "deletableSavedViewIds",
+  "deleteSavedViewAction",
+  "projectId",
+  "savedViews",
+] as const;
+const scopeProps = ["lens", "locationOptions", "onQueryNavigation", "query"] as const;
+type Props = Pick<Parameters<typeof SavedViewsControl>[0], (typeof savedViewProps)[number]> &
+  Pick<Parameters<typeof KeywordsScopeControls>[0], (typeof scopeProps)[number]> & {
+    createSavedViewAction: KeywordsGridProps["createSavedViewAction"];
+    deleteSavedViewAction: KeywordsGridProps["deleteSavedViewAction"];
+    keywordsPath: string;
+  };
 
-export function KeywordsGridScopeView({
-  activeFiltersSummary,
-  activeViewId,
-  config,
-  createSavedViewAction,
-  deletableSavedViewIds,
-  deleteSavedViewAction,
-  keywordsPath,
-  lens,
-  locationOptions,
-  projectId,
-  onQueryNavigation,
-  query,
-  savedViews,
-}: Readonly<Props>): { control: ReactNode; savedView: ReactNode } {
+export function KeywordsGridScopeView(props: Readonly<Props>): {
+  control: ReactNode;
+  savedView: ReactNode;
+} {
   return {
     control: (
       <KeywordsScopeControls
-        basePath={keywordsPath}
-        lens={lens}
-        locationOptions={locationOptions}
-        onQueryNavigation={onQueryNavigation}
-        viewId={activeViewId}
-        query={query}
+        {...pickGridProps(props, scopeProps)}
+        basePath={props.keywordsPath}
+        viewId={props.activeViewId}
       />
     ),
-    savedView: (
-      <SavedViewsControl
-        activeFiltersSummary={activeFiltersSummary}
-        activeViewId={activeViewId}
-        config={config}
-        createSavedViewAction={createSavedViewAction}
-        deletableSavedViewIds={deletableSavedViewIds}
-        deleteSavedViewAction={deleteSavedViewAction}
-        projectId={projectId}
-        savedViews={savedViews}
-      />
-    ),
+    savedView: <SavedViewsControl {...pickGridProps(props, savedViewProps)} />,
   };
 }

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type MarketDeviceActions,
   type MarketDeviceCandidate,
@@ -14,7 +14,6 @@ import {
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useForm } from "react-hook-form";
 import { MarketDeviceKeywordPicker } from "./MarketDeviceKeywordPicker";
 import type { NewMarketScheduleOption } from "./NewMarketSchedule";
 export function ExistingMarketDevices({
@@ -41,8 +40,7 @@ export function ExistingMarketDevices({
   const t = useTranslations("projectMarkets.deviceTracking");
   const { showToast } = useToast();
   const root = useTranslations("projectMarkets");
-  const form = useForm<MarketDeviceSelection>({
-    resolver: zodResolver(marketDeviceSelectionSchema),
+  const form = useZodForm<MarketDeviceSelection>(marketDeviceSelectionSchema, {
     defaultValues: {
       projectId,
       marketId,

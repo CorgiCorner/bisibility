@@ -2,12 +2,15 @@
 
 import type { KeywordAction } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Card } from "@/components/ui/Card";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
 import { monthlyNativeUsage } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
+import { sortSavedKeywords } from "@/lib/saved-keywords/sort";
 import type { AddKeywordsInput } from "@/lib/schemas/keyword";
 import type { RemoveSavedKeywordsInput } from "@/lib/schemas/saved-keyword";
 import type { SerpDevice } from "@/lib/serp/constants";
@@ -56,12 +59,19 @@ export function SavedKeywordsTable({
   total,
 }: Readonly<SavedKeywordsTableProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.saved");
+  const bulkT = useTranslations("projectRankTracker.keywordImport.management.bulk");
+  const { readOnly, readOnlyReason } = useProjectWriteMode();
+  const disabledReason = readOnly ? (readOnlyReason ?? bulkT("readOnlyFallback")) : undefined;
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [rows, setRows] = useState(initialRows);
   const [search, setSearch] = useState("");
+  const [sorting, setSorting] = useState<DataTableSort | null>({
+    field: "volume",
+    direction: "desc",
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [totalCount, setTotalCount] = useState(total);
   const [trackDraft, setTrackDraft] = useState<SavedKeywordRow[] | null>(null);
@@ -69,7 +79,8 @@ export function SavedKeywordsTable({
   const maxPage = Math.max(0, Math.ceil(filtered.length / pageSize) - 1);
   const activePage = Math.min(page, maxPage);
   const startIndex = activePage * pageSize;
-  const pageRows = filtered.slice(startIndex, startIndex + pageSize);
+  const sorted = useMemo(() => sortSavedKeywords(filtered, sorting), [filtered, sorting]);
+  const pageRows = sorted.slice(startIndex, startIndex + pageSize);
   const dataTableRows = useMemo(
     () =>
       pageRows.map<SavedKeywordsTableRow>((row) => ({
@@ -104,7 +115,7 @@ export function SavedKeywordsTable({
   }
 
   async function removeRows(targetRows: readonly SavedKeywordRow[]) {
-    if (targetRows.length === 0) return;
+    if (readOnly || targetRows.length === 0) return;
     setActionError(null);
     const publicIds = targetRows.map((row) => row.publicId);
     try {
@@ -164,9 +175,14 @@ export function SavedKeywordsTable({
         ) : null}
         {filtered.length > 0 ? (
           <SavedKeywordsTableRows
-            canDelete={canDeleteKeyword}
-            canTrack={canCreateKeyword}
+            canDelete={canDeleteKeyword && !readOnly}
+            canTrack={canCreateKeyword && !readOnly}
             onRemove={(row) => void removeRows([row])}
+            onSortingChange={(next) => {
+              setSorting(next);
+              setPage(0);
+            }}
+            sorting={sorting}
             onSelectionChange={(selection) => setSelectedIds([...selection])}
             onToggle={toggleRow}
             onTrack={(row) => setTrackDraft([row])}
@@ -202,7 +218,9 @@ export function SavedKeywordsTable({
         onRemove={() => void removeRows(selectedRows)}
         onTrack={() => setTrackDraft(selectedRows)}
         projectRef={projectId}
+        removeDisabledReason={disabledReason}
         selectedRows={selectedRows}
+        trackDisabledReason={disabledReason}
       />
       {selectedRows.length > 0 ? <FloatingSelectionBarSpacer /> : null}
       <AddKeywordDrawer
@@ -230,7 +248,7 @@ export function SavedKeywordsTable({
           setTrackDraft(null);
         }}
         onClose={() => setTrackDraft(null)}
-        open={Boolean(trackDraft)}
+        open={!readOnly && Boolean(trackDraft)}
         projectId={projectId}
         projectMarkets={projectMarkets}
         showSchedule

@@ -57,6 +57,7 @@ export type SavedViewResource = {
     KeywordSavedView | CompetitorSavedView,
     { surface: Surface }
   > & {
+    createdByPublicId: string | null;
     definition: Extract<ProjectViewConfig, { surface: Surface }>;
     revision: number;
     visibility: "project";
@@ -72,6 +73,7 @@ type SavedViewRecord = {
   config: unknown;
   createdAt: Date;
   createdById: string | null;
+  createdBy?: { publicId: string } | null;
   id: string;
   name: string;
   publicId: string | null;
@@ -101,10 +103,13 @@ export function mapSavedViewRecord(
   const definition = normalizeStoredViewConfig(view.config, view.surface);
   if (!definition) return null;
   const normalized = { config: legacyProjectViewScope(definition), surface: definition.surface };
+  const creator = view.createdBy?.publicId;
+  const createdByPublicId = creator && isPublicIdOfType(creator, "usr") ? creator : null;
   if (definition.surface === "competitors") {
     return normalized.config.surface === "competitors"
       ? {
           canDelete,
+          createdByPublicId,
           definition,
           revision: view.revision,
           visibility: "project",
@@ -119,6 +124,7 @@ export function mapSavedViewRecord(
   if (definition.surface !== "keywords" || normalized.config.surface !== "keywords") return null;
   return {
     canDelete,
+    createdByPublicId,
     definition,
     revision: view.revision,
     visibility: "project",

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { operationPath } from "./operation-path";
 import { mcpPublicIdSchema } from "./public-id-schema";
 import type { JsonObject } from "./types";
 
@@ -24,8 +25,7 @@ export const rankRunToolSchemas = Object.fromEntries(
 export function dispatchRankRunTool(name: string, input: JsonObject) {
   if (name !== "listRankCheckRuns" && name !== "getRankCheckRun") return null;
   const selection = schemas[name].parse(input);
-  let path = `/projects/${encodeURIComponent(selection.project_id)}/rank-check-runs`;
-  if ("run_id" in selection) path += `/${encodeURIComponent(selection.run_id)}`;
+  const path = operationPath(name, selection);
   const query = new URLSearchParams();
   for (const key of ["segment", "status", "limit", "cursor"]) {
     if (name === "listRankCheckRuns") {

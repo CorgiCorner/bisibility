@@ -19,6 +19,7 @@ import {
   NoDataValue,
 } from "./market-grid-cells";
 import { rowActionsColumn } from "./RowActionsCell";
+import { researchColumns } from "./research-grid-columns";
 import { ScheduleCell, type ScheduleCellTarget } from "./ScheduleCell";
 import { TargetRankingCell } from "./TargetRankingCell";
 
@@ -42,6 +43,22 @@ export type KeywordColumnLabels = TrafficColumnLabels & {
   trendTitle: string;
   intent: string;
   volume: string;
+  researchVolume: string;
+  researchTrend: string;
+  researchDifficulty: string;
+  researchCpc: string;
+  researchIntent: string;
+  researchSource: string;
+  researchAt: string;
+  researchHeaders: {
+    volume: string;
+    trend: string;
+    difficulty: string;
+    cpc: string;
+    intent: string;
+    source: string;
+    date: string;
+  };
 };
 
 export function scheduleTargetsForRow(row: KeywordRow): ScheduleCellTarget[] {
@@ -169,6 +186,7 @@ export function keywordColumns(
       minSize: 120,
       size: 120,
     },
+    ...researchColumns(labels, projectRef),
     ...trafficColumns(labels),
     {
       accessorFn: (row) => row.lastCheckAt,

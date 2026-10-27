@@ -1,15 +1,6 @@
+import { deferred } from "@/tests/deferred";
 import { describe, expect, it } from "vitest";
 import { SerializedToggleQueue } from "./alert-rule-enabled-queue";
-
-function deferred<T>() {
-  let reject!: (reason?: unknown) => void;
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, reject, resolve };
-}
 
 async function settle() {
   await Promise.resolve();

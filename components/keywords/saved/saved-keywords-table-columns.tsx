@@ -90,6 +90,17 @@ function KeywordCell({
   );
 }
 
+export function ResearchDifficultyPill({ value }: Readonly<{ value: number | null }>) {
+  return (
+    <span
+      className="inline-grid h-6 min-w-6 place-items-center rounded-full border px-1 font-sans tabular-nums text-[10.5px] font-semibold"
+      style={difficultyPillStyle(value)}
+    >
+      {value ?? "-"}
+    </span>
+  );
+}
+
 export function savedKeywordsTableColumns({
   canDelete,
   canTrack,
@@ -106,16 +117,17 @@ export function savedKeywordsTableColumns({
       cell: ({ row }) => <KeywordCell row={row.original} variants={labels.variants} />,
       header: labels.keyword,
       id: "keyword",
-      meta: { flex: 1.4, lockVisible: true, pin: "left", sortable: false, title: labels.keyword },
+      meta: { flex: 1.4, lockVisible: true, pin: "left", title: labels.keyword },
       minSize: 200,
       size: 224,
     },
     {
       accessorKey: "volume",
       cell: ({ row }) => (row.original.volume == null ? "-" : formatVolume(row.original.volume)),
-      header: () => <span className="font-semibold text-accent-text">{labels.volume} ↓</span>,
+      header: labels.volume,
       id: "volume",
-      meta: { align: "end", sortable: false, title: labels.volume },
+      meta: { align: "end", title: labels.volume },
+      sortDescFirst: true,
       minSize: 88,
       size: 88,
     },
@@ -134,17 +146,10 @@ export function savedKeywordsTableColumns({
     },
     {
       accessorKey: "difficulty",
-      cell: ({ row }) => (
-        <span
-          className="inline-grid h-6 min-w-6 place-items-center rounded-full border px-1 font-sans tabular-nums text-[10.5px] font-semibold"
-          style={difficultyPillStyle(row.original.difficulty)}
-        >
-          {row.original.difficulty ?? "-"}
-        </span>
-      ),
+      cell: ({ row }) => <ResearchDifficultyPill value={row.original.difficulty} />,
       header: labels.difficulty,
       id: "difficulty",
-      meta: { sortable: false, title: labels.difficulty },
+      meta: { title: labels.difficulty },
       minSize: 64,
       size: 64,
     },
@@ -153,7 +158,7 @@ export function savedKeywordsTableColumns({
       cell: ({ row }) => (row.original.cpc == null ? "-" : formatCurrency(row.original.cpc)),
       header: labels.cpc,
       id: "cpc",
-      meta: { align: "end", sortable: false, title: labels.cpc },
+      meta: { align: "end", title: labels.cpc },
       minSize: 80,
       size: 80,
     },
@@ -164,7 +169,7 @@ export function savedKeywordsTableColumns({
       ),
       header: labels.intent,
       id: "intent",
-      meta: { sortable: false, title: labels.intent },
+      meta: { title: labels.intent },
       minSize: 160,
       size: 160,
     },
@@ -185,7 +190,7 @@ export function savedKeywordsTableColumns({
       ),
       header: labels.source,
       id: "source",
-      meta: { sortable: false, title: labels.source },
+      meta: { title: labels.source },
       minSize: 160,
       size: 160,
     },
@@ -200,7 +205,7 @@ export function savedKeywordsTableColumns({
       ),
       header: labels.saved,
       id: "savedAt",
-      meta: { sortable: false, title: labels.saved },
+      meta: { title: labels.saved },
       minSize: 104,
       size: 104,
     },

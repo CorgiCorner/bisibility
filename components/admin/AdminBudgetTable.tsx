@@ -1,23 +1,37 @@
 "use client";
 import { BudgetRemaining } from "@/components/metering/BudgetRemaining";
-import {
-  BudgetHeading,
-  BudgetValue,
-  type BudgetValueKind,
-} from "@/components/metering/BudgetValue";
+import { BudgetValue, type BudgetValueKind } from "@/components/metering/BudgetValue";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { SortableTableHead } from "@/components/ui/TableSortButton";
+import { sortTableRows } from "@/components/ui/table-sorting";
+import { figureSortValue } from "@/components/usagekit/figure-sorting";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/usagekit/primitives/table";
 import { UsageStatus } from "@/components/usagekit/usage-motion";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { AdminProjectLabel } from "./AdminProjectLabel";
+
+function hasHistoryGate(row: MeteringAdminData["budgets"][number]) {
+  return (
+    !row.redacted &&
+    row.level !== "unavailable" &&
+    row.unit === "paid_attempts" &&
+    row.boundary.onExceed === "block" &&
+    typeof row.limit === "object" &&
+    row.limit.certainty !== "unknown" &&
+    /^0+(?:\.0+)?$/.test(row.limit.text)
+  );
+}
 
 export function AdminBudgetTable({
   rows,
@@ -28,39 +42,80 @@ export function AdminBudgetTable({
   busy?: boolean;
   references?: MeteringAdminData["references"];
 }) {
+  const [sorting, setSorting] = useState<DataTableSort | null>(null);
   const p = useUsagePresentation();
   const t = useTranslations("instanceAdmin.metering");
+  const sortedRows = sortTableRows(rows, sorting, (row, field) => {
+    if (field === "scope") {
+      const connection = references?.connections[row.target];
+      return `${references?.projects[row.target] ?? connection?.project ?? (row.kind === "group" ? t("project") : p.dimensions.connection)} ${connection?.provider ?? ""} ${row.target}`;
+    }
+    if (field === "status")
+      return hasHistoryGate(row)
+        ? t("historyBlocked")
+        : `${p.budget[row.level]} ${row.boundary.onExceed === "block" ? p.budget.block : p.budget.allow}`;
+    if (field === "resets") return row.resetsAt ? Date.parse(row.resetsAt) : undefined;
+    if (row.redacted || row.level === "unavailable") return undefined;
+    return ["used", "reserved", "remaining", "limit"].includes(field)
+      ? figureSortValue(row[field as BudgetValueKind])
+      : undefined;
+  });
+
   return (
     <div className="min-w-0 overflow-hidden rounded-card border border-border">
       <Table
         aria-label={t("budgetsHeading")}
         tabIndex={0}
         aria-busy={busy || undefined}
-        className="min-w-[64rem] table-fixed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid"
+        className="min-w-[74rem] table-fixed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid"
       >
         <TableHeader className="bg-bg-sunken">
           <TableRow>
-            <TableHead className="px-4 text-xs">{t("scope")}</TableHead>
+            <SortableTableHead
+              className="w-72 px-4 text-xs"
+              field="scope"
+              label={t("scope")}
+              sorting={sorting}
+              onSortingChange={setSorting}
+            />
             {(["used", "reserved", "remaining", "limit"] as BudgetValueKind[]).map((kind) => (
-              <TableHead
+              <SortableTableHead
                 key={kind}
-                aria-label={p.budget[kind]}
                 className="w-32 px-4 text-right text-xs"
+                field={kind}
+                label={p.budget[kind]}
+                align="end"
+                sorting={sorting}
+                onSortingChange={setSorting}
               >
-                <BudgetHeading kind={kind} />
-              </TableHead>
+                {kind === "reserved" ? <InfoTooltip text={p.budget.reservedHint} /> : null}
+              </SortableTableHead>
             ))}
-            <TableHead className="px-4 text-xs">{t("status")}</TableHead>
-            <TableHead className="px-4 text-xs">{p.budget.resets}</TableHead>
+            <SortableTableHead
+              className="px-4 text-xs"
+              field="status"
+              label={t("status")}
+              sorting={sorting}
+              onSortingChange={setSorting}
+            />
+            <SortableTableHead
+              className="px-4 text-xs"
+              field="resets"
+              label={p.budget.resets}
+              sorting={sorting}
+              onSortingChange={setSorting}
+            />
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length ? (
-            rows.map((row) => {
+            sortedRows.map((row) => {
               const ref = references?.connections[row.target];
               const name = references?.projects[row.target] ?? ref?.project;
-              const tone =
-                row.level === "ok"
+              const historyGate = hasHistoryGate(row);
+              const tone = historyGate
+                ? "warning"
+                : row.level === "ok"
                   ? "positive"
                   : row.level === "warning"
                     ? "warning"
@@ -71,7 +126,11 @@ export function AdminBudgetTable({
                 <TableRow key={row.id}>
                   <TableCell className="min-w-60 max-w-80 whitespace-normal break-words px-4 py-3">
                     <div className="font-medium">
-                      {name ?? (row.kind === "group" ? t("project") : p.dimensions.connection)}
+                      <AdminProjectLabel
+                        value={
+                          name ?? (row.kind === "group" ? t("project") : p.dimensions.connection)
+                        }
+                      />
                     </div>
                     {row.redacted && (
                       <p className="mt-1 text-xs text-fg-muted">{p.budget.redacted}</p>
@@ -116,10 +175,18 @@ export function AdminBudgetTable({
                   )}
                   <TableCell className="px-4 py-3">
                     <UsageStatus tone={tone}>
-                      {row.level === "unavailable" ? p.budget.unavailable : p.budget[row.level]}
+                      {historyGate
+                        ? t("historyBlocked")
+                        : row.level === "unavailable"
+                          ? p.budget.unavailable
+                          : p.budget[row.level]}
                     </UsageStatus>
                     <p className="mt-1 text-xs text-fg-muted">
-                      {row.boundary.onExceed === "block" ? p.budget.block : p.budget.allow}
+                      {historyGate
+                        ? t("historyBlockedHint")
+                        : row.boundary.onExceed === "block"
+                          ? p.budget.block
+                          : p.budget.allow}
                     </p>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-xs text-fg-muted tabular-nums">

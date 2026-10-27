@@ -40,6 +40,7 @@ function savedViewApiResource(view: SavedViewResource) {
     can_delete: view.canDelete,
     config: snakeizeKeys(view.config),
     created_at: view.createdAt,
+    created_by_id: view.createdByPublicId,
     definition: savedDefinition(view),
     id: view.id,
     name: view.name,

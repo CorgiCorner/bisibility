@@ -2,9 +2,8 @@
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
 import { BusinessActionStatus } from "./BusinessActionStatus";
 import { BusinessRevisionReview } from "./BusinessRevisionReview";
 import { BusinessSectionHeading } from "./BusinessSectionHeading";
@@ -59,9 +58,8 @@ export function BusinessIdentityEditor({
     ...command,
     idempotencyKey,
   }));
-  const form = useForm<IdentityFormValues>({
+  const form = useZodForm<IdentityFormValues>(identityFormSchema, {
     defaultValues: identityDefaults(base?.identity, base?.role),
-    resolver: zodResolver(identityFormSchema),
   });
   const strongIdentity = JSON.stringify(form.watch(["cid", "placeId", "mapsUrl"]));
   const blocked =

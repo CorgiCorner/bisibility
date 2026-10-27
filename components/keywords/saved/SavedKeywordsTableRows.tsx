@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import type { RelativePastFact } from "@/lib/format/relative-time";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import { useFormatter, useTranslations } from "next-intl";
@@ -16,6 +17,8 @@ type SavedKeywordsTableRowsProps = {
   onSelectionChange: (selection: ReadonlySet<string>) => void;
   onToggle: (row: SavedKeywordRow) => void;
   onTrack: (row: SavedKeywordRow) => void;
+  onSortingChange?: (sort: DataTableSort | null) => void;
+  sorting?: DataTableSort | null;
   projectRef: string;
   rows: readonly SavedKeywordsTableRow[];
   selectedIds: ReadonlySet<string>;
@@ -28,6 +31,8 @@ export function SavedKeywordsTableRows({
   onSelectionChange,
   onToggle,
   onTrack,
+  onSortingChange = () => undefined,
+  sorting = null,
   projectRef,
   rows,
   selectedIds,
@@ -83,7 +88,7 @@ export function SavedKeywordsTableRows({
       layout="auto"
       onRowClick={onToggle}
       onSelectionChange={onSelectionChange}
-      onSortingChange={() => undefined}
+      onSortingChange={onSortingChange}
       rowClassName={(row) =>
         selectedIds.has(row.publicId)
           ? "shadow-[inset_2px_0_0_var(--accent)] [&>[data-column-id=selection]]:shadow-[inset_2px_0_0_var(--accent)]"
@@ -91,7 +96,7 @@ export function SavedKeywordsTableRows({
       }
       rows={rows}
       selection={selectedIds}
-      sorting={null}
+      sorting={sorting}
     />
   );
 }

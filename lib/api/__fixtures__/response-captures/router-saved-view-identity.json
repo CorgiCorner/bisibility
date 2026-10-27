@@ -26,7 +26,71 @@
           "surface": "keywords",
           "version": 1
         },
+        "created_at": "2026-01-07T00:00:00.000Z",
+        "created_by_id": "usr_a00000000000000000000000",
+        "definition": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
+        "id": "viw_a00000000000000000000000",
+        "name": "User view",
+        "revision": 1,
+        "surface": "keywords",
+        "visibility": "project"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSavedView",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 201
+    },
+    {
+      "body": {
+        "can_delete": true,
+        "config": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
         "created_at": "2026-07-10T23:00:00.000Z",
+        "created_by_id": null,
         "definition": {
           "filters": {
             "change": "any",
@@ -61,6 +125,315 @@
       "operationId": "createSavedView",
       "path": "/projects/{project_id}/saved-views",
       "status": 201
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "can_delete": false,
+            "config": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "search": "service",
+              "surface": "keywords",
+              "version": 1
+            },
+            "created_at": "2026-01-07T00:00:00.000Z",
+            "created_by_id": "usr_a00000000000000000000000",
+            "definition": {
+              "report_scope": {
+                "view": "general",
+                "subject": null,
+                "comparison_days": 7,
+                "as_of": null
+              },
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "grouped": true,
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "page_size": 100,
+              "presentation": {
+                "column_order": [],
+                "registry_version": 1,
+                "sizing": {},
+                "version": 1,
+                "visibility": {}
+              },
+              "search": "service",
+              "sort": {
+                "direction": "asc",
+                "field": "keyword"
+              },
+              "surface": "keywords",
+              "version": 2
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "View",
+            "revision": 1,
+            "surface": "keywords",
+            "visibility": "project"
+          },
+          {
+            "can_delete": false,
+            "config": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "search": "service",
+              "surface": "keywords",
+              "version": 1
+            },
+            "created_at": "2026-01-07T00:00:00.000Z",
+            "created_by_id": null,
+            "definition": {
+              "report_scope": {
+                "view": "general",
+                "subject": null,
+                "comparison_days": 7,
+                "as_of": null
+              },
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "grouped": true,
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "page_size": 100,
+              "presentation": {
+                "column_order": [],
+                "registry_version": 1,
+                "sizing": {},
+                "version": 1,
+                "visibility": {}
+              },
+              "search": "service",
+              "sort": {
+                "direction": "asc",
+                "field": "keyword"
+              },
+              "surface": "keywords",
+              "version": 2
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "View",
+            "revision": 1,
+            "surface": "keywords",
+            "visibility": "project"
+          },
+          {
+            "can_delete": false,
+            "config": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "search": "service",
+              "surface": "keywords",
+              "version": 1
+            },
+            "created_at": "2026-01-07T00:00:00.000Z",
+            "created_by_id": null,
+            "definition": {
+              "report_scope": {
+                "view": "general",
+                "subject": null,
+                "comparison_days": 7,
+                "as_of": null
+              },
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": ["Service"],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": true
+              },
+              "grouped": true,
+              "lens": {
+                "device": "mobile",
+                "location_id": "krakow"
+              },
+              "page_size": 100,
+              "presentation": {
+                "column_order": [],
+                "registry_version": 1,
+                "sizing": {},
+                "version": 1,
+                "visibility": {}
+              },
+              "search": "service",
+              "sort": {
+                "direction": "asc",
+                "field": "keyword"
+              },
+              "surface": "keywords",
+              "version": 2
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "View",
+            "revision": 1,
+            "surface": "keywords",
+            "visibility": "project"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSavedViews",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "can_delete": false,
+            "config": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": [],
+                "topics": [],
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": false,
+                "url_changed": false
+              },
+              "lens": {
+                "device": "all",
+                "location_id": null
+              },
+              "search": "",
+              "surface": "keywords",
+              "version": 1
+            },
+            "created_at": "2026-01-07T00:00:00.000Z",
+            "created_by_id": null,
+            "definition": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": [],
+                "topics": [],
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": false,
+                "url_changed": false
+              },
+              "lens": {
+                "device": "all",
+                "location_id": null
+              },
+              "search": "",
+              "surface": "keywords",
+              "version": 1
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "Legacy view",
+            "revision": 1,
+            "surface": "keywords",
+            "visibility": "project"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSavedViews",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 200
     },
     {
       "body": {

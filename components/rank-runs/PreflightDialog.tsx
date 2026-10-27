@@ -5,12 +5,11 @@ import { usePaymentQuoteExpiry } from "@/components/action-payment/usePaymentQuo
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { appPath } from "@/lib/routing/app-path";
 import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { PreflightFooter } from "./PreflightFooter";
 import {
   type PreflightDialogProps,
@@ -58,14 +57,13 @@ export function PreflightDialog({
   const paymentT = useTranslations("shared.actionPayment");
   const [selection] = useState(() => structuredClone(spec));
   const formId = useId();
-  const form = useForm<PreflightFormInput>({
+  const form = useZodForm<PreflightFormInput>(preflightFormSchema, {
     defaultValues: {
       depth: initialDepth,
       providerId:
         initialPreview.payment?.option.providerId ?? initialProviderId ?? providers[0]?.id,
       paymentOptionId: initialPreview.payment?.option.id,
     },
-    resolver: zodResolver(preflightFormSchema),
   });
   const requestNumber = useRef(0);
   const launching = useRef(false);

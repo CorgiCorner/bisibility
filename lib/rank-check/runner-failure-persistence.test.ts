@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  persistFailedRankCheck,
-  persistFailedRankCheckInTransaction,
-} from "./runner-failure-persistence";
+import { persistFailedRankCheck, persistFailedRankCheckInTransaction } from "./runner-persistence";
 
 const mocks = vi.hoisted(() => ({
   notifyRankCheckFailed: vi.fn(() => Promise.resolve()),
+  publishOperationChanged: vi.fn(() => Promise.resolve()),
+  captureRecoveryCandidate: vi.fn(() => Promise.resolve()),
+  applyRunItemTransition: vi.fn(() => Promise.resolve()),
   prisma: {
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
@@ -19,6 +19,16 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/notifications/events", () => ({
   notifyRankCheckFailed: mocks.notifyRankCheckFailed,
+}));
+
+vi.mock("@/lib/notifications/realtime", () => ({
+  publishOperationChanged: mocks.publishOperationChanged,
+}));
+vi.mock("@/lib/provider-evidence/recovery/capture", () => ({
+  captureRecoveryCandidate: mocks.captureRecoveryCandidate,
+}));
+vi.mock("./runs/items", () => ({
+  applyRunItemTransition: mocks.applyRunItemTransition,
 }));
 
 const checkedAt = new Date("2026-01-01T06:00:00.000Z");
@@ -82,6 +92,13 @@ describe("failed rank-check persistence", () => {
 
     expect(tx.rankCheck.create).not.toHaveBeenCalled();
     expect(tx.observationRun.create).not.toHaveBeenCalled();
+    expect(mocks.captureRecoveryCandidate).toHaveBeenCalledWith(tx, "rank_running_1", {
+      finishedAt: expect.any(Date),
+    });
+    expect(mocks.applyRunItemTransition).toHaveBeenCalledWith(tx, {
+      rankCheckId: "rank_running_1",
+      to: "failed",
+    });
   });
 
   it("writes no observation through the transactional entry point", async () => {
@@ -93,6 +110,7 @@ describe("failed rank-check persistence", () => {
     expect(tx.observationRun.create).not.toHaveBeenCalled();
     expect(tx.observationItem.createMany).not.toHaveBeenCalled();
     expect(mocks.prisma.observationRun.create).not.toHaveBeenCalled();
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
   });
 });
 

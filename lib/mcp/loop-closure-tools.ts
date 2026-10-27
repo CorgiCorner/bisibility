@@ -1,3 +1,6 @@
+import type { ApiOperationId } from "@/lib/api/operation-policy";
+import { operationPath } from "./operation-path";
+import { requiredString } from "./tool-arguments";
 import type { JsonObject } from "./types";
 
 type RestCall = {
@@ -8,12 +11,6 @@ type RestCall = {
   projectId?: string;
 };
 
-function required(input: JsonObject, key: string) {
-  const value = input[key];
-  if (typeof value !== "string" || !value.trim()) throw new Error(`${key} is required.`);
-  return encodeURIComponent(value);
-}
-
 function call(input: JsonObject, path: string, method: RestCall["method"], body?: unknown) {
   return {
     body,
@@ -22,10 +19,6 @@ function call(input: JsonObject, path: string, method: RestCall["method"], body?
     path,
     projectId: typeof input.project_id === "string" ? input.project_id : undefined,
   };
-}
-
-function project(input: JsonObject, resource: string) {
-  return `/projects/${required(input, "project_id")}/${resource}`;
 }
 
 function exportQuery(input: JsonObject) {
@@ -54,25 +47,20 @@ function exportQuery(input: JsonObject) {
 }
 
 export function dispatchLoopClosureTool(name: string, input: JsonObject): RestCall | null {
-  if (name === "markProjectAlertsRead")
-    return call(input, project(input, "triggered-alerts/mark-read"), "POST");
-  if (name === "muteTriggeredAlert")
-    return call(
-      input,
-      `${project(input, "triggered-alerts")}/${required(input, "alert_id")}/mute`,
-      "POST",
-    );
+  const path = (operation: ApiOperationId) => operationPath(operation, input);
+  if (name === "markProjectAlertsRead") return call(input, path("markProjectAlertsRead"), "POST");
+  if (name === "muteTriggeredAlert") return call(input, path("muteTriggeredAlert"), "POST");
   if (name === "exportRankHistory")
-    return call(input, `${project(input, "exports/rank-history")}${exportQuery(input)}`, "GET");
-  if (name === "listSitemapMonitors") return call(input, project(input, "sitemap-monitors"), "GET");
+    return call(input, `${path("exportRankHistory")}${exportQuery(input)}`, "GET");
+  if (name === "listSitemapMonitors") return call(input, path("listSitemapMonitors"), "GET");
   if (name === "enableSitemapMonitor" || name === "disableSitemapMonitor") {
     // A project has exactly one sitemap monitor and its id equals the project id, so the
     // monitor_id argument is optional and defaults to project_id.
     const monitorId =
       typeof input.monitor_id === "string" && input.monitor_id.trim()
-        ? required(input, "monitor_id")
-        : required(input, "project_id");
-    return call(input, `${project(input, "sitemap-monitors")}/${monitorId}`, "PATCH", {
+        ? encodeURIComponent(requiredString(input, "monitor_id"))
+        : encodeURIComponent(requiredString(input, "project_id"));
+    return call(input, `${path("listSitemapMonitors")}/${monitorId}`, "PATCH", {
       enabled: name === "enableSitemapMonitor",
     });
   }

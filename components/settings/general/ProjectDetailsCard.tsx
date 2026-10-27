@@ -12,14 +12,13 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { IdChip } from "@/components/ui/IdChip";
 import { Input } from "@/components/ui/Input";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { createProjectSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 const projectNameSchema = createProjectSchema.pick({ name: true });
@@ -62,10 +61,9 @@ export function ProjectDetailsCard({
     initialDomainConfirmationOpen,
   );
   const [saveError, setSaveError] = useState<string | null>(null);
-  const form = useForm<ProjectNameForm>({
+  const form = useZodForm<ProjectNameForm>(projectNameSchema, {
     defaultValues: { name: project.name },
     mode: "onChange",
-    resolver: zodResolver(projectNameSchema),
   });
   const nameError = form.formState.errors.name;
 

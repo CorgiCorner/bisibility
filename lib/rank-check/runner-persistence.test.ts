@@ -6,6 +6,8 @@ import {
   persistRankCheck,
   RankCheckClosedBeforePersistenceError,
 } from "./runner";
+import type { RankCheckPersistTarget } from "./runner-persistence-types";
+import type { RankCheckRunResult } from "./runner-result";
 
 const mocks = vi.hoisted(() => ({
   enqueueAlertDeliveries: vi.fn(() => Promise.resolve()),
@@ -48,6 +50,46 @@ vi.mock("@/lib/notifications/realtime", () => ({
 const checkedAt = new Date("2026-01-01T06:00:00.000Z");
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
 const RANK_CHECK_PUBLIC_ID = "check_abcdefghijklmnopqrstuvwx";
+
+function persistenceTarget(
+  overrides: Partial<RankCheckPersistTarget> = {},
+): RankCheckPersistTarget {
+  return {
+    hasDefaults: false,
+    hasSchedule: false,
+    keywordId: "keyword_1",
+    keywordPublicId: KEYWORD_PUBLIC_ID,
+    projectId: "project_1",
+    ...overrides,
+  };
+}
+
+function persistenceResult(
+  rankCheck: Partial<RankCheckRunResult["rankCheck"]> = {},
+  overrides: Partial<Omit<RankCheckRunResult, "rankCheck">> = {},
+): RankCheckRunResult {
+  return {
+    comparisonAllowed: true,
+    rankCheck: {
+      billingUnits: null,
+      checkedAt,
+      costCents: 0.06,
+      estimatedCostCents: null,
+      keywordId: "keyword_1",
+      normalizationVersion: "v1",
+      organicRanks: null,
+      position: 4,
+      previousPosition: 8,
+      provider: "dataforseo",
+      rankingUrl: null,
+      raw: null,
+      requestedDepth: 20,
+      ...rankCheck,
+    },
+    scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+    ...overrides,
+  };
+}
 
 describe("rank-check persistence update path", () => {
   beforeEach(() => {
@@ -108,38 +150,21 @@ describe("rank-check persistence update path", () => {
     });
 
     await persistRankCheck(
-      {
+      persistenceTarget({
         connectionId: "connection_1",
         existingRankCheckId: "rank_running_1",
-        hasDefaults: false,
         hasSchedule: true,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        providerCostCents: 0.04,
-        rankCheck: {
-          billingUnits: 4,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "dataforseo",
-          rankingUrl: "https://example.com/rank-tracker",
-          raw: null,
-          requestedDepth: 20,
+      }),
+      persistenceResult(
+        { billingUnits: 4, rankingUrl: "https://example.com/rank-tracker" },
+        {
+          providerCostCents: 0.04,
+          scheduleUpdate: {
+            lastCheckedAt: checkedAt,
+            nextCheckAt: new Date("2026-01-02T06:00:00.000Z"),
+          },
         },
-        scheduleUpdate: {
-          lastCheckedAt: checkedAt,
-          nextCheckAt: new Date("2026-01-02T06:00:00.000Z"),
-        },
-      },
+      ),
     );
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -234,33 +259,13 @@ describe("rank-check persistence update path", () => {
     };
 
     await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          observation,
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "example-provider",
-          rankingUrl: "https://example.com/rank-tracker",
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget(),
+      persistenceResult({
+        costCents: 0,
+        observation,
+        provider: "example-provider",
+        rankingUrl: "https://example.com/rank-tracker",
+      }),
     );
 
     expect(tx.observationRun.create).toHaveBeenCalledWith({
@@ -308,34 +313,8 @@ describe("rank-check persistence update path", () => {
     };
 
     await persistRankCheck(
-      {
-        existingRankCheckId: "rank_running_1",
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          observation,
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "example-provider",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget({ existingRankCheckId: "rank_running_1" }),
+      persistenceResult({ costCents: 0, observation, provider: "example-provider" }),
     );
 
     expect(tx.rankCheck.create).not.toHaveBeenCalled();
@@ -355,32 +334,8 @@ describe("rank-check persistence update path", () => {
     );
 
     await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "example-provider",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget(),
+      persistenceResult({ costCents: 0, provider: "example-provider" }),
     );
 
     expect(mocks.prisma.observationRun.create).not.toHaveBeenCalled();
@@ -411,36 +366,17 @@ describe("rank-check persistence update path", () => {
 
   it("updates an existing running row when a rank check id is supplied", async () => {
     const rankCheck = await persistRankCheck(
-      {
+      persistenceTarget({
         existingRankCheckId: "rank_running_1",
-        hasDefaults: false,
-        hasSchedule: false,
         expectedUrlAtCheck: "https://example.com/recorded",
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
         keywordTargetUrl: "https://example.com/rank-tracker",
         previousRankingUrl: "https://example.com/old-page",
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 4,
-          provider: "dataforseo",
-          rankingUrl: "https://example.com/rank-tracker",
-          raw: null,
-          requestedDepth: 50,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      }),
+      persistenceResult({
+        previousPosition: 4,
+        rankingUrl: "https://example.com/rank-tracker",
+        requestedDepth: 50,
+      }),
     );
 
     expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
@@ -487,33 +423,8 @@ describe("rank-check persistence update path", () => {
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
 
     await persistRankCheck(
-      {
-        existingRankCheckId: "rank_running_1",
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "dataforseo",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget({ existingRankCheckId: "rank_running_1" }),
+      persistenceResult(),
     );
 
     expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
@@ -532,33 +443,8 @@ describe("rank-check persistence update path", () => {
     );
 
     await persistRankCheck(
-      {
-        expectedUrlAtCheck: "https://example.com/recorded",
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "primary",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget({ expectedUrlAtCheck: "https://example.com/recorded" }),
+      persistenceResult({ provider: "primary" }),
     );
 
     expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
@@ -578,34 +464,7 @@ describe("rank-check persistence update path", () => {
     );
     mocks.evaluateKeywordAlerts.mockResolvedValue([{ id: "alert_1" }, { id: "alert_2" }]);
 
-    await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "dataforseo",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
-    );
+    await persistRankCheck(persistenceTarget(), persistenceResult());
 
     expect(mocks.enqueueAlertDeliveries).toHaveBeenCalledWith(["alert_1", "alert_2"]);
   });
@@ -618,32 +477,8 @@ describe("rank-check persistence update path", () => {
     mocks.evaluateKeywordAlerts.mockResolvedValue([{ id: "alert_1" }]);
 
     await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "fake",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 20,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      persistenceTarget(),
+      persistenceResult({ costCents: 0, provider: "fake" }),
       { enqueueDeliveries },
     );
 
@@ -658,36 +493,9 @@ describe("rank-check persistence update path", () => {
     mocks.evaluateKeywordAlerts.mockResolvedValue([{ id: "alert_1" }]);
     mocks.enqueueAlertDeliveries.mockRejectedValueOnce(new Error("Temporal unavailable"));
 
-    await expect(
-      persistRankCheck(
-        {
-          hasDefaults: false,
-          hasSchedule: false,
-          keywordId: "keyword_1",
-          keywordPublicId: KEYWORD_PUBLIC_ID,
-          projectId: "project_1",
-        },
-        {
-          comparisonAllowed: true,
-          rankCheck: {
-            billingUnits: null,
-            checkedAt,
-            costCents: 0.06,
-            estimatedCostCents: null,
-            keywordId: "keyword_1",
-            normalizationVersion: "v1",
-            organicRanks: null,
-            position: 4,
-            previousPosition: 8,
-            provider: "dataforseo",
-            rankingUrl: null,
-            raw: null,
-            requestedDepth: 20,
-          },
-          scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-        },
-      ),
-    ).resolves.toMatchObject({ id: "rank_1" });
+    await expect(persistRankCheck(persistenceTarget(), persistenceResult())).resolves.toMatchObject(
+      { id: "rank_1" },
+    );
   });
 
   it("does not emit signals when completed rank-check facts are unchanged", async () => {
@@ -696,34 +504,15 @@ describe("rank-check persistence update path", () => {
     );
 
     await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
+      persistenceTarget({
         keywordTargetUrl: "https://example.com/rank-tracker",
         previousRankingUrl: "https://example.com/rank-tracker",
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 4,
-          provider: "dataforseo",
-          rankingUrl: "https://example.com/rank-tracker",
-          raw: null,
-          requestedDepth: 100,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
+      }),
+      persistenceResult({
+        previousPosition: 4,
+        rankingUrl: "https://example.com/rank-tracker",
+        requestedDepth: 100,
+      }),
     );
 
     expect(mocks.prisma.signal.create).not.toHaveBeenCalled();
@@ -743,34 +532,7 @@ describe("rank-check persistence update path", () => {
       }),
     );
 
-    await persistRankCheck(
-      {
-        hasDefaults: false,
-        hasSchedule: false,
-        keywordId: "keyword_1",
-        keywordPublicId: KEYWORD_PUBLIC_ID,
-        projectId: "project_1",
-      },
-      {
-        comparisonAllowed: true,
-        rankCheck: {
-          billingUnits: null,
-          checkedAt,
-          costCents: 0.06,
-          estimatedCostCents: null,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          organicRanks: null,
-          position: 4,
-          previousPosition: 8,
-          provider: "dataforseo",
-          rankingUrl: null,
-          raw: null,
-          requestedDepth: 10,
-        },
-        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-      },
-    );
+    await persistRankCheck(persistenceTarget(), persistenceResult({ requestedDepth: 10 }));
 
     expect(mocks.evaluateKeywordAlerts).toHaveBeenCalledWith(
       "keyword_1",
@@ -951,33 +713,8 @@ describe("rank-check persistence update path", () => {
 
     await expect(
       persistRankCheck(
-        {
-          existingRankCheckId: "rank_stale_1",
-          hasDefaults: false,
-          hasSchedule: false,
-          keywordId: "keyword_1",
-          keywordPublicId: KEYWORD_PUBLIC_ID,
-          projectId: "project_1",
-        },
-        {
-          comparisonAllowed: true,
-          rankCheck: {
-            billingUnits: null,
-            checkedAt,
-            costCents: 0,
-            estimatedCostCents: null,
-            keywordId: "keyword_1",
-            normalizationVersion: "v1",
-            organicRanks: null,
-            position: 4,
-            previousPosition: null,
-            provider: "local-sequence",
-            rankingUrl: null,
-            raw: null,
-            requestedDepth: 20,
-          },
-          scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
-        },
+        persistenceTarget({ existingRankCheckId: "rank_stale_1" }),
+        persistenceResult({ costCents: 0, previousPosition: null, provider: "local-sequence" }),
       ),
     ).rejects.toBeInstanceOf(RankCheckClosedBeforePersistenceError);
 

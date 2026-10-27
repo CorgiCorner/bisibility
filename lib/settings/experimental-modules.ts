@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const experimentalModuleKeys = ["timeline", "competitors"] as const;
+export const experimentalModuleKeys = ["timeline", "competitors", "promptPlayground"] as const;
 
 export type ExperimentalModuleKey = (typeof experimentalModuleKeys)[number];
 

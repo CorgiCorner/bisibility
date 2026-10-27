@@ -2,6 +2,7 @@
 
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { bulkDeleteButtonStyle } from "@/components/keywords/grid/bulk-action-styles";
+import { KeywordResearchAction } from "@/components/keywords/KeywordResearchAction";
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import { Button } from "@/components/ui/Button";
 import { FloatingSelectionBar } from "@/components/ui/FloatingSelectionBar";
@@ -21,7 +22,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef } from "react";
 import { downloadSavedKeywordsCsv } from "./saved-keywords-export";
-import { savedKeywordResearchHrefForKeyword } from "./saved-keywords-table-model";
 
 export function SavedKeywordsToolbar({
   onSearchChange,
@@ -99,46 +99,6 @@ export function SavedKeywordsToolbar({
   );
 }
 
-function SavedKeywordsResearchAction({
-  projectRef,
-  row,
-}: Readonly<{
-  projectRef: string;
-  row: SavedKeywordRow | undefined;
-}>) {
-  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
-  const icon = <MagnifyingGlass weight="regular" size={15} />;
-  if (row) {
-    return (
-      <Button
-        component={Link}
-        href={savedKeywordResearchHrefForKeyword(projectRef, row)}
-        size="xs"
-        startIcon={icon}
-        variant="secondary"
-      >
-        {t("research")}
-      </Button>
-    );
-  }
-  return (
-    <Tooltip content={t("researchOneAtATime")} semantics="description">
-      <Button
-        aria-disabled="true"
-        onClick={(event) => {
-          event.preventDefault();
-        }}
-        size="xs"
-        startIcon={icon}
-        type="button"
-        variant="secondary"
-      >
-        {t("research")}
-      </Button>
-    </Tooltip>
-  );
-}
-
 export function SavedKeywordsBulkBar({
   canDelete,
   canTrack,
@@ -149,6 +109,7 @@ export function SavedKeywordsBulkBar({
   onTrack,
   projectRef,
   selectedRows,
+  removeDisabledReason,
   trackDisabledReason,
 }: Readonly<{
   canDelete: boolean;
@@ -160,8 +121,10 @@ export function SavedKeywordsBulkBar({
   onTrack: () => void;
   projectRef: string;
   selectedRows: readonly SavedKeywordRow[];
+  removeDisabledReason?: string;
   trackDisabledReason?: string;
 }>) {
+  const bulkT = useTranslations("projectRankTracker.keywordImport.management.bulk");
   const usage = useNativeUsageFormat();
   const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const quota = nativeUsage?.unit === "units";
@@ -180,50 +143,48 @@ export function SavedKeywordsBulkBar({
     <FloatingSelectionBar
       ariaLabel={t("toolbar")}
       clearLabel={t("clear")}
+      clearTooltip={bulkT("clearTooltip")}
       count={count}
       countLabel={t("selected", { count })}
-      footer={
-        summary ? (
-          <p className="m-0 font-sans tabular-nums text-[11.5px] text-fg-muted">{summary}</p>
-        ) : null
-      }
       onClear={onClear}
     >
-      {canDelete ? (
-        <Button
-          onClick={onRemove}
-          size="xs"
-          startIcon={<Trash weight="regular" size={15} />}
-          style={bulkDeleteButtonStyle}
-          variant="secondary"
-        >
-          {t("remove")}
-        </Button>
-      ) : null}
       {canTrack ? (
-        <Button
-          aria-label={
-            !known
-              ? t("track", { count })
-              : quota
-                ? t("trackAriaUsage", { count, usage: usageText })
-                : t("trackAria", { cost, count })
-          }
-          disabled={Boolean(trackDisabledReason)}
-          onClick={onTrack}
-          size="xs"
-        >
-          {t("track", { count })}
-          {known ? (
-            <span className="ml-1.5 font-sans tabular-nums text-[12px] font-medium">
-              {quota
-                ? t("monthlyEstimateUsage", { usage: usageText })
-                : t("monthlyEstimate", { cost })}
-            </span>
-          ) : null}
-        </Button>
+        <Tooltip content={trackDisabledReason ?? summary} semantics="description">
+          <Button
+            aria-disabled={trackDisabledReason ? "true" : undefined}
+            className="!pointer-events-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            onClick={() => {
+              if (!trackDisabledReason) onTrack();
+            }}
+            size="xs"
+          >
+            {t("track", { count })}
+          </Button>
+        </Tooltip>
       ) : null}
-      <SavedKeywordsResearchAction projectRef={projectRef} row={researchRow} />
+      <KeywordResearchAction
+        projectRef={projectRef}
+        selection={
+          researchRow ? { keyword: researchRow.text, location: researchRow.location } : null
+        }
+      />
+      {canDelete ? (
+        <Tooltip content={removeDisabledReason ?? t("removeTooltip")} semantics="description">
+          <Button
+            aria-disabled={removeDisabledReason ? "true" : undefined}
+            className="!pointer-events-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
+            onClick={() => {
+              if (!removeDisabledReason) onRemove();
+            }}
+            size="xs"
+            startIcon={<Trash weight="regular" size={15} />}
+            style={bulkDeleteButtonStyle}
+            variant="secondary"
+          >
+            {t("remove")}
+          </Button>
+        </Tooltip>
+      ) : null}
     </FloatingSelectionBar>
   );
 }

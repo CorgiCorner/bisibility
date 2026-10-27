@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type ProjectContextInput,
   type ProjectContextResource,
@@ -11,7 +11,6 @@ import {
 } from "@/lib/project-context/model";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import {
   ProjectContextFields,
   ProjectContextFooter,
@@ -37,9 +36,8 @@ export function ProjectContextForm({
   const t = useTranslations("agentWorkspace");
   const { showToast } = useToast();
   const [failed, setFailed] = useState(false);
-  const form = useForm<ProjectContextInput>({
+  const form = useZodForm<ProjectContextInput>(projectContextSchema, {
     defaultValues: formValues(context),
-    resolver: zodResolver(projectContextSchema),
   });
   async function save(values: ProjectContextInput) {
     setFailed(false);

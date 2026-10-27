@@ -9,7 +9,6 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { indexingData, indexingUrl } from "./indexing.test-support";
 import { PageIndexingTab } from "./PageIndexingTab";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 const action = vi.fn();
 const inspect = vi.fn();
 function tab(data: IndexingData = indexingData) {

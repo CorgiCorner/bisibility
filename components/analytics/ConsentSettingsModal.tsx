@@ -18,10 +18,10 @@ import {
   type ConsentState,
 } from "@/lib/analytics/consent";
 import { restrictConsentImmediately } from "@/lib/analytics/consent-client";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
 
 export type SaveConsent = (
   values: AnalyticsConsentValues,
@@ -47,12 +47,11 @@ export function ConsentSettingsModal({
   const consentCopy = localizedConsentCopy(t);
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const form = useForm<AnalyticsConsentValues>({
+  const form = useZodForm<AnalyticsConsentValues>(analyticsConsentValuesSchema, {
     defaultValues: {
       analytics: initialConsent.status === "pending" || initialConsent.analytics,
       replay: initialConsent.status === "pending" || initialConsent.replay,
     },
-    resolver: zodResolver(analyticsConsentValuesSchema),
   });
   const analytics = form.watch("analytics");
   const submitting = saving || form.formState.isSubmitting;

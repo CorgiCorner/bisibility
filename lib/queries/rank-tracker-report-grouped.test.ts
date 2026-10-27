@@ -39,6 +39,39 @@ describe("rank tracker grouping preserves target quality", () => {
       aggregate: { change: null, position: 2, sparkline: [] },
     });
   });
+  it("does not copy Research metrics across different language markets", () => {
+    const first = rankTrackerQualityFixture();
+    const second = rankTrackerQualityFixture({
+      ...reportTarget(),
+      id: "kw_bbcdefghijklmnopqrstuvwx",
+    });
+    const research = {
+      volume: 800,
+      difficulty: 12,
+      cpc: 1.5,
+      intent: "commercial" as const,
+      sourceSeed: "service",
+      fetchedAt: "2026-01-02T00:00:00Z",
+      trend: [],
+    };
+    const rows = [
+      { ...first.row, research },
+      { ...second.row, research, location: { ...second.row.location, hl: "en" } },
+    ];
+    const groups = groupRankTrackerReportRows(
+      rows,
+      [first.resolution, second.resolution],
+      reportPolicy(),
+      {
+        ...defaultRankTrackerQueryState,
+        grouped: true,
+        sort: { field: "researchVolume", direction: "desc" },
+      },
+    );
+    expect(groups[0].research).toBeNull();
+    expect(groups[0].subRows.map((row) => row.research?.volume)).toEqual([800, 800]);
+  });
+
   it("does not inject the old 48-hour freshness cutoff when server policy is unavailable", () => {
     const policy = reportPolicy();
     const target = rankTrackerQualityFixture();

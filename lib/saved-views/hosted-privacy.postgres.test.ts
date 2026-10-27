@@ -118,6 +118,50 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
       };
     }
 
+    it("resolves a shared creator public ID and clears it after the creator is deleted", async () => {
+      const creator = await fixture.db.user.create({
+        data: {
+          email: `${randomUUID()}@example.test`,
+          name: "Creator",
+          publicId: makePublicId("usr"),
+        },
+      });
+      await fixture.db.membership.create({
+        data: {
+          userId: creator.id,
+          projectId: project.id,
+          role: "member",
+          publicId: makePublicId("mbr"),
+        },
+      });
+      const view = await createSavedViewFor(
+        {
+          name: "Shared",
+          config: { surface: "keywords", version: 1 },
+          projectId: project.publicId,
+        },
+        context(creator.id),
+        fixture.db,
+      );
+      expect(view.createdByPublicId).toBe(creator.publicId);
+      const actor = {
+        id: viewer,
+        memberships: [{ projectId: project.id, role: "viewer" as const }],
+      };
+      expect(
+        (await listSavedViewsFor(actor, project.publicId, "keywords"))[0].createdByPublicId,
+      ).toBe(creator.publicId);
+      state.sessionUser = admin;
+      expect((await getSavedView(project.publicId, view.id))?.createdByPublicId).toBe(
+        creator.publicId,
+      );
+      await fixture.db.user.delete({ where: { id: creator.id } });
+      expect(
+        (await listSavedViewsFor(actor, project.publicId, "keywords"))[0].createdByPublicId,
+      ).toBeNull();
+      expect((await getSavedView(project.publicId, view.id))?.createdByPublicId).toBeNull();
+    });
+
     it("allows hosted viewer creation and idempotent retry without changing shared views or measurements", async () => {
       const data = input();
       const [first, retry] = await Promise.all([

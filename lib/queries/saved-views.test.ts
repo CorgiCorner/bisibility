@@ -37,6 +37,7 @@ function savedView(overrides: Record<string, unknown> = {}) {
     },
     createdAt: new Date("2026-06-28T08:00:00.000Z"),
     createdById: "user_1",
+    createdBy: { publicId: "usr_aaaaaaaaaaaaaaaaaaaaaaaa" },
     id: "view_1",
     name: "Product rank",
     publicId: VIEW_PUBLIC_ID,
@@ -99,7 +100,11 @@ describe("saved view queries", () => {
         visibility: "project",
       },
     });
-    expect(view).toMatchObject({ canDelete: true, id: VIEW_PUBLIC_ID_2 });
+    expect(view).toMatchObject({
+      canDelete: true,
+      createdByPublicId: "usr_aaaaaaaaaaaaaaaaaaaaaaaa",
+      id: VIEW_PUBLIC_ID_2,
+    });
     expect(view).not.toHaveProperty("createdById");
   });
 

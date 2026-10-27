@@ -1,10 +1,7 @@
 import { competitorDomainInitials } from "@/lib/competitors/competitor-market-model";
 import { COMPETITOR_ENGINE, competitorMarketKey } from "@/lib/competitors/scope-model";
 import type {
-  CompetitorColumn,
-  CompetitorMarketData,
   CompetitorMarketOption,
-  CompetitorObservation,
   ManagedCompetitor,
   SuggestedCompetitor,
 } from "@/lib/competitors/types";
@@ -31,21 +28,7 @@ export type QueryKeywordSummary = {
   };
   rankChecks: LatestRank[];
 };
-export type QueryKeywordDetail = {
-  device: "desktop" | "mobile";
-  id: string;
-  locationId: string;
-  publicId: string;
-  tags: Array<{ tag: { name: string } }>;
-  text: string;
-};
 export type MarketSummary = CompetitorMarketOption & { observations: OrganicDomainRank[][] };
-
-function addRank(ranks: Map<string, number>, domain: string, position: number | null) {
-  if (!position || position <= 0) return;
-  const current = ranks.get(domain);
-  if (!current || position < current) ranks.set(domain, position);
-}
 
 export function managedCompetitor(row: ManagedRow): ManagedCompetitor {
   const domain = normalizeCompetitorDomain(row.domain) ?? row.domain;
@@ -100,62 +83,6 @@ export function summarizeCompetitorMarkets(keywords: QueryKeywordSummary[]) {
       a.location.localeCompare(b.location) ||
       a.device.localeCompare(b.device),
   );
-}
-
-function column(domain: string, label: string, kind: CompetitorColumn["kind"], id?: string) {
-  return { domain, id, kind, label } satisfies CompetitorColumn;
-}
-
-export function competitorMarketData(
-  option: CompetitorMarketOption,
-  keywords: QueryKeywordDetail[],
-  latestByKeyword: Map<string, LatestRank>,
-  legacyRanks: Map<string, OrganicDomainRank[]>,
-  volumes: Map<string, number | null>,
-  ownDomain: string,
-  managed: ManagedCompetitor[],
-): CompetitorMarketData {
-  const managedDomains = managed.map((item) => item.domain);
-  const tagSet = new Set<string>();
-  const observations: CompetitorObservation[] = keywords.map((keyword) => {
-    const tags = keyword.tags.map((entry) => entry.tag.name);
-    for (const tag of tags) tagSet.add(tag);
-    const latest = latestByKeyword.get(keyword.id);
-    const organicRanks =
-      storedOrganicDomainRanks(latest?.organicRanks) ?? legacyRanks.get(keyword.id) ?? [];
-    const ranks = new Map<string, number>();
-    for (const item of organicRanks) addRank(ranks, item.domain, item.position);
-    addRank(ranks, ownDomain, latest?.position ?? null);
-    return {
-      checkedAt: latest?.checkedAt ? latest.checkedAt.toISOString() : null,
-      completed: Boolean(latest),
-      id: keyword.publicId,
-      keyword: keyword.text,
-      ranked: ranks.size > 0,
-      ranks: Object.fromEntries(
-        [ownDomain, ...managedDomains].map((domain) => [domain, ranks.get(domain) ?? null]),
-      ),
-      tags,
-      volume: volumes.get(keyword.id) ?? null,
-    };
-  });
-  return {
-    allColumns: [
-      column(ownDomain, ownDomain, "You"),
-      ...managed.map((item) => column(item.domain, item.label, "Managed", item.id)),
-    ],
-    competitorCount: managed.length,
-    device: option.device,
-    engine: COMPETITOR_ENGINE,
-    key: option.key,
-    languageLabel: option.languageLabel,
-    location: option.location,
-    locationId: option.locationId,
-    locationKind: option.locationKind,
-    observations,
-    tags: [...tagSet].sort((a, b) => a.localeCompare(b)),
-    trackedKeywordCount: keywords.length,
-  };
 }
 
 export function competitorSuggestions(

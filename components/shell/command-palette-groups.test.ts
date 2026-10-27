@@ -41,6 +41,7 @@ const englishCopy = {
       ]),
     ),
     Competitors: "Competitors",
+    "Prompt Playground": "Prompt Playground",
   },
 } satisfies CommandPaletteCopy;
 
@@ -312,7 +313,9 @@ describe("commandGroups markets", () => {
 });
 
 it("keeps AI commands in the same Tracker-first order as the sidebar", () => {
-  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), []);
+  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), [], undefined, undefined, [
+    "promptPlayground",
+  ]);
   const aiLabels = ["Prompt Tracker", "Prompt Research", "Brand Visibility", "Prompt Playground"];
   expect(
     groups

@@ -20,11 +20,10 @@ import { useCloudImportActionError } from "@/components/cloud/useCloudImportActi
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 
 type CloudImportProps = {
   activeToken: ActiveMigrationToken | null;
@@ -98,9 +97,8 @@ export function CloudImport({
     pollAction: pollJobAction,
     projectId,
   });
-  const mintForm = useForm<MintMigrationTokenForm>({
+  const mintForm = useZodForm<MintMigrationTokenForm>(mintMigrationTokenFormSchema, {
     defaultValues: { projectId, scope: "full" },
-    resolver: zodResolver(mintMigrationTokenFormSchema),
   });
   const status = migrationTokenStatus(message, visibleIssuedToken, visibleActiveToken);
   const errorTitle =

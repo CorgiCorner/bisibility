@@ -241,6 +241,7 @@ describe("readOperationSnapshot", () => {
         },
       }),
     );
+    expect(mocks.rankCheckRun.findMany.mock.calls[0]?.[0]).not.toHaveProperty("select.costCents");
     expect(mocks.activeSearchImport).toHaveBeenCalledWith("project_1");
   });
 

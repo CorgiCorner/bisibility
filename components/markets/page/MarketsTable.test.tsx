@@ -1,5 +1,6 @@
 import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
+import { deferred as sharedDeferred } from "@/tests/deferred";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketsTable } from "./MarketsTable";
@@ -21,15 +22,11 @@ const market = {
   topThreeCount: 1,
 } satisfies MarketsPageRow;
 
-function deferred<T>() {
-  let reject!: (error: Error) => void;
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((nextResolve, nextReject) => {
-    resolve = nextResolve;
-    reject = nextReject;
-  });
-  return { promise, reject, resolve };
-}
+const deferred: <T>() => {
+  promise: Promise<T>;
+  reject: (error: Error) => void;
+  resolve: (value: T) => void;
+} = sharedDeferred;
 
 function renderTable(
   onStatusChange: ReturnType<typeof vi.fn>,

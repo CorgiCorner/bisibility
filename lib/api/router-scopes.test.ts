@@ -95,6 +95,7 @@ describe("API key scopes", () => {
         method: "POST",
         path: ["projects", "prj_1", "keyword-matches"],
       }),
+      "matchProjectKeywords",
     );
   });
 
@@ -117,6 +118,7 @@ describe("API key scopes", () => {
     expect(response.status).toBe(201);
     expect(mocks.dispatchRoute).toHaveBeenCalledWith(
       expect.objectContaining({ method: "POST", path: ["signals"] }),
+      "createSignal",
     );
   });
 
@@ -175,6 +177,7 @@ describe("API key scopes", () => {
         },
         actorId: null,
       }),
+      "updateTeamMemberRole",
     );
   });
 
@@ -556,6 +559,7 @@ describe("role capabilities", () => {
         actor: { id: "owner_1", memberships: [{ projectId: project.id, role: "admin" }] },
         actorId: null,
       }),
+      "updateTeamMemberRole",
     );
   });
 });

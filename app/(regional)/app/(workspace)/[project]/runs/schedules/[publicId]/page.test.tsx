@@ -128,7 +128,7 @@ describe("SchedulePage", () => {
     });
     render(await SchedulePage({ params: Promise.resolve({ project: "prj_1", publicId }) }));
 
-    expect(screen.getByText("sch_y9iq0n").parentElement).toHaveAttribute("title", publicId);
+    expect(screen.getByText("sch_y9iq0n…g07464").parentElement).toHaveAttribute("title", publicId);
     expect(screen.queryByText(publicId)).not.toBeInTheDocument();
     expect(screen.queryByText(/manual, custom cron/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy schedule ID" })).toBeVisible();

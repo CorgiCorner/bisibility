@@ -180,6 +180,33 @@ describe("TrackingDefaultsCard", () => {
     expect(screen.queryByRole("button", { name: "Timezone" })).not.toBeInTheDocument();
   });
 
+  it("hides an already reviewed quote after edit permission is revoked", async () => {
+    const updateDefaults = vi.fn(async () => ({ kind: "saved" }));
+    const card = (canEdit: boolean) => (
+      <TrackingDefaultsCard
+        canEdit={canEdit}
+        defaults={defaults}
+        previewDefaults={reviewedDefaultsPreview}
+        projectId="prj_1"
+        updateDefaults={updateDefaults}
+      />
+    );
+    const view = render(card(true));
+    fireEvent.click(screen.getByRole("button", { name: "Default SERP depth" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
+    expect(
+      await screen.findByRole("checkbox", { name: /reviewed these exact/i }),
+    ).toBeInTheDocument();
+    view.rerender(card(false));
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: /reviewed these exact/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm reviewed save" })).not.toBeInTheDocument();
+    expect(updateDefaults).not.toHaveBeenCalled();
+  });
+
   it("localizes the read-only capability state", () => {
     renderWithFeatureMessages(
       <TrackingDefaultsCard

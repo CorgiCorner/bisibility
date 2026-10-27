@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { newScheduleDefaults } from "@/lib/schedules/form-defaults";
@@ -15,7 +15,6 @@ import { suggestedScheduleName } from "@/lib/schedules/suggested-name";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { NewScheduleFromSelection } from "./NewScheduleFromSelection";
 import { SetScheduleModalChoices } from "./SetScheduleModalChoices";
 import { scheduleMonthlyDeltaLabel } from "./schedule-monthly-delta";
@@ -88,7 +87,7 @@ export function SetScheduleModal({
   const currentSchedule =
     schedules.find((schedule) => schedule.publicId === currentScheduleId) ?? null;
   const selectedCount = selectedRows.length;
-  const form = useForm<NewScheduleValues>({
+  const form = useZodForm<NewScheduleValues>(newScheduleSchema, {
     defaultValues: {
       ...newScheduleDefaults,
       choice: initialChoice ?? currentScheduleId,
@@ -108,7 +107,6 @@ export function SetScheduleModal({
       ),
       timezone: newScheduleDefaults.timezone ?? "",
     },
-    resolver: zodResolver(newScheduleSchema),
   });
   const choice = form.watch("choice");
   const schedulesLoading = scheduleLoadState === "loading";

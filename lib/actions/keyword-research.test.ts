@@ -11,8 +11,10 @@ const mocks = vi.hoisted(() => ({
   project: { id: "project_1", publicId: "prj_1" },
   research: vi.fn(),
   requireScope: vi.fn(),
+  revalidate: vi.fn(),
 }));
 
+vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 vi.mock("@/lib/keyword-research/service", () => ({ researchKeywords: mocks.research }));
 vi.mock("./_shared", () => ({
   getActionActor: vi.fn(async () => mocks.actor),
@@ -109,6 +111,25 @@ describe("researchKeywordsAction", () => {
       resultLimit: 300,
       seed: "rank tracker",
     });
+  });
+
+  it("refreshes Tracked only after completed Research, never during an estimate", async () => {
+    const result = {
+      ok: true,
+      cached: false,
+      cachedUntil: "2026-10-01T00:00:00Z",
+      fetchedAt: "2026-09-30T00:00:00Z",
+      connections: [],
+      costCents: 0,
+      provider: "Example",
+      rows: [],
+      sources: [],
+    };
+    mocks.research.mockResolvedValue(result);
+    await researchKeywordsAction({ projectId: "prj_1", seed: "seo", estimateOnly: true });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+    await researchKeywordsAction({ projectId: "prj_1", seed: "seo" });
+    expect(mocks.revalidate).toHaveBeenCalledWith("/app/prj_1/rank-tracker");
   });
 
   it.each([

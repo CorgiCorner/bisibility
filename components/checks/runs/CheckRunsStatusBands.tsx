@@ -3,8 +3,9 @@
 import { formatCap } from "@/components/checks/upcoming/upcoming-format";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
-import type { CheckRunsView, UpcomingView } from "@/lib/checks/contract";
+import type { CheckRunsView } from "@/lib/checks/contract";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
+import type { CheckRunsBudget, CheckRunsRenderProps } from "@/lib/checks/section-contract";
 import { type DateDisplayContext, formatDisplayDateRange } from "@/lib/dates/format";
 import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { ArrowClockwiseIcon as Retry } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
@@ -16,18 +17,12 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-export type CheckRunsBudget = Pick<UpcomingView, "blocked" | "forecast">;
+export type { CheckRunsBudget } from "@/lib/checks/section-contract";
 
-type StatusBandsProps = {
-  budget: CheckRunsBudget;
-  budgetSettingsHref: string;
-  now: Date;
-  onRetryFailed?: () => void;
-  onRetryStale?: () => void;
-  showStale?: boolean;
-  timeZone: string;
-  view: CheckRunsView;
-};
+type StatusBandsProps = Pick<
+  CheckRunsRenderProps,
+  "budget" | "budgetSettingsHref" | "now" | "onRetryFailed" | "onRetryStale" | "timeZone" | "view"
+> & { showStale?: boolean };
 
 function nextMonthLabel(now: Date, timeZone: string, dateDisplay: DateDisplayContext) {
   const [year, month] = zonedDateInputValue(now, timeZone).split("-").map(Number);

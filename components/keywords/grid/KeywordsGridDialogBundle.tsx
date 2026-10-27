@@ -3,97 +3,69 @@ import type { KeywordExportTarget } from "@/components/keywords/export-target-mo
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { type AddKeywordDraft, KeywordsGridDialogs } from "./KeywordsGridDialogs";
+import { pickGridProps } from "./keywords-grid-projection";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { RankTrackerCommandMarker } from "./useRankTrackerCommands";
 
-type Props = Pick<
-  KeywordsGridProps,
-  | "addKeywordsAction"
-  | "canCreateKeyword"
-  | "canUpdateKeyword"
-  | "checkHealth"
-  | "costContext"
-  | "getFirstCheckRunPlanAction"
-  | "initialAction"
-  | "keywordDefaults"
-  | "projectId"
-  | "projectMarkets"
-  | "tagSuggestions"
-> & {
-  addDraft: AddKeywordDraft;
-  exportTarget: KeywordExportTarget | null;
-  exportSupported?: boolean;
-  marketScope?: MarketScope | null;
-  onExport: () => void;
-  onFilter: () => void;
-  onImport: () => void;
-  onRunChecks: () => void;
-  openAddDrawer: (keyword?: string, tab?: AddKeywordDraft["tab"]) => void;
-  pendingRows: number;
-  preflightDialog: ReactNode;
-  requestRows: KeywordsGridProps["rows"];
-  scopedRows?: number;
-  setAddDraft: Dispatch<SetStateAction<AddKeywordDraft>>;
-  setExportTarget: Dispatch<SetStateAction<KeywordExportTarget | null>>;
-};
+const dialogProps = [
+  "addDraft",
+  "addKeywordsAction",
+  "costContext",
+  "exportTarget",
+  "keywordDefaults",
+  "projectId",
+  "projectMarkets",
+] as const;
+const commandProps = [
+  "canCreateKeyword",
+  "canUpdateKeyword",
+  "exportSupported",
+  "onExport",
+  "onFilter",
+  "onImport",
+  "onRunChecks",
+] as const;
+type Props = Pick<Parameters<typeof KeywordsGridDialogs>[0], (typeof dialogProps)[number]> &
+  Pick<Parameters<typeof RankTrackerCommandMarker>[0], (typeof commandProps)[number]> &
+  Pick<
+    KeywordsGridProps,
+    "checkHealth" | "getFirstCheckRunPlanAction" | "initialAction" | "tagSuggestions"
+  > & {
+    marketScope?: MarketScope | null;
+    openAddDrawer: (keyword?: string, tab?: AddKeywordDraft["tab"]) => void;
+    pendingRows: number;
+    preflightDialog: ReactNode;
+    requestRows: KeywordsGridProps["rows"];
+    scopedRows?: number;
+    setAddDraft: Dispatch<SetStateAction<AddKeywordDraft>>;
+    setExportTarget: Dispatch<SetStateAction<KeywordExportTarget | null>>;
+  };
 export function KeywordsGridDialogBundle(props: Props) {
-  const {
-    addDraft,
-    addKeywordsAction,
-    canCreateKeyword,
-    canUpdateKeyword,
-    costContext,
-    exportTarget,
-    initialAction,
-    keywordDefaults,
-    marketScope = null,
-    onExport,
-    onFilter,
-    onImport,
-    onRunChecks,
-    openAddDrawer,
-    pendingRows,
-    preflightDialog,
-    scopedRows,
-    projectId,
-    projectMarkets,
-    requestRows,
-    setAddDraft,
-    setExportTarget,
-    tagSuggestions,
-  } = props;
+  const { marketScope = null, setAddDraft, setExportTarget } = props;
   return (
     <>
-      {canCreateKeyword || exportTarget ? (
+      {props.canCreateKeyword || props.exportTarget ? (
         <KeywordsGridDialogs
-          addDraft={addDraft}
-          addKeywordsAction={addKeywordsAction}
-          exportTarget={exportTarget}
-          costContext={costContext}
-          keywordDefaults={keywordDefaults}
+          {...pickGridProps(props, dialogProps)}
           initialMarketKeys={marketScope ? [marketScope.canonicalKey] : undefined}
           onCloseAdd={() => setAddDraft((current) => ({ ...current, open: false }))}
           onExitedAdd={() => setAddDraft({ keyword: "", open: false, tab: "manual" })}
           onCloseExport={() => setExportTarget(null)}
-          projectId={projectId}
-          projectMarkets={projectMarkets}
-          rows={requestRows}
-          tagSuggestions={tagSuggestions ?? []}
+          rows={props.requestRows}
+          tagSuggestions={props.tagSuggestions ?? []}
         />
       ) : null}
-      {preflightDialog}
+      {props.preflightDialog}
       <RankTrackerCommandMarker
-        canCreateKeyword={canCreateKeyword}
-        canUpdateKeyword={canUpdateKeyword}
-        initialAction={initialAction ?? null}
-        exportSupported={props.exportSupported}
+        {...pickGridProps(props, commandProps)}
+        initialAction={props.initialAction ?? null}
         marketScope={marketScope}
-        onAdd={openAddDrawer}
-        onExport={onExport}
-        onFilter={onFilter}
-        onImport={onImport}
-        onRunChecks={onRunChecks}
-        rowCounts={{ all: requestRows.length, scoped: scopedRows, visible: pendingRows }}
+        onAdd={props.openAddDrawer}
+        rowCounts={{
+          all: props.requestRows.length,
+          scoped: props.scopedRows,
+          visible: props.pendingRows,
+        }}
       />
     </>
   );

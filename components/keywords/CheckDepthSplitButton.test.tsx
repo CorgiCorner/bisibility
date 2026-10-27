@@ -1,6 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { type ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
@@ -75,7 +75,7 @@ describe("CheckDepthSplitButton", () => {
     expect(action).not.toHaveAttribute("data-variant", "primary");
   });
 
-  it("runs from the primary button and only changes depth from the menu", () => {
+  it("runs from the primary button and only changes depth from the menu", async () => {
     const onAction = vi.fn();
     const onDepthChange = vi.fn();
     render(
@@ -96,6 +96,7 @@ describe("CheckDepthSplitButton", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
     expect(onDepthChange).toHaveBeenCalledWith(20);
     expect(onAction).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     const changeDefault = screen.getByRole("link", { name: "Change default" });

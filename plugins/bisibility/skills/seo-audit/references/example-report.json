@@ -78,13 +78,12 @@
       "note": "Bounded crawl sample. Not a ranking observation and not Search Console history."
     },
     "visibility": {
-      "observed": "Unavailable; no recorded Brand Visibility report.",
-      "synthetic": "Not run; synthetic answers are not observed visibility."
+      "observed": "Coverage gap: no saved ai_visibility reports. Use /ai-visibility-audit separately for AI visibility research.",
+      "synthetic": "Coverage gap: no saved prompt_explorer reports. Synthetic answers are not observed visibility."
     },
     "costs": {
       "provider_cost_cents": 0,
-      "funding": "No paid provider calls; BYOK/credits not inspected.",
-      "paid_extensions": "Skipped; no spending approval."
+      "usage": "Bounded crawl and saved-data reads only; no new provider usage."
     },
     "evidence": [
       {

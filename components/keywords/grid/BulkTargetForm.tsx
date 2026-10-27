@@ -5,11 +5,10 @@ import { actionResultCount, type KeywordAction } from "@/components/keywords/act
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/toast-context";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { type BulkKeywordTargetInput, bulkKeywordTargetSchema } from "@/lib/schemas/keyword";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { presentBulkActionError } from "./bulk-action-error";
 import { type BulkFormChrome, runBulkFormBusy } from "./bulk-form-chrome";
 import { bulkTargetView } from "./bulk-target-model";
@@ -45,10 +44,9 @@ export function BulkTargetForm({
     formState: { errors, isDirty, isSubmitting, isValid },
     handleSubmit,
     register,
-  } = useForm<BulkKeywordTargetInput>({
+  } = useZodForm<BulkKeywordTargetInput>(bulkKeywordTargetSchema, {
     defaultValues: { keywordIds: selectedIds, projectId, targetUrl: view.initialValue },
     mode: "onChange",
-    resolver: zodResolver(bulkKeywordTargetSchema),
   });
 
   async function save(values: BulkKeywordTargetInput) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/ui/cn";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ type FloatingSelectionBarProps = {
   ariaLabel: string;
   children: ReactNode;
   clearLabel: string;
+  clearTooltip?: string;
   count: number;
   /** Already localized, for example "3 selected". */
   countLabel: string;
@@ -35,6 +37,7 @@ export function FloatingSelectionBar({
   ariaLabel,
   children,
   clearLabel,
+  clearTooltip,
   count,
   countLabel,
   footer,
@@ -75,15 +78,21 @@ export function FloatingSelectionBar({
               >
                 {children}
               </div>
-              <Button
-                className="shrink-0"
-                onClick={onClear}
-                size="xs"
-                startIcon={<X aria-hidden size={14} weight="regular" />}
-                variant="ghost"
+              <Tooltip
+                content={clearTooltip ?? clearLabel}
+                semantics="description"
+                wrapperClassName="shrink-0"
               >
-                <span className="max-sm:sr-only">{clearLabel}</span>
-              </Button>
+                <Button
+                  className="shrink-0"
+                  onClick={onClear}
+                  size="xs"
+                  startIcon={<X aria-hidden size={14} weight="regular" />}
+                  variant="ghost"
+                >
+                  <span className="max-sm:sr-only">{clearLabel}</span>
+                </Button>
+              </Tooltip>
             </div>
             {footer ? <div className="min-w-0 px-1">{footer}</div> : null}
           </div>

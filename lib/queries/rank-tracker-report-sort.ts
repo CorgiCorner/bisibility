@@ -14,6 +14,12 @@ const values: Record<RankTrackerSortField, (row: RankTrackerQualityRow) => strin
     change: (row) => row.rankQuality.movement,
     volume: (row) => (row.volumeKnown === false ? null : row.volume),
     difficulty: (row) => (row.difficultyKnown === false ? null : row.difficulty),
+    researchVolume: (row) => row.research?.volume ?? null,
+    researchDifficulty: (row) => row.research?.difficulty ?? null,
+    researchCpc: (row) => row.research?.cpc ?? null,
+    researchIntent: (row) => lower(row.research?.intent ?? null),
+    researchSource: (row) => lower(row.research?.sourceSeed ?? null),
+    researchAt: (row) => row.research?.fetchedAt ?? null,
     sparkline: (row) =>
       row.rankQuality.current?.evidence === "positive" ? row.rankQuality.current.position : null,
     clicks: (row) => row.clicks,

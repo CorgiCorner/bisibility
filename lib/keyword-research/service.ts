@@ -22,6 +22,7 @@ import {
 } from "./context";
 import {
   estimateKeywordResearch,
+  findResearchSeed,
   keywordResearchSourceKey,
   remainingResearchDiagnostics,
 } from "./execution";
@@ -118,6 +119,7 @@ export async function researchKeywords(
       const seen = new Set([normalizeResearchKeyword(input.seed)]);
       const rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }> = [];
       const diagnostics: KeywordResearchSourceDiagnostic[] = [];
+      let seedResult: ReturnType<typeof findResearchSeed>;
       const successfulFetchedAts: string[] = [];
       let spentThisRequest = 0;
       let latestFetchedAt = fetchedAt;
@@ -190,6 +192,7 @@ export async function researchKeywords(
             source,
             status: "ok",
           });
+          seedResult ??= findResearchSeed(lookup.value.rows, input.seed, source);
           for (const row of lookup.value.rows) {
             const normalized = normalizeResearchKeyword(row.keyword);
             if (!normalized || seen.has(normalized)) continue;
@@ -284,9 +287,11 @@ export async function researchKeywords(
           resultLimit: input.resultLimit,
           seed: input.seed,
           successfulFetchedAts,
+          seedResult,
         });
       } catch (error) {
-        console.error("[keyword-research] Failed to persist a demo snapshot.", error);
+        console.error("[keyword-research] Failed to persist a Research snapshot.", error);
+        return Object.assign({}, outcome, { storageWarning: true });
       }
       return outcome;
     },

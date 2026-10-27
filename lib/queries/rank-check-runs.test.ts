@@ -638,8 +638,6 @@ describe("rank-check run queries", () => {
         select: expect.objectContaining({
           rankCheck: {
             select: {
-              billingUnits: true,
-              costCents: true,
               deferredReason: true,
               errorCode: true,
               id: true,
@@ -655,6 +653,7 @@ describe("rank-check run queries", () => {
         where: { runId: "run_1" },
       }),
     );
+    expect(mocks.itemFindMany.mock.calls[0]?.[0]).not.toHaveProperty("select.actualCostCents");
   });
 
   it("keeps stored target fields when the ledger has no receipts for the run", async () => {

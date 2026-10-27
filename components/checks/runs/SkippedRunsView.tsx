@@ -1,7 +1,8 @@
 "use client";
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
-import type { CheckRange, DeferredGroup, DeferredReason } from "@/lib/checks/contract";
+import type { DeferredGroup, DeferredReason } from "@/lib/checks/contract";
+import type { CheckRunsRenderProps, SkippedRunsLinks } from "@/lib/checks/section-contract";
 import type { ProjectionKey } from "@/lib/provider-evidence/projection/model";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
@@ -13,11 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { type CheckRunsTranslations, deferredWindow, rangeCaption } from "./check-runs-format";
 import { EvidenceProjectionBands } from "./EvidenceProjectionBands";
 
-export type SkippedRunsLinks = {
-  connectProviderHref: string;
-  reviewProvidersHref: string;
-  timelineHref: string;
-};
+export type { SkippedRunsLinks } from "@/lib/checks/section-contract";
 
 const reasonMeta: Record<
   DeferredReason,
@@ -128,15 +125,11 @@ function GroupCard({
   );
 }
 
-type SkippedProps = {
-  exactRange?: boolean;
+type SkippedProps = Pick<CheckRunsRenderProps, "exactRange" | "now" | "range" | "timeZone"> & {
   evidenceCounts?: Partial<Record<ProjectionKey, number>>;
   onFilterChange?: (key: ProjectionKey) => void;
   groups: DeferredGroup[];
   links: SkippedRunsLinks;
-  now: Date;
-  range: CheckRange;
-  timeZone: string;
 };
 
 export function SkippedRunsView({

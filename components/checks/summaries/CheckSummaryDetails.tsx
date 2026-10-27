@@ -129,7 +129,7 @@ export function CheckSummaryDetails({
           className="inline-flex items-center gap-1 text-ui-caption font-semibold text-accent-text underline underline-offset-2"
         >
           {t("openRuns")}
-          <ArrowSquareOutIcon aria-hidden size={13} />
+          <ArrowSquareOutIcon weight="regular" aria-hidden size={13} />
         </Link>
       </header>
       {details.incidentHrefs.length ? (

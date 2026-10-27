@@ -9,30 +9,8 @@ export const siteAuditActionSchema = siteAuditSchema.extend({
   projectId: z.string().trim().min(1).max(120),
 });
 export type SiteAuditInput = z.input<typeof siteAuditSchema>;
-export type SiteAuditIssue = {
-  code: string;
-  severity: "error" | "warning" | "info";
-  message: string;
-};
-export type SiteAuditPage = {
-  url: string;
-  finalUrl: string;
-  status: number | null;
-  responseTimeMs: number;
-  title: string | null;
-  description: string | null;
-  canonical: string | null;
-  headings: { level: number; text: string }[];
-  h1Count: number;
-  indexable: boolean;
-  robots: string | null;
-  internalLinkCount: number;
-  externalLinkCount: number;
-  internalLinks: string[];
-  imageCount: number;
-  missingAltCount: number;
-  issues: SiteAuditIssue[];
-};
+export type SiteAuditIssue = SiteAuditPage["issues"][number];
+export type SiteAuditPage = z.output<typeof pageSchema>;
 export type SiteAuditResult = {
   version: 1;
   target: string;

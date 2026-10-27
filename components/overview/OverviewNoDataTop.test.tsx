@@ -1,4 +1,6 @@
 import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
+import { canProjectAction } from "@/lib/auth/capabilities";
+import type { Role } from "@/lib/generated/prisma/client";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -71,6 +73,28 @@ describe("NoDataBanner", () => {
     window.localStorage.clear();
     firstCheckPreflight.request.mockReset();
   });
+  it.each(["viewer", "auditor", "member", "admin", "owner"] satisfies Role[])(
+    "keeps the provider setup action at the %s capability boundary",
+    (role) => {
+      const canManageProviders = canProjectAction(role, "manage", "provider_connection");
+      renderDashboard(
+        <NoDataBanner
+          canManageProviders={canManageProviders}
+          getFirstCheckRunPlanAction={vi.fn()}
+          keywordCount={0}
+          keywordId={null}
+          projectId="prj_1"
+          projectRef="prj_1"
+          runCheckNowAction={vi.fn()}
+          state="missing"
+        />,
+      );
+      expect(Boolean(screen.queryByRole("link", { name: "Choose a data source" }))).toBe(
+        canManageProviders,
+      );
+    },
+  );
+
   it("offers SERP setup only when no SERP provider exists", () => {
     renderBanner("missing");
 

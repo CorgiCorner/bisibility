@@ -4,6 +4,9 @@ import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { getAiResearchPage } from "@/lib/actions/ai-research";
+import { getExperimentalModules } from "@/lib/queries/experimental-modules";
+import { hasExperimentalModule } from "@/lib/settings/experimental-modules";
+import { notFound } from "next/navigation";
 // Provider work has a 260-second aggregate budget, leaving time to settle usage and save results.
 export const maxDuration = 300;
 
@@ -11,6 +14,8 @@ export default async function PromptPlaygroundPage({
   params,
 }: Readonly<{ params: Promise<{ project: string }> }>) {
   const [{ project }, runtime] = await Promise.all([params, resolveRegionalDocumentLocale()]);
+  const enabled = await getExperimentalModules(project);
+  if (!hasExperimentalModule(enabled, "promptPlayground")) notFound();
   const [data, messages] = await Promise.all([
     getAiResearchPage(project, "prompt"),
     loadCoreMessages(runtime.locale, ["shared", "projectAiResearch"]),

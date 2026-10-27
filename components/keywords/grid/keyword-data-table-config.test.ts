@@ -9,6 +9,13 @@ describe("keyword data table configuration", () => {
     expect(defaultKeywordColumnVisibility).toEqual({
       change: true,
       difficulty: true,
+      researchVolume: true,
+      researchTrend: true,
+      researchDifficulty: true,
+      researchCpc: true,
+      researchIntent: true,
+      researchSource: true,
+      researchAt: true,
       frequency: true,
       intent: true,
       lastChecked: true,
@@ -37,7 +44,6 @@ describe("keyword data table configuration", () => {
 const typographySources = [
   "components/charts/TimeSeriesChart.tsx",
   "components/overview/PositionDistributionCard.tsx",
-  "components/keywords/PositionHistoryAnnotations.tsx",
 ] as const;
 
 describe("numeric typography source contract", () => {

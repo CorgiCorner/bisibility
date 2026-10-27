@@ -2,12 +2,14 @@
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
+import { KeywordResearchAction } from "@/components/keywords/KeywordResearchAction";
 import { useKeywordDeletion } from "@/components/keywords/use-keyword-deletion";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { FloatingSelectionBar } from "@/components/ui/FloatingSelectionBar";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -131,6 +133,7 @@ export function BulkActionBar({
       <FloatingSelectionBar
         ariaLabel={t("toolbar")}
         clearLabel={t("clear")}
+        clearTooltip={t("clearTooltip")}
         count={selectedRows.length}
         countLabel={t("selected", { count: selectedRows.length })}
         footer={
@@ -154,58 +157,81 @@ export function BulkActionBar({
           />
         ) : null}
         {canUpdateKeyword ? (
-          <ProjectReadOnlyTooltip>
-            <Button
-              disabled={readOnly}
-              onClick={() => setMode(mode === "tag" ? null : "tag")}
-              size="xs"
-              startIcon={<Tag weight="regular" size={15} />}
-              variant="secondary"
-            >
-              {t("addTag")}
-            </Button>
+          <ProjectReadOnlyTooltip focusable>
+            <Tooltip content={t("tagTooltip")} semantics="description" disabled={readOnly}>
+              <Button
+                disabled={readOnly}
+                onClick={() => setMode(mode === "tag" ? null : "tag")}
+                size="xs"
+                startIcon={<Tag weight="regular" size={15} />}
+                variant="secondary"
+              >
+                {t("addTag")}
+              </Button>
+            </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
         {canUpdateKeyword ? (
-          <ProjectReadOnlyTooltip>
-            <Button
-              disabled={readOnly}
-              onClick={() => setMode(mode === "target" ? null : "target")}
-              size="xs"
-              startIcon={<LinkSimple weight="regular" size={15} />}
-              variant="secondary"
-            >
-              {t(targetView.actionKey)}
-            </Button>
+          <ProjectReadOnlyTooltip focusable>
+            <Tooltip content={t("targetTooltip")} semantics="description" disabled={readOnly}>
+              <Button
+                disabled={readOnly}
+                onClick={() => setMode(mode === "target" ? null : "target")}
+                size="xs"
+                startIcon={<LinkSimple weight="regular" size={15} />}
+                variant="secondary"
+              >
+                {t(targetView.actionKey)}
+              </Button>
+            </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
         {canUpdateKeyword ? (
-          <ProjectReadOnlyTooltip>
-            <Button
-              disabled={readOnly || scheduleLoading}
-              loading={scheduleLoading}
-              loadingLabel={t("loading")}
-              onClick={() => void openScheduleModal()}
-              size="xs"
-              startIcon={<CalendarDots weight="regular" size={15} />}
-              variant="secondary"
-            >
-              {t("setSchedule")}
-            </Button>
+          <ProjectReadOnlyTooltip focusable>
+            <Tooltip content={t("scheduleTooltip")} semantics="description" disabled={readOnly}>
+              <Button
+                disabled={readOnly || scheduleLoading}
+                loading={scheduleLoading}
+                loadingLabel={t("loading")}
+                onClick={() => void openScheduleModal()}
+                size="xs"
+                startIcon={<CalendarDots weight="regular" size={15} />}
+                variant="secondary"
+              >
+                {t("setSchedule")}
+              </Button>
+            </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
+        <KeywordResearchAction
+          projectRef={projectId}
+          selection={
+            selectedRows.length === 1 && selectedRows[0]
+              ? {
+                  keyword: selectedRows[0].keyword,
+                  location: selectedRows[0].location.canonicalKey,
+                }
+              : null
+          }
+        />
         {canDeleteKeyword ? (
-          <ProjectReadOnlyTooltip>
-            <Button
-              disabled={readOnly || deletion.busy}
-              onClick={() => void deletion.open(selectedIds)}
-              size="xs"
-              startIcon={<Trash weight="regular" size={15} />}
-              style={bulkDeleteButtonStyle}
-              variant="secondary"
+          <ProjectReadOnlyTooltip focusable>
+            <Tooltip
+              content={t("removeTrackedTooltip")}
+              semantics="description"
+              disabled={readOnly}
             >
-              {deletion.busy ? t("deleting") : t("delete")}
-            </Button>
+              <Button
+                disabled={readOnly || deletion.busy}
+                onClick={() => void deletion.open(selectedIds)}
+                size="xs"
+                startIcon={<Trash weight="regular" size={15} />}
+                style={bulkDeleteButtonStyle}
+                variant="secondary"
+              >
+                {deletion.busy ? t("deleting") : t("remove")}
+              </Button>
+            </Tooltip>
           </ProjectReadOnlyTooltip>
         ) : null}
       </FloatingSelectionBar>

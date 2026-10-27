@@ -17,6 +17,16 @@ import { rankPoint, rankQualityRow } from "./keyword-rank-quality.test-fixture";
 const columnMessages = messages.projectRankTracker.keywordImport.management.columns;
 const keywordColumnLabels = {
   ...columnMessages,
+  ...messages.projectRankTracker.keywordImport.management.saved,
+  researchHeaders: {
+    volume: "Volume",
+    trend: "Trend",
+    difficulty: "KD",
+    cpc: "CPC",
+    intent: "Intent",
+    source: "Source",
+    date: "Researched",
+  },
   noRankLabel: () => "No ranking data",
   noTrafficDataLabel: "Connect Search Console to see traffic",
   formatNumber: (value: number) => value.toString(),

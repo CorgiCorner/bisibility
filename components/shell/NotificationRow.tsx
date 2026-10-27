@@ -147,10 +147,13 @@ export function NotificationRow({
     <div
       data-notification-id={item.id}
       data-version={item.version}
-      className="border-b border-border last:border-b-0"
+      className="group border-b border-border transition-colors last:border-b-0 hover:bg-bg-sunken focus-within:bg-bg-sunken"
     >
       <Link
-        className="flex w-full items-start gap-[11px] px-4 py-3 text-left transition-colors hover:bg-bg-sunken"
+        className={cn(
+          "flex w-full items-start gap-[11px] px-4 pt-3 text-left",
+          summary && (runsHref || incidents.length) ? "pb-1.5" : "pb-3",
+        )}
         href={
           summary && item.projectId ? `/app/${item.projectId}/runs/summaries/${item.id}` : item.href
         }
@@ -166,7 +169,7 @@ export function NotificationRow({
           <span
             className={cn(
               "block text-[13px] font-medium leading-[1.35] text-fg",
-              summary && "min-h-9 break-words",
+              summary && "break-words",
             )}
             title={title}
           >
@@ -175,7 +178,7 @@ export function NotificationRow({
           <span
             className={cn(
               "mt-0.5 block font-sans text-[11px] text-fg-muted",
-              summary && "min-h-8 break-words leading-4 tabular-nums",
+              summary && "min-h-4 break-words leading-4 tabular-nums",
             )}
           >
             {detail}
@@ -189,8 +192,8 @@ export function NotificationRow({
           />
         </span>
       </Link>
-      {summary ? (
-        <div className="ml-11 flex min-h-7 flex-wrap gap-x-3 gap-y-1 px-4 pb-2 text-xs text-accent-text underline underline-offset-2">
+      {summary && (runsHref || incidents.length > 0) ? (
+        <div className="ml-[43px] flex flex-wrap gap-x-3 gap-y-1 px-4 pb-3 text-xs text-accent-text [&_a]:no-underline [&_a:hover]:underline [&_a:focus-visible]:underline">
           {runsHref ? (
             <Link href={runsHref} onClick={onNavigate}>
               {t("summary.viewRuns")}

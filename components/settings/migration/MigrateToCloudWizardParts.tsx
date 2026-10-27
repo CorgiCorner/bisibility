@@ -3,6 +3,7 @@ import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/ui/cn";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 export function MigrateStepper({ step }: Readonly<{ step: number }>) {
   const t = useTranslations("projectSettingsMigration.wizard.step");
@@ -72,150 +73,37 @@ export function ReadOnlyBanner({
   );
 }
 
-export function EnableReadOnlyConfirmModal({
-  busy,
-  error,
-  onClose,
-  onConfirm,
-  open,
-}: Readonly<{
+type MigrationConfirmationProps = Readonly<{
   busy?: boolean;
   error?: string | null;
   onClose: () => void;
   onConfirm: () => void;
   open: boolean;
-}>) {
-  const t = useTranslations("projectSettingsMigration.hold");
-  return (
-    <Modal
-      footer={
-        <>
-          <button
-            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:bg-bg-sunken disabled:text-fg-muted"
-            disabled={busy}
-            onClick={onClose}
-            type="button"
-          >
-            {t("enableKeep")}
-          </button>
-          <Button
-            loading={busy}
-            loadingLabel={t("enabling")}
-            onClick={onConfirm}
-            style={{ minHeight: 40 }}
-            type="button"
-            variant="primary"
-          >
-            {t("enableConfirm")}
-          </Button>
-        </>
-      }
-      onClose={onClose}
-      open={open}
-      title={t("enableTitle")}
-    >
-      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{t("enableBody")}</p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("enableNote")}</p>
-      {error ? (
-        <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
-      ) : null}
-    </Modal>
-  );
-}
+}>;
 
-export function MarkMigratedConfirmModal({
-  busy,
-  error,
-  onClose,
-  onConfirm,
-  open,
-}: Readonly<{
-  busy?: boolean;
-  error?: string | null;
-  onClose: () => void;
-  onConfirm: () => void;
-  open: boolean;
-}>) {
-  const t = useTranslations("projectSettingsMigration.hold");
-  return (
-    <Modal
-      footer={
-        <>
-          <button
-            className="p-0 text-[13px] font-semibold text-fg-muted hover:text-fg disabled:bg-bg-sunken disabled:text-fg-muted"
-            disabled={busy}
-            onClick={onClose}
-            type="button"
-          >
-            {t("notYet")}
-          </button>
-          <Button
-            loading={busy}
-            loadingLabel={t("marking")}
-            onClick={onConfirm}
-            style={{ minHeight: 40 }}
-            type="button"
-            variant="primary"
-          >
-            {t("mark")}
-          </Button>
-        </>
-      }
-      onClose={onClose}
-      open={open}
-      title={t("migratedTitle")}
-    >
-      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{t("migratedBody")}</p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("migratedNote")}</p>
-      {error ? (
-        <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
-      ) : null}
-    </Modal>
-  );
-}
+type MigrationConfirmationCopy = {
+  title: string;
+  body: string;
+  note: string;
+} & (
+  | { footer: ReactNode }
+  | {
+      keepLabel: string;
+      loadingLabel: string;
+      confirmLabel: string;
+      variant: "primary" | "destructive";
+    }
+);
 
-export function CancelMigrationConfirmModal({
-  busy,
-  error,
-  mode = "cancel",
-  onClose,
-  onConfirm,
-  onKeepReadOnly,
-  open,
-}: Readonly<{
-  busy?: boolean;
-  error?: string | null;
-  mode?: "cancel" | "close";
-  onClose: () => void;
-  onConfirm: () => void;
-  onKeepReadOnly?: () => void;
-  open: boolean;
-}>) {
-  const closeMode = mode === "close";
-  const t = useTranslations("projectSettingsMigration.hold");
+function renderMigrationConfirmation(
+  { busy, error, onClose, onConfirm, open }: MigrationConfirmationProps,
+  copy: MigrationConfirmationCopy,
+) {
   return (
     <Modal
       footer={
-        closeMode ? (
-          <>
-            <button
-              className="p-0 text-[13px] font-semibold text-red-text hover:opacity-80 disabled:bg-bg-sunken disabled:text-fg-muted"
-              disabled={busy}
-              onClick={onConfirm}
-              type="button"
-            >
-              {busy ? t("cancelling") : t("cancelAndResume")}
-            </button>
-            <Button
-              disabled={busy}
-              onClick={onKeepReadOnly ?? onClose}
-              style={{ minHeight: 40 }}
-              type="button"
-              variant="primary"
-            >
-              {t("keepReadOnlyClose")}
-            </Button>
-          </>
+        "footer" in copy ? (
+          copy.footer
         ) : (
           <>
             <button
@@ -224,32 +112,104 @@ export function CancelMigrationConfirmModal({
               onClick={onClose}
               type="button"
             >
-              {t("keepMigrating")}
+              {copy.keepLabel}
             </button>
             <Button
               loading={busy}
-              loadingLabel={t("cancelling")}
+              loadingLabel={copy.loadingLabel}
               onClick={onConfirm}
               style={{ minHeight: 40 }}
               type="button"
-              variant="destructive"
+              variant={copy.variant}
             >
-              {t("cancel")}
+              {copy.confirmLabel}
             </Button>
           </>
         )
       }
       onClose={onClose}
       open={open}
-      title={closeMode ? t("progressTitle") : t("cancelTitle")}
+      title={copy.title}
     >
-      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">
-        {closeMode ? t("progressBody") : t("cancelBody")}
-      </p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("autoRelease")}</p>
+      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{copy.body}</p>
+      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{copy.note}</p>
       {error ? (
         <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
       ) : null}
     </Modal>
   );
+}
+
+export function EnableReadOnlyConfirmModal(props: MigrationConfirmationProps) {
+  const t = useTranslations("projectSettingsMigration.hold");
+  return renderMigrationConfirmation(props, {
+    keepLabel: t("enableKeep"),
+    loadingLabel: t("enabling"),
+    confirmLabel: t("enableConfirm"),
+    variant: "primary",
+    title: t("enableTitle"),
+    body: t("enableBody"),
+    note: t("enableNote"),
+  });
+}
+
+export function MarkMigratedConfirmModal(props: MigrationConfirmationProps) {
+  const t = useTranslations("projectSettingsMigration.hold");
+  return renderMigrationConfirmation(props, {
+    keepLabel: t("notYet"),
+    loadingLabel: t("marking"),
+    confirmLabel: t("mark"),
+    variant: "primary",
+    title: t("migratedTitle"),
+    body: t("migratedBody"),
+    note: t("migratedNote"),
+  });
+}
+
+export function CancelMigrationConfirmModal({
+  mode = "cancel",
+  onKeepReadOnly,
+  ...props
+}: MigrationConfirmationProps &
+  Readonly<{
+    mode?: "cancel" | "close";
+    onKeepReadOnly?: () => void;
+  }>) {
+  const closeMode = mode === "close";
+  const t = useTranslations("projectSettingsMigration.hold");
+  return renderMigrationConfirmation(props, {
+    ...(closeMode
+      ? {
+          footer: (
+            <>
+              <button
+                className="p-0 text-[13px] font-semibold text-red-text hover:opacity-80 disabled:bg-bg-sunken disabled:text-fg-muted"
+                disabled={props.busy}
+                onClick={props.onConfirm}
+                type="button"
+              >
+                {props.busy ? t("cancelling") : t("cancelAndResume")}
+              </button>
+              <Button
+                disabled={props.busy}
+                onClick={onKeepReadOnly ?? props.onClose}
+                style={{ minHeight: 40 }}
+                type="button"
+                variant="primary"
+              >
+                {t("keepReadOnlyClose")}
+              </Button>
+            </>
+          ),
+        }
+      : {
+          keepLabel: t("keepMigrating"),
+          loadingLabel: t("cancelling"),
+          confirmLabel: t("cancel"),
+          variant: "destructive" as const,
+        }),
+    title: closeMode ? t("progressTitle") : t("cancelTitle"),
+    body: closeMode ? t("progressBody") : t("cancelBody"),
+    note: t("autoRelease"),
+  });
 }

@@ -10,7 +10,6 @@ import { indexingData, indexingUrl } from "./indexing.test-support";
 import { PageIndexingTab } from "./PageIndexingTab";
 import { SearchConsoleTabs } from "./SearchConsoleTabs";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 const loadDetailAction = vi.fn();
 const inspectAction = vi.fn();
 const loadUrlsAction = vi.fn();

@@ -1,6 +1,8 @@
 import type { AcceptedActionPayment } from "@/lib/action-payment/contract";
 import type { AiPaymentConsent } from "@/lib/ai-research/payment";
 import type { MeterOperationReference } from "@/lib/metering/operation-reference";
+import type { z } from "zod";
+import type * as schema from "./schema";
 export const PROMPT_CATEGORIES = ["neutral", "branded", "comparative"] as const;
 export type PromptCategory = (typeof PROMPT_CATEGORIES)[number];
 export const TRACKING_SOURCES = ["consumer_scrape", "model_api", "google_aio"] as const;
@@ -50,14 +52,7 @@ export interface TrackingActorCredential {
 }
 export type TrackingOrigin = "manual" | "scheduled";
 export type TrackingEntrySource = "app" | "api" | "mcp" | "worker" | "cli" | "sdk";
-export interface SourceConfiguration {
-  provider: "dataforseo";
-  endpoint: string;
-  engine: TrackingEngine;
-  source: TrackingSource;
-  model: string | null;
-  parameters: { [key: string]: JsonValue };
-}
+export interface SourceConfiguration extends z.output<typeof schema.sourceConfigurationSchema> {}
 export interface SamplePlan {
   paymentConsent?: AiPaymentConsent;
   version: 1;
@@ -86,79 +81,31 @@ export interface SamplePlan {
   attemptId: string;
   deadline: string;
 }
-export interface Evidence {
-  answerText: string | null;
-  raw: JsonValue | null;
-  answerTruncated: boolean;
-  rawTruncated: boolean;
+export interface Evidence
+  extends z.input<typeof schema.persistTrackingResultSchema.shape.evidence> {
   searchResults: CitationInput[];
-  requestedLocale: string | null;
-  effectiveLocale: string | null;
-  localeMechanism: string | null;
-  requestedModel: string | null;
-  actualModel: string | null;
-  providerStatus: string | null;
-  observedAt: string;
-  fetchedAt: string;
-  recordedSource: "fresh" | "cache";
 }
-export interface CostReceipt {
-  /** Host-proven refusal before a transport barrier; carries exact zero only. */
-  noDispatch?: true;
+export interface CostReceipt
+  extends z.input<typeof schema.persistTrackingResultSchema.shape.receipt> {
   operationRef?: MeterOperationReference | null;
-  /** Historical input alias; runtime accounting resolves only Store operations. */
-  providerCostEntryId: string | null;
-  amountUsd: string | null;
-  state: "unknown" | "pending" | "confirmed" | "refund_pending" | "derived";
 }
-export interface CitationInput {
-  url: string;
-  title: string | null;
-  position: number;
-}
-export interface EntityObservationInput {
-  entityKey: string;
-  name: string;
-  competitorId: string | null;
-  mentioned: boolean;
-  snippet?: string | null;
-  matchPolicy?: string;
-  confidence?: number | null;
-  aliases?: string[];
-  position: number | null;
-}
+export interface CitationInput
+  extends z.input<typeof schema.persistTrackingResultSchema.shape.citations.element> {}
+export interface EntityObservationInput
+  extends z.input<typeof schema.persistTrackingResultSchema.shape.observations.element> {}
 export interface TrackingLimits {
   activePrompts: number;
   topics: number;
 }
 export const DEFAULT_TRACKING_LIMITS: TrackingLimits = { activePrompts: 100, topics: 30 };
-export interface PlanTrackingRunInput {
+export interface PlanTrackingRunInput extends z.input<typeof schema.planTrackingRunSchema> {
   paymentConsent?: AiPaymentConsent;
   acceptedPayment?: AcceptedActionPayment;
-  requirePayment?: boolean;
-  paymentScope?: "manual" | "recurring";
-  paymentScheduleId?: string;
-  paymentRecurrence?: { cron: string; timezone: string };
-  actorId: string;
   actorCredential?: TrackingActorCredential;
-  idempotencyKey: string;
-  promptIds: string[];
   configurations: SourceConfiguration[];
-  credentialConnectionId: string;
-  credentialVersion: string;
-  budgetRevision: string;
-  consentRevision: string;
-  origin: TrackingOrigin;
-  entrySource: TrackingEntrySource;
-  deadline: string;
-  scheduleId?: string;
-  plannedAt?: string;
-  retryOfRunId?: string;
 }
-export interface PersistTrackingResultInput {
-  attemptId: string;
-  expectedDispatch: DispatchState;
-  measurement: MeasurementState;
+export interface PersistTrackingResultInput
+  extends z.input<typeof schema.persistTrackingResultSchema> {
   evidence: Evidence;
   citations: CitationInput[];
   observations: EntityObservationInput[];

@@ -13,7 +13,7 @@ export function OnboardingPageHeading({
           className="mb-2 min-h-10 px-0"
           href={backLink.href}
           size="sm"
-          startIcon={<ArrowLeftIcon aria-hidden size={15} />}
+          startIcon={<ArrowLeftIcon weight="regular" aria-hidden size={15} />}
           variant="ghost"
         >
           {backLink.label}

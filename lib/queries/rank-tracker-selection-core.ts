@@ -13,6 +13,7 @@ import { loadKeywordRowsByInternalIds } from "./keyword-row-loader";
 import type { KeywordRow } from "./keyword-row-types";
 import { exactRankTrackerRows, filterExactRankTrackerRows } from "./rank-tracker-list-exact";
 import { buildRankTrackerListSql } from "./rank-tracker-list-sql";
+import { loadTrackedResearch } from "./tracked-research";
 
 export type RankTrackerSelectionProject = { domain: string | null; id: string };
 type ExportSelectionOptions = { membershipLimit?: number | null };
@@ -48,6 +49,12 @@ const flatExactSortFields = new Set([
   "ctr",
   "change",
   "sparkline",
+  "researchVolume",
+  "researchDifficulty",
+  "researchCpc",
+  "researchIntent",
+  "researchSource",
+  "researchAt",
 ]);
 
 export function requiresExactRows(query: RankTrackerQueryState) {
@@ -64,6 +71,13 @@ export function requiresExactRows(query: RankTrackerQueryState) {
 
 function requiresExactFlatRows(query: RankTrackerQueryState) {
   return requiresExactRows(query) || flatExactSortFields.has(query.sort.field);
+}
+
+async function withResearch(projectId: string, rows: KeywordRow[], query: RankTrackerQueryState) {
+  if (!query.sort.field.startsWith("research")) return rows;
+  const asOf = query.reportScope?.asOf ? new Date(query.reportScope.asOf) : new Date();
+  const values = await loadTrackedResearch(prisma, projectId, rows, asOf);
+  return rows.map((row) => ({ ...row, research: values.get(row.id) ?? null }));
 }
 
 async function rawSelection(
@@ -93,7 +107,11 @@ export async function selectRankTrackerKeywordsForProject(
   const effectiveQuery = resolvedQuery(query, raw);
   const exactRows = exact
     ? exactRankTrackerRows(
-        await loadKeywordRowsByInternalIds(project, raw.keywordIds),
+        await withResearch(
+          project.id,
+          await loadKeywordRowsByInternalIds(project, raw.keywordIds),
+          effectiveQuery,
+        ),
         effectiveQuery,
       )
     : null;
@@ -122,7 +140,11 @@ async function exactExportIds(
       seenCandidateIds.add(id);
       return true;
     });
-    const rows = await loadKeywordRowsByInternalIds(project, candidateIds);
+    const rows = await withResearch(
+      project.id,
+      await loadKeywordRowsByInternalIds(project, candidateIds),
+      query,
+    );
     for (const row of filterExactRankTrackerRows(rows, query)) {
       matches.push(row);
       if (membershipLimit !== null) assertKeywordExportMembershipLimit(matches.length);

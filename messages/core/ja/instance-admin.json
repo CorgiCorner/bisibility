@@ -410,7 +410,9 @@
       "budgetsHeading": "現在の予算",
       "scope": "プロジェクト / 接続",
       "status": "状態",
-      "exceptionsHeading": "対応が必要"
+      "exceptionsHeading": "対応が必要",
+      "historyBlocked": "有料チェックは一時停止中",
+      "historyBlockedHint": "過去のコストを確認する必要があります。"
     },
     "announcements": {
       "heading": "ユーザーへのお知らせ",

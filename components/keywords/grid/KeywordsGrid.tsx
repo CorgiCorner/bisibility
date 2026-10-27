@@ -42,12 +42,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const {
     activeViewId = null,
-    bulkClearTargetAction,
-    bulkDeleteAction,
-    bulkSetTargetAction,
-    bulkTagAction,
     canCreateKeyword,
-    canDeleteKeyword,
     checkHealth,
     costContext,
     createSavedViewAction,
@@ -63,7 +58,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     rows,
     savedViews = [],
     totalCount,
-    updateKeywordAction,
   } = props;
   const { readOnly } = useProjectWriteMode();
   const { openKeywordImport } = useKeywordImport();
@@ -224,15 +218,10 @@ export function KeywordsGrid(props: KeywordsGridProps) {
       ) : null}
       <KeywordDataTable
         {...props}
-        bulkClearTargetAction={bulkClearTargetAction}
-        bulkDeleteAction={bulkDeleteAction}
-        bulkSetTargetAction={bulkSetTargetAction}
-        bulkTagAction={bulkTagAction}
-        canDeleteKeyword={canDeleteKeyword}
         checkHealth={checkHealth}
+        matchedGroupCount={matchedGroupCount}
         filterChips={filterChips}
         filterCount={filterChips.length}
-        matchedGroupCount={matchedGroupCount}
         noRowsState={noRowsState}
         savedViewControl={scopeView.savedView}
         onAddKeyword={canCreateKeyword ? () => openAddDrawer() : undefined}
@@ -265,7 +254,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         pendingCheckIds={new Set<string>()}
         marketScope={marketScope}
         rankTrackerPath={keywordsPath}
-        rows={rows}
         searchValue={searchValue}
         scopeChip={
           !marketContext.market && query.lens.locationId ? (
@@ -279,7 +267,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
           ) : undefined
         }
         scopeControl={scopeView.control}
-        updateKeywordAction={updateKeywordAction}
       />
       <KeywordsGridServerFilters
         activeViewId={activeViewId}

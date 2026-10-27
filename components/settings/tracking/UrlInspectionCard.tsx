@@ -7,7 +7,7 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   availableInspectionModes,
   effectiveInspectionMode,
@@ -19,7 +19,6 @@ import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 type InspectionBudgetForm = z.infer<typeof projectInspectionBudgetSchema>;
@@ -46,14 +45,13 @@ export function UrlInspectionCard({
   const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("projectSettingsTracking.inspection");
   const [saveError, setSaveError] = useState<string | null>(null);
-  const form = useForm<InspectionBudgetForm>({
+  const form = useZodForm<InspectionBudgetForm>(projectInspectionBudgetSchema, {
     defaultValues: {
       inspectionDailyLimit: dailyLimit,
       inspectionBudgetMode: effectiveInspectionMode(budgetMode),
       projectId,
     },
     mode: "onChange",
-    resolver: zodResolver(projectInspectionBudgetSchema),
   });
 
   async function saveInspectionBudget() {

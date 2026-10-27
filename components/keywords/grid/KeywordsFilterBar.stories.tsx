@@ -1,9 +1,10 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import type {
   DataTableColumn,
   DataTableDensity,
 } from "@/components/ui/data-table/data-table-types";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
-import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
+import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
@@ -15,7 +16,15 @@ const meta = {
   component: KeywordsFilterBar,
   parameters: { layout: "fullscreen" },
   decorators: [
-    withSharedMessages,
+    (Story) => (
+      <FeatureMessagesProvider
+        locale="en"
+        messages={projectRankTrackerFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <Story />
+      </FeatureMessagesProvider>
+    ),
     (Story) => (
       <div className="min-h-[220px] bg-bg p-6 text-fg">
         <div className="rounded-card border border-border bg-bg-elev">
@@ -50,7 +59,7 @@ function ToolbarControl({ children }: Readonly<{ children: ReactNode }>) {
   );
 }
 
-function FilterBarStory() {
+function FilterBarStory({ refreshing = false }: Readonly<{ refreshing?: boolean }>) {
   const [searchValue, setSearchValue] = useState("rank tracker");
   const [density, setDensity] = useState<DataTableDensity>("standard");
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
@@ -80,7 +89,9 @@ function FilterBarStory() {
       onDensityChange={setDensity}
       onOpenExport={() => undefined}
       onOpenFilters={() => undefined}
+      onAddKeyword={() => undefined}
       onRefresh={() => undefined}
+      refreshing={refreshing}
       onRemoveFilter={() => undefined}
       onSearchChange={setSearchValue}
       savedViewControl={<ToolbarControl>Default view</ToolbarControl>}
@@ -112,4 +123,9 @@ export const Interactive: Story = {
     searchValue: "",
   },
   render: () => <FilterBarStory />,
+};
+
+export const Refreshing: Story = {
+  ...Interactive,
+  render: () => <FilterBarStory refreshing />,
 };

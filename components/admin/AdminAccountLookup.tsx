@@ -11,13 +11,12 @@ import { IdChip } from "@/components/ui/IdChip";
 import { inputControlSizeClassName } from "@/components/ui/input-styles";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { lookupInstanceAdminAccount } from "@/lib/actions/instance-admin-account";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const emailSchema = z.string().email();
@@ -163,9 +162,8 @@ export function AdminAccountLookup() {
     formState: { errors },
     handleSubmit,
     register,
-  } = useForm<LookupForm>({
+  } = useZodForm<LookupForm>(lookupSchema, {
     defaultValues: { identifier: "" },
-    resolver: zodResolver(lookupSchema),
   });
 
   function onSubmit(values: LookupForm) {

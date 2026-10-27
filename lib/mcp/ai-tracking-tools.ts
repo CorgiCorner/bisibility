@@ -1,52 +1,48 @@
+import { operationPolicy } from "@/lib/api/operation-policy";
+import { operationPath } from "./operation-path";
 import type { RestCall } from "./rest-call";
 import type { JsonObject, McpToolDefinition } from "./types";
 
-const operations = {
-  listPromptTrackerTopics: ["GET", "topics"],
-  createPromptTrackerTopic: ["POST", "topics"],
-  updatePromptTrackerTopic: ["PATCH", "topics", "topic_id"],
-  archivePromptTrackerTopic: ["DELETE", "topics", "topic_id"],
-  listPromptTrackerPrompts: ["GET", "prompts"],
-  createPromptTrackerPrompt: ["POST", "prompts"],
-  updatePromptTrackerPrompt: ["PATCH", "prompts", "prompt_id"],
-  archivePromptTrackerPrompt: ["DELETE", "prompts", "prompt_id"],
-  listPromptTrackerSchedules: ["GET", "schedules"],
-  createPromptTrackerSchedule: ["POST", "schedules"],
-  updatePromptTrackerSchedule: ["PATCH", "schedules", "schedule_id"],
-  archivePromptTrackerSchedule: ["DELETE", "schedules", "schedule_id"],
-  previewPromptTrackerRun: ["POST", "runs/preview"],
-  createPromptTrackerRun: ["POST", "runs"],
-  listPromptTrackerRuns: ["GET", "runs"],
-  getPromptTrackerRun: ["GET", "runs", "run_id"],
-  listPromptTrackerSamples: ["GET", "runs", "run_id", "samples"],
-  cancelPromptTrackerRun: ["POST", "runs", "run_id", "cancel"],
-  retryPromptTrackerRun: ["POST", "runs", "run_id", "retry"],
-  getPromptTrackerHistory: ["GET", "history"],
-  getPromptTrackerTrends: ["GET", "trends"],
-  exportPromptTrackerEvidence: ["GET", "export"],
-  suggestPromptResearchPrompts: ["POST", "suggestions"],
-  acceptPromptResearchSuggestions: ["POST", "suggestions/accept"],
-  promptResearchSuggestionsPreview: ["POST", "suggestions/preview"],
-  promptResearchSuggestionsGenerate: ["POST", "suggestions/generate"],
-} as const;
-function required(input: JsonObject, key: string) {
-  const value = input[key];
-  if (typeof value !== "string" || !value.trim()) throw new Error(`${key} is required.`);
-  return encodeURIComponent(value);
+// MCP membership remains an explicit opt-in, independent of new REST policies.
+const operations = [
+  "listPromptTrackerTopics",
+  "createPromptTrackerTopic",
+  "updatePromptTrackerTopic",
+  "archivePromptTrackerTopic",
+  "listPromptTrackerPrompts",
+  "createPromptTrackerPrompt",
+  "updatePromptTrackerPrompt",
+  "archivePromptTrackerPrompt",
+  "listPromptTrackerSchedules",
+  "createPromptTrackerSchedule",
+  "updatePromptTrackerSchedule",
+  "archivePromptTrackerSchedule",
+  "previewPromptTrackerRun",
+  "createPromptTrackerRun",
+  "listPromptTrackerRuns",
+  "getPromptTrackerRun",
+  "listPromptTrackerSamples",
+  "cancelPromptTrackerRun",
+  "retryPromptTrackerRun",
+  "getPromptTrackerHistory",
+  "getPromptTrackerTrends",
+  "exportPromptTrackerEvidence",
+  "suggestPromptResearchPrompts",
+  "acceptPromptResearchSuggestions",
+  "promptResearchSuggestionsPreview",
+  "promptResearchSuggestionsGenerate",
+] as const;
+
+function memberParameter(path: string) {
+  return [...path.matchAll(/\{([^}]+)\}/g)][1]?.[1];
 }
 export function dispatchPromptTrackerTool(name: string, input: JsonObject): RestCall | null {
-  if (!(name in operations)) return null;
-  const [method, resource, member, action] = operations[
-    name as keyof typeof operations
-  ] as readonly [RestCall["method"], string, string?, string?];
-  const promptResearch =
-    name === "suggestPromptResearchPrompts" ||
-    name === "acceptPromptResearchSuggestions" ||
-    name.startsWith("promptResearch");
-  const root = promptResearch ? "prompt-research" : "prompt-tracker";
-  let path = `/projects/${required(input, "project_id")}/${root}/${resource}`;
-  if (member) path += `/${required(input, member)}`;
-  if (action) path += `/${action}`;
+  const operation = operations.find((candidate) => candidate === name);
+  if (!operation) return null;
+  const { method, path: pattern } = operationPolicy[operation];
+  if (method === "PUT") return null;
+  const member = memberParameter(pattern);
+  let path = operationPath(operation, input);
   const query = new URLSearchParams();
   if (method === "GET")
     for (const key of ["limit", "cursor", "run_id", "previous_run_id", "format"]) {
@@ -70,53 +66,49 @@ export function dispatchPromptTrackerTool(name: string, input: JsonObject): Rest
     idempotencyKey: typeof input.idempotency_key === "string" ? input.idempotency_key : undefined,
   };
 }
-export const promptTrackerToolDefinitions: McpToolDefinition[] = Object.entries(operations).map(
-  ([name, route]) => {
-    const preview =
-      name === "previewPromptTrackerRun" || name === "promptResearchSuggestionsPreview";
-    const readOnly = route[0] === "GET" || preview || name === "suggestPromptResearchPrompts";
-    return {
-      name,
-      title: name.replace(/([A-Z])/g, " $1").trim(),
-      description:
-        name.startsWith("promptResearch") || name.includes("PromptResearch")
-          ? preview
-            ? "Spend-free Prompt Research suggestion preview. Never submits a provider task."
-            : "Prompt Research suggestions to review. Accepted drafts become Prompt Tracker prompts."
-          : preview
-            ? "Spend-free Prompt Tracker capability and budget preview. Never submits a provider task."
-            : "Project-scoped Prompt Tracker operation. Preserve evidence provenance, partial/unknown states, and explicit budget consent. Writes never trigger an automatic baseline.",
-      annotations: {
-        destructiveHint: route[0] === "DELETE",
-        openWorldHint:
-          name === "createPromptTrackerRun" || name === "promptResearchSuggestionsGenerate",
-        readOnlyHint: readOnly,
+export const promptTrackerToolDefinitions: McpToolDefinition[] = operations.map((name) => {
+  const route = operationPolicy[name];
+  const member = memberParameter(route.path);
+  const preview = name === "previewPromptTrackerRun" || name === "promptResearchSuggestionsPreview";
+  const readOnly = route.method === "GET" || preview || name === "suggestPromptResearchPrompts";
+  return {
+    name,
+    title: name.replace(/([A-Z])/g, " $1").trim(),
+    description:
+      name.startsWith("promptResearch") || name.includes("PromptResearch")
+        ? preview
+          ? "Spend-free Prompt Research suggestion preview. Never submits a provider task."
+          : "Prompt Research suggestions to review. Accepted drafts become Prompt Tracker prompts."
+        : preview
+          ? "Spend-free Prompt Tracker capability and budget preview. Never submits a provider task."
+          : "Project-scoped Prompt Tracker operation. Preserve evidence provenance, partial/unknown states, and explicit budget consent. Writes never trigger an automatic baseline.",
+    annotations: {
+      destructiveHint: route.method === "DELETE",
+      openWorldHint:
+        name === "createPromptTrackerRun" || name === "promptResearchSuggestionsGenerate",
+      readOnlyHint: readOnly,
+    },
+    execution: { taskSupport: "forbidden" },
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string" },
+        topic_id: { type: "string" },
+        prompt_id: { type: "string" },
+        schedule_id: { type: "string" },
+        run_id: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+        cursor: { type: "string", maxLength: 512 },
+        consent: { type: "boolean" },
       },
-      execution: { taskSupport: "forbidden" },
-      inputSchema: {
-        type: "object",
-        properties: {
-          project_id: { type: "string" },
-          topic_id: { type: "string" },
-          prompt_id: { type: "string" },
-          schedule_id: { type: "string" },
-          run_id: { type: "string" },
-          limit: { type: "integer", minimum: 1, maximum: 100 },
-          cursor: { type: "string", maxLength: 512 },
-          consent: { type: "boolean" },
-        },
-        required: ["project_id", ...(route[2] ? [route[2]] : [])],
-        additionalProperties: true,
-      },
-    };
-  },
-);
+      required: ["project_id", ...(member ? [member] : [])],
+      additionalProperties: true,
+    },
+  };
+});
 
 export const promptTrackerToolOperationNames = Object.fromEntries(
-  Object.keys(operations).map((name) => [
-    name,
-    name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
-  ]),
+  operations.map((name) => [name, name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)]),
 );
 export const promptTrackerToolSchemas = Object.fromEntries(
   promptTrackerToolDefinitions.map((tool) => [tool.name, tool.inputSchema]),

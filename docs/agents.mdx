@@ -213,9 +213,10 @@ for URL scope, retry behavior and saved-report reuse.
 
 Reports retain source dates, partial crawl limits, missing data and uncertainty.
 Saved Brand Visibility evidence is provider-observed; Prompt Playground responses
-are synthetic tests and cannot establish real consumer visibility. Optional
-paid enrichment uses an estimate followed by explicit approval of the operation
-and cost cap, whether funded by your own provider key or deployment credits.
+are synthetic tests and cannot establish real consumer visibility. This skill
+only reads already-saved AI reports and never runs paid provider research. If no
+saved AI reports exist, the report records a coverage gap and points to the separate
+`/ai-visibility-audit` workflow. The agent does not offer to run it inside the SEO audit.
 
 The skill saves bounded JSON/text with external kind `seo_audit` and returns `/app/<project_id>/agent-reports/<report_id>` on your app origin after confirming the save. This link inherits project access and does not publish the report publicly.
 

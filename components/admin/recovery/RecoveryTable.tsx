@@ -5,6 +5,7 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import type {
   DataTableColumn,
   DataTableRowBase,
+  DataTableSort,
 } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -14,6 +15,7 @@ import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { RecoveryEvidence } from "./RecoveryEvidence";
+import { recoveryEvidenceSortValue } from "./recovery-sorting";
 
 type Row = DataTableRowBase & {
   value?: RecoveryCase;
@@ -22,7 +24,6 @@ type Row = DataTableRowBase & {
   selected?: boolean;
   selectionDisabled?: boolean;
 };
-const unsorted = () => {};
 export function RecoveryTable({
   rows,
   selected,
@@ -38,6 +39,7 @@ export function RecoveryTable({
 }) {
   const t = useTranslations("instanceAdmin.recovery");
   const [groupBy, setGroupBy] = useState("none");
+  const [sorting, setSorting] = useState<DataTableSort | null>(null);
   function label(row: RecoveryCase) {
     if (groupBy === "project") return row.project ?? t("retainedScope");
     if (groupBy === "cause")
@@ -73,10 +75,11 @@ export function RecoveryTable({
     () => [
       {
         id: "select",
+        enableSorting: false,
         header: t("select"),
         size: 140,
         minSize: 140,
-        meta: { sortable: false, lockResize: true },
+        meta: { sortable: true, lockResize: true },
         cell: ({ row }) => {
           const value = row.original.value;
           return (
@@ -96,9 +99,11 @@ export function RecoveryTable({
       },
       {
         id: "project",
+        accessorFn: (row) => (row.value ? (row.value.project ?? t("retainedScope")) : undefined),
+        sortUndefined: "last",
         header: t("project"),
         size: 224,
-        meta: { sortable: false, flex: 1 },
+        meta: { sortable: true, flex: 1 },
         cell: ({ row }) => {
           const value = row.original.value;
           return (
@@ -119,16 +124,20 @@ export function RecoveryTable({
       },
       {
         id: "provider",
+        accessorFn: (row) => row.value?.provider,
+        sortUndefined: "last",
         header: t("provider"),
         size: 130,
-        meta: { sortable: false },
+        meta: { sortable: true },
         cell: ({ row }) => row.original.value?.provider,
       },
       ...(["send", "work", "accounting"] as const).map((axis) => ({
         id: axis,
+        accessorFn: (row: Row) => (row.value ? t(`states.${row.value[axis]}`) : undefined),
+        sortUndefined: "last" as const,
         header: t(axis),
         size: axis === "send" ? 260 : 180,
-        meta: { sortable: false },
+        meta: { sortable: true },
         cell: ({ row }: { row: { original: Row } }) => {
           const value = row.original.value;
           return (
@@ -148,18 +157,22 @@ export function RecoveryTable({
       })),
       ...(["classification", "acceptance", "incident", "lookup"] as const).map((column) => ({
         id: column,
+        accessorFn: (row: Row) => recoveryEvidenceSortValue(row.value?.evidence, column),
+        sortUndefined: "last" as const,
         header: t(`evidence.${column}`),
         size: column === "incident" || column === "lookup" ? 260 : 240,
-        meta: { sortable: false },
+        meta: { sortable: true },
         cell: ({ row }: { row: { original: Row } }) => (
           <RecoveryEvidence value={row.original.value?.evidence} column={column} />
         ),
       })),
       {
         id: "triage",
+        accessorFn: (row) => (row.value ? t(`triageStates.${row.value.triage.status}`) : undefined),
+        sortUndefined: "last",
         header: t("triage"),
         size: 165,
-        meta: { sortable: false },
+        meta: { sortable: true },
         cell: ({ row }) => {
           const value = row.original.value;
           return value && t(`triageStates.${value.triage.status}`);
@@ -167,9 +180,10 @@ export function RecoveryTable({
       },
       {
         id: "details",
+        enableSorting: false,
         header: t("details"),
         size: 144,
-        meta: { sortable: false },
+        meta: { sortable: true },
         cell: ({ row }) => {
           const value = row.original.value;
           return (
@@ -203,8 +217,9 @@ export function RecoveryTable({
         ariaLabel={t("heading")}
         columns={columns}
         rows={tableRows}
-        sorting={null}
-        onSortingChange={unsorted}
+        sorting={sorting}
+        onSortingChange={setSorting}
+        sortingMode="client"
         defaultExpanded="all"
         layout="auto"
         rowClassName={() => "h-auto! min-h-14 [&_[role=cell]]:py-3"}

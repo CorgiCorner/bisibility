@@ -14,11 +14,12 @@ import {
   paymentFailureResponse,
   paymentResource,
 } from "./action-payment";
-import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import { commonLookupFailureResponse } from "./lookup-failure-response";
 import { requireApiPublicId } from "./public-id";
 import { providerOrigin } from "./request-origin";
 import { errorResponse, resourceResponse } from "./responses";
+import { retryHeaders } from "./retry-headers";
 import { scopedProject } from "./surface";
 
 const booleanParam = z
@@ -90,6 +91,8 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
   );
 }
 function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
+  const commonFailure = commonLookupFailureResponse(ctx, outcome);
+  if (commonFailure) return commonFailure;
   if (outcome.reason === "provider_error")
     return errorResponse(
       "provider_unavailable",
@@ -115,52 +118,14 @@ function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
       },
     );
   }
-  if (outcome.reason === "budget_exhausted") {
-    return budgetExhaustedResponse(ctx, {
-      reason: outcome.budgetReason,
-      surface: "programmatic",
-      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
-    });
-  }
-  if (outcome.reason === "cost_limit_exceeded") {
-    return errorResponse(
-      "cost_limit_exceeded",
-      "The estimated provider cost exceeds max_cost_cents.",
-      422,
-      {
-        headers: ctx.headers,
-        instance: ctx.instance,
-        ...(outcome.estimatedCostCents === undefined
-          ? {}
-          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
-      },
-    );
-  }
   if (outcome.reason === "in_progress") {
-    const headers = new Headers(ctx.headers);
-    const retryAfter = String(
-      Math.max(1, Math.ceil(((outcome.resetAt ?? Date.now() + 5_000) - Date.now()) / 1_000)),
-    );
-    headers.set("Retry-After", retryAfter);
-    headers.set("RateLimit-Reset", retryAfter);
+    const headers = retryHeaders(ctx, outcome.resetAt, 5_000);
     return errorResponse(
       "lookup_in_progress",
       "An identical cached lookup is still in progress. Try again after the cache lock expires.",
       429,
       { headers, instance: ctx.instance },
     );
-  }
-  if (outcome.reason === "rate_limited") {
-    const headers = new Headers(ctx.headers);
-    const retryAfter = String(
-      Math.max(1, Math.ceil(((outcome.resetAt ?? Date.now() + 1_000) - Date.now()) / 1_000)),
-    );
-    headers.set("Retry-After", retryAfter);
-    headers.set("RateLimit-Reset", retryAfter);
-    return errorResponse("rate_limited", "Provider rate limit reached. Try again shortly.", 429, {
-      headers,
-      instance: ctx.instance,
-    });
   }
   if (outcome.reason === "unsupported_location") {
     return errorResponse(

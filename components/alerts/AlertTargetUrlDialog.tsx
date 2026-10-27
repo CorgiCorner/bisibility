@@ -4,13 +4,12 @@ import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { setAlertKeywordTargetUrl } from "@/lib/actions/alert-feed";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { targetUrlValueSchema } from "@/lib/schemas/keyword";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({ targetUrl: targetUrlValueSchema });
@@ -38,9 +37,8 @@ export function AlertTargetUrlDialog({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
-  } = useForm<FormValues>({
+  } = useZodForm<FormValues>(formSchema, {
     defaultValues: { targetUrl: targetUrl ?? "" },
-    resolver: zodResolver(formSchema),
   });
 
   async function save(values: FormValues) {
