@@ -8,12 +8,11 @@ import { compactInputClassName } from "@/components/ui/input-styles";
 import { Kbd } from "@/components/ui/Kbd";
 import type { ActionPaymentOption } from "@/lib/action-payment/contract";
 import type { DomainOverviewScope } from "@/lib/domain-overview/types";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { ResearchScope } from "@/lib/research/scope";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
 import {
@@ -65,8 +64,7 @@ export function DomainOverviewAnalyzeCard({
     if (quote?.cache.state === "hit") return t("cached", { action });
     return presented ? t("priced", { action, cost: presented.text }) : action;
   }
-  const { handleSubmit, register } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const { handleSubmit, register } = useZodForm<FormValues>(formSchema, {
     values: { target },
   });
   const targetField = register("target");

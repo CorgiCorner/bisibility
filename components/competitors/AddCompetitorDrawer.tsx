@@ -11,13 +11,12 @@ import {
   addManagedCompetitorSchema,
   type SuggestedCompetitor,
 } from "@/lib/competitors/types";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { presentCompetitorValidationMessage } from "./competitor-validation-presentation";
 
 type AddCompetitorDrawerProps = {
@@ -53,13 +52,12 @@ export function AddCompetitorDrawer({
     register,
     reset,
     setValue,
-  } = useForm<AddManagedCompetitorInput>({
+  } = useZodForm<AddManagedCompetitorInput>(addManagedCompetitorSchema, {
     defaultValues: {
       domain: "",
       label: "",
       projectId,
     },
-    resolver: zodResolver(addManagedCompetitorSchema),
   });
 
   if (!canCreate) return null;

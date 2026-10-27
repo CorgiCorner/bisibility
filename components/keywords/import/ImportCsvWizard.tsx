@@ -8,7 +8,7 @@ import {
   reviewKeywordImport,
 } from "@/lib/actions/keyword-import-export";
 import { refreshKeywordViewsAfterImport } from "@/lib/actions/keyword-import-refresh";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { parseCsvKeywordsResult } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { KeywordImportColumnMapping } from "@/lib/keywords/import-csv-parser";
 import { keywordImportTemplateForMarkets } from "@/lib/keywords/import-csv-template";
@@ -21,7 +21,6 @@ import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { ImportCsvWizardBody } from "./ImportCsvWizardBody";
 import { ImportCsvWizardFooter } from "./ImportCsvWizardFooter";
 import { ImportCsvWizardFrame } from "./ImportCsvWizardFrame";
@@ -61,7 +60,7 @@ export function ImportCsvWizard({
     setValue,
     trigger,
     watch,
-  } = useForm<ImportWizardForm>({
+  } = useZodForm<ImportWizardForm>(importWizardSchema, {
     defaultValues: {
       defaultMarketKey: initialImportMarketKey(marketContext),
       csv: "",
@@ -69,7 +68,6 @@ export function ImportCsvWizard({
       projectId,
       refresh: "deferred",
     },
-    resolver: zodResolver(importWizardSchema),
   });
   const csvText = watch("csv");
   const defaultMarketKey = watch("defaultMarketKey");

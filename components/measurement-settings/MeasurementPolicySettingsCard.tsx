@@ -2,7 +2,7 @@
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   freshnessSecondsText,
   type MeasurementFreshnessForm,
@@ -17,7 +17,6 @@ import type {
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 
 type Props = Readonly<{
   canEdit: boolean;
@@ -31,9 +30,8 @@ export function MeasurementPolicySettingsCard({ canEdit, projectId, snapshot, co
     router = useRouter(),
     id = useId();
   const formId = `${id}-form`;
-  const form = useForm<MeasurementFreshnessForm>({
+  const form = useZodForm<MeasurementFreshnessForm>(measurementFreshnessFormSchema, {
     mode: "onChange",
-    resolver: zodResolver(measurementFreshnessFormSchema),
     defaultValues: {
       manualSeconds: freshnessSecondsText(snapshot.config?.freshness.manualTtlMs ?? null),
       graceSeconds: freshnessSecondsText(snapshot.config?.freshness.cadenceGraceMs ?? null),

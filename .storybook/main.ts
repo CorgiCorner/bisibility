@@ -53,7 +53,6 @@ const serverActionAliases = [
   "@/app/(regional)/app/account/actions",
   "@/app/(regional)/app/account/preferences/actions",
   "@/app/(regional)/app/settings/actions",
-  "@/app/(regional)/cloud/import/actions",
   "@/app/(regional)/onboarding/actions",
   "@/lib/actions/_shared",
   "@/lib/actions/account",

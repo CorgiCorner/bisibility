@@ -324,7 +324,6 @@
     "components/auth/use-auth-error-messages.ts",
     "components/auth/useOAuthConsentCountdown.ts",
     "components/backlinks/AnalyzeCard.tsx",
-    "components/backlinks/AnalyzePricingPopover.tsx",
     "components/backlinks/backlinks-append-state.ts",
     "components/backlinks/backlinks-filters-model.ts",
     "components/backlinks/backlinks-table-columns.tsx",
@@ -370,7 +369,6 @@
     "components/business-locations/use-business-command.ts",
     "components/charts/Sparkline.tsx",
     "components/charts/TimeSeriesChart.tsx",
-    "components/checks/ChecksWorkspace.tsx",
     "components/checks/runs/AsOfDatePopover.tsx",
     "components/checks/runs/check-runs-format.ts",
     "components/checks/runs/check-runs-table-columns.tsx",
@@ -385,13 +383,7 @@
     "components/checks/runs/SkippedRunsView.tsx",
     "components/checks/runs/use-auto-load-more.ts",
     "components/checks/runs/use-run-table-width.ts",
-    "components/checks/upcoming/BudgetForecastNote.tsx",
     "components/checks/upcoming/upcoming-format.ts",
-    "components/checks/upcoming/UpcomingBlockedAlerts.tsx",
-    "components/checks/upcoming/UpcomingDayRollups.tsx",
-    "components/checks/upcoming/UpcomingSection.tsx",
-    "components/checks/upcoming/UpcomingStrip.tsx",
-    "components/checks/use-upcoming-display-mode.ts",
     "components/cloud/cloud-token.ts",
     "components/cloud/CloudImport.tsx",
     "components/cloud/CloudImportCompletedFooter.tsx",
@@ -426,7 +418,6 @@
     "components/competitors/HeadToHeadTable.tsx",
     "components/competitors/ManagedCompetitorControls.tsx",
     "components/competitors/SaveCompetitorViewModal.tsx",
-    "components/competitors/set/AliasPills.tsx",
     "components/competitors/set/competitor-set-columns.tsx",
     "components/competitors/set/CompetitorDetailsDialog.tsx",
     "components/competitors/set/CompetitorSetTable.tsx",
@@ -434,7 +425,6 @@
     "components/competitors/set/RemoveCompetitorDialog.tsx",
     "components/competitors/ShareOfVoiceCard.tsx",
     "components/cost-estimate/cost-estimate-store.ts",
-    "components/cost-estimate/CostEstimateLine.tsx",
     "components/cost-estimate/EstimateStatus.tsx",
     "components/cost-estimate/header-budget-summary.ts",
     "components/cost-estimate/HeaderBudgetScope.tsx",
@@ -492,7 +482,6 @@
     "components/domain-overview/DomainOverviewMissingModule.tsx",
     "components/domain-overview/DomainOverviewPagesTable.tsx",
     "components/domain-overview/DomainOverviewPerformanceChart.tsx",
-    "components/domain-overview/DomainOverviewPricingPopover.tsx",
     "components/domain-overview/DomainOverviewRankingLink.tsx",
     "components/domain-overview/DomainOverviewRecentTargets.tsx",
     "components/domain-overview/DomainOverviewResults.tsx",
@@ -560,7 +549,6 @@
     "components/integrations/Ga4PropertyManualEntry.tsx",
     "components/integrations/IntegrationCategories.tsx",
     "components/integrations/IntegrationCategory.tsx",
-    "components/integrations/IntegrationsByoNote.tsx",
     "components/integrations/IntegrationsPageLoading.tsx",
     "components/integrations/IntegrationsTabs.tsx",
     "components/integrations/IntegrationUsagePanel.tsx",
@@ -593,27 +581,12 @@
     "components/keyword-detail-history/HistoryScope.tsx",
     "components/keyword-detail-history/HistoryTime.tsx",
     "components/keyword-detail-history/KeywordDetailHistory.tsx",
-    "components/keyword-detail-history/LegacyPositionHistoryPlot.tsx",
     "components/keyword-detail-history/ObservationHistoryTable.tsx",
     "components/keyword-detail-history/RecordedHistoryChart.tsx",
     "components/keyword-detail-history/RecordedUrlHistory.tsx",
     "components/keyword-detail-history/RetainedSnapshotCard.tsx",
     "components/keyword-detail-history/use-keyword-detail-history.ts",
-    "components/keyword-detail/empty/empty-state-primitives.tsx",
-    "components/keyword-detail/empty/FirstCheckNoData.tsx",
-    "components/keyword-detail/empty/KeywordContextAllUnknown.tsx",
-    "components/keyword-detail/empty/KeywordContextPartial.tsx",
-    "components/keyword-detail/empty/PositionHistoryNoChecksInRange.tsx",
-    "components/keyword-detail/empty/PositionHistoryOneCheck.tsx",
-    "components/keyword-detail/empty/SchedulePausedBudgetExhausted.tsx",
-    "components/keyword-detail/empty/SearchPerformanceAwaitingFirstSync.tsx",
-    "components/keyword-detail/empty/SearchPerformanceNotConnected.tsx",
-    "components/keyword-detail/empty/TargetMismatchCannibalization.tsx",
-    "components/keyword-detail/shared/KeywordDetailCheckSplitButton.tsx",
-    "components/keyword-detail/shared/KeywordDetailContextPills.tsx",
-    "components/keyword-detail/shared/KeywordDetailFreeActionButton.tsx",
     "components/keyword-detail/shared/KeywordDetailPageSkeleton.tsx",
-    "components/keyword-detail/shared/KeywordDetailStatePill.tsx",
     "components/keyword-detail/shared/story-theme-preview.tsx",
     "components/keywords/action-utils.ts",
     "components/keywords/add/add-keyword-drawer-markets.ts",
@@ -635,9 +608,7 @@
     "components/keywords/add/AddKeywordManualPanel.tsx",
     "components/keywords/add/AddKeywordSuggestionsPanel.tsx",
     "components/keywords/add/AddKeywordTrackingControls.tsx",
-    "components/keywords/add/AddKeywordTrackingPanel.tsx",
     "components/keywords/add/KeywordManagementMessagesBoundary.tsx",
-    "components/keywords/add/ProjectMarketsSelector.tsx",
     "components/keywords/add/TrackingConfigurationFields.tsx",
     "components/keywords/add/useAddKeywordDrawerMarkets.ts",
     "components/keywords/add/useAddKeywordDrawerSave.ts",
@@ -647,7 +618,6 @@
     "components/keywords/blocks/keyword-paste-parser.ts",
     "components/keywords/blocks/KeywordsPasteInput.tsx",
     "components/keywords/CheckDepthSplitButton.tsx",
-    "components/keywords/DegradedPositionMarkers.tsx",
     "components/keywords/export-target-model.ts",
     "components/keywords/export/export-action-error.ts",
     "components/keywords/export/export-history-request.ts",
@@ -716,14 +686,14 @@
     "components/keywords/grid/KeywordsToolbarActions.tsx",
     "components/keywords/grid/KeywordsToolbarButton.tsx",
     "components/keywords/grid/KeywordTableStatus.tsx",
-    "components/keywords/grid/LastCheckedCell.tsx",
     "components/keywords/grid/market-grid-cells.tsx",
     "components/keywords/grid/MarketRunSliceStatus.tsx",
     "components/keywords/grid/NewScheduleFromSelection.tsx",
     "components/keywords/grid/RankTrackerReportScopeControl.tsx",
+    "components/keywords/grid/research-grid-columns.tsx",
+    "components/keywords/grid/ResearchMetricCells.tsx",
     "components/keywords/grid/RowActionsCell.tsx",
     "components/keywords/grid/run-check-depth.ts",
-    "components/keywords/grid/RunChecksConfirmationModal.tsx",
     "components/keywords/grid/RunChecksSplitButton.tsx",
     "components/keywords/grid/SavedViewsControl.tsx",
     "components/keywords/grid/SaveViewModal.tsx",
@@ -733,6 +703,7 @@
     "components/keywords/grid/SetScheduleModal.tsx",
     "components/keywords/grid/SetScheduleModalChoices.tsx",
     "components/keywords/grid/TargetRankingCell.tsx",
+    "components/keywords/grid/use-filter-chip-edges.ts",
     "components/keywords/grid/use-flat-rank-tracker-navigation.ts",
     "components/keywords/grid/use-keywords-grid-view-state.ts",
     "components/keywords/grid/use-personal-keyword-layout.ts",
@@ -769,7 +740,6 @@
     "components/keywords/KeywordDetailRetainedUrl.tsx",
     "components/keywords/KeywordDetailScopeProof.tsx",
     "components/keywords/KeywordEditDrawer.tsx",
-    "components/keywords/KeywordFirstCheckModal.tsx",
     "components/keywords/KeywordHeaderActions.tsx",
     "components/keywords/KeywordHeaderCard.test-utils.tsx",
     "components/keywords/KeywordHeaderCard.tsx",
@@ -777,10 +747,10 @@
     "components/keywords/KeywordHeaderContextBoundary.tsx",
     "components/keywords/KeywordIndexStatus.tsx",
     "components/keywords/KeywordMarketsDrawer.tsx",
-    "components/keywords/KeywordPendingDeleteButton.tsx",
     "components/keywords/KeywordPendingDetail.tsx",
     "components/keywords/KeywordPendingEmptyState.tsx",
     "components/keywords/KeywordPendingModules.tsx",
+    "components/keywords/KeywordResearchAction.tsx",
     "components/keywords/keywords-fixture-url-history.ts",
     "components/keywords/keywords-fixtures-locations.ts",
     "components/keywords/keywords-fixtures.ts",
@@ -794,13 +764,7 @@
     "components/keywords/location-picker-data.ts",
     "components/keywords/LocationActionWarning.tsx",
     "components/keywords/LocationField.tsx",
-    "components/keywords/PositionHistoryAnnotations.tsx",
-    "components/keywords/PositionHistoryCard.tsx",
-    "components/keywords/PositionHistoryMarketLegend.tsx",
     "components/keywords/rank-tracker-cost-context.ts",
-    "components/keywords/RankCheckRunModal.tsx",
-    "components/keywords/RankingUrlExternalLink.tsx",
-    "components/keywords/RankingUrlHistory.tsx",
     "components/keywords/RankTrackerDeviceHeaderControl.tsx",
     "components/keywords/RankTrackerHeaderContext.tsx",
     "components/keywords/RankTrackerSearchDraft.tsx",
@@ -868,7 +832,6 @@
     "components/markets/MarketChip.tsx",
     "components/markets/MarketCombobox.tsx",
     "components/markets/MarketContextProvider.tsx",
-    "components/markets/MarketPicker.tsx",
     "components/markets/page/ArchiveMarketDialog.tsx",
     "components/markets/page/MarketEditSheet.tsx",
     "components/markets/page/MarketsPageContent.tsx",
@@ -890,27 +853,8 @@
     "components/measurement-help/LocalizedMeasurementHelp.tsx",
     "components/measurement-help/MeasurementHelp.tsx",
     "components/measurement-help/translate.ts",
-    "components/measurement-settings/commands.ts",
-    "components/measurement-settings/draft-validation.ts",
-    "components/measurement-settings/draft.ts",
-    "components/measurement-settings/editor-validation.ts",
-    "components/measurement-settings/form.ts",
-    "components/measurement-settings/MeasurementActionStatus.tsx",
-    "components/measurement-settings/MeasurementCapabilityEvidence.tsx",
-    "components/measurement-settings/MeasurementConflictReview.tsx",
-    "components/measurement-settings/MeasurementIntentActions.tsx",
     "components/measurement-settings/MeasurementPolicySettingsCard.tsx",
     "components/measurement-settings/MeasurementPolicySettingsSection.tsx",
-    "components/measurement-settings/MeasurementQuoteReview.tsx",
-    "components/measurement-settings/MeasurementRunReceipt.tsx",
-    "components/measurement-settings/MeasurementScheduleFields.tsx",
-    "components/measurement-settings/MeasurementScopeSummary.tsx",
-    "components/measurement-settings/MeasurementSelectionFields.tsx",
-    "components/measurement-settings/MeasurementSettingsEditor.tsx",
-    "components/measurement-settings/MeasurementSettingsHost.tsx",
-    "components/measurement-settings/MeasurementSettingsHostSection.tsx",
-    "components/measurement-settings/translate.ts",
-    "components/measurement-settings/use-measurement-actions.ts",
     "components/metering/BudgetTrafficBadge.tsx",
     "components/metering/usage-display-context.ts",
     "components/metering/usage-number-format.ts",
@@ -1007,17 +951,12 @@
     "components/overview/FirstCheckIllustration.tsx",
     "components/overview/FirstCheckIntro.tsx",
     "components/overview/FloatingIntroStack.tsx",
-    "components/overview/getting-started.ts",
-    "components/overview/GhostKpiRow.tsx",
     "components/overview/HighlightLists.tsx",
     "components/overview/KpiCard.tsx",
-    "components/overview/OnboardingCard.tsx",
-    "components/overview/OnboardingStages.tsx",
     "components/overview/OverviewChartHeader.tsx",
     "components/overview/OverviewCompetitorsCard.tsx",
     "components/overview/OverviewContributorsCard.tsx",
     "components/overview/OverviewDashboardView.tsx",
-    "components/overview/OverviewEmpty.tsx",
     "components/overview/OverviewHeaderContext.tsx",
     "components/overview/OverviewHeaderContextBoundary.tsx",
     "components/overview/OverviewHealthBanners.tsx",
@@ -1056,12 +995,8 @@
     "components/project-runs/RunTitleCell.tsx",
     "components/rank-check/FirstCheckBanner.tsx",
     "components/rank-check/FirstCheckBannerAction.tsx",
-    "components/rank-check/FirstCheckRunModal.tsx",
-    "components/rank-runs/budget-notices-model.ts",
-    "components/rank-runs/BudgetNotices.tsx",
     "components/rank-runs/deferral-reason-copy.tsx",
     "components/rank-runs/notice-dismissals.ts",
-    "components/rank-runs/PlannedSection.tsx",
     "components/rank-runs/preflight-contracts.ts",
     "components/rank-runs/preflight-presentation.ts",
     "components/rank-runs/PreflightBlockNotice.tsx",
@@ -1070,7 +1005,6 @@
     "components/rank-runs/PreflightOptionGroups.tsx",
     "components/rank-runs/PreflightOverlapNotice.tsx",
     "components/rank-runs/rank-run-copy.ts",
-    "components/rank-runs/RankTrackerRunsTab.tsx",
     "components/rank-runs/run-page-summary-presentation.ts",
     "components/rank-runs/run-target-table-columns.tsx",
     "components/rank-runs/RunDetailLoading.tsx",
@@ -1085,7 +1019,6 @@
     "components/rank-runs/runs-format.ts",
     "components/rank-runs/runs-table-cells.tsx",
     "components/rank-runs/runs-table-columns.tsx",
-    "components/rank-runs/RunsSection.tsx",
     "components/rank-runs/RunsTable.tsx",
     "components/rank-runs/useRunPreflight.tsx",
     "components/rank-tracker/ProjectRankTrackerMessages.tsx",
@@ -1113,7 +1046,6 @@
     "components/research/ResearchKeywordCell.tsx",
     "components/research/ResearchLoadingSkeletons.tsx",
     "components/research/ResearchPaymentReview.tsx",
-    "components/research/ResearchPricingPopover.tsx",
     "components/research/ResearchResults.tsx",
     "components/research/ResearchResultsTable.tsx",
     "components/research/ResearchScopePicker.tsx",
@@ -1180,6 +1112,7 @@
     "components/search-insights/search-insights-copy.ts",
     "components/search-insights/search-insights-data-table-columns.tsx",
     "components/search-insights/search-insights-import-progress.ts",
+    "components/search-insights/search-insights-metric-column.tsx",
     "components/search-insights/search-insights-pages-columns.tsx",
     "components/search-insights/search-insights-property-match.ts",
     "components/search-insights/search-insights-refresh-policy.ts",
@@ -1191,7 +1124,6 @@
     "components/search-insights/search-insights-table-columns.ts",
     "components/search-insights/search-insights-workspace-model.ts",
     "components/search-insights/search-sync-presentation.ts",
-    "components/search-insights/SearchImportPauseControl.tsx",
     "components/search-insights/SearchInsightsActions.tsx",
     "components/search-insights/SearchInsightsArchivedActivation.tsx",
     "components/search-insights/SearchInsightsBody.test-helpers.tsx",
@@ -1204,7 +1136,6 @@
     "components/search-insights/SearchInsightsLoadingSkeletons.tsx",
     "components/search-insights/SearchInsightsMenu.tsx",
     "components/search-insights/SearchInsightsOauthReturn.tsx",
-    "components/search-insights/SearchInsightsOauthSelection.tsx",
     "components/search-insights/SearchInsightsPagesTable.tsx",
     "components/search-insights/SearchInsightsPeriodMenu.tsx",
     "components/search-insights/SearchInsightsPropertyMenuGroups.tsx",
@@ -1333,8 +1264,6 @@
     "components/shell/AppHeaderTitle.tsx",
     "components/shell/AppRealtimeProvider.tsx",
     "components/shell/AppThemeRoot.tsx",
-    "components/shell/cloud-backup-action-error.ts",
-    "components/shell/CloudBackupModal.tsx",
     "components/shell/command-keyboard.ts",
     "components/shell/command-palette-copy.ts",
     "components/shell/command-palette-groups.ts",
@@ -1492,7 +1421,6 @@
     "components/ui/Popup.tsx",
     "components/ui/Portal.tsx",
     "components/ui/PricingPopover.tsx",
-    "components/ui/primitives/dialog.tsx",
     "components/ui/primitives/menu.tsx",
     "components/ui/primitives/popover.tsx",
     "components/ui/primitives/toggle-group.tsx",
@@ -6880,6 +6808,16 @@
       {
         "arguments": [],
         "key": "instanceAdmin.metering.heading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.metering.historyBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.metering.historyBlockedHint",
         "tags": []
       },
       {
@@ -32698,7 +32636,17 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.clearTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.bulk.delete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.deleteTooltip",
         "tags": []
       },
       {
@@ -32713,12 +32661,47 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.providerTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.readOnlyFallback",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.remove",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.removeTrackedTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.runAllTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.runTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.bulk.saving",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.bulk.scheduleLoadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.scheduleTooltip",
         "tags": []
       },
       {
@@ -32759,6 +32742,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.bulk.tagPlaceholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.tagTooltip",
         "tags": []
       },
       {
@@ -32854,6 +32842,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.bulk.targetSetTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.bulk.targetTooltip",
         "tags": []
       },
       {
@@ -35698,6 +35691,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.noResearchData",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.saved.openSource",
         "tags": []
       },
@@ -35781,7 +35779,32 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.removeTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.saved.research",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchCpc",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchDifficulty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchedShort",
         "tags": []
       },
       {
@@ -35791,7 +35814,47 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchIntent",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.saved.researchOneAtATime",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordImport.management.saved.researchSnapshotAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchSource",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchStorageFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchTrend",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchVolume",
         "tags": []
       },
       {
@@ -48859,6 +48922,11 @@
       {
         "arguments": [],
         "key": "projectSettingsExperimental.module.competitors",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsExperimental.module.promptPlayground",
         "tags": []
       },
       {

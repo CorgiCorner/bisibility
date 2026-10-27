@@ -5,6 +5,7 @@ import type {
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { RankedKeywordRow, RelevantPageRow } from "@/lib/providers/types";
 import type { ResearchScope } from "@/lib/research/scope";
+import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -17,14 +18,6 @@ import { useDomainOverviewTablePages } from "./useDomainOverviewTablePages";
 
 type KeywordPageOutcome = Awaited<ReturnType<LoadDomainKeywordsPageAction>>;
 type PageOutcome = Awaited<ReturnType<LoadDomainPagesPageAction>>;
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((next) => {
-    resolve = next;
-  });
-  return { promise, resolve };
-}
 
 function keywordRow(keyword: string, rankingUrl: string): RankedKeywordRow {
   return {

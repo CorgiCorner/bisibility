@@ -12,6 +12,7 @@ import { parseRetryAfterSeconds } from "@/lib/http/retry-after";
 import { decryptSecret } from "@/lib/providers/crypto";
 import { Agent, type Dispatcher } from "undici";
 import type { TriggeredAlertDeliveryPayload } from "./alert-delivery-payload";
+import { DeliveryHttpError } from "./delivery-http-error";
 import { buildAlertFiredWebhookBody, buildWebhookTestBody } from "./webhook-envelope";
 import {
   resolveAllowedWebhookAddresses,
@@ -23,6 +24,7 @@ export type {
   AlertExternalDeliveryPayload,
   TriggeredAlertDeliveryPayload,
 } from "./alert-delivery-payload";
+export { DeliveryHttpError } from "./delivery-http-error";
 export type { AlertFiredWebhookEnvelope } from "./webhook-envelope";
 export { buildAlertFiredWebhookBody } from "./webhook-envelope";
 
@@ -38,25 +40,6 @@ export type AlertWebhookEndpoint = {
   publicId?: string | null;
   url: string;
 };
-
-export class DeliveryHttpError extends Error {
-  readonly latencyMs: number | null;
-  readonly retryAfterSeconds: number | null;
-  readonly status: number;
-
-  constructor(
-    message: string,
-    status: number,
-    retryAfterSeconds: number | null,
-    latencyMs: number | null = null,
-  ) {
-    super(message);
-    this.name = "DeliveryHttpError";
-    this.latencyMs = latencyMs;
-    this.status = status;
-    this.retryAfterSeconds = retryAfterSeconds;
-  }
-}
 
 function signWebhookBody(body: string, encryptedSecret: string, timestamp: string) {
   const secret = decryptSecret(encryptedSecret);

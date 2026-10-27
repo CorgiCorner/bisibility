@@ -1,5 +1,6 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { appPath } from "@/lib/routing/app-path";
+import { deferred } from "@/tests/deferred";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addManualCompetitor,
@@ -113,14 +114,6 @@ function freshProjectSetup() {
     return Promise.resolve({ count: matches ? 1 : 0 });
   });
   return { decidedAt: () => decidedAt, outcome: () => outcome };
-}
-
-function deferred() {
-  let resolve!: () => void;
-  const promise = new Promise<void>((next) => {
-    resolve = next;
-  });
-  return { promise, resolve };
 }
 
 beforeEach(() => {
@@ -446,10 +439,10 @@ describe("competitor-set actions", () => {
     let activeCompetitorCount = 0;
     let projectLocked = false;
     let setupOutcome: SetupOutcome | null = null;
-    const projectLockReleased = deferred();
-    const skipCountReleased = deferred();
-    const legacyAddStarted = deferred();
-    const skipCountRead = deferred();
+    const projectLockReleased = deferred<void>();
+    const skipCountReleased = deferred<void>();
+    const legacyAddStarted = deferred<void>();
+    const skipCountRead = deferred<void>();
     const project = {
       updateMany: vi.fn(({ data }: SetupOutcomeUpdate) => {
         setupOutcome = data.competitorSetupOutcome;
@@ -529,10 +522,10 @@ describe("competitor-set actions", () => {
     let activeCompetitorCount = 0;
     let projectLocked = false;
     let setupOutcome: SetupOutcome | null = null;
-    const projectLockReleased = deferred();
-    const addLookupReleased = deferred();
-    const legacyAddStarted = deferred();
-    const skipLockAttempted = deferred();
+    const projectLockReleased = deferred<void>();
+    const addLookupReleased = deferred<void>();
+    const legacyAddStarted = deferred<void>();
+    const skipLockAttempted = deferred<void>();
     const project = {
       updateMany: vi.fn(({ data }: SetupOutcomeUpdate) => {
         setupOutcome = data.competitorSetupOutcome;

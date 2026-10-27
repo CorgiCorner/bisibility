@@ -1,10 +1,10 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
+import { fixtureHistoryPort } from "@/components/keyword-detail-history/history.test-fixture";
+import { KeywordDetailHistory } from "@/components/keyword-detail-history/KeywordDetailHistory";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
-import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { ToastProvider } from "@/components/ui/Toast";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
@@ -114,9 +114,9 @@ const meta = {
           <ToastProvider>
             <main className="grid max-w-6xl gap-4 text-fg">
               <KeywordHeaderCard {...actions} keyword={keyword} searchConsoleConnected />
-              <PositionHistoryCard
-                chartState="normal"
-                keyword={keyword}
+              <KeywordDetailHistory
+                history={fixtureHistoryPort()}
+                keyword={keyword.keyword}
                 timeZone={costContext.timezone}
               />
               <KeywordTrafficCard
@@ -129,7 +129,6 @@ const meta = {
                 }}
                 trafficState="both"
               />
-              <RankingUrlHistory keyword={keyword} />
             </main>
           </ToastProvider>
         </KeywordDetailStoryThemes>

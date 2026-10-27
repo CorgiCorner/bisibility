@@ -1,7 +1,6 @@
 import type { Certainty } from "@usagekit/core";
 import type { Amount, Figure } from "@usagekit/views";
 import type { UsageTone } from "./usage-motion";
-import type { UsageTableLabels, UsageTableProps } from "./usage-table";
 
 export const certaintyTone: Record<Certainty, UsageTone> = {
   measured: "positive",
@@ -10,8 +9,11 @@ export const certaintyTone: Record<Certainty, UsageTone> = {
 };
 export function usageTableFigure(
   value: Figure | Amount,
-  labels: UsageTableLabels,
-  props: Pick<UsageTableProps, "formatFigure" | "formatUnit">,
+  labels: Record<"unavailable" | "unknown" | "cents", string>,
+  props: {
+    formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
+    formatUnit?: (unit: string) => string;
+  },
 ): string {
   if (value === "unavailable") return labels.unavailable;
   if (value.certainty === "unknown") return labels.unknown;

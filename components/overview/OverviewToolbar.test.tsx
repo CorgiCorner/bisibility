@@ -41,6 +41,7 @@ describe("OverviewToolbar", () => {
     renderToolbar({ initialSelected: selected, projectRef: "prj_1" });
 
     const action = screen.getByRole("link", { name: /Add keyword/ });
+    expect(action).toHaveAttribute("href", "/app/prj_1/rank-tracker?add=1");
     expect(action).toHaveStyle({ height: "37px", minHeight: "37px" });
   });
 

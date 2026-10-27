@@ -13,17 +13,10 @@ vi.mock("@/lib/measurement-definitions/worker-queued", async (importOriginal) =>
 });
 
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
+import { deferred } from "@/tests/deferred";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { submitQueuedRankCheckBatch } from "./queued-submit";
 import { cancelRankCheckRun } from "./runs/cancel";
-
-function deferred() {
-  let resolve!: () => void;
-  const promise = new Promise<void>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
 
 const mocks = vi.hoisted(() => {
   const state = {
@@ -674,11 +667,11 @@ describe("queued paid-call fence", () => {
   });
 
   it("does not pay after cancellation claims the run and commits", async () => {
-    const cancellationClaimed = deferred();
-    const continueCancellation = deferred();
-    const submissionReachedFence = deferred();
-    const cancellationCommitted = deferred();
-    const allowProvider = deferred();
+    const cancellationClaimed = deferred<void>();
+    const continueCancellation = deferred<void>();
+    const submissionReachedFence = deferred<void>();
+    const cancellationCommitted = deferred<void>();
+    const allowProvider = deferred<void>();
 
     mocks.prisma.rankCheckRun.updateMany.mockImplementation(async ({ data }) => {
       if (data.status !== "cancelling") return { count: 0 };

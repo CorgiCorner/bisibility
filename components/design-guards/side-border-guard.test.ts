@@ -45,16 +45,6 @@ const separators: Separator[] = [
     reason: "Resets the metric column separators when stacked.",
   },
   {
-    path: "components/keyword-detail/empty/PositionHistoryNoChecksInRange.tsx",
-    token: "border-l",
-    reason: "Divider between inline empty-state actions.",
-  },
-  {
-    path: "components/keyword-detail/empty/SchedulePausedBudgetExhausted.tsx",
-    token: "border-l",
-    reason: "Divider between inline empty-state actions.",
-  },
-  {
     path: "components/keywords/filters/DimensionSwitcher.tsx",
     token: "border-l",
     reason: "Separates the dropdown trigger from the dimension value.",

@@ -24,7 +24,7 @@ describe("IdChip", () => {
   it("limits Mono to the opaque machine identifier", () => {
     render(<IdChip value="prj_8fK2Qf9m" />);
 
-    expect(screen.getByText("prj_8fK2Qf")).toHaveClass("font-mono");
+    expect(screen.getByText("prj_8fK2Qf9m")).toHaveClass("font-mono", "whitespace-nowrap");
     expect(screen.getByRole("button", { name: "Copy ID" })).not.toHaveClass("font-mono");
   });
 
@@ -45,7 +45,9 @@ describe("IdChip", () => {
       </table>,
     );
 
-    expect(screen.getByText("sch_y9iq0n").parentElement).toHaveAttribute("title", value);
+    const label = screen.getByText("sch_y9iq0n…g07464");
+    expect(label.parentElement).toHaveAttribute("title", value);
+    expect(label.parentElement).toHaveClass("shrink-0", "whitespace-nowrap");
     expect(screen.queryByText(value)).not.toBeInTheDocument();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Copy schedule ID" }));

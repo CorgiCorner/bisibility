@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/Button";
 import { ExpiryChoiceGroup } from "@/components/ui/ExpiryChoiceGroup";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Modal } from "@/components/ui/Modal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { type IssueApiKeyInput, issueApiKeySchema } from "@/lib/schemas/apiKey";
 import { cn } from "@/lib/ui/cn";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ApiKeyRevealContent } from "./ApiKeyReveal";
 import type { IssuedApiKey } from "./api-key-model";
@@ -45,7 +44,7 @@ export function ApiKeyCreateModal({
   const [issuedKey, setIssuedKey] = useState<IssuedApiKey | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const canIssue = Boolean(issueKey && projectId);
-  const form = useForm<IssueForm>({
+  const form = useZodForm<IssueForm>(issueApiKeySchema, {
     defaultValues: {
       expiresInDays: 90,
       name: defaultName,
@@ -53,7 +52,6 @@ export function ApiKeyCreateModal({
       scope: "write",
     },
     mode: "onChange",
-    resolver: zodResolver(issueApiKeySchema),
   });
   const selectedScope = form.watch("scope");
   const selectedExpiry = form.watch("expiresInDays");

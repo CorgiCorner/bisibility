@@ -1,5 +1,6 @@
 import type { LoadDomainHistoryAction } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
+import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -15,14 +16,6 @@ const domainOverviewHistoryRow = domainOverviewHistoryFixture[0];
 
 if (!domainOverviewHistoryRow) {
   throw new Error("Domain overview history fixture must include one row");
-}
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((next) => {
-    resolve = next;
-  });
-  return { promise, resolve };
 }
 
 function report(target: string): DomainOverviewReport {

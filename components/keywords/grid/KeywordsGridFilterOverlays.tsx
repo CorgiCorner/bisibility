@@ -4,97 +4,44 @@ import {
   KeywordsScopeControls,
   KeywordsScopeLocationChip,
 } from "@/components/keywords/KeywordsScopeControls";
-import type { KeywordFilters } from "@/lib/keywords/keyword-filter-model";
-import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
-import type {
-  RankTrackerListFacets,
-  RankTrackerQueryState,
-} from "@/lib/keywords/rank-tracker-query-types";
-import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ComponentProps } from "react";
 import { FiltersDrawer } from "./KeywordsGridOverlays";
+import { pickGridProps } from "./keywords-grid-projection";
 
-type ScopeProps = {
+const scopeProps = ["lens", "locationOptions", "query"] as const;
+type ScopeProps = Pick<Parameters<typeof KeywordsScopeControls>[0], (typeof scopeProps)[number]> & {
   activeViewId: string | null;
   keywordsPath: string;
-  lens: ActiveLens;
-  locationOptions: LensLocationOption[];
-  query?: RankTrackerQueryState;
 };
 
-export function KeywordsGridScopeChip({
-  activeViewId,
-  keywordsPath,
-  lens,
-  locationOptions,
-  query,
-}: Readonly<ScopeProps>) {
-  return lens.locationId ? (
-    <KeywordsScopeLocationChip
-      basePath={keywordsPath}
-      lens={lens}
-      locationOptions={locationOptions}
-      viewId={activeViewId}
-      query={query}
-    />
-  ) : null;
+function scopeProjection(props: ScopeProps) {
+  return {
+    ...pickGridProps(props, scopeProps),
+    basePath: props.keywordsPath,
+    viewId: props.activeViewId,
+  };
 }
 
-export function KeywordsGridScopeControl({
-  activeViewId,
-  keywordsPath,
-  lens,
-  locationOptions,
-  query,
-}: Readonly<ScopeProps>) {
-  return (
-    <KeywordsScopeControls
-      basePath={keywordsPath}
-      lens={lens}
-      locationOptions={locationOptions}
-      viewId={activeViewId}
-      query={query}
-    />
-  );
+export function KeywordsGridScopeChip(props: Readonly<ScopeProps>) {
+  return props.lens.locationId ? <KeywordsScopeLocationChip {...scopeProjection(props)} /> : null;
 }
 
-type FilterDrawerProps = ScopeProps & {
-  filters: KeywordFilters;
-  onChange: (filters: KeywordFilters) => void;
-  onClose: () => void;
-  open: boolean;
-  rows: KeywordRow[];
-  facets?: RankTrackerListFacets;
-  onApply?: (filters: KeywordFilters) => void;
-};
+export function KeywordsGridScopeControl(props: Readonly<ScopeProps>) {
+  return <KeywordsScopeControls {...scopeProjection(props)} />;
+}
 
-export function KeywordsGridFilterDrawer({
-  activeViewId,
-  filters,
-  keywordsPath,
-  lens,
-  locationOptions,
-  onChange,
-  onClose,
-  onApply,
-  open,
-  rows,
-  facets,
-  query,
-}: Readonly<FilterDrawerProps>) {
-  return (
-    <FiltersDrawer
-      basePath={keywordsPath}
-      facets={facets}
-      filters={filters}
-      lens={lens}
-      locationOptions={locationOptions}
-      onChange={onChange}
-      onApply={onApply}
-      onClose={onClose}
-      open={open}
-      rows={rows}
-      viewId={activeViewId}
-      query={query}
-    />
-  );
+const filterProps = [
+  "filters",
+  "onChange",
+  "onClose",
+  "open",
+  "rows",
+  "facets",
+  "onApply",
+] as const;
+type FilterDrawerProps = ScopeProps &
+  Pick<ComponentProps<typeof FiltersDrawer>, (typeof filterProps)[number]>;
+
+export function KeywordsGridFilterDrawer(props: Readonly<FilterDrawerProps>) {
+  return <FiltersDrawer {...scopeProjection(props)} {...pickGridProps(props, filterProps)} />;
 }

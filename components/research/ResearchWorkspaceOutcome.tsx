@@ -1,6 +1,7 @@
 "use client";
 
 import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 import type { ResearchScope } from "@/lib/research/scope";
 import { useTranslations } from "next-intl";
 import { type ResearchState, ResearchStatePanel } from "./ResearchStatePanel";
@@ -31,6 +32,7 @@ export function ResearchWorkspaceOutcome({
   onRetry: () => void;
 }) {
   const paymentT = useTranslations("shared.actionPayment");
+  const researchT = useTranslations("projectRankTracker.keywordImport.management.saved");
   if (researching) return <ResearchStatePanel projectRef={projectId} state="loading" />;
   if (!activeTab)
     return (
@@ -41,20 +43,30 @@ export function ResearchWorkspaceOutcome({
         state={budgetState ?? (researchAvailable ? "idle" : "unsupported_location")}
       />
     );
-  if (activeTab.outcome.ok)
-    return activeTab.outcome.rows.length === 0 ? (
+  if (activeTab.outcome.ok) {
+    const empty = activeTab.outcome.rows.length === 0;
+    if (!empty && !activeTab.outcome.storageWarning) return null;
+    return (
       <div className="grid gap-3">
-        <PaymentChargeLine payment={activeTab.outcome.payment} />
-        <ResearchStatePanel
-          cached={activeTab.outcome.cached}
-          scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
-          mode={activeTab.mode}
-          onEditSearch={focusResearchSeedInput}
-          projectRef={projectId}
-          state="empty"
-        />
+        {activeTab.outcome.storageWarning ? (
+          <AlertBanner tint="yellow" title={researchT("researchStorageFailed")} />
+        ) : null}
+        {empty ? (
+          <>
+            <PaymentChargeLine payment={activeTab.outcome.payment} />
+            <ResearchStatePanel
+              cached={activeTab.outcome.cached}
+              scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
+              mode={activeTab.mode}
+              onEditSearch={focusResearchSeedInput}
+              projectRef={projectId}
+              state="empty"
+            />
+          </>
+        ) : null}
       </div>
-    ) : null;
+    );
+  }
   const payment = "payment" in activeTab.outcome ? activeTab.outcome.payment : undefined;
   const legacyCharged = "charged" in activeTab.outcome ? activeTab.outcome.charged : false;
   const unresolved =

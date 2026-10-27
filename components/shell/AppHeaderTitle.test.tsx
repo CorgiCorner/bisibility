@@ -102,7 +102,7 @@ describe("AppHeaderTitle", () => {
       render(<AppHeaderTitle />);
 
       expect(screen.getByRole("heading", { name: "Run" })).toBeVisible();
-      expect(screen.getByText("rcr_abcdef").parentElement).toHaveAttribute("title", id);
+      expect(screen.getByText("rcr_abcdef…stuvwx").parentElement).toHaveAttribute("title", id);
       expect(screen.queryByText(id)).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Copy run ID" })).toBeVisible();
     },

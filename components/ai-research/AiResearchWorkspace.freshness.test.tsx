@@ -1,5 +1,6 @@
 import { AI_RESEARCH_CATALOG_CLIENT_WINDOW_MS } from "@/lib/ai-research/catalog-freshness";
 import type { AiCatalogOutcome, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
+import { deferred } from "@/tests/deferred";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -34,14 +35,6 @@ vi.mock("@/lib/actions/ai-research", () => ({
 
 import { AiResearchWorkspace } from "./AiResearchWorkspace";
 import { aiResearchCatalogFixture } from "./ai-research-fixtures";
-
-function deferred<T>() {
-  let resolve: (value: T) => void = () => undefined;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
 
 function openedCatalog(): AiResearchCatalog {
   return { ...aiResearchCatalogFixture, fetchedAt: new Date(fetchedAtMs).toISOString() };

@@ -3,14 +3,15 @@ import { useUsagePresentation } from "@/components/metering/use-usage-presentati
 import { Button } from "@/components/ui/Button";
 import { IdChip } from "@/components/ui/IdChip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { ExceptionsList } from "@/components/usagekit/exceptions-list";
-import { UsageTable } from "@/components/usagekit/usage-table";
+import { ExceptionsList } from "@/components/usagekit/exceptions-list-view";
+import { UsageTable } from "@/components/usagekit/usage-table-view";
 import { loadMeteringAdminPageAction } from "@/lib/actions/metering-admin";
 import { mergeMeteringAdminPage } from "@/lib/metering/admin-page";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { AdminBudgetTable } from "./AdminBudgetTable";
+import { AdminProjectLabel } from "./AdminProjectLabel";
 export function AdminMeteringView({
   data,
   month,
@@ -99,6 +100,12 @@ export function AdminMeteringView({
           {t("usageHeading")}
         </h2>
         <UsageTable
+          sortable
+          dimensionSortValue={(key, value, row) =>
+            key === "connection"
+              ? `${current.references?.connections[value]?.project ?? row.dimensions.provider} ${value}`
+              : `${p.dimension("surface", row.dimensions.surface ?? "")} ${value}`
+          }
           view={{
             ...current.usage,
             groupBy: ["connection", "source"],
@@ -109,9 +116,13 @@ export function AdminMeteringView({
           formatDimension={(key, value, row) =>
             key === "connection" ? (
               <div className="grid gap-1">
-                <span className="max-w-52 whitespace-normal break-words font-medium">
-                  {current.references?.connections[value]?.project ?? row.dimensions.provider}
-                </span>
+                <div className="max-w-52 whitespace-normal">
+                  <AdminProjectLabel
+                    value={
+                      current.references?.connections[value]?.project ?? row.dimensions.provider
+                    }
+                  />
+                </div>
                 <div className="flex items-center gap-2 text-xs text-fg-muted">
                   {current.references?.connections[value] && <span>{row.dimensions.provider}</span>}
                   {value && <IdChip value={value} truncate="middle" size="xs" />}
@@ -168,6 +179,7 @@ export function AdminMeteringView({
           {p.exceptions.title}
         </h2>
         <ExceptionsList
+          sortable
           view={current.exceptions}
           labels={p.exceptions}
           formatState={p.state}

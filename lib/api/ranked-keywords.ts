@@ -8,8 +8,8 @@ import {
   paymentFailureResponse,
   paymentResource,
 } from "./action-payment";
-import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import { commonLookupFailureResponse } from "./lookup-failure-response";
 import { requireApiPublicId } from "./public-id";
 import { providerOrigin } from "./request-origin";
 import { errorResponse, resourceResponse } from "./responses";
@@ -71,6 +71,8 @@ function error(ctx: ApiContext, outcome: RankedKeywordsFailure) {
   );
 }
 function errorBase(ctx: ApiContext, outcome: RankedKeywordsFailure) {
+  const commonFailure = commonLookupFailureResponse(ctx, outcome);
+  if (commonFailure) return commonFailure;
   const reason = outcome.reason;
   if (reason.startsWith("payment_"))
     return errorResponse("conflict", "Review the current price before starting this lookup.", 409, {
@@ -99,39 +101,6 @@ function errorBase(ctx: ApiContext, outcome: RankedKeywordsFailure) {
   if (reason === "no_domain") {
     return errorResponse("bad_request", "The project needs a valid domain.", 422, {
       headers: ctx.headers,
-      instance: ctx.instance,
-    });
-  }
-  if (reason === "budget_exhausted") {
-    return budgetExhaustedResponse(ctx, {
-      reason: outcome.budgetReason,
-      surface: "programmatic",
-      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
-    });
-  }
-  if (reason === "cost_limit_exceeded") {
-    return errorResponse(
-      "cost_limit_exceeded",
-      "The estimated provider cost exceeds max_cost_cents.",
-      422,
-      {
-        headers: ctx.headers,
-        instance: ctx.instance,
-        ...(outcome.estimatedCostCents === undefined
-          ? {}
-          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
-      },
-    );
-  }
-  if (reason === "rate_limited") {
-    const headers = new Headers(ctx.headers);
-    const retryAfter = String(
-      Math.max(1, Math.ceil(((outcome.resetAt ?? Date.now() + 1_000) - Date.now()) / 1_000)),
-    );
-    headers.set("Retry-After", retryAfter);
-    headers.set("RateLimit-Reset", retryAfter);
-    return errorResponse("rate_limited", "Provider rate limit reached. Try again shortly.", 429, {
-      headers,
       instance: ctx.instance,
     });
   }

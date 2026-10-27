@@ -410,7 +410,9 @@
       "budgetsHeading": "Presupuestos actuales",
       "scope": "Proyecto / conexión",
       "status": "Estado",
-      "exceptionsHeading": "Requiere atención"
+      "exceptionsHeading": "Requiere atención",
+      "historyBlocked": "Comprobaciones de pago en pausa",
+      "historyBlockedHint": "Los costes históricos necesitan verificación."
     },
     "announcements": {
       "heading": "Avisos para los usuarios",

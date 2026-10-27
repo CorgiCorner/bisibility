@@ -111,9 +111,6 @@ vi.mock("@/lib/queries/retrieved-results", () => ({
   loadRetrievedResultsForChecks: mocks.loadRetrievedResultsForChecks,
 }));
 vi.mock("@/lib/rank-check/raw-retention", () => ({ getRankCheckRawRetentionDays: () => 90 }));
-vi.mock("@/components/keywords/RankingUrlHistory", () => ({
-  RankingUrlHistory: () => <div data-testid="ranking-history" />,
-}));
 vi.mock("@/lib/actions/alerts", () => ({ createKeywordAlertRule: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({
   addKeywords: vi.fn(),

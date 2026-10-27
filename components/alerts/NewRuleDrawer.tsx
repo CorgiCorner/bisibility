@@ -26,7 +26,7 @@ import {
   type RuleTemplateId,
   ruleTemplatesForDomain,
 } from "@/lib/alerts/new-rule-data";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
@@ -34,7 +34,6 @@ import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 
 type NewRuleDrawerProps = {
   actions: Pick<
@@ -73,7 +72,7 @@ export function NewRuleDrawer({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const availableMarketIds = targets.markets.map((market) => market.id);
-  const form = useForm<NewRuleForm>({
+  const form = useZodForm<NewRuleForm>(newRuleSchema, {
     defaultValues: localizedNewRuleFormDefaults(
       projectId,
       initialTemplate,
@@ -81,7 +80,6 @@ export function NewRuleDrawer({
       initialRule,
       availableMarketIds,
     ),
-    resolver: zodResolver(newRuleSchema),
   });
   const {
     formState: { errors, isSubmitting },

@@ -17,12 +17,11 @@ import { loginErrorReturnTo, mergeReturnToHash } from "@/lib/auth/return-to";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { presentWaitlistFailure } from "@/lib/ui/action-error";
 import { useHumanVerification } from "@/lib/verification/human-verification-client";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { authErrorMessage, isEmailCapacityError, isSessionCreationBlocked } from "./login-errors";
 import { useAuthErrorMessages } from "./use-auth-error-messages";
 
@@ -83,10 +82,9 @@ export function LoginForm({
       cooldownTimer.current = null;
     };
   }, []);
-  const form = useForm<LoginFormValues>({
+  const form = useZodForm<LoginFormValues>(loginSchema, {
     defaultValues: { email: demoEmail ?? "", otp: emptyOtpDigits(), verificationToken: undefined },
     mode: "onSubmit",
-    resolver: zodResolver(loginSchema),
   });
   const { errors, isSubmitting } = form.formState;
   const isOtpStep = step === "otp";

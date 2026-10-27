@@ -5,46 +5,16 @@ import {
   type BootstrapScheduleClient,
   type EnsureScheduleResult,
   ensureSingletonSchedule,
+  hasErrorName,
 } from "./bootstrap";
 import { isScheduledMaintenanceEnabled } from "./maintenance-schedule-bootstrap";
+import { pauseSingletonSchedule } from "./schedule-pause";
 import { getSchedulerTemporalClient } from "./scheduler-client";
 
 export const METERING_MAINTENANCE_SCHEDULE_ID = "maintenance-metering-reservations";
 export const METERING_MAINTENANCE_WORKFLOW_TYPE = "maintainMeteringReservationsWorkflow";
 
 type MeteringScheduleClient = BootstrapScheduleClient & Pick<Client["schedule"], "getHandle">;
-
-function isScheduleNotFound(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    (error as { name?: unknown }).name === "ScheduleNotFoundError"
-  );
-}
-
-async function pauseMeteringSchedule(
-  client?: MeteringScheduleClient,
-): Promise<EnsureScheduleResult> {
-  try {
-    const temporal = client ?? (await getSchedulerTemporalClient()).schedule;
-    const handle = temporal.getHandle(METERING_MAINTENANCE_SCHEDULE_ID);
-    const description = await handle.describe();
-    if (!description.state.paused) {
-      await handle.pause("Disabled by metering maintenance convergence");
-    }
-    return { scheduleId: METERING_MAINTENANCE_SCHEDULE_ID, status: "disabled" };
-  } catch (error) {
-    if (isScheduleNotFound(error)) {
-      return { scheduleId: METERING_MAINTENANCE_SCHEDULE_ID, status: "disabled" };
-    }
-    console.error("[temporal] metering maintenance pause failed", {
-      error,
-      scheduleId: METERING_MAINTENANCE_SCHEDULE_ID,
-    });
-    return { scheduleId: METERING_MAINTENANCE_SCHEDULE_ID, status: "failed" };
-  }
-}
 
 export async function ensureMeteringMaintenanceSchedule(
   client?: MeteringScheduleClient,
@@ -59,13 +29,20 @@ export async function ensureMeteringMaintenanceSchedule(
       throw new Error("Retired shadow workflow has not drained");
     await handle.delete();
   } catch (error) {
-    if (!isScheduleNotFound(error)) {
+    if (!hasErrorName(error, "ScheduleNotFoundError")) {
       console.error("[temporal] retired shadow maintenance has not converged", { error });
       return { scheduleId: METERING_MAINTENANCE_SCHEDULE_ID, status: "failed" };
     }
   }
   if (!isScheduledMaintenanceEnabled()) {
-    return pauseMeteringSchedule(client);
+    return pauseSingletonSchedule(
+      {
+        scheduleId: METERING_MAINTENANCE_SCHEDULE_ID,
+        note: "Disabled by metering maintenance convergence",
+        failureMessage: "[temporal] metering maintenance pause failed",
+      },
+      client,
+    );
   }
 
   return ensureSingletonSchedule(

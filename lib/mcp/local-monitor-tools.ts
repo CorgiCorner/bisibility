@@ -1,4 +1,6 @@
+import type { localMonitorReadPolicies } from "@/lib/api/operation-policy-local-monitors";
 import { z } from "zod";
+import { operationPath } from "./operation-path";
 import { mcpPublicIdSchema } from "./public-id-schema";
 import type { JsonObject } from "./types";
 
@@ -37,15 +39,7 @@ export function dispatchLocalMonitorTool(name: string, input: JsonObject) {
   const entry = Object.entries(schemas).find(([key]) => key === name);
   if (!entry) throw new Error("Unknown Local read operation");
   const selection = entry[1].parse(input);
-  let path = `/projects/${encodeURIComponent(selection.project_id)}/local-monitors/${encodeURIComponent(selection.monitor_id)}/runs`;
-  if ("run_id" in selection && typeof selection.run_id === "string")
-    path += `/${encodeURIComponent(selection.run_id)}`;
-  if ("target_id" in selection && typeof selection.target_id === "string")
-    path += `/points/${encodeURIComponent(selection.target_id)}`;
-  if (name === "getLocalMonitorRunResults") path += "/results";
-  if (name === "listLocalMonitorPointListings") path += "/listings";
-  if (name === "listLocalMonitorPointHistory") path += "/history";
-  if (name === "exportLocalMonitorRun") path += "/export";
+  const path = operationPath(name as keyof typeof localMonitorReadPolicies, selection);
   const query = new URLSearchParams();
   for (const key of ["as_of", "from", "to", "cursor"]) {
     const value = input[key];

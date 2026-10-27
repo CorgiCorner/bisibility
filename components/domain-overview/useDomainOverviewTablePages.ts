@@ -6,7 +6,7 @@ import type {
   LoadDomainKeywordsPageAction,
   LoadDomainPagesPageAction,
 } from "@/lib/actions/domain-overview";
-import type { DomainOverviewReport } from "@/lib/domain-overview/types";
+import type { DomainModulePaymentOutcome, DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
 import { appendKeywords, appendPages, providerConsumedCount } from "./domain-overview-append";
@@ -110,89 +110,59 @@ export function useDomainOverviewTablePages({
     activeRequest.current = request;
     setLoading(request);
     setError(null);
+
+    function applyResult<T extends { rows: unknown[]; totalCount: number | null }>(
+      result: DomainModulePaymentOutcome<T> | null,
+      append: (value: Extract<DomainModulePaymentOutcome<T>, { ok: true; data: unknown }>) => void,
+    ) {
+      if (!result) return;
+      if ("estimate" in result) {
+        setError({ identity, module });
+        return;
+      }
+      addSpend(result.costCents);
+      if (latestIdentity.current !== identity) return;
+      if ("payment" in result)
+        setPayments((value) => ({
+          identity,
+          values: {
+            ...(value?.identity === identity ? value.values : {}),
+            [module]: result.payment,
+          },
+        }));
+      if (unresolvedPayment(result))
+        setBlocked((value) => ({
+          identity,
+          modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
+        }));
+      if (result.ok) {
+        append(result);
+        const next = nextModulePaging(
+          modulePaging,
+          providerConsumedCount(result.data),
+          result.data.totalCount,
+        );
+        setPaging((value) =>
+          latestIdentity.current === identity
+            ? {
+                ...(value.identity === identity ? value : currentPaging),
+                identity,
+                [module]: next,
+              }
+            : value,
+        );
+      } else {
+        setError({ identity, module });
+      }
+    }
+
     try {
       if (module === "keywords") {
         const result = await loadKeywordsPageAction(input);
-        if (!result) return;
-        if ("estimate" in result) {
-          setError({ identity, module });
-          return;
-        }
-        addSpend(result.costCents);
-        if (latestIdentity.current !== identity) return;
-        if ("payment" in result)
-          setPayments((value) => ({
-            identity,
-            values: {
-              ...(value?.identity === identity ? value.values : {}),
-              [module]: result.payment,
-            },
-          }));
-        if (unresolvedPayment(result))
-          setBlocked((value) => ({
-            identity,
-            modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
-          }));
-        if (result.ok) {
-          appendKeywords(setOutcome, result, identity);
-          const next = nextModulePaging(
-            modulePaging,
-            providerConsumedCount(result.data),
-            result.data.totalCount,
-          );
-          setPaging((value) =>
-            latestIdentity.current === identity
-              ? {
-                  ...(value.identity === identity ? value : currentPaging),
-                  identity,
-                  keywords: next,
-                }
-              : value,
-          );
-        } else {
-          setError({ identity, module });
-        }
+        applyResult(result, (value) => appendKeywords(setOutcome, value, identity));
       } else {
         const result = await loadPagesPageAction(input);
-        if (!result) return;
-        if ("estimate" in result) {
-          setError({ identity, module });
-          return;
-        }
-        addSpend(result.costCents);
-        if (latestIdentity.current !== identity) return;
-        if ("payment" in result)
-          setPayments((value) => ({
-            identity,
-            values: {
-              ...(value?.identity === identity ? value.values : {}),
-              [module]: result.payment,
-            },
-          }));
-        if (unresolvedPayment(result))
-          setBlocked((value) => ({
-            identity,
-            modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
-          }));
-        if (result.ok) {
-          appendPages(setOutcome, result, identity);
-          const next = nextModulePaging(
-            modulePaging,
-            providerConsumedCount(result.data),
-            result.data.totalCount,
-          );
-          setPaging((value) =>
-            latestIdentity.current === identity
-              ? {
-                  ...(value.identity === identity ? value : currentPaging),
-                  identity,
-                  pages: next,
-                }
-              : value,
-          );
-        } else {
-          setError({ identity, module });
-        }
+        applyResult(result, (value) => appendPages(setOutcome, value, identity));
       }
     } catch {
       if (latestIdentity.current === identity) {

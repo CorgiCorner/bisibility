@@ -54,3 +54,11 @@ it("treats truncated absence as unknown but keeps positive observations valid", 
     }),
   ).toMatchObject({ kind: "ranked", position: 4 });
 });
+
+it("does not format a zero observation as a ranked position", () => {
+  expect(rankObservationState({ completedChecks: 1, position: 0, trackedDepth: 20 })).toEqual({
+    kind: "not_ranked",
+    label: "Not in top 20",
+    position: null,
+  });
+});

@@ -5,6 +5,7 @@ import { RANK_REPORT_CALENDAR_CONFIGURATION } from "@/lib/rank-reports/host-poli
 import { getQueryActor } from "./_auth";
 import { createRankTrackerHostReportOptions } from "./rank-tracker-report-host";
 import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
+import { loadTrackedResearch } from "./tracked-research";
 
 /** Page construction never initializes semantic policy, adjusts schedules, or performs provider I/O. */
 export async function createSessionRankTrackerReportOptions(
@@ -18,10 +19,11 @@ export async function createSessionRankTrackerReportOptions(
     configurationRevision: RANK_REPORT_CALENDAR_CONFIGURATION,
     legacyExecutionEngine: "dispatcher",
   });
-  return createRankTrackerHostReportOptions(
+  const options = createRankTrackerHostReportOptions(
     context,
     currentDefinitionMetadataLoader(context, freshness),
     asOf,
     comparisonDays,
   );
+  return { ...options, loadResearch: loadTrackedResearch };
 }

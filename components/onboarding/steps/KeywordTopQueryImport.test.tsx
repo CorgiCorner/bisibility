@@ -9,7 +9,11 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { KeywordTopQueryImport, type KeywordTopQueryImportMessages } from "./KeywordTopQueryImport";
+import {
+  type ImportTopQueriesAction,
+  KeywordTopQueryImport,
+  type KeywordTopQueryImportMessages,
+} from "./KeywordTopQueryImport";
 import { topQueryImportMessages } from "./keyword-import-messages";
 
 function noop() {}
@@ -64,6 +68,45 @@ describe("KeywordTopQueryImport", () => {
       screen.getByRole("button", { name: /Import top queries from Search Console/ }),
     ).toBeInTheDocument();
   });
+
+  it.each([
+    [{ queries: [], reason: "no_source" }, "No analytics source connected."],
+    [{ queries: [], reason: "needs_reauth" }, "Google authorization has expired."],
+    [
+      { queries: [], suggestions: [] },
+      "No queries observed yet - new Search Console properties can take a few days.",
+    ],
+  ] satisfies Array<[Awaited<ReturnType<ImportTopQueriesAction>>, string]>)(
+    "keeps pending and the typed import outcome %j distinct",
+    async (result, message) => {
+      let complete!: (value: Awaited<ReturnType<ImportTopQueriesAction>>) => void;
+      const importTopQueriesAction = vi.fn(
+        () =>
+          new Promise<Awaited<ReturnType<ImportTopQueriesAction>>>((resolve) => {
+            complete = resolve;
+          }),
+      );
+      const onAppendQueries = vi.fn();
+      render(
+        <LocalizedTopQueryImport
+          currentKeywords=""
+          hasAnalyticsSource
+          importTopQueriesAction={importTopQueriesAction}
+          onAppendQueries={onAppendQueries}
+          projectId="prj_1"
+        />,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Import top queries from Search Console" }),
+      );
+      expect(screen.getByText("Importing top queries...")).toBeVisible();
+      expect(importTopQueriesAction).toHaveBeenCalledWith({ limit: 50, projectId: "prj_1" });
+      complete(result);
+      expect(await screen.findByText(message)).toBeVisible();
+      expect(onAppendQueries).not.toHaveBeenCalled();
+    },
+  );
 
   it("maps the actual rate-limit action error to the feature locale and hides unknown provider text", async () => {
     const messages = mergeMessageCatalogs(sharedMessages, {

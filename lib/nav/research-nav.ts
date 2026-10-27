@@ -32,6 +32,8 @@ export const aiSearchNavEntries = [
   },
   {
     group: "ai",
+    badge: "experimental",
+    experimentalModule: "promptPlayground",
     label: "Prompt Playground",
     scope: "own-axis",
     segment: "prompt-playground",

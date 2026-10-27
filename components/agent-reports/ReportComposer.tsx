@@ -6,13 +6,12 @@ import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/toast-context";
 import { type ManualReportInput, manualReportSchema } from "@/lib/agent-reports/manual-model";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
 
 export function ReportComposer({
   projectId,
@@ -27,9 +26,8 @@ export function ReportComposer({
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
   const formId = useId();
-  const form = useForm<ManualReportInput>({
+  const form = useZodForm<ManualReportInput>(manualReportSchema, {
     defaultValues: { title: "", analysis: "" },
-    resolver: zodResolver(manualReportSchema),
   });
   async function save(values: ManualReportInput) {
     setFailed(false);

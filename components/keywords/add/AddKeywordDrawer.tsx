@@ -2,7 +2,7 @@
 
 import { buildCsvKeywordReview } from "@/components/keywords/AddKeywordCsvReviewModel";
 import { splitTagInput } from "@/components/keywords/action-utils";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   type AddKeywordDrawerForm,
   type AddKeywordTab,
@@ -15,7 +15,6 @@ import type { CsvParseErrorCode } from "@/lib/keywords/import-csv-parser";
 import { DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { buildDrawerCsvKeywordRowsForTracking } from "./AddKeywordCsvRows";
 import type { AddKeywordDrawerProps } from "./AddKeywordDrawerExtensions";
 import { AddKeywordDrawerFeedback } from "./AddKeywordDrawerFeedback";
@@ -101,7 +100,7 @@ export function AddKeywordDrawer({
     setValue,
     trigger,
     watch,
-  } = useForm<AddKeywordDrawerForm>({
+  } = useZodForm<AddKeywordDrawerForm>(addKeywordDrawerSchema, {
     defaultValues: drawerFormDefaults({
       costContext,
       defaultDevice,
@@ -110,7 +109,6 @@ export function AddKeywordDrawer({
       location: locationValue,
       projectId,
     }),
-    resolver: zodResolver(addKeywordDrawerSchema),
   });
   const keywordsValue = watch("keywords");
   const tags = watch("tags") ?? [];

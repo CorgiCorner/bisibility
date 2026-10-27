@@ -1,4 +1,5 @@
 import "server-only";
+import type { ApiOperationId } from "@/lib/api/operation-policy";
 import { dispatchAgentToolRoute } from "./agent-tool-routes";
 import { dispatchPromptTrackerTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
@@ -6,12 +7,13 @@ import { dispatchExtendedToolRoute, providerSettingsBody } from "./extended-tool
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLocalMonitorTool } from "./local-monitor-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
+import { operationPath } from "./operation-path";
 import { validateMcpPublicIds } from "./public-id-input";
 import { dispatchRankRunTool } from "./rank-run-tools";
 import { dispatchResearchWorkspaceTool } from "./research-workspace-tools";
 import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
 import { dispatchSessionProfile } from "./session-profile";
-import { addKeywordsBody, body, query, requiredString } from "./tool-arguments";
+import { addKeywordsBody, body, query } from "./tool-arguments";
 import type { JsonObject } from "./types";
 
 type ToolArgs = JsonObject;
@@ -33,11 +35,6 @@ function call(
   };
 }
 
-function projectPath(input: ToolArgs, resource = "") {
-  const base = `/projects/${encodeURIComponent(requiredString(input, "project_id"))}`;
-  return resource ? `${base}/${resource}` : base;
-}
-
 function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
   const rankRunRoute = dispatchRankRunTool(name, input);
@@ -53,8 +50,7 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
   const extendedRoute = dispatchExtendedToolRoute(name, input);
   if (extendedRoute) return extendedRoute;
   if (directRoute) return directRoute;
-  const keyword = () => encodeURIComponent(requiredString(input, "keyword_id"));
-  const project = (resource: string) => projectPath(input, resource);
+  const path = (operation: ApiOperationId) => operationPath(operation, input);
   const page = () => query(input, ["cursor", "limit"]);
   const rankPage = () => query(input, ["cursor", "limit", "since", "status", "until"]);
   const keywordList = () =>
@@ -79,180 +75,148 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
     case "getCapabilities":
       return call("/capabilities", "GET");
     case "getMe":
-      return call("/me", "GET");
+      return call(path("getMe"), "GET");
     case "updateMe":
-      return call("/me", "PATCH", input, body(input, []));
+      return call(path("updateMe"), "PATCH", input, body(input, []));
     case "listProjects":
-      return call(`/projects${page()}`, "GET");
+      return call(`${path("listProjects")}${page()}`, "GET");
     case "createProject":
-      return call("/projects", "POST", input, body(input, []));
+      return call(path("createProject"), "POST", input, body(input, []));
     case "getProject":
-      return call(projectPath(input), "GET");
+      return call(path("getProject"), "GET");
     case "listKeywords":
-      return call(`${project("keywords")}${keywordList()}`, "GET");
+      return call(`${path("listKeywords")}${keywordList()}`, "GET");
     case "addKeywords":
-      return call(project("keywords"), "POST", input, addKeywordsBody(input));
+      return call(path("addKeywords"), "POST", input, addKeywordsBody(input));
     case "getKeyword":
-      return call(`/keywords/${keyword()}`, "GET", input);
+      return call(path("getKeyword"), "GET", input);
     case "updateKeyword":
-      return call(`/keywords/${keyword()}`, "PATCH", input, body(input, ["keyword_id"]));
+      return call(path("setKeywordTargetUrl"), "PATCH", input, body(input, ["keyword_id"]));
     case "setKeywordTargetUrl":
-      return call(`/keywords/${keyword()}`, "PATCH", input, {
+      return call(path("setKeywordTargetUrl"), "PATCH", input, {
         target_url: input.target_url ?? null,
       });
     case "deleteKeyword":
-      return call(`/keywords/${keyword()}`, "DELETE", input);
+      return call(path("deleteKeyword"), "DELETE", input);
     case "bulkUpdateKeywords":
-      return call("/keywords/bulk", "POST", input, body(input, []));
+      return call(path("bulkUpdateKeywords"), "POST", input, body(input, []));
     case "runRankCheck":
-      return call(
-        `/keywords/${keyword()}/checks`,
-        "POST",
-        input,
-        body(input, ["async", "keyword_id"]),
-      );
+      return call(path("runRankCheck"), "POST", input, body(input, ["async", "keyword_id"]));
     case "getRankHistory":
-      return call(`/keywords/${keyword()}/rank-checks${rankPage()}`, "GET", input);
+      return call(`${path("listRankChecks")}${rankPage()}`, "GET", input);
     case "getRankCheckResult":
-      return call(
-        `/rank-checks/${encodeURIComponent(requiredString(input, "check_id"))}`,
-        "GET",
-        input,
-      );
+      return call(path("getRankCheckResult"), "GET", input);
     case "listApiKeys":
       // Personal tokens pass project_id (nested route); project keys are
       // already scoped and use the top-level alias.
       return input.project_id
-        ? call(`${projectPath(input, "api-keys")}${page()}`, "GET")
-        : call(`/api-keys${page()}`, "GET");
+        ? call(`${path("listProjectApiKeys")}${page()}`, "GET")
+        : call(`${path("listApiKeys")}${page()}`, "GET");
     case "createApiKey":
       return input.project_id
-        ? call(projectPath(input, "api-keys"), "POST", input, body(input, ["project_id"]))
-        : call("/api-keys", "POST", input, body(input, []));
+        ? call(path("createProjectApiKey"), "POST", input, body(input, ["project_id"]))
+        : call(path("createApiKey"), "POST", input, body(input, []));
     case "revokeApiKey":
-      return call(
-        `/api-keys/${encodeURIComponent(requiredString(input, "key_id"))}`,
-        "DELETE",
-        input,
-      );
+      return call(path("revokeApiKey"), "DELETE", input);
     case "listPersonalTokens":
-      return call("/me/tokens", "GET");
+      return call(path("listPersonalAccessTokens"), "GET");
     case "createPersonalToken":
-      return call("/me/tokens", "POST", input, body(input, []));
+      return call(path("createPersonalAccessToken"), "POST", input, body(input, []));
     case "revokePersonalToken":
-      return call(
-        `/me/tokens/${encodeURIComponent(requiredString(input, "token_id"))}`,
-        "DELETE",
-        input,
-      );
+      return call(path("revokePersonalAccessToken"), "DELETE", input);
     default:
       return dispatchProjectTool(name, input, page());
   }
 }
 
-function memberPath(input: ToolArgs, resource: string, idKey: string, action = "") {
-  return `${projectPath(input, resource)}/${encodeURIComponent(requiredString(input, idKey))}${action}`;
-}
-
 function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestCall {
   const loopClosure = dispatchLoopClosureTool(name, input);
   if (loopClosure) return loopClosure;
-  const project = (resource: string) => projectPath(input, resource);
-  const member = (resource: string, idKey: string, action = "") =>
-    memberPath(input, resource, idKey, action);
+  const path = (operation: ApiOperationId) => operationPath(operation, input);
 
   switch (name) {
     case "listAlertRules":
-      return call(`${project("alert-rules")}${page}`, "GET");
+      return call(`${path("listAlertRules")}${page}`, "GET");
     case "createAlertRule":
-      return call(project("alert-rules"), "POST", input, body(input, ["project_id"]));
+      return call(path("createAlertRule"), "POST", input, body(input, ["project_id"]));
     case "updateAlertRule":
-      return call(
-        `/alert-rules/${encodeURIComponent(requiredString(input, "rule_id"))}`,
-        "PATCH",
-        input,
-        body(input, ["rule_id", "project_id"]),
-      );
+      return call(path("updateAlertRule"), "PATCH", input, body(input, ["rule_id", "project_id"]));
     case "deleteAlertRule":
-      return call(
-        `/alert-rules/${encodeURIComponent(requiredString(input, "rule_id"))}`,
-        "DELETE",
-        input,
-      );
+      return call(path("deleteAlertRule"), "DELETE", input);
     case "listTriggeredAlerts":
-      return call(`${project("triggered-alerts")}${page}`, "GET");
+      return call(`${path("listTriggeredAlerts")}${page}`, "GET");
     case "listTeamMembers":
-      return call(`${project("team/members")}${page}`, "GET");
+      return call(`${path("listTeamMembers")}${page}`, "GET");
     case "listTeamInvites":
-      return call(`${project("team/invites")}${page}`, "GET");
+      return call(`${path("listTeamInvites")}${page}`, "GET");
     case "createTeamInvite":
-      return call(project("team/invites"), "POST", input, body(input, ["project_id"]));
+      return call(path("createTeamInvite"), "POST", input, body(input, ["project_id"]));
     case "revokeTeamInvite":
-      return call(member("team/invites", "invite_id"), "DELETE", input);
+      return call(path("revokeProjectTeamInvite"), "DELETE", input);
     case "listProviders":
-      return call(`${project("providers")}${page}`, "GET");
+      return call(`${path("listProviders")}${page}`, "GET");
     case "connectProvider":
-      return call(
-        member("providers", "provider_id", "/connect"),
-        "POST",
-        input,
-        providerSettingsBody(input),
-      );
+      return call(path("connectProvider"), "POST", input, providerSettingsBody(input));
     case "testProviderConnection":
       return call(
-        member("providers", "provider_id", "/test"),
+        path("testProviderConnection"),
         "POST",
         input,
         body(input, ["project_id", "provider_id"]),
       );
     case "updateProviderSettings":
-      return call(member("providers", "provider_id"), "PATCH", input, providerSettingsBody(input));
+      return call(path("updateProviderSettings"), "PATCH", input, providerSettingsBody(input));
     case "disconnectProvider":
-      return call(member("providers", "provider_id"), "DELETE", input);
+      return call(path("disconnectProvider"), "DELETE", input);
     case "listSavedKeywords":
-      return call(`${project("saved-keywords")}${page}`, "GET");
+      return call(`${path("listSavedKeywords")}${page}`, "GET");
     case "createSavedKeywords":
-      return call(project("saved-keywords"), "POST", input, body(input, ["project_id"]));
+      return call(path("createSavedKeywords"), "POST", input, body(input, ["project_id"]));
     case "deleteSavedKeyword":
-      return call(member("saved-keywords", "saved_keyword_id"), "DELETE", input);
+      return call(path("deleteProjectSavedKeyword"), "DELETE", input);
     case "listSavedViews":
       return call(
-        `${project("saved-views")}${query(input, ["cursor", "limit", "surface"])}`,
+        `${path("listSavedViews")}${query(input, ["cursor", "limit", "surface"])}`,
         "GET",
       );
     case "createSavedView":
-      return call(project("saved-views"), "POST", input, body(input, ["project_id"]));
+      return call(path("createSavedView"), "POST", input, body(input, ["project_id"]));
     case "deleteSavedView":
-      return call(member("saved-views", "view_id"), "DELETE", input);
+      return call(path("deleteProjectSavedView"), "DELETE", input);
     case "listCompetitors":
-      return call(`${project("competitors")}${page}`, "GET");
+      return call(`${path("listCompetitors")}${page}`, "GET");
     case "addCompetitor":
-      return call(project("competitors"), "POST", input, body(input, ["project_id"]));
+      return call(path("addCompetitor"), "POST", input, body(input, ["project_id"]));
     case "removeCompetitor":
-      return call(member("competitors", "competitor_id"), "DELETE", input);
+      return call(path("removeProjectCompetitor"), "DELETE", input);
     case "getNotificationPreferences":
-      return call(project("notification-preferences"), "GET");
+      return call(path("getNotificationPreferences"), "GET");
     case "updateNotificationPreferences":
-      return call(project("notification-preferences"), "PATCH", input, body(input, ["project_id"]));
+      return call(
+        path("updateNotificationPreferences"),
+        "PATCH",
+        input,
+        body(input, ["project_id"]),
+      );
     case "listMigrationTokens":
-      return call(`${project("migration-tokens")}${page}`, "GET");
+      return call(`${path("listMigrationTokens")}${page}`, "GET");
     case "mintMigrationToken":
-      return call(project("migration-tokens"), "POST", input, body(input, ["project_id"]));
+      return call(path("mintMigrationToken"), "POST", input, body(input, ["project_id"]));
     case "revokeMigrationToken":
-      return call(member("migration-tokens", "token_id"), "DELETE", input);
+      return call(path("revokeProjectMigrationToken"), "DELETE", input);
     case "listWebhooks":
-      return call(`${project("webhooks")}${page}`, "GET");
+      return call(`${path("listWebhookEndpoints")}${page}`, "GET");
     case "createWebhook":
-      return call(project("webhooks"), "POST", input, body(input, ["project_id"]));
+      return call(path("createWebhookEndpoint"), "POST", input, body(input, ["project_id"]));
     case "updateWebhook":
       return call(
-        member("webhooks", "webhook_id"),
+        path("updateWebhookEndpoint"),
         "PATCH",
         input,
         body(input, ["project_id", "webhook_id"]),
       );
     case "deleteWebhook":
-      return call(member("webhooks", "webhook_id"), "DELETE", input);
+      return call(path("deleteWebhookEndpoint"), "DELETE", input);
     default:
       throw new Error(`Unknown MCP tool: ${name}`);
   }

@@ -18,9 +18,9 @@ import type {
   BusinessTranslator,
   LocationSummary,
 } from "@/lib/business-locations/ui-contracts";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { z } from "zod";
 
 const filterSchema = z.object({
@@ -41,9 +41,8 @@ export function BusinessAssignmentWorkspace({
   translate: BusinessTranslator;
 }) {
   const searchId = useId();
-  const form = useForm<Filter>({
+  const form = useZodForm<Filter>(filterSchema, {
     defaultValues: { kind: "keyword", search: "" },
-    resolver: zodResolver(filterSchema),
   });
   const [page, setPage] = useState<{
     choices: AssignmentScopeChoice[];

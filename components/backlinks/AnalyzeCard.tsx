@@ -11,14 +11,13 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Switch } from "@/components/ui/Switch";
 import type { ActionPaymentOption } from "@/lib/action-payment/contract";
 import { formatPaymentAmount } from "@/lib/action-payment/format";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { cn } from "@/lib/ui/cn";
 import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useLocale, useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { BacklinksEstimateView, BacklinksLimit } from "./backlinks-workspace-model";
 
@@ -82,8 +81,7 @@ export function AnalyzeCard({
       ? t("priced", { action, cost: formatPaymentAmount(quote.charge, locale) })
       : action;
   }
-  const { handleSubmit, register, reset } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const { handleSubmit, register, reset } = useZodForm<FormValues>(formSchema, {
     values: { target },
   });
   const targetField = register("target");

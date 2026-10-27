@@ -42,7 +42,6 @@ vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
 vi.mock("@/components/keywords/saved/SavedKeywordsWorkspace", () => ({
   SavedKeywordsWorkspace: () => null,
 }));
-vi.mock("@/components/rank-runs/RunsSection", () => ({ RunsSection: () => null }));
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({ RankTrackerTabs: () => null }));
 vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: () => "owner" }));
 vi.mock("@/lib/auth/capabilities", () => ({

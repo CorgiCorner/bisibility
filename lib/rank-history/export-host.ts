@@ -3,6 +3,7 @@ import { requirePublicId } from "@/lib/db/public-id-resources";
 import { hostCalendarFreshnessPorts } from "@/lib/measurement-definitions/host-calendar";
 import { verifiedDefinitionMetadataLoader } from "@/lib/measurement-definitions/query-adapter";
 import { createRankTrackerHostReportOptions } from "@/lib/queries/rank-tracker-report-host";
+import { loadTrackedResearch } from "@/lib/queries/tracked-research";
 import { authorizeRankReportScope } from "@/lib/rank-reports/access";
 import { RANK_REPORT_CALENDAR_CONFIGURATION } from "@/lib/rank-reports/host-policy";
 import { assertHistoryExportCredential, type HistoryExportAuthority } from "./export-authority";
@@ -36,5 +37,8 @@ export function historyExportReportOptions(
       );
     },
   });
-  return createRankTrackerHostReportOptions(context, load, asOf, comparisonDays);
+  return {
+    ...createRankTrackerHostReportOptions(context, load, asOf, comparisonDays),
+    loadResearch: loadTrackedResearch,
+  };
 }

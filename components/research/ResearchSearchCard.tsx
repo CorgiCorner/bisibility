@@ -10,14 +10,13 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Switch } from "@/components/ui/Switch";
 import type { ActionPaymentOption, ActionPaymentQuote } from "@/lib/action-payment/contract";
 import { formatPaymentAmount } from "@/lib/action-payment/format";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useLocale, useTranslations } from "next-intl";
 import type { KeyboardEvent } from "react";
 import { useId } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ResearchScopePicker } from "./ResearchScopePicker";
 
@@ -95,10 +94,12 @@ export function ResearchSearchCard({
 }: Readonly<ResearchSearchCardProps>) {
   const t = useTranslations("projectResearch.search");
   const locale = useLocale();
-  const { getValues, handleSubmit, register, resetField, watch } = useForm<FormValues>({
-    defaultValues: { seed: "" },
-    resolver: zodResolver(formSchema),
-  });
+  const { getValues, handleSubmit, register, resetField, watch } = useZodForm<FormValues>(
+    formSchema,
+    {
+      defaultValues: { seed: "" },
+    },
+  );
 
   const noSeedHintId = useId();
   const seedHelpId = useId();

@@ -12,4 +12,11 @@ export const defaultKeywordColumnVisibility: Record<string, boolean> = {
   topic: true,
   volume: true,
   difficulty: true,
+  researchVolume: true,
+  researchTrend: true,
+  researchDifficulty: true,
+  researchCpc: true,
+  researchIntent: true,
+  researchSource: true,
+  researchAt: true,
 };

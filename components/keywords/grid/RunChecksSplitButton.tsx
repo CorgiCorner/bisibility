@@ -29,6 +29,7 @@ export function RunChecksSplitButton({
   selectedRows,
 }: Readonly<RunChecksSplitButtonProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
+  const bulkT = useTranslations("projectRankTracker.keywordImport.management.bulk");
   const selectedIds = selectedRows.map((row) => row.id);
   const selectionDepths = new Set(selectedRows.map(effectiveRowDepth));
   const uniformDepth = selectionDepths.size === 1 ? selectionDepths.values().next().value : null;
@@ -45,8 +46,9 @@ export function RunChecksSplitButton({
     : baseAction;
 
   return (
-    <ProjectReadOnlyTooltip>
+    <ProjectReadOnlyTooltip focusable>
       <CheckDepthSplitButton
+        actionDescription={bulkT("runTooltip")}
         actionLabel={
           checksRunning ? t("starting") : t("actionWithDepth", { action, depth: selectionLabel })
         }

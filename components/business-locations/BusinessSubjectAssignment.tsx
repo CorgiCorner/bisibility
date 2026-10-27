@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { compactInputClassName, Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
 import { BusinessActionStatus } from "./BusinessActionStatus";
 import { BusinessSectionHeading } from "./BusinessSectionHeading";
 import type {
@@ -48,9 +47,8 @@ export function BusinessSubjectAssignment({
     ...command,
     idempotencyKey,
   }));
-  const form = useForm<{ reason: string }>({
+  const form = useZodForm<{ reason: string }>(reasonFormSchema, {
     defaultValues: { reason: "" },
-    resolver: zodResolver(reasonFormSchema),
   });
   const eligible = locations.filter(
     (location) => location.state === "active" && location.role === "subject",

@@ -16,7 +16,7 @@ import {
   drawerManual,
   drawerSteady,
   drawerToday,
-} from "./history-drawer-fixtures";
+} from "./history-drawer.test-support";
 import {
   fillingDays,
   firstDays,
@@ -25,7 +25,7 @@ import {
   steadyDays,
 } from "./history-fixtures";
 import { pausedRanges, trendValueTicks } from "./history-presentation";
-import { historyTab } from "./history-tab-fixtures";
+import { historyTab } from "./history-tab.test-support";
 import { IndexingDrawer } from "./IndexingDrawer";
 import { IndexingHistoryStrip } from "./IndexingHistoryStrip";
 import { IndexingStatus } from "./IndexingStatus";

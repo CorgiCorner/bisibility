@@ -22,6 +22,7 @@ export type KeywordResearchSnapshotInput = {
   outcome: Pick<KeywordResearchSuccess, "provider" | "rows" | "sources" | "payment">;
   projectId: string;
   request: CanonicalKeywordResearchRequest;
+  seedResult?: Omit<KeywordResearchRow, "alreadySaved" | "alreadyTracked">;
 };
 
 function storedRows(rows: KeywordResearchRow[]) {
@@ -68,7 +69,19 @@ function snapshotData(input: KeywordResearchSnapshotInput) {
     normalizedSeed: input.request.normalizedSeed,
     provider: input.outcome.provider,
     resultLimit: input.request.resultLimit,
-    rows: storedRows(input.outcome.rows) as Prisma.InputJsonValue,
+    rows: [
+      ...storedRows(input.outcome.rows),
+      ...(input.seedResult
+        ? [
+            {
+              ...storedRows([
+                { ...input.seedResult, alreadySaved: false, alreadyTracked: false },
+              ])[0],
+              _trackedSeed: true,
+            },
+          ]
+        : []),
+    ] as Prisma.InputJsonValue,
     seed: input.request.seed,
     sources: storedSources(input.outcome.sources, input.outcome.payment) as Prisma.InputJsonValue,
   };
@@ -110,19 +123,27 @@ export async function maybePersistKeywordResearchSnapshot(input: {
   resultLimit: number;
   seed: string;
   successfulFetchedAts: readonly string[];
+  seedResult?: Omit<KeywordResearchRow, "alreadySaved" | "alreadyTracked">;
 }) {
-  if (!isEditableDemoResearchProject(input.project.publicId) || !input.outcome.ok) return null;
+  if (!input.outcome.ok) return null;
   if (isKeywordResearchEstimate(input.outcome) || input.successfulFetchedAts.length === 0) {
     return null;
   }
-  if (input.outcome.cached) return null;
   const fetchedAt = new Date(input.outcome.fetchedAt);
-  const freshUntil = demoResearchFreshUntil(input.successfulFetchedAts);
-  if (!Number.isFinite(fetchedAt.getTime()) || !freshUntil) return null;
+  const freshUntil = isEditableDemoResearchProject(input.project.publicId)
+    ? demoResearchFreshUntil(input.successfulFetchedAts)
+    : new Date(input.outcome.cachedUntil);
+  if (
+    !Number.isFinite(fetchedAt.getTime()) ||
+    !freshUntil ||
+    !Number.isFinite(freshUntil.getTime())
+  )
+    return null;
   return persistKeywordResearchSnapshot({
     fetchedAt,
     freshUntil,
     outcome: input.outcome,
+    seedResult: input.seedResult,
     projectId: input.project.id,
     request: canonicalKeywordResearchRequest({
       connectionPublicId: input.connectionPublicId,

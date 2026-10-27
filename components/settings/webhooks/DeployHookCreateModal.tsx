@@ -4,13 +4,12 @@ import { useDeveloperActionError } from "@/components/settings/developers/useDev
 import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Modal } from "@/components/ui/Modal";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { createIngestHookSchema, DEFAULT_INGEST_HOOK_LABEL } from "@/lib/schemas/ingestHook";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DeployHookRevealContent } from "./DeployHookReveal";
 import type { CreateDeployHookAction, IssuedDeployHook } from "./deploy-hook-model";
@@ -42,10 +41,9 @@ export function DeployHookCreateModal({
   const [issuedHook, setIssuedHook] = useState<IssuedDeployHook | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const canCreate = Boolean(createHook && projectId);
-  const form = useForm<CreateHookForm>({
+  const form = useZodForm<CreateHookForm>(createIngestHookSchema, {
     defaultValues: { label: DEFAULT_INGEST_HOOK_LABEL, projectId: projectId ?? "" },
     mode: "onChange",
-    resolver: zodResolver(createIngestHookSchema),
   });
 
   function handleClose() {

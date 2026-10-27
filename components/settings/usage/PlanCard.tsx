@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type { WaitlistFailureResult } from "@/lib/landing/waitlist-result";
 import {
   type HostedPricingFeedbackInput,
@@ -18,7 +18,6 @@ import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 export type SubmitPricingFeedback = (
   input: HostedPricingFeedbackInput,
@@ -85,9 +84,8 @@ export function PlanCard({
   const sharedErrors = useSharedErrorMessages();
   const [answered, setAnswered] = useState(initialAnswered);
   const [actionError, setActionError] = useState<string | null>(null);
-  const form = useForm<HostedPricingFeedbackInput>({
+  const form = useZodForm<HostedPricingFeedbackInput>(hostedPricingFeedbackSchema, {
     defaultValues: { monthlyPrice: "20", projectId },
-    resolver: zodResolver(hostedPricingFeedbackSchema),
   });
 
   async function submit(values: HostedPricingFeedbackInput) {

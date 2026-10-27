@@ -1,6 +1,8 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
@@ -161,6 +163,50 @@ export const Pending: Story = {
     providerConnected: false,
     rows: pendingRows,
   },
+};
+
+export const SelectionEvidence: Story = {
+  decorators: [
+    (Story) => (
+      <FeatureMessagesProvider
+        locale="en"
+        messages={projectRankTrackerFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <Story />
+      </FeatureMessagesProvider>
+    ),
+  ],
+  args: {
+    ...actionArgs,
+    ...serverListArgs,
+    projectId: "prj_story",
+    providerConnected: false,
+    rows: pendingRows.map((row, index) => ({
+      ...row,
+      targetUrl: "https://example.com",
+      research:
+        index < 2
+          ? {
+              volume: index === 0 ? 1200 : 900,
+              difficulty: index === 0 ? 22 : 41,
+              cpc: index === 0 ? 1.5 : 0.8,
+              intent: index === 0 ? ("commercial" as const) : ("informational" as const),
+              trend: [
+                { year: 2026, month: 8, searchVolume: 800 },
+                { year: 2026, month: 9, searchVolume: 1200 },
+              ],
+              sourceSeed: "example research",
+              fetchedAt: "2026-10-01T00:00:00.000Z",
+            }
+          : null,
+    })),
+  },
+};
+
+export const SelectionEvidenceReady: Story = {
+  ...SelectionEvidence,
+  args: { ...SelectionEvidence.args, providerConnected: true },
 };
 
 export const PendingReady: Story = {

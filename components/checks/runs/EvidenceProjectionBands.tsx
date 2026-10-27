@@ -32,9 +32,15 @@ export function EvidenceProjectionBands({
             className="group/evidence mx-4 mt-3 flex flex-wrap items-start gap-2.5 rounded-control border border-border bg-bg-sunken px-3.5 py-3 data-[evidence-tone=warning]:border-yellow/35 data-[evidence-tone=warning]:bg-yellow/10 data-[evidence-tone=error]:border-red/35 data-[evidence-tone=error]:bg-red/8 data-[evidence-tone=success]:border-green/35 data-[evidence-tone=success]:bg-green/8"
           >
             {key === "recovered" ? (
-              <CheckCircleIcon aria-hidden size={17} className="mt-0.5 shrink-0 text-green-text" />
+              <CheckCircleIcon
+                weight="regular"
+                aria-hidden
+                size={17}
+                className="mt-0.5 shrink-0 text-green-text"
+              />
             ) : (
               <WarningCircleIcon
+                weight="regular"
                 aria-hidden
                 size={17}
                 className="mt-0.5 shrink-0 text-fg-muted group-data-[evidence-tone=error]/evidence:text-red-text group-data-[evidence-tone=warning]/evidence:text-yellow-text"
@@ -49,7 +55,7 @@ export function EvidenceProjectionBands({
             <Button
               size="sm"
               variant="secondary"
-              endIcon={<CaretRightIcon aria-hidden size={12} />}
+              endIcon={<CaretRightIcon weight="regular" aria-hidden size={12} />}
               onClick={() => onFilterChange(key)}
             >
               {t("viewChecks")}

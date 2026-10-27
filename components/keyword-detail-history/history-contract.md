@@ -1,11 +1,11 @@
 # Recorded keyword history
 
-`PositionHistoryCard.history` selects the full report consumer. Its required read
-ports are server adapters over authorized rank reports. They capture the project
-and validated selected target IDs, renew actor and project authorization on every
-read, and return the report's actual snapshot, source, selection and window binding.
-No actor or owner ID enters the client request. The compatibility renderer remains
-available for old callers; it is not evidence of a full report window.
+`KeywordDetailHistory` is the full report consumer. Its required read ports are
+server adapters over authorized rank reports. They capture the project and
+validated selected target IDs, renew actor and project authorization on every read,
+and return the report's actual snapshot, source, selection and window binding.
+No actor or owner ID enters the client request. The transitional
+`PositionHistoryCard` wrapper and its legacy renderer have been retired.
 
 Initial observations and attempts share `asOf`, source, selection, definition and
 date bounds. Observations use the chosen observation or recorded basis. Attempts
@@ -50,7 +50,7 @@ the observation's retained identity revision. Missing proof stays unknown; organ
 completeness does not prove absence or ownership of other feature families. There is
 no absence inference from a partial or empty retained result set.
 
-`RankingUrlHistory.history` reads individual observation DTOs, retaining the expected
+`RecordedUrlHistory.page` reads individual observation DTOs, retaining the expected
 URL captured by each check. It never falls back to today's editable target. The new
 `RetrievedResultsCard.history` branch accepts the same normalized snapshot contract.
 The old results branch now takes its ranking URL from the selected saved snapshot,

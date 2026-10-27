@@ -22,6 +22,7 @@ describe("RunsTable", () => {
       />,
     );
 
+    expect(screen.getByRole("table", { name: "Runs" })).toBeVisible();
     expect(screen.getByText("Scheduled")).toBeInTheDocument();
     expect(screen.getByText("Manual run")).toBeInTheDocument();
     expect(screen.getByText("Retry")).toBeInTheDocument();
@@ -37,7 +38,7 @@ describe("RunsTable", () => {
       <RunsTable emptyActionHref="/app/prj_1/runs/schedules" projectRef="prj_1" rows={[run]} />,
     );
 
-    expect(screen.getByText("rcr_9d2e41").parentElement).toHaveAttribute("title", run.id);
+    expect(screen.getByText("rcr_9d2e41abcdef").parentElement).toHaveAttribute("title", run.id);
     expect(screen.getByRole("button", { name: `Copy run ID ${run.id}` })).toBeInTheDocument();
   });
 

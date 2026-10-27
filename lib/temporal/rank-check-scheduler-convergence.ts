@@ -5,6 +5,7 @@ import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-cons
 import { type RankCheckSchedulerMode, rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
 import {
   type BootstrapScheduleClient,
+  hasErrorName,
   RECONCILE_WORKFLOW_TYPE,
   RECONCILER_SCHEDULE_ID,
 } from "./bootstrap";
@@ -26,15 +27,6 @@ export type RankCheckSingletonConvergenceResult = {
 
 export type RankCheckSchedulerConvergenceClient = BootstrapScheduleClient &
   Pick<Client["schedule"], "getHandle">;
-
-function isScheduleNotFound(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    (error as { name?: unknown }).name === "ScheduleNotFoundError"
-  );
-}
 
 async function retireSingleton(
   client: RankCheckSchedulerConvergenceClient,
@@ -60,7 +52,7 @@ async function retireSingleton(
     await handle.pause("Retired by rank-check scheduler mode convergence");
     return "paused";
   } catch (error) {
-    if (isScheduleNotFound(error)) return "absent";
+    if (hasErrorName(error, "ScheduleNotFoundError")) return "absent";
     throw new Error(`Failed to retire rank-check singleton ${scheduleId}.`, { cause: error });
   }
 }

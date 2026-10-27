@@ -89,6 +89,26 @@ function renderContent(overrides: Partial<React.ComponentProps<typeof ProjectRun
 describe("ProjectRunsContent", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it.each([1, 2])("uses total counts and localized keyword/target plurals for %i", (count) => {
+    renderContent({
+      page: {
+        counts: { aiTracking: 0, rankChecks: count, searchConsole: 0, total: count },
+        nextCursor: null,
+        runs: [
+          {
+            ...plannedRankRun,
+            scope: { description: null, keywordCount: count, kind: "rank" },
+            progress: { completed: 0, total: count, unit: "targets" },
+          },
+        ],
+      },
+    });
+
+    expect(screen.getByRole("heading", { name: count === 1 ? "1 run" : "2 runs" })).toBeVisible();
+    expect(screen.getByText(count === 1 ? "1 keyword" : "2 keywords")).toBeVisible();
+    expect(screen.getByText(count === 1 ? "0 / 1 target" : "0 / 2 targets")).toBeVisible();
+  });
+
   it("explains planned listing delay for an enabled rank schedule with keywords", () => {
     renderContent({
       schedulePlanningMinutes: 15,
@@ -339,6 +359,7 @@ describe("ProjectRunsContent", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Skip once" }));
 
     expect(skipAction).toHaveBeenCalledWith({ projectRef, runId: plannedRankRun.id });
+    expect(skipAction).toHaveBeenCalledOnce();
     await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
     expect(routerMock.push).not.toHaveBeenCalled();
   });

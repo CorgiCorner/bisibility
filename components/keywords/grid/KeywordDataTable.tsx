@@ -62,6 +62,7 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows: incomingRows, viewDevices, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
+  const researchT = useTranslations("projectRankTracker.keywordImport.management.saved");
   const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
   const format = useFormatter();
   const router = useRouter();
@@ -76,6 +77,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const [navigationSequence, setNavigationSequence] = useState(0);
   const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
   const [navigationPending, startNavigation] = useTransition();
+  const [refreshing, startRefresh] = useTransition();
   const targetRows = useMemo(() => leafRows(rows), [rows]);
   const showDevices = useMemo(() => viewDevices ? new Set(viewDevices).size > 1 : keywordViewHasMultipleDevices(rows), [rows, viewDevices]);
   const selectedIds = [...selection];
@@ -109,8 +111,16 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
       trend: columnT("trend"),
       trendTitle: columnT("trendTitle"),
       volume: columnT("volume"),
+      researchVolume: researchT("researchVolume"),
+      researchTrend: researchT("researchTrend"),
+      researchDifficulty: researchT("researchDifficulty"),
+      researchCpc: researchT("researchCpc"),
+      researchIntent: researchT("researchIntent"),
+      researchSource: researchT("researchSource"),
+      researchAt: researchT("researchAt"),
+      researchHeaders: { volume: researchT("volume"), trend: researchT("trend"), difficulty: researchT("difficulty"), cpc: researchT("cpc"), intent: researchT("intent"), source: researchT("source"), date: researchT("researchedShort") },
     }),
-    [columnT, format, marketCellsT],
+    [columnT, format, marketCellsT, researchT],
   );
   const deletion = useKeywordDeletion({ action: bulkDeleteAction, onDeleted: () => { held.immediate(); router.refresh(); }, projectId });
   const columns = useMemo(
@@ -211,7 +221,8 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           exportDisabled={Boolean(local)}
           onOpenExport={() => { if (!local) onOpenExport(selectedIds); }}
           onOpenFilters={onOpenFilters}
-          onRefresh={() => { held.immediate(); router.refresh(); }}
+          onRefresh={() => startRefresh(() => { held.immediate(); router.refresh(); })}
+          refreshing={refreshing}
           onRemoveFilter={onRemoveFilter}
           onSearchChange={onSearchChange}
           onSearchCommit={onSearchCommit}

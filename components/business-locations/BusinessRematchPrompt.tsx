@@ -3,9 +3,8 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
 import { BusinessActionStatus } from "./BusinessActionStatus";
 import type {
   BusinessCommandPort,
@@ -46,9 +45,8 @@ export function BusinessRematchPrompt({
     ...command,
     idempotencyKey,
   }));
-  const form = useForm<{ confirmed: boolean }>({
+  const form = useZodForm<{ confirmed: boolean }>(confirmedPromptSchema, {
     defaultValues: { confirmed: false },
-    resolver: zodResolver(confirmedPromptSchema),
   });
   const same = JSON.stringify(base) === JSON.stringify(selection);
   const valid =

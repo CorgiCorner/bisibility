@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
     config: { kind: "disabled" } as { kind: "disabled" | "editable" | "legacy-read-only" },
   },
   experimentalModules: vi.fn(),
-  lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
   noticeExtension: vi.fn(),
   loadSetupAcknowledgedAt: vi.fn(),
@@ -139,9 +138,6 @@ vi.mock("@/lib/queries/_auth", () => ({
 vi.mock("@/lib/queries/workspace-budget-summary", () => ({
   loadWorkspaceBudgetSummary: mocks.budgetSummary,
 }));
-vi.mock("@/lib/queries/cloud-beta-export", () => ({
-  getLatestCloudPackageExport: mocks.lastExport,
-}));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
 vi.mock("@/lib/queries/experimental-modules", () => ({
   getExperimentalModules: mocks.experimentalModules,
@@ -189,7 +185,6 @@ describe("workspace layout", () => {
     ]);
     mocks.cookies.mockResolvedValue({ get: vi.fn(() => undefined) });
     mocks.budgetSummary.mockResolvedValue(headerFixture());
-    mocks.lastExport.mockResolvedValue(null);
     mocks.loadSetupContext.mockResolvedValue({
       completedCheckCount: 0,
       competitorSetupOutcome: null,
@@ -403,7 +398,7 @@ describe("workspace layout", () => {
     );
   });
 
-  it("renders no beta banner and issues no last-export query on self-host", async () => {
+  it("renders no beta banner on self-host", async () => {
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
       children: <div>Self-host workspace</div>,
@@ -413,10 +408,9 @@ describe("workspace layout", () => {
 
     expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup).toContain('data-hosted-links="false"');
-    expect(mocks.lastExport).not.toHaveBeenCalled();
   });
 
-  it("omits the retired Cloud banner and export lookup", async () => {
+  it("omits the retired Cloud banner", async () => {
     mocks.deployment.isCloud = true;
 
     const result = await WorkspaceShell({
@@ -427,7 +421,6 @@ describe("workspace layout", () => {
     const markup = renderToStaticMarkup(result);
 
     expect(markup).not.toContain('data-testid="cloud-beta-banner"');
-    expect(mocks.lastExport).not.toHaveBeenCalled();
   });
 
   it("renders the resolved account notice where the beta banner sat and suppresses the beta banner", async () => {
@@ -487,7 +480,6 @@ describe("workspace layout", () => {
 
       expect(markup).toContain('data-testid="demo-banner"');
       expect(markup).not.toContain('data-testid="cloud-beta-banner"');
-      expect(mocks.lastExport).not.toHaveBeenCalled();
       expect(mocks.demo.banner).toHaveBeenCalledWith({
         actor: actor.kind,
         capturedAt,
@@ -499,7 +491,7 @@ describe("workspace layout", () => {
     },
   );
 
-  it("keeps enforced Cloud free of the retired banner and its export query", async () => {
+  it("keeps enforced Cloud free of the retired banner", async () => {
     mocks.deployment.isCloud = true;
     mocks.noticeExtension.mockResolvedValue({ content: null });
 
@@ -510,7 +502,6 @@ describe("workspace layout", () => {
     });
     const markup = renderToStaticMarkup(result);
 
-    expect(mocks.lastExport).not.toHaveBeenCalled();
     expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup).toContain('data-hosted-links="true"');
   });

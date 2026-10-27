@@ -56,10 +56,14 @@ describe("SavedKeywordsBulkBar", () => {
     expect(bar).not.toHaveClass("bg-accent-soft");
     expect(bar.closest("[data-floating-selection-bar]")).toHaveClass("fixed", "bottom-0");
     expect(within(bar).getByText("1 selected")).toBeInTheDocument();
+    const track = within(bar).getByRole("button", { name: "Track 1" });
+    expect(track).toHaveAccessibleDescription("tracking all 1 adds $0.90/mo at daily checks");
+    expect(within(bar).queryByText("~$0.90/mo")).not.toBeInTheDocument();
     expect(
-      within(bar).getByText("tracking all 1 adds $0.90/mo at daily checks"),
-    ).toBeInTheDocument();
-    expect(within(bar).getByText("~$0.90/mo")).toBeInTheDocument();
+      within(bar)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual(["Track 1", "Remove", "Clear"]);
 
     fireEvent.click(within(bar).getByRole("button", { name: "Clear" }));
     expect(props.onClear).toHaveBeenCalledTimes(1);
@@ -86,10 +90,20 @@ describe("SavedKeywordsBulkBar", () => {
   it("disables Track when a reason is set and hides the estimate summary", () => {
     const props = renderBar({ trackDisabledReason: "Read only" });
     const track = screen.getByRole("button", { name: "Track 1" });
-    expect(track).toBeDisabled();
+    expect(track).toHaveAttribute("aria-disabled", "true");
+    expect(track).toHaveAccessibleDescription("Read only");
     fireEvent.click(track);
     expect(props.onTrack).not.toHaveBeenCalled();
     expect(screen.queryByText(/unavailable estimate/)).not.toBeInTheDocument();
+  });
+
+  it("explains and blocks Remove in a read-only project", () => {
+    const props = renderBar({ removeDisabledReason: "Project is read only." });
+    const remove = screen.getByRole("button", { name: "Remove" });
+    expect(remove).toHaveAttribute("aria-disabled", "true");
+    expect(remove).toHaveAccessibleDescription("Project is read only.");
+    fireEvent.click(remove);
+    expect(props.onRemove).not.toHaveBeenCalled();
   });
 
   it("links Research to the keyword seed and saved location when one keyword is selected", () => {

@@ -11,7 +11,6 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
   resolveRegionalDocumentLocale: vi.fn(),
   sectionProps: undefined as unknown,
-  genericHost: vi.fn(),
   policy: vi.fn(),
 }));
 
@@ -28,12 +27,6 @@ vi.mock("@/components/measurement-settings/MeasurementPolicySettingsSection", ()
   MeasurementPolicySettingsSection: () => {
     mocks.policy();
     return <div data-testid="measurement-policy" />;
-  },
-}));
-vi.mock("@/components/measurement-settings/MeasurementSettingsHostSection", () => ({
-  MeasurementSettingsHostSection: () => {
-    mocks.genericHost();
-    return <div data-testid="duplicate-measurement-settings" />;
   },
 }));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
@@ -94,7 +87,6 @@ describe("TrackingSettingsPage", () => {
     mockPage("member");
     render(await TrackingSettingsPage({ params: Promise.resolve({ project: "prj_1" }) }));
 
-    expect(mocks.genericHost).not.toHaveBeenCalled();
     expect(screen.queryByTestId("duplicate-measurement-settings")).not.toBeInTheDocument();
     expect(mocks.policy).toHaveBeenCalledOnce();
     expect(document.querySelectorAll("[data-tracking-section-test]")).toHaveLength(1);

@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
-import type { CheckRunFilter, CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
+import type { CheckRunRow } from "@/lib/checks/contract";
+import type { CheckRunsRenderProps } from "@/lib/checks/section-contract";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { checkRunDetailLines } from "./CheckRunDetails";
@@ -12,14 +13,12 @@ import { type CheckRunsTableRow, checkRunsTableColumns } from "./check-runs-tabl
 import { useAutoLoadMore } from "./use-auto-load-more";
 import { type RunTableColumns, useRunTableWidth } from "./use-run-table-width";
 
-type TableProps = {
+type TableProps = Pick<
+  CheckRunsRenderProps,
+  "filter" | "keywordHref" | "now" | "onLoadMore" | "view"
+> & {
   expandedRunIds: ReadonlySet<string>;
-  filter: CheckRunFilter;
-  keywordHref: (keywordPublicId: string) => string;
-  now: Date;
-  onLoadMore: () => void;
   onToggleRun: (runId: string) => void;
-  view: CheckRunsView;
 };
 
 type RunRowOptions = Pick<TableProps, "keywordHref" | "now"> & {

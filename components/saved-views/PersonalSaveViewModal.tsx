@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { savedViewNameSchema } from "@/lib/keywords/saved-view-model";
 import type { CanonicalSavedViewResource } from "@/lib/saved-views/canonical-model";
 import { useId, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { z } from "zod";
 import type { PersonalSavedViewsControlProps } from "./personal-control-types";
 
@@ -38,9 +38,8 @@ export function PersonalSaveViewModal({
     register,
     setError,
     watch,
-  } = useForm<Values>({
+  } = useZodForm<Values>(formSchema, {
     defaultValues: { name: "", visibility: "private" },
-    resolver: zodResolver(formSchema),
   });
   const busy = isSubmitting || saving;
   const labels = props.labels;

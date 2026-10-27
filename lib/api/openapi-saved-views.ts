@@ -51,6 +51,7 @@ export const savedViewSchema = {
   properties: {
     can_delete: { type: "boolean" },
     created_at: { format: "date-time", type: "string" },
+    created_by_id: { ...publicIdSchema("usr"), type: ["string", "null"] },
     definition: definitionSchema,
     revision: { maximum: MAX_VIEW_REVISION, minimum: 1, type: "integer" },
     visibility: { enum: ["project"], type: "string" },
@@ -65,6 +66,7 @@ export const savedViewSchema = {
     "name",
     "surface",
     "created_at",
+    "created_by_id",
     "can_delete",
     "definition",
     "revision",

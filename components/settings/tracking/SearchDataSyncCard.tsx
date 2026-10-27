@@ -17,7 +17,7 @@ import {
   type SearchInsightsImportAction,
 } from "@/lib/actions/search-insights";
 import { formatDisplayDate } from "@/lib/dates/format";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { projectSearchSyncSchema } from "@/lib/schemas/project";
@@ -32,7 +32,7 @@ import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import type { z } from "zod";
 import { localizeSearchSyncControl } from "./search-sync-presentation";
 
@@ -71,9 +71,8 @@ export function SearchDataSyncCard({
   const t = useTranslations("projectSettingsTracking.searchSync");
   const { showToast } = useToast();
   const [pauseBusy, setPauseBusy] = useState(false);
-  const form = useForm<FormData>({
+  const form = useZodForm<FormData>(projectSearchSyncSchema, {
     defaultValues: { pace, projectId, retentionMonths },
-    resolver: zodResolver(projectSearchSyncSchema),
   });
   const control = resolveSearchSyncControl(metrics, dateFormat);
   const localizedControl = localizeSearchSyncControl({

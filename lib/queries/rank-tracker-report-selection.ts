@@ -47,6 +47,7 @@ function prepareRankTrackerReportSelection(
   };
   const pausedSchedules = options.pausedSchedules ?? "include_retained";
   const loadMetadata = options.loadMetadata;
+  const loadResearch = options.loadResearch;
   const policy = snapshotRankReportPolicy(options.policyAt(new Date(asOf.getTime())));
   validateRankTrackerReportPolicy(policy, asOf, limits, input.projectRef);
   const reportScope = rankTrackerScope(query);
@@ -67,7 +68,17 @@ function prepareRankTrackerReportSelection(
     stream: "observations",
     window: { basis: "recorded_at", from: new Date(0).toISOString(), to: asOf.toISOString() },
   });
-  return { query, actor, asOf, limits, pausedSchedules, loadMetadata, policy, request };
+  return {
+    query,
+    actor,
+    asOf,
+    limits,
+    pausedSchedules,
+    loadMetadata,
+    loadResearch,
+    policy,
+    request,
+  };
 }
 
 import { readRankResultEvidence } from "./rank-result-evidence";
@@ -76,7 +87,17 @@ async function readRankTrackerReportSelection(
   tx: Prisma.TransactionClient,
   plan: ReturnType<typeof prepareRankTrackerReportSelection>,
 ) {
-  const { query, actor, asOf, limits, pausedSchedules, loadMetadata, policy, request } = plan;
+  const {
+    query,
+    actor,
+    asOf,
+    limits,
+    pausedSchedules,
+    loadMetadata,
+    loadResearch,
+    policy,
+    request,
+  } = plan;
   const authorized = await authorizeRankReportScope(tx, actor, request, asOf);
   const project = await tx.project.findUniqueOrThrow({
     select: { domain: true, id: true, publicId: true },
@@ -133,8 +154,12 @@ async function readRankTrackerReportSelection(
       row.rankQuality.latestAttempt?.id ? [row.rankQuality.latestAttempt.id] : [],
     ),
   );
+  const research = loadResearch
+    ? await loadResearch(tx, project.id, projectedRows, asOf)
+    : new Map();
   const rows = projectedRows.map((row) => ({
     ...row,
+    research: research.get(row.id) ?? null,
     rankEvidence: evidence.get(row.rankQuality.latestAttempt?.id ?? ""),
   }));
   const locations = rankTrackerReportLocations(rows, candidates.registeredLocations);

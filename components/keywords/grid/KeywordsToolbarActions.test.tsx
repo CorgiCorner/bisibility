@@ -39,6 +39,8 @@ const props = {
   onDensityChange: vi.fn(),
   onOpenExport: vi.fn(),
   onOpenFilters: vi.fn(),
+  onRefresh: vi.fn(),
+  refreshing: false,
 };
 
 function expectCompactWidth(button: HTMLElement) {

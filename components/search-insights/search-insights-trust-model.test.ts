@@ -2,14 +2,13 @@ import type { SearchInsightsImportState } from "@/lib/search-insights/queries/co
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
 import { describe, expect, it } from "vitest";
+import { importProgress, progressWidthClass } from "./search-insights-import-progress";
 import {
   capHitClause,
   freshnessPresentation,
   importObservabilityProgress,
-  importProgress,
   importRunningLine,
   importStartupPresentation,
-  progressWidthClass,
 } from "./search-insights-trust-model";
 
 function importState(overrides: Partial<SearchInsightsImportState> = {}) {

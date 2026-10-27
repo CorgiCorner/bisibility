@@ -35,6 +35,7 @@ export function RealtimeIndicator() {
       title={t(phase)}
     >
       <Icon
+        weight="regular"
         aria-hidden
         size={14}
         className={phase === "live" ? "text-green-text" : "text-fg-muted"}

@@ -7,8 +7,8 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("experimental modules", () => {
-  it("defines only Timeline and Competitors as valid keys", () => {
-    expect(experimentalModuleKeys).toEqual(["timeline", "competitors"]);
+  it("includes Prompt Playground as an opt-in key", () => {
+    expect(experimentalModuleKeys).toEqual(["timeline", "competitors", "promptPlayground"]);
     expect(
       experimentalModulesSchema.safeParse({
         enabledExperimentalModules: ["timeline", "not-a-module"],

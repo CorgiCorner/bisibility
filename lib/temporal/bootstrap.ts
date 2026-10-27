@@ -87,7 +87,7 @@ export function calendarSpec(
   return { calendars: [defaults] };
 }
 
-function hasErrorName(error: unknown, name: string) {
+export function hasErrorName(error: unknown, name: string) {
   return (
     typeof error === "object" &&
     error !== null &&

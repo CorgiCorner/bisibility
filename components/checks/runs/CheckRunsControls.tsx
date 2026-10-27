@@ -7,36 +7,14 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Tooltip } from "@/components/ui/Tooltip";
-import type {
-  CheckRange,
-  CheckRunFilter,
-  CheckRunProviderOption,
-  CheckRunsCounts,
-  CheckRunTriggerFilter,
-} from "@/lib/checks/contract";
+import type { CheckRunFilter, CheckRunsCounts, CheckRunTriggerFilter } from "@/lib/checks/contract";
+import type { CheckRunsHeaderProps, CheckRunsSectionProps } from "@/lib/checks/section-contract";
 import { formatDisplayDate } from "@/lib/dates/format";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { AsOfDatePopover } from "./AsOfDatePopover";
 import { rangeValues } from "./check-runs-format";
-
-type HeaderProps = {
-  exactRange?: boolean;
-  hideAsOfDate?: boolean;
-  hideProvider?: boolean;
-  asOfDate: string;
-  now: Date;
-  onAsOfDateChange: (date: string) => void;
-  onProviderChange: (provider: string) => void;
-  onRangeChange: (range: CheckRange) => void;
-  onTriggerChange: (trigger: CheckRunTriggerFilter) => void;
-  provider: string;
-  providerOptions: readonly CheckRunProviderOption[];
-  range: CheckRange;
-  timeZone: string;
-  trigger: CheckRunTriggerFilter;
-};
 
 export function CheckRunsHeader({
   exactRange = false,
@@ -53,7 +31,7 @@ export function CheckRunsHeader({
   range,
   timeZone,
   trigger,
-}: Readonly<HeaderProps>) {
+}: Readonly<CheckRunsHeaderProps>) {
   const dateDisplay = useDateDisplay();
   const t = useTranslations("projectRankTracker.checks");
   const [dateAnchor, setDateAnchor] = useState<HTMLElement | null>(null);
@@ -150,10 +128,8 @@ const statTiles = [
   valueClassName: string;
 }[];
 
-type FilterProps = {
+type FilterProps = Pick<CheckRunsSectionProps, "filter" | "onFilterChange"> & {
   counts: CheckRunsCounts;
-  filter: CheckRunFilter;
-  onFilterChange: (filter: CheckRunFilter) => void;
 };
 
 export function CheckRunStats({ counts, filter, onFilterChange }: Readonly<FilterProps>) {

@@ -83,7 +83,7 @@ describe("UI-1 evidence bell", () => {
     expect(document.querySelector(`[data-notification-id="${item.id}"]`)).toBe(row);
     expect(row?.parentElement?.firstElementChild).toBe(row);
     expect(row?.querySelector('[class*="line-clamp"]')).toBeNull();
-    expect(row?.querySelector(".min-h-8.tabular-nums")).not.toBeNull();
+    expect(row?.querySelector(".min-h-4.tabular-nums")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
     expect(row?.querySelector(".bg-accent")).toHaveStyle({ visibility: "hidden" });
   });

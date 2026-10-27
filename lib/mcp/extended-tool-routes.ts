@@ -1,11 +1,7 @@
+import type { ApiOperationId } from "@/lib/api/operation-policy";
+import { operationPath } from "./operation-path";
 import type { RestCall } from "./rest-call";
 import type { JsonObject } from "./types";
-
-function required(input: JsonObject, key: string) {
-  const value = input[key];
-  if (typeof value !== "string" || !value.trim()) throw new Error(`${key} is required.`);
-  return encodeURIComponent(value);
-}
 
 function query(input: JsonObject, keys: string[]) {
   const params = new URLSearchParams();
@@ -43,15 +39,6 @@ function call(
     path,
     projectId: typeof input.project_id === "string" ? input.project_id : undefined,
   };
-}
-
-function project(input: JsonObject, resource = "") {
-  const base = `/projects/${required(input, "project_id")}`;
-  return resource ? `${base}/${resource}` : base;
-}
-
-function provider(input: JsonObject) {
-  return `${project(input, "providers")}/${required(input, "provider_id")}`;
 }
 
 function estimateQuery(input: JsonObject, keys: string[]) {
@@ -93,6 +80,7 @@ export function providerSettingsBody(input: JsonObject) {
 }
 
 export function dispatchExtendedToolRoute(name: string, input: JsonObject): RestCall | null {
+  const path = (operation: ApiOperationId) => operationPath(operation, input);
   switch (name) {
     case "getCloudImportCompatibility":
       return call(input, "/cloud/import/compatibility", "GET");
@@ -115,15 +103,15 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
         "GET",
       );
     case "updateProject":
-      return call(input, project(input), "PATCH", body(input, ["project_id"]));
+      return call(input, path("updateProject"), "PATCH", body(input, ["project_id"]));
     case "deleteProject":
-      return call(input, project(input), "DELETE");
+      return call(input, path("deleteProject"), "DELETE");
     case "getProjectDefaults":
-      return call(input, project(input, "defaults"), "GET");
+      return call(input, path("getProjectDefaults"), "GET");
     case "analyzeBacklinks":
       return call(
         input,
-        `${project(input, "backlinks")}${query(input, [
+        `${path("analyzeBacklinks")}${query(input, [
           "target",
           "target_scope",
           "mode",
@@ -144,11 +132,11 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
         throw new Error(
           "snapshot_ref must contain 1 to 32768 characters from the latest snapshot response.",
         );
-      return call(input, project(input, "backlinks/rows"), "POST", body(input, ["project_id"]));
+      return call(input, path("loadMoreBacklinkRows"), "POST", body(input, ["project_id"]));
     case "estimateBacklinksCost":
       return call(
         input,
-        `${project(input, "backlinks")}${estimateQuery(input, [
+        `${path("analyzeBacklinks")}${estimateQuery(input, [
           "target",
           "target_scope",
           "mode",
@@ -160,44 +148,24 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
       );
     case "analyzeDomainOverview":
       requireCostCap(input);
-      return call(
-        input,
-        project(input, "domain-overview/analyze"),
-        "POST",
-        body(input, ["project_id"]),
-      );
+      return call(input, path("analyzeDomainOverview"), "POST", body(input, ["project_id"]));
     case "loadDomainOverviewHistory":
-      return call(
-        input,
-        project(input, "domain-overview/history"),
-        "POST",
-        body(input, ["project_id"]),
-      );
+      return call(input, path("loadDomainOverviewHistory"), "POST", body(input, ["project_id"]));
     case "loadDomainOverviewKeywords":
-      return call(
-        input,
-        project(input, "domain-overview/keywords"),
-        "POST",
-        body(input, ["project_id"]),
-      );
+      return call(input, path("loadDomainOverviewKeywords"), "POST", body(input, ["project_id"]));
     case "loadDomainOverviewPages":
-      return call(
-        input,
-        project(input, "domain-overview/pages"),
-        "POST",
-        body(input, ["project_id"]),
-      );
+      return call(input, path("loadDomainOverviewPages"), "POST", body(input, ["project_id"]));
     case "estimateDomainOverviewCost":
-      return call(input, project(input, "domain-overview/analyze"), "POST", {
+      return call(input, path("analyzeDomainOverview"), "POST", {
         ...body(input, ["project_id"]),
         estimate_only: true,
       });
     case "createSignal":
-      return call(input, "/signals", "POST", body(input, ["project_id"]));
+      return call(input, path("createSignal"), "POST", body(input, ["project_id"]));
     case "listSignals":
       return call(
         input,
-        `${project(input, "signals")}${query(input, [
+        `${path("listSignals")}${query(input, [
           "cursor",
           "limit",
           "source",
@@ -210,27 +178,32 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
     case "listProjectApiKeys":
       return call(
         input,
-        `${project(input, "api-keys")}${query(input, ["cursor", "limit"])}`,
+        `${path("listProjectApiKeys")}${query(input, ["cursor", "limit"])}`,
         "GET",
       );
     case "createProjectApiKey":
-      return call(input, project(input, "api-keys"), "POST", body(input, ["project_id"]));
+      return call(input, path("createProjectApiKey"), "POST", body(input, ["project_id"]));
     case "setProviderEnabled":
-      return call(input, provider(input), "PATCH", { enabled: input.enabled });
+      return call(input, path("updateProviderSettings"), "PATCH", { enabled: input.enabled });
     case "setProviderPriority":
-      return call(input, provider(input), "PATCH", { priority: input.priority });
+      return call(input, path("updateProviderSettings"), "PATCH", { priority: input.priority });
     case "setPrimaryProvider":
       // Deprecated compatibility alias: primary=true promotes priority 0;
       // primary=false (and only false) is a legacy no-op. Default when the
       // field is omitted matches the legacy promote-to-primary semantics.
-      return call(input, provider(input), "PATCH", input.primary === false ? {} : { priority: 0 });
+      return call(
+        input,
+        path("updateProviderSettings"),
+        "PATCH",
+        input.primary === false ? {} : { priority: 0 },
+      );
     case "listStoredReports":
-      return call(input, project(input, "research/reports"), "GET");
+      return call(input, path("listStoredResearchReports"), "GET");
     case "getStoredReport": {
       const kind = typeof input.kind === "string" ? input.kind : "";
       return call(
         input,
-        `${project(input, "research/reports")}/${encodeURIComponent(kind)}${storedReportQuery(input, kind)}`,
+        `${path("listStoredResearchReports")}/${encodeURIComponent(kind)}${storedReportQuery(input, kind)}`,
         "GET",
       );
     }

@@ -76,10 +76,7 @@ describe("keyword research snapshot persistence", () => {
     mocks.findUniqueOrThrow.mockResolvedValue({ id: "snapshot_1" });
   });
 
-  it("does not write when the demo is disabled, the result is an estimate, or every source fails", async () => {
-    mocks.editable.mockReturnValue(false);
-    await expect(maybePersistKeywordResearchSnapshot(writeInput())).resolves.toBeNull();
-    mocks.editable.mockReturnValue(true);
+  it("does not write estimates or failed results", async () => {
     await expect(
       maybePersistKeywordResearchSnapshot(writeInput({ outcome: { ...outcome, estimate: true } })),
     ).resolves.toBeNull();
@@ -89,6 +86,32 @@ describe("keyword research snapshot persistence", () => {
       ),
     ).resolves.toBeNull();
     expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it("persists successful non-demo Research results, including cached results, with the original fetch time", async () => {
+    mocks.editable.mockReturnValue(false);
+    await maybePersistKeywordResearchSnapshot(
+      writeInput({ outcome: { ...outcome, cached: true } }),
+    );
+    expect(mocks.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          countryCode: "US",
+          languageCode: "en",
+          fetchedAt: new Date(outcome.fetchedAt),
+          rows: expect.arrayContaining([expect.objectContaining({ keyword: "zero-safe" })]),
+        }),
+      }),
+    );
+  });
+
+  it("retains a provider-returned seed separately from the visible suggestions", async () => {
+    await maybePersistKeywordResearchSnapshot(
+      writeInput({ seedResult: { ...outcome.rows[0], keyword: "seed" } }),
+    );
+    expect(mocks.updateMany.mock.calls[0][0].data.rows).toEqual(
+      expect.arrayContaining([expect.objectContaining({ keyword: "seed", _trackedSeed: true })]),
+    );
   });
 
   it("stores sanitized partial or zero-row successes from the oldest source age", async () => {

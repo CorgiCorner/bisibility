@@ -11,10 +11,9 @@ import {
   selectOAuthConsentScopes,
 } from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { OAuthConsentAccountBar } from "./OAuthConsentAccountBar";
 import { OAuthConsentExpired } from "./OAuthConsentExpired";
@@ -66,13 +65,12 @@ export function OAuthConsentForm({
   const offered = offeredOAuthAccessLevels(ceiling);
   const [pendingChoice, setPendingChoice] = useState<"accept" | "deny" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const form = useForm<ConsentValues>({
+  const form = useZodForm<ConsentValues>(consentSchema, {
     defaultValues: {
       accept: true,
       accessLevel: defaultOAuthAccessLevel(ceiling),
       allowApiTokens: false,
     },
-    resolver: zodResolver(consentSchema),
   });
   const watchedLevel = form.watch("accessLevel");
   const level: OAuthAccessLevel | null =

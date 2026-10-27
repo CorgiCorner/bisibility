@@ -3,7 +3,6 @@ import "server-only";
 import type { AlertExternalDeliveryPayload } from "../alerts/alert-delivery-payload";
 import {
   type AlertDeliveryChannel,
-  DeliveryHttpError,
   postSignedWebhook,
   recordDeliveryAttempt,
   sendAlertEmail,
@@ -12,17 +11,14 @@ import {
   type TriggeredAlertDeliveryPayload,
 } from "../alerts/delivery";
 import { deliverPushToProject } from "../alerts/push-delivery";
-import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "../alerts/webhook-target";
 import { prisma } from "../db/prisma";
-import { EmailBudgetExceededError, EmailSendError } from "../email/send";
 import { defaultPushSender, type PushMessage } from "../notifications/apns";
 import { notifyTriggeredAlertDelivered } from "../notifications/events";
 import {
-  classifyPermanentDeliveryFailure,
+  classifyDeliveryFailure,
   deliveryFailureMessage,
   deliveryStateForOutcomes,
   nonRetryableFailure,
-  rateLimitedFailure,
 } from "./delivery-failures";
 
 export const PUSH_NOT_CONFIGURED = "Push delivery is not configured.";
@@ -46,20 +42,7 @@ export async function deliverAlertEmailActivity(input: {
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error);
     await recordDeliveryAttempt(input.alertId, "email", "failed", errorMessage);
-    if (error instanceof EmailBudgetExceededError) {
-      throw nonRetryableFailure(errorMessage, "email_budget_exceeded");
-    }
-    if (error instanceof EmailSendError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    if (error instanceof EmailSendError) {
-      const classified = classifyPermanentDeliveryFailure(error, {
-        message: errorMessage,
-        status: error.status,
-      });
-      if (classified) throw classified;
-    }
-    throw error;
+    throw classifyDeliveryFailure(error, "email", errorMessage);
   }
 }
 
@@ -88,16 +71,7 @@ export async function deliverAlertWebhookActivity(input: {
       errorMessage,
       resolvedEndpointId,
     );
-    if (error instanceof DeliveryHttpError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    const classified = classifyPermanentDeliveryFailure(error, {
-      message: errorMessage,
-      permanentMessage: errorMessage.includes(PRIVATE_NETWORK_WEBHOOK_ERROR),
-      ...(error instanceof DeliveryHttpError ? { status: error.status } : {}),
-    });
-    if (classified) throw classified;
-    throw error;
+    throw classifyDeliveryFailure(error, "webhook", errorMessage);
   }
 }
 
@@ -116,16 +90,7 @@ export async function deliverAlertSlackActivity(input: {
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error);
     await recordDeliveryAttempt(input.alertId, "slack", "failed", errorMessage);
-    if (error instanceof DeliveryHttpError && error.status === 429) {
-      throw rateLimitedFailure(errorMessage, error.retryAfterSeconds);
-    }
-    const classified = classifyPermanentDeliveryFailure(error, {
-      message: errorMessage,
-      permanentMessage: errorMessage.startsWith("Slack alert send failed:"),
-      ...(error instanceof DeliveryHttpError ? { status: error.status } : {}),
-    });
-    if (classified) throw classified;
-    throw error;
+    throw classifyDeliveryFailure(error, "slack", errorMessage);
   }
 }
 

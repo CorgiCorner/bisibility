@@ -88,8 +88,14 @@ export function groupRankTrackerReportRows(
       volume: volumes.length ? volumes.reduce((sum, row) => sum + row.volume, 0) : null,
     };
     const row = groupRow(aggregate, children);
+    const researchScopes = new Set(
+      children.map(
+        (child) => `${child.location.gl.toLowerCase()}:${child.location.hl.toLowerCase()}`,
+      ),
+    );
     return {
       ...row,
+      research: researchScopes.size === 1 ? first.research : null,
       clicks: children.length === 1 ? first.clicks : null,
       ctr: children.length === 1 ? first.ctr : null,
       impressions: children.length === 1 ? first.impressions : null,
@@ -108,6 +114,12 @@ export function groupRankTrackerReportRows(
     const a = group.marketGrid?.kind === "parent" ? group.marketGrid.aggregate : null;
     if (!a) return null;
     const field = query.sort.field;
+    if (field === "researchVolume") return group.research?.volume ?? null;
+    if (field === "researchDifficulty") return group.research?.difficulty ?? null;
+    if (field === "researchCpc") return group.research?.cpc ?? null;
+    if (field === "researchIntent") return group.research?.intent ?? null;
+    if (field === "researchSource") return group.research?.sourceSeed ?? null;
+    if (field === "researchAt") return group.research?.fetchedAt ?? null;
     if (field === "position" || field === "sparkline") return a.position;
     if (field === "change") return a.change;
     if (field === "volume") return a.volume;

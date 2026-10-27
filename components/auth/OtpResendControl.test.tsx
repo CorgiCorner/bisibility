@@ -3,6 +3,7 @@ import {
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import type { HumanVerificationState } from "@/lib/verification/human-verification-client";
+import { deferred } from "@/tests/deferred";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { type ReactElement, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,14 +38,6 @@ function useRequiredVerification(): HumanVerificationState {
   };
 }
 
-function deferred() {
-  let resolve!: () => void;
-  const promise = new Promise<void>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
-
 describe("OtpResendControl concurrency", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -52,8 +45,8 @@ describe("OtpResendControl concurrency", () => {
   });
 
   it("starts once for rapid clicks and allows a fresh token after completion", async () => {
-    const first = deferred();
-    const second = deferred();
+    const first = deferred<void>();
+    const second = deferred<void>();
     const onResend = vi
       .fn()
       .mockImplementationOnce(() => first.promise)
@@ -90,7 +83,7 @@ describe("OtpResendControl concurrency", () => {
   });
 
   it("keeps self-host tokenless while preventing rapid re-entry", async () => {
-    const request = deferred();
+    const request = deferred<void>();
     const onResend = vi.fn(() => request.promise);
     render(
       <OtpResendControl

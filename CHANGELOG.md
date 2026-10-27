@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.44.0] - 2026-10-27
+
+### Added
+
+- Added sorting across administration tables and kept long IDs readable on one line.
+
+- Added research metrics and research actions to tracked keywords with the existing price review.
+
+### Changed
+
+- Improved keyword sorting and bulk controls, aligned notification summary actions and guidance, and made Prompt Playground an opt-in experiment.
+
+### Fixed
+
+- Fixed the SEO audit skill to use saved AI reports only and leave AI visibility research to its separate workflow.
+
+- Fixed saved-view responses to return public creator IDs required by API clients.
+
 ## [0.43.0] - 2026-10-26
 
 - Add sitemap reads and URL selection; paginate and sort beta indexing results, clarify timing and status filters, and add notification tabs.

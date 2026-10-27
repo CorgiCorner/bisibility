@@ -1,12 +1,10 @@
+import { notFound } from "@/tests/next-navigation";
 import { expect, it, vi } from "vitest";
 import Page from "./page";
 
 const mocks = vi.hoisted(() => ({
   read: vi.fn(async () => null),
   access: vi.fn(async () => ({ publicId: "prj_test" })),
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   resolveProjectAccess: mocks.access,
@@ -20,8 +18,11 @@ vi.mock("@/lib/notifications/check-summaries/details", () => ({
 }));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: vi.fn() }));
 vi.mock("@/i18n/document-locale.server", () => ({ resolveRegionalDocumentLocale: vi.fn() }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+
 it("UI-5 maps a missing or another recipient's summary to the normal not-found page", async () => {
+  notFound.mockImplementation(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  });
   await expect(
     Page({ params: Promise.resolve({ project: "prj_test", notificationPublicId: "ntf_test" }) }),
   ).rejects.toThrow("NEXT_NOT_FOUND");
@@ -31,7 +32,7 @@ it("UI-5 maps a missing or another recipient's summary to the normal not-found p
     "authenticated-viewer",
     "ntf_test",
   );
-  expect(mocks.notFound).toHaveBeenCalledTimes(1);
+  expect(notFound).toHaveBeenCalledTimes(1);
 });
 
 it("UI-5 stops before reading a non-member project", async () => {

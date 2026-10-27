@@ -2,7 +2,6 @@ import { defaultRankTrackerQueryState } from "@/lib/keywords/rank-tracker-query"
 import { marketManualRunSelection } from "@/lib/markets/manual-run-selection";
 import { describe, expect, it, vi } from "vitest";
 import { groupedFilterFixture } from "./rank-tracker-grouped-filter-fixtures";
-import { buildRankTrackerGroupedSql } from "./rank-tracker-grouped-sql";
 import { withGroupedFilterDatabase } from "./rank-tracker-grouped-test-database";
 import { buildRankTrackerListSql } from "./rank-tracker-list-sql";
 import { resolveRankTrackerExportKeywordIdsForProject } from "./rank-tracker-selection-core";
@@ -132,15 +131,10 @@ describe("registered empty market scopes", () => {
                 publicIds: true,
                 selectionLimit: 100,
               }),
-              buildRankTrackerGroupedSql(
-                "project_empty",
-                { ...query, grouped: true },
-                { candidatesOnly: true },
-              ),
             ]) {
               const result = (await client.query(statement.text, statement.values)).rows[0];
               expect(result.matchedTargetCount).toBe(0);
-              expect(result.keywordIds ?? result.groups).toEqual([]);
+              expect(result.keywordIds).toEqual([]);
             }
           },
         );
@@ -161,9 +155,9 @@ describe("registered empty market scopes", () => {
         await client.query(
           `INSERT INTO project_markets ("projectId", "locationId", status) VALUES ('other_project', 'foreign', 'active')`,
         );
-        const statement = buildRankTrackerGroupedSql("project_empty", {
+        const statement = buildRankTrackerListSql("project_empty", {
           ...defaultRankTrackerQueryState,
-          grouped: true,
+          grouped: false,
           lens: { device: "all", locationId: "ES:es" },
         });
         const result = (await client.query(statement.text, statement.values)).rows[0];
@@ -176,7 +170,7 @@ describe("registered empty market scopes", () => {
   });
 });
 
-it("distinguishes equal-count Spain scopes and filters by opaque keys in both query modes", async () => {
+it("distinguishes equal-count Spain scopes and filters by opaque keys in flat candidate scans", async () => {
   const fixture = groupedFilterFixture();
   const locations = [
     {
@@ -199,42 +193,32 @@ it("distinguishes equal-count Spain scopes and filters by opaque keys in both qu
   await withGroupedFilterDatabase("project_empty", locations, targets, async (client) => {
     await client.query(`CREATE TEMP TABLE keyword_schedules ("keywordId" text, frequency text) ON COMMIT DROP;
       CREATE TEMP TABLE project_defaults ("projectId" text, frequency text) ON COMMIT DROP;`);
-    for (const grouped of [false, true]) {
-      for (const locationId of [null, "opaque-a", "opaque-b", "opaque-c"]) {
-        const query = {
-          ...defaultRankTrackerQueryState,
-          grouped,
-          lens: { device: "all" as const, locationId },
-        };
-        const statement = grouped
-          ? buildRankTrackerGroupedSql("project_empty", query)
-          : buildRankTrackerListSql("project_empty", query);
-        const result = (await client.query(statement.text, statement.values)).rows[0];
-        expect(result.locations).toEqual([
-          { count: 1, displayName: "Spain / English", id: "opaque-a", kind: "country" },
-          { count: 1, displayName: "Spain / Spanish", id: "opaque-b", kind: "country" },
-          { count: 0, displayName: "Spain / French", id: "opaque-c", kind: "country" },
-        ]);
-        expect(result.matchedTargetCount).toBe(
-          locationId === null ? 2 : locationId === "opaque-c" ? 0 : 1,
-        );
-        const ids = grouped
-          ? result.groups.flatMap((group: { members: { id: string }[] }) =>
-              group.members.map((member) => member.id),
-            )
-          : result.keywordIds;
-        expect(ids).toEqual(
-          locationId === null
-            ? grouped
-              ? ["target_0", "target_1"]
-              : ["target_1", "target_0"]
-            : locationId === "opaque-a"
-              ? ["target_0"]
-              : locationId === "opaque-b"
-                ? ["target_1"]
-                : [],
-        );
-      }
+    for (const locationId of [null, "opaque-a", "opaque-b", "opaque-c"]) {
+      const query = {
+        ...defaultRankTrackerQueryState,
+        grouped: false,
+        lens: { device: "all" as const, locationId },
+      };
+      const statement = buildRankTrackerListSql("project_empty", query);
+      const result = (await client.query(statement.text, statement.values)).rows[0];
+      expect(result.locations).toEqual([
+        { count: 1, displayName: "Spain / English", id: "opaque-a", kind: "country" },
+        { count: 1, displayName: "Spain / Spanish", id: "opaque-b", kind: "country" },
+        { count: 0, displayName: "Spain / French", id: "opaque-c", kind: "country" },
+      ]);
+      expect(result.matchedTargetCount).toBe(
+        locationId === null ? 2 : locationId === "opaque-c" ? 0 : 1,
+      );
+      const ids = result.keywordIds;
+      expect(ids).toEqual(
+        locationId === null
+          ? ["target_1", "target_0"]
+          : locationId === "opaque-a"
+            ? ["target_0"]
+            : locationId === "opaque-b"
+              ? ["target_1"]
+              : [],
+      );
     }
   });
 });

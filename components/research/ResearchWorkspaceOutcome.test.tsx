@@ -83,3 +83,25 @@ it("does not offer a new paid retry for a retained pending charge", () => {
   expect(screen.getByText("Charge pending")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Retry/ })).not.toBeInTheDocument();
 });
+
+it("shows a storage warning while retaining the completed Research result", () => {
+  render(
+    <Fixture
+      outcome={{
+        ok: true,
+        cached: false,
+        cachedUntil: "2026-10-02T00:00:00Z",
+        connections: [],
+        costCents: 0,
+        fetchedAt: "2026-10-01T00:00:00Z",
+        provider: "Example",
+        rows: [],
+        sources: [],
+        storageWarning: true,
+      }}
+    />,
+  );
+  expect(
+    screen.getByText("Research finished, but its results could not be saved for Tracked."),
+  ).toBeVisible();
+});

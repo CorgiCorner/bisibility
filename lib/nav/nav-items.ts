@@ -143,7 +143,10 @@ export const navItemGroups = [
   },
 ] as const satisfies readonly NavItemGroupDescriptor[];
 
-export type NavEntry = Omit<NavItem, "href"> & { segment: string };
+export type NavEntry = Omit<NavItem, "href"> & {
+  segment: string;
+  experimentalModule?: ExperimentalModuleKey;
+};
 
 type RailNavEntry = NavEntry & { experimentalModule?: ExperimentalModuleKey };
 

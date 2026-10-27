@@ -1,33 +1,29 @@
+import { operationPolicy } from "@/lib/api/operation-policy";
+import { operationPath } from "./operation-path";
 import type { RestCall } from "./rest-call";
 import type { JsonObject } from "./types";
 
-const routes = {
-  getAiResearchCatalog: ["GET", "ai-catalog"],
-  getProjectContext: ["GET", "context"],
-  updateProjectContext: ["PATCH", "context"],
-  listAgentReports: ["GET", "agent-reports"],
-  createAgentReport: ["POST", "agent-reports"],
-  getAgentReport: ["GET", "agent-reports"],
-  analyzeBrandVisibility: ["POST", "brand-visibility"],
-  compareAiPrompts: ["POST", "prompt-explorer"],
-  runSiteAudit: ["POST", "site-audits"],
-  listSiteAudits: ["GET", "site-audits"],
-  getSiteAudit: ["GET", "site-audits"],
-} as const;
-
-function required(input: JsonObject, key: string) {
-  const value = input[key];
-  if (typeof value !== "string" || !value.trim()) throw new Error(`${key} is required.`);
-  return encodeURIComponent(value);
-}
+// MCP membership remains an explicit opt-in, independent of new REST policies.
+const routes = [
+  "getAiResearchCatalog",
+  "getProjectContext",
+  "updateProjectContext",
+  "listAgentReports",
+  "createAgentReport",
+  "getAgentReport",
+  "analyzeBrandVisibility",
+  "compareAiPrompts",
+  "runSiteAudit",
+  "listSiteAudits",
+  "getSiteAudit",
+] as const;
 
 export function dispatchResearchWorkspaceTool(name: string, input: JsonObject): RestCall | null {
-  if (!(name in routes)) return null;
-  const [method, resource] = routes[name as keyof typeof routes];
-  let path = `/projects/${required(input, "project_id")}/${resource}`;
-  if (name === "getAgentReport" || name === "getSiteAudit") {
-    path += `/${required(input, "report_id")}`;
-  }
+  const operation = routes.find((candidate) => candidate === name);
+  if (!operation) return null;
+  const { method } = operationPolicy[operation];
+  if (method === "PUT" || method === "DELETE") return null;
+  let path = operationPath(operation, input);
   if (name === "listAgentReports") {
     const query = new URLSearchParams();
     for (const key of ["kind", "limit", "cursor"]) {

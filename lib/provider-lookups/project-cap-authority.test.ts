@@ -4,7 +4,6 @@ import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-boots
 import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import { setProjectSpendingLimit } from "@/lib/metering/project-spending-limit";
 import { adoptedTimestampQuery, usageReadFixture } from "@/lib/metering/read.test-fixture";
-import { getUpcomingView } from "@/lib/queries/upcoming-view";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -94,11 +93,11 @@ it.each(["connected", "connectionless"])(
   },
 );
 
-it("upcoming checks reread the Store after each settings change", async () => {
+it("the active project cap reader rereads the Store after each settings change", async () => {
   await setCap(777);
-  expect((await getUpcomingView("project_1")).forecast?.capCents).toBe(777);
+  expect(await projectBudgetCapCents("project_1")).toBe(777);
   await setCap(222);
-  expect((await getUpcomingView("project_1")).forecast?.capCents).toBe(222);
+  expect(await projectBudgetCapCents("project_1")).toBe(222);
 });
 it("bootstraps a new project at 5000 and never replaces settings changes", async () => {
   const tx = mocks.prisma as unknown as PrismaTypes.TransactionClient;

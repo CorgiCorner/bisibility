@@ -1,62 +1,39 @@
 "use client";
 
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type {
-  DataTableColumn,
-  DataTableDensity,
-  DataTablePagination,
-  DataTableSort,
-} from "@/components/ui/data-table/data-table-types";
+import type { DataTableProps } from "@/components/ui/data-table/data-table-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 import { KeywordNoRowsOverlay, type KeywordNoRowsState } from "./KeywordTableStatus";
+import { pickGridProps } from "./keywords-grid-projection";
 
-type KeywordGridViewportProps = {
-  columnOrder?: readonly string[];
-  columnSizing: Record<string, number>;
-  columns: readonly DataTableColumn<KeywordRow>[];
-  columnVisibility: Record<string, boolean>;
-  density: DataTableDensity;
-  footerStart?: ReactNode;
-  id: string;
-  noRowsState?: KeywordNoRowsState;
-  onColumnSizingChange: (next: Record<string, number>) => void;
-  onColumnVisibilityChange: (next: Record<string, boolean>) => void;
-  onNavigate: (keywordId: string) => void;
-  onPaginationChange: (next: { page: number; pageSize: number }) => void;
-  onSelectionChange: (next: ReadonlySet<string>) => void;
-  onSortingChange: (next: DataTableSort | null) => void;
-  pagination: DataTablePagination;
-  paginationMode?: "client" | "server";
-  pending?: boolean;
-  rows: readonly KeywordRow[];
-  selection: ReadonlySet<string>;
-  sorting: DataTableSort | null;
-  sortingMode?: "client" | "server";
-};
+const requiredTableProps = [
+  "columnSizing",
+  "columns",
+  "columnVisibility",
+  "density",
+  "id",
+  "onColumnSizingChange",
+  "onColumnVisibilityChange",
+  "onPaginationChange",
+  "onSelectionChange",
+  "onSortingChange",
+  "pagination",
+  "rows",
+  "selection",
+  "sorting",
+] as const;
+const optionalTableProps = ["columnOrder", "footerStart", "pending"] as const;
+const tableProps = [...requiredTableProps, ...optionalTableProps];
+type TableProps = DataTableProps<KeywordRow>;
+type KeywordGridViewportProps = Required<Pick<TableProps, (typeof requiredTableProps)[number]>> &
+  Pick<TableProps, (typeof optionalTableProps)[number] | "paginationMode" | "sortingMode"> & {
+    pagination: NonNullable<TableProps["pagination"]>;
+    noRowsState?: KeywordNoRowsState;
+    onNavigate: (keywordId: string) => void;
+  };
 
-export function KeywordGridViewport({
-  columnOrder,
-  columnSizing,
-  columns,
-  columnVisibility,
-  density,
-  footerStart,
-  id,
-  noRowsState,
-  onColumnSizingChange,
-  onColumnVisibilityChange,
-  onNavigate,
-  onPaginationChange,
-  onSelectionChange,
-  onSortingChange,
-  pagination,
-  pending,
-  rows,
-  selection,
-  sorting,
-}: Readonly<KeywordGridViewportProps>) {
+export function KeywordGridViewport(props: Readonly<KeywordGridViewportProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   return (
     <div className="min-w-0 overflow-hidden">
@@ -65,30 +42,14 @@ export function KeywordGridViewport({
         data-testid="keywords-grid-viewport"
       >
         <DataTable
+          {...pickGridProps(props, tableProps)}
           bordered={false}
           ariaLabel={t("tableAria")}
-          columnOrder={columnOrder}
-          columnSizing={columnSizing}
-          columns={columns}
-          columnVisibility={columnVisibility}
-          density={density}
-          emptyState={<KeywordNoRowsOverlay state={noRowsState} />}
-          footerStart={footerStart}
-          id={id}
+          emptyState={<KeywordNoRowsOverlay state={props.noRowsState} />}
           layout="fill"
-          onColumnSizingChange={onColumnSizingChange}
-          onColumnVisibilityChange={onColumnVisibilityChange}
-          onPaginationChange={onPaginationChange}
-          onRowClick={(row) => onNavigate(row.id)}
-          onSelectionChange={onSelectionChange}
-          onSortingChange={onSortingChange}
-          pagination={pagination}
+          onRowClick={(row) => props.onNavigate(row.id)}
           paginationMode="server"
-          pending={pending}
-          rows={rows}
           rowHeight={(row) => (row.rankEvidence ? 112 : undefined)}
-          selection={selection}
-          sorting={sorting}
           sortingMode="server"
         />
       </div>

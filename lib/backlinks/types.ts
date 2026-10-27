@@ -6,7 +6,13 @@ import type {
 import type { ActionPaymentInput } from "@/lib/action-payment/session";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
-import type { BacklinkFlag, BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import type {
+  BacklinkHistoryResult,
+  BacklinkRow,
+  BacklinkRowMode,
+  BacklinkSummary,
+  BacklinkTargetScope,
+} from "@/lib/providers/backlink-types";
 import type { ProviderUsageFailurePhase } from "@/lib/providers/usage";
 
 export type BacklinksServiceContext = {
@@ -38,42 +44,11 @@ export type LoadMoreBacklinkRowsOptions = ActionPaymentInput & {
   targetScope: BacklinkTargetScope;
 };
 
-export type BacklinksSummary = {
-  backlinksTotal: number;
-  brokenBacklinks: number;
-  brokenPages: number;
-  dofollowPct: number;
-  domainRank: number;
-  lostBacklinks: number;
-  lostReferringDomains: number;
-  newBacklinks: number;
-  newReferringDomains: number;
-  referringDomainsTotal: number;
-  referringPages: number;
-  spamScore: number;
-};
+export type BacklinksSummary = BacklinkSummary;
 
-export type BacklinksHistoryMonth = {
-  lostLinks: number;
-  lostReferringDomains: number;
-  month: string;
-  newLinks: number;
-  newReferringDomains: number;
-};
+export type BacklinksHistoryMonth = BacklinkHistoryResult["rows"][number];
 
-export type BacklinksRow = {
-  anchor: string;
-  domainAuthority: number;
-  firstSeen: string | null;
-  flags: BacklinkFlag[];
-  linksCount: number;
-  lostAt: string | null;
-  sourceDomain: string;
-  sourceUrl: string;
-  spamScore: number;
-  status: "active" | "new" | "lost";
-  targetUrl: string;
-};
+export type BacklinksRow = BacklinkRow;
 
 export type BacklinksSnapshot = {
   originalPayment?: ActionPaymentReceipt;

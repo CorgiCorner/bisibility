@@ -1,15 +1,14 @@
 "use client";
 
+import { TableSortButton } from "@/components/ui/TableSortButton";
 import {
   tableHeaderClassName,
   tableHeaderFrameBorderClassName,
 } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { flexRender, type Header, type Table } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
-import { type CSSProperties, type ReactNode, useId } from "react";
+import { type CSSProperties, useId } from "react";
 import { DataTableResizeHandle } from "./DataTableResizeHandle";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
 import { dataTablePinnedEdge, dataTablePinnedStyle } from "./data-table-pinning";
@@ -18,7 +17,6 @@ import {
   toggleDataTablePageSelection,
 } from "./data-table-selection";
 import { dataTableColumnWidthVariable } from "./data-table-sizing";
-import { nextDataTableSort } from "./data-table-sorting";
 import { dataTableHeaderCellClassName, dataTablePinnedEdgeClassName } from "./data-table-styles";
 import type { DataTableColumn, DataTableRowBase, DataTableSort } from "./data-table-types";
 import { DATA_TABLE_SELECTION_COLUMN_ID } from "./use-data-table";
@@ -41,62 +39,6 @@ function headerLabel<TRow extends DataTableRowBase>(header: Header<TRow, unknown
   if (definition.meta?.title) return definition.meta.title;
   if (typeof definition.header === "string") return definition.header;
   return header.column.id;
-}
-
-function SortGlyph({ direction }: Readonly<{ direction?: "asc" | "desc" }>) {
-  if (direction === "asc") return <CaretUp aria-hidden size={9} weight="regular" />;
-  if (direction === "desc") return <CaretDown aria-hidden size={9} weight="regular" />;
-  return (
-    <span aria-hidden className="grid leading-none">
-      <CaretUp className="row-start-1" size={7} weight="regular" />
-      <CaretDown className="row-start-2" size={7} weight="regular" />
-    </span>
-  );
-}
-
-function SortableHeader<TRow extends DataTableRowBase>({
-  content,
-  header,
-  label,
-  labelId,
-  onSortingChange,
-  sorting,
-}: Readonly<{
-  content: ReactNode;
-  header: Header<TRow, unknown>;
-  label: string;
-  labelId: string;
-  onSortingChange: (sort: DataTableSort | null) => void;
-  sorting: DataTableSort | null;
-}>) {
-  const t = useTranslations("shared.controls.dataTable");
-  const definition = header.column.columnDef as DataTableColumn<TRow>;
-  const field = definition.meta?.sortField ?? header.column.id;
-  const active = sorting?.field === field ? sorting.direction : undefined;
-  const next = nextDataTableSort(sorting, field, Boolean(definition.sortDescFirst));
-  const action = next
-    ? next.direction === "asc"
-      ? t("sortAscending", { column: label })
-      : t("sortDescending", { column: label })
-    : t("clearSort", { column: label });
-  return (
-    <button
-      aria-label={action}
-      aria-sort={active ? (active === "asc" ? "ascending" : "descending") : "none"}
-      className={cn(
-        "flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden p-0 [font:inherit] [letter-spacing:inherit] [text-transform:inherit] hover:text-fg",
-        definition.meta?.align === "end" ? "justify-end" : "justify-start",
-        active ? "text-accent-text" : "text-fg-muted",
-      )}
-      onClick={() => onSortingChange(next)}
-      type="button"
-    >
-      <span className="truncate" id={labelId}>
-        {content}
-      </span>
-      <SortGlyph direction={active} />
-    </button>
-  );
 }
 
 export function DataTableHeader<TRow extends DataTableRowBase>({
@@ -204,14 +146,17 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
                   }
                 />
               ) : sortable ? (
-                <SortableHeader
-                  content={content}
-                  header={header}
+                <TableSortButton
+                  field={definition.meta?.sortField ?? header.column.id}
+                  descendingFirst={Boolean(definition.sortDescFirst)}
+                  align={definition.meta?.align}
                   label={label}
                   labelId={labelId}
                   onSortingChange={onSortingChange}
                   sorting={sorting}
-                />
+                >
+                  {content}
+                </TableSortButton>
               ) : (
                 <span className="truncate" id={labelId}>
                   {content}

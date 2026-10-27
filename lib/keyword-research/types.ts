@@ -37,6 +37,7 @@ export type KeywordResearchSourceDiagnostic = {
 export type { ProviderLookupFailure };
 
 export type KeywordResearchSuccess = {
+  storageWarning?: boolean;
   payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   cached: boolean;
   cachedUntil: string;

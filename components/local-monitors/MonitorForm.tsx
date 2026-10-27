@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import type {
   MonitorDetail,
   MonitorSaveResult,
@@ -18,7 +18,6 @@ import {
 } from "@/lib/local-monitors/form-model";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { MonitorCenterPicker } from "./MonitorCenterPicker";
 import { MonitorField } from "./MonitorField";
 import { MonitorFields } from "./MonitorFields";
@@ -49,8 +48,7 @@ export function MonitorForm({
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<MonitorSaveResult | null>(null);
   const key = useRef<{ body: string; value: string } | null>(null);
-  const form = useForm<MonitorFormValues>({
-    resolver: zodResolver(monitorFormSchema),
+  const form = useZodForm<MonitorFormValues>(monitorFormSchema, {
     defaultValues: monitorFormDefaults(current),
   });
   const locationId = form.watch("locationId");

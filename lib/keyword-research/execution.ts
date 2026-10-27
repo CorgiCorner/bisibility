@@ -1,3 +1,4 @@
+import type { ResearchKeywordRow } from "@/lib/providers/types";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import {
   keywordResearchCachedUntil,
@@ -13,6 +14,17 @@ import type {
   KeywordResearchSourceEstimate,
   KeywordResearchSourceReason,
 } from "./types";
+
+export function findResearchSeed(
+  rows: ResearchKeywordRow[],
+  seed: string,
+  source: KeywordResearchSource,
+) {
+  const found = rows.find(
+    (row) => normalizeResearchKeyword(row.keyword) === normalizeResearchKeyword(seed),
+  );
+  return found ? { ...found, source } : undefined;
+}
 
 export function keywordResearchSourceKey(input: {
   connectionId: string;

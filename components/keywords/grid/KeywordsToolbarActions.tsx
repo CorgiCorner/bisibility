@@ -13,6 +13,7 @@ import { MenuItem } from "@/components/ui/MenuItem";
 import { trackKeywordAction } from "@/lib/analytics/product-interactions";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
@@ -39,6 +40,8 @@ type KeywordsToolbarActionsProps = {
   exportDisabled?: boolean;
   onOpenExport: () => void;
   onOpenFilters: () => void;
+  onRefresh: () => void;
+  refreshing: boolean;
 };
 
 export function KeywordsToolbarActions({
@@ -57,8 +60,11 @@ export function KeywordsToolbarActions({
   exportDisabled,
   onOpenExport,
   onOpenFilters,
+  onRefresh,
+  refreshing,
 }: Readonly<KeywordsToolbarActionsProps>) {
   const t = useTranslations("projectRankTracker.list.toolbar");
+  const filterT = useTranslations("projectRankTracker.list.filterBar");
   const [transferAnchor, setTransferAnchor] = useState<null | HTMLElement>(null);
   const { readOnly } = useProjectWriteMode();
   const mobileTooltips = useMediaQuery("(max-width:1023px)");
@@ -70,7 +76,7 @@ export function KeywordsToolbarActions({
   }
 
   return (
-    <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
       <span className="inline-flex">
         <DataTableColumnsMenu
           footerContent={columnOrderControl}
@@ -194,19 +200,36 @@ export function KeywordsToolbarActions({
           </ProjectReadOnlyTooltip>
         </span>
       ) : null}
-      {onAddKeyword ? (
-        <ProjectReadOnlyTooltip>
-          <KeywordsToolbarButton
-            compactBelowXl
-            showTooltip
-            disabled={readOnly}
-            label={t("addKeyword")}
-            onClick={() => transfer("add", onAddKeyword)}
-            startIcon={<Plus size={15} weight="regular" className="text-current" />}
-            variant="primary"
-          />
-        </ProjectReadOnlyTooltip>
-      ) : null}
+      <span className="inline-flex shrink-0 items-center gap-1.5">
+        <KeywordsToolbarButton
+          label={filterT("refreshTable")}
+          loading={refreshing}
+          onClick={onRefresh}
+          showTooltip
+          startIcon={
+            <ArrowClockwise
+              aria-hidden
+              size={15}
+              weight="regular"
+              className={toolbarSecondaryIconClassName}
+            />
+          }
+          variant="secondary"
+        />
+        {onAddKeyword ? (
+          <ProjectReadOnlyTooltip>
+            <KeywordsToolbarButton
+              compactBelowXl
+              showTooltip
+              disabled={readOnly}
+              label={t("addKeyword")}
+              onClick={() => transfer("add", onAddKeyword)}
+              startIcon={<Plus size={15} weight="regular" className="text-current" />}
+              variant="primary"
+            />
+          </ProjectReadOnlyTooltip>
+        ) : null}
+      </span>
     </div>
   );
 }

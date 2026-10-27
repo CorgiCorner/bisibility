@@ -2,6 +2,7 @@ import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { ToastContext } from "@/components/ui/toast-context";
 import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
+import { deferred } from "@/tests/deferred";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,14 +31,6 @@ async function openSwitcher(workspaces: WorkspaceSummary[] = mockWorkspaces, can
 
 function star(name: string) {
   return screen.getByRole("button", { name: `Default project: ${name}` });
-}
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
 }
 
 describe("WorkspaceSwitcher default project star", () => {

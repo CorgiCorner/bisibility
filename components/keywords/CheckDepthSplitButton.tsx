@@ -14,12 +14,13 @@ import { VISIBILITY_HORIZON } from "@/lib/visibility/definition";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 export type CheckDepthSplitButtonSize = "md" | "xs";
 
 type CheckDepthSplitButtonProps = {
   actionLabel: string;
+  actionDescription?: string;
   compactActionLabel?: string;
   caretAriaLabel?: string;
   copy?: CheckDepthSplitButtonCopy;
@@ -59,6 +60,7 @@ function splitButtonStyle(size: CheckDepthSplitButtonSize, variant: "primary" | 
 
 export function CheckDepthSplitButton({
   actionLabel,
+  actionDescription,
   compactActionLabel,
   caretAriaLabel,
   copy,
@@ -73,6 +75,7 @@ export function CheckDepthSplitButton({
   variant = "secondary",
 }: Readonly<CheckDepthSplitButtonProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
+  const actionDescriptionId = useId();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const { projectRef } = useProjectWriteMode();
   const compact = size === "xs";
@@ -88,12 +91,13 @@ export function CheckDepthSplitButton({
         content={
           currentDepth !== null && currentDepth < VISIBILITY_HORIZON
             ? (copy?.shallowVisibility ?? t("shallowVisibility"))
-            : null
+            : (actionDescription ?? null)
         }
         semantics="description"
       >
         <ButtonGroup variant={variant} style={compact ? { height: 30 } : undefined}>
           <Button
+            aria-describedby={actionDescription ? actionDescriptionId : undefined}
             aria-label={compactActionLabel ? actionLabel : undefined}
             variant={variant}
             size={size}
@@ -135,6 +139,11 @@ export function CheckDepthSplitButton({
           </Button>
         </ButtonGroup>
       </Tooltip>
+      {actionDescription ? (
+        <span className="sr-only" id={actionDescriptionId}>
+          {actionDescription}
+        </span>
+      ) : null}
       <Menu
         anchorEl={menuAnchor}
         onClose={() => setMenuAnchor(null)}

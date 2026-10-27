@@ -68,7 +68,7 @@ describe("RunPage", () => {
     const run = { ...runPageFixture.run, id: "rcr_9d2e41abcdef" };
     renderPage({ run });
 
-    expect(screen.getByText("rcr_9d2e41").parentElement).toHaveAttribute("title", run.id);
+    expect(screen.getByText("rcr_9d2e41abcdef").parentElement).toHaveAttribute("title", run.id);
     expect(screen.getByRole("button", { name: `Copy run ID ${run.id}` })).toBeInTheDocument();
   });
 

@@ -1,227 +1,24 @@
 "use client";
-
 import { Button } from "@/components/usagekit/primitives/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/usagekit/primitives/table";
-import { UsageSpinner, UsageStatus, usageMotion } from "@/components/usagekit/usage-motion";
+import { usageMotion } from "@/components/usagekit/usage-motion";
 import type { Meter, UsageQuery } from "@usagekit/core";
 import { serialize, useMeterBinding, useUsageView } from "@usagekit/react";
-import type { Figure, UsageView } from "@usagekit/views";
-import type { ReactNode } from "react";
+import type { UsageView } from "@usagekit/views";
 import { useState } from "react";
-import { certaintyTone, usageTableFigure as figure } from "./usage-table-format";
+import { UsageTable, type UsageTableProps, usageTableLabels } from "./usage-table-view";
 
-export const usageTableLabels = {
-  title: "Usage detail",
-  funding: "Funding source",
-  byok: "Own key",
-  platform: "Platform funded",
-  cost: "Cost",
-  customerCharges: "Customer charges",
-  cents: "cents",
-  certainty: "Certainty",
-  unknownOperations: "Unknown operations",
-  measured: "Measured",
-  estimated: "Estimated",
-  unknown: "Unknown",
-  unavailable: "Unavailable",
-  loading: "Loading usage.",
-  empty: "No usage in this period.",
-  forbidden: "You cannot view usage for this scope.",
-  failed: "Usage is unavailable right now.",
-  next: "Next page",
-  first: "First page",
-};
-export type UsageTableLabels = typeof usageTableLabels;
-
-const frame = "rounded-xl border min-w-0 overflow-hidden border-border";
-const head = "h-10 px-4 text-xs font-medium text-fg-muted";
-const cell = "px-4 py-3";
-
-export type UsageTableProps = {
-  view: UsageView | null;
-  labels?: Partial<UsageTableLabels>;
-  hideMeasured?: boolean;
-  /** Column headings per dimension; the dimension name is the default. */
-  dimensionLabels?: Partial<Record<string, string>>;
-  unitLabels?: Partial<Record<string, string>>;
-  onNextPage?: (cursor: string) => void;
-  onFirstPage?: () => void;
-  /** A newer page is loading; the current rows stay visible but dimmed. */
-  busy?: boolean;
-  formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
-  formatDimension?: (dimension: string, value: string, row: UsageView["rows"][number]) => ReactNode;
-  showFunding?: boolean;
-  formatFunding?: (source: UsageView["rows"][number]["fundingSource"]) => ReactNode;
-  metadata?: ReactNode;
-  details?: ReactNode;
-};
-
-/** Renders one UsageView page. Amounts are the view model's exact text, never recomputed. */
-export function UsageTable({
-  view,
-  labels: custom,
-  hideMeasured = false,
-  dimensionLabels = {},
-  unitLabels = {},
-  onNextPage,
-  onFirstPage,
-  busy = false,
-  formatFigure,
-  formatUnit,
-  formatDimension,
-  showFunding = false,
-  formatFunding,
-  metadata,
-  details,
-}: UsageTableProps) {
-  const labels = { ...usageTableLabels, ...custom };
-  if (!view)
-    return (
-      <div role="status" className={frame}>
-        <span className="sr-only">{labels.loading}</span>
-        {[0, 1, 2].map((row) => (
-          <span
-            key={row}
-            aria-hidden
-            className="px-4 py-3 block border-b border-border last:border-0"
-          >
-            <span className="block h-4 w-full max-w-md rounded bg-fg/[0.07] animate-pulse motion-reduce:animate-none" />
-          </span>
-        ))}
-      </div>
-    );
-  if (view.state === "forbidden" || view.state === "unavailable")
-    return (
-      <p
-        role="status"
-        className={`rounded-lg border border-dashed px-4 py-3.5 text-sm border-border text-fg-muted ${usageMotion.enter}`}
-      >
-        {view.state === "forbidden" ? labels.forbidden : labels.failed}
-      </p>
-    );
-  return (
-    <div className="flex min-w-0 flex-col gap-3">
-      {metadata}
-      <div className={frame}>
-        <Table
-          tabIndex={0}
-          aria-label={labels.title}
-          aria-busy={busy || undefined}
-          className={`focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${busy ? "opacity-60" : ""} ${usageMotion.settle}`}
-        >
-          <TableHeader className="bg-bg-sunken">
-            <TableRow className="hover:bg-transparent">
-              {view.groupBy.map((d) => (
-                <TableHead key={d} className={head}>
-                  {dimensionLabels[d] ?? d}
-                </TableHead>
-              ))}
-              {showFunding && <TableHead className={head}>{labels.funding}</TableHead>}
-              {view.units.map((unit) => (
-                <TableHead key={unit} className={`${head} text-right`}>
-                  {unitLabels[unit] ??
-                    formatUnit?.(unit) ??
-                    (unit === "customer_cents" ? labels.customerCharges : unit)}
-                </TableHead>
-              ))}
-              <TableHead className={`${head} text-right`}>{labels.cost}</TableHead>
-              <TableHead className={head}>{labels.certainty}</TableHead>
-              <TableHead className={`${head} text-right`}>{labels.unknownOperations}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {view.state === "empty" ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={view.groupBy.length + view.units.length + 3 + (showFunding ? 1 : 0)}
-                  className="text-sm px-4 py-8 text-center text-fg-muted"
-                >
-                  {labels.empty}
-                </TableCell>
-              </TableRow>
-            ) : (
-              view.rows.map((row) => (
-                <TableRow
-                  key={row.key}
-                  className="transition-[background-color,opacity] duration-300 starting:opacity-0 motion-reduce:transition-none"
-                >
-                  {view.groupBy.map((d) => (
-                    <TableCell key={d} className={`${cell} font-medium`}>
-                      {formatDimension?.(d, row.dimensions[d] ?? "", row) ??
-                        row.dimensions[d] ??
-                        ""}
-                    </TableCell>
-                  ))}
-                  {showFunding && (
-                    <TableCell className={cell}>
-                      {formatFunding?.(row.fundingSource) ?? labels[row.fundingSource]}
-                    </TableCell>
-                  )}
-                  {view.units.map((unit) => (
-                    <TableCell key={unit} className={`${cell} text-right tabular-nums`}>
-                      {figure(row.units[unit] ?? "unavailable", labels, {
-                        formatFigure,
-                        formatUnit,
-                      })}
-                    </TableCell>
-                  ))}
-                  <TableCell className={`${cell} text-right tabular-nums`}>
-                    {figure(row.cost, labels, { formatFigure, formatUnit })}
-                  </TableCell>
-                  <TableCell className={cell}>
-                    {(!hideMeasured || row.certainty !== "measured") && (
-                      <UsageStatus tone={certaintyTone[row.certainty]}>
-                        {labels[row.certainty]}
-                      </UsageStatus>
-                    )}
-                  </TableCell>
-                  <TableCell
-                    className={`${cell} text-right tabular-nums ${row.unknownOperations === "0" ? "text-fg-muted" : "font-medium"}`}
-                  >
-                    {row.unknownOperations}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      {details}
-      {(onFirstPage || (onNextPage && view.nextCursor)) && (
-        <div className="flex justify-end gap-2">
-          {onFirstPage && (
-            <Button variant="outline" size="sm" disabled={busy} onClick={onFirstPage}>
-              {labels.first}
-            </Button>
-          )}
-          {onNextPage && view.nextCursor && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              onClick={() => onNextPage(view.nextCursor!)}
-            >
-              {busy && <UsageSpinner />}
-              {labels.next}
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+export {
+  UsageTable,
+  type UsageTableLabels,
+  type UsageTableProps,
+  usageTableLabels,
+} from "./usage-table-view";
 
 /** Reads the view with useUsageView inside a MeterProvider and pages with the cursor. */
 export function UsageTablePanel({
   labels,
+  sortable,
+  dimensionSortValue,
   hideMeasured,
   dimensionLabels,
   unitLabels,
@@ -283,6 +80,8 @@ export function UsageTablePanel({
       view={result.data ?? retained}
       busy={retained !== null}
       labels={labels}
+      sortable={sortable}
+      dimensionSortValue={dimensionSortValue}
       hideMeasured={hideMeasured}
       dimensionLabels={dimensionLabels}
       unitLabels={unitLabels}

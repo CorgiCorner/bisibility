@@ -14,10 +14,10 @@ import type {
   AccountEmailChanged,
   AccountEmailChangeRequested,
 } from "@/lib/actions/account-email";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { type FieldError, useForm } from "react-hook-form";
+import type { FieldError } from "react-hook-form";
 import { useAccountActionError } from "./useAccountActionError";
 
 export type RequestAccountEmailChangeCode = () => Promise<AccountEmailChangeCodeRequested>;
@@ -68,15 +68,13 @@ export function AccountEmailChangeSteps({
   const t = useTranslations("account.email.change");
   const emailT = useTranslations("account.email");
   const accountErrors = useAccountActionError();
-  const detailsForm = useForm<AccountEmailChangeForm>({
+  const detailsForm = useZodForm<AccountEmailChangeForm>(accountEmailChangeSchema, {
     defaultValues: { currentCode: "", newEmail: "" },
     mode: "onSubmit",
-    resolver: zodResolver(accountEmailChangeSchema),
   });
-  const confirmForm = useForm<VerificationCodeForm>({
+  const confirmForm = useZodForm<VerificationCodeForm>(verificationCodeSchema, {
     defaultValues: { code: "" },
     mode: "onSubmit",
-    resolver: zodResolver(verificationCodeSchema),
   });
   const [step, setStep] = useState<Step>("current");
   const [pendingEmail, setPendingEmail] = useState("");

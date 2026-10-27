@@ -30,6 +30,19 @@ describe("KeywordsGridNotices", () => {
     }));
   });
 
+  it("shows running-check guidance and links to the current Runs workspace", () => {
+    renderNotices({ checkStates: ["running"] });
+
+    expect(screen.getByText("Rank checks are running.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ranking data will appear after the running checks finish."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View check runs" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/runs",
+    );
+  });
+
   it("does not show historical failures after the current problem has cleared", () => {
     renderNotices({
       checkHealth: {

@@ -9,14 +9,13 @@ import {
 } from "@/components/settings/tracking/tracking-form";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { projectDefaultsSchema } from "@/lib/schemas/project";
 import type { DefaultsData } from "@/lib/settings/options";
 import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { ReviewedDefaultsPanel } from "./ReviewedDefaultsPanel";
 import { useDefaultsFormReview } from "./use-defaults-form-review";
 import {
@@ -48,10 +47,9 @@ export function TrackingDefaultsCard({
   const reviewed = useReviewedDefaults(previewDefaults, updateDefaults);
   const reviewT = useTranslations("shared.reviewedDefaults");
   const [saveError, setSaveError] = useState<string | null>(null);
-  const form = useForm<TrackingDefaultsForm>({
+  const form = useZodForm<TrackingDefaultsForm>(projectDefaultsSchema, {
     defaultValues: trackingFormDefaults(defaults, projectId),
     mode: "onChange",
-    resolver: zodResolver(projectDefaultsSchema),
   });
 
   useDefaultsFormReview(form, reviewed.invalidate);

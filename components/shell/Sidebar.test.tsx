@@ -3,6 +3,7 @@ import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NavBadge, NavContext } from "@/lib/nav/nav-items";
 import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
+import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import { setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -41,7 +42,7 @@ vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
     navItems: (
       projectRef: string,
       context?: NavContext,
-      enabledExperimentalModules?: readonly ("timeline" | "competitors")[],
+      enabledExperimentalModules?: readonly ExperimentalModuleKey[],
     ) =>
       actual
         .navItems(projectRef, context, enabledExperimentalModules)
@@ -126,44 +127,51 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
   });
 
-  it("keeps the exact standalone and headed order on the desktop rail", () => {
-    render(
-      <AppThemeRoot data-collapsed="false" defaultTheme="light">
-        <Sidebar
-          activeProjectId={mockWorkspaces[0].id}
-          canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
-          projectRef={mockWorkspaces[0].publicId}
-          workspaces={mockWorkspaces}
-        />
-      </AppThemeRoot>,
-    );
+  it.each([false, true])(
+    "keeps the exact desktop rail order with Playground enabled: %s",
+    (playgroundEnabled) => {
+      render(
+        <AppThemeRoot data-collapsed="false" defaultTheme="light">
+          <Sidebar
+            activeProjectId={mockWorkspaces[0].id}
+            canCreateWorkspace
+            enabledExperimentalModules={
+              playgroundEnabled
+                ? ["timeline", "competitors", "promptPlayground"]
+                : ["timeline", "competitors"]
+            }
+            projectRef={mockWorkspaces[0].publicId}
+            workspaces={mockWorkspaces}
+          />
+        </AppThemeRoot>,
+      );
 
-    expect(screen.queryByText("Activity")).toBeNull();
-    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(
-      [
-        "dashboard",
-        "rank-tracker",
-        "keyword-research",
-        "domain-overview",
-        "backlinks",
-        "site-audit",
-        "competitors",
-        "prompt-tracker",
-        "prompt-research",
-        "brand-visibility",
-        "prompt-playground",
-        "search-console",
-        "agent-reports",
-        "markets",
-        "alerts",
-        "runs",
-        "integrations",
-        "install",
-        "settings",
-      ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
-    );
-  });
+      expect(screen.queryByText("Activity")).toBeNull();
+      expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(
+        [
+          "dashboard",
+          "rank-tracker",
+          "keyword-research",
+          "domain-overview",
+          "backlinks",
+          "site-audit",
+          "competitors",
+          "prompt-tracker",
+          "prompt-research",
+          "brand-visibility",
+          ...(playgroundEnabled ? ["prompt-playground"] : []),
+          "search-console",
+          "agent-reports",
+          "markets",
+          "alerts",
+          "runs",
+          "integrations",
+          "install",
+          "settings",
+        ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
+      );
+    },
+  );
 
   beforeEach(() => {
     // biome-ignore lint/suspicious/noDocumentCookie: jsdom cookie setup mirrors the browser contract.
@@ -569,86 +577,95 @@ describe("Sidebar", () => {
     expect(rankingIcon(collapsedIdle)).toHaveAttribute("data-weight", "regular");
   });
 
-  it("keeps Dashboard above the purpose groups in desktop and collapsed rails", () => {
-    function shell(collapsed: boolean) {
-      return (
-        <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
-          <Sidebar
-            activeProjectId={mockWorkspaces[0].id}
-            canCreateWorkspace
-            projectRef={mockWorkspaces[0].publicId}
-            workspaces={mockWorkspaces}
-          />
-        </AppThemeRoot>
+  it.each([false, true])(
+    "keeps Dashboard above the purpose groups with Playground enabled: %s",
+    (playgroundEnabled) => {
+      function shell(collapsed: boolean) {
+        return (
+          <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
+            <Sidebar
+              activeProjectId={mockWorkspaces[0].id}
+              canCreateWorkspace
+              enabledExperimentalModules={playgroundEnabled ? ["promptPlayground"] : []}
+              projectRef={mockWorkspaces[0].publicId}
+              workspaces={mockWorkspaces}
+            />
+          </AppThemeRoot>
+        );
+      }
+
+      const expanded = render(shell(false));
+      const modules = expanded.getByText("SEO");
+      expect(expanded.queryByText("Activity")).toBeNull();
+      expect(expanded.getByText("SEO")).toBeInTheDocument();
+      expect(expanded.getByText("AI Search")).toBeInTheDocument();
+      expect(expanded.getByText("Data & reports")).toBeInTheDocument();
+      expect(expanded.getByText("Project")).toBeInTheDocument();
+      expect(modules.closest("a")).toBeNull();
+      expect(modules).not.toHaveAttribute("tabindex");
+
+      // A heading is a caption, not a destination: a focusable or role-bearing element here would
+      // put three extra stops in the rail's tab order.
+      expect(modules.tagName).toBe("SPAN");
+      expect(modules).not.toHaveAttribute("role");
+      expect(modules).not.toHaveAttribute("href");
+      // 14 + 10 + 4 = the 28px box ShellSkeleton reserves. `leading-none` is what pins the line
+      // box to the font size - preflight is off, so a UA line-height would make it taller.
+      expect(modules).toHaveClass(
+        "block",
+        "px-[11px]",
+        "pt-3.5",
+        "pb-1",
+        "text-[10px]",
+        "leading-none",
       );
-    }
+      // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
+      expect(modules.closest("[data-tooltip]")).toHaveAttribute(
+        "data-tooltip",
+        "Track rankings and research keywords, websites, backlinks and site health.",
+      );
+      expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
 
-    const expanded = render(shell(false));
-    const modules = expanded.getByText("SEO");
-    expect(expanded.queryByText("Activity")).toBeNull();
-    expect(expanded.getByText("SEO")).toBeInTheDocument();
-    expect(expanded.getByText("AI Search")).toBeInTheDocument();
-    expect(expanded.getByText("Data & reports")).toBeInTheDocument();
-    expect(expanded.getByText("Project")).toBeInTheDocument();
-    expect(modules.closest("a")).toBeNull();
-    expect(modules).not.toHaveAttribute("tabindex");
+      const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
+      expect(gcsInsights).toHaveTextContent("Search Console");
+      expect(expanded.queryByRole("link", { name: "Prompt Playground" }) !== null).toBe(
+        playgroundEnabled,
+      );
+      expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
+      expanded.unmount();
 
-    // A heading is a caption, not a destination: a focusable or role-bearing element here would
-    // put three extra stops in the rail's tab order.
-    expect(modules.tagName).toBe("SPAN");
-    expect(modules).not.toHaveAttribute("role");
-    expect(modules).not.toHaveAttribute("href");
-    // 14 + 10 + 4 = the 28px box ShellSkeleton reserves. `leading-none` is what pins the line
-    // box to the font size - preflight is off, so a UA line-height would make it taller.
-    expect(modules).toHaveClass(
-      "block",
-      "px-[11px]",
-      "pt-3.5",
-      "pb-1",
-      "text-[10px]",
-      "leading-none",
-    );
-    // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
-    expect(modules.closest("[data-tooltip]")).toHaveAttribute(
-      "data-tooltip",
-      "Track rankings and research keywords, websites, backlinks and site health.",
-    );
-    expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
-
-    const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
-    expect(gcsInsights).toHaveTextContent("Search Console");
-    expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
-    expanded.unmount();
-
-    const collapsed = render(shell(true));
-    expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-    expect(collapsed.getByText("SEO")).toBeInTheDocument();
-    expect(collapsed.getByText("AI")).toBeInTheDocument();
-    expect(collapsed.getByText("DATA")).toBeInTheDocument();
-    expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
-    expect(collapsed.queryByText("Activity")).toBeNull();
-    expect(collapsed.queryByText("beta")).toBeNull();
-    expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual([
-      "Dashboard",
-      "Rank Tracker",
-      "Keyword Research",
-      "Domain Overview",
-      "Backlinks",
-      "Site Audit",
-      "Prompt Tracker",
-      "Prompt Research",
-      "Brand Visibility",
-      "Prompt Playground",
-      "Search Console",
-      "Agent Reports",
-      "Markets",
-      "Alerts",
-      "Runs",
-      "Integrations",
-      "Install",
-      "Settings",
-    ]);
-  });
+      const collapsed = render(shell(true));
+      expect(collapsed.queryByText("ACTIVITY")).toBeNull();
+      expect(collapsed.getByText("SEO")).toBeInTheDocument();
+      expect(collapsed.getByText("AI")).toBeInTheDocument();
+      expect(collapsed.getByText("DATA")).toBeInTheDocument();
+      expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
+      expect(collapsed.queryByText("Activity")).toBeNull();
+      expect(collapsed.queryByText("beta")).toBeNull();
+      expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual(
+        [
+          "Dashboard",
+          "Rank Tracker",
+          "Keyword Research",
+          "Domain Overview",
+          "Backlinks",
+          "Site Audit",
+          "Prompt Tracker",
+          "Prompt Research",
+          "Brand Visibility",
+          ...(playgroundEnabled ? ["Prompt Playground"] : []),
+          "Search Console",
+          "Agent Reports",
+          "Markets",
+          "Alerts",
+          "Runs",
+          "Integrations",
+          "Install",
+          "Settings",
+        ],
+      );
+    },
+  );
 
   it("renders Markets with the folded map and no count, subtitle or hairline", () => {
     render(

@@ -52,7 +52,7 @@ const view = {
     version: 1 as const,
   },
   createdAt: "2026-07-27T10:00:00.000Z",
-  createdById: rawUserId,
+  createdByPublicId: "usr_aaaaaaaaaaaaaaaaaaaaaaaa",
   id: savedViewPublicId,
   name: "Top 10",
   surface: "keywords" as const,
@@ -113,7 +113,7 @@ it("whitelists full shared definition without leaking owner IDs or mutation capa
     visibility: { rankingUrl: false },
   });
   expect(JSON.stringify(body)).not.toMatch(
-    /private-owner|internal-project|internal-request|owner_id|created_by_id|can_edit/,
+    /private-owner|internal-project|internal-request|owner_id|can_edit/,
   );
 });
 

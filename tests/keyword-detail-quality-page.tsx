@@ -25,7 +25,6 @@ const detailPageMocks = vi.hoisted(() => ({
   window: vi.fn(),
   snapshot: vi.fn(),
   paid: vi.fn(),
-  comparison: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/i18n/document-locale.server", () => ({
@@ -78,12 +77,6 @@ vi.mock("@/components/shell/PageContent", () => ({
 vi.mock("@/components/ui/BackLink", () => ({
   BackLink: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
-vi.mock("@/components/provider-comparison/ProviderComparisonCard", () => ({
-  ProviderComparisonCard: (props: unknown) => {
-    detailPageMocks.comparison(props);
-    return <section>Provider comparison</section>;
-  },
-}));
 vi.mock("@/components/keywords/KeywordHeaderCard", () => ({
   KeywordHeaderCard: (props: unknown) => {
     detailPageMocks.header(props);
@@ -101,9 +94,6 @@ vi.mock("@/components/keyword-detail-history/KeywordDetailHistory", () => ({
     detailPageMocks.history(props);
     return <section>History</section>;
   },
-}));
-vi.mock("@/components/keywords/RankingUrlHistory", () => ({
-  RankingUrlHistory: detailPageMocks.legacyUrls,
 }));
 vi.mock("@/components/keywords/KeywordTrafficCard", () => ({
   KeywordTrafficCard: () => <section>Traffic</section>,

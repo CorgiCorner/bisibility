@@ -9,7 +9,7 @@ import {
   preferencesSchema,
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { primaryNavEntries } from "@/lib/nav/nav-items";
 import { applyTheme } from "@/lib/theme/browser-theme";
 import { cn } from "@/lib/ui/cn";
@@ -22,7 +22,7 @@ import { SunIcon as Sun } from "@phosphor-icons/react/dist/csr/Sun";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
-import { type UseFormSetValue, useForm } from "react-hook-form";
+import type { UseFormSetValue } from "react-hook-form";
 import { AccountSection } from "./AccountSection";
 import { feedbackClass, fieldLabelClass } from "./account-ui";
 
@@ -122,11 +122,13 @@ export function PreferencesForm({
   const [message, setMessage] = useState<string | null>(null);
   const localeRequestPending = useRef(false);
   const [isPending, startTransition] = useTransition();
-  const { getValues, register, reset, setValue, watch } = useForm<UserPreferences>({
-    defaultValues: defaults,
-    mode: "onChange",
-    resolver: zodResolver(preferencesSchema),
-  });
+  const { getValues, register, reset, setValue, watch } = useZodForm<UserPreferences>(
+    preferencesSchema,
+    {
+      defaultValues: defaults,
+      mode: "onChange",
+    },
+  );
   const theme = watch("theme");
   const dateFormat = watch("dateFormat");
   const landing = watch("landing");

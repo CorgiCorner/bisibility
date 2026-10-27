@@ -35,7 +35,6 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   const rows = await prisma.rankCheckRunItem.findMany({
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: {
-      actualCostCents: true,
       blockedReason: true,
       createdAt: true,
       estimatedCostCents: true,
@@ -53,8 +52,6 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
       notBefore: true,
       rankCheck: {
         select: {
-          billingUnits: true,
-          costCents: true,
           deferredReason: true,
           errorCode: true,
           id: true,
@@ -107,7 +104,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
           ...row,
           deferralCode,
           ...(payment ? { payment } : {}),
-          actualCostCents: ledgerActualCostCents(ledger, row.actualCostCents),
+          actualCostCents: ledgerActualCostCents(ledger, null),
           finishedAt: iso(row.finishedAt),
           id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
           keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
@@ -115,15 +112,8 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
             ? {
                 ...(payment ? { payment } : {}),
                 evidenceProjection: evidence.get(storedRankCheck.publicId) ?? null,
-                billingUnits: ledgerActualUnits(
-                  ledger,
-                  storedRankCheck.billingUnits,
-                  storedRankCheck.provider,
-                ),
-                costCents: ledgerActualCostCents(
-                  ledger,
-                  storedRankCheck.costCents === null ? null : Number(storedRankCheck.costCents),
-                ),
+                billingUnits: ledgerActualUnits(ledger, null, storedRankCheck.provider),
+                costCents: ledgerActualCostCents(ledger, null),
                 errorCode: storedRankCheck.errorCode,
                 observationCompleteness: normalizedObservationCompleteness(
                   storedRankCheck.observationRun?.completeness,

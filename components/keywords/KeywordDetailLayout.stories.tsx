@@ -1,6 +1,8 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { fixtureHistoryPort } from "@/components/keyword-detail-history/history.test-fixture";
+import { KeywordDetailHistory } from "@/components/keyword-detail-history/KeywordDetailHistory";
 import { ToastProvider } from "@/components/ui/Toast";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
@@ -11,7 +13,6 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { KeywordHeaderCard } from "./KeywordHeaderCard";
 import { keywordRows } from "./keywords-fixtures";
-import { PositionHistoryCard } from "./PositionHistoryCard";
 import { RetrievedResultsCard } from "./RetrievedResultsCard";
 
 const checkedAt = new Date(Date.now() - 60_000).toISOString();
@@ -107,9 +108,9 @@ const meta = {
                 data-theme={context.parameters.theme ?? "light"}
               >
                 <Story />
-                <PositionHistoryCard
-                  keyword={context.args.keyword}
-                  chartState="normal"
+                <KeywordDetailHistory
+                  history={fixtureHistoryPort()}
+                  keyword={context.args.keyword.keyword}
                   timeZone="UTC"
                 />
                 <RetrievedResultsCard

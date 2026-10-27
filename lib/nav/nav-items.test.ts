@@ -17,6 +17,12 @@ describe("navItems", () => {
 
     expect(disabled.map((item) => item.label)).not.toContain("Timeline");
     expect(disabled.map((item) => item.label)).not.toContain("Competitors");
+    expect(disabled.map((item) => item.label)).not.toContain("Prompt Playground");
+    expect(
+      navItems("prj_example", undefined, ["promptPlayground"]).find(
+        (item) => item.label === "Prompt Playground",
+      ),
+    ).toMatchObject({ badge: "experimental" });
     expect(
       navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
     ).not.toContain("Timeline");
@@ -192,6 +198,7 @@ describe("navItems", () => {
 
     expect(items.filter((item) => item.badge).map((item) => [item.label, item.badge])).toEqual([
       ["Competitors", "experimental"],
+      ["Prompt Playground", "experimental"],
     ]);
     expect(items.find((item) => item.label === "Search Console")?.badge).toBeUndefined();
     expect(items.find((item) => item.label === "Alerts")?.badge).toBeUndefined();

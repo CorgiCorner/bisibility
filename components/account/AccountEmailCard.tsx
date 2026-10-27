@@ -19,11 +19,10 @@ import type {
   CurrentAccountEmailVerificationRequested,
   CurrentAccountEmailVerified,
 } from "@/lib/actions/account-email";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { useAccountActionError } from "./useAccountActionError";
 
 export type {
@@ -64,10 +63,9 @@ export function AccountEmailCard({
 }: Readonly<AccountEmailCardProps>) {
   const t = useTranslations("account.email");
   const accountErrors = useAccountActionError();
-  const confirmationForm = useForm<VerificationCodeForm>({
+  const confirmationForm = useZodForm<VerificationCodeForm>(verificationCodeSchema, {
     defaultValues: { code: "" },
     mode: "onChange",
-    resolver: zodResolver(verificationCodeSchema),
   });
   const router = useRouter();
   const [currentEmail, setCurrentEmail] = useState(email);

@@ -14,6 +14,12 @@ const values: Record<RankTrackerSortField, (row: KeywordRow) => unknown> = {
   change: (row) => (row.positionBaseline === null ? null : row.positionBaseline - row.position),
   volume: (row) => row.volume,
   difficulty: (row) => row.difficulty,
+  researchVolume: (row) => row.research?.volume ?? null,
+  researchDifficulty: (row) => row.research?.difficulty ?? null,
+  researchCpc: (row) => row.research?.cpc ?? null,
+  researchIntent: (row) => row.research?.intent ?? null,
+  researchSource: (row) => row.research?.sourceSeed ?? null,
+  researchAt: (row) => row.research?.fetchedAt ?? null,
   sparkline: (row) => row.position,
   clicks: (row) => row.clicks,
   impressions: (row) => row.impressions,
@@ -47,12 +53,23 @@ export function filterExactRankTrackerRows(rows: KeywordRow[], query: RankTracke
 
 export function exactRankTrackerRows(rows: KeywordRow[], query: RankTrackerQueryState) {
   const order = new Map(rows.map((row, index) => [row.id, index]));
-  return filterExactRankTrackerRows(rows, query).sort(
-    (left, right) =>
+  return filterExactRankTrackerRows(rows, query).sort((left, right) => {
+    if (query.sort.field.startsWith("research")) {
+      const a = values[query.sort.field](left),
+        b = values[query.sort.field](right);
+      if (a == null || b == null)
+        return a == null && b == null
+          ? (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0)
+          : a == null
+            ? 1
+            : -1;
+    }
+    return (
       compareValue(
         values[query.sort.field](left),
         values[query.sort.field](right),
         query.sort.direction,
-      ) || (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0),
-  );
+      ) || (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0)
+    );
+  });
 }

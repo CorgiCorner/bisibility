@@ -1,3 +1,4 @@
+import { keywordViewFixture } from "@/lib/saved-views/view-test-fixture";
 import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
@@ -146,6 +147,8 @@ it("creates project-key views without attributing them to the project owner", as
     createPath,
   );
   expect(response.status).toBe(201);
+  const systemBody = await response.json();
+  expect(systemBody.created_by_id).toBeNull();
   expect(mocks.prisma.savedView.create).toHaveBeenCalledWith(
     expect.objectContaining({
       data: expect.objectContaining({ createdById: null, projectId: project.id }),
@@ -191,4 +194,111 @@ it("keeps a matching user PAT project-only and never borrows its browser session
   expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
   expect(mocks.session).not.toHaveBeenCalled();
   expect(JSON.stringify(await response.json())).not.toContain("Private sensitive scope");
+});
+
+it("returns only the creator public ID on real list responses, including missing creators", async () => {
+  const config = keywordViewFixture();
+  const row = {
+    id: "view-db",
+    publicId: viewRef,
+    createdById: "private-user-db-id",
+    createdBy: { publicId: "usr_aaaaaaaaaaaaaaaaaaaaaaaa" },
+    createdAt: new Date("2026-01-07T00:00:00.000Z"),
+    name: "View",
+    surface: "keywords",
+    visibility: "project",
+    ownerId: null,
+    revision: 1,
+    config,
+  };
+  const listPath = ["projects", ref, "saved-views"];
+  for (const field of ["keyword", "researchVolume"] as const) {
+    config.sort = { field, direction: "asc" };
+    mocks.prisma.savedView.findMany.mockResolvedValue([
+      row,
+      { ...row, createdById: null, createdBy: null },
+      { ...row, createdBy: { publicId: "private-user-db-id" } },
+    ]);
+    const response = await handleApiRequest(
+      new Request(`https://example.test/api/v1/${listPath.join("/")}`, {
+        headers: { authorization: "Bearer bsb_pat_live_fixture" },
+      }),
+      listPath,
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.data.map((view: { created_by_id: string | null }) => view.created_by_id)).toEqual([
+      "usr_aaaaaaaaaaaaaaaaaaaaaaaa",
+      null,
+      null,
+    ]);
+    expect(body.data[0].definition.sort.field).toBe(field);
+    expect(JSON.stringify(body)).not.toContain("private-user-db-id");
+    expect(mocks.prisma.savedView.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: { projectId: project.id, surface: "keywords", visibility: "project" },
+        select: expect.objectContaining({ createdBy: { select: { publicId: true } } }),
+      }),
+    );
+  }
+});
+
+it("attributes a personal-token creation to its public user ID", async () => {
+  mocks.prisma.savedView.create.mockImplementation(async ({ data }) => ({
+    ...data,
+    id: "view-db",
+    createdAt: new Date("2026-01-07T00:00:00.000Z"),
+    createdBy: { publicId: "usr_aaaaaaaaaaaaaaaaaaaaaaaa" },
+  }));
+  const createPath = ["projects", ref, "saved-views"];
+  const response = await handleApiRequest(
+    new Request(`https://example.test/api/v1/${createPath.join("/")}`, {
+      method: "POST",
+      headers: { authorization: "Bearer bsb_pat_live_fixture" },
+      body: JSON.stringify({ name: "User view", config: {} }),
+    }),
+    createPath,
+  );
+  expect(response.status).toBe(201);
+  const body = await response.json();
+  expect(body.created_by_id).toBe("usr_aaaaaaaaaaaaaaaaaaaaaaaa");
+  expect(JSON.stringify(body)).not.toContain("member-user");
+  expect(mocks.prisma.savedView.create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({ createdById: "member-user" }),
+      select: expect.objectContaining({ createdBy: { select: { publicId: true } } }),
+    }),
+  );
+});
+
+it("returns a compatible legacy version 1 view through the list route", async () => {
+  mocks.prisma.savedView.findMany.mockResolvedValue([
+    {
+      id: "view-db",
+      publicId: viewRef,
+      createdById: null,
+      createdBy: null,
+      createdAt: new Date("2026-01-07T00:00:00.000Z"),
+      name: "Legacy view",
+      surface: "keywords",
+      visibility: "project",
+      ownerId: null,
+      revision: 1,
+      config: { surface: "keywords", version: 1 },
+    },
+  ]);
+  const listPath = ["projects", ref, "saved-views"];
+  const response = await handleApiRequest(
+    new Request(`https://example.test/api/v1/${listPath.join("/")}`, {
+      headers: { authorization: "Bearer bsb_pat_live_fixture" },
+    }),
+    listPath,
+  );
+  expect(response.status).toBe(200);
+  const body = await response.json();
+  expect(body.data[0]).toMatchObject({
+    created_by_id: null,
+    config: { surface: "keywords", version: 1 },
+    definition: { surface: "keywords", version: 1 },
+  });
 });

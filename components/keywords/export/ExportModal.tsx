@@ -5,14 +5,13 @@ import type { KeywordExportTarget } from "@/components/keywords/export-target-mo
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { exportKeywords } from "@/lib/actions/keyword-export-action";
-import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useZodForm } from "@/lib/forms/use-zod-form";
 import { downloadBlob } from "@/lib/ui/download";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ExportHistoryOptions } from "./ExportHistoryOptions";
 import {
@@ -65,7 +64,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
     register,
     setValue,
     watch,
-  } = useForm<ExportValues>({
+  } = useZodForm<ExportValues>(exportSchema, {
     defaultValues: {
       columns: {
         change: false,
@@ -83,7 +82,6 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       range: "30",
       scope: "current",
     },
-    resolver: zodResolver(exportSchema),
   });
   const values = watch();
   const report = values.scope === "history" && values.historyVersion === "2";

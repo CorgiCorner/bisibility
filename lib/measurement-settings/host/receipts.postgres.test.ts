@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { fixtureSnapshot } from "@/components/measurement-settings/test-fixtures";
 import { definitionProjectScope } from "@/lib/measurement-definitions/access";
 import { definitionDatabaseFixture } from "@/lib/measurement-definitions/postgres.test-fixture";
+import { fixtureSnapshot } from "./legacy-snapshot.test-fixture";
 import { readSettingsMutation, settingsMutationScope, writeSettingsMutation } from "./receipts";
 
 /** Full reviewed migration chain and OWNED isolated DB only; no partial schema or execution in this lane. */

@@ -1,13 +1,14 @@
 import type {
   CostReceipt,
   JsonValue,
-  PromptCategory,
   TrackingActorCredential,
   TrackingEntrySource,
 } from "@/lib/ai-tracking/contract";
 import type {
   SuggestionGenerationConfiguration,
+  SuggestionGenerationDraft,
   SuggestionGenerationPreview,
+  SuggestionGenerationResult,
   SuggestionGenerationSnapshot,
 } from "@/lib/ai-tracking/suggestions/generation-schema";
 
@@ -24,24 +25,9 @@ export interface GenerationReceipt extends CostReceipt {
   credentialVersion: string;
   providerRequestId?: string | null;
 }
-export interface GenerationDraft {
-  draftId: string;
-  text: string;
-  category: PromptCategory;
-  provenance: "model_generated_hypothesis";
-  evidenceIds: string[];
-  popularity: null;
-  accepted: false;
-}
-export interface GenerationResult {
-  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
-  originalPayment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
-  generationId: string;
+export interface GenerationDraft extends SuggestionGenerationDraft {}
+export interface GenerationResult extends SuggestionGenerationResult {
   drafts: GenerationDraft[];
-  costUsd: string | null;
-  costState: "confirmed" | "unknown";
-  method: "model_generated_hypothesis";
-  limitations: string[];
 }
 export interface GenerationEvidence {
   inputSnapshot: SuggestionGenerationSnapshot;

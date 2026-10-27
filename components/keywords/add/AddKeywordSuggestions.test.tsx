@@ -273,15 +273,21 @@ describe("Add keyword suggestions", () => {
     expect(mocks.sources).toHaveBeenCalledTimes(2);
   });
 
-  it("keeps provider requests disabled for a read-only project", async () => {
-    renderProject(
-      <ProjectWriteModeProvider projectRef={projectId} writeMode="migration_hold">
-        <SuggestionsHarness onAppendQueries={vi.fn()} />
-      </ProjectWriteModeProvider>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
-    expect(await screen.findByRole("button", { name: "Choose queries" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Choose keywords" })).toBeDisabled();
-    expect(mocks.ranked).not.toHaveBeenCalled();
-  });
+  it.each(["migration_hold", "migrated"] as const)(
+    "keeps provider requests disabled for a %s project",
+    async (writeMode) => {
+      renderProject(
+        <ProjectWriteModeProvider projectRef={projectId} writeMode={writeMode}>
+          <SuggestionsHarness onAppendQueries={vi.fn()} />
+        </ProjectWriteModeProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
+      const chooseQueries = await screen.findByRole("button", { name: "Choose queries" });
+      expect(chooseQueries).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Choose keywords" })).toBeDisabled();
+      fireEvent.click(chooseQueries);
+      expect(mocks.gsc).not.toHaveBeenCalled();
+      expect(mocks.ranked).not.toHaveBeenCalled();
+    },
+  );
 });

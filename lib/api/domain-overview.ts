@@ -30,6 +30,7 @@ import {
   keywordPageBodySchema,
   relevantPageBodySchema,
 } from "./domain-overview-input";
+import { commonLookupFailureResponse } from "./lookup-failure-response";
 import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
 import { retryHeaders } from "./retry-headers";
@@ -58,6 +59,8 @@ function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
   return paymentFailureResponse(lookupErrorBase(ctx, outcome), outcome);
 }
 function lookupErrorBase(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
+  const commonFailure = commonLookupFailureResponse(ctx, outcome, failureDetails(outcome));
+  if (commonFailure) return commonFailure;
   if (outcome.reason === "wallet_budget_exhausted")
     return budgetExhaustedResponse(ctx, {
       scope: "wallet",
@@ -96,36 +99,10 @@ function lookupErrorBase(ctx: ApiContext, outcome: DomainOverviewLookupFailure) 
       common,
     );
   }
-  if (outcome.reason === "budget_exhausted") {
-    return budgetExhaustedResponse(ctx, {
-      reason: outcome.budgetReason,
-      surface: "programmatic",
-      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
-    });
-  }
-  if (outcome.reason === "cost_limit_exceeded") {
-    return errorResponse(
-      "cost_limit_exceeded",
-      "The estimated provider cost exceeds max_cost_cents.",
-      422,
-      {
-        ...common,
-        ...(outcome.estimatedCostCents === undefined
-          ? {}
-          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
-      },
-    );
-  }
   if (outcome.reason === "in_progress") {
     return errorResponse("lookup_in_progress", "An identical lookup is still in progress.", 429, {
       ...common,
       headers: retryHeaders(ctx, outcome.resetAt, 5_000),
-    });
-  }
-  if (outcome.reason === "rate_limited") {
-    return errorResponse("rate_limited", "Provider rate limit reached. Try again shortly.", 429, {
-      ...common,
-      headers: retryHeaders(ctx, outcome.resetAt, 1_000),
     });
   }
   if (outcome.reason === "unsupported_location") {

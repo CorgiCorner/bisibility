@@ -44,8 +44,6 @@ export const buckets = [
   ["#51-100", 51, 100],
 ] as const;
 
-export const avg = (values: number[]) =>
-  values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const roundToDisplayTenth = (value: number) => Number(value.toFixed(1));
 export const tone = (value: number): Tone => {
   if (value > 0) return "positive";

@@ -38,7 +38,7 @@ export function RecentTrayRuns({
                   {rank(`titles.${operation.trigger}`)} ·{" "}
                   {rank("keywordCount", { count: operation.keywordCount })}
                 </span>
-                <CaretRightIcon aria-hidden size={14} className="shrink-0" />
+                <CaretRightIcon weight="regular" aria-hidden size={14} className="shrink-0" />
               </a>
               <Button
                 size="sm"

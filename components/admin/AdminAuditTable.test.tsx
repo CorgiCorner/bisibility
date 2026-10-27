@@ -77,7 +77,7 @@ describe("AdminAuditTable", () => {
 
     expect(screen.getByText("admin@example.com")).toBeInTheDocument();
     expect(screen.getByText("instance_admin.account_viewed")).toBeInTheDocument();
-    expect(screen.getByText("usr_abcdef")).toHaveClass("font-mono");
+    expect(screen.getByText("usr_abcdef…stuvwx")).toHaveClass("font-mono");
     expect(
       screen.getByRole("button", {
         name: "Copy audit target ID usr_abcdefghijklmnopqrstuvwx",
