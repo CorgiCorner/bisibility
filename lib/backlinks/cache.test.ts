@@ -1,3 +1,4 @@
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   backlinksCachedUntil,
@@ -34,6 +35,12 @@ describe("backlinks cache", () => {
 
   it("computes cached until from fetched at", () => {
     expect(backlinksCachedUntil("2026-07-24T10:00:00.000Z")).toBe("2026-07-25T10:00:00.000Z");
+  });
+
+  it("keeps a snapshot reusable for the project's 30 day window", () => {
+    expect(
+      withProjectCachePolicy(2_592_000, () => backlinksCachedUntil("2026-07-24T10:00:00.000Z")),
+    ).toBe("2026-08-23T10:00:00.000Z");
   });
 });
 

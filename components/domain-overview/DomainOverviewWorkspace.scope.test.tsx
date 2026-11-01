@@ -190,7 +190,7 @@ describe("DomainOverviewWorkspace research scope state", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /refresh now.*review price/i }));
     expect(await screen.findByRole("button", { name: /refresh now/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
   });
 });
 

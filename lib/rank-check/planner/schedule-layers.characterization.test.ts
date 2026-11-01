@@ -114,7 +114,7 @@ vi.mock("./empty-schedule", () => ({ skipEmptyScheduleOccurrences: vi.fn() }));
 vi.mock("./persist-occurrence", () => ({ persistOccurrence: mocks.persistOccurrence }));
 vi.mock("@/lib/operations/access-extension", () => ({ assertOperationAccess: vi.fn() }));
 vi.mock("@/lib/rank-check/queued-routing", () => ({
-  queuedRankCheckRoute: async () => ({ mode: "legacy", reason: "queued_dataforseo_disabled" }),
+  queuedRankCheckRoute: async () => ({ mode: "legacy", reason: "primary_provider_not_dataforseo" }),
 }));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: async () => [

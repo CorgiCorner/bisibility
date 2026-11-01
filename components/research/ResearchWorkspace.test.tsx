@@ -748,15 +748,15 @@ describe("ResearchWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     expect(
-      screen.getByText("Choose a supported data source in Integrations to run a search."),
+      screen.getByText("Choose a supported data source in Providers to run a search."),
     ).toBeVisible();
     const emptyPanel = screen.getByRole("region", { name: "Choose a data source" });
     expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
     expect(within(emptyPanel).getByRole("link", { name: "Choose a data source" })).toHaveAttribute(
       "href",
-      `/app/${context.project.id}/integrations`,
+      `/app/${context.project.id}/providers`,
     );
-    expect(screen.queryByRole("link", { name: "Open Integrations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open Providers" })).not.toBeInTheDocument();
     expect(researchAction).not.toHaveBeenCalled();
   });
 

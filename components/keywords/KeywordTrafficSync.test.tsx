@@ -63,9 +63,9 @@ describe("keyword analytics fetch", () => {
     expect(screen.getByRole(role)).toHaveTextContent(message);
     expect(routerMock.refresh).toHaveBeenCalledOnce();
     if (role === "alert")
-      expect(screen.getByRole("link", { name: "Manage integrations" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: "Manage providers" })).toHaveAttribute(
         "href",
-        `/app/${projectRef}/integrations`,
+        `/app/${projectRef}/providers`,
       );
   });
 

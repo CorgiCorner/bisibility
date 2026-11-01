@@ -186,7 +186,7 @@ describe("Checks visual conformance", () => {
       <ProviderHealth
         onFilterChange={onFilterChange}
         range="24h"
-        reorderProvidersHref="/app/prj_test/integrations"
+        reorderProvidersHref="/app/prj_test/providers"
         view={checkRunsFixtureView}
       />,
     );
@@ -210,7 +210,7 @@ describe("Checks visual conformance", () => {
       <ProviderHealth
         onFilterChange={vi.fn()}
         range="24h"
-        reorderProvidersHref="/app/prj_test/integrations"
+        reorderProvidersHref="/app/prj_test/providers"
         view={{
           ...checkRunsFixtureView,
           counts: { ...checkRunsFixtureView.counts, deferred: 0, viaFallback: 19 },
@@ -232,7 +232,7 @@ describe("Checks visual conformance", () => {
       <ProviderHealth
         onFilterChange={vi.fn()}
         range="7d"
-        reorderProvidersHref="/app/prj_test/integrations"
+        reorderProvidersHref="/app/prj_test/providers"
         view={{
           ...checkRunsFixtureView,
           counts: { completed: 4, deferred: 0, failed: 0, running: 0, runs: 4, viaFallback: 0 },

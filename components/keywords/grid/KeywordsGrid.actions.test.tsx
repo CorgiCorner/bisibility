@@ -149,7 +149,7 @@ describe("KeywordsGrid actions", () => {
 
     expect(screen.getByRole("link", { name: "Connect a SERP provider" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
     expect(screen.queryByRole("button", { name: /Run check/ })).not.toBeInTheDocument();
   });

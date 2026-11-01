@@ -46,7 +46,7 @@ function props(overrides: Partial<PreflightDialogProps> = {}): PreflightDialogPr
     initialDepth: 20,
     initialPreview: preview,
     initialProviderId: "provider-dataforseo",
-    integrationsHref: "/app/prj_story/integrations",
+    integrationsHref: "/app/prj_story/providers",
     launchAction: vi.fn(async () => ({
       estimatedCostCents: 298,
       keywordCount: 248,
@@ -167,7 +167,7 @@ describe("PreflightDialog", () => {
 
   it.each([
     ["budget", "budget_exhausted", "Edit budget"],
-    ["no provider", "no_provider", "Open Integrations"],
+    ["no provider", "no_provider", "Open Providers"],
     ["duplicate", "duplicate", "Open run"],
   ] as const)("plan criterion: blocks %s", (_label, reason, cta) => {
     render(
@@ -210,7 +210,7 @@ describe("PreflightDialog", () => {
       />,
     );
     expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
-    expect(screen.getByRole("link", { name: "Open Integrations" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Providers" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Edit budget" })).not.toBeInTheDocument();
     expect(screen.getAllByText(/Review and reconcile the usage history/i).length).toBeGreaterThan(
       0,
@@ -285,6 +285,62 @@ describe("PreflightDialog", () => {
       expect.objectContaining({ previewToken: "refreshed-token" }),
     );
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("launches an estimate requested without a provider without naming the quoted one", async () => {
+    const user = userEvent.setup();
+    const launchAction = vi.fn<PreflightDialogProps["launchAction"]>(async () => ({
+      estimatedCostCents: 298,
+      keywordCount: 248,
+      publicId: "rcr_story",
+      status: "queued",
+      targetCount: 496,
+    }));
+    render(
+      <PreflightDialog {...props({ initialProviderId: undefined, providers: [], launchAction })} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
+
+    expect(launchAction).toHaveBeenCalledOnce();
+    expect(launchAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerId: undefined,
+        paymentOptionId: preview.payment?.option.id,
+      }),
+    );
+  });
+
+  it("launches with the provider the refreshed estimate was requested for", async () => {
+    const user = userEvent.setup();
+    const previewAction = vi.fn<PreflightDialogProps["previewAction"]>(async () => preview);
+    const launchAction = vi.fn<PreflightDialogProps["launchAction"]>(async () => ({
+      estimatedCostCents: 298,
+      keywordCount: 248,
+      publicId: "rcr_story",
+      status: "queued",
+      targetCount: 496,
+    }));
+    render(
+      <PreflightDialog
+        {...props({ initialProviderId: undefined, providers: [], launchAction, previewAction })}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: /Top 50/ }));
+    expect(previewAction).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
+
+    expect(launchAction).toHaveBeenCalledOnce();
+    expect(launchAction).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: previewAction.mock.calls[0]?.[0].providerId }),
+    );
+  });
+
+  it("does not show an empty provider section when the payment options choose it", () => {
+    render(<PreflightDialog {...props({ initialProviderId: undefined, providers: [] })} />);
+
+    expect(screen.queryByText(/primary provider/i)).not.toBeInTheDocument();
   });
 
   describe("overlapping runs", () => {

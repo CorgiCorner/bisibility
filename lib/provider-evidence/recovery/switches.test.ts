@@ -62,6 +62,20 @@ it("fails closed for invalid values and warns once with accepted modes", () => {
   );
   warn.mockRestore();
 });
+it("can activate financial recovery and the bell while keeping incident email disabled", () => {
+  expect(recoverySwitches({ PROVIDER_RECOVERY: "on", PROVIDER_RECOVERY_DIGEST: "off" })).toEqual({
+    capture: true,
+    lookup: true,
+    proofWrites: true,
+    restore: true,
+    incidentBell: true,
+    incidentDigest: false,
+  });
+  expect(
+    recoverySwitches({ PROVIDER_RECOVERY: "on", PROVIDER_RECOVERY_DIGEST: "invalid" })
+      .incidentDigest,
+  ).toBe(false);
+});
 it.each(["legacy-read-only", "editable"])(
   "DV-4 demo %s denies every stage and maintenance before any dependency",
   async (mode) => {

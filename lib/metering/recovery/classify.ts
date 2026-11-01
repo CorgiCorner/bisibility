@@ -13,6 +13,7 @@ export function recoveryBasis(row: RecoveryRecord) {
     row.id,
     row.version,
     row.state,
+    row.closedUnknown,
     row.fenced,
     row.binding,
     row.nativeId,
@@ -84,7 +85,12 @@ export function classifyRecoveryRecord(
     action = null;
     blockedReason = "project_unavailable";
   }
+  if (row.closedUnknown) {
+    action = null;
+    blockedReason = null;
+  }
   return {
+    closedUnknown: row.closedUnknown,
     token: sealRecoveryCase(scope, row.kind, row.id),
     version: `${basis}:${row.triageVersion ?? 0}`,
     kind: row.kind,
@@ -107,11 +113,13 @@ export function classifyRecoveryRecord(
     work:
       row.rankStatus === "completed"
         ? "completed"
-        : !row.projectExists
-          ? "obsolete"
-          : row.rankCheckId || row.kind === "run"
-            ? "unfinished"
-            : "unknown",
+        : ["failed", "deferred", "cancelled"].includes(row.rankStatus ?? "")
+          ? "stopped"
+          : !row.projectExists
+            ? "obsolete"
+            : row.rankCheckId || row.kind === "run"
+              ? "unfinished"
+              : "unknown",
     accounting:
       row.kind === "run" || row.kind === "result" || row.kind === "check"
         ? "not_applicable"

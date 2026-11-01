@@ -98,6 +98,18 @@ export async function scheduleAdmission(
     throw error;
   }
   const route = await queuedRankCheckRoute({ projectId: schedule.projectId }, client);
+  if (route.mode === "legacy" && route.reason === "queued_dataforseo_disabled") {
+    // Planned items run only through the queued route in dispatcher mode, and dispatcher-claimed
+    // items have no per-keyword executor. Block visibly instead of launching work that the queue
+    // would defer; admission is retried while the run stays blocked.
+    return {
+      blockedReason: "queued_dataforseo_disabled" as const,
+      connection: null,
+      estimatedCostCents: 0,
+      itemCosts: schedule.keywords.map(() => null),
+      usageQuantity: 0,
+    };
+  }
   const connections =
     route.mode === "deferred"
       ? []

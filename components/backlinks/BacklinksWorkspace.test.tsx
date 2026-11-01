@@ -9,6 +9,7 @@ import { BacklinksWorkspace } from "./BacklinksWorkspace";
 import { backlinksSnapshotFixture } from "./backlinks-fixtures";
 
 const context = {
+  cacheTtlSeconds: 86_400,
   costContext: { capCents: 5000, spentCents: 1200 },
   defaultTarget: "example.com",
   providerStatus: "connected" as const,
@@ -88,6 +89,18 @@ afterEach(() => {
 });
 
 describe("BacklinksWorkspace", () => {
+  it.each([
+    [2_592_000, "30 days"],
+    [3_600, "1 hour"],
+    [86_400, "1 day"],
+  ])("shows the configured %i-second cache window before a lookup", (cacheTtlSeconds, duration) => {
+    renderWorkspace({ context: { ...context, cacheTtlSeconds } });
+
+    expect(
+      screen.getByText(`Snapshots cached for ${duration} - reopening and re-slicing is free`),
+    ).toBeInTheDocument();
+  });
+
   it("reopens a recent legacy result read-only without changing its unknown source", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-24T12:00:00Z"));
@@ -229,8 +242,8 @@ describe("BacklinksWorkspace", () => {
       expect(
         screen.getByText(
           reconnect
-            ? "Reconnect the selected data source in Integrations before running another search."
-            : "Choose a supported data source in Integrations to run a search.",
+            ? "Reconnect the selected data source in Providers before running another search."
+            : "Choose a supported data source in Providers to run a search.",
         ),
       ).toBeVisible();
       expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(1);
@@ -243,12 +256,12 @@ describe("BacklinksWorkspace", () => {
         within(emptyPanel).getByRole("link", {
           name: reconnect ? "Reconnect provider" : "Choose a data source",
         }),
-      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      ).toHaveAttribute("href", "/app/prj_1/providers");
       expect(
         screen.getAllByRole("link", {
           name: reconnect ? "Reconnect provider" : "Choose a data source",
         })[0],
-      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      ).toHaveAttribute("href", "/app/prj_1/providers");
       expect(screen.getByRole("button", { name: /^Analyze/ })).toBeDisabled();
       expect(screen.queryByText("Connect DataForSEO to analyze backlinks")).not.toBeInTheDocument();
     },

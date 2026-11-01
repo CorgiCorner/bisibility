@@ -116,9 +116,9 @@ const routeCases = [
     title: "Docs",
   },
   {
-    path: appPath("prj_1", "integrations"),
-    pattern: appPath("[project]", "integrations"),
-    title: "Integrations",
+    path: appPath("prj_1", "providers"),
+    pattern: appPath("[project]", "providers"),
+    title: "Providers",
   },
   {
     path: appPath("prj_1", "install"),
@@ -379,9 +379,9 @@ describe("dashboard header titles", () => {
       headerVariant: "settings",
       title: "Settings",
     });
-    expect(headerMetaFor(appPath("prj_1", "integrations"))).toMatchObject({
+    expect(headerMetaFor(appPath("prj_1", "providers"))).toMatchObject({
       subtitle: "Connect data providers and analytics sources.",
-      title: "Integrations",
+      title: "Providers",
     });
   });
 

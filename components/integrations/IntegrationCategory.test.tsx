@@ -50,7 +50,9 @@ describe("IntegrationCategory", () => {
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
     expect(
-      screen.getByText("Connect providers that run Google rank checks in Rank Tracker."),
+      screen.getByText(
+        "Connect data providers for rank tracking, SEO research and domain metrics.",
+      ),
     ).toBeVisible();
     expect(screen.queryByText(/priority-ordered fallback chain/)).not.toBeInTheDocument();
   });

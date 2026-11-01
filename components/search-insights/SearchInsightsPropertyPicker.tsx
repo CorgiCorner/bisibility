@@ -11,7 +11,7 @@ import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { searchSyncPreflightFacts } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -192,7 +192,7 @@ export function SearchInsightsPropertyPicker({
       </Button>
       {searchConsoleHref ? (
         <Button
-          endIcon={<ArrowSquareOut aria-hidden size={14} weight="regular" />}
+          endIcon={<ArrowUpRight aria-hidden size={14} weight="regular" />}
           href={searchConsoleHref}
           rel="noreferrer noopener"
           size="sm"

@@ -49,3 +49,14 @@ it("never infers reached admission from provider cost below the configured cap",
   expect(copy.title).toBe("Review budget and usage");
   expect(copy.description).not.toContain("of $50.00");
 });
+
+it("names the disabled queued route instead of a generic wait", () => {
+  const copy = localizedBlockedRunCopy(
+    { reason: "queued_dataforseo_disabled", deploymentMode: "self-host", budget: null },
+    t,
+    "en",
+  );
+  expect(copy.title).toBe("Scheduled checks off");
+  expect(copy.description).toBe("Scheduled DataForSEO checks are turned off on this installation.");
+  expect(copy.action).toBeNull();
+});

@@ -45,7 +45,7 @@ export function BudgetValue({
   href?: string;
   monthly?: boolean;
   /** Native provider wording supplied by the host without changing the accounting unit. */
-  unitLabel?: string;
+  unitLabel?: (count: string) => string;
   level?: "ok" | "warning" | "exceeded" | "unavailable";
 }) {
   const p = useUsagePresentation();
@@ -60,7 +60,12 @@ export function BudgetValue({
   const missing =
     value === "unavailable" ||
     (typeof value !== "string" && (value.certainty === "unknown" || number === null));
-  const unit = typeof value !== "string" ? (unitLabel ?? p.unit(value.unit)) : "";
+  const unit =
+    typeof value !== "string"
+      ? unitLabel
+        ? unitLabel(value.text)
+        : p.unit(value.unit, value.text)
+      : "";
   const formatted = [number, unit].filter(Boolean).join(" ");
   const text =
     missing || (unlimited && kind !== "limit") || (zero && kind === "reserved")

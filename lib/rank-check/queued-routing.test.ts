@@ -61,14 +61,43 @@ describe("queued rank-check routing", () => {
     vi.unstubAllEnvs();
   });
 
-  it("is an exact legacy no-op while the queued gate is off", async () => {
-    vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "");
+  it.each(["0", "false", "off", "no"])(
+    "is an exact legacy no-op while the queued gate is explicitly %s",
+    async (value) => {
+      vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", value);
 
+      await expect(queuedRankCheckRoute(group)).resolves.toEqual({
+        mode: "legacy",
+        reason: "queued_dataforseo_disabled",
+      });
+      expect(mocks.findProject).not.toHaveBeenCalled();
+    },
+  );
+
+  it("routes to the queue when the gate is unset or empty", async () => {
+    vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "");
     await expect(queuedRankCheckRoute(group)).resolves.toEqual({
-      mode: "legacy",
-      reason: "queued_dataforseo_disabled",
+      mode: "queued",
+      provider: "dataforseo",
     });
-    expect(mocks.findProject).not.toHaveBeenCalled();
+    vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", undefined);
+    await expect(queuedRankCheckRoute(group)).resolves.toEqual({
+      mode: "queued",
+      provider: "dataforseo",
+    });
+  });
+
+  it("disables the queue for an invalid queue setting", async () => {
+    vi.stubEnv("DATAFORSEO_QUEUE_MAX_AGE_SECONDS", "5");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      await expect(queuedRankCheckRoute(group)).resolves.toEqual({
+        mode: "legacy",
+        reason: "queued_dataforseo_disabled",
+      });
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it("keeps other providers on the existing Live workflow", async () => {

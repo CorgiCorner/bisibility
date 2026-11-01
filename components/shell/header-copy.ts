@@ -20,7 +20,7 @@ const titleKeys = {
   Docs: "titles.docs",
   "Domain Overview": "titles.domainOverview",
   "Get set up": "titles.gettingStarted",
-  Integrations: "titles.integrations",
+  Providers: "titles.integrations",
   Install: "titles.install",
   "Keyword details": "titles.keywordDetails",
   "Keyword Research": "titles.keywordResearch",

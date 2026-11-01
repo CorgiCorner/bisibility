@@ -74,6 +74,9 @@ vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
     </div>
   ),
 }));
+vi.mock("@/components/integrations/provider-recovery/MonitoringAccountBlocksServer", () => ({
+  MonitoringAccountBlocksServer: () => null,
+}));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
   KeywordsGrid: (props: Readonly<KeywordsGridProps>) => {
     captured.gridProps = { ...props };

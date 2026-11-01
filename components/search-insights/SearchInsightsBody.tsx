@@ -94,7 +94,7 @@ export function SearchInsightsBody({
   const manageGa4Link = (
     <a
       className="font-sans tabular-nums text-ui-caption text-fg-muted no-underline underline-offset-3 hover:text-fg hover:underline focus-visible:underline"
-      href={`${appPath(asProjectRef(projectId), "integrations")}?connect=ga4`}
+      href={`${appPath(asProjectRef(projectId), "providers")}?connect=ga4`}
     >
       {t("copy.manageGa4")}
     </a>

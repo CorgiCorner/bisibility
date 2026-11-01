@@ -106,7 +106,7 @@ describe("NoDataBanner", () => {
     expect(screen.getByTestId("first-check-banner-icon")).toHaveAttribute("data-weight", "regular");
     expect(screen.getByRole("link", { name: "Choose a data source" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations#all-providers",
+      "/app/prj_1/providers#all-providers",
     );
     expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
   });
@@ -115,7 +115,7 @@ describe("NoDataBanner", () => {
     renderBanner("missing", vi.fn(), vi.fn().mockResolvedValue({ queued: 1 }), 0);
 
     expect(
-      screen.getByText("Choose a data source in Integrations to run checks."),
+      screen.getByText("Choose a data source in Providers to run checks."),
     ).toBeInTheDocument();
   });
 
@@ -125,7 +125,7 @@ describe("NoDataBanner", () => {
     expect(screen.getByText("SERP provider needs attention.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Manage provider" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations#all-providers",
+      "/app/prj_1/providers#all-providers",
     );
   });
 
@@ -204,7 +204,7 @@ describe("NoDataKpiRow", () => {
     expect(screen.getByText("Rank checks are paused pending a usage review.")).toBeVisible();
     expect(screen.getByRole("link", { name: "Open Usage" })).toHaveAttribute(
       "href",
-      "/app/prj_example/integrations?tab=usage",
+      "/app/prj_example/providers?tab=usage",
     );
   });
   const states: Array<{

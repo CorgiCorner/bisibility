@@ -3,6 +3,7 @@ import { z } from "zod";
 const idSchema = z.string().trim().min(1).max(120);
 
 export const providerIdSchema = z.enum([
+  "ahrefs",
   "dataforseo",
   "serpapi",
   "local-sequence",

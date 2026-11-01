@@ -231,6 +231,25 @@ describe("audit redaction canaries", () => {
     expect(data.after).toEqual(after);
   });
 
+  it.each(["provider.payment_required", "provider.account_blocked"])(
+    "retains typed account-block evidence for %s and drops credentials",
+    async (action) => {
+      const evidence = {
+        reason: "provider_billing",
+        httpStatus: 402,
+        paidTransportPaused: true,
+        originalCostConfirmed: false,
+      };
+      const data = await writeCanary(
+        { ...evidence, api_key: "audit-account-secret" },
+        undefined,
+        action,
+      );
+      expect(data.after).toEqual(evidence);
+      expect(JSON.stringify(data)).not.toContain("audit-account-secret");
+    },
+  );
+
   it("retains reviewed competitor details and drops unrelated edit payload fields", async () => {
     const details = {
       id: "cmp_aaaaaaaaaaaaaaaaaaaaaaaa",

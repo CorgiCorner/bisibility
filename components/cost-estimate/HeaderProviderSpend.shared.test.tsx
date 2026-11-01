@@ -13,6 +13,11 @@ import { HeaderProviderSpend } from "./HeaderProviderSpend";
 const permissions = vi.hoisted(() => ({ access: vi.fn(), demo: vi.fn() }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: permissions.access }));
 vi.mock("@/lib/demo/config", () => ({ readDemoConfig: permissions.demo }));
+// These actors are never the configured demo owner, so any demo mode locks them.
+vi.mock("@/lib/demo/account-view", () => ({
+  resolveDemoAccountView: async () =>
+    permissions.demo().kind === "disabled" ? "normal" : "locked",
+}));
 
 const figure = (text: string) => ({ text, unit: "units", certainty: "measured" as const });
 const row: BudgetRow = {
@@ -104,7 +109,7 @@ it("renders exact reserved project usage through the shared bound projection and
   expect(screen.getByRole("link")).toHaveTextContent("Less than 1% used");
   const tooltip = await screen.findByRole("tooltip");
   expect(tooltip).toHaveTextContent("Reserved:");
-  expect(within(tooltip).getAllByText("1 Units")).toHaveLength(2);
+  expect(within(tooltip).getAllByText("1 billing unit")).toHaveLength(2);
   expect(await screen.findByRole("tooltip")).toBeInTheDocument();
 });
 it("offers budget editing without a fabricated spend for an unbounded project", () => {
@@ -123,7 +128,7 @@ it("offers budget editing without a fabricated spend for an unbounded project", 
   );
   expect(screen.getByRole("link")).toHaveAttribute(
     "href",
-    "/app/prj_example/integrations?tab=usage&budget=edit",
+    "/app/prj_example/providers?tab=usage&budget=edit",
   );
   expect(screen.getByRole("link")).not.toHaveTextContent("$0");
 });
@@ -152,10 +157,10 @@ it("links configured project bounds to usage and preserves every denomination", 
   const links = screen.getAllByRole("link");
   expect(links).toHaveLength(1);
   for (const link of links)
-    expect(link).toHaveAttribute("href", "/app/prj_example/integrations?tab=usage");
+    expect(link).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  expect(tooltip).toHaveTextContent("1 Units");
+  expect(tooltip).toHaveTextContent("1 billing unit");
   expect(tooltip).toHaveTextContent("< $0.01");
 });
 it.each(["unavailable", "forbidden"] as const)(
@@ -242,7 +247,7 @@ it("never rounds a partial lower bound upward", async () => {
   expect(screen.getByRole("link")).toHaveTextContent("At least some usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  expect(tooltip).toHaveTextContent("≈ 1 Units");
+  expect(tooltip).toHaveTextContent("≈ 1 billing unit");
   expect(tooltip).not.toHaveTextContent("1.02");
   expect(container.querySelector('[data-usagekit="usage-cap-pill"]')).toHaveAttribute(
     "data-coverage",
@@ -269,7 +274,7 @@ it("gives the no-budget header link its Polish accessible name", async () => {
   );
   expect(screen.getByRole("link", { name: "Brak budżetu, ustaw go" })).toHaveAttribute(
     "href",
-    "/app/prj_example/integrations?tab=usage&budget=edit",
+    "/app/prj_example/providers?tab=usage&budget=edit",
   );
 });
 
@@ -337,10 +342,7 @@ it("keeps unavailable scoped budgets reachable without leaking redacted figures"
       }}
     />,
   );
-  expect(screen.getByRole("link")).toHaveAttribute(
-    "href",
-    "/app/prj_example/integrations?tab=usage",
-  );
+  expect(screen.getByRole("link")).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
   await userEvent.tab();
   expect(await screen.findByRole("tooltip")).not.toHaveTextContent("998");
 });
@@ -395,8 +397,8 @@ it("distinguishes app and programmatic traffic within their own provider budget 
   const agents = within(tooltip).getByText("API and agents").closest("li");
   expect(app).not.toHaveTextContent("API and agents");
   expect(agents).not.toHaveTextContent("App and schedules");
-  expect(app).toHaveTextContent("1,000 Units / month");
-  expect(agents).toHaveTextContent("1,000 Units / month");
+  expect(app).toHaveTextContent("1,000 billing units / month");
+  expect(agents).toHaveTextContent("1,000 billing units / month");
 });
 
 it("keeps no-limit viewer chrome informational without a budget-edit action", () => {
@@ -447,13 +449,13 @@ it.each(
   );
   expect(
     screen.getByRole("link", { name: "Budget usage: No limit. View details" }),
-  ).toHaveAttribute("href", "/app/prj_example/integrations?tab=usage");
+  ).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
   if (kind === "disabled" && role === "owner") {
     expect(within(tooltip).getByRole("link", { name: "Set limit" })).toHaveAttribute(
       "href",
-      "/app/prj_example/integrations?tab=usage&budget=edit",
+      "/app/prj_example/providers?tab=usage&budget=edit",
     );
   } else {
     expect(within(tooltip).getByText("No limit")).toBeVisible();

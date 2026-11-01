@@ -38,6 +38,6 @@ export function emptyRankCopy(
   return {
     action: providerConnected ? "run_first_check" : "connect_provider",
     depth: trackedDepth,
-    href: appPath(projectRef, "integrations"),
+    href: appPath(projectRef, "providers"),
   };
 }

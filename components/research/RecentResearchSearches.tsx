@@ -3,8 +3,6 @@
 import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { usePaymentAmountFormatter } from "@/components/action-payment/use-payment-amount-formatter";
 import type { RecentKeywordResearch } from "@/lib/keyword-research/recent-searches";
-import { wholeSecondsRemaining } from "@/lib/ui/format-duration";
-import { useFormatDuration } from "@/lib/ui/use-format-duration";
 import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
@@ -18,16 +16,6 @@ type RecentResearchSearchesProps = {
   searches: RecentKeywordResearch[];
 };
 
-function freeFor(
-  value: string,
-  now: Date,
-  formatDuration: (seconds: number) => string,
-  t: ReturnType<typeof useTranslations<"projectResearch.recent">>,
-) {
-  const seconds = wholeSecondsRemaining(value, now);
-  return seconds > 0 ? t("freeFor", { duration: formatDuration(seconds) }) : t("expired");
-}
-
 export function RecentResearchSearches({
   disabled = false,
   disabledHint,
@@ -37,7 +25,6 @@ export function RecentResearchSearches({
 }: Readonly<RecentResearchSearchesProps>) {
   const presentAmount = usePaymentAmountFormatter();
   const t = useTranslations("projectResearch.recent");
-  const formatDuration = useFormatDuration();
   const searchT = useTranslations("projectResearch.search");
   const modeLabels = {
     auto: searchT("modeAuto"),
@@ -101,7 +88,7 @@ export function RecentResearchSearches({
                   presented={payment ? presentAmount(payment.charge) : undefined}
                 />
                 <span className="rounded-full bg-accent-soft px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text">
-                  {freeFor(search.cachedUntil, now, formatDuration, t)}
+                  {t("saved")}
                 </span>
               </button>
               <button

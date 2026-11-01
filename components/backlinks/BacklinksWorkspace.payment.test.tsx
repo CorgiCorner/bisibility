@@ -69,6 +69,7 @@ it("confirms the exact backlinks lookup, then independently quotes an append aga
           payment: quote,
         }}
         context={{
+          cacheTtlSeconds: 86_400,
           defaultTarget: "example.com",
           recentTargets: [],
           providerStatus: "connected",

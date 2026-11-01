@@ -5,17 +5,26 @@ import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
-import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
+import {
+  DataForSeoError,
+  dataForSeoSubmissionRejection,
+  redactedMessage,
+  safeDataForSeoStatusMessage,
+} from "./dataforseo-errors";
 import { dataForSeoResponseCostCents } from "./dataforseo-payload";
 import { pricedTasksetBody } from "./dataforseo-priced-taskset";
+import { dataForSeoAuthorization } from "./dataforseo-queued-authorization";
 import { queuedRankTaskPayload } from "./dataforseo-queued-payload";
+import {
+  queuedAccountFailureCodes,
+  queuedResponseCostCents,
+} from "./dataforseo-queued-response-facts";
 
 const TASK_POST_URL = "https://api.dataforseo.com/v3/serp/google/organic/task_post";
 const TASKS_READY_URL = "https://api.dataforseo.com/v3/serp/google/organic/tasks_ready";
 const TASK_GET_URL = "https://api.dataforseo.com/v3/serp/google/organic/task_get/advanced";
 const TASK_POST_TIMEOUT_MS = 30_000;
 const CREATED_STATUS = 20100;
-
 export type DataForSeoQueuedTaskInput = {
   attribution: ProviderRequestAttribution;
   correlationId: string;
@@ -42,14 +51,16 @@ type TaskPostResponse = {
   status_message?: string;
   tasks?: TaskResponse[];
 };
-
 export class DataForSeoAmbiguousSubmissionError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  constructor(
+    message: string,
+    options?: ErrorOptions,
+    readonly httpStatus?: number,
+  ) {
     super(message, options);
     this.name = "DataForSeoAmbiguousSubmissionError";
   }
 }
-
 export function legacyDataForSeoQueuedTaskTag(correlationId: string) {
   return `bisibility:rank:${correlationId}`.slice(0, 255);
 }
@@ -57,18 +68,7 @@ export function legacyDataForSeoQueuedTaskTag(correlationId: string) {
 /** @deprecated Only for resolving submissions created before provider usage tags. */
 export const dataForSeoQueuedTaskTag = legacyDataForSeoQueuedTaskTag;
 
-export function dataForSeoAuthorization(credentials: ProviderCredentials) {
-  if (!credentials.login || !credentials.password) {
-    throw new DataForSeoError("DataForSEO queued tasks require login and password.");
-  }
-  return `Basic ${Buffer.from(`${credentials.login}:${credentials.password}`).toString("base64")}`;
-}
-
-/** An explicit nonnegative provider cost in cents, or null when the cost is unknown. */
-function costCents(value: unknown): number | null {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
-  return Number((value * 100).toFixed(4));
-}
+export { dataForSeoAuthorization } from "./dataforseo-queued-authorization";
 
 async function postTasks(
   credentials: ProviderCredentials,
@@ -92,16 +92,16 @@ async function postTasks(
     if (response.status >= 500) {
       throw new DataForSeoAmbiguousSubmissionError(
         `DataForSEO task submission returned HTTP ${response.status}; acceptance is unknown.`,
+        undefined,
+        response.status,
       );
     }
-    const data = (await response.json()) as TaskPostResponse;
-    if (!response.ok) {
-      throw new DataForSeoError(
-        redactedMessage(
-          data.status_message ?? `DataForSEO task submission failed with HTTP ${response.status}.`,
-          credentials,
-        ),
-        response.status === 429,
+    const data = (await response.json().catch(() => null)) as TaskPostResponse | null;
+    if (!response.ok) throw dataForSeoSubmissionRejection(response.status, data, credentials);
+    if (!data) {
+      throw new DataForSeoAmbiguousSubmissionError(
+        `DataForSEO task submission returned an unreadable HTTP ${response.status} body; acceptance is unknown.`,
+        undefined,
         response.status,
       );
     }
@@ -134,6 +134,9 @@ export type DataForSeoQueuedSubmissionResult = {
   }>;
   failed: Array<{ correlationId: string; costCents: number | null; message: string }>;
   unknown: Array<{ correlationId: string; message: string }>;
+  /** Envelope status when DataForSEO answered with something other than success. */
+  envelope?: { statusCode?: number; statusMessage?: string };
+  accountFailureCodes?: number[];
 };
 
 type QueuedSubmissionInput = {
@@ -142,7 +145,6 @@ type QueuedSubmissionInput = {
   tasks: DataForSeoQueuedTaskInput[];
 };
 
-/** Capture credentials, attribution and all pricing fields before the first asynchronous step. */
 export function prepareDataForSeoQueuedTasks(input: QueuedSubmissionInput) {
   const snapshot = {
     credentials: { login: input.credentials.login, password: input.credentials.password },
@@ -187,28 +189,44 @@ async function submitPreparedTasks(
     if (task.status_code === CREATED_STATUS && task.id) {
       accepted.push({
         correlationId,
-        costCents: costCents(task.cost),
+        costCents: queuedResponseCostCents(task.cost),
         providerTaskId: task.id,
         tag,
       });
     } else {
       failed.push({
         correlationId,
-        costCents: costCents(task.cost),
+        costCents: queuedResponseCostCents(task.cost),
         message: task.status_message ?? "DataForSEO rejected the queued task.",
       });
     }
   }
   const accounted = new Set([...accepted, ...failed].map((task) => task.correlationId));
+  const statusMessage = safeDataForSeoStatusMessage(data.status_message, input.credentials);
+  const envelope =
+    typeof data.status_code === "number" && data.status_code !== 20000
+      ? { statusCode: data.status_code, ...(statusMessage ? { statusMessage } : {}) }
+      : undefined;
+  const cause = envelope ? ` (status ${envelope.statusCode}: ${statusMessage ?? "none"})` : "";
   for (const task of input.tasks) {
     if (!accounted.has(task.correlationId)) {
       unknown.push({
         correlationId: task.correlationId,
-        message: "DataForSEO did not return a task result for this correlation.",
+        message: `DataForSEO did not return a task result for this correlation${cause}.`,
       });
     }
   }
-  return { accepted, failed, unknown };
+  const accountFailureCodes = queuedAccountFailureCodes([
+    data.status_code,
+    ...(data.tasks ?? []).map((task) => task.status_code),
+  ]);
+  return {
+    accepted,
+    failed,
+    unknown,
+    ...(envelope ? { envelope } : {}),
+    ...(accountFailureCodes.length ? { accountFailureCodes } : {}),
+  };
 }
 
 type QueuedGetOptions = {

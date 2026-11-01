@@ -4,7 +4,15 @@ const mocks = vi.hoisted(() => ({ findMany: vi.fn() }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { domainOverviewSnapshot: { findMany: mocks.findMany } },
+  prisma: {
+    domainOverviewSnapshot: {
+      findMany: async (input: unknown) =>
+        (await mocks.findMany(input)).map((row: Record<string, unknown>) => ({
+          project: { lookupCacheTtlSeconds: null },
+          ...row,
+        })),
+    },
+  },
 }));
 
 import { recentDomainOverviewTargets } from "./recent";
@@ -16,6 +24,34 @@ describe("recent domain overview targets", () => {
     vi.stubEnv("DEMO_MODE", "");
   });
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    [2_592_000, "2026-09-10T12:00:00.000Z", "2026-09-10T12:00:00.000Z"],
+    [3_600, "2026-09-10T12:00:00.000Z", "2026-08-11T13:00:00.000Z"],
+    [2_592_000, "2026-08-12T00:00:00.000Z", "2026-08-12T00:00:00.000Z"],
+  ])(
+    "bounds recent cache labels by current policy and stored expiry",
+    async (ttl, stored, expected) => {
+      mocks.findMany.mockResolvedValue([
+        {
+          cachedUntil: new Date(stored),
+          fetchedAt: new Date("2026-08-11T12:00:00.000Z"),
+          languageCode: "en",
+          locationCode: 2840,
+          project: { lookupCacheTtlSeconds: ttl },
+          scope: "root",
+          target: "example.com",
+        },
+      ]);
+
+      const result = await recentDomainOverviewTargets(
+        "project_1",
+        8,
+        new Date("2026-08-11T12:30:00.000Z"),
+      );
+      expect(result[0].cachedUntil).toBe(expected);
+    },
+  );
 
   it.each(["snapshot", "editable"])(
     "keeps %s demo targets visible for 30 days with the report expiry",
@@ -181,6 +217,7 @@ describe("recent domain overview targets", () => {
         languageCode: true,
         locationCode: true,
         overview: true,
+        project: { select: { lookupCacheTtlSeconds: true } },
         scope: true,
         target: true,
       },

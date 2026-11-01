@@ -7,6 +7,7 @@
       "description": "Diagnostyka operacyjna całej instancji. Dane klientów są reprezentowane wyłącznie przez identyfikatory."
     },
     "navigation": {
+      "instance": "Instancja",
       "label": "Sekcje administracji instancją",
       "operations": "Operacje",
       "administration": "Administracja",
@@ -152,7 +153,7 @@
       },
       "stats": {
         "title": "Statystyki instancji",
-        "description": "Liczniki instancji oraz zakończone zużycie SERP w bieżącym miesiącu UTC.",
+        "description": "Liczniki instancji i zużycie dostawców we wszystkich projektach i typach operacji. Wybierz okres zużycia poniżej.",
         "unavailable": "Statystyki instancji są niedostępne.",
         "users": "Użytkownicy",
         "projects": "Projekty",
@@ -262,7 +263,7 @@
       },
       "consumption": {
         "title": "Największe zużycie",
-        "description": "10 wierszy projekt/dostawca o najwyższym koszcie referencyjnym w tym miesiącu. Stawki wprowadzone przez użytkownika są pomijane.",
+        "description": "10 grup projekt/dostawca z najwyższym zapisanym kosztem w wybranym okresie, ze wszystkich typów operacji.",
         "empty": "Nie zapisano żadnych zakończonych sprawdzeń SERP w tym miesiącu.",
         "note": "Koszty referencyjne opierają się na utrzymywanych stawkach dostawców i zapisanych jednostkach zapytań. Rozstrzygające pozostają faktury od dostawcy.",
         "tableLabel": "Największe zużycie według projektu i dostawcy w tym miesiącu",
@@ -508,14 +509,16 @@
         "failed": "Nieudane odzyskania",
         "unconfirmed": "Niepotwierdzone rozliczenie",
         "historical": "Historyczne braki",
-        "retainedResults": "Wyniki do przywrócenia"
+        "retainedResults": "Wyniki do przywrócenia",
+        "closedUnknown": "Zamknięte, koszt nieznany"
       },
       "categories": {
         "all": "Wszystkie sprawy",
         "unfinished": "Niedokończona praca",
         "accounting": "Braki w rozliczeniu",
         "failed": "Nieudane odzyskania",
-        "historical": "Historyczne rozliczenie"
+        "historical": "Historyczne rozliczenie",
+        "closed_unknown": "Zamknięte z nieznanym kosztem"
       },
       "states": {
         "not_started": "Nie rozpoczęto",
@@ -526,7 +529,8 @@
         "unfinished": "Niedokończone",
         "obsolete": "Już nieaktualne",
         "measured": "Potwierdzone",
-        "not_applicable": "Brak powiązanej operacji"
+        "not_applicable": "Brak powiązanej operacji",
+        "stopped": "Zatrzymane"
       },
       "fundingSources": {
         "byok": "Własne konto providera",
@@ -655,14 +659,17 @@
           "scheduled": "Zaplanowane",
           "attempting": "Wyszukiwanie",
           "resolved": "Rozwiązane",
-          "operator_review": "Weryfikacja operatora"
+          "operator_review": "Weryfikacja operatora",
+          "closed_unknown": "Zamknięte, koszt nieznany"
         },
         "partialKinds": {
           "partial": "Częściowe",
           "unresolved": "Nierozstrzygnięte"
         },
         "utcTimestamp": "{timestamp} UTC"
-      }
+      },
+      "closedUnknown": "Zamknięte, koszt nieznany",
+      "closedUnknownNote": "Operator zamknął te zgłoszenia. Pierwotny koszt pozostaje nieznany. Historia jest zachowana; te same zgłoszenia nie uruchomią ponownie odzyskiwania ani przypomnień."
     },
     "dangerousActions": {
       "notice": "Włącz uwierzytelnianie dwuskładnikowe, aby {action}.",
@@ -678,6 +685,40 @@
         "repairUsage": "naprawić dane użycia",
         "importUsage": "zaimportować dane użycia"
       }
+    },
+    "recoveryAccounting": {
+      "title": "Rozliczenia Recovery (cała historia)",
+      "description": "Zachowane zamknięcia ze wszystkich okresów. Ich zapisane koszty są wliczone do zużycia za całą historię. Nieznane kwoty pozostają nieznane.",
+      "historical": "Zachowany koszt historyczny (niepełna tożsamość dostawcy)",
+      "closedUnknown": "Zamknięte z nieznanym kosztem",
+      "unknown": "Koszt nieznany",
+      "requests": "{count, plural, one {# zgłoszenie} few {# zgłoszenia} many {# zgłoszeń} other {# zgłoszenia}}",
+      "view": "Zobacz wpisy Recovery",
+      "ledger": "Zobacz rejestr zużycia",
+      "unavailable": "Rozliczenia Recovery są niedostępne. Nieznanych kwot nie zastąpiono zerem."
+    },
+    "instanceUsage": {
+      "period": "Okres zużycia",
+      "all": "Cała historia",
+      "month": "Bieżący miesiąc (UTC)",
+      "scope": "Zapisane zużycie we wszystkich projektach i typach operacji, również w zachowanej historii.",
+      "operations": "Operacje",
+      "cost": "Zapisany koszt",
+      "unknownEntries": "Koszt nieznany (wpisy)",
+      "unknown": "Nieznany",
+      "provider": "Dostawca",
+      "project": "ID projektu",
+      "copyProject": "Kopiuj ID projektu",
+      "unattributed": "Projekt nieprzypisany",
+      "unknownProvider": "Dostawca nieznany",
+      "share": "Udział w zapisanym koszcie",
+      "providerTable": "Zużycie dostawców w całej instancji",
+      "topTable": "Największe zużycie w instancji",
+      "empty": "Brak zapisanego zużycia w tym okresie.",
+      "unavailable": "Zużycie instancji jest niedostępne. Nieznanych kosztów nie zastąpiono zerem.",
+      "note": "Koszty pochodzą z ostatniego zapisanego rachunku każdej operacji. Korekta jest liczona raz. Nieznane kwoty nie są wliczane do sum kosztów; rozstrzygające są faktury dostawców.",
+      "topNote": "10 grup projekt/dostawca z najwyższym zapisanym kosztem. Udziały odnoszą się do zapisanego kosztu całej instancji. Nieznane kwoty i nieznana tożsamość dostawcy są zachowane.",
+      "referenceTitle": "Koszty referencyjne SERP (bieżący miesiąc UTC)"
     }
   }
 }

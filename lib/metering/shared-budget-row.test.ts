@@ -54,3 +54,21 @@ it("withholds crossed alerts and fallback warnings when ownership is unproven", 
   });
   expect(sharedBudgetRow(status, "conn_public", false)?.warningAt).toBeNull();
 });
+
+it("projects an estimate as approximate exposure with its alerts and geometry kept", () => {
+  const row = sharedBudgetRow(status, "conn_public", "estimated");
+  expect(row).toMatchObject({
+    used: { text: "1.6", certainty: "estimated" },
+    reserved: { text: "0", certainty: "estimated" },
+    remaining: { text: "-0.6", certainty: "estimated" },
+    bar: { used: "80", reserved: "0", limit: "50" },
+    level: "warning",
+  });
+  expect(sharedBudgetRow(status, "conn_public", "unknown")).toMatchObject({
+    used: "unavailable",
+    level: "unavailable",
+  });
+  expect(sharedBudgetRow(status, "conn_public", "measured")).toEqual(
+    sharedBudgetRow(status, "conn_public", true),
+  );
+});

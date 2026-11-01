@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import { EmailSendError } from "@/lib/email/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sesEmailProvider } from "./ses";
@@ -89,6 +90,35 @@ describe("ses email provider", () => {
       Destination: { ToAddresses: ["owner@example.com"] },
       FromEmailAddress: "bisibility <reports@example.com>",
     });
+  });
+
+  it("serializes both unsubscribe headers into the SES request body", async () => {
+    sendMock.mockResolvedValue({});
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    const headers = {
+      "List-Unsubscribe": "<https://example.com/unsubscribe?token=opaque>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+    await sesEmailProvider.send({ ...message, headers });
+    const input = sendMock.mock.calls[0][0].input;
+    const { SESv2Client, SendEmailCommand } =
+      await vi.importActual<typeof import("@aws-sdk/client-sesv2")>("@aws-sdk/client-sesv2");
+    let requestBody = "";
+    const client = new SESv2Client({
+      region: "eu-central-1",
+      credentials: { accessKeyId: "test", secretAccessKey: "test" },
+      requestHandler: {
+        handle: async (request: { body?: unknown }) => {
+          requestBody = String(request.body);
+          return { response: { statusCode: 200, headers: {}, body: Readable.from(["{}"]) } };
+        },
+      },
+    });
+    await client.send(new SendEmailCommand(input));
+    expect(JSON.parse(requestBody).Content.Simple.Headers).toEqual([
+      { Name: "List-Unsubscribe", Value: headers["List-Unsubscribe"] },
+      { Name: "List-Unsubscribe-Post", Value: headers["List-Unsubscribe-Post"] },
+    ]);
   });
 
   it("sets the monitored Reply-To address", async () => {

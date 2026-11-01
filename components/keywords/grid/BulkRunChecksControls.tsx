@@ -48,7 +48,7 @@ export function BulkRunChecksControls({
         <Button
           component={Link}
           endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
-          href={appPath(projectId, "integrations")}
+          href={appPath(projectId, "providers")}
           size="xs"
         >
           {t("connectProvider")}

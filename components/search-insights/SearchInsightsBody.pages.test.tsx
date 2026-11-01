@@ -158,7 +158,7 @@ v.describe("SearchInsightsBody", () => {
         r.within(card).getByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
       ).toBeInTheDocument();
       v.expect(heading.parentElement).not.toContainElement(manage);
-      v.expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
+      v.expect(manage).toHaveAttribute("href", "/app/prj_1/providers?connect=ga4");
       v.expect(r.within(card).getByTestId("data-table-footer")).toContainElement(manage);
       v.expect(t.pageColumnHeaders(card).some((item) => item.textContent === "Key events")).toBe(
         false,
@@ -215,7 +215,7 @@ v.describe("SearchInsightsBody", () => {
     const trafficCard = t.pagesCard();
     const trafficHeading = r.within(trafficCard).getByRole("heading", { name: "Top pages" });
     const manage = r.within(trafficCard).getByRole("link", { name: "Manage GA4" });
-    v.expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
+    v.expect(manage).toHaveAttribute("href", "/app/prj_1/providers?connect=ga4");
     v.expect(manage).toHaveClass("hover:underline");
     v.expect(manage).not.toHaveClass("underline");
     v.expect(trafficHeading.parentElement).not.toContainElement(manage);

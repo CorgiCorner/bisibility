@@ -66,14 +66,30 @@ it("distinguishes confirmed zero measurements from unknown measurements", () => 
     state: "ok",
     complete: true,
     measurements: {
-      requests: { text: "0", unit: "requests", certainty: "measured" },
-      units: { text: "", unit: "units", certainty: "unknown" },
+      units: { text: "0", unit: "units", certainty: "measured" },
+      cents: { text: "", unit: "cents", certainty: "unknown" },
     },
   };
   render(<UsageSummary data={data} />);
   expect(screen.getByText("0")).toBeInTheDocument();
   expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
   expect(screen.queryByText("No usage in this period.")).toBeNull();
+});
+it("leaves the raw request count out of the summary cards", () => {
+  const data = emptyProjectUsage();
+  data.status = "available";
+  data.summary = {
+    ...data.summary,
+    state: "ok",
+    complete: true,
+    measurements: {
+      requests: "unavailable",
+      units: { text: "4", unit: "units", certainty: "measured" },
+    },
+  };
+  render(<UsageSummary data={data} />);
+  expect(screen.getByText("4")).toBeInTheDocument();
+  expect(screen.queryByText("Requests")).toBeNull();
 });
 it("shows empty state without duplicating project budget cards", () => {
   const data = emptyProjectUsage();

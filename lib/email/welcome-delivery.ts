@@ -1,6 +1,7 @@
 import "server-only";
 
 import { resolveFounderEmailIdentity } from "./founder-email-identity";
+import { oneClickUnsubscribeUrl } from "./one-click-link";
 import { sendEmail } from "./send";
 import { welcomeEmail, welcomeFollowupEmail } from "./welcome-template";
 
@@ -40,5 +41,10 @@ export async function sendWelcomeFollowupEmail(
 ) {
   const identity = resolveFounderEmailIdentity();
   const message = welcomeFollowupEmail({ ...recipient, ...identity });
-  await sendEmail({ ...message, category: "bulk", to: recipient.email });
+  await sendEmail({
+    ...message,
+    category: "bulk",
+    to: recipient.email,
+    listUnsubscribeUrl: oneClickUnsubscribeUrl(recipient.unsubscribeUrl, "marketing"),
+  });
 }

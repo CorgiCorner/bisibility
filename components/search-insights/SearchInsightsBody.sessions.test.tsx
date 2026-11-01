@@ -233,7 +233,7 @@ v.describe("SearchInsightsBody", () => {
     v.expect(r.within(card).getByText("84")).toBeInTheDocument();
     v.expect(r.screen.getByRole("link", { name: "Manage GA4" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations?connect=ga4",
+      "/app/prj_1/providers?connect=ga4",
     );
     v.expect(r.screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
   });

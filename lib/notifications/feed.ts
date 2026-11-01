@@ -75,12 +75,17 @@ function mapNotification(
         ? renderSummary(row.type as "manual_run_summary" | "scheduled_window_summary", row.payload)
         : row;
   const display = notificationDisplay(row.type, row.body, row.payload, row.project);
+  const accountBlock =
+    row.payload &&
+    typeof row.payload === "object" &&
+    !Array.isArray(row.payload) &&
+    row.payload.kind === "account_block";
 
   return {
     body: copy.body,
     createdAt: row.createdAt.toISOString(),
     href:
-      row.type === "provider_incident"
+      row.type === "provider_incident" && !accountBlock
         ? row.project
           ? appPath(row.project.publicId, "runs")
           : appRootPath()
@@ -88,7 +93,7 @@ function mapNotification(
     id: requiredPublicId(row.publicId, "ntf", "Notification"),
     meta: row.type === "provider_incident" || summary ? (copy.body ?? "") : display.meta,
     payload: redactAuditIds(
-      row.type === "provider_incident"
+      row.type === "provider_incident" && !accountBlock
         ? {
             ...(row.payload && typeof row.payload === "object" && !Array.isArray(row.payload)
               ? row.payload
@@ -131,12 +136,41 @@ export async function listNotificationsForScope(
           select: { id: true },
         })
       : [];
+    const accountIncidents = scope.activeProjectId
+      ? await prisma.providerAccountIncident.findMany({
+          where: {
+            resolvedAt: null,
+            connection: {
+              projectId: scope.activeProjectId,
+              project: {
+                OR: [{ ownerId: scope.userId }, { members: { some: { userId: scope.userId } } }],
+              },
+            },
+          },
+          select: {
+            id: true,
+            connectionId: true,
+            credentialVersion: true,
+            connection: { select: { recoveryAccount: { select: { credentialVersion: true } } } },
+          },
+        })
+      : [];
     const rows = await prisma.notification.findMany({
       where: {
         ...notificationFeedWhere(scope.userId, scope.activeProjectId),
         type: "provider_incident",
         projectId: scope.activeProjectId,
-        idempotencyKey: { in: incidents.map(({ id }) => `provider-incident:${id}`) },
+        idempotencyKey: {
+          in: [
+            ...incidents.map(({ id }) => `provider-incident:${id}`),
+            ...accountIncidents
+              .filter(
+                ({ credentialVersion, connection }) =>
+                  connection.recoveryAccount?.credentialVersion === credentialVersion,
+              )
+              .map(({ id, connectionId }) => `provider-account:${connectionId}:${id}`),
+          ],
+        },
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: notificationSelect,

@@ -251,7 +251,7 @@ describe("BulkActionBar inside one market", () => {
 
     expect(screen.getByRole("link", { name: "Połącz dostawcę SERP" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
     expect(screen.queryByRole("button", { name: "Wybierz głębokość" })).not.toBeInTheDocument();
   });

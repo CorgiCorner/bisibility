@@ -77,13 +77,7 @@ export function NativeAllocationObservation({
   const known = value && value !== "unavailable" && value.certainty !== "unknown";
   const amount = known ? numbers.budgetFigure(value) : null;
   const unit =
-    !known || value.unit === "USD"
-      ? ""
-      : value.unit === "searches"
-        ? t("searchesAdornment")
-        : value.unit === "units"
-          ? p.unit(value.unit)
-          : value.unit;
+    !known || value.unit === "USD" ? "" : p.providerUnit(value.unit, providerName, value.text);
   const certainty = known
     ? value.certainty === "measured"
       ? null

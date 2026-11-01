@@ -53,7 +53,7 @@ export default function AddKeywordSuggestionsPanel({
         <p className="m-0 text-sm leading-6 text-fg-muted">{t("unavailable")}</p>
         <Link
           className="text-sm font-semibold text-fg underline underline-offset-4"
-          href={appPath(projectId, "integrations")}
+          href={appPath(projectId, "providers")}
         >
           {t("manageIntegrations")}
         </Link>

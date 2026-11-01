@@ -6,7 +6,7 @@
     "pageLimitError": "Elige entre 1 y 15 páginas.",
     "run": "Iniciar auditoría",
     "running": "Rastreando sitio",
-    "cost": "Hasta 15 segundos · Sin créditos del proveedor · Resultados en caché durante 5 minutos",
+    "cost": "Hasta 15 segundos · Sin créditos del proveedor · Los resultados se reutilizan según la configuración de caché del proyecto",
     "readOnly": "Tu rol o el modo de solo lectura impide iniciar auditorías. Los informes guardados siguen disponibles.",
     "history": "Historial de auditorías",
     "loadingHistory": "Cargando informe guardado...",

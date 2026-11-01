@@ -21,6 +21,8 @@ export type VerifiedOwnBudgetBinding = {
 };
 export type OwnBudgetRead = {
   binding: VerifiedOwnBudgetBinding;
-  budgets: readonly { status: BudgetStatus; figuresKnown: boolean }[];
+  /** figuresKnown means measured or zero. estimated: ownership is proved, but part of the
+   * amount is still an admission estimate; exact consumers must keep ignoring it. */
+  budgets: readonly { status: BudgetStatus; figuresKnown: boolean; estimated?: true }[];
 };
 export type OwnBudgetReader = (input: OwnBudgetReadInput) => Promise<OwnBudgetRead | null>;

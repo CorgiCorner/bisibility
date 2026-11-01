@@ -51,7 +51,10 @@ const METADATA_ROUTING_KEYS = ["api", "se", "se_type", "function"] as const;
 function sameRouting(endpointPath: string, metadata: Record<string, unknown>) {
   const parts = endpointPath.split("/").slice(2);
   return METADATA_ROUTING_KEYS.every(
-    (key, index) => !Object.hasOwn(metadata, key) || metadata[key] === parts[index],
+    (key, index) =>
+      !Object.hasOwn(metadata, key) ||
+      metadata[key] === parts[index] ||
+      (endpointPath === ORGANIC_POST_PATH && key === "function" && metadata[key] === "task_get"),
   );
 }
 

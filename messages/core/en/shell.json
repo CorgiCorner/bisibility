@@ -74,7 +74,7 @@
         "dashboard": "Dashboard",
         "domainOverview": "Domain Overview",
         "install": "Install",
-        "integrations": "Integrations",
+        "integrations": "Providers",
         "keywordResearch": "Keyword Research",
         "markets": "Markets",
         "rankTracker": "Rank Tracker",
@@ -129,7 +129,16 @@
       "allNotifications": "All notifications",
       "filterError": "Could not load open incidents.",
       "allTab": "All",
-      "incidentsTab": "Incidents"
+      "incidentsTab": "Incidents",
+      "accountBlock": {
+        "title": "{provider} connection paused",
+        "body": "Check the provider account in Providers. Your existing schedule is saved.",
+        "resolvedTitle": "{provider} account verified",
+        "resolvedBody": "Future checks can use this connection, subject to any remaining accounting hold. Missed checks are not retried automatically.",
+        "billing": "Check the provider account payment or available capacity in Providers.",
+        "credentials": "Ask a project owner to update the provider credentials in Providers.",
+        "restricted": "Check the provider account permissions in Providers."
+      }
     },
     "operations": {
       "actionError": "Could not update this operation. Refresh and try again.",
@@ -156,7 +165,7 @@
           "budgetWithoutAmounts": "Usage needs review. Check budget and unresolved accounting before trying again.",
           "keywordArchived": "This keyword was archived before the check started, so it was stopped before it cost anything.",
           "marketInactive": "This keyword's market is paused, so the check was stopped before it cost anything.",
-          "noProvider": "Review the selected data source in Integrations to start this run.",
+          "noProvider": "Review the selected data source in Providers to start this run.",
           "providerUnavailable": "The provider isn't reachable right now. The run starts on its own once it reconnects.",
           "waiting": "This run is waiting to start. It will continue automatically when it can.",
           "workerCloud": "The background worker isn't reachable right now. The run starts on its own once it reconnects.",
@@ -298,7 +307,7 @@
         "docs": "Docs",
         "domainOverview": "Domain Overview",
         "gettingStarted": "Get set up",
-        "integrations": "Integrations",
+        "integrations": "Providers",
         "install": "Install",
         "importFromAnotherInstance": "Import from another instance",
         "instanceAdministration": "Instance administration",
@@ -353,7 +362,10 @@
         "label": "Default project: {name}",
         "makeDefault": "Make default project",
         "makeDefaultDescription": "Opens first when you sign in."
-      }
+      },
+      "limitReached": "{limit, plural, one {# project} other {# projects}} limit reached",
+      "limitHelp": "Your account can own up to {limit, plural, one {# project} other {# projects}}. Click to contact support and raise the limit, or delete a project you no longer need.",
+      "limitSupportMessage": "Hi, I'd like to raise my project limit. My account can own up to {limit, plural, one {# project} other {# projects}}."
     },
     "writeMode": {
       "migrationSettings": "Migration settings",

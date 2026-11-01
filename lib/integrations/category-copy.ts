@@ -1,6 +1,6 @@
 import type { ProviderKind } from "@/lib/providers/types";
 
-export type ActiveIntegrationKind = Extract<ProviderKind, "analytics" | "serp">;
+export type ActiveIntegrationKind = Extract<ProviderKind, "analytics" | "serp" | "enrichment">;
 
 export type IntegrationCategoryCopy = {
   description: string;
@@ -9,9 +9,9 @@ export type IntegrationCategoryCopy = {
 };
 
 export const SERP_INTEGRATION_CATEGORY_COPY = {
-  description: "Connect providers that run Google rank checks in Rank Tracker.",
-  eyebrow: "Google rank checks - priority fallback",
-  title: "SERP providers",
+  description: "Connect data providers for rank tracking, SEO research and domain metrics.",
+  eyebrow: "Rankings, research and domain metrics",
+  title: "SEO data",
 } satisfies IntegrationCategoryCopy;
 
 export const ANALYTICS_INTEGRATION_CATEGORY_COPY = {
@@ -22,6 +22,11 @@ export const ANALYTICS_INTEGRATION_CATEGORY_COPY = {
 } satisfies IntegrationCategoryCopy;
 
 export const INTEGRATION_CATEGORY_COPY = {
+  enrichment: {
+    description: "Track your domain's backlink authority with daily Domain Rating observations.",
+    eyebrow: "Domain authority",
+    title: "SEO enrichment",
+  },
   analytics: ANALYTICS_INTEGRATION_CATEGORY_COPY,
   serp: SERP_INTEGRATION_CATEGORY_COPY,
 } satisfies Record<ActiveIntegrationKind, IntegrationCategoryCopy>;

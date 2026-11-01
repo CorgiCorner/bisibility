@@ -73,7 +73,7 @@ export function MonitorWorkspace({
         </Link>
         <Link
           className="text-accent underline-offset-4 hover:underline"
-          href={appPath(asProjectRef(projectId), "integrations")}
+          href={appPath(asProjectRef(projectId), "providers")}
         >
           {t("reviewIntegrations")}
         </Link>

@@ -21,6 +21,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
+import { appExtensions } from "@/lib/app-extensions";
 import { appVersion } from "@/lib/app-version";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
@@ -40,6 +41,7 @@ import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getExperimentalModules } from "@/lib/queries/experimental-modules";
+import { readActorReachedProjectLimit } from "@/lib/queries/project-limit";
 import { listProjectMarketOptions } from "@/lib/queries/project-markets";
 import { loadSetupContext } from "@/lib/queries/setup-context";
 import { listWorkspaces } from "@/lib/queries/workspaces";
@@ -108,6 +110,13 @@ export async function WorkspaceShell({
     notFound();
   }
   const canCreateWorkspace = !isDemo && Boolean(session.user.id);
+  // Same count the create action enforces, so the switcher blocks only what the server refuses.
+  const reachedProjectLimit = canCreateWorkspace ? await readActorReachedProjectLimit() : null;
+  // Only builds with an in-app support channel explain how to raise the limit.
+  const projectLimit =
+    reachedProjectLimit === null
+      ? null
+      : { canContactSupport: appExtensions.supportAvailable(), limit: reachedProjectLimit };
   // Demo identities are shared and their account settings are locked server-side.
   const canSetDefault = !isDemo;
   const accountNotice = isDemo
@@ -177,6 +186,7 @@ export async function WorkspaceShell({
                 <Sidebar
                   activeProjectId={active.publicId}
                   canCreateWorkspace={canCreateWorkspace}
+                  projectLimit={projectLimit}
                   canSetDefault={canSetDefault}
                   enabledExperimentalModules={enabledExperimentalModules}
                   planStatus={planStatus}
@@ -224,6 +234,7 @@ export async function WorkspaceShell({
                     }
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}
+                    projectLimit={projectLimit}
                     canSetDefault={canSetDefault}
                     context={<Suspense fallback={<HeaderContextLoading />}>{context}</Suspense>}
                     enabledExperimentalModules={enabledExperimentalModules}

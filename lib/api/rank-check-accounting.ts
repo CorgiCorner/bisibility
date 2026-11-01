@@ -2,7 +2,7 @@ import "server-only";
 
 import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 import { evidenceProjectionResource } from "@/lib/provider-evidence/projection/wire";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 import {
   type RunLedgerActual,
   rankCheckLedgerActuals,

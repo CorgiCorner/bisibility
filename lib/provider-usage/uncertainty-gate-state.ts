@@ -1,6 +1,6 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { Prisma as SQL } from "@/lib/metering/store/host-sql";
-import { finalReceiptJoin, unknownAccounting } from "./reconcile-state";
+import { actionableUnknownAccounting, finalReceiptJoin } from "./reconcile-state";
 
 /** Shared financial classifier; reading eligibility never supersedes a gate. */
 export async function uncertaintyScopeUnknownCount(
@@ -14,7 +14,7 @@ export async function uncertaintyScopeUnknownCount(
       : SQL.sql`o.input->'scope'->>'connection'=${scope.connection}`;
   const [row] = await tx.$queryRaw<{ unknown: bigint }[]>(SQL.sql`
     SELECT count(*) AS unknown FROM metering_operation o ${finalReceiptJoin}
-    WHERE o.namespace=${namespace} AND ${constraint} AND ${unknownAccounting}`);
+    WHERE o.namespace=${namespace} AND ${constraint} AND ${actionableUnknownAccounting}`);
   if (!row) throw new Error("Uncertainty scope classification unavailable");
   return row.unknown;
 }

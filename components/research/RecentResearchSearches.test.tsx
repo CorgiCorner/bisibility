@@ -87,9 +87,10 @@ describe("RecentResearchSearches", () => {
   });
 
   it.each([
-    ["2026-07-22T20:00:00.000Z", "cached, free for 10 hours"],
-    ["2026-07-22T16:00:00.000Z", "cached, free for 6 hours"],
-  ])("derives the remaining cache TTL from %s", (cachedUntil, expected) => {
+    ["2026-07-22T20:00:00.000Z", "Saved search"],
+    ["2026-07-22T16:00:00.000Z", "Saved search"],
+    ["2026-07-21T16:00:00.000Z", "Saved search"],
+  ])("does not infer server cache availability from saved expiry %s", (cachedUntil, expected) => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-22T10:00:00.000Z"));
 
@@ -142,14 +143,14 @@ describe("RecentResearchSearches", () => {
   it.each([
     {
       cachedUntil: "2026-07-24T00:00:00.000Z",
-      expectedCacheLabel: "cached, free for 8 hours",
+      expectedCacheLabel: "Saved search",
       expectedScopeLabel: "Spain / Spanish - just now",
       name: "displays a live country-language scope",
       scopeLabel: "Spain / Spanish",
     },
     {
       cachedUntil: "2026-07-23T15:00:00.000Z",
-      expectedCacheLabel: "cache expired",
+      expectedCacheLabel: "Saved search",
       expectedScopeLabel: "Spain / Spanish - just now",
       name: "displays a derived legacy country-language scope after expiry",
       scopeLabel: "Spain / Spanish",
@@ -174,13 +175,14 @@ describe("RecentResearchSearches", () => {
     );
   });
 
-  it("shows when the cache window has expired", () => {
+  it("keeps expired local history without promising a cache hit", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));
 
     render(<RecentResearchSearches onOpen={vi.fn()} onRemove={vi.fn()} searches={[search]} />);
 
-    expect(screen.getByText("cache expired")).toBeInTheDocument();
+    expect(screen.getByText("Saved search")).toBeInTheDocument();
+    expect(screen.queryByText(/cached, free for/)).not.toBeInTheDocument();
   });
   it("shows the retained original charge separately from a free cached read", () => {
     const quote = paymentQuote();

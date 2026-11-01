@@ -120,10 +120,16 @@ export async function getSearchInsightsSignals(
   projectId: string,
   property: string,
   window: DateWindow,
+  sequential = false,
 ): Promise<SearchInsightsSignals> {
-  const [bandCount, overlapCount] = await Promise.all([
-    getPositionBandCount(projectId, property, window),
-    getOverlapCount(projectId, property, window),
-  ]);
+  const [bandCount, overlapCount] = sequential
+    ? [
+        await getPositionBandCount(projectId, property, window),
+        await getOverlapCount(projectId, property, window),
+      ]
+    : await Promise.all([
+        getPositionBandCount(projectId, property, window),
+        getOverlapCount(projectId, property, window),
+      ]);
   return { bandCount, overlapCount };
 }

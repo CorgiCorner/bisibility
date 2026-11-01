@@ -245,11 +245,14 @@ export async function runRankCheckActivity(
     if (error instanceof ProviderChainError) {
       if (input.rankCheckId) {
         const result = await prisma.rankCheck.updateMany({
-          data: { attempts: error.attempts.map(({ message, provider }) => ({ message, provider })), errorCode: error.dominantCode },
+          data: { attempts: error.attempts.map(({ message, provider, reason }) => ({ message, provider, ...(reason ? { reason } : {}) })), errorCode: error.deferralReason ? null : error.dominantCode },
           where: { id: input.rankCheckId, status: "running" },
         });
         if (result.count === 0) throw ApplicationFailure.create({ message: "Rank check was closed before its result could be persisted.", nonRetryable: true, type: RANK_CHECK_CLOSED_FAILURE });
       }
+      if (error.deferralReason) throw ApplicationFailure.create({ message: error.deferralReason, nonRetryable: true, type: error.deferralReason });
+      if (error.attempts.some((attempt) => attempt.reason === "account_blocked") && error.attempts.some((attempt) => attempt.reason === "provider_failed"))
+        throw ApplicationFailure.create({ message: error.message, nonRetryable: true, type: "provider_chain_failed" });
       const allocationExhausted =
         error.attempts.length > 0 &&
         error.attempts.every((attempt) => attempt.reason === "allocation_exhausted" || attempt.reason === "funding_exhausted");

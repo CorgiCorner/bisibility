@@ -12,6 +12,7 @@ export const DEFERRAL_REASON_CODES = [
   "primary_provider_not_dataforseo",
   "project_ineligible",
   "project_read_only",
+  "provider_account_blocked",
   "queued_dataforseo_disabled",
   "queued_submission_disabled",
   "quote_unavailable",

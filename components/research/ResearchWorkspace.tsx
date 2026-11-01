@@ -160,7 +160,7 @@ export function ResearchWorkspace({
       <ProviderAccessGate
         blocked={!hasProvider}
         showNotice={hasResults}
-        href={appPath(context.project.id, "integrations")}
+        href={appPath(context.project.id, "providers")}
         providers={context.supportingProviders}
       >
         <div className="w-full">
@@ -227,7 +227,7 @@ export function ResearchWorkspace({
       />
       {!hasProvider && !hasResults ? (
         <ProviderAccessEmptyState
-          href={appPath(context.project.id, "integrations")}
+          href={appPath(context.project.id, "providers")}
           providers={context.supportingProviders}
         />
       ) : null}

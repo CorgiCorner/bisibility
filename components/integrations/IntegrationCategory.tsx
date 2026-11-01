@@ -54,10 +54,20 @@ export function IntegrationCategory({
     };
     return rank(a.id) - rank(b.id);
   });
-  const title = category.id === "serp" ? t("serpTitle") : t("analyticsTitle");
-  const description = category.id === "serp" ? t("serpDescription") : t("analyticsDescription");
+  const title =
+    category.id === "enrichment"
+      ? t("enrichmentTitle")
+      : category.id === "serp"
+        ? t("serpTitle")
+        : t("analyticsTitle");
+  const description =
+    category.id === "enrichment"
+      ? t("enrichmentDescription")
+      : category.id === "serp"
+        ? t("serpDescription")
+        : t("analyticsDescription");
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" data-integration-category={category.id}>
       <div className="space-y-1">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2.5">
           <SectionTitle component="h2" size="md">
@@ -68,7 +78,7 @@ export function IntegrationCategory({
       </div>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] items-stretch gap-3">
         {providers.map((provider, index) => {
-          const isFirstSerpProvider = category.id === "serp" && index === 0;
+          const isFirstSerpProvider = provider.kind === "serp" && index === 0;
 
           return (
             <ProviderCard
@@ -106,7 +116,7 @@ export function IntegrationCategory({
         <ProjectSerpChain
           canManageProviders={canManageProviders}
           projectId={projectId}
-          providers={category.providers}
+          providers={category.providers.filter((provider) => provider.kind === "serp")}
         />
       ) : null}
     </section>

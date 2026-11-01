@@ -8,7 +8,9 @@ import {
   sleep,
   workflowInfo,
 } from "@temporalio/workflow";
+import { TASKSET_SUBMISSION_ACTIVITY_TIMEOUT } from "../provider-usage/taskset-timeouts";
 import type { QueuedRankCheckModeAuthorization } from "../rank-check/queued-mode";
+import type { QueuedRefusalProof } from "../rank-check/queued-refusal-contract";
 import {
   QUEUED_DEADLINE_REASON,
   QUEUED_INSPECTION_ACTIVITY_HEARTBEAT_TIMEOUT,
@@ -38,10 +40,13 @@ type LifecycleActivities = {
     reason: string;
   }): Promise<QueuedBatchProgress>;
   queuedRankCheckBatchProgressActivity(input: { batchId: string }): Promise<QueuedBatchProgress>;
+  persistQueuedRefusalActivity(input: QueuedRefusalProof): Promise<QueuedBatchProgress>;
 };
 
 type SubmissionActivities = {
-  submitQueuedRankCheckBatchActivity(input: { batchId: string }): Promise<{ state: string }>;
+  submitQueuedRankCheckBatchActivity(input: {
+    batchId: string;
+  }): Promise<{ state: string; refusal?: QueuedRefusalProof }>;
 };
 
 type InspectionActivities = {
@@ -62,6 +67,7 @@ const {
   authorizeQueuedRankCheckBatchActivity,
   prepareQueuedRankCheckBatchActivity,
   queuedRankCheckBatchProgressActivity,
+  persistQueuedRefusalActivity,
   timeoutQueuedRankCheckBatchActivity,
 } = proxyActivities<LifecycleActivities>({
   retry: {
@@ -80,7 +86,7 @@ const { submitQueuedRankCheckBatchActivity } = proxyActivities<SubmissionActivit
     maximumAttempts: 3,
     maximumInterval: "30 seconds",
   },
-  startToCloseTimeout: "45 seconds",
+  startToCloseTimeout: TASKSET_SUBMISSION_ACTIVITY_TIMEOUT,
 });
 
 const { inspectQueuedRankCheckBatchActivity } = proxyActivities<InspectionActivities>({
@@ -160,7 +166,12 @@ export async function queuedRankCheckBatchWorkflow(
   let deadlineReached = queueExpired(startedAt, prepared.maxQueueAgeSeconds);
   if (!deadlineReached && authorization.allowSubmit) {
     const submitted = await submitQueuedRankCheckBatchActivity({ batchId: prepared.batchId });
-    lastKnownState = submitted.state;
+    if (submitted.state === "refusal_pending") {
+      if (!submitted.refusal) throw new Error("Queued refusal proof is missing.");
+      const persisted = await persistQueuedRefusalActivity(submitted.refusal);
+      if (persisted.pending === 0) return persisted;
+      lastKnownState = persisted.state;
+    } else lastKnownState = submitted.state;
   } else if (!deadlineReached && prepared.state === "prepared") {
     return timeoutQueuedRankCheckBatchActivity({
       batchId: prepared.batchId,

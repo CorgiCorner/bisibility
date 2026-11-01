@@ -2,7 +2,7 @@ import { historySourceHash } from "@/lib/metering/history-evidence";
 import { historicalOperation } from "@/lib/metering/history-mapping";
 import { source } from "@/lib/metering/history-test-data";
 import { canonical, encode, hash } from "@/lib/metering/store/codec";
-import { type CloseoutManifest, closeoutPolicy } from "./manifest";
+import { type CloseoutManifest, closeoutPolicy, liveConnectionCloseoutPolicy } from "./manifest";
 import type { CloseoutSnapshot } from "./snapshot";
 
 export function closeoutFixture() {
@@ -33,6 +33,7 @@ export function closeoutFixture() {
     project: { id: "project", publicId: "prj_fixture" },
     migration: { checksum: "verified", finished: true, verified: true },
     schemaAvailable: true,
+    live: null,
     entries: [
       {
         operation,
@@ -77,4 +78,28 @@ export function closeoutFixture() {
     ],
   };
   return { snapshot, manifest, now: new Date("2026-10-18T12:01:00.000Z") };
+}
+
+/** The same original import, still on its existing BYOK connection with a retained snapshot. */
+export function liveCloseoutFixture() {
+  const base = closeoutFixture();
+  base.snapshot.live = {
+    connection: {
+      id: "connection",
+      projectId: "project",
+      provider: "dataforseo",
+      credentialSource: "own",
+    },
+    retainedSettings: [
+      {
+        kind: "connection",
+        source_id: "connection",
+        payload: { id: "connection", projectId: "project", provider: "dataforseo" },
+      },
+    ],
+    cutoff: "2026-10-11T02:10:00.000Z",
+  };
+  base.snapshot.entries[0]!.facts.retainedIdentity = true;
+  base.manifest.policy = liveConnectionCloseoutPolicy;
+  return base;
 }

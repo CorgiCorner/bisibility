@@ -1,7 +1,9 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
-import { persistQueuedSubmissionResult } from "@/lib/rank-check/queued-submit-persist";
+import { recordQueuedAccountFailure } from "./queued-account-failure";
+import type { QueuedSubmissionResult } from "./queued-refusal-contract";
 import { completeOwnedQueuedSubmission } from "./queued-submission-completion";
 import { admissionDeferral } from "./queued-submit-deferral";
+import { queuedSubmissionDiagnostic } from "./queued-submit-diagnostics";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -27,6 +29,7 @@ import {
   type DataForSeoQueuedSubmissionResult,
   prepareDataForSeoQueuedTasks,
 } from "@/lib/providers/serp/dataforseo-queued";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { queuedRankCheckConfig } from "@/lib/rank-check/queued-config";
 import { deferQueuedRankCheckBatch } from "@/lib/rank-check/queued-lifecycle";
 import { queuedRankCheckModeAuthorization } from "@/lib/rank-check/queued-mode";
@@ -38,11 +41,18 @@ import {
   type QueuedTaskUsageJournal,
 } from "@/lib/rank-check/queued-usage-journal";
 import { rankCheckSchedulerMode } from "@/lib/rank-check/scheduler-mode";
+import {
+  deferQueuedRefusal,
+  queuedMinimumCapacity,
+  recordQueuedCodes,
+  resumePriorRefusal,
+  resumeUnclaimedBatch,
+} from "./queued-account-observation";
+import { completeQueuedResponse } from "./queued-submit-complete";
 import { queuedRankPaymentSessions } from "./runs/payment-queued";
 
 const TERMINAL_STATES = new Set(["completed", "deferred", "failed"]);
-
-export function submitQueuedRankCheckBatch(batchId: string) {
+export function submitQueuedRankCheckBatch(batchId: string): Promise<QueuedSubmissionResult> {
   return completeOwnedQueuedSubmission(batchId, (ownClaim) => submitBatch(batchId, ownClaim));
 }
 async function submitBatch(batchId: string, ownClaim: () => void) {
@@ -53,6 +63,10 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
   });
   const authorization = queuedRankCheckModeAuthorization(schedulerMode, existing.state);
   if (!authorization.allowSubmit) {
+    if (existing.state === "submitting") {
+      const resumed = await resumePriorRefusal(batchId);
+      if (resumed) return resumed;
+    }
     if (authorization.allowPaidRetrieval) return { state: existing.state };
     const progress = await deferQueuedRankCheckBatch(
       batchId,
@@ -72,22 +86,13 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       return { state: progress.state };
     }
     if (isOperationAccessDeniedError(error)) {
-      // The claim rolled back, so the batch is still prepared: defer it with
-      // the neutral message and touch no provider credentials.
       const progress = await deferQueuedRankCheckBatch(batchId, error.message);
       return { state: progress.state };
     }
     throw error;
   }
   if (TERMINAL_STATES.has(claimed.batch.state)) return { state: claimed.batch.state };
-  if (!claimed.claimed) {
-    return claimed.batch.state === "submitting"
-      ? markAmbiguous(
-          batchId,
-          "Submission activity resumed after the paid-call fence; recovering by task tag.",
-        )
-      : { state: claimed.batch.state };
-  }
+  if (!claimed.claimed) return resumeUnclaimedBatch(batchId, claimed.batch);
   ownClaim();
   const config = queuedRankCheckConfig();
   if (!config.enabled) {
@@ -217,44 +222,36 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       throw error;
     }
     phase = "responded";
-    if (execution) {
-      await execution.record([
-        ...result.accepted.map((task) => ({
-          correlationId: task.correlationId,
-          costCents: task.costCents,
-          failed: false,
-          providerRequestId: task.providerTaskId,
-        })),
-        ...result.failed.map((task) => ({
-          correlationId: task.correlationId,
-          costCents: task.costCents,
-          failed: true,
-        })),
-      ]);
-    } else {
-      await journal?.settle(result);
-    }
-    await persistQueuedSubmissionResult(batchId, result, execution);
-    await execution?.finish();
-    const authoritative = await prisma.queuedRankCheckBatch.findUniqueOrThrow({
-      select: { state: true },
-      where: { id: batchId },
-    });
-    return { state: authoritative.state };
+    await recordQueuedCodes(
+      connection,
+      claimed.batch.projectId,
+      result.accountFailureCodes ?? [],
+      journal,
+    );
+    return await completeQueuedResponse(batchId, connection.id, result, execution, journal);
   } catch (error) {
     const message = error instanceof Error ? error.message : "DataForSEO task submission failed.";
+    const diagnostic = queuedSubmissionDiagnostic(batchId, connection.id, submissionPhase(), error);
+    await recordQueuedAccountFailure(
+      connection,
+      claimed.batch.projectId,
+      error,
+      queuedMinimumCapacity(journal),
+    );
     if (submissionPhase() === "unknown") {
       return markAmbiguous(
         batchId,
         error instanceof DataForSeoAmbiguousSubmissionError
           ? message
           : `DataForSEO task submission acceptance is unknown: ${message}`,
+        diagnostic,
       );
     }
     if (submissionPhase() === "responded") {
       return markAmbiguous(
         batchId,
         `DataForSEO accepted the batch but queued persistence failed: ${message}`,
+        diagnostic,
       );
     }
     if (submissionPhase() === "not_sent") {
@@ -264,7 +261,16 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       return markAmbiguous(
         batchId,
         `DataForSEO submission rejection is not proof of zero charge: ${message}`,
+        diagnostic,
       );
+    if (error instanceof ProviderRecoveryAdmissionError) {
+      return deferQueuedRefusal(
+        batchId,
+        connection,
+        claimed.batch.tasks.map((task) => task.rankCheckId),
+        error,
+      );
+    }
     if (
       error instanceof BudgetExhaustedError ||
       error instanceof ProviderAllocationExhaustedError
@@ -288,6 +294,6 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       const progress = await deferQueuedRankCheckBatch(batchId, message);
       return { state: progress.state };
     }
-    return markDefiniteFailure(batchId, message);
+    return markDefiniteFailure(batchId, message, diagnostic);
   }
 }

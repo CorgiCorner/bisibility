@@ -15,9 +15,14 @@ import { useTranslations } from "next-intl";
 type SettingsSubnavProps = {
   activeSection: SettingsSectionId;
   projectRef: ProjectRef;
+  showUsage?: boolean;
 };
 
-export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsSubnavProps>) {
+export function SettingsSubnav({
+  activeSection,
+  projectRef,
+  showUsage = true,
+}: Readonly<SettingsSubnavProps>) {
   const t = useTranslations("projectSettingsShell");
 
   return (
@@ -35,7 +40,11 @@ export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsS
               </h2>
               <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
                 {settingsSections
-                  .filter((section) => group.sections.some((id) => id === section.id))
+                  .filter(
+                    (section) =>
+                      (showUsage || section.id !== "usage") &&
+                      group.sections.some((id) => id === section.id),
+                  )
                   .map((section) => {
                     const current = section.id === activeSection;
                     const Icon = section.icon;

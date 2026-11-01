@@ -46,6 +46,29 @@ describe("AdminShell", () => {
     expect(screen.getByText("Operations")).toHaveAttribute("aria-current", "page");
   });
 
+  it("separates deployment extensions without duplicating shared navigation", () => {
+    setNavigationState({ pathname: "/app/admin/insights" });
+    const { container } = render(
+      <AdminShell
+        extraTabs={[
+          { href: "/app/admin/insights", label: "Product insights", section: "Cloud" },
+          { href: "/app/admin/signups", label: "Signups", section: "Cloud" },
+        ]}
+      >
+        Content
+      </AdminShell>,
+    );
+    expect(container.querySelectorAll("[data-admin-navigation-group]")).toHaveLength(2);
+    expect(container.querySelector('[data-admin-navigation-group="Instance"]')).toHaveTextContent(
+      "Operations",
+    );
+    expect(container.querySelector('[data-admin-navigation-group="Cloud"]')).toHaveTextContent(
+      "Product insights",
+    );
+    expect(screen.getByText("Product insights")).toHaveAttribute("aria-current", "page");
+    expect(screen.getAllByRole("link", { name: "Operations" })).toHaveLength(1);
+  });
+
   it.each([
     ["/app/admin/administration", "Administration"],
     ["/app/admin/audit", "Audit"],
@@ -66,7 +89,7 @@ const ownedRoots = [
   "components/admin",
   "components/audit",
   "app/(regional)/app/admin",
-  "app/(regional)/app/(workspace)/[project]/integrations",
+  "app/(regional)/app/(workspace)/[project]/providers",
   "app/(regional)/app/(workspace)/[project]/settings/(sections)/data-sources",
 ] as const;
 

@@ -42,6 +42,15 @@ describe("queued TaskGET final cost", () => {
     expect(() => explicitQueuedGetCostCents({ tasks: [] }, "native")).toThrow(/native identity/);
   });
 
+  it("accepts a partial task's own final cost", () => {
+    expect(
+      explicitQueuedGetCostCents(
+        { tasks: [{ id: "native", status_code: 40106, cost: 0.0012 }] },
+        "native",
+      ),
+    ).toBe(0.12);
+  });
+
   it("never treats pending or lookup errors as final receipts, regardless of cost", () => {
     for (const status_code of [20100, 40601, 40602, 40401, 40403, 50000]) {
       for (const cost of [0, 0.024]) {

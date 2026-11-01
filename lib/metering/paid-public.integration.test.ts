@@ -9,6 +9,7 @@ import {
 } from "./admission";
 import { budget, input, nativeReceipt, paidFixture, required } from "./paid-attempt-test-fixture";
 import { ensureProjectSpendingBudget } from "./project-budget-bootstrap";
+import { createRecoveryAdmissionFixture } from "./recovery-admission-test-fixture";
 import { settlePaidAttempt } from "./settlement";
 import { Prisma } from "./store/host-sql";
 
@@ -26,6 +27,7 @@ test("public default BYOK binding admits without private tables and fences crede
     await f.run(async (tx) => {
       await tx.$executeRaw`CREATE TABLE projects(id text primary key, "ownerId" text, "budgetCapCents" int)`;
       await tx.$executeRaw`CREATE TABLE provider_connections(id text primary key, "projectId" text, "publicId" text, provider text, "credentialSource" text, enabled boolean, status text, "credentialsEncrypted" text)`;
+      await createRecoveryAdmissionFixture(tx);
       await tx.$executeRaw`INSERT INTO projects VALUES('project','owner',0)`;
       await ensureProjectSpendingBudget(tx, "test", "project");
       await tx.$executeRaw`INSERT INTO provider_connections VALUES('connection','project','public-connection','dataforseo','own',true,'connected','encrypted-envelope')`;

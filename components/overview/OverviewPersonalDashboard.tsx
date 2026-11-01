@@ -3,6 +3,7 @@ import { PersonalDashboardSurface } from "@/components/dashboard-layout/Personal
 import { LocalReportCard } from "@/components/dashboard-local/LocalReportCard";
 import { LocalSubjectControl } from "@/components/dashboard-local/LocalSubjectControl";
 import { localReportSummary } from "@/components/dashboard-local/report-summary";
+import { DomainRatingSection } from "@/components/domain-rating/DomainRatingSection";
 import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { ViewAllKeywordsButton } from "@/components/overview/OverviewNoDataBottom";
 import type { OverviewCompetitorComparison } from "@/lib/competitors/overview-comparison";
@@ -11,7 +12,7 @@ import type { LocalDashboardContext, LocalReport } from "@/lib/dashboard-local/m
 import type { DashboardSurfacePreference } from "@/lib/project-surface-preferences/dashboard-model";
 import type { CheckHealth } from "@/lib/queries/check-health";
 import { getFormatter, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { ByMarketRollup } from "./ByMarketRollup";
 import { DataSourcePanel } from "./DataSourcePanel";
 import { HighlightLists } from "./HighlightLists";
@@ -20,6 +21,7 @@ import { OverviewContributorsCard } from "./OverviewContributorsCard";
 import { OverviewHealthBanners } from "./OverviewHealthBanners";
 import { OverviewKpiGrid } from "./OverviewKpiGrid";
 import { OverviewReportHistoryCard } from "./OverviewReportHistoryCard";
+import { OverviewSetupNotice } from "./OverviewSetupNotice";
 import { OverviewToolbar } from "./OverviewToolbar";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
@@ -30,6 +32,8 @@ export async function OverviewPersonalDashboard({
   checkHealth,
   competitors,
   canCreateKeyword,
+  canManageProviders = true,
+  canRunChecks = true,
   personal,
   loadedProjections,
   localReport,
@@ -40,6 +44,8 @@ export async function OverviewPersonalDashboard({
   failedProjections?: readonly ProjectionId[];
   competitors: OverviewCompetitorComparison | null;
   canCreateKeyword: boolean;
+  canManageProviders?: boolean;
+  canRunChecks?: boolean;
   personal: {
     access: DashboardAccess;
     layout: DashboardLayout;
@@ -64,6 +70,15 @@ export async function OverviewPersonalDashboard({
         ? ready(content)
         : { state: "not_loaded" as const };
   const widgets: DashboardCompositorProps["widgets"] = {
+    ...(personal.layout.widgets.some((widget) => widget.id === "domain_rating" && widget.visible)
+      ? {
+          domain_rating: ready(
+            <Suspense fallback={null}>
+              <DomainRatingSection projectRef={projectRef} />
+            </Suspense>,
+          ),
+        }
+      : {}),
     ...(localReport
       ? {
           local_business_results: loaded(
@@ -179,8 +194,19 @@ export async function OverviewPersonalDashboard({
             <p className="text-sm text-fg-muted">{t("readOnly")}</p>
           ) : null,
           health:
-            checkHealth && checkHealth.failed24h.count > 0 ? (
-              <OverviewHealthBanners checkHealth={checkHealth} projectRef={projectRef} />
+            checkHealth && (overview.state !== "populated" || checkHealth.failed24h.count > 0) ? (
+              <>
+                <OverviewSetupNotice
+                  overview={overview}
+                  checkHealth={checkHealth}
+                  canCreateKeyword={canCreateKeyword}
+                  canManageProviders={canManageProviders}
+                  canRunChecks={canRunChecks}
+                />
+                {checkHealth && checkHealth.failed24h.count > 0 ? (
+                  <OverviewHealthBanners checkHealth={checkHealth} projectRef={projectRef} />
+                ) : null}
+              </>
             ) : null,
           budget: checkHealth?.budget.exhausted ? (
             <p className="text-sm text-fg-muted">{t("budgetBlocked")}</p>

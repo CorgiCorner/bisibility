@@ -245,9 +245,9 @@ const railNavEntries = [
   { group: "project", label: "Runs", scope: "project", segment: "runs", icon: PlayCircle },
   {
     group: "project",
-    label: "Integrations",
+    label: "Providers",
     scope: "project",
-    segment: "integrations",
+    segment: "providers",
     icon: PuzzlePiece,
   },
   { group: "project", label: "Install", scope: "project", segment: "install", icon: Sparkle },

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { Prisma as SQL } from "@/lib/metering/store/host-sql";
+import { closedUnknownAccounting } from "./uncertainty-closeout-state";
 
 // Both health and uncertainty gates read the final receipt, never a business projection.
 export const unknownAccounting = SQL.sql`(o.state IN ('pending','dispatch_intended') OR
@@ -10,7 +11,7 @@ export const unknownAccounting = SQL.sql`(o.state IN ('pending','dispatch_intend
       AND h.version=o.version AND h.receipt_id=r.body->>'id'
       AND h.original_receipt_id=r.body->>'supersedes' AND h.source_hash=j.source_hash AND h.target_hash=j.target_hash
       AND j.namespace=o.namespace AND j.operation_id=o.operation_id AND j.created_operation
-      AND h.policy='known-cost-incomplete-byok-v1' AND h.disposition='financially_closed_identity_incomplete'
+      AND h.policy IN ('known-cost-incomplete-byok-v1','known-cost-incomplete-byok-live-connection-v1','known-cost-incomplete-byok-retired-settings-v1') AND h.disposition='financially_closed_identity_incomplete'
       AND o.input->>'fundingSource'='byok' AND r.body->'metadata'->'historicalCloseout'->>'policy'=h.policy
   )) OR r.body IS NULL OR
     r.body->'cost'->>'certainty' IS DISTINCT FROM 'measured' OR
@@ -19,6 +20,7 @@ export const unknownAccounting = SQL.sql`(o.state IN ('pending','dispatch_intend
 export const finalReceiptJoin = SQL.sql`LEFT JOIN LATERAL (
   SELECT body FROM metering_receipt WHERE operation_pk=o.operation_pk ORDER BY sequence DESC LIMIT 1
 ) r ON TRUE`;
+export const actionableUnknownAccounting = SQL.sql`(${unknownAccounting} AND NOT ${closedUnknownAccounting})`;
 export async function reconciliationHealth(
   tx: Prisma.TransactionClient,
   namespace: string,
@@ -31,9 +33,13 @@ export async function reconciliationHealth(
       count(*) FILTER(WHERE o.created_at<${new Date(now.getTime() - 15 * 60000)}) AS overdue,
       min(o.created_at) AS oldest
     FROM metering_operation o ${finalReceiptJoin}
-    WHERE o.namespace=${namespace} AND ${unknownAccounting}`);
+    WHERE o.namespace=${namespace} AND ${actionableUnknownAccounting}`);
   if (!row) throw new Error("Accounting health is unavailable");
-  return { unconfirmed: Number(row.unconfirmed), overdue: Number(row.overdue), oldest: row.oldest };
+  return {
+    unconfirmed: Number(row.unconfirmed),
+    overdue: Number(row.overdue),
+    oldest: row.oldest,
+  };
 }
 export type RecoveryCandidate = {
   cursor: string;
@@ -62,6 +68,6 @@ export async function recoveryCandidates(
       SELECT 'o:' || o.operation_id AS cursor,'operation' AS kind,o.operation_id,o.input->'scope'->>'connection' AS connection
       FROM metering_operation o ${finalReceiptJoin}
       WHERE o.namespace=${namespace} AND o.input->>'fundingSource'='byok'
-        AND o.created_at<=${cutoff} AND ${unknownAccounting}
+        AND o.created_at<=${cutoff} AND ${actionableUnknownAccounting}
     ) candidates WHERE cursor COLLATE "C">${after} COLLATE "C" ORDER BY cursor COLLATE "C" LIMIT ${limit + 1}`);
 }

@@ -394,7 +394,7 @@ Installed packages listed: 655
 | `express-rate-limit` | 8.5.2 | transitive | MIT | git+https://github.com/express-rate-limit/express-rate-limit.git |
 | `fast-csv` | 4.3.6 | transitive | MIT | git+https://github.com/C2FO/fast-csv.git |
 | `fast-deep-equal` | 3.1.3 | transitive | MIT | git+https://github.com/epoberezkin/fast-deep-equal.git |
-| `fast-uri` | 3.1.8 | transitive | BSD-3-Clause | git+https://github.com/fastify/fast-uri.git |
+| `fast-uri` | 3.1.9 | transitive | BSD-3-Clause | git+https://github.com/fastify/fast-uri.git |
 | `fdir` | 6.5.0 | transitive | MIT | git+https://github.com/thecodrr/fdir.git |
 | `fflate` | 0.4.9 | transitive | MIT | https://github.com/101arrowz/fflate |
 | `finalhandler` | 2.1.1 | transitive | MIT | pillarjs/finalhandler |
@@ -438,7 +438,7 @@ Installed packages listed: 655
 | `inherits` | 2.0.4 | transitive | ISC | git://github.com/isaacs/inherits |
 | `internmap` | 2.0.3 | transitive | ISC | https://github.com/mbostock/internmap.git |
 | `intl-messageformat` | 11.2.14 | transitive | BSD-3-Clause | git@github.com:formatjs/formatjs.git |
-| `ip-address` | 10.7.1 | transitive | MIT | https://github.com/beaugunderson/ip-address.git |
+| `ip-address` | 10.7.4 | transitive | MIT | https://github.com/beaugunderson/ip-address.git |
 | `ipaddr.js` | 1.9.1 | transitive | MIT | git://github.com/whitequark/ipaddr.js |
 | `is-extglob` | 2.1.1 | transitive | MIT | jonschlinkert/is-extglob |
 | `is-fullwidth-code-point` | 3.0.0 | transitive | MIT | sindresorhus/is-fullwidth-code-point |
@@ -507,7 +507,7 @@ Installed packages listed: 655
 | `node-addon-api` | 7.1.1 | transitive | MIT | git://github.com/nodejs/node-addon-api.git |
 | `node-fetch` | 2.7.0 | transitive | MIT | https://github.com/bitinn/node-fetch.git |
 | `node-releases` | 2.0.54 | transitive | MIT | https://github.com/chicoxyzzy/node-releases.git |
-| `nodemailer` | 10.0.13 | direct | MIT-0 | https://github.com/nodemailer/nodemailer.git |
+| `nodemailer` | 10.1.4 | direct | MIT-0 | https://github.com/nodemailer/nodemailer.git |
 | `normalize-path` | 3.0.0 | transitive | MIT | jonschlinkert/normalize-path |
 | `object-assign` | 4.1.1 | transitive | MIT | sindresorhus/object-assign |
 | `object-inspect` | 1.13.4 | transitive | MIT | git://github.com/inspect-js/object-inspect.git |

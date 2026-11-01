@@ -89,42 +89,44 @@ export function PreflightOptionGroups({
         </div>
       </div>
 
-      <div>
-        <p className="m-0 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-fg-muted">
-          {t("primaryProvider")}
-        </p>
-        {providers.length > 1 ? (
-          <div
-            aria-label={t("primaryProviderAria")}
-            className="mt-[7px] flex flex-wrap gap-1.5"
-            role="radiogroup"
-          >
-            {providers.map((provider) => (
-              <ChoiceButton
-                active={selectedProvider === provider.id}
-                disabled={disabled}
-                key={provider.id}
-                onClick={() => onProviderChange(provider.id)}
-                title={provider.tooltip}
-              >
-                {provider.label}
-                {provider.note ? (
-                  <span className="ml-1 text-[10px] font-normal opacity-75">{provider.note}</span>
-                ) : null}
-              </ChoiceButton>
-            ))}
-          </div>
-        ) : providers[0] ? (
-          <p className="m-0 mt-[7px] text-[12px] text-fg">
-            {t("configuredProvider", { provider: providers[0].label })}
+      {providers.length > 0 || providerFallbackNote ? (
+        <div>
+          <p className="m-0 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-fg-muted">
+            {t("primaryProvider")}
           </p>
-        ) : null}
-        {providerFallbackNote ? (
-          <p className="m-0 mt-2 text-[10.5px] leading-[1.6] text-fg-muted">
-            {providerFallbackNote}
-          </p>
-        ) : null}
-      </div>
+          {providers.length > 1 ? (
+            <div
+              aria-label={t("primaryProviderAria")}
+              className="mt-[7px] flex flex-wrap gap-1.5"
+              role="radiogroup"
+            >
+              {providers.map((provider) => (
+                <ChoiceButton
+                  active={selectedProvider === provider.id}
+                  disabled={disabled}
+                  key={provider.id}
+                  onClick={() => onProviderChange(provider.id)}
+                  title={provider.tooltip}
+                >
+                  {provider.label}
+                  {provider.note ? (
+                    <span className="ml-1 text-[10px] font-normal opacity-75">{provider.note}</span>
+                  ) : null}
+                </ChoiceButton>
+              ))}
+            </div>
+          ) : providers[0] ? (
+            <p className="m-0 mt-[7px] text-[12px] text-fg">
+              {t("configuredProvider", { provider: providers[0].label })}
+            </p>
+          ) : null}
+          {providerFallbackNote ? (
+            <p className="m-0 mt-2 text-[10.5px] leading-[1.6] text-fg-muted">
+              {providerFallbackNote}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

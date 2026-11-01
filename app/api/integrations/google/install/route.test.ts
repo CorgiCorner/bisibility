@@ -59,7 +59,7 @@ describe("GET /api/integrations/google/install", () => {
       projectId,
       property: undefined,
       provider: "gsc",
-      returnPath: `/app/${projectId}/integrations`,
+      returnPath: `/app/${projectId}/providers`,
     });
   });
 
@@ -75,7 +75,7 @@ describe("GET /api/integrations/google/install", () => {
       projectId,
       property: undefined,
       provider: "ga4",
-      returnPath: `/app/${projectId}/integrations`,
+      returnPath: `/app/${projectId}/providers`,
     });
   });
 

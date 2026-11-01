@@ -1,5 +1,6 @@
 import { notificationTransaction } from "@/lib/notifications/transaction";
 import { refreshOperationIncident } from "@/lib/provider-evidence/incidents/refresh";
+import { closedUnknownOperations } from "@/lib/provider-usage/uncertainty-closeout-state";
 import { RECOVERY_MAX_LOOKUPS } from "./retry";
 import { providerRecoveryScope } from "./scope";
 import "server-only";
@@ -24,12 +25,16 @@ export async function claimRecoveryIntent(intentId: string) {
       include: { candidate: true },
     });
     if (!intent) return null;
+    if ((await closedUnknownOperations(tx, [intent.operationPk])).has(intent.operationPk))
+      return null;
     const taskId = intent.candidate.queuedTaskId;
     if (taskId) await lockRecoveryTask(tx, taskId);
     const [clock] = await tx.$queryRaw<Array<{ now: Date }>>`SELECT clock_timestamp() AS now`;
     const now = clock.now;
     if (taskId) {
-      const task = await tx.queuedRankCheckTask.findUnique({ where: { id: taskId } });
+      const task = await tx.queuedRankCheckTask.findUnique({
+        where: { id: taskId },
+      });
       if (task?.persistenceLeaseExpiresAt && task.persistenceLeaseExpiresAt > now) return null;
     }
     const exhausted = await tx.providerRecoveryIntent.updateMany({
@@ -89,7 +94,11 @@ export async function claimRecoveryIntent(intentId: string) {
     if (changed.count)
       await tx.providerOperationEvidence.update({
         where: { operationPk: intent.operationPk },
-        data: { recoveryState: "attempting", lastAttemptAt: now, nextAttemptAt: null },
+        data: {
+          recoveryState: "attempting",
+          lastAttemptAt: now,
+          nextAttemptAt: null,
+        },
       });
     return changed.count ? { intentId, owner } : null;
   });

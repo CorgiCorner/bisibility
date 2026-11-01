@@ -67,11 +67,11 @@ describe("OAuth result path validation", () => {
 
     const url = oauthResultUrl(
       "https://app.example.com/x",
-      "/app/prj_a00000000000000000000000/integrations?tab=slack",
+      "/app/prj_a00000000000000000000000/providers?tab=slack",
     );
 
     expect(url.href).toBe(
-      "https://app.example.com/app/prj_a00000000000000000000000/integrations?tab=slack",
+      "https://app.example.com/app/prj_a00000000000000000000000/providers?tab=slack",
     );
   });
 });

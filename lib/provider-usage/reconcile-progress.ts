@@ -2,10 +2,10 @@ import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { createSql, lock, Prisma as SQL } from "@/lib/metering/store/host-sql";
 import { recoverCandidate } from "./reconcile-recovery";
 import {
+  actionableUnknownAccounting,
   finalReceiptJoin,
   reconciliationHealth,
   recoveryCandidates,
-  unknownAccounting,
 } from "./reconcile-state";
 import { retainRecoveryIncident, writeReconciliationHealth } from "./reconciliation-health";
 import { recoveryErrorCode } from "./recovery-error";
@@ -115,7 +115,7 @@ export async function recoverPage(
             (${recoveryIncidentBody}->>'kind'='operation' AND EXISTS(
               SELECT 1 FROM metering_operation o ${finalReceiptJoin}
               WHERE o.namespace=${namespace} AND o.operation_id=${recoveryIncidentBody}->>'id'
-                AND NOT ${unknownAccounting}))
+                AND NOT ${actionableUnknownAccounting}))
             OR (${recoveryIncidentBody}->>'kind'='evidence' AND EXISTS(
               SELECT 1 FROM metering_usage_evidence e
               LEFT JOIN metering_history_import h ON h.namespace=e.namespace AND h.source_id=e.id
@@ -141,7 +141,10 @@ export async function recoverPage(
     if (!hasMore) await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata WHERE key=${key}`);
     await writeReconciliationHealth(tx, namespace, {
       ...(!hasMore
-        ? { lastActivityAt: new Date().toISOString(), lastCompletedAt: new Date().toISOString() }
+        ? {
+            lastActivityAt: new Date().toISOString(),
+            lastCompletedAt: new Date().toISOString(),
+          }
         : {}),
       ...(!hasMore && failed === 0 && health.unconfirmed === 0
         ? { lastCleanAt: new Date().toISOString() }
@@ -150,6 +153,13 @@ export async function recoverPage(
       unconfirmed: health.unconfirmed,
       overdue: health.overdue,
     });
-    return { hasMore, lastReconciledAt, reconciled, scanned: page.length, failed, ...health };
+    return {
+      hasMore,
+      lastReconciledAt,
+      reconciled,
+      scanned: page.length,
+      failed,
+      ...health,
+    };
   });
 }

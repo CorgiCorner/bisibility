@@ -29,15 +29,20 @@ export type RecoveryCase = {
   connection: string | null;
   createdAt: string;
   historical: boolean;
+  closedUnknown?: boolean;
   funding: "byok" | "platform" | "unknown";
   send: "not_started" | "possibly_sent" | "accepted" | "unknown";
-  work: "completed" | "unfinished" | "obsolete" | "unknown";
+  work: "completed" | "unfinished" | "stopped" | "obsolete" | "unknown";
   accounting: "unknown" | "measured" | "not_applicable";
   unknownDimensions: string[];
   proofAvailable: boolean;
   spendingGateEligible?: { project: boolean; connection: boolean };
   spendingBlocked?: { project: boolean; connection: boolean };
-  originalAuthorization?: { maxCostCents: string; targets: number; maxAttempts: number } | null;
+  originalAuthorization?: {
+    maxCostCents: string;
+    targets: number;
+    maxAttempts: number;
+  } | null;
   failure: {
     code: RecoveryErrorCode;
     attempts: number;
@@ -64,6 +69,7 @@ export type RecoveryCase = {
     | null;
 };
 export type RecoverySummary = {
+  closedUnknown?: number;
   unconfirmed: number;
   overdue: number;
   historical: number;
@@ -77,7 +83,7 @@ export type RecoverySummary = {
   lastResultActivityAt?: string | null;
 };
 export type RecoveryFilters = {
-  category?: "all" | "unfinished" | "accounting" | "failed" | "historical";
+  category?: "all" | "unfinished" | "accounting" | "failed" | "historical" | "closed_unknown";
   provider?: string;
   cursor?: string;
 };

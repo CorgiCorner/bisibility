@@ -37,6 +37,57 @@ function begin(ledger: ReturnType<typeof fakeLedger>, count = 2) {
 }
 
 describe("beginQueuedTaskUsageJournal", () => {
+  it("retries a rolled-back admission timeout with the same child identities", async () => {
+    const ledger = fakeLedger();
+    const create = ledger.table.createMany.getMockImplementation();
+    ledger.table.createMany.mockImplementationOnce(async (args) => {
+      if (!create) throw new Error("Missing fixture create");
+      await create(args);
+      throw Object.assign(new Error("Transaction expired"), {
+        code: "P2028",
+        meta: { operation: "query", timeout: 5000, timeTaken: 5012 },
+      });
+    });
+
+    await begin(ledger, 2);
+
+    expect(ledger.db.$transaction).toHaveBeenCalledTimes(2);
+    expect(ledger.rows).toHaveLength(2);
+    expect(new Set(ledger.rows.map((row) => row.id)).size).toBe(2);
+    expect(ledger.rows.map((row) => row.correlationId)).toEqual(["qtask_1", "qtask_2"]);
+  });
+
+  it("allows a bounded thirty seconds for atomic taskset admission", async () => {
+    const ledger = fakeLedger();
+    await begin(ledger, 2);
+    expect(ledger.db.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      maxWait: 10_000,
+      timeout: 30_000,
+    });
+  });
+
+  it("rechecks business authority after rollback and stops if it was withdrawn", async () => {
+    const ledger = fakeLedger();
+    const lockBusiness = vi.fn(async () => undefined);
+    const refusal = new Error("Execution no longer owns the queued check");
+    const assertRequest = vi.fn(async () => {
+      throw refusal;
+    });
+    ledger.table.createMany.mockRejectedValueOnce({ code: "P2034" });
+    await expect(
+      beginQueuedTaskUsageJournal({
+        client: ledger.db,
+        connectionId: "connection_1",
+        projectId: "project_1",
+        tasks: [taskInput(1)],
+        beforeReserve: new Map([["qtask_1", { lockBusiness, assertRequest }]]),
+      }),
+    ).rejects.toMatchObject({ cause: refusal });
+    expect(lockBusiness).toHaveBeenCalledTimes(2);
+    expect(assertRequest).toHaveBeenCalledOnce();
+    expect(ledger.rows).toHaveLength(0);
+  });
+
   it("begins one durable unknown row per queued task under its own attribution", async () => {
     const ledger = fakeLedger();
     await begin(ledger, 2);

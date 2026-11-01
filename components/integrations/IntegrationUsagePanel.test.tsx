@@ -1,3 +1,4 @@
+import { emptyProjectUsage } from "@/lib/metering/user-views";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -16,6 +17,10 @@ const mocks = vi.hoisted(() => ({
   meterCard: vi.fn((_props: { data: unknown }) => null),
 }));
 vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
+// These actors are never the configured demo owner, so any demo mode locks them.
+vi.mock("@/lib/demo/account-view", () => ({
+  resolveDemoAccountView: async () => (mocks.demo().kind === "disabled" ? "normal" : "locked"),
+}));
 vi.mock("@/components/provider-management/ProviderUiProvider", () => ({
   ProviderUiProvider: mocks.boundary,
 }));
@@ -25,7 +30,10 @@ vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.readable }));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.settings }));
 vi.mock("@/lib/metering/user-data", () => ({ getProjectMeteringUsage: mocks.metering }));
-vi.mock("./UsageSummary", () => ({ UsageSummary: mocks.meterCard }));
+vi.mock("./OwnUsageDetails", () => ({
+  OwnUsageDetails: mocks.meterCard,
+  OwnUsagePeriod: () => null,
+}));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: vi.fn(async () => ({ locale: "en", timeZone: "UTC" })),
@@ -44,7 +52,10 @@ vi.mock("@/components/settings/usage/ProviderUsageCard", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.demo.mockReturnValue({ kind: "disabled" });
-  mocks.metering.mockResolvedValue({ status: "unavailable", observed: false });
+  mocks.metering.mockResolvedValue({
+    ...emptyProjectUsage(new Date("2026-10-01T00:00:00Z")),
+    observed: false,
+  });
   mocks.settings.mockResolvedValue({
     project: { projectId: "project_1" },
     usage: { connections: [] },
@@ -89,7 +100,7 @@ it.each([
   expect(mocks.settings).not.toHaveBeenCalled();
   expect(mocks.readable).toHaveBeenCalledWith("prj_1");
   expect(mocks.metering).toHaveBeenCalledWith("prj_1");
-  expect(mocks.meterCard.mock.calls[0][0].data).toEqual({
+  expect(mocks.meterCard.mock.calls[0][0].data).toMatchObject({
     status: "unavailable",
     observed: false,
   });
@@ -128,7 +139,7 @@ it("passes the authorized usage read and edit rights to the budget extension", a
       projectId: "project_1",
       projectRef: "prj_1",
       projectName: "Example",
-      usage: { status: "unavailable", observed: false },
+      usage: expect.objectContaining({ status: "unavailable", observed: false }),
       canEditBudget: true,
       editBudget: true,
     },
@@ -156,7 +167,7 @@ it("renders the extension overview in place of the provider card and usage summa
   expect(mocks.meterCard).not.toHaveBeenCalled();
 });
 
-it("keeps the existing provider card and usage summary without an overview", async () => {
+it("keeps the provider card and own-key usage table without an overview", async () => {
   mocks.role.mockReturnValue("owner");
   mocks.readable.mockResolvedValue({
     actor: {},

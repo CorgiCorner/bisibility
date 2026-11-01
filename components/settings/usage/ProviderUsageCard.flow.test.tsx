@@ -90,7 +90,13 @@ function renderUsage() {
   return renderWithFeatureMessages(
     <ProviderUiProvider projectId="prj_story">
       <ProviderGrant />
-      <ProviderUsageCard canEditBudget projectId="prj_story" projectRef="prj_story" data={usage} />
+      <ProviderUsageCard
+        projectName="Example"
+        canEditBudget
+        projectId="prj_story"
+        projectRef="prj_story"
+        data={usage}
+      />
     </ProviderUiProvider>,
     { messages: { ...usageSettingsFeatureTestMessages, ...integrationsFeatureTestMessages } },
   );
@@ -182,6 +188,7 @@ it("reopens original ambiguous allocation status after the same principal loses 
       <ProviderUiProvider projectId="prj_story">
         <ProviderGrant />
         <ProviderUsageCard
+          projectName="Example"
           canEditBudget={canEditBudget}
           projectId="prj_story"
           projectRef="prj_story"

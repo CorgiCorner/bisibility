@@ -1,4 +1,5 @@
 import { dataForSeoObservationRun } from "@/lib/providers/serp/observation-extract-dataforseo";
+import { rankObservationState } from "@/lib/serp/rank-depth";
 import { describe, expect, it } from "vitest";
 import { opaqueIdentifier } from "./opaque-identifier";
 import { queuedDataForSeoObservation } from "./queued-dataforseo";
@@ -37,6 +38,32 @@ describe("queued capture parity", () => {
     });
     expect(queue).toEqual(live);
     expect(queue.requestPolicy.evidence?.completeThrough.organic_result).toBeNull();
+  });
+  it("renders a partial miss as coverage unknown", () => {
+    const observation = queuedDataForSeoObservation(
+      { status_code: 40106, data: { stop_crawl_on_match: [] } },
+      items,
+      20,
+      at,
+    );
+    expect(
+      rankObservationState({
+        completedChecks: 1,
+        position: null,
+        trackedDepth: 20,
+        completeness: observation.completeness,
+      }),
+    ).toEqual({ kind: "unknown", label: "Coverage unknown", position: null });
+  });
+  it("preserves stop-on-match truncation for a partial match", () => {
+    const observation = queuedDataForSeoObservation(
+      { status_code: 40106, data: { stop_crawl_on_match: [{}] } },
+      items,
+      20,
+      at,
+      true,
+    );
+    expect(observation.completeness).toBe("truncated_by_stop_on_match");
   });
   it("retains observations even when legacy request metadata is unavailable", () => {
     const queue = queuedDataForSeoObservation({}, items, 100, at);

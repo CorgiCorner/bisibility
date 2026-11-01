@@ -20,6 +20,7 @@ const messages: Record<string, string> = {
   presentationOnly: "Personal display only. Schedules and paid checks do not change.",
   preset: "Dashboard preset",
   resetPreset: "Reset to preset",
+  setDefault: "Set as my default",
   save: "Save",
   cancel: "Cancel",
   saving: "Saving display preferences.",
@@ -68,6 +69,7 @@ const widgetLabels: Record<string, string> = {
   visibility_history: "Visibility history",
   contributors: "Contributors",
   quality_history: "Quality history",
+  domain_rating: "Domain Rating",
 };
 for (const [id, label] of Object.entries(widgetLabels)) {
   messages[`widgets.${id}.label`] = label;

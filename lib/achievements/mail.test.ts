@@ -79,7 +79,12 @@ describe("milestone mail delivery", () => {
   it("combines both awards into one localized bulk message and persists its delivery", async () => {
     expect(await sweepAchievementMail(10, now)).toEqual({ sent: 1 });
     expect(m.send).toHaveBeenCalledTimes(1);
-    expect(m.send.mock.calls[0][0]).toMatchObject({ category: "bulk", to: "a@example.com" });
+    expect(m.send.mock.calls[0][0]).toMatchObject({
+      category: "bulk",
+      to: "a@example.com",
+      listUnsubscribeUrl:
+        "https://local-instance.example.com/api/email/unsubscribe/one-click?stream=achievement&token=category-only-test-token",
+    });
     expect(m.send.mock.calls[0][0].text).toContain("category-only-test-token");
     expect(m.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: "sent" }) }),

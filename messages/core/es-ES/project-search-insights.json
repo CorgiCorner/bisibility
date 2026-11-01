@@ -414,7 +414,7 @@
       "discoveredUrls": "URLs descubiertas",
       "sitemapStoredOnly": "Archivos de sitemap descubiertos y recuentos de URL de los datos guardados. No son los totales enviados a Search Console ni la jerarquía del índice de sitemaps.",
       "noSitemaps": "No hay URLs de sitemaps almacenadas. Envía un sitemap en Search Console y espera al descubrimiento. Esto no confirma que no se haya enviado ningún sitemap.",
-      "noConnection": "Conecta una propiedad de Search Console en las integraciones del proyecto para ver la indexación de páginas.",
+      "noConnection": "Conecta una propiedad de Search Console en la sección Proveedores del proyecto para ver la indexación de páginas.",
       "urls": "URLs",
       "url": "URL",
       "urlsCaption": "Cada fila es el último resultado almacenado de una URL. Abrir una fila no envía solicitudes a Google.",

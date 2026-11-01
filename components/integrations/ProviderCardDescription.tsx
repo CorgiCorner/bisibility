@@ -9,13 +9,17 @@ export function ProviderCardDescription({
   const t = useTranslations("projectIntegrations.provider");
   if (provider.credentialSource === "hosted") return null;
   const description =
-    provider.id === "gsc"
-      ? t("gscDescription")
-      : provider.id === "local-sequence"
-        ? t("localDescription")
-        : provider.kind === "serp"
-          ? t("serpDescription", { provider: provider.name })
-          : t("analyticsDescription", { provider: provider.name });
+    provider.id === "dataforseo"
+      ? t("dataforseoDescription")
+      : provider.id === "ahrefs"
+        ? t("ahrefsDescription")
+        : provider.id === "gsc"
+          ? t("gscDescription")
+          : provider.id === "local-sequence"
+            ? t("localDescription")
+            : provider.kind === "serp"
+              ? t("serpDescription", { provider: provider.name })
+              : t("analyticsDescription", { provider: provider.name });
 
-  return <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">{description}</p>;
+  return <p className="m-0 text-[12px] leading-5 text-fg-muted">{description}</p>;
 }

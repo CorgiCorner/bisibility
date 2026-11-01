@@ -2,10 +2,9 @@
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
+import { ProviderRecovery } from "@/components/integrations/provider-recovery/ProviderRecovery";
 import { ProviderDataSourceSlot } from "@/components/settings/AccountDataSourceSlot";
-import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
 import type { ProviderActionHandlers, ProviderTestResult } from "@/lib/integrations/types";
@@ -13,8 +12,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Notice } from "./ConnectDrawerSchema";
 import type { ProviderCardProps } from "./ProviderCard.types";
+import { ProviderCardActions } from "./ProviderCardActions";
 import { ProviderCardDescription } from "./ProviderCardDescription";
-import { ProviderCardDisconnectMenu } from "./ProviderCardDisconnectMenu";
 import { ProviderCardFeedback } from "./ProviderCardFeedback";
 import { ProviderCardHeader } from "./ProviderCardHeader";
 import { ProviderCardMeta } from "./ProviderCardMeta";
@@ -23,7 +22,7 @@ import { ProviderConsumerRows } from "./ProviderConsumerRows";
 export type { ProviderCardProps } from "./ProviderCard.types";
 
 import { providerCardActions } from "./provider-card-actions";
-import { outlineActionStyle, providerConsumerStatuses } from "./provider-card-config";
+import { providerConsumerStatuses, reauthMessageKey } from "./provider-card-config";
 import { useProviderTrafficSync } from "./useProviderTrafficSync";
 
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
@@ -46,14 +45,13 @@ export function ProviderCard({
   timeZone,
 }: Readonly<ProviderCardProps>) {
   const t = useTranslations("projectIntegrations.provider");
+  const tIntegrations = useTranslations("projectIntegrations");
   const [drawerOpen, setDrawerOpen] = useState(initialOpen && canManageProviders);
   const [testPending, setTestPending] = useState(false);
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
-  const { isHostedSerp, keyRemoval, managementActionKey } = providerCardActions(provider);
-  const actionVariant = provider.status === "connected" ? "secondary" : "primary";
-  const actionStyle = provider.status === "connected" ? outlineActionStyle : undefined;
+  const { isHostedSerp, managementActionKey } = providerCardActions(provider);
   const managementActionLabel = t(managementActionKey);
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
@@ -71,6 +69,13 @@ export function ProviderCard({
     readOnly,
     syncProjectTraffic: actions?.syncProjectTraffic,
   });
+  const showFooter =
+    (canManageProviders && !isHostedSerp) ||
+    (provider.kind === "serp" && canManageProviders) ||
+    (canSync && canUpdateProject && !hasConsumerRows) ||
+    Boolean(
+      disconnectNotice || testResult || (!hasConsumerRows && (provider.neverSynced || syncResult)),
+    );
   async function handleSecondaryAction() {
     if (readOnly) return;
     if (provider.secondaryAction !== "Test") {
@@ -95,98 +100,29 @@ export function ProviderCard({
       setTestPending(false);
     }
   }
-  const actionControls =
-    !isHostedSerp && (canManageProviders || (canSync && canUpdateProject && !hasConsumerRows)) ? (
-      <div
-        className={`flex max-w-full shrink-0 flex-wrap items-center gap-1.5 ${provider.kind === "serp" ? "ml-auto" : "mt-3"}`}
-      >
-        {provider.secondaryAction && canManageProviders && provider.status !== "connected" ? (
-          <ProjectReadOnlyTooltip className="inline-flex">
-            <Button
-              disabled={readOnly || testPending}
-              onClick={() => void handleSecondaryAction()}
-              size="xs"
-              style={outlineActionStyle}
-              type="button"
-              variant="secondary"
-            >
-              {testPending
-                ? t("testing")
-                : provider.secondaryAction === "Test"
-                  ? t("test")
-                  : provider.secondaryAction}
-            </Button>
-          </ProjectReadOnlyTooltip>
-        ) : null}
-        {canSync && canUpdateProject && !hasConsumerRows ? (
-          <ProjectReadOnlyTooltip className="inline-flex">
-            <Button
-              disabled={readOnly || syncPending}
-              onClick={() => void handleTrafficSync()}
-              size="xs"
-              style={outlineActionStyle}
-              type="button"
-              variant="secondary"
-            >
-              {syncPending ? t("syncing") : t("syncNow")}
-            </Button>
-          </ProjectReadOnlyTooltip>
-        ) : null}
-        {canManageProviders && readOnly && provider.status !== "connected" ? (
-          <ProjectReadOnlyTooltip className="inline-flex">
-            <Button disabled size="xs" style={actionStyle} type="button" variant={actionVariant}>
-              {provider.status === "needs_reauth" ? t("reconnect") : t("connect")}
-            </Button>
-          </ProjectReadOnlyTooltip>
-        ) : canManageProviders ? (
-          <Button
-            onClick={() => setDrawerOpen(true)}
-            size="xs"
-            style={actionStyle}
-            type="button"
-            variant={actionVariant}
-          >
-            {provider.status === "connected"
-              ? managementActionLabel
-              : provider.status === "needs_reauth"
-                ? t("reconnect")
-                : t("connect")}
-          </Button>
-        ) : null}
-        {provider.status === "connected" && canManageProviders ? (
-          <ProviderCardDisconnectMenu
-            disconnectProvider={actions?.disconnectProvider}
-            hasTest={Boolean(provider.secondaryAction)}
-            onDisconnected={() => setDrawerOpen(false)}
-            onNotice={setDisconnectNotice}
-            onTest={() => void handleSecondaryAction()}
-            projectId={projectId ?? "prj_storybook"}
-            providerId={provider.id as ProviderId}
-            providerName={provider.name}
-            readOnly={readOnly}
-            testPending={testPending}
-            keyRemoval={keyRemoval}
-          />
-        ) : null}
-      </div>
-    ) : null;
   return (
     <>
       <Card
         id={`provider-${provider.id}`}
-        className={
-          provider.kind === "serp"
-            ? "row-span-3 grid min-w-0 grid-rows-subgrid p-4"
-            : "flex min-w-0 flex-col p-4"
-        }
+        className="row-span-3 grid min-w-0 grid-rows-subgrid p-4"
         size="md"
         style={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
       >
-        <ProviderCardHeader canManageProviders={canManageProviders} provider={provider}>
-          {provider.kind === "serp" ? actionControls : null}
-        </ProviderCardHeader>
-        <div className="min-w-0">
-          <ProviderCardDescription provider={provider} />
+        <ProviderCardHeader canManageProviders={canManageProviders} provider={provider} />
+        <div className="min-w-0" data-provider-details="">
+          {provider.recovery && projectId && provider.connectionId ? (
+            <ProviderRecovery
+              key={provider.recovery.revision}
+              initial={provider.recovery}
+              providerName={provider.name}
+              accountUrl={provider.accountUrl}
+              projectId={projectId}
+              connectionId={provider.connectionId}
+              canManage={canManageProviders && !readOnly}
+            />
+          ) : (
+            <ProviderCardDescription provider={provider} />
+          )}
 
           {consumerStatuses && consumerDetails === "inline" ? (
             <ProviderConsumerRows
@@ -200,7 +136,7 @@ export function ProviderCard({
               syncResult={syncResult}
               timeZone={timeZone}
             />
-          ) : (
+          ) : provider.recovery ? null : (
             <ProviderCardMeta
               provider={
                 consumerStatuses
@@ -224,11 +160,7 @@ export function ProviderCard({
               className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text"
               role="alert"
             >
-              {provider.id === "gsc"
-                ? t("reauthGsc")
-                : provider.id === "ga4"
-                  ? t("reauthGa4")
-                  : t("reauthGeneric")}
+              {tIntegrations(reauthMessageKey(provider))}
             </p>
           ) : null}
           <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />
@@ -240,22 +172,41 @@ export function ProviderCard({
             />
           ) : null}
         </div>
-        <div className={provider.kind === "serp" ? "min-w-0" : "mt-auto"}>
-          {provider.kind === "serp" && canManageProviders ? (
-            <ProviderDataSourceSlot
-              onSelectOwn={() => setDrawerOpen(true)}
+        {showFooter ? (
+          <div
+            className="flex min-w-0 flex-col gap-3 border-t border-border pt-3"
+            data-provider-footer=""
+          >
+            {provider.kind === "serp" && canManageProviders ? (
+              <ProviderDataSourceSlot
+                onSelectOwn={() => setDrawerOpen(true)}
+                projectId={projectId}
+                provider={provider}
+              />
+            ) : null}
+            <ProviderCardFeedback
+              disconnectNotice={disconnectNotice}
+              neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
+              syncResult={hasConsumerRows ? null : syncResult}
+              testResult={testResult}
+            />
+            <ProviderCardActions
+              actions={actions}
+              canManageProviders={canManageProviders}
+              onManage={() => setDrawerOpen(true)}
+              onDisconnected={() => setDrawerOpen(false)}
+              onNotice={setDisconnectNotice}
+              onSecondaryAction={handleSecondaryAction}
+              onSync={handleTrafficSync}
               projectId={projectId}
               provider={provider}
+              readOnly={readOnly}
+              showSync={canSync && canUpdateProject && !hasConsumerRows}
+              syncPending={syncPending}
+              testPending={testPending}
             />
-          ) : null}
-          <ProviderCardFeedback
-            disconnectNotice={disconnectNotice}
-            neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
-            syncResult={hasConsumerRows ? null : syncResult}
-            testResult={testResult}
-          />
-          {provider.kind === "serp" ? null : actionControls}
-        </div>
+          </div>
+        ) : null}
       </Card>
       {canManageProviders ? (
         <ConnectDrawer

@@ -53,3 +53,34 @@ export const ReopenedIncident: Story = { args: { initial: evidenceRecoveryFixtur
 export const PartialUnresolvedList: Story = {
   args: { initial: { ...evidenceRecoveryFixture(), rows: [] } },
 };
+
+export const ClosedWithUnknownCost: Story = {
+  args: {
+    initial: {
+      ...recoveryViewFixture(),
+      summary: {
+        ...recoveryViewFixture().summary,
+        unfinished: 0,
+        unconfirmed: 0,
+        overdue: 0,
+        historical: 0,
+        closedUnknown: 12,
+        failed: 0,
+        retainedResults: 0,
+        blockedScopes: { projects: 0, connections: 0 },
+      },
+      rows: [
+        {
+          ...recoveryViewFixture().rows[0],
+          historical: false,
+          closedUnknown: true,
+          send: "possibly_sent",
+          accounting: "unknown",
+          work: "stopped",
+          action: null,
+          blockedReason: null,
+        },
+      ],
+    },
+  },
+};

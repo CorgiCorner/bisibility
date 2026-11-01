@@ -118,9 +118,9 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
 
   // The route-aware app header renders the page title as an h1, so several titles now
   // match both the header and a content heading - assert exact + first.
-  await expectAppPage(page, `/app/${projectRef}/integrations`, async () => {
+  await expectAppPage(page, `/app/${projectRef}/providers`, async () => {
     await expect(
-      page.getByRole("heading", { name: "Integrations", exact: true }).first(),
+      page.getByRole("heading", { name: "Providers", exact: true }).first(),
     ).toBeVisible();
   });
   await expectAppPage(page, `/app/${projectRef}/settings/general`, async () => {

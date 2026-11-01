@@ -60,6 +60,9 @@ export const analyticsEventSchemas = {
     action: z.enum(["add", "import", "export"]),
     source: z.enum(["command_palette", "rank_tracker_toolbar"]),
   }),
+  affiliate_waitlist_joined: z.object({ locale: activeLocale }),
+  ios_beta_joined: z.object({ locale: activeLocale }),
+  newsletter_joined: z.object({ locale: activeLocale, placement: z.literal("home") }),
   $pageview: z.object({ $current_url: z.string().url() }),
   consent_updated: z.object({
     analytics: z.boolean(),
@@ -124,6 +127,13 @@ export const analyticsEventSchemas = {
     slot: z.enum(["hero", "inline", "strip", "closing", "sticky", "menu_featured"]),
   }),
   onboarding_entered: empty,
+  onboarding_quiz_answered: z.object({
+    answerIds: z.array(z.string().max(120)).max(20),
+    questionId: z.string().max(120),
+    quizVersion: z.number().int().positive(),
+  }),
+  onboarding_quiz_completed: z.object({ quizVersion: z.number().int().positive() }),
+  onboarding_quiz_skipped: z.object({ quizVersion: z.number().int().positive() }),
   onboarding_completed: z.object({
     first_check_ran: z.boolean(),
     has_provider: z.boolean(),

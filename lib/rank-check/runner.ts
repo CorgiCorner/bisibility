@@ -11,11 +11,11 @@ import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 import type { ProviderCredentials, SerpRankResult } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch } from "@/lib/serp/constants";
@@ -38,6 +38,7 @@ export { persistFailedRankCheck, persistRankCheck } from "./runner-persistence";
 import { loadDefinitionComparablePrevious } from "@/lib/measurement-definitions/worker-comparable";
 import { configuredWorkerObservation } from "@/lib/measurement-definitions/worker-session";
 import { prepareRunnerDefinition } from "./runner-definition";
+import { recordRunnerRefusal } from "./runner-refusal";
 import { computeNextCheckAt } from "./schedule";
 
 export type { RankCheckRunnerErrorCode } from "./runner-error";
@@ -158,6 +159,7 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
     });
   } catch (caughtError) {
     let error = caughtError;
+    await recordRunnerRefusal(error, input, provider.id, journal?.fenced ?? 0);
     if (
       error instanceof DeploymentAdmissionExhaustedError ||
       error instanceof BudgetExhaustedError ||

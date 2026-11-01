@@ -7,6 +7,7 @@ export async function recoverRunItem(
   checkId: string,
   now: Date,
   finishedAt?: Date,
+  preserveCost = false,
 ) {
   await tx.$queryRaw`SELECT run.id FROM rank_check_runs run JOIN rank_check_run_items item
     ON item."runId"=run.id WHERE item."rankCheckId"=${checkId} FOR UPDATE OF run`;
@@ -27,7 +28,7 @@ export async function recoverRunItem(
     data: {
       status: "completed",
       finishedAt,
-      actualCostCents: null,
+      ...(preserveCost ? {} : { actualCostCents: null }),
       claimExpiresAt: null,
     },
   });
@@ -39,11 +40,13 @@ export async function recoverRunItem(
   });
   const counters = runCounterData(runCountsFromItemGroups(groups, item.run.requestedCount), groups);
   const terminal = pendingRunItemCount(groups) === 0;
+  const final = terminal ? finalRunData({ groups, now, run: item.run }) : null;
+  const { costCents: _costCents, ...finalWithoutCost } = final ?? {};
   await tx.rankCheckRun.update({
     where: { id: item.runId },
     data: terminal
       ? {
-          ...finalRunData({ groups, now, run: item.run }),
+          ...(preserveCost ? finalWithoutCost : final),
           finishedAt: item.run.finishedAt ?? finishedAt,
         }
       : counters,

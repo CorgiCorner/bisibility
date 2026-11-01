@@ -28,6 +28,7 @@ export { flushAlertDigestsActivity } from "./alert-digest-activities";
 export type { AlertHealthActivityResult } from "./alert-health-activities";
 export { alertHealthActivity } from "./alert-health-activities";
 export { checkNotificationSummariesActivity } from "./check-summary-maintenance-activity";
+export { collectDomainRatingBatchActivity } from "./domain-rating-activity";
 export { executeLocalMonitorIntentActivity } from "./local-monitor-activities";
 export {
   cleanupRankCheckRawPurgeProgressActivity,
@@ -47,12 +48,14 @@ export type { MeteringMaintenanceActivityResult } from "./metering-maintenance-a
 export { maintainMeteringReservationsActivity } from "./metering-maintenance-activity";
 export type { OpsHeartbeatActivityResult } from "./ops-activities";
 export { opsHeartbeatActivity } from "./ops-activities";
+export { checkProviderAccountsActivity } from "./provider-account-check-activity";
 export { executeProviderComparisonActivity } from "./provider-comparison-activities";
 export type { ProviderUsageReconciliationActivityResult } from "./provider-usage-reconcile-activity";
 export { reconcileProviderUsageActivity } from "./provider-usage-reconcile-activity";
 export {
   authorizeQueuedRankCheckBatchActivity,
   inspectQueuedRankCheckBatchActivity,
+  persistQueuedRefusalActivity,
   persistReadyQueuedRankCheckTasksActivity,
   planQueuedRankCheckGroupActivity,
   prepareQueuedRankCheckBatchActivity,

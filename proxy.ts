@@ -47,6 +47,7 @@ const APEX_PUBLIC_API_PATHS = new Set(["/api/v1/cost-estimate"]);
 const APP_SURFACE_PATHS = [
   "/api",
   "/activity",
+  "/email/unsubscribe/notifications",
   "/app",
   "/cloud",
   "/install",

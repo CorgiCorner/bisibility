@@ -5,7 +5,7 @@ import type { AppLocale } from "@/i18n/config";
 import type { SummaryDetails } from "@/lib/notifications/check-summaries/details-model";
 import { formatCheckWindowLabel } from "@/lib/notifications/check-summaries/window-label";
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import Link from "next/link";
 import { useLocale, useTimeZone, useTranslations } from "next-intl";
 
@@ -129,7 +129,7 @@ export function CheckSummaryDetails({
           className="inline-flex items-center gap-1 text-ui-caption font-semibold text-accent-text underline underline-offset-2"
         >
           {t("openRuns")}
-          <ArrowSquareOutIcon weight="regular" aria-hidden size={13} />
+          <ArrowRightIcon weight="regular" aria-hidden size={13} />
         </Link>
       </header>
       {details.incidentHrefs.length ? (

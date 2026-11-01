@@ -8,6 +8,7 @@ import { useLiveNow } from "@/components/ui/useLiveNow";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { RetryDeferredDialog } from "./RetryDeferredDialog";
 import { RunPageBlockedBanner } from "./RunPageBlockedBanner";
 import { RunPageCancelDialog } from "./RunPageCancelDialog";
 import { RunPageCounters } from "./RunPageCounters";
@@ -70,6 +71,7 @@ export function RunPage({
   }
   const [filter, setFilter] = useState<RunItemFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [retryOpen, setRetryOpen] = useState(false);
   const [busy, setBusy] = useState<RunMutation | null>(null);
   const [error, setError] = useState("");
   const { items, cursor, loadMore } = useRunPageItems(
@@ -108,6 +110,11 @@ export function RunPage({
     createRunPageSummaryLabels({ currentRun, dateDisplay, locale, now, statusT, t, paymentT }),
   );
   const scopedProject = asProjectRef(projectRef);
+  const sealed = Boolean(
+    run.selectionSpec &&
+      typeof run.selectionSpec === "object" &&
+      "rankPaymentConsent" in run.selectionSpec,
+  );
 
   // Synchronize the persisted detail with the external realtime snapshot when it becomes terminal.
   useEffect(() => {
@@ -149,6 +156,7 @@ export function RunPage({
       const retryId = nextRunId(payload);
       if (retryId) window.location.assign(appPath(scopedProject, "rank-tracker", "runs", retryId));
       setDialogOpen(false);
+      setRetryOpen(false);
     } catch {
       setError(t("updateFailed"));
     } finally {
@@ -167,6 +175,14 @@ export function RunPage({
         now={now}
       />
       <RunPageBlockedBanner projectRef={scopedProject} run={currentRun} />
+      {sealed && run.hasAccountDeferred ? (
+        <section className="rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3 text-[12px] text-fg-muted">
+          <p className="m-0">{t("sealedAccountPaused")}</p>
+          <a className="mt-2 inline-block underline" href={appPath(scopedProject, "rank-tracker")}>
+            {t("startNewRun")}
+          </a>
+        </section>
+      ) : null}
       <RunPageCounters
         onShowSkipped={() => setFilter("skipped")}
         run={currentRun}
@@ -185,7 +201,9 @@ export function RunPage({
             held.immediate();
             void loadMore();
           }}
-          onMutate={(mutation) => void mutate(mutation)}
+          onMutate={(mutation) =>
+            mutation === "retry-deferred" ? setRetryOpen(true) : void mutate(mutation)
+          }
           onCancel={() => setDialogOpen(true)}
           projectRef={scopedProject}
           run={currentRun}
@@ -197,6 +215,14 @@ export function RunPage({
           {error}
         </p>
       ) : null}
+      <RetryDeferredDialog
+        open={retryOpen}
+        busy={busy === "retry-deferred"}
+        projectRef={projectRef}
+        runId={run.id}
+        onClose={() => setRetryOpen(false)}
+        onConfirm={() => void mutate("retry-deferred")}
+      />
       <RunPageCancelDialog
         busy={busy === "cancel"}
         onClose={() => setDialogOpen(false)}

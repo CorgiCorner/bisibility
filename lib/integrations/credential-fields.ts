@@ -46,6 +46,7 @@ const OAUTH_CLIENT_CREDENTIAL_FIELDS = [
 ] as const satisfies readonly CredentialField[];
 
 const fieldsByProvider: Record<string, readonly CredentialField[]> = {
+  ahrefs: SERPAPI_CREDENTIAL_FIELDS,
   dataforseo: DATAFORSEO_CREDENTIAL_FIELDS,
   "local-sequence": [],
   plausible: PLAUSIBLE_CREDENTIAL_FIELDS,

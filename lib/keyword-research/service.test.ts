@@ -1,5 +1,6 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderLookupSignal } from "./paid-call";
 import { researchKeywords } from "./service";
@@ -507,6 +508,17 @@ describe("keyword research service", () => {
         : Number.POSITIVE_INFINITY,
     ).toBeLessThanOrEqual(Date.now());
   });
+
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "propagates %s before any research source is sent",
+    async (reason) => {
+      const error = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+      mocks.paidCall.mockRejectedValueOnce(error);
+      await expect(run()).rejects.toBe(error);
+      expect(mocks.related).not.toHaveBeenCalled();
+      expect(mocks.snapshot).not.toHaveBeenCalled();
+    },
+  );
 
   it("propagates deployment admission after an earlier paid source succeeded", async () => {
     const admission = new DeploymentAdmissionExhaustedError("balance");

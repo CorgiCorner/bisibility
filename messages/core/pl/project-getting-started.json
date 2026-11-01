@@ -38,7 +38,7 @@
       },
       "connect_source": {
         "active": "Search Console dostarcza bezpłatne dane o ruchu. Do sprawdzania aktualnych pozycji wybierz źródło danych rankingowych.",
-        "done": "Źródło danych rankingowych jest skonfigurowane. Jego ustawienia i użycie sprawdzisz w Integracjach."
+        "done": "Źródło danych rankingowych jest skonfigurowane. Jego ustawienia i użycie sprawdzisz w sekcji Dostawcy."
       },
       "first_check": {
         "active": "Uruchom pierwsze sprawdzenie, aby zebrać pozycje śledzonych słów kluczowych. Ustawienia sprawdzeń znajdziesz w ustawieniach monitorowania projektu.",

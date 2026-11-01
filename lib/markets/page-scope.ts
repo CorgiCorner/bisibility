@@ -11,6 +11,7 @@ const PROJECT_SCOPED_SECTIONS = new Set([
   "getting-started",
   "install",
   "integrations",
+  "providers",
   "markets",
   "settings",
   "timeline",

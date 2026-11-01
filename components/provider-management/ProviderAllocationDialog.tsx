@@ -124,7 +124,7 @@ export function ProviderAllocationDialog(props: ProviderAllocationDialogProps) {
   const empty = (
     <p>
       {t("empty")}{" "}
-      <Link className="text-accent-text" href={appPath(props.projectRef, "integrations")}>
+      <Link className="text-accent-text" href={appPath(props.projectRef, "providers")}>
         {t("connect")}
       </Link>{" "}
       {t("emptyAfterLink")}

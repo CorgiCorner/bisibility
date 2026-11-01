@@ -31,6 +31,7 @@ export type CheckRunTriggerFilter = "all" | "manual" | "scheduled" | "programmat
 export type DeferredReason = "rate_limited" | "no_provider" | "budget_exhausted" | "migration_hold";
 
 export type CheckAttemptOutcome =
+  | "account_blocked"
   | "ok"
   | "rate_limited"
   | "provider_failed"

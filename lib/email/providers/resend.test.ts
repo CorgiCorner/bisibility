@@ -27,6 +27,18 @@ describe("resend email provider", () => {
     vi.useRealTimers();
   });
 
+  it("passes one-click headers to the transport", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubEnv("RESEND_API_KEY", "email-key");
+    vi.stubGlobal("fetch", fetchMock);
+    const headers = {
+      "List-Unsubscribe": "<https://app.example.com/u?token=opaque>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+    await resendEmailProvider.send({ ...message, headers });
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).headers).toEqual(headers);
+  });
+
   it("declares its catalog identity", () => {
     expect(resendEmailProvider.id).toBe("resend");
     expect(resendEmailProvider.label).toBe("Resend");

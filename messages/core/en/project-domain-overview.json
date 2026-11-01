@@ -35,6 +35,7 @@
         "idleBullets": {
           "key": "Price shown before each run",
           "cache": "Results cached for {duration}, repeat lookups are free",
+          "cacheLoading": "Cached results can be reopened for free until they expire.",
           "track": "Turn findings into tracked keywords in one click"
         },
         "idleTitle": "Analyze any domain",

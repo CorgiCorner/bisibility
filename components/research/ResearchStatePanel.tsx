@@ -70,11 +70,11 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
     <EmptyState
       action={
         <ProviderAccessActions
-          href={appPath(projectRef, "integrations")}
+          href={appPath(projectRef, "providers")}
           providers={["DataForSEO"]}
           surface="keywords"
         >
-          <AccentCtaLink href={appPath(projectRef, "integrations")}>
+          <AccentCtaLink href={appPath(projectRef, "providers")}>
             {t("connectAction")}
           </AccentCtaLink>
         </ProviderAccessActions>
@@ -113,7 +113,7 @@ function LookupFailedState({
               integrations: (chunks) => (
                 <Link
                   className="font-semibold text-accent-text hover:underline"
-                  href={appPath(projectRef, "integrations")}
+                  href={appPath(projectRef, "providers")}
                 >
                   {chunks}
                 </Link>
@@ -256,9 +256,7 @@ export function ResearchStatePanel({
     return (
       <MessageState
         action={
-          <AccentCtaLink href={appPath(projectRef, "integrations")}>
-            {t("reauthAction")}
-          </AccentCtaLink>
+          <AccentCtaLink href={appPath(projectRef, "providers")}>{t("reauthAction")}</AccentCtaLink>
         }
         description={t("reauthDescription")}
         mark={<ModuleMark bordered icon={Binoculars} />}

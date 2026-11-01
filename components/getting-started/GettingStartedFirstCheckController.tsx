@@ -82,7 +82,7 @@ function FirstCheckController({ context, now, providerRate, rows }: Readonly<Pro
       return;
     }
     if (cta.id === "connect_source") {
-      router.push(appPath(context.project.publicRef ?? "", "integrations"));
+      router.push(appPath(context.project.publicRef ?? "", "providers"));
       return;
     }
     router.push("/setup");

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.45.0] - 2026-11-01
+
+### Added
+
+- Added Ahrefs Domain Rating history with a dashboard card, a Providers page that groups SEO data providers, whole-instance usage history and one-click email unsubscribe.
+
+### Changed
+
+- Rank checks now pause on provider account blocks, try the next provider, offer a free account check and keep partial results with coverage shown as unknown.
+
+- Redesigned Usage limits and dashboard customization, show unknown and historical costs separately, and block Create project once the project limit is reached.
+
+### Fixed
+
+- Fixed first rank checks that would not start, queued DataForSEO recovery, unresolved result destinations, cache messages, demo owner permissions and lost Google access alerts.
+
+- Updated dependencies for security advisories, count product actions anonymously when analytics is off, recover from mixed-deployment errors and reduce worker database load.
+
 ## [0.44.0] - 2026-10-27
 
 ### Added

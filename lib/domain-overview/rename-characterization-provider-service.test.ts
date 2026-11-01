@@ -234,7 +234,9 @@ describe("domain overview provider and service characterization", () => {
     ],
     ["no rows after expiry filtering", [], []],
   ])("recent targets preserve %s", async (_name, rows, expected) => {
-    mocks.findMany.mockResolvedValue(rows);
+    mocks.findMany.mockResolvedValue(
+      rows.map((row) => ({ ...row, project: { lookupCacheTtlSeconds: null } })),
+    );
     const recent = asModule(await import("./recent"));
     const targets = await (
       recent.recentDomainOverviewTargets as (

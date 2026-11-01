@@ -3,16 +3,30 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { projectLabel } from "@/lib/ops/labels";
 import { notifyOps, shouldNotifyOpsSuccess } from "@/lib/ops/notify";
-import type { ProviderFailureClass } from "@/lib/providers/failure-class";
+import { googleFailureDiagnostic } from "@/lib/providers/analytics/google-failure";
+import { type ProviderFailureClass, ProviderHttpError } from "@/lib/providers/failure-class";
 import { shouldEscalateTrafficFailure } from "./failure-escalation";
-import { isTransientTrafficFailure, isUserActionableTrafficFailure } from "./failure-policy";
+import {
+  isTransientTrafficFailure,
+  isUserActionableTrafficFailure,
+  type TrafficFailureDiagnostic,
+} from "./failure-policy";
 import type { TrafficSnapshotSyncMetrics } from "./snapshots";
 import type { TrafficConnectionRun, TrafficSyncRunStatus } from "./sync";
 
 type OperationalConnection = { id: string; provider: string };
 
+// The persisted error stays redacted; these fields are fixed vocabularies safe to store.
+export function trafficFailureDiagnostic(error: unknown): TrafficFailureDiagnostic {
+  return {
+    ...(error instanceof ProviderHttpError ? { httpStatus: error.status } : {}),
+    ...googleFailureDiagnostic(error),
+  };
+}
+
 export async function recordTrafficOperationalRun(input: {
   connection: OperationalConnection;
+  diagnostic?: TrafficFailureDiagnostic;
   error?: string;
   errorClass?: ProviderFailureClass;
   finishedAt: Date;
@@ -29,7 +43,7 @@ export async function recordTrafficOperationalRun(input: {
       errorClass: input.errorClass,
       finishedAt: input.finishedAt,
       kind: "traffic_sync",
-      meta: input.metrics,
+      meta: { ...input.metrics, ...input.diagnostic },
       projectId: input.projectId,
       provider: input.connection.provider,
       scheduledFor: input.scheduledFor,

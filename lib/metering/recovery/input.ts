@@ -4,7 +4,9 @@ import { TRIAGE_STATUSES } from "./contract";
 export const MAX_RECOVERY_BATCH = 25;
 export const recoveryFiltersSchema = z
   .object({
-    category: z.enum(["all", "unfinished", "accounting", "failed", "historical"]).optional(),
+    category: z
+      .enum(["all", "unfinished", "accounting", "failed", "historical", "closed_unknown"])
+      .optional(),
     provider: z
       .string()
       .regex(/^[a-zA-Z0-9_-]{1,64}$/)

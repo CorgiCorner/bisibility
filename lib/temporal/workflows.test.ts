@@ -594,6 +594,8 @@ describe("rankCheckWorkflow", () => {
   it.each([
     ["automatic_execution_disabled", "mode changed", "mode changed"],
     ["provider_rate_limited", "rate limited", "rate limited"],
+    ["provider_account_blocked", "provider_account_blocked", "provider_account_blocked"],
+    ["usage_unconfirmed", "usage_unconfirmed", "usage_unconfirmed"],
     ["budget_exhausted", "monthly budget reached", "monthly budget reached"],
     ["credits_exhausted", "Deployment credits are exhausted.", "Deployment credits are exhausted."],
     ["project_read_only", "read-only", "Project is in read-only mode."],
@@ -624,6 +626,22 @@ describe("rankCheckWorkflow", () => {
     expect(mocks.activities.failRankCheckActivity).toHaveBeenCalledWith({
       keywordId: "keyword_1",
       message,
+      providerId: undefined,
+      rankCheckId: "rank_running_1",
+    });
+    expect(mocks.activities.discardRankCheckActivity).not.toHaveBeenCalled();
+  });
+
+  it("fails a mixed provider chain instead of deferring a real failed attempt", async () => {
+    const error = activityFailure(
+      "provider_chain_failed",
+      "Account refusal and provider rejection",
+    );
+    mocks.activities.runRankCheckActivity.mockRejectedValue(error);
+    await expect(rankCheckWorkflow({ keywordId: "keyword_1" })).rejects.toThrow(error);
+    expect(mocks.activities.failRankCheckActivity).toHaveBeenCalledWith({
+      keywordId: "keyword_1",
+      message: "Account refusal and provider rejection",
       providerId: undefined,
       rankCheckId: "rank_running_1",
     });

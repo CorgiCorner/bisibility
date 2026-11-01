@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -191,7 +191,7 @@
     "geist": "^1",
     "next": "16.4.2",
     "next-intl": "4.14.4",
-    "nodemailer": "^10.0.13",
+    "nodemailer": "^10.1.4",
     "parse5": "8.0.1",
     "pg": "^8.22.0",
     "react": "19.2.7",
@@ -226,8 +226,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@typescript/typescript6": "^6.0.2",
-    "@vitest/browser-playwright": "5.0.1",
-    "@vitest/coverage-v8": "5.0.1",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
     "ajv": "^8.20.0",
     "country-flag-icons": "^1.6.20",
     "esbuild": "^0.28.1",
@@ -245,7 +245,7 @@
     "tailwindcss": "^4.3.2",
     "typescript": "^7.0.2",
     "vite": "^8.1.6",
-    "vitest": "5.0.1",
+    "vitest": "5.0.5",
     "yaml": "^2.9.0"
   },
   "overrides": {
@@ -259,8 +259,8 @@
         }
       }
     },
-    "fast-uri": "3.1.8",
-    "ip-address": "10.7.1",
+    "fast-uri": "3.1.9",
+    "ip-address": "10.7.4",
     "nanoid": "3.3.18",
     "sharp": "0.35.5",
     "mysql2": "3.24.4",
@@ -268,7 +268,7 @@
     "uuid": "11.1.1",
     "valibot": "1.4.2",
     "better-auth": {
-      "vitest": "5.0.1"
+      "vitest": "5.0.5"
     },
     "jsdom": {
       "undici": "7.30.1"

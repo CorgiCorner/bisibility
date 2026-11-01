@@ -33,6 +33,9 @@ vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: vi.fn(async () => ({ locale: "en", timeZone: "UTC" })),
 }));
 
+vi.mock("@/components/integrations/provider-recovery/MonitoringAccountBlocksServer", () => ({
+  MonitoringAccountBlocksServer: () => null,
+}));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
   KeywordsGrid: ({ initialAddOpen }: { initialAddOpen?: boolean }) => {
     state.initialAddOpen = initialAddOpen;

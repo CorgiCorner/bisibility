@@ -1,6 +1,8 @@
 "use client";
 
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
+import { AdminInstanceUsage } from "@/components/admin/AdminInstanceUsage";
+import { AdminRecoveryAccounting } from "@/components/admin/AdminRecoveryAccounting";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
 import { DangerousActionGate } from "@/components/admin/DangerousActionGate";
 import { InstanceMailSettings } from "@/components/admin/InstanceMailSettings";
@@ -117,22 +119,35 @@ function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
 
 function TopConsumption({
   rows,
-}: Readonly<{ rows: InstanceAdminAdministration["topConsumption"] }>) {
+  recoveryAccounting,
+  usageReport,
+  usagePeriod,
+}: Readonly<
+  Pick<InstanceAdminAdministration, "recoveryAccounting" | "usageReport" | "usagePeriod"> & {
+    rows: InstanceAdminAdministration["topConsumption"];
+  }
+>) {
   const t = useTranslations("instanceAdmin.administration.consumption");
+  const usage = useTranslations("instanceAdmin.instanceUsage");
   const boundedRows = rows.slice(0, 10);
 
   return (
     <Card component="section" size="lg" aria-labelledby="admin-consumption-heading">
       <SectionTitle id="admin-consumption-heading">{t("title")}</SectionTitle>
       <p className="mt-1 text-xs text-fg-muted">{t("description")}</p>
-      {boundedRows.length === 0 ? (
-        <p className="mt-4 text-xs text-fg-muted">{t("empty")}</p>
-      ) : (
-        <div className="mt-3">
-          <AdminAdministrationConsumptionTable rows={boundedRows} />
-          <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">{t("note")}</p>
-        </div>
-      )}
+      <AdminInstanceUsage report={usageReport} period={usagePeriod} projects />
+      <details className="mt-4">
+        <summary className="cursor-pointer text-xs font-medium">{usage("referenceTitle")}</summary>
+        {boundedRows.length === 0 ? (
+          <p className="mt-4 text-xs text-fg-muted">{t("empty")}</p>
+        ) : (
+          <div className="mt-3">
+            <AdminAdministrationConsumptionTable rows={boundedRows} />
+            <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">{t("note")}</p>
+          </div>
+        )}
+      </details>
+      <AdminRecoveryAccounting data={recoveryAccounting} />
     </Card>
   );
 }
@@ -177,7 +192,12 @@ export function AdminAdministration({
         </DangerousActionGate>
       ) : null}
       <Growth data={data} />
-      <TopConsumption rows={data.topConsumption} />
+      <TopConsumption
+        rows={data.topConsumption}
+        recoveryAccounting={data.recoveryAccounting}
+        usageReport={data.usageReport}
+        usagePeriod={data.usagePeriod}
+      />
       <AdminAccountLookup />
     </div>
   );

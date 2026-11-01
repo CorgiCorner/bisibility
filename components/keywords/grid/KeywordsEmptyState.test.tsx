@@ -134,23 +134,23 @@ describe("KeywordsEmptyState", () => {
     expect(screen.queryByText("Add keywords")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add keywords" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Import CSV" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^Integrations$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Providers$/i })).not.toBeInTheDocument();
   });
 
   it("hides the checks-consequence note when a provider is connected", () => {
     renderEmpty(true);
 
     expect(screen.queryByText(/Choose a data source in/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^Integrations$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Providers$/i })).not.toBeInTheDocument();
   });
 
   it("states the truthful checks consequence when no provider is connected", () => {
     renderEmpty(false);
 
     expect(screen.getByText(/Choose a data source in/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Integrations$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Providers$/i })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
   });
 
@@ -193,9 +193,9 @@ describe("KeywordsEmptyState", () => {
     fireEvent.click(screen.getByRole("button", { name: "From Search Console" }));
 
     expect(await screen.findByText("No Search Console source is connected.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(
       "href",
-      appPath("prj_1", "integrations"),
+      appPath("prj_1", "providers"),
     );
   });
 
@@ -212,7 +212,7 @@ describe("KeywordsEmptyState", () => {
     expect(await screen.findByText("Google authorization has expired.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Reconnect your Google account" })).toHaveAttribute(
       "href",
-      appPath("prj_1", "integrations"),
+      appPath("prj_1", "providers"),
     );
   });
 

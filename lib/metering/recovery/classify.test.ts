@@ -48,6 +48,23 @@ const record = (overrides: Partial<RecoveryRecord> = {}): RecoveryRecord => ({
   ...overrides,
 });
 describe("independent recovery facts", () => {
+  it.each(["deferred", "failed", "cancelled"])(
+    "treats terminal %s work as stopped",
+    (rankStatus) => {
+      expect(classifyRecoveryRecord(record({ rankStatus }), scope, now).work).toBe("stopped");
+    },
+  );
+  it("keeps operator closure distinct from measured money or recovered work", () => {
+    const value = classifyRecoveryRecord(record({ closedUnknown: true, proof: true }), scope, now);
+    expect(value).toMatchObject({
+      closedUnknown: true,
+      work: "stopped",
+      accounting: "unknown",
+      action: null,
+    });
+    expect(value.unknownDimensions).toContain("provider_cost");
+  });
+
   it("never infers no-send from an expired unfenced intent, missing ID or age", () => {
     const value = classifyRecoveryRecord(record(), scope, now);
     expect(value.send).toBe("unknown");
@@ -57,7 +74,11 @@ describe("independent recovery facts", () => {
   });
   it("keeps delivered work and unknown cost separate", () => {
     const value = classifyRecoveryRecord(
-      record({ rankStatus: "completed", nativeId: "private-native", proof: true }),
+      record({
+        rankStatus: "completed",
+        nativeId: "private-native",
+        proof: true,
+      }),
       scope,
       now,
     );
@@ -76,7 +97,11 @@ describe("independent recovery facts", () => {
   });
   it("does not reopen acknowledgement for the same automatic failure repeating", () => {
     const row = record({
-      error: { code: "native_identity_conflict", attempts: 1, failedAt: now.toISOString() },
+      error: {
+        code: "native_identity_conflict",
+        attempts: 1,
+        failedAt: now.toISOString(),
+      },
     });
     row.triageBasis = recoveryBasis(row);
     row.triageStatus = "acknowledged";
@@ -112,14 +137,26 @@ describe("independent recovery facts", () => {
   it("never grants new customer spending from a system-admin case", () => {
     expect(
       classifyRecoveryRecord(
-        record({ kind: "run", state: "queued", binding: false, rankCheckId: null }),
+        record({
+          kind: "run",
+          state: "queued",
+          binding: false,
+          rankCheckId: null,
+        }),
         scope,
         now,
       ),
-    ).toMatchObject({ send: "not_started", action: null, blockedReason: "authorization_required" });
+    ).toMatchObject({
+      send: "not_started",
+      action: null,
+      blockedReason: "authorization_required",
+    });
     expect(
       classifyRecoveryRecord(record({ funding: "platform", proof: false }), scope, now),
-    ).toMatchObject({ action: null, blockedReason: "wallet_coordination_required" });
+    ).toMatchObject({
+      action: null,
+      blockedReason: "wallet_coordination_required",
+    });
     expect(
       classifyRecoveryRecord(record({ funding: "platform", proof: true }), scope, now),
     ).toMatchObject({ action: "recover_proof" });
@@ -131,6 +168,10 @@ describe("independent recovery facts", () => {
         scope,
         now,
       ),
-    ).toMatchObject({ action: "restore_result", accounting: "unknown", work: "unfinished" });
+    ).toMatchObject({
+      action: "restore_result",
+      accounting: "unknown",
+      work: "stopped",
+    });
   });
 });

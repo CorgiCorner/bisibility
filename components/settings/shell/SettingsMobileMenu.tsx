@@ -15,11 +15,13 @@ import { useTranslations } from "next-intl";
 type SettingsMobileMenuProps = {
   activeSection: SettingsSectionId;
   projectRef: ProjectRef;
+  showUsage?: boolean;
 };
 
 export function SettingsMobileMenu({
   activeSection,
   projectRef,
+  showUsage = true,
 }: Readonly<SettingsMobileMenuProps>) {
   const router = useRouter();
   const t = useTranslations("projectSettingsShell");
@@ -35,10 +37,12 @@ export function SettingsMobileMenu({
           groups={settingsSectionGroups.map((group) => ({
             id: group.id,
             label: t(`groups.${group.id}`),
-            options: group.sections.map((id) => ({
-              label: settingsSectionLabel(t, id),
-              value: id,
-            })),
+            options: group.sections
+              .filter((id) => showUsage || id !== "usage")
+              .map((id) => ({
+                label: settingsSectionLabel(t, id),
+                value: id,
+              })),
           }))}
           triggerClassName="w-full justify-between"
           value={activeSection}

@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { errorReportingRuntime } from "@/lib/observability/runtime-identity";
 import { finalizedWindow } from "@/lib/search-insights/dates";
 import { getWindowCounts } from "./counts";
 import { getQueryCoverage } from "./coverage";
@@ -35,20 +36,38 @@ import { searchInsightsWindowFilter } from "./window-filter";
  */
 export async function computeWindowFacts(
   key: WindowFactsKey,
+  sequential = false,
 ): Promise<{ coveredDays: number; facts: SearchInsightsWindowFacts }> {
   const window = finalizedWindow(key.finalizedThrough, key.windowDays);
   const { current } = window;
-  const [coverage, counts, signals, totals, queries, coveredDays] = await Promise.all([
-    getQueryCoverage(key.projectId, key.property, current),
-    getWindowCounts(key.projectId, key.property, current),
-    getSearchInsightsSignals(key.projectId, key.property, current),
-    getWindowTotals(key.projectId, key.property, window),
+  const readCoverage = () => getQueryCoverage(key.projectId, key.property, current, sequential);
+  const readCounts = () => getWindowCounts(key.projectId, key.property, current);
+  const readSignals = () =>
+    getSearchInsightsSignals(key.projectId, key.property, current, sequential);
+  const readTotals = () => getWindowTotals(key.projectId, key.property, window);
+  const readQueries = () =>
     getTopQueries(key.projectId, key.property, current, {
       limit: DEFAULT_LENS_ROW_LIMIT,
       offset: 0,
-    }),
-    countCoveredDays(key.projectId, key.property, current),
-  ]);
+    });
+  const readDays = () => countCoveredDays(key.projectId, key.property, current);
+  const [coverage, counts, signals, totals, queries, coveredDays] = sequential
+    ? [
+        await readCoverage(),
+        await readCounts(),
+        await readSignals(),
+        await readTotals(),
+        await readQueries(),
+        await readDays(),
+      ]
+    : await Promise.all([
+        readCoverage(),
+        readCounts(),
+        readSignals(),
+        readTotals(),
+        readQueries(),
+        readDays(),
+      ]);
 
   return {
     coveredDays,
@@ -119,8 +138,29 @@ export type WindowFactsRefreshResult = {
  * Failures are collected rather than thrown, so one bad window cannot abandon the others; the
  * caller decides whether a partial refresh is worth retrying.
  */
+// A process-wide queue also bounds concurrent imports; no connection is held between reads.
+let workerRefreshTail: Promise<void> = Promise.resolve();
+
 export async function refreshWindowFacts(
   input: WindowFactsRefresh,
+): Promise<WindowFactsRefreshResult> {
+  if (errorReportingRuntime() !== "worker") return refreshFacts(input, false);
+  const previous = workerRefreshTail;
+  let release: () => void = () => {};
+  workerRefreshTail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await refreshFacts(input, true);
+  } finally {
+    release();
+  }
+}
+
+async function refreshFacts(
+  input: WindowFactsRefresh,
+  sequential: boolean,
 ): Promise<WindowFactsRefreshResult> {
   const written: number[] = [];
   const failed: { reason: string; windowDays: number }[] = [];
@@ -134,10 +174,9 @@ export async function refreshWindowFacts(
     };
     try {
       const compared = comparedWindowKey(key);
-      const [currentFacts, comparedFacts] = await Promise.all([
-        computeWindowFacts(key),
-        computeWindowFacts(compared),
-      ]);
+      const [currentFacts, comparedFacts] = sequential
+        ? [await computeWindowFacts(key, true), await computeWindowFacts(compared, true)]
+        : await Promise.all([computeWindowFacts(key), computeWindowFacts(compared)]);
       await prisma.$transaction(async (tx) => {
         await writeWindowFacts({ ...key, ...currentFacts, importId: input.importId }, tx);
         await writeWindowFacts({ ...compared, ...comparedFacts, importId: input.importId }, tx);

@@ -31,18 +31,16 @@ function ProviderFrame() {
 export function IntegrationsPageLoading({
   connectionsLabel,
   usageLabel,
-  byokLabel,
   active: activeOverride,
 }: Readonly<{
   connectionsLabel: string;
   usageLabel?: string;
-  byokLabel?: string;
   active?: "connections" | "usage" | "byok";
 }>) {
   const search = useSearchParams();
   const active =
-    activeOverride ??
-    (["usage", "byok"].includes(search.get("tab") ?? "") ? search.get("tab") : "connections");
+    (activeOverride === "byok" ? "usage" : activeOverride) ??
+    (["usage", "byok"].includes(search.get("tab") ?? "") ? "usage" : "connections");
   return (
     <PageContent aria-busy="true" className="flex flex-col gap-5">
       <div
@@ -54,7 +52,6 @@ export function IntegrationsPageLoading({
           [
             { id: "connections", label: connectionsLabel },
             ...(usageLabel ? [{ id: "usage", label: usageLabel }] : []),
-            ...(byokLabel ? [{ id: "byok", label: byokLabel }] : []),
           ] as const
         ).map((tab) => (
           <span

@@ -7,6 +7,7 @@
       "description": "Cross-instance operational diagnostics. Tenant data is represented by identifiers only."
     },
     "navigation": {
+      "instance": "Instance",
       "label": "Instance administration sections",
       "operations": "Operations",
       "administration": "Administration",
@@ -152,7 +153,7 @@
       },
       "stats": {
         "title": "Instance stats",
-        "description": "Instance counts and completed SERP usage for the current UTC month.",
+        "description": "Instance totals and provider usage across all projects and operation types. Select the usage period below.",
         "unavailable": "Instance statistics are unavailable.",
         "users": "Users",
         "projects": "Projects",
@@ -262,7 +263,7 @@
       },
       "consumption": {
         "title": "Top consumption",
-        "description": "Top 10 project/provider rows by reference cost this month. User-entered rates are ignored.",
+        "description": "Top 10 project/provider groups by recorded cost for the selected period, across all operation types.",
         "empty": "No completed SERP checks recorded this month.",
         "note": "Reference costs use maintained provider rates and recorded request units. Provider invoices remain authoritative.",
         "tableLabel": "Top project and provider consumption this month",
@@ -508,14 +509,16 @@
         "failed": "Failed recoveries",
         "unconfirmed": "Unconfirmed accounting",
         "historical": "Historical uncertainty",
-        "retainedResults": "Results ready to restore"
+        "retainedResults": "Results ready to restore",
+        "closedUnknown": "Closed, cost unknown"
       },
       "categories": {
         "all": "All cases",
         "unfinished": "Unfinished work",
         "accounting": "Accounting uncertainty",
         "failed": "Failed recoveries",
-        "historical": "Historical accounting"
+        "historical": "Historical accounting",
+        "closed_unknown": "Closed with unknown cost"
       },
       "states": {
         "not_started": "Not started",
@@ -526,7 +529,8 @@
         "unfinished": "Unfinished",
         "obsolete": "No longer applicable",
         "measured": "Measured",
-        "not_applicable": "No linked operation"
+        "not_applicable": "No linked operation",
+        "stopped": "Stopped"
       },
       "fundingSources": {
         "byok": "Own provider account",
@@ -655,14 +659,17 @@
           "scheduled": "Scheduled",
           "attempting": "Looking up",
           "resolved": "Resolved",
-          "operator_review": "Operator review"
+          "operator_review": "Operator review",
+          "closed_unknown": "Closed, cost unknown"
         },
         "partialKinds": {
           "partial": "Partial",
           "unresolved": "Unresolved"
         },
         "utcTimestamp": "{timestamp} UTC"
-      }
+      },
+      "closedUnknown": "Closed, cost unknown",
+      "closedUnknownNote": "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again."
     },
     "dangerousActions": {
       "notice": "Enable two-factor authentication to {action}.",
@@ -678,6 +685,40 @@
         "repairUsage": "repair usage records",
         "importUsage": "import usage records"
       }
+    },
+    "recoveryAccounting": {
+      "title": "Recovery accounting (all time)",
+      "description": "Retained recovery closures across all dates. Their recorded costs are included in the all-history usage totals. Unknown amounts remain unknown.",
+      "historical": "Historical cost retained (provider identity incomplete)",
+      "closedUnknown": "Closed with unknown cost",
+      "unknown": "Cost unknown",
+      "requests": "{count, plural, one {# request} other {# requests}}",
+      "view": "View recovery records",
+      "ledger": "View usage ledger",
+      "unavailable": "Recovery accounting is unavailable. Unknown amounts have not been replaced by zero."
+    },
+    "instanceUsage": {
+      "period": "Usage period",
+      "all": "All history",
+      "month": "Current month (UTC)",
+      "scope": "Recorded usage across all projects and operation types, including retained history.",
+      "operations": "Operations",
+      "cost": "Recorded cost",
+      "unknownEntries": "Cost unknown (entries)",
+      "unknown": "Unknown",
+      "provider": "Provider",
+      "project": "Project ID",
+      "copyProject": "Copy project ID",
+      "unattributed": "Unattributed project",
+      "unknownProvider": "Unknown provider",
+      "share": "Share of recorded cost",
+      "providerTable": "Provider usage for the whole instance",
+      "topTable": "Top instance consumption",
+      "empty": "No recorded usage in this period.",
+      "unavailable": "Instance usage is unavailable. Unknown costs have not been replaced by zero.",
+      "note": "Costs come from the final recorded receipt for each operation. Corrections count once. Unknown amounts are excluded from cost totals; provider invoices remain authoritative.",
+      "topNote": "Top 10 project/provider groups by recorded cost. Shares use the recorded cost of the entire instance. Unknown amounts and unknown provider identities are retained.",
+      "referenceTitle": "SERP reference costs (current UTC month)"
     }
   }
 }

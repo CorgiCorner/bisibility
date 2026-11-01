@@ -60,6 +60,7 @@ import {
 import type { QueuedTask } from "@/lib/rank-check/queued-results-load";
 import { persistRankCheck } from "@/lib/rank-check/runner";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
+import { queuedPartialResult } from "./queued-partial-result";
 
 async function persistProviderResult(
   task: QueuedTask,
@@ -101,10 +102,21 @@ async function persistProviderResult(
       ? explicitQueuedGetCostCents(data, task.providerTaskId)
       : dataForSeoResponseCostCents(data);
   if ((recovery || own) && terminalCostCents === null) return "pending";
+  const partialDefinition =
+    providerTask?.status_code === 40106 ? await collectedQueuedDefinition(task, lease) : null;
+  const partial =
+    providerTask && partialDefinition
+      ? queuedPartialResult(
+          providerTask,
+          partialDefinition.request.domain,
+          partialDefinition.request.depth,
+        )
+      : null;
   const providerFailed =
-    !providerTask ||
-    (providerTask.status_code !== 20000 &&
-      providerTask.status_code !== DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS);
+    !partial?.accountingSuccess &&
+    (!providerTask ||
+      (providerTask.status_code !== 20000 &&
+        providerTask.status_code !== DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS));
   if (own) await recoverOwnQueuedResult(task, data, providerFailed);
   const frozenCost = recovery
     ? await recovery.settleTask(task.id, {
@@ -116,13 +128,9 @@ async function persistProviderResult(
       })
     : null;
   if (recovery && frozenCost === null) return "pending";
-  if (
-    !providerTask ||
-    (providerTask.status_code !== 20000 &&
-      providerTask.status_code !== DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS)
-  ) {
+  if ((!partial?.success && providerFailed) || !providerTask) {
     throw new DataForSeoError(
-      providerTask?.status_message ?? "DataForSEO queued result was unavailable.",
+      partial?.error ?? providerTask?.status_message ?? "DataForSEO queued result was unavailable.",
       false,
       undefined,
       terminalCostCents === 0 ? 0 : terminalCostCents,
@@ -131,10 +139,10 @@ async function persistProviderResult(
   // biome-ignore format: keep the queue persistence module under its enforced line cap.
   const items = providerTask.status_code === DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS ? [] : Array.isArray(providerTask.result) ? providerTask.result.flatMap((result) => result.items ?? []) : [null];
   const checkedAt = new Date();
-  const definition = await collectedQueuedDefinition(task, lease);
+  const definition = partialDefinition ?? (await collectedQueuedDefinition(task, lease));
   const requestedDepth = definition.request.depth;
   // biome-ignore format: keep the queue persistence module under its enforced line cap.
-  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, definition.request.domain, requestedDepth));
+  const decision = requireDeterminateOrganicResult("DataForSEO", partial?.decision ?? dataForSeoOrganicDecision(items, definition.request.domain, requestedDepth));
   const reportedCost = recovery
     ? frozenCost
     : terminalCostCents !== null && terminalCostCents > 0

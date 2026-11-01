@@ -6,7 +6,11 @@ import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { classifyProviderFailure, type ProviderFailureClass } from "@/lib/providers/failure-class";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getAnalyticsProvider } from "@/lib/providers/registry";
-import { isUserActionableTrafficFailure } from "./failure-policy";
+import {
+  isUserActionableTrafficFailure,
+  type TrafficFailureDiagnostic,
+  trafficReauthReason,
+} from "./failure-policy";
 import type { TrafficKeyword } from "./match";
 import { trafficRuntimeCredentials } from "./runtime-credentials";
 import {
@@ -23,7 +27,11 @@ import {
   upsertQuerySnapshots,
 } from "./snapshots";
 import { addTrafficMetrics, emptyTrafficMetrics, warnIfTrafficTruncated } from "./sync-metrics";
-import { notifyTrafficRun, recordTrafficOperationalRun } from "./sync-observability";
+import {
+  notifyTrafficRun,
+  recordTrafficOperationalRun,
+  trafficFailureDiagnostic,
+} from "./sync-observability";
 import { loadTrafficConnections, type TrafficConnectionLoadOptions } from "./traffic-connections";
 
 type TrafficSyncOptions = TrafficConnectionLoadOptions;
@@ -111,6 +119,7 @@ export async function syncTrafficForProject(
     let status: TrafficSyncRunStatus = "failed";
     let persistedError: string | undefined;
     let errorClass: ProviderFailureClass | undefined;
+    let diagnostic: TrafficFailureDiagnostic | undefined;
 
     if (connection.status === "needs_reauth") {
       status = "skipped_needs_reauth";
@@ -168,6 +177,7 @@ export async function syncTrafficForProject(
         }
       } catch (error) {
         errorClass = classifyProviderFailure(error);
+        diagnostic = trafficFailureDiagnostic(error);
         if (isUserActionableTrafficFailure(errorClass)) {
           persistedError = REDACTED_PROVIDER_ERROR;
           const transitioned = await markProviderNeedsReauth({
@@ -176,17 +186,20 @@ export async function syncTrafficForProject(
             projectId,
             provider: connection.provider,
           });
+          const reason = trafficReauthReason(diagnostic.googleReason);
           if (transitioned) {
             await notifyProviderNeedsReauth({
               connectionId: connection.id,
               failedAt: new Date(),
               projectId,
               provider: connection.provider,
+              ...(reason ? { reason } : {}),
             }).catch(() => undefined);
           }
         } else if (error instanceof ProviderRateLimitedError) {
           status = "deferred_rate_limit";
           errorClass = undefined;
+          diagnostic = undefined;
           summary.skipped.push({ provider: connection.provider, reason: "rate_limited" });
         } else {
           persistedError = REDACTED_PROVIDER_ERROR;
@@ -203,6 +216,7 @@ export async function syncTrafficForProject(
     const finishedAt = new Date();
     await recordTrafficOperationalRun({
       connection,
+      diagnostic,
       error: persistedError,
       errorClass,
       finishedAt,

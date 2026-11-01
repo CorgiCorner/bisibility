@@ -2,14 +2,15 @@
 
 import { cn } from "@/lib/ui/cn";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 /** Matches InfoTooltip; callers retain their hover help and optional details action. */
 export function HelpButton({
   className,
+  icon,
   type = "button",
   ...props
-}: Omit<ComponentProps<"button">, "children">) {
+}: Omit<ComponentProps<"button">, "children"> & { icon?: ReactNode }) {
   return (
     <button
       {...props}
@@ -19,7 +20,7 @@ export function HelpButton({
         className,
       )}
     >
-      <Info aria-hidden size={12} weight="regular" />
+      {icon ?? <Info aria-hidden size={12} weight="regular" />}
     </button>
   );
 }

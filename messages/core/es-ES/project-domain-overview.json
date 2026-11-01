@@ -35,6 +35,7 @@
         "idleBullets": {
           "key": "Precio antes de cada búsqueda",
           "cache": "Los resultados se guardan en caché {duration}: repetir una consulta es gratis",
+          "cacheLoading": "Los resultados en caché se pueden volver a abrir gratis hasta que caduquen.",
           "track": "Convierte los hallazgos en palabras clave en seguimiento con un solo clic"
         },
         "idleTitle": "Analiza cualquier dominio",

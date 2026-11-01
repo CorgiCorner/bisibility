@@ -1,7 +1,11 @@
 "use client";
 
 import { useDefaultProject } from "@/components/shell/use-default-project";
-import { MENU_ROW_STYLE, WorkspaceRow } from "@/components/shell/WorkspaceRow";
+import {
+  WorkspaceCreateRow,
+  type WorkspaceProjectLimit,
+} from "@/components/shell/WorkspaceCreateRow";
+import { WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import {
   WorkspaceSwitcherTrigger,
   type WorkspaceTriggerVariant,
@@ -19,13 +23,12 @@ import {
 } from "@/components/shell/workspace-menu-placement";
 import { Divider } from "@/components/ui/Divider";
 import { Menu } from "@/components/ui/Menu";
-import { MenuItem } from "@/components/ui/MenuItem";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
+
+export type { WorkspaceProjectLimit };
 
 const MENU_ID = "workspace-switcher-menu";
 
@@ -95,6 +98,8 @@ export type WorkspaceSwitcherProps = {
   /** Shows the default-project star on rows the entry page could open. */
   canSetDefault?: boolean;
   className?: string;
+  /** Set when the account owns as many projects as it may: creation shows as blocked. */
+  projectLimit?: WorkspaceProjectLimit | null;
   /** `ghost` (default) is transparent until hover; `boxed` sits on its own elevated card. */
   variant?: WorkspaceTriggerVariant;
   workspaces: WorkspaceSummary[];
@@ -107,6 +112,7 @@ export function WorkspaceSwitcher({
   className,
   collapsed = false,
   compact = false,
+  projectLimit = null,
   variant = "ghost",
   workspaces,
 }: Readonly<WorkspaceSwitcherProps>) {
@@ -239,25 +245,12 @@ export function WorkspaceSwitcher({
             The switcher is for changing workspace, not a second way into the same page. */}
         {canCreateWorkspace ? <Divider style={DIVIDER_STYLE} /> : null}
         {canCreateWorkspace ? (
-          <MenuItem
-            aria-label={t("create")}
-            component={Link}
-            href="/onboarding?new=1"
-            onClick={close}
-            style={MENU_ROW_STYLE}
-          >
-            <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control text-fg-muted">
-              <Plus aria-hidden size={14} weight="regular" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-medium leading-tight text-fg">
-                {t("create")}
-              </span>
-              <span className="mt-px block text-[10px] text-fg-muted">
-                {t("createDescription")}
-              </span>
-            </span>
-          </MenuItem>
+          <WorkspaceCreateRow
+            description={t("createDescription")}
+            label={t("create")}
+            onSelect={close}
+            projectLimit={projectLimit}
+          />
         ) : null}
       </Menu>
     </div>

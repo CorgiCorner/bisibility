@@ -35,6 +35,7 @@
         "idleBullets": {
           "key": "Cena przed każdym uruchomieniem",
           "cache": "Wyniki w pamięci podręcznej przez {duration}, powtórne sprawdzenia są bezpłatne",
+          "cacheLoading": "Zapisane wyniki można otwierać bezpłatnie, dopóki nie wygasną.",
           "track": "Zamień wyniki w śledzone słowa kluczowe jednym kliknięciem"
         },
         "idleTitle": "Przeanalizuj dowolną domenę",

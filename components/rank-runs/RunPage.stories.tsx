@@ -21,7 +21,7 @@ const meta = {
         <DateDisplayProvider>
           <main
             className="min-h-dvh bg-bg p-4 text-fg lg:p-8"
-            data-theme={context.parameters.theme ?? "light"}
+            data-theme={context.parameters.theme}
           >
             <div className="mx-auto max-w-[1400px]">
               <Story />
@@ -103,3 +103,47 @@ export const RunstatePlanned: Story = {
 };
 
 export const Unconfirmed: Story = { args: unconfirmedRunFixture };
+
+export const AccountBlockedWithFailure: Story = {
+  args: {
+    run: {
+      ...runPageFixture.run,
+      status: "completed",
+      outcome: "partial",
+      counts: { ...runPageFixture.run.counts, completed: 1, deferred: 1, failed: 1, total: 3 },
+      sharedDeferralCode: "provider_account_blocked",
+    },
+    items: [
+      {
+        ...runPageFixture.items[0],
+        id: "account-deferred",
+        accountBlocks: [
+          { connectionId: "conn_data", provider: "DataForSEO", reason: "provider_billing" },
+        ],
+        status: "deferred",
+        rankCheck: {
+          errorCode: null,
+          position: null,
+          publicId: "check_deferred",
+          rankingUrl: null,
+        },
+        deferralCode: "provider_account_blocked",
+      },
+      {
+        ...runPageFixture.items[0],
+        id: "provider-failure",
+        accountBlocks: [
+          { connectionId: "conn_data", provider: "DataForSEO", reason: "provider_billing" },
+        ],
+        status: "failed",
+        rankCheck: {
+          errorCode: "provider_transient",
+          position: null,
+          publicId: "check_story",
+          rankingUrl: null,
+        },
+      },
+    ],
+    nextCursor: null,
+  },
+};

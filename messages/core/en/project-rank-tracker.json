@@ -19,8 +19,8 @@
         "noSource": "No Search Console source is connected.",
         "noKeywordsDescription": "Add keywords to start tracking your Google rankings.",
         "noKeywordsTitle": "No keywords yet",
-        "openIntegrations": "Open Integrations",
-        "providerMissing": "You can add keywords now. Choose a data source in <providerLink>Integrations</providerLink> when you are ready to run checks.",
+        "openIntegrations": "Open Providers",
+        "providerMissing": "You can add keywords now. Choose a data source in <providerLink>Providers</providerLink> when you are ready to run checks.",
         "reconnectGoogle": "Reconnect your Google account",
         "searchConsoleAuthorizationExpired": "Google authorization has expired.",
         "startMarketDescription": "A market is the country, location and language you rank in. Add one with your first keywords.",
@@ -105,6 +105,7 @@
       "completed": "Completed",
       "connect": "Connect",
       "cost": "Cost",
+      "checkDeferred": "Deferred",
       "credentialsUnavailable": "Credentials unavailable",
       "credentialsUnavailableLower": "credentials unavailable",
       "daysAgo": "{count, number}d ago",
@@ -186,6 +187,8 @@
       "provider": "Provider",
       "providerChain": "Provider chain",
       "providerChainExhausted": "{count, number} failed after the provider chain was exhausted.",
+      "providerConnectionPaused": "Provider connection paused",
+      "providerConnectionPausedLower": "provider connection paused",
       "providerError": "Provider error",
       "providerRateLimiting": "{provider} is rate-limiting.",
       "providers": "{count, number} {count, plural, one {provider} other {providers}}",
@@ -280,7 +283,10 @@
         "customRangeCaption": "selected range",
         "customRangeWindow": "in the selected range"
       },
-      "partialNoMatch": "Incomplete: checked to position {depth, number}"
+      "partialNoMatch": "Incomplete: checked to position {depth, number}",
+      "monitoringTitle": "Provider connections need attention",
+      "monitoringItem": "{provider}: connection paused. {count, plural, one {# check deferred by the account} other {# checks deferred by the account}} in the last 30 days.",
+      "monitoringAction": "View connections"
     },
     "deletion": {
       "selection": "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# market/device variant} other {# market/device variants}}",

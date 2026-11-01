@@ -23,6 +23,7 @@ export type SendEmailInput = {
   from?: string;
   requireProvider?: boolean;
   html: string;
+  listUnsubscribeUrl?: string;
   replyTo?: string;
   sendCounterReserved?: boolean;
   subject: string;
@@ -40,12 +41,29 @@ async function prepareEmail({
   to,
   subject,
   html,
+  listUnsubscribeUrl,
   replyTo,
   text,
   sendCounterReserved = false,
   requireProvider = false,
 }: SendEmailInput) {
   try {
+    let headers: Record<string, string> | undefined;
+    if (listUnsubscribeUrl !== undefined) {
+      const url = new URL(listUnsubscribeUrl);
+      if (
+        category !== "bulk" ||
+        url.protocol !== "https:" ||
+        url.username ||
+        url.password ||
+        /[\s<>]/.test(listUnsubscribeUrl)
+      )
+        throw new Error("Invalid list unsubscribe URL.");
+      headers = {
+        "List-Unsubscribe": `<${listUnsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      };
+    }
     if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
     await refreshInstanceMailRuntime();
     const provider = resolveEmailProvider();
@@ -66,6 +84,7 @@ async function prepareEmail({
     const message = {
       from: from ?? requireEmailFrom(),
       html,
+      ...(headers ? { headers } : {}),
       replyTo,
       sendCounterReserved,
       subject,

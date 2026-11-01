@@ -50,7 +50,7 @@ export function RankedImportError({
       {reason === "needs_reauth" ? (
         <Link
           className="ml-1 font-semibold text-accent-text"
-          href={appPath(projectRef, "integrations")}
+          href={appPath(projectRef, "providers")}
         >
           {messages.reconnect}
         </Link>

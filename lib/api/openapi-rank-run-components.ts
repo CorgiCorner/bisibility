@@ -1,7 +1,8 @@
+import { DEFERRAL_REASON_CODES } from "@/lib/rank-check/deferral-reason";
 import { paymentResponseFields } from "./openapi-action-payment";
 import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { publicIdSchema } from "./openapi-public-id";
-import { sdkName, usdCents } from "./openapi-sdk-schema";
+import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
 
 const time = { format: "date-time", type: ["string", "null"] } as const;
 const count = { minimum: 0, type: "integer" } as const;
@@ -53,6 +54,16 @@ export const rankRunSchemas = {
       started_at: time,
       finished_at: time,
       blocked_reason: { type: ["string", "null"] },
+      deferral_reasons: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: DEFERRAL_REASON_CODES,
+          ...openEnum("RankCheckDeferralReason"),
+        },
+        description:
+          "Distinct typed reasons for deferred checks, including provider_account_blocked and usage_unconfirmed.",
+      },
       parent_run_id: { ...publicIdSchema("rcr"), type: ["string", "null"] },
       cost_cents: { ...usdCents, minimum: 0, type: ["number", "null"] },
       usage: {

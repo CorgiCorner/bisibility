@@ -72,6 +72,7 @@ const serverActionAliases = [
   "@/lib/actions/project",
   "@/lib/actions/project-market-create",
   "@/lib/actions/providers",
+  "@/lib/actions/provider-recovery",
   "@/lib/actions/provider-ui",
   "@/lib/actions/rank-check-status",
   "@/lib/actions/rankCheck",
@@ -90,7 +91,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|provider-ui|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|provider-recovery|provider-ui|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /[\\/](?:credential-source|credits-bonus|payment)-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,

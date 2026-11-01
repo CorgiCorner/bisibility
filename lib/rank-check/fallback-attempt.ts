@@ -4,6 +4,7 @@ import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { ProviderCallError, providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import type { FallbackAttempt } from "./provider-chain-error";
 import { RankCheckRunnerError, type RankCheckRunnerErrorCode } from "./runner-error";
 
@@ -23,6 +24,18 @@ export function fallbackAttempt(
   admission?: DeploymentAdmissionExhaustedError;
   funding?: BudgetExhaustedError;
 } | null {
+  if (error instanceof ProviderRecoveryAdmissionError) {
+    return {
+      attempt: {
+        message:
+          error.reason === "account_blocked" ? "provider_account_blocked" : "usage_unconfirmed",
+        provider,
+        reason: "account_blocked",
+        recoveryReason: error.reason,
+      },
+      rateLimited: false,
+    };
+  }
   // One funding source (Credits or own keys) reached its project limit: the next provider may be
   // paid from the other source. The shared project cap and unresolved usage still stop the chain.
   if (

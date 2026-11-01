@@ -2,7 +2,11 @@ import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
 import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/provider-usage/tag";
-import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+  readObservedResponse,
+} from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
 import { createProviderRequestJournal } from "./request-journal";
 
@@ -55,6 +59,24 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("createProviderRequestJournal", () => {
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "preserves a %s admission refusal before transport",
+    async (reason) => {
+      const ledger = createFakeLedger();
+      const denial = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+      testOwnAdmission.reserve.mockRejectedValueOnce(denial);
+      const request = vi.fn();
+      await expect(
+        readObservedResponse({
+          observer: journal(ledger).observer,
+          request,
+          measure: () => successReceipt,
+        }),
+      ).rejects.toBe(denial);
+      expect(request).not.toHaveBeenCalled();
+    },
+  );
+
   it.each([undefined, "P2002"])(
     "blocks a different journal sharing consent after settlement fails (%s)",
     async (code) => {

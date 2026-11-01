@@ -72,7 +72,7 @@ describe("sanitizeErrorReport", () => {
   it("redacts sc-domain values because a Search Console property identifies the customer", () => {
     const sanitized = sanitizeErrorReport({
       message: "Search Console rejected sc-domain:acme.example",
-      pathname: "/app/prj_abc/integrations",
+      pathname: "/app/prj_abc/providers",
       stack: "Error: property sc-domain:acme.example is unavailable",
     });
 

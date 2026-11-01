@@ -10,7 +10,7 @@
         "stateExpired": "The sign-in flow expired or was restarted. Try again once, in a single tab.",
         "storeFailed": "Google sign-in worked but our server could not finish the connection. This is on us - retry, and contact us if it repeats."
       },
-      "searchConsoleSync": "Search Console sync did not finish. Observed data may take a moment. You can retry from Integrations."
+      "searchConsoleSync": "Search Console sync did not finish. Observed data may take a moment. You can retry from Providers."
     },
     "firstCheck": {
       "back": "Back",
@@ -30,6 +30,7 @@
       "description": {
         "completed": "Your first results are ready.",
         "manual": "Everything's ready. Run your first check whenever you like - nothing runs until you start it.",
+        "noKeywords": "No keywords added yet. Go back to add keywords, or open the app and add them later.",
         "noProvider": "Your keywords are ready. Choose a data source whenever you are ready to run checks.",
         "paused": "Everything's ready. Checks are paused until you resume the schedule.",
         "scheduled": "Your schedule is set to {frequency}. You can also run a sample check now."
@@ -199,7 +200,7 @@
         "clear": "Clear",
         "connection": "Connection",
         "connectionLabel": "DataForSEO connection",
-        "description": "Uses your DataForSEO account. Results are cached for 12 hours.",
+        "description": "Uses your DataForSEO account. Cached results can be reopened for free until they expire.",
         "drawerDescription": "Keywords your site already ranks for, ordered by estimated traffic.",
         "drawerTitle": "Import from DataForSEO",
         "estimatedTraffic": "Est. traffic",
@@ -322,7 +323,7 @@
           "idle": "Not connected",
           "tested": "Verified"
         },
-        "tooltip": "Live rankings come from a supported data provider. Choose how to use it in Integrations. You can add keywords first and choose a source later."
+        "tooltip": "Live rankings come from a supported data provider. Choose how to use it in Providers. You can add keywords first and choose a source later."
       },
       "credentials": {
         "connected": "{provider} connected",
@@ -378,7 +379,7 @@
         },
         "watch": "Watch setup guide"
       },
-      "description": "Choose how to power your rank checks. You can change this later in Integrations."
+      "description": "Choose how to power your rank checks. You can change this later in Providers."
     },
     "residency": {
       "message": "Your data is stored and processed in the {region}."

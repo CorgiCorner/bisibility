@@ -1,9 +1,19 @@
-import { PROVIDER_ALLOCATION_METADATA } from "./allocation-metadata";
+import { PROVIDER_ALLOCATION_METADATA } from "./runtime-allocation-metadata";
 import { localSequenceProviderEnabled } from "./serp/synthetic-mode";
 import type { ProviderCatalogEntry } from "./types";
 
 /** Display and credential metadata never initialize provider transports. */
 const BASE_PROVIDER_CATALOG = [
+  {
+    id: "ahrefs",
+    allocation: PROVIDER_ALLOCATION_METADATA.ahrefs,
+    label: "Ahrefs",
+    kind: "enrichment",
+    defaultStatus: "ready",
+    requiredCredentials: ["apiKey"],
+    logoDomain: "ahrefs.com",
+    billingUnit: "apiUnits",
+  },
   {
     id: "dataforseo",
     allocation: PROVIDER_ALLOCATION_METADATA.dataforseo,
@@ -12,6 +22,7 @@ const BASE_PROVIDER_CATALOG = [
     defaultStatus: "ready",
     requiredCredentials: ["login", "password"],
     logoDomain: "dataforseo.com",
+    accountUrl: "https://app.dataforseo.com/",
   },
   {
     id: "serpapi",
@@ -21,6 +32,8 @@ const BASE_PROVIDER_CATALOG = [
     defaultStatus: "ready",
     requiredCredentials: ["apiKey"],
     logoDomain: "serpapi.com",
+    billingUnit: "searches",
+    accountUrl: "https://serpapi.com/change-plan",
   },
   {
     id: "gsc",

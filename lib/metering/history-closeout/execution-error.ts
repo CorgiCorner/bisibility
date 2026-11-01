@@ -5,7 +5,7 @@ export class CloseoutExecutionError extends Error {
       elapsedMs: number;
       statements: number;
       phase: "connect" | "warmup" | "transaction";
-      mode: "apply" | "read_only_preview";
+      mode: "apply" | "read_only_preview" | "read_only_list";
       timeoutMs: number;
       maxWaitMs: number;
       code: string;

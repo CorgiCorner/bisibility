@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getBacklinksPageContext } from "./backlinks";
 
 const mocks = vi.hoisted(() => ({
   cost: vi.fn(),
   prisma: {
     backlinkSnapshot: { findMany: vi.fn() },
+    project: { findUniqueOrThrow: vi.fn() },
     providerConnection: { findMany: vi.fn() },
   },
   project: {
@@ -22,10 +23,13 @@ vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject
 vi.mock("./cost-calculator", () => ({ getProjectCostContext: mocks.cost }));
 
 describe("backlinks page context", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.cost.mockResolvedValue({ capCents: 5000, spentCents: 125 });
+    mocks.prisma.project.findUniqueOrThrow.mockResolvedValue({ lookupCacheTtlSeconds: null });
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       { provider: "dataforseo", status: "connected" },
     ]);
@@ -49,8 +53,23 @@ describe("backlinks page context", () => {
     ]);
   });
 
+  it.each([
+    [2_592_000, "600", 2_592_000],
+    [3_600, "600", 3_600],
+    [null, "600", 600],
+    [null, "", 86_400],
+  ])("supplies the effective project cache window %s / %s", async (ttl, instanceTtl, expected) => {
+    vi.stubEnv("BACKLINKS_CACHE_TTL_SECONDS", instanceTtl);
+    mocks.prisma.project.findUniqueOrThrow.mockResolvedValue({ lookupCacheTtlSeconds: ttl });
+
+    await expect(getBacklinksPageContext("prj_1")).resolves.toMatchObject({
+      cacheTtlSeconds: expected,
+    });
+  });
+
   it("returns the five newest distinct target keys with cost and project defaults", async () => {
     await expect(getBacklinksPageContext("prj_1")).resolves.toEqual({
+      cacheTtlSeconds: 86_400,
       costContext: { capCents: 5000, spentCents: 125 },
       defaultTarget: "example.com",
       providerStatus: "connected",
@@ -94,6 +113,24 @@ describe("backlinks page context", () => {
       where: { projectId: "project_1" },
     });
   });
+
+  it.each([
+    [3_600, "2026-07-25T15:00:00.000Z", "2026-07-24T16:00:00.000Z"],
+    [2_592_000, "2026-07-25T15:00:00.000Z", "2026-07-25T15:00:00.000Z"],
+    [2_592_000, "2026-08-23T15:00:00.000Z", "2026-08-23T15:00:00.000Z"],
+  ])(
+    "bounds recent cache labels by current policy and stored expiry",
+    async (ttl, stored, expected) => {
+      mocks.prisma.project.findUniqueOrThrow.mockResolvedValue({ lookupCacheTtlSeconds: ttl });
+      const [row] = await mocks.prisma.backlinkSnapshot.findMany();
+      mocks.prisma.backlinkSnapshot.findMany.mockResolvedValue([
+        { ...row, expiresAt: new Date(stored) },
+      ]);
+
+      const result = await getBacklinksPageContext("prj_1");
+      expect(result.recentTargets[0].cachedUntil).toBe(expected);
+    },
+  );
 
   it("offers only connected providers with the complete backlinks capability", async () => {
     mocks.prisma.providerConnection.findMany.mockResolvedValue([

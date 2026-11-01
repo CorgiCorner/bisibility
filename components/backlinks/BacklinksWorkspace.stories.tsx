@@ -71,6 +71,7 @@ export const Idle: Story = {
   args: {
     analyzeAction,
     context: {
+      cacheTtlSeconds: 86_400,
       costContext: { capCents: 5000, spentCents: 1246 },
       defaultTarget: "acme-store.com",
       providerStatus: "connected",
@@ -78,6 +79,13 @@ export const Idle: Story = {
     },
     loadMoreAction,
     projectId: "prj_story",
+  },
+};
+
+export const ThirtyDayCache: Story = {
+  args: {
+    ...Idle.args,
+    context: { ...Idle.args.context, cacheTtlSeconds: 2_592_000 },
   },
 };
 

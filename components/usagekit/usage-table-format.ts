@@ -12,10 +12,10 @@ export function usageTableFigure(
   labels: Record<"unavailable" | "unknown" | "cents", string>,
   props: {
     formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
-    formatUnit?: (unit: string) => string;
+    formatUnit?: (unit: string, count?: string) => string;
   },
 ): string {
   if (value === "unavailable") return labels.unavailable;
   if (value.certainty === "unknown") return labels.unknown;
-  return `${props.formatFigure?.(value) ?? value.text} ${props.formatUnit?.(value.unit) ?? (["customer_cents", "cents"].includes(value.unit) ? labels.cents : value.unit)}`;
+  return `${props.formatFigure?.(value) ?? value.text} ${props.formatUnit?.(value.unit, value.text) ?? (["customer_cents", "cents"].includes(value.unit) ? labels.cents : value.unit)}`;
 }

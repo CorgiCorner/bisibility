@@ -73,7 +73,7 @@ describe("durable generation data", () => {
       credentialVersion: "v1",
       budgetRevision: "b1",
       consentRevision: "c1",
-      expiresAt: "2027-01-01T00:00:00Z",
+      expiresAt: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
       limitations: ["Hypothesis only"],
     };
   }, 120000);

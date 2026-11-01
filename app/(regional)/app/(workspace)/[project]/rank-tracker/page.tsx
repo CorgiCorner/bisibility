@@ -1,3 +1,4 @@
+import { MonitoringAccountBlocksServer } from "@/components/integrations/provider-recovery/MonitoringAccountBlocksServer";
 import { KeywordPresentationDraftProvider } from "@/components/keywords/grid/KeywordPresentationDraftProvider";
 import { KeywordsGrid } from "@/components/keywords/grid/KeywordsGrid";
 import { RankTrackerReportScopeControl } from "@/components/keywords/grid/RankTrackerReportScopeControl";
@@ -209,6 +210,7 @@ export default async function KeywordsPage({
             savedCount={savedCount}
             trackedCount={list.totalCount}
           />
+          <MonitoringAccountBlocksServer projectId={projectId} projectRef={publicId} />
           <RankTrackerReportScopeControl
             query={query}
             basePath={routeRankTrackerPath ?? appPath(publicId, "rank-tracker")}

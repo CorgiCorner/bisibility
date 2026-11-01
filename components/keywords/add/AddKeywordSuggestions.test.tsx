@@ -255,9 +255,9 @@ describe("Add keyword suggestions", () => {
     mocks.sources.mockResolvedValue({ ...sources, searchConsole: false, rankedConnections: [] });
     renderProject(<SuggestionsHarness onAppendQueries={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
-    expect(await screen.findByRole("link", { name: "Manage integrations" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Manage providers" })).toHaveAttribute(
       "href",
-      `/app/${projectId}/integrations`,
+      `/app/${projectId}/providers`,
     );
     expect(screen.queryByRole("button", { name: /Choose/ })).not.toBeInTheDocument();
     expect(mocks.gsc).not.toHaveBeenCalled();

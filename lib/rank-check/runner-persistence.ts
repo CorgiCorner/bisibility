@@ -51,7 +51,11 @@ export async function persistRankCheck(
   });
   const { observation, ...rankCheckFields } = result.rankCheck;
   const attempts = target.attempts?.length
-    ? target.attempts.map(({ message, provider }) => ({ message, provider }))
+    ? target.attempts.map(({ message, provider, reason }) => ({
+        message,
+        provider,
+        ...(reason ? { reason } : {}),
+      }))
     : Prisma.JsonNull;
   const attemptSummary = deriveCheckAttemptSummary(
     attempts,
@@ -182,7 +186,11 @@ export async function persistFailedRankCheckInTransaction(
 ) {
   const checkedAt = target.checkedAt ?? new Date();
   const attempts = target.attempts?.length
-    ? target.attempts.map(({ message, provider }) => ({ message, provider }))
+    ? target.attempts.map(({ message, provider, reason }) => ({
+        message,
+        provider,
+        ...(reason ? { reason } : {}),
+      }))
     : Prisma.JsonNull;
   const attemptSummary = deriveCheckAttemptSummary(attempts, target.provider, "failed");
   const data = {

@@ -307,7 +307,7 @@ describe("SearchInsightsPropertyPicker", () => {
     expect(content?.parentElement).toBe(footer);
     expect(connection).toHaveAttribute("data-variant", "secondary");
     expect(connection).toHaveClass("w-full");
-    expect(connection).toHaveAttribute("href", "/app/prj_1/integrations?connect=gsc#provider-gsc");
+    expect(connection).toHaveAttribute("href", "/app/prj_1/providers?connect=gsc#provider-gsc");
     expect(screen.queryByRole("button", { name: "Change property" })).toBeNull();
     expect(screen.queryByRole("dialog", { name: "Change Search Console property" })).toBeNull();
   });
@@ -356,7 +356,7 @@ describe("SearchInsightsPropertyPicker", () => {
     await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
 
     const link = screen.getByRole("link", { name: "Manage connection" });
-    expect(link).toHaveAttribute("href", "/app/prj_1/integrations?connect=gsc#provider-gsc");
+    expect(link).toHaveAttribute("href", "/app/prj_1/providers?connect=gsc#provider-gsc");
     expect(link).toHaveAttribute("data-variant", "secondary");
     expect(link).toHaveClass("w-full");
     expect(link).toHaveAttribute("data-size", "xs");

@@ -4,6 +4,7 @@ import { assertSnapshotContinuationPreflight } from "@/lib/measurement-definitio
 import type { DefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
 import type { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/provider-usage/tag";
+import { providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
@@ -53,6 +54,16 @@ export type RunCheckChainResult = {
   attempts: FallbackAttempt[];
 };
 
+function recordFallbackAttempt(attempts: FallbackAttempt[], attempt: FallbackAttempt) {
+  if (attempt.reason === "account_blocked")
+    for (const previous of attempts) if (!previous.reason) previous.reason = "provider_failed";
+  attempts.push(
+    !attempt.reason && attempts.some((previous) => previous.reason === "account_blocked")
+      ? { ...attempt, reason: "provider_failed" }
+      : attempt,
+  );
+}
+
 export async function runCheckWithFallback(
   input: RunCheckChainInput,
 ): Promise<RunCheckChainResult> {
@@ -101,7 +112,7 @@ export async function runCheckWithFallback(
     } catch (error) {
       const fallback = fallbackAttempt(error, connection.provider, input.source);
       if (fallback) {
-        attempts.push(fallback.attempt);
+        recordFallbackAttempt(attempts, fallback.attempt);
         admissionExhaustion = fallback.admission;
         fundingExhaustion = fallback.funding ?? fundingExhaustion;
         if (!fallback.rateLimited) rateLimitedOnly = false;
@@ -160,13 +171,26 @@ export async function runCheckWithFallback(
     } catch (error) {
       const fallback = fallbackAttempt(error, connection.provider, input.source);
       if (fallback) {
-        attempts.push(fallback.attempt);
+        recordFallbackAttempt(attempts, fallback.attempt);
         admissionExhaustion = fallback.admission;
         fundingExhaustion = fallback.funding ?? fundingExhaustion;
         if (!fallback.rateLimited) rateLimitedOnly = false;
         continue;
       }
 
+      if (
+        attempts.some((attempt) => attempt.reason === "account_blocked") &&
+        error instanceof RankCheckRunnerError &&
+        error.code === "provider_failed"
+      ) {
+        attempts.push({
+          provider: connection.provider,
+          message: error.message,
+          code: providerErrorCodeFromError(error.cause),
+          reason: "provider_failed",
+        });
+        throw new ProviderChainError(attempts);
+      }
       throw error;
     }
   }

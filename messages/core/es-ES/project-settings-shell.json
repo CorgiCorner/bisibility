@@ -13,8 +13,8 @@
       "results": "{count, plural, one {# ajuste encontrado} other {# ajustes encontrados}}",
       "resultsLabel": "Ajustes coincidentes",
       "sections": {
-        "providerConnections": "Integraciones / Conexiones",
-        "providerUsage": "Integraciones / Uso"
+        "providerConnections": "Proveedores / Conexiones",
+        "providerUsage": "Proveedores / Uso"
       },
       "entries": {
         "apiKeys": {
@@ -118,6 +118,7 @@
     "sections": {
       "advanced": "Avanzado",
       "billing": "Facturación",
+      "usage": "Uso",
       "competitors": "Competidores",
       "dataSources": "Fuentes de datos",
       "developers": "Desarrolladores",

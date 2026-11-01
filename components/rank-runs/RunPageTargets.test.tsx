@@ -178,6 +178,21 @@ describe("RunPageTargets", () => {
     expect(screen.getByText("Payment details unavailable")).toBeVisible();
   });
 
+  it.each(["budget_exhausted", "budget_missing", "credits_exhausted"] as const)(
+    "links %s deferrals to provider usage",
+    (deferralCode) => {
+      renderTargets({
+        items: [
+          { ...runPageFixture.items[0], deferralCode, id: "deferred-budget", status: "deferred" },
+        ],
+      });
+      expect(screen.getByRole("link", { name: "Review budget" })).toHaveAttribute(
+        "href",
+        "/app/prj_example/providers?tab=usage",
+      );
+    },
+  );
+
   it("links a credentials deferral to Integrations", () => {
     renderTargets({
       items: [
@@ -190,9 +205,9 @@ describe("RunPageTargets", () => {
       ],
     });
 
-    expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(
       "href",
-      appPath("prj_example", "integrations"),
+      appPath("prj_example", "providers"),
     );
   });
 });

@@ -65,7 +65,7 @@ export function DomainOverviewNoDataCard({
 
 function ProviderAction({ projectRef }: Readonly<{ projectRef: string }>) {
   const t = useTranslations("projectDomainOverview.workspace.state");
-  return <AccentCtaLink href={appPath(projectRef, "integrations")}>{t("connect")}</AccentCtaLink>;
+  return <AccentCtaLink href={appPath(projectRef, "providers")}>{t("connect")}</AccentCtaLink>;
 }
 
 export function DomainOverviewStatePanel({
@@ -111,7 +111,7 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         action={
-          <AccentCtaLink href={appPath(projectRef, "integrations")}>{t("reconnect")}</AccentCtaLink>
+          <AccentCtaLink href={appPath(projectRef, "providers")}>{t("reconnect")}</AccentCtaLink>
         }
         description={t("reauthDescription")}
         mark={<ModuleMark bordered icon={Globe} />}

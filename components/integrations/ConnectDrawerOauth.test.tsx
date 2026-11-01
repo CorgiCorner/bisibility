@@ -196,7 +196,7 @@ describe("ConnectDrawerOauth", () => {
 
     expect(screen.getByRole("link", { name: "Connect Google account" })).toHaveAttribute(
       "href",
-      expect.stringContaining("returnPath=%2Fapp%2Fprj_public_1%2Fintegrations"),
+      expect.stringContaining("returnPath=%2Fapp%2Fprj_public_1%2Fproviders"),
     );
   });
 

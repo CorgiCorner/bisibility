@@ -21,7 +21,13 @@ describe("dashboard reorder", () => {
 
   it("rejects invalid targets and saving, and retains the conflict fence", () => {
     const state = beginDashboardDraft(presetDashboardLayout(), 7);
-    for (const target of [-1, 12, 0.5, Number.NaN, Number.POSITIVE_INFINITY])
+    for (const target of [
+      -1,
+      state.draft.widgets.length,
+      0.5,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+    ])
       expect(moveDashboardWidgetTo(state, "organic_kpis", target)).toBe(state);
     expect(moveDashboardWidgetTo(state, "organic_kpis", 0)).toBe(state);
     const saving = { ...state, status: "saving" as const };

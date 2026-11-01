@@ -12,7 +12,10 @@
       "successDescription": "Ya no te enviaremos mensajes de seguimiento de bienvenida ni otros correos de marketing. Los mensajes sobre tu cuenta y el servicio no se ven afectados.",
       "successTitle": "Te has dado de baja",
       "validDescription": "Dejarás de recibir los mensajes del fundador y otros correos de marketing. Los mensajes sobre tu cuenta y el servicio seguirán llegando.",
-      "validTitle": "¿Dejar de recibir los mensajes del fundador?"
+      "validTitle": "¿Dejar de recibir los mensajes del fundador?",
+      "notificationTitle": "¿Dejar de recibir estos correos del proyecto?",
+      "notificationDescription": "Dejarás de recibir este tipo de correo para este proyecto. Las demás preferencias no cambiarán.",
+      "notificationSuccess": "Ya no recibirás este tipo de correo para este proyecto."
     },
     "button": {
       "error": "No se ha podido actualizar tu preferencia. Inténtalo de nuevo.",

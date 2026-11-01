@@ -51,7 +51,7 @@ export function AiCatalogNotice({
       ) : null}
       {noSource ? (
         <Button asChild variant="outline" size="sm">
-          <Link href={appPath(projectId, "integrations")}>{t("openIntegrations")}</Link>
+          <Link href={appPath(projectId, "providers")}>{t("openIntegrations")}</Link>
         </Button>
       ) : (
         <Tooltip

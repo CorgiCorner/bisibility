@@ -59,7 +59,7 @@ function toEmailSendError(error: unknown) {
   return new EmailSendError(`SES send failed with status ${status}${detail}.`, status, null);
 }
 
-async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
+async function send({ from, to, subject, html, headers, replyTo, text }: EmailMessage) {
   const region = resolveSesRegion();
   if (!region) {
     throw new Error("SES_REGION or AWS_REGION is required to send email with SES.");
@@ -74,6 +74,9 @@ async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
           Text: { Charset: "UTF-8", Data: text },
         },
         Subject: { Charset: "UTF-8", Data: subject },
+        ...(headers
+          ? { Headers: Object.entries(headers).map(([Name, Value]) => ({ Name, Value })) }
+          : {}),
       },
     },
     Destination: { ToAddresses: [to] },

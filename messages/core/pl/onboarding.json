@@ -10,7 +10,7 @@
         "stateExpired": "Proces logowania wygasł lub został uruchomiony od nowa. Spróbuj jeszcze raz, w jednej karcie.",
         "storeFailed": "Logowanie Google się powiodło, ale nasz serwer nie zdołał dokończyć połączenia. To problem po naszej stronie – ponów próbę, a jeśli się powtórzy, skontaktuj się z nami."
       },
-      "searchConsoleSync": "Synchronizacja z Search Console nie została ukończona. Dane obserwowane mogą pojawić się z opóźnieniem. Możesz ponowić próbę w Integracjach."
+      "searchConsoleSync": "Synchronizacja z Search Console nie została ukończona. Dane obserwowane mogą pojawić się z opóźnieniem. Możesz ponowić próbę w sekcji Dostawcy."
     },
     "firstCheck": {
       "back": "Wstecz",
@@ -30,6 +30,7 @@
       "description": {
         "completed": "Pierwsze wyniki są gotowe.",
         "manual": "Wszystko gotowe. Uruchom pierwsze sprawdzenie, kiedy zechcesz – nic nie ruszy, dopóki tego nie zrobisz.",
+        "noKeywords": "Nie dodano jeszcze słów kluczowych. Wróć, aby je dodać, albo otwórz aplikację i dodaj je później.",
         "noProvider": "Słowa kluczowe są gotowe. Wybierz źródło danych, gdy zechcesz uruchomić sprawdzanie.",
         "paused": "Wszystko gotowe. Sprawdzenia są wstrzymane, dopóki nie wznowisz harmonogramu.",
         "scheduled": "Harmonogram: {frequency}. Możesz też uruchomić teraz przykładowe sprawdzenie."
@@ -199,7 +200,7 @@
         "clear": "Wyczyść",
         "connection": "Połączenie",
         "connectionLabel": "Połączenie z DataForSEO",
-        "description": "Korzysta z Twojego konta DataForSEO. Wyniki są zapisywane w pamięci podręcznej na 12 godzin.",
+        "description": "Korzysta z Twojego konta DataForSEO. Zapisane wyniki można otwierać bezpłatnie, dopóki nie wygasną.",
         "drawerDescription": "Słowa kluczowe, na które Twoja witryna już zajmuje pozycje, uszeregowane według szacowanego ruchu.",
         "drawerTitle": "Import z DataForSEO",
         "estimatedTraffic": "Szac. ruch",
@@ -322,7 +323,7 @@
           "idle": "Nie połączono",
           "tested": "Zweryfikowano"
         },
-        "tooltip": "Aktualne pozycje pochodzą od obsługiwanego dostawcy danych. W Integracjach wybierzesz sposób korzystania z niego. Możesz najpierw dodać słowa kluczowe, a źródło wybrać później."
+        "tooltip": "Aktualne pozycje pochodzą od obsługiwanego dostawcy danych. W sekcji Dostawcy wybierzesz sposób korzystania z niego. Możesz najpierw dodać słowa kluczowe, a źródło wybrać później."
       },
       "credentials": {
         "connected": "Połączono z dostawcą {provider}",
@@ -378,7 +379,7 @@
         },
         "watch": "Obejrzyj przewodnik konfiguracji"
       },
-      "description": "Wybierz źródło danych do sprawdzania pozycji. Możesz je później zmienić w Integracjach."
+      "description": "Wybierz źródło danych do sprawdzania pozycji. Możesz je później zmienić w sekcji Dostawcy."
     },
     "residency": {
       "message": "Twoje dane są przechowywane i przetwarzane w regionie {region}."

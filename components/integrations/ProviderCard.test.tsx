@@ -31,6 +31,25 @@ vi.mock("@/components/integrations/ConnectDrawer", () => ({
 }));
 
 describe("ProviderCard", () => {
+  it.each([
+    integrationCategories[0].providers[0],
+    integrationCategories[0].providers[1],
+    integrationCategories[2].providers[0],
+  ])("keeps $name management in the shared footer and its identity separate", (provider) => {
+    const view = render(<ProviderCard canManageProviders canUpdateProject provider={provider} />);
+    const card = view.container.querySelector(`#provider-${provider.id}`);
+    expect(card).not.toBeNull();
+    const header = card?.querySelector("[data-provider-header]");
+    const footer = card?.querySelector("[data-provider-footer]");
+    expect(header?.querySelector("button")).toBeNull();
+    expect(header).toHaveTextContent(provider.name);
+    if (provider.status === "ready") expect(header).toHaveTextContent("Not connected");
+    expect(footer).not.toBeNull();
+    if (!(footer instanceof HTMLElement)) throw new Error("Missing provider footer");
+    fireEvent.click(within(footer).getByRole("button", { name: /^(Connect|Manage key)$/ }));
+    expect(screen.getByTestId("connect-drawer")).toBeInTheDocument();
+  });
+
   it("uses one muted accent interaction contract for consumer-row actions", () => {
     expect(consumerActionStyle).toEqual({
       "--control-color": "var(--fg-muted)",

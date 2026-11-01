@@ -414,7 +414,7 @@
       "discoveredUrls": "Wykryte adresy URL",
       "sitemapStoredOnly": "Odkryte pliki map witryny i liczby adresów URL z zapisanych danych. Nie są to sumy przesłane w Search Console ani hierarchia indeksu map witryny.",
       "noSitemaps": "Brak zapisanych adresów z map witryny. Prześlij mapę w Search Console i poczekaj na wykrycie. Nie oznacza to, że żadna mapa nie została przesłana.",
-      "noConnection": "Połącz usługę Search Console w integracjach projektu, aby wyświetlić indeksowanie stron.",
+      "noConnection": "Połącz usługę Search Console w sekcji Dostawcy projektu, aby wyświetlić indeksowanie stron.",
       "urls": "Adresy URL",
       "url": "Adres URL",
       "urlsCaption": "Każdy wiersz to ostatni zapisany wynik adresu URL. Otwarcie wiersza nie wysyła zapytania do Google.",

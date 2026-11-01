@@ -5,7 +5,7 @@ import {
   keywordMembershipSchedule,
 } from "@/lib/keywords/schedule-membership";
 import { recoveryResultMetadata } from "@/lib/provider-evidence/recovery/result-metadata";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 import { keywordCheckScheduleSelect } from "@/lib/queries/keyword-row-types";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";

@@ -31,7 +31,7 @@ function toEmailSendError(error: unknown) {
   );
 }
 
-async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
+async function send({ from, to, subject, html, headers, replyTo, text }: EmailMessage) {
   const url = configuredValue(process.env.SMTP_URL);
   const stored = storedMailProvider("smtp");
   if (!url && !stored?.smtpHost) {
@@ -49,7 +49,15 @@ async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
           ...SMTP_TRANSPORT_OPTIONS,
         });
     try {
-      await transport.sendMail({ from, html, replyTo, subject, text, to });
+      await transport.sendMail({
+        from,
+        html,
+        ...(headers ? { headers } : {}),
+        replyTo,
+        subject,
+        text,
+        to,
+      });
     } finally {
       transport.close();
     }

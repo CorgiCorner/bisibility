@@ -48,11 +48,21 @@ function renderSurface({
   );
 }
 async function openCustomization() {
-  const trigger = screen.getByRole("button", { name: "Customize dashboard" });
-  await waitFor(() => expect(trigger).toBeEnabled());
-  fireEvent.click(trigger);
-  return { trigger, menu: await screen.findByRole("menu", { name: "Customize dashboard" }) };
+  const existing = screen.queryByRole("dialog", { name: "Customize dashboard" });
+  const trigger = screen.getByRole("button", {
+    name: "Customize dashboard",
+    hidden: Boolean(existing),
+  });
+  if (!existing) {
+    await waitFor(() => expect(trigger).toBeEnabled());
+    fireEvent.click(trigger);
+  }
+  return {
+    trigger,
+    menu: existing ?? (await screen.findByRole("dialog", { name: "Customize dashboard" })),
+  };
 }
+
 beforeEach(() => {
   vi.clearAllMocks();
   setNavigationState({ pathname: "/app/project/dashboard" });
@@ -75,29 +85,24 @@ describe("integrated personal dashboard toolbar", () => {
     expect(actions.setDefault).not.toHaveBeenCalled();
   });
 
-  it("opens the editor with the menu keyboard action and restores focus after Escape", async () => {
+  it("opens the modal directly and restores focus after Escape", async () => {
     renderSurface();
-    const { trigger, menu } = await openCustomization();
-    const edit = within(menu).getByRole("menuitem", { name: "Customize dashboard" });
-    edit.focus();
-    fireEvent.keyDown(edit, { key: "Enter" });
+    const { trigger } = await openCustomization();
     await screen.findByRole("switch", { name: "Organic metrics" });
     await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole("switch", { name: "Organic metrics" }));
-    fireEvent.keyDown(screen.getByRole("group", { name: "Customize dashboard" }), {
+    fireEvent.keyDown(screen.getByRole("dialog", { name: "Customize dashboard" }), {
       key: "Escape",
     });
     expect(screen.queryByRole("button", { name: /^Save$/ })).not.toBeInTheDocument();
-    expect(trigger).toHaveFocus();
+    await waitFor(() => expect(trigger).toHaveFocus());
     expect(actions.save).not.toHaveBeenCalled();
   });
 
   it("keeps the default command disabled for the current default", async () => {
     renderSurface();
     const opened = await openCustomization();
-    expect(
-      within(opened.menu).getByRole("menuitem", { name: "Set as my default" }),
-    ).toHaveAttribute("aria-disabled", "true");
+    expect(within(opened.menu).getByRole("button", { name: "Set as my default" })).toBeDisabled();
     expect(actions.setDefault).not.toHaveBeenCalled();
   });
 
@@ -105,16 +110,11 @@ describe("integrated personal dashboard toolbar", () => {
     renderSurface({ preset: "local" });
     const presetControl = screen.getByRole("button", { name: "Dashboard preset" });
     let opened = await openCustomization();
-    expect(
-      within(opened.menu).getByRole("menuitem", { name: "Set as my default" }),
-    ).not.toHaveAttribute("aria-disabled", "true");
-    fireEvent.click(within(opened.menu).getByRole("menuitem", { name: "Customize dashboard" }));
+    expect(within(opened.menu).getByRole("button", { name: "Set as my default" })).toBeEnabled();
     await screen.findByRole("button", { name: /^Save$/ });
     fireEvent.click(screen.getAllByRole("switch")[0]);
     opened = await openCustomization();
-    expect(
-      within(opened.menu).getByRole("menuitem", { name: "Set as my default" }),
-    ).toHaveAttribute("aria-disabled", "true");
+    expect(within(opened.menu).getByRole("button", { name: "Set as my default" })).toBeDisabled();
     expect(presetControl).toBeDisabled();
     expect(actions.setDefault).not.toHaveBeenCalled();
   });
@@ -125,10 +125,7 @@ describe("integrated personal dashboard toolbar", () => {
       preference: { ...initial, notice: { kind: "unsupported_version", scopeUnavailable: true } },
     });
     const { menu } = await openCustomization();
-    expect(within(menu).getByRole("menuitem", { name: "Set as my default" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    expect(within(menu).getByRole("button", { name: "Set as my default" })).toBeDisabled();
     expect(actions.setDefault).not.toHaveBeenCalled();
   });
 
@@ -140,15 +137,13 @@ describe("integrated personal dashboard toolbar", () => {
     });
     renderSurface({ preset: "local" });
     const { menu } = await openCustomization();
-    fireEvent.click(within(menu).getByRole("menuitem", { name: "Set as my default" }));
+    fireEvent.click(within(menu).getByRole("button", { name: "Set as my default" }));
     await screen.findByText(
       "Preferences changed elsewhere. Your draft is preserved; review the current layout before saving.",
     );
     expect(actions.save).not.toHaveBeenCalled();
     const reopened = await openCustomization();
-    expect(
-      within(reopened.menu).getByRole("menuitem", { name: "Set as my default" }),
-    ).toHaveAttribute("aria-disabled", "true");
+    expect(within(reopened.menu).getByRole("button", { name: "Set as my default" })).toBeDisabled();
     expect(actions.read).toHaveBeenCalledWith(initial.projectId);
   });
 
@@ -160,7 +155,7 @@ describe("integrated personal dashboard toolbar", () => {
     renderSurface({ preset: "local" });
     const { menu } = await openCustomization();
     expect(actions.setDefault).not.toHaveBeenCalled();
-    fireEvent.click(within(menu).getByRole("menuitem", { name: "Set as my default" }));
+    fireEvent.click(within(menu).getByRole("button", { name: "Set as my default" }));
     await screen.findByText("Your default dashboard is saved.");
     expect(actions.setDefault).toHaveBeenCalledExactlyOnceWith({
       projectId: initial.projectId,

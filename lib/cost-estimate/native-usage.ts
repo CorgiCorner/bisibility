@@ -1,5 +1,5 @@
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { pagesPerCheck } from "./estimate";

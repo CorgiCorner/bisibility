@@ -3,6 +3,7 @@
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import type { AllocationProps } from "@/components/usagekit/provider-allocation-editor";
 import type { UsageConnection } from "@/lib/metering/user-views";
+import { providerBillingUnit } from "@/lib/providers/billing-unit";
 import type { ProviderAllocationRow } from "@usagekit/views";
 import { useTranslations } from "next-intl";
 
@@ -107,9 +108,15 @@ export function useAllocationLabels(
   };
   const formatFigure: NonNullable<AllocationProps["formatFigure"]> = (figure) =>
     presentation.budgetFigure(figure) ?? meter("unknown");
-  const formatUnit = (unit: string) =>
+  // One editor can hold several connections. Only providers with their own billed unit have
+  // counted rows, so that unit labels them when exactly one such unit is present.
+  const counted = new Set(
+    connections.flatMap((connection) => providerBillingUnit(connection.provider) ?? []),
+  );
+  const countedUnit = counted.size === 1 ? [...counted][0] : undefined;
+  const formatUnit = (unit: string, count?: string) =>
     unit === "units"
-      ? t("searchesAdornment")
+      ? presentation.unit(countedUnit ?? unit, count)
       : unit === "customer_cents"
         ? presentation.unit(unit)
         : unit === "cents"

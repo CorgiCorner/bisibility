@@ -8,7 +8,11 @@ export function RecoveryAxes({ row }: { row: RecoveryCase }) {
       {(["send", "work", "accounting"] as const).map((axis) => (
         <div key={axis} className="rounded-xl border border-border bg-bg p-3">
           <dt className="text-xs text-fg-muted">{t(axis)}</dt>
-          <dd className="mt-1 text-sm font-semibold">{t(`states.${row[axis]}`)}</dd>
+          <dd className="mt-1 text-sm font-semibold">
+            {axis === "accounting" && row.closedUnknown
+              ? t("closedUnknown")
+              : t(`states.${row[axis]}`)}
+          </dd>
         </div>
       ))}
     </dl>

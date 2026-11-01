@@ -141,7 +141,7 @@ describe("controlled dashboard layout editor", () => {
     );
     expect(handle).toHaveFocus();
     expect(screen.getAllByRole("status").find((node) => node.tagName === "P")).toHaveTextContent(
-      "Moved Position history to position 12.",
+      `Moved Position history to position ${presetDashboardLayout().widgets.length}.`,
     );
     await user.keyboard("{Home}");
     expect(screen.getAllByRole("status").find((node) => node.tagName === "P")).toHaveTextContent(
@@ -271,9 +271,7 @@ describe("controlled dashboard layout editor", () => {
     const row = screen.getByRole("switch", { name: "Contributors" }).closest("li");
     expect(row).toHaveAttribute("data-reason", "missing_capability");
     expect(row?.querySelector("p")).toBeNull();
-    expect(within(row as HTMLElement).getByRole("img")).toHaveAccessibleName(
-      "This section's stored report is unavailable.",
-    );
+    expect(within(row as HTMLElement).queryByRole("img")).not.toBeInTheDocument();
     const help = screen.getByRole("button", { name: "About Contributors" });
     const reason = "The stored data capability required by this section is unavailable.";
     expect(help).toHaveAccessibleDescription(`Stored report for contributors. ${reason}`);

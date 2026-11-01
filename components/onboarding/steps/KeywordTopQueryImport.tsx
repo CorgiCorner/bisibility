@@ -161,7 +161,7 @@ export function KeywordTopQueryImport({
               {" "}
               <Link
                 className="font-semibold text-accent-text"
-                href={appPath(projectId, "integrations")}
+                href={appPath(projectId, "providers")}
               >
                 {messages.reconnect}
               </Link>

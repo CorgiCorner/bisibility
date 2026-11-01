@@ -9,7 +9,7 @@ it("shows capability-specific providers and a link while locking all descendant 
     <ProviderAccessGate
       blocked
       providers={["Example keyword provider"]}
-      href="/app/prj_example/integrations"
+      href="/app/prj_example/providers"
     >
       <input aria-label="Seeds" />
       <button type="button">Research</button>
@@ -20,9 +20,9 @@ it("shows capability-specific providers and a link while locking all descendant 
   expect(screen.getByRole("textbox", { name: "Seeds" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Research" })).toBeDisabled();
   expect(screen.getByText("Supported providers: Example keyword provider.")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(
     "href",
-    "/app/prj_example/integrations",
+    "/app/prj_example/providers",
   );
 });
 it("keeps available fields editable and omits the lock notice", () => {
@@ -41,7 +41,7 @@ it("offers one reconnect action with capability-specific providers", () => {
       blocked
       reconnect
       providers={["Fixture provider"]}
-      href="/app/prj_1/integrations"
+      href="/app/prj_1/providers"
     >
       <input aria-label="Target" />
     </ProviderAccessGate>,
@@ -50,22 +50,22 @@ it("offers one reconnect action with capability-specific providers", () => {
   expect(screen.getAllByRole("link")).toHaveLength(1);
   expect(screen.getByRole("link", { name: "Reconnect provider" })).toHaveAttribute(
     "href",
-    "/app/prj_1/integrations",
+    "/app/prj_1/providers",
   );
   expect(screen.getByText("Supported providers: Fixture provider.")).toBeVisible();
   expect(screen.getByRole("textbox", { name: "Target" })).toBeDisabled();
 });
 
 it("opens Integrations without promising a compatible provider when none is available", () => {
-  render(<ProviderAccessEmptyState href="/app/prj_1/integrations" providers={[]} />);
+  render(<ProviderAccessEmptyState href="/app/prj_1/providers" providers={[]} />);
   expect(
     screen.getByRole("heading", {
       name: "No supported data source is available for this feature.",
     }),
   ).toBeVisible();
-  expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(
     "href",
-    "/app/prj_1/integrations",
+    "/app/prj_1/providers",
   );
   expect(screen.queryByRole("link", { name: "Connect provider" })).not.toBeInTheDocument();
   expect(screen.queryByText(/Connect one in Integrations/)).not.toBeInTheDocument();

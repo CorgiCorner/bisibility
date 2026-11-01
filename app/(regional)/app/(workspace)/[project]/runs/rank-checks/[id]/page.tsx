@@ -7,7 +7,10 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
-import { sharedRankCheckRunDeferralCode } from "@/lib/queries/rank-check-run-deferral";
+import {
+  hasAccountDeferredRankCheck,
+  sharedRankCheckRunDeferralCode,
+} from "@/lib/queries/rank-check-run-deferral";
 import { getRankCheckRun, listRankCheckRunItems } from "@/lib/queries/rank-check-runs";
 import { notFound } from "next/navigation";
 
@@ -25,10 +28,11 @@ export default async function RankCheckRunPage({ params }: Readonly<RankCheckRun
   const access = await resolveProjectAccess(project);
   const readable = await requireReadableProject(access.publicId);
   try {
-    const [run, items, sharedDeferralCode] = await Promise.all([
+    const [run, items, sharedDeferralCode, hasAccountDeferred] = await Promise.all([
       getRankCheckRun(access.projectId, id),
       listRankCheckRunItems(access.projectId, id, itemsUrl(access.publicId)),
       sharedRankCheckRunDeferralCode(access.projectId, id),
+      hasAccountDeferredRankCheck(access.projectId, id),
     ]);
     const canMutate =
       canProjectAction(getProjectRole(readable.actor, readable.project.id), "update", "keyword") &&
@@ -42,7 +46,7 @@ export default async function RankCheckRunPage({ params }: Readonly<RankCheckRun
             nextCursor={items.nextCursor}
             now={new Date().toISOString()}
             projectRef={access.publicId}
-            run={{ ...run, sharedDeferralCode }}
+            run={{ ...run, sharedDeferralCode, hasAccountDeferred }}
           />
         </PageContent>
       </ProjectRunsFeatureBoundary>

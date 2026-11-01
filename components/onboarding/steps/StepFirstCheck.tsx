@@ -46,9 +46,10 @@ export function StepFirstCheck({
   const navigationProjectId = project?.publicId ?? projectId;
   const sampleProject = Boolean(project?.isSample);
   const providerReady = !sampleProject && (providerConnected ?? Boolean(flowState?.providerId));
+  const hasKeywords = keywordCount > 0;
   const markets = selectedMarkets(defaults),
     devices = selectedDevices(defaults);
-  const sampleCount = keywordCount > 0 ? markets.length * devices.length : 0;
+  const sampleCount = hasKeywords ? markets.length * devices.length : 0;
   const deviceLabel =
     devices.length === 2 && devices.includes("desktop") && devices.includes("mobile")
       ? t("review.bothDevices")
@@ -81,7 +82,7 @@ export function StepFirstCheck({
     initialFirstCheckCandidates?.filter((candidate) => candidate.text === sampleKeyword),
     projectId,
   );
-  const canPreview = providerReady || sampleProject;
+  const canPreview = hasKeywords && (providerReady || sampleProject);
   const previewDisabled =
     state.status === "running" ||
     state.status === "queued" ||
@@ -97,7 +98,7 @@ export function StepFirstCheck({
   const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
     ? t("queue.sample")
-    : !providerReady
+    : !providerReady || !hasKeywords
       ? null
       : state.status === "running"
         ? t("queue.running")
@@ -156,9 +157,11 @@ export function StepFirstCheck({
   const reviewDescription =
     state.status === "completed"
       ? t("description.completed")
-      : !providerReady
-        ? t("description.noProvider")
-        : t("description.manual");
+      : !hasKeywords
+        ? t("description.noKeywords")
+        : !providerReady
+          ? t("description.noProvider")
+          : t("description.manual");
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
       <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
@@ -187,7 +190,9 @@ export function StepFirstCheck({
       />
       <FirstCheckErrors
         keywordError={
-          keywordError ?? (!sampleKeyword && providerReady ? t("errors.keyword") : null)
+          hasKeywords
+            ? (keywordError ?? (!sampleKeyword && providerReady ? t("errors.keyword") : null))
+            : null
         }
         onRetryKeyword={retryKeyword}
         submitError={submitError}

@@ -1,4 +1,7 @@
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { comparisonFixture } from "./fixtures.test-support";
 import { comparisonHash } from "./model";
@@ -205,6 +208,17 @@ describe("comparison worker execution remains separate from rank history", () =>
     );
     expect(mocks.journal).not.toHaveBeenCalled();
   });
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "retains the existing outcome when %s prevents admission",
+    async (reason) => {
+      mocks.journal.mockImplementationOnce(() => {
+        throw new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+      });
+      await executeComparisonSide(input);
+      expect(mocks.fetch).not.toHaveBeenCalled();
+      expect(row).toMatchObject({ status: "failed", reason: "usage_unconfirmed" });
+    },
+  );
   it("unknown receipt never becomes zero and a restarted activity cannot rebuy", async () => {
     mocks.fetch.mockImplementation(async (call: any) => {
       await call.credentials.usageObserver.begin();

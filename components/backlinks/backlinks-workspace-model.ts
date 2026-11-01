@@ -41,6 +41,7 @@ export type RecentBacklinksTarget = {
 };
 
 type BacklinksWorkspaceContext = {
+  cacheTtlSeconds: number;
   costContext: {
     capCents: number;
     spentCents: number;

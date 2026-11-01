@@ -71,6 +71,7 @@ export function DataTable<TRow extends DataTableRowBase>({
   selection,
   sorting,
   sortingMode = "server",
+  tabIndex,
 }: Readonly<DataTableProps<TRow>>) {
   useMemo(() => {
     validateDataTableRows(rows);
@@ -145,6 +146,7 @@ export function DataTable<TRow extends DataTableRowBase>({
       aria-rowcount={rowCount}
       className={cn(
         dataTableRootClassName,
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid",
         // The surface drawing the border must also own its corners, even inside a clipped card.
         bordered && "overflow-hidden rounded-card",
         // Keep the header rule inside the viewport, including clipped card bodies.
@@ -166,6 +168,7 @@ export function DataTable<TRow extends DataTableRowBase>({
       ref={container.ref}
       role="table"
       style={rootStyle}
+      tabIndex={tabIndex}
     >
       <div className="min-w-full shrink-0" style={{ width: `var(${DATA_TABLE_WIDTH_VARIABLE})` }}>
         <DataTableHeader

@@ -66,6 +66,7 @@ function createdEnvelope(count: number) {
 describe("DataForSEO queued tasks", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.useRealTimers();
   });
 
@@ -218,6 +219,26 @@ describe("DataForSEO queued tasks", () => {
       ),
     ).resolves.toEqual([{ providerTaskId: "provider_1", tag: "bisibility:rank:task_1" }]);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("matches the stored production tag for a task submitted before the demo stage change", async () => {
+    const tag =
+      "app=bisibility;stage=prod;src=worker;cs=own;trg=scheduled;f=rank_check;p=project_1;c=task_1";
+    vi.stubEnv("TEMPORAL_NAMESPACE", "bisibility-demo");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status_code: 20000,
+            tasks: [{ result: [{ id: "provider_1", tag }] }],
+          }),
+        ),
+      ),
+    );
+    await expect(
+      readyDataForSeoQueuedTasks({ login: "login", password: "password" }, new Set([tag])),
+    ).resolves.toEqual([{ providerTaskId: "provider_1", tag }]);
   });
 
   it("propagates caller cancellation to the queued readiness GET", async () => {

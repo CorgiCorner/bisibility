@@ -114,7 +114,10 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
       id = requestId;
     start(async () => {
       try {
-        const result = await commitRecoveryAction({ previewToken: token, commandId: id });
+        const result = await commitRecoveryAction({
+          previewToken: token,
+          commandId: id,
+        });
         if (result.ok) {
           setCommandId(id);
           setPreview(null);
@@ -162,11 +165,14 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
             ariaLabel={t("category")}
             disabled={busy}
             value={filters.category ?? "all"}
-            options={(["all", "unfinished", "accounting", "failed", "historical"] as const).map(
-              (value) => ({ value, label: t(`categories.${value}`) }),
-            )}
+            options={(
+              ["all", "unfinished", "accounting", "failed", "historical", "closed_unknown"] as const
+            ).map((value) => ({ value, label: t(`categories.${value}`) }))}
             onChange={(value) =>
-              load({ category: value as RecoveryFilters["category"], provider: filters.provider })
+              load({
+                category: value as RecoveryFilters["category"],
+                provider: filters.provider,
+              })
             }
           />
         </div>
@@ -184,7 +190,10 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
               })),
             ]}
             onChange={(value) =>
-              load({ category: filters.category, provider: value === "all" ? undefined : value })
+              load({
+                category: filters.category,
+                provider: value === "all" ? undefined : value,
+              })
             }
           />
         </div>

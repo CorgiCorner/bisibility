@@ -105,7 +105,7 @@ describe("greeting name", () => {
 
 describe("welcome email variant A (onboarding completed)", () => {
   const alertsUrl = `${origin}/app/${projectRef}/alerts`;
-  const integrationsUrl = `${origin}/app/${projectRef}/integrations`;
+  const integrationsUrl = `${origin}/app/${projectRef}/providers`;
   const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
   const pricingUrl = "https://bisibility.com/pricing";
 
@@ -128,7 +128,7 @@ describe("welcome email variant A (onboarding completed)", () => {
     "While it runs, three things worth switching on:",
     "",
     `- Alerts, so you hear about ranking moves without checking in ${alertsUrl}`,
-    `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${integrationsUrl}`,
+    `- Search Console and GA4 (in Providers), to see impressions and clicks next to rankings ${integrationsUrl}`,
     `- API and webhooks, if you want the data in your own tools ${apiDocsUrl}`,
     "",
     "Nothing is charged unless you add a card yourself. Plans and credits are explained at https://bisibility.com/pricing.",
@@ -150,7 +150,7 @@ describe("welcome email variant A (onboarding completed)", () => {
       `- Alerts, so you hear about ranking moves without checking in ${alertsUrl}`,
     );
     expect(message.text).toContain(
-      `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${integrationsUrl}`,
+      `- Search Console and GA4 (in Providers), to see impressions and clicks next to rankings ${integrationsUrl}`,
     );
     expect(message.text).toContain(
       `- API and webhooks, if you want the data in your own tools ${apiDocsUrl}`,

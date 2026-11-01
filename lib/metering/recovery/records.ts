@@ -20,6 +20,7 @@ export type RecoveryRecord = {
   rankUpdatedAt: Date | null;
   projectExists: boolean;
   historical: boolean;
+  closedUnknown?: boolean;
   accountingUnknown: boolean;
   nativeId: string | null;
   binding: boolean;
@@ -34,7 +35,11 @@ export type RecoveryRecord = {
   resultExpiresAt: Date | null;
   resultBlockedCode?: string | null;
   resumeAuthorized?: boolean;
-  originalAuthorization?: { maxCostCents: string; targets: number; maxAttempts: number } | null;
+  originalAuthorization?: {
+    maxCostCents: string;
+    targets: number;
+    maxAttempts: number;
+  } | null;
   error: Prisma.JsonValue | null;
   activeError: boolean;
   triageVersion: number | null;

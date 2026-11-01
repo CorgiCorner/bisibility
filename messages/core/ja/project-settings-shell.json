@@ -13,8 +13,8 @@
       "results": "{count, plural, other {#件の設定が見つかりました}}",
       "resultsLabel": "一致した設定",
       "sections": {
-        "providerConnections": "連携 / 接続",
-        "providerUsage": "連携 / 利用状況"
+        "providerConnections": "プロバイダー / 接続",
+        "providerUsage": "プロバイダー / 利用状況"
       },
       "entries": {
         "apiKeys": {
@@ -118,6 +118,7 @@
     "sections": {
       "advanced": "詳細設定",
       "billing": "請求",
+      "usage": "使用量",
       "competitors": "競合",
       "dataSources": "データソース",
       "developers": "開発者",

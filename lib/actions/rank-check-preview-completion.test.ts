@@ -5,12 +5,14 @@ const mocks = vi.hoisted(() => ({
   consent: vi.fn(),
   surface: vi.fn(),
   track: vi.fn(),
+  resolveUser: vi.fn(),
   after: vi.fn(),
 }));
 
 vi.mock("next/server", () => ({ after: mocks.after }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: { rankCheckRun: { findMany: mocks.findMany } } }));
+vi.mock("@/lib/analytics/server-user", () => ({ resolveServerAnalyticsUser: mocks.resolveUser }));
 vi.mock("@/lib/analytics/server", () => ({
   readAnalyticsSurfaceFromHeaders: mocks.surface,
   readConsentFromCookies: mocks.consent,
@@ -54,6 +56,10 @@ describe("first-check completion analytics", () => {
       status: "decided",
       decidedAt: 1,
     });
+    mocks.resolveUser.mockImplementation(async (_user, consent) => ({
+      distinctId: "user-fixture",
+      consent,
+    }));
     mocks.findMany.mockResolvedValue([completed()]);
     mocks.track.mockResolvedValue(undefined);
   });
@@ -149,7 +155,7 @@ describe("first-check completion analytics", () => {
     expect(mocks.after).not.toHaveBeenCalled();
   });
 
-  it("rechecks current consent before reading analytics data", async () => {
+  it("counts refused consent without a consent-date cutoff", async () => {
     mocks.consent.mockResolvedValue({
       analytics: false,
       replay: true,
@@ -157,9 +163,20 @@ describe("first-check completion analytics", () => {
       decidedAt: 1,
     });
     await emitFirstCheckRunCompletion(input);
-    expect(mocks.findMany).not.toHaveBeenCalled();
-    expect(mocks.track).not.toHaveBeenCalled();
-    expect(mocks.after).not.toHaveBeenCalled();
+    expect(mocks.findMany.mock.calls[0][0].where).not.toHaveProperty("createdAt");
+    await flushDelivery();
+    expect(mocks.track).toHaveBeenCalledOnce();
+  });
+
+  it("omits the cutoff when the account has refused despite a stale browser grant", async () => {
+    mocks.resolveUser.mockResolvedValue({
+      distinctId: "user-fixture",
+      consent: { analytics: false },
+    });
+    await emitFirstCheckRunCompletion(input);
+    expect(mocks.findMany.mock.calls[0][0].where).not.toHaveProperty("createdAt");
+    await flushDelivery();
+    expect(mocks.track).toHaveBeenCalledOnce();
   });
 
   it.each([null, "settings"])("does not activate from surface %s", async (surface) => {

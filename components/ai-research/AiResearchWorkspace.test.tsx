@@ -57,7 +57,7 @@ describe("AI workspace product states", () => {
     await waitFor(() => expect(screen.getByRole("link", { name: "connectAction" })).toBeVisible());
     expect(screen.getByRole("link", { name: "connectAction" })).toHaveAttribute(
       "href",
-      "/app/prj_example/integrations",
+      "/app/prj_example/providers",
     );
     expect(screen.queryByRole("button", { name: "estimateCost" })).toBeNull();
     expect(screen.queryByText("noSource")).not.toBeInTheDocument();
@@ -110,7 +110,7 @@ describe("AI workspace product states", () => {
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "action" })).toHaveAttribute(
       "href",
-      "/app/prj_example/integrations",
+      "/app/prj_example/providers",
     );
     expect(screen.getByRole("link", { name: "openReport" })).toHaveAttribute(
       "href",

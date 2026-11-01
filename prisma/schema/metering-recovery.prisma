@@ -1,3 +1,22 @@
+// An immutable operational closure retains unknown money and every original receipt/reservation.
+model MeteringUnknownCloseout {
+  operationPk       String @id @map("operation_pk")
+  operation         MeteringOperation @relation(fields: [operationPk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  namespace         String
+  operationId       String @map("operation_id")
+  version           Int
+  input             Json
+  attemptId         String @map("attempt_id")
+  credentialVersion String @map("credential_version")
+  policy            String
+  planHash          String @map("plan_hash")
+  actorId           String @map("actor_id")
+  recordedAt        DateTime @map("recorded_at") @db.Timestamptz
+
+  @@unique([namespace, operationId])
+  @@map("metering_unknown_closeout")
+}
+
 // Operational triage never changes financial accounting truth.
 model MeteringRecoveryTriage {
   namespace      String

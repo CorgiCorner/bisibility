@@ -29,7 +29,10 @@ import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/pro
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
 import type { SerpProvider, SerpRankResult } from "@/lib/providers/types";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { getCalculatorPrefill } from "@/lib/queries/cost-calculator";
 import type { SerpRankLocation } from "@/lib/serp/location";
@@ -221,6 +224,104 @@ function ranked(position: number): SerpRankResult {
 }
 
 describe("runCheckWithFallback", () => {
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "falls through a %s refusal to a successful backup",
+    async (reason) => {
+      const backup = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
+      const result = await runCheckWithFallback({
+        keyword: KEYWORD,
+        schedule: { frequency: "manual" },
+        connections: [
+          { provider: "primary" },
+          { provider: "secondary", credentials: { apiKey: "fixture" } },
+        ],
+        resolveProvider: (id) => {
+          if (id === "primary")
+            throw new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+          return backup;
+        },
+      });
+      expect(result.provider).toBe("secondary");
+      expect(result.attempts).toMatchObject([
+        { provider: "primary", reason: "account_blocked", recoveryReason: reason },
+      ]);
+      expect(backup.fetchRank).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each([
+    ["account_blocked", "account_blocked", "provider_account_blocked"],
+    ["accounting_review", "accounting_review", "usage_unconfirmed"],
+    ["accounting_review", "account_blocked", "provider_account_blocked"],
+  ] as const)(
+    "defers when both providers refuse before sending",
+    async (first, second, expected) => {
+      const result = await runCheckWithFallback({
+        keyword: KEYWORD,
+        schedule: { frequency: "manual" },
+        connections: [{ provider: "primary" }, { provider: "secondary" }],
+        resolveProvider: (id) => {
+          throw new ProviderRecoveryAdmissionError(id === "primary" ? first : second, {
+            kind: "account",
+          });
+        },
+      }).catch((error: unknown) => error);
+      expect(result).toBeInstanceOf(ProviderChainError);
+      expect(result).toMatchObject({
+        deferralReason: expected,
+        attempts: [{ reason: "account_blocked" }, { reason: "account_blocked" }],
+      });
+    },
+  );
+
+  it("retains the refusal and a genuine provider failure", async () => {
+    const result = await runCheckWithFallback({
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      connections: [{ provider: "primary" }, { provider: "secondary" }],
+      resolveProvider: (id) => {
+        if (id === "primary")
+          throw new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+        throw new RankCheckRunnerError("provider_failed", "Sent request rejected.");
+      },
+    }).catch((error: unknown) => error);
+    expect(result).toMatchObject({
+      deferralReason: null,
+      attempts: [
+        { reason: "account_blocked" },
+        { message: "Sent request rejected.", reason: "provider_failed" },
+      ],
+    });
+  });
+
+  it.each(["usage_reconciliation_required", "budget_missing"] as const)(
+    "stops on the project-level %s budget reason after a refusal",
+    async (reason) => {
+      const denial = new BudgetExhaustedError({
+        projectId: "project",
+        capCents: 100,
+        spentCents: 100,
+        fundingSource: "byok",
+        reason,
+      });
+      const backup = vi.fn(() => {
+        throw denial;
+      });
+      const result = runCheckWithFallback({
+        keyword: KEYWORD,
+        schedule: { frequency: "manual" },
+        connections: [{ provider: "primary" }, { provider: "secondary" }, { provider: "third" }],
+        resolveProvider: (id) => {
+          if (id === "primary")
+            throw new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+          return backup();
+        },
+      });
+      await expect(result).rejects.toBe(denial);
+      expect(backup).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("never invokes a backup provider after an unconfirmed paid request", async () => {
     const uncertain = new ProviderUsagePersistenceError({ phase: "request" });
     const primary = provider("primary", vi.fn().mockRejectedValue(uncertain));

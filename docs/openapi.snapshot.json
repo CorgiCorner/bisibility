@@ -27551,6 +27551,37 @@
           "counts_basis": {
             "type": "string"
           },
+          "deferral_reasons": {
+            "description": "Distinct typed reasons for deferred checks, including provider_account_blocked and usage_unconfirmed.",
+            "items": {
+              "enum": [
+                "budget_exhausted",
+                "budget_missing",
+                "credentials_unavailable",
+                "credits_exhausted",
+                "dispatcher_disabled",
+                "keyword_archived",
+                "market_inactive",
+                "migration_hold",
+                "no_provider",
+                "primary_provider_not_dataforseo",
+                "project_ineligible",
+                "project_read_only",
+                "provider_account_blocked",
+                "queued_dataforseo_disabled",
+                "queued_submission_disabled",
+                "quote_unavailable",
+                "rate_limited",
+                "schedule_ineligible",
+                "unknown",
+                "usage_unconfirmed"
+              ],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "RankCheckDeferralReason"
+            },
+            "type": "array"
+          },
           "evidence_projections": {
             "items": {
               "properties": {
@@ -33126,6 +33157,7 @@
               "deferred_reason": {
                 "anyOf": [
                   {
+                    "description": "Stable deferral reason, including provider_account_blocked for a provider account pre-send refusal and usage_unconfirmed for unresolved accounting.",
                     "type": "string"
                   },
                   {
@@ -73398,7 +73430,15 @@
             "name": "provider_id",
             "required": true,
             "schema": {
-              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "enum": [
+                "ahrefs",
+                "dataforseo",
+                "serpapi",
+                "local-sequence",
+                "gsc",
+                "ga4",
+                "plausible"
+              ],
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ProviderId"
@@ -73529,7 +73569,15 @@
             "name": "provider_id",
             "required": true,
             "schema": {
-              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "enum": [
+                "ahrefs",
+                "dataforseo",
+                "serpapi",
+                "local-sequence",
+                "gsc",
+                "ga4",
+                "plausible"
+              ],
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ProviderId"
@@ -73672,7 +73720,15 @@
             "name": "provider_id",
             "required": true,
             "schema": {
-              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "enum": [
+                "ahrefs",
+                "dataforseo",
+                "serpapi",
+                "local-sequence",
+                "gsc",
+                "ga4",
+                "plausible"
+              ],
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ProviderId"
@@ -73816,7 +73872,15 @@
             "name": "provider_id",
             "required": true,
             "schema": {
-              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "enum": [
+                "ahrefs",
+                "dataforseo",
+                "serpapi",
+                "local-sequence",
+                "gsc",
+                "ga4",
+                "plausible"
+              ],
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ProviderId"
@@ -73959,7 +74023,15 @@
             "name": "provider_id",
             "required": true,
             "schema": {
-              "enum": ["dataforseo", "serpapi", "local-sequence", "gsc", "ga4", "plausible"],
+              "enum": [
+                "ahrefs",
+                "dataforseo",
+                "serpapi",
+                "local-sequence",
+                "gsc",
+                "ga4",
+                "plausible"
+              ],
               "type": "string",
               "x-bisibility-enum": "open",
               "x-bisibility-name": "ProviderId"

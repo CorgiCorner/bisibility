@@ -202,7 +202,7 @@ describe("OnboardingWizard keyword step", () => {
     );
     expect(
       await screen.findByText(
-        "Search Console sync did not finish. Observed data may take a moment. You can retry from Integrations.",
+        "Search Console sync did not finish. Observed data may take a moment. You can retry from Providers.",
       ),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { name: "First check" })).toHaveLength(2);

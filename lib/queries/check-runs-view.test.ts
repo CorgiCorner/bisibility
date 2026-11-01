@@ -3,6 +3,7 @@ import { checkRunRowsWhere, getCheckRunsView } from "./check-runs-view";
 
 const mocks = vi.hoisted(() => ({
   evidence: vi.fn(async () => new Map()),
+  actuals: vi.fn(async () => new Map()),
   triggerWhere: vi.fn(async (_project: string, trigger: string) =>
     trigger && trigger !== "all" ? { trigger } : {},
   ),
@@ -23,6 +24,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/provider-evidence/projection/read", () => ({ readCheckEvidence: mocks.evidence }));
+vi.mock("@/lib/queries/rank-check-run-accounting", () => ({
+  rankCheckLedgerActuals: mocks.actuals,
+  ledgerActualCostCents: (
+    actual: { receiptCount: number; costCents: number | null } | undefined,
+  ) => (actual?.receiptCount ? actual.costCents : null),
+}));
 vi.mock("./check-run-trigger", () => ({ checkRunTriggerWhere: mocks.triggerWhere }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
@@ -48,6 +55,7 @@ function row(publicId: string) {
     estimatedCostCents: null,
     finishedAt: new Date("2026-07-24T10:00:02.000Z"),
     publicId,
+    id: `internal_${publicId}`,
     keyword: {
       publicId: "kw_abcdefghijklmnopqrstuvwx",
       text: "rank tracker",
@@ -105,6 +113,22 @@ describe("check runs view query", () => {
     expect(checkRunRowsWhere("project_1", RANGE_START, NOW, { status })).toEqual(
       expect.objectContaining(expected),
     );
+  });
+
+  it("uses confirmed ledger cost for failed checks and preserves unknown cost", async () => {
+    mocks.prisma.rankCheck.findMany.mockImplementation(async (args) =>
+      args.select?.deferredReason
+        ? []
+        : [
+            { ...row("charged"), status: "failed" },
+            { ...row("unknown"), status: "failed" },
+          ],
+    );
+    mocks.actuals.mockResolvedValueOnce(
+      new Map([["internal_charged", { receiptCount: 1, costCents: 0.12 }]]),
+    );
+    const view = await getCheckRunsView("project", { now: NOW });
+    expect(view.rows.map((item) => item.costCents)).toEqual([0.12, null]);
   });
 
   it("pushes provider, trigger, and compound cursor filters into a bounded page query", async () => {

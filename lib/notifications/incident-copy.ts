@@ -23,6 +23,30 @@ export async function incidentCopyRenderer(locale: AppLocale) {
   const t = createIntlTranslator(locale, messages, { timeZone: "UTC" });
   return (payload: Prisma.JsonValue | null) => {
     const data = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+    if (data.kind === "account_block") {
+      const provider = typeof data.provider === "string" ? data.provider : "";
+      const reason =
+        data.reason === "provider_billing"
+          ? "billing"
+          : data.reason === "provider_auth"
+            ? "credentials"
+            : data.reason === "provider_account_restricted"
+              ? "restricted"
+              : "body";
+      return {
+        title: t(
+          data.state === "resolved"
+            ? "shell.notifications.accountBlock.resolvedTitle"
+            : "shell.notifications.accountBlock.title",
+          { provider },
+        ),
+        body: t(
+          data.state === "resolved"
+            ? "shell.notifications.accountBlock.resolvedBody"
+            : `shell.notifications.accountBlock.${reason}`,
+        ),
+      };
+    }
     const dimension = (
       keys: readonly ((typeof incidentResultKeys)[number] | (typeof incidentCostKeys)[number])[],
     ) =>

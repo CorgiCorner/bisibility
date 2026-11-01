@@ -218,7 +218,7 @@ describe("SidebarNav", () => {
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);
@@ -260,7 +260,7 @@ describe("SidebarNav", () => {
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);

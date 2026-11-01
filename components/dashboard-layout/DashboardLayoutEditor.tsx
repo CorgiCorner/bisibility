@@ -29,6 +29,10 @@ import { DashboardWidgetRow } from "./DashboardWidgetRow";
 import { useWidgetReorder } from "./use-widget-reorder";
 
 export type DashboardLayoutEditorProps = {
+  embedded?: boolean;
+  pending?: boolean;
+  defaultDisabled?: boolean;
+  onSetDefault?: () => void;
   state: DashboardDraft;
   access: DashboardAccess;
   translate: DashboardTranslator;
@@ -66,11 +70,15 @@ export function DashboardLayoutEditor({
   onCancel,
   canSavePersonalLayout,
   onClosedFocusReturn,
+  embedded = false,
+  pending = false,
+  defaultDisabled = true,
+  onSetDefault,
 }: DashboardLayoutEditorProps) {
   const id = useId();
   const pendingFocus = useRef<{ key: string } | null>(null);
   const composition = composeDashboardLayout(state.draft, access);
-  const saving = state.status === "saving";
+  const saving = state.status === "saving" || pending;
   const conflict = state.status === "conflict";
   function change(action: DashboardDraftAction) {
     onChange(updateDashboardDraft(state, action));
@@ -104,8 +112,8 @@ export function DashboardLayoutEditor({
   return (
     <Card
       component="section"
-      aria-labelledby={`${id}-title`}
-      className="flex min-w-0 flex-col"
+      aria-labelledby={embedded ? undefined : `${id}-title`}
+      className={`flex min-w-0 flex-col ${embedded ? "border-0 p-0" : ""}`}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing)
           return;
@@ -116,12 +124,29 @@ export function DashboardLayoutEditor({
       }}
     >
       <header className="flex flex-col items-stretch gap-3 border-b border-border pb-3 xl:flex-row xl:items-end xl:justify-between">
-        <div className="flex min-w-0 flex-1 items-center gap-1">
-          <h2 id={`${id}-title`} className="m-0 text-base font-semibold leading-6">
-            {t("title")}
-          </h2>
-          <DashboardViewHelp label={t("viewDetails")} description={t("viewHelp")} />
-        </div>
+        {embedded ? (
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {onSetDefault ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-11 font-normal xl:min-h-[34px]"
+                disabled={defaultDisabled || saving}
+                onClick={onSetDefault}
+              >
+                {t("setDefault")}
+              </Button>
+            ) : null}
+            <DashboardViewHelp label={t("viewDetails")} description={t("viewHelp")} />
+          </div>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-1">
+            <h2 id={`${id}-title`} className="m-0 text-base font-semibold leading-6">
+              {t("title")}
+            </h2>
+            <DashboardViewHelp label={t("viewDetails")} description={t("viewHelp")} />
+          </div>
+        )}
         <div className="flex shrink-0 items-center justify-between gap-2 xl:justify-start">
           <span className="text-[12.5px] text-fg-muted">{t("preset")}</span>
           <MenuSelect
@@ -152,7 +177,7 @@ export function DashboardLayoutEditor({
           // biome-ignore lint/a11y/noRedundantRoles: VoiceOver needs an explicit list role when native markers are removed.
           role="list"
           aria-busy={saving}
-          className={`m-0 flex list-none flex-col gap-1 p-0 ${reorder.preview ? "select-none" : ""}`}
+          className={`m-0 flex list-none flex-col gap-2 p-0 ${reorder.preview ? "select-none" : ""}`}
         >
           {composition.widgets.map((widget, index) => (
             <DashboardWidgetRow
@@ -189,15 +214,15 @@ export function DashboardLayoutEditor({
           ))}
         </ol>
       </div>
-      <footer className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+      <footer className="mt-3 flex flex-col items-stretch gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
         <p
           role="status"
           aria-live="polite"
-          className="m-0 min-w-0 flex-1 text-[13px] leading-5 text-fg-muted"
+          className="m-0 min-w-0 flex-1 text-[13px] leading-5 text-fg-muted empty:hidden"
         >
           {editorStatus(state, t)}
         </p>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex max-w-full shrink-0 flex-wrap justify-end gap-2 self-end sm:ml-auto">
           <Button
             variant="ghost"
             className="min-h-11 xl:min-h-[34px]"

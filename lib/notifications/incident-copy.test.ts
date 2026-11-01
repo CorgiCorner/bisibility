@@ -73,3 +73,24 @@ describe("IN-4 incident catalog contract", () => {
     });
   });
 });
+
+it.each(localeValues)("renders account incident notifications in %s", async (locale) => {
+  const render = await incidentCopyRenderer(locale);
+  const open = render({ kind: "account_block", provider: "SerpApi", state: "open" });
+  const resolved = render({ kind: "account_block", provider: "SerpApi", state: "resolved" });
+  expect(open.title).toContain("SerpApi");
+  expect(resolved.title).toContain("SerpApi");
+  expect(open.title).not.toBe(resolved.title);
+  expect(open.body).not.toContain("shell.notifications");
+  expect(
+    render({ kind: "account_block", provider: "SerpApi", state: "open", reason: "provider_auth" })
+      .body,
+  ).not.toBe(
+    render({
+      kind: "account_block",
+      provider: "SerpApi",
+      state: "open",
+      reason: "provider_billing",
+    }).body,
+  );
+});

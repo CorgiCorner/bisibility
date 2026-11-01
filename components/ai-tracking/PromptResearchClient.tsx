@@ -51,7 +51,7 @@ export function PromptResearchClient({
       <ProviderAccessGate
         blocked={noSource}
         providers={data.supportingProviders}
-        href={appPath(projectId, "integrations")}
+        href={appPath(projectId, "providers")}
         surface="ai"
         showNotice={showNotice}
       >
@@ -102,7 +102,7 @@ export function PromptResearchClient({
       {noSource && !showNotice ? (
         <ProviderAccessEmptyState
           surface="ai"
-          href={appPath(projectId, "integrations")}
+          href={appPath(projectId, "providers")}
           providers={data.supportingProviders}
         />
       ) : null}

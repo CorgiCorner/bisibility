@@ -145,6 +145,7 @@ export default defineConfig({
           include: [...nodeUnitIncludes, ...nodeRenderTests],
           exclude: [
             "lib/**/*.postgres.test.ts",
+            "lib/roadmap/*.integration.test.ts",
             "lib/metering/**/*.integration.test.ts",
             ...domUnitTests,
           ],
@@ -258,7 +259,7 @@ export default defineConfig({
           name: "postgres-smoke",
           clearMocks: false,
           environment: "node",
-          include: ["lib/**/*.postgres.test.ts"],
+          include: ["lib/**/*.postgres.test.ts", "lib/roadmap/*.integration.test.ts"],
           testTimeout: 30_000,
         },
       },

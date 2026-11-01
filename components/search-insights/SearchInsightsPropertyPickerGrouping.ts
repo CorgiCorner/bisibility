@@ -42,6 +42,6 @@ export function groupSearchInsightsProperties({
 }
 
 export function propertyConnectionSettingsHref(projectId: string) {
-  const route = appPath(asProjectRef(projectId), "integrations");
+  const route = appPath(asProjectRef(projectId), "providers");
   return `${route}?connect=gsc#provider-gsc`;
 }

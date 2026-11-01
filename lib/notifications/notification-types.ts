@@ -10,11 +10,11 @@ export function notificationTypePresentation(type: NotificationType): {
     case "check_complete":
       return { href: "rank-tracker", label: "Rank check" };
     case "check_failed":
-      return { href: "integrations", label: "Rank check failed" };
+      return { href: "providers", label: "Rank check failed" };
     case "import_done":
-      return { href: "integrations", label: "Import complete" };
+      return { href: "providers", label: "Import complete" };
     case "import_failed":
-      return { href: "integrations", label: "Import failed" };
+      return { href: "providers", label: "Import failed" };
     case "invite":
       return { href: "settings", label: "Team invite" };
     case "manual_run_summary":

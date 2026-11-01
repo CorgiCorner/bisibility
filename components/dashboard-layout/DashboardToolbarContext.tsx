@@ -67,3 +67,19 @@ export function DashboardToolbarSurface({
     </>
   );
 }
+
+export function DashboardToolbarStatus({
+  editing,
+  integrated,
+  message,
+}: Readonly<{ editing: boolean; integrated: boolean; message: string }>) {
+  return editing ? null : (
+    <p
+      role="status"
+      aria-live="polite"
+      className={integrated && !message ? "sr-only" : "text-sm text-fg-muted"}
+    >
+      {message}
+    </p>
+  );
+}

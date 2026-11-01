@@ -44,6 +44,8 @@ const DEFERRED_FAILURE_TYPES = new Set([
   BUDGET_EXHAUSTED_FAILURE,
   BALANCE_EXHAUSTED_FAILURE,
   OPERATION_ACCESS_DENIED_FAILURE,
+  "provider_account_blocked",
+  "usage_unconfirmed",
 ]);
 
 type RankCheckActivities = {
@@ -144,6 +146,7 @@ export {
 } from "./maintenance-workflows";
 export { maintainMeteringReservationsWorkflow } from "./metering-maintenance-workflow";
 export { opsHeartbeatWorkflow } from "./ops-workflows";
+export { checkProviderAccountsWorkflow } from "./provider-account-check-workflow";
 export { reconcileProviderUsageWorkflow } from "./provider-usage-reconcile-workflow";
 export { queuedRankCheckBatchWorkflow } from "./queued-rank-check-workflow";
 export {
@@ -257,5 +260,6 @@ export async function rankCheckWorkflow(
 }
 
 export { checkNotificationSummariesWorkflow } from "./check-summary-maintenance-workflow";
+export { collectDomainRatingsWorkflow } from "./domain-rating-workflow";
 export { localMonitorRunWorkflow } from "./local-monitor-workflow";
 export { providerComparisonWorkflow } from "./provider-comparison-workflow";

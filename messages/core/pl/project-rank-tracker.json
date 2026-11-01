@@ -19,8 +19,8 @@
         "noSource": "Nie połączono żadnego źródła Search Console.",
         "noKeywordsDescription": "Dodaj słowa kluczowe, aby zacząć śledzić pozycje w Google.",
         "noKeywordsTitle": "Brak słów kluczowych",
-        "openIntegrations": "Otwórz Integracje",
-        "providerMissing": "Możesz już dodać słowa kluczowe. Gdy zechcesz je sprawdzić, wybierz źródło danych w <providerLink>Integracjach</providerLink>.",
+        "openIntegrations": "Otwórz dostawców",
+        "providerMissing": "Możesz już dodać słowa kluczowe. Gdy zechcesz je sprawdzić, wybierz źródło danych w sekcji <providerLink>Dostawcy</providerLink>.",
         "reconnectGoogle": "Połącz ponownie konto Google",
         "searchConsoleAuthorizationExpired": "Autoryzacja Google wygasła.",
         "startMarketDescription": "Rynek to kraj, lokalizacja i język, w których zajmujesz pozycje. Dodaj go razem z pierwszymi słowami kluczowymi.",
@@ -105,6 +105,7 @@
       "completed": "Zakończono",
       "connect": "Połącz",
       "cost": "Koszt",
+      "checkDeferred": "Odroczono",
       "credentialsUnavailable": "Dane uwierzytelniające niedostępne",
       "credentialsUnavailableLower": "bez danych uwierzytelniających",
       "daysAgo": "{count, number} dni temu",
@@ -186,6 +187,8 @@
       "provider": "Dostawca",
       "providerChain": "Łańcuch dostawców",
       "providerChainExhausted": "Nie powiodło się {count, number} po wyczerpaniu łańcucha dostawców.",
+      "providerConnectionPaused": "Połączenie z dostawcą wstrzymane",
+      "providerConnectionPausedLower": "połączenie z dostawcą wstrzymane",
       "providerError": "Błąd dostawcy",
       "providerRateLimiting": "{provider} – ograniczenie liczby zapytań.",
       "providers": "{count, number} {count, plural, one {dostawca} few {dostawcy} many {dostawców} other {dostawcy}}",
@@ -280,7 +283,10 @@
         "customRangeCaption": "wybrany zakres",
         "customRangeWindow": "w wybranym zakresie"
       },
-      "partialNoMatch": "Niepełne: sprawdzono do pozycji {depth, number}"
+      "partialNoMatch": "Niepełne: sprawdzono do pozycji {depth, number}",
+      "monitoringTitle": "Połączenia z dostawcami wymagają uwagi",
+      "monitoringItem": "{provider}: połączenie wstrzymane. {count, plural, one {# sprawdzenie odroczone z powodu konta} other {# sprawdzeń odroczonych z powodu konta}} w ostatnich 30 dniach.",
+      "monitoringAction": "Zobacz połączenia"
     },
     "deletion": {
       "selection": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} other {# słów kluczowych}} · {targets, plural, one {# wariant rynku/urządzenia} few {# warianty rynku/urządzenia} other {# wariantów rynku/urządzenia}}",

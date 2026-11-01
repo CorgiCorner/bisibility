@@ -189,8 +189,10 @@ it.each([
   );
   const link = screen.getByRole("link", { current: "page" });
   expect(within(link).getByText(label)).toBeVisible();
-  expect(link).toHaveAccessibleName(new RegExp(label));
-  expect(link).toHaveAccessibleName(new RegExp(catalog.projectSearchInsights.indexing.title));
+  expect(link).toHaveAccessibleName(expect.stringContaining(label));
+  expect(link).toHaveAccessibleName(
+    expect.stringContaining(catalog.projectSearchInsights.indexing.title),
+  );
   expect(link).toHaveAccessibleName(/248/);
 });
 function PolishFilters() {

@@ -1,10 +1,14 @@
 import { classifyProviderFailure } from "@/lib/providers/failure-class";
 import { expect, it } from "vitest";
-import { googlePropertyFailure, googleResponseError } from "./google-failure";
+import {
+  googleFailureDiagnostic,
+  googlePropertyFailure,
+  googleResponseError,
+} from "./google-failure";
 
 it.each([
   [403, "SERVICE_DISABLED", "api_disabled", "configure_api", "config_invalid"],
-  [403, "ACCESS_TOKEN_SCOPE_INSUFFICIENT", "scope", "reauthorize", "provider_4xx"],
+  [403, "ACCESS_TOKEN_SCOPE_INSUFFICIENT", "scope", "reauthorize", "config_invalid"],
   [403, "RATE_LIMIT_EXCEEDED", "quota", "retry_later", "rate_limit"],
   [429, "RESOURCE_EXHAUSTED", "quota", "retry_later", "rate_limit"],
   [401, "UNAUTHENTICATED", "auth", "reconnect", "auth"],
@@ -52,4 +56,91 @@ it("preserves invalid-property classification without storing the raw provider m
   });
   expect(classifyProviderFailure(error)).toBe("config_invalid");
   expect(String(error)).not.toContain("access_secret");
+});
+
+it.each([
+  [
+    "forbidden",
+    403,
+    { error: { errors: [{ reason: "forbidden" }], message: "x" } },
+    "config_invalid",
+    "permission",
+  ],
+  [
+    "PERMISSION_DENIED",
+    403,
+    { error: { status: "PERMISSION_DENIED", message: "x" } },
+    "config_invalid",
+    "permission",
+  ],
+  ["no body", 403, null, "config_invalid", "permission"],
+  [
+    "scope",
+    403,
+    {
+      error: {
+        status: "PERMISSION_DENIED",
+        details: [{ reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" }],
+      },
+    },
+    "config_invalid",
+    "scope",
+  ],
+  [
+    "rateLimitExceeded",
+    403,
+    { error: { status: "PERMISSION_DENIED", errors: [{ reason: "rateLimitExceeded" }] } },
+    "rate_limit",
+    "quota",
+  ],
+  [
+    "dailyLimitExceeded",
+    403,
+    { error: { errors: [{ reason: "dailyLimitExceeded" }] } },
+    "rate_limit",
+    "quota",
+  ],
+  [
+    "accessNotConfigured",
+    403,
+    { error: { status: "PERMISSION_DENIED", errors: [{ reason: "accessNotConfigured" }] } },
+    "config_invalid",
+    "api_disabled",
+  ],
+  ["401", 401, { error: { status: "UNAUTHENTICATED" } }, "auth", "auth"],
+  ["invalid_grant", 400, { error: "invalid_grant" }, "auth", "auth"],
+  ["5xx", 503, null, "provider_5xx", "temporary"],
+  [
+    "400 without a permission signal",
+    400,
+    { error: { message: "Bad request" } },
+    "provider_4xx",
+    "unknown",
+  ],
+  ["404", 404, null, "provider_4xx", "unknown"],
+] as const)(
+  "classifies a Google data API %s failure",
+  (_name, status, payload, failureClass, reason) => {
+    const error = googleResponseError(status, payload, "gsc");
+    expect(classifyProviderFailure(error)).toBe(failureClass);
+    expect(googleFailureDiagnostic(error)).toMatchObject({
+      googleReason: reason,
+      httpStatus: status,
+    });
+  },
+);
+
+it("keeps the stored diagnostic to allowlisted vocabulary", () => {
+  const error = googleResponseError(403, {
+    error: {
+      errors: [{ reason: "insufficientPermissions", domain: "sc-domain:private.example" }],
+      message: "User account@example.com lacks access to https://private.example/ token=secret",
+    },
+  });
+  expect(googleFailureDiagnostic(error)).toEqual({
+    googleCode: "insufficientPermissions",
+    googleReason: "permission",
+    httpStatus: 403,
+  });
+  expect(googleFailureDiagnostic(new Error("token=secret"))).toBeUndefined();
 });

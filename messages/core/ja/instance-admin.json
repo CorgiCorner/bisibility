@@ -7,6 +7,7 @@
       "description": "インスタンス全体の運用診断情報です。テナントのデータは識別子のみで表示されます。"
     },
     "navigation": {
+      "instance": "インスタンス",
       "label": "インスタンス管理のセクション",
       "operations": "運用",
       "administration": "管理",
@@ -152,7 +153,7 @@
       },
       "stats": {
         "title": "インスタンス統計",
-        "description": "今月（UTC）のインスタンス全体の件数と、完了した SERP の利用状況です。",
+        "description": "全プロジェクトと全種類の操作を対象としたインスタンスの件数とプロバイダー利用です。下で期間を選択できます。",
         "unavailable": "インスタンス統計は利用できません。",
         "users": "ユーザー",
         "projects": "プロジェクト",
@@ -262,7 +263,7 @@
       },
       "consumption": {
         "title": "利用額上位",
-        "description": "今月の参考費用が多いプロジェクト / プロバイダーの上位10件です。ユーザーが入力したレートは無視されます。",
+        "description": "選択期間の全種類の操作について、記録費用が多いプロジェクトとプロバイダーの上位10組です。",
         "empty": "今月に完了した SERP チェックの記録はありません。",
         "note": "参考費用には、管理されたプロバイダーレートと記録済みのリクエストユニットを使用します。プロバイダーの請求書が正となります。",
         "tableLabel": "今月の利用額が上位のプロジェクトとプロバイダー",
@@ -508,14 +509,16 @@
         "failed": "失敗した復旧",
         "unconfirmed": "未確認の会計情報",
         "historical": "過去の未確認分",
-        "retainedResults": "復元可能な結果"
+        "retainedResults": "復元可能な結果",
+        "closedUnknown": "終了済み・費用不明"
       },
       "categories": {
         "all": "すべての案件",
         "unfinished": "未完了の作業",
         "accounting": "未確認の会計情報",
         "failed": "失敗した復旧",
-        "historical": "過去の会計情報"
+        "historical": "過去の会計情報",
+        "closed_unknown": "費用不明として終了"
       },
       "states": {
         "not_started": "未開始",
@@ -526,7 +529,8 @@
         "unfinished": "未完了",
         "obsolete": "対象外",
         "measured": "測定済み",
-        "not_applicable": "関連する操作なし"
+        "not_applicable": "関連する操作なし",
+        "stopped": "停止済み"
       },
       "fundingSources": {
         "byok": "自分のプロバイダーアカウント",
@@ -655,14 +659,17 @@
           "scheduled": "予定済み",
           "attempting": "検索中",
           "resolved": "解決済み",
-          "operator_review": "運用者の確認"
+          "operator_review": "運用者の確認",
+          "closed_unknown": "終了済み・費用不明"
         },
         "partialKinds": {
           "partial": "部分的",
           "unresolved": "未解決"
         },
         "utcTimestamp": "{timestamp} UTC"
-      }
+      },
+      "closedUnknown": "終了済み・費用不明",
+      "closedUnknownNote": "管理者がこれらのリクエストを終了しました。元の費用は不明のままです。履歴は保持され、同じリクエストに対する復旧処理や通知は繰り返されません。"
     },
     "dangerousActions": {
       "notice": "{action}には、二要素認証を有効にしてください。",
@@ -678,6 +685,40 @@
         "repairUsage": "使用記録を修復する",
         "importUsage": "使用記録をインポートする"
       }
+    },
+    "recoveryAccounting": {
+      "title": "復旧の会計（全期間）",
+      "description": "全期間の終了済み復旧記録です。記録された費用は全履歴の利用合計に含まれます。不明な金額は不明のままです。",
+      "historical": "保持された過去の費用（プロバイダー識別情報が不完全）",
+      "closedUnknown": "費用不明で終了",
+      "unknown": "費用不明",
+      "requests": "{count, plural, other {# 件のリクエスト}}",
+      "view": "復旧記録を表示",
+      "ledger": "利用台帳を表示",
+      "unavailable": "復旧の会計は利用できません。不明な金額をゼロに置き換えていません。"
+    },
+    "instanceUsage": {
+      "period": "利用期間",
+      "all": "全履歴",
+      "month": "今月（UTC）",
+      "scope": "保持された履歴を含む、全プロジェクトと全種類の操作の利用記録。",
+      "operations": "操作数",
+      "cost": "記録された費用",
+      "unknownEntries": "費用不明（件数）",
+      "unknown": "不明",
+      "provider": "プロバイダー",
+      "project": "プロジェクト ID",
+      "copyProject": "プロジェクト ID をコピー",
+      "unattributed": "未割り当てのプロジェクト",
+      "unknownProvider": "不明なプロバイダー",
+      "share": "記録費用の割合",
+      "providerTable": "インスタンス全体のプロバイダー利用",
+      "topTable": "インスタンスの利用上位",
+      "empty": "この期間の利用記録はありません。",
+      "unavailable": "インスタンスの利用を取得できません。不明な費用をゼロに置き換えていません。",
+      "note": "各操作の最終記録に基づく費用です。訂正は一度だけ計上します。不明な金額は合計に含めません。プロバイダーの請求書が正式な記録です。",
+      "topNote": "記録費用が多いプロジェクトとプロバイダーの上位10組です。割合はインスタンス全体の記録費用が基準です。不明な金額と識別情報を保持します。",
+      "referenceTitle": "SERP の参考費用（今月・UTC）"
     }
   }
 }

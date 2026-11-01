@@ -58,6 +58,7 @@ function workspace(action: AnalyzeBacklinksAction, loadMoreAction = vi.fn()) {
       <BacklinksWorkspace
         analyzeAction={action}
         context={{
+          cacheTtlSeconds: 86_400,
           costContext: { capCents: 5000, spentCents: 0 },
           defaultTarget: "example.com",
           providerStatus: "connected",

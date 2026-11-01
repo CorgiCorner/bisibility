@@ -41,7 +41,8 @@
               "quantity": null,
               "unknown_targets": 1
             },
-            "evidence_projections": null
+            "evidence_projections": null,
+            "deferral_reasons": []
           }
         ],
         "meta": {
@@ -138,7 +139,8 @@
           "quantity": null,
           "unknown_targets": 1
         },
-        "evidence_projections": null
+        "evidence_projections": null,
+        "deferral_reasons": []
       },
       "contentType": "application/json",
       "method": "GET",
@@ -185,7 +187,8 @@
           "quantity": null,
           "unknown_targets": 1
         },
-        "evidence_projections": null
+        "evidence_projections": null,
+        "deferral_reasons": []
       },
       "contentType": "application/json",
       "method": "GET",
@@ -232,7 +235,56 @@
           "quantity": null,
           "unknown_targets": 1
         },
-        "evidence_projections": null
+        "evidence_projections": null,
+        "deferral_reasons": ["provider_account_blocked", "usage_unconfirmed"]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "status": "completed",
+        "outcome": "deferred",
+        "terminal": true,
+        "polling_state": "terminal",
+        "trigger": "manual",
+        "counts": {
+          "requested": 1,
+          "total": 1,
+          "completed": 0,
+          "failed": 0,
+          "deferred": 1,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "counts_basis": "planned_or_unlaunched",
+        "keyword_count": 1,
+        "target_count": 1,
+        "planned_for": null,
+        "launched_at": null,
+        "started_at": null,
+        "finished_at": "2026-10-12T10:00:00.000Z",
+        "blocked_reason": null,
+        "parent_run_id": null,
+        "cost_cents": null,
+        "usage": {
+          "actual": null,
+          "estimated": null,
+          "unit": "operations"
+        },
+        "native_estimate": {
+          "provider_id": null,
+          "unit": null,
+          "quantity": null,
+          "unknown_targets": 1
+        },
+        "evidence_projections": null,
+        "deferral_reasons": []
       },
       "contentType": "application/json",
       "method": "GET",
@@ -279,7 +331,8 @@
           "quantity": null,
           "unknown_targets": 1
         },
-        "evidence_projections": null
+        "evidence_projections": null,
+        "deferral_reasons": []
       },
       "contentType": "application/json",
       "method": "GET",

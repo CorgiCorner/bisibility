@@ -3,6 +3,7 @@ import {
   readConsentFromCookies,
   trackServerEvent,
 } from "@/lib/analytics/server";
+import { resolveServerAnalyticsUser } from "@/lib/analytics/server-user";
 import { prisma } from "@/lib/db/prisma";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { after } from "next/server";
@@ -48,8 +49,17 @@ export async function emitFirstCheckRunCompletion(input: {
     const surface = await readAnalyticsSurfaceFromHeaders();
     if (surface !== "onboarding" && surface !== "getting_started") return;
     const consent = await readConsentFromCookies();
-    if (!consent.analytics || consent.status !== "decided" || consent.decidedAt === null) return;
-    const consentAt = new Date(consent.decidedAt * 1000);
+    const resolved = consent.analytics
+      ? await resolveServerAnalyticsUser(input.actorId, consent)
+      : null;
+    if (consent.analytics && !resolved) return;
+    const consentAt =
+      consent.analytics &&
+      resolved?.consent.analytics &&
+      consent.status === "decided" &&
+      consent.decidedAt !== null
+        ? new Date(consent.decidedAt * 1000)
+        : null;
     const completedItem = { status: "completed", rankCheck: { status: "completed" } };
     const runs = await prisma.rankCheckRun.findMany({
       where: {
@@ -58,7 +68,7 @@ export async function emitFirstCheckRunCompletion(input: {
         requestedById: input.actorId,
         deletedAt: null,
         trigger: "manual",
-        createdAt: { gte: consentAt },
+        ...(consentAt ? { createdAt: { gte: consentAt } } : {}),
         project: { isSample: false },
         items: { some: completedItem },
       },
@@ -80,7 +90,7 @@ export async function emitFirstCheckRunCompletion(input: {
       const item = run.items[0];
       const check = item?.rankCheck;
       if (
-        run.createdAt < consentAt ||
+        (consentAt && run.createdAt < consentAt) ||
         item?.status !== "completed" ||
         check?.status !== "completed" ||
         !check.finishedAt
@@ -90,8 +100,9 @@ export async function emitFirstCheckRunCompletion(input: {
       after(async () => {
         try {
           await trackServerEvent("rank_check_preview_completed", {
-            consent,
-            userId: input.actorId,
+            consent: consentAt ? consent : { ...consent, analytics: false },
+            // Without a consent instant, an account grant must not identify an earlier run.
+            ...(consentAt ? { userId: input.actorId } : {}),
             uuid: uuidv5(
               `bisibility/first-check/${input.actorId}/${run.publicId}/completed`,
               uuidv5.URL,

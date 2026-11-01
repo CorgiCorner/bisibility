@@ -41,6 +41,15 @@ const actions: Record<GooglePropertyFailureReason, GooglePropertyFailure["action
   temporary: "retry",
   unknown: "retry",
 };
+// Permission and scope loss need the owner, so they share the user-actionable class.
+const failureClasses: Partial<Record<GooglePropertyFailureReason, ProviderFailureClass>> = {
+  api_disabled: "config_invalid",
+  auth: "auth",
+  configuration: "config_invalid",
+  permission: "config_invalid",
+  quota: "rate_limit",
+  scope: "config_invalid",
+};
 const configurationCopy =
   "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.";
 const copy: Record<GooglePropertyFailureReason, string> = {
@@ -105,13 +114,7 @@ export class GoogleRequestError extends ProviderHttpError {
     super(
       status,
       `Google API request failed with status ${status}.`,
-      reason === "quota"
-        ? "rate_limit"
-        : ["api_disabled", "configuration"].includes(reason)
-          ? "config_invalid"
-          : reason === "auth"
-            ? "auth"
-            : classification,
+      failureClasses[reason] ?? classification,
     );
     this.reason = reason;
   }
@@ -161,6 +164,18 @@ export function googlePropertyFailure(error: unknown): GooglePropertyFailure {
     action: actions[reason],
     ...(httpStatus ? { httpStatus } : {}),
     ...(code ? { code } : {}),
+  };
+}
+// Only allowlisted codes and derived reasons leave this module; provider text never does.
+export function googleFailureDiagnostic(error: unknown) {
+  if (!(error instanceof GoogleRequestError || error instanceof GoogleAuthorizationError)) {
+    return undefined;
+  }
+  const failure = googlePropertyFailure(error);
+  return {
+    googleReason: failure.reason,
+    ...(failure.code ? { googleCode: failure.code } : {}),
+    ...(failure.httpStatus ? { httpStatus: failure.httpStatus } : {}),
   };
 }
 export function googlePropertyFailureCopy(failure: GooglePropertyFailure) {

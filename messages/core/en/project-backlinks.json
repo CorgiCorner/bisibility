@@ -31,7 +31,8 @@
         "aria": "Backlinks introduction",
         "bullets": {
           "price": "Price shown before each run.",
-          "cache": "Snapshots cached for 24 hours - reopening and re-slicing is free",
+          "cache": "Snapshots cached for {duration} - reopening and re-slicing is free",
+          "cacheLoading": "Cached snapshots can be reopened and re-sliced for free until they expire.",
           "diff": "Every refresh diffs against the last snapshot: new and lost links flagged"
         },
         "reconnect": "Reconnect DataForSEO",
@@ -194,7 +195,7 @@
         "history": "12-month history",
         "linkRows": "Link rows ({count, number})",
         "loadMore": "Loading more rows later",
-        "description": "Charged by DataForSEO to your own account. A snapshot stays cached for 24 hours - reopening or switching tabs within it is free.",
+        "description": "Charged by DataForSEO to your own account. Reopening or switching tabs within a cached snapshot is free until it expires.",
         "unavailable": "Price unavailable",
         "perHundred": "{price} / 100"
       },

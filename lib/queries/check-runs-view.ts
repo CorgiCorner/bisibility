@@ -11,6 +11,10 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { evidenceMatches, projectionKeys } from "@/lib/provider-evidence/projection/model";
 import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
+import {
+  ledgerActualCostCents,
+  rankCheckLedgerActuals,
+} from "@/lib/queries/rank-check-run-accounting";
 import { storedResultsSummaries } from "@/lib/queries/retrieved-results";
 import { requireReadableProject } from "./_auth";
 import { checkRunTriggerWhere } from "./check-run-trigger";
@@ -120,6 +124,7 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
         error: true,
         estimatedCostCents: true,
         finishedAt: true,
+        id: true,
         publicId: true,
         keyword: {
           select: {
@@ -168,7 +173,20 @@ export async function getCheckRunsView(projectId: string, options: CheckRunsView
     }),
   ]);
 
-  const view = buildCheckRunsView(rows, summary, { limit, staleCount });
+  const failedRows = rows.filter((row) => row.status === "failed");
+  const actuals = await rankCheckLedgerActuals(
+    project.id,
+    failedRows.map((row) => row.id),
+  );
+  const view = buildCheckRunsView(
+    rows.map((row) =>
+      row.status === "failed"
+        ? { ...row, costCents: ledgerActualCostCents(actuals.get(row.id), null) }
+        : row,
+    ),
+    summary,
+    { limit, staleCount },
+  );
   // Without this the checks table can never expand a completed run: storedResults would
   // stay undefined on every row and the whole surface would be unreachable in production.
   const evidence = await readCheckEvidence(project.id, {

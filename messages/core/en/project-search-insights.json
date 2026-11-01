@@ -414,7 +414,7 @@
       "discoveredUrls": "Discovered URLs",
       "sitemapStoredOnly": "Discovered sitemap files and URL counts from stored data. These are not Search Console submitted totals or the sitemap index hierarchy.",
       "noSitemaps": "No stored sitemap URLs. Submit a sitemap in Search Console and wait for discovery. This does not confirm that no sitemap is submitted.",
-      "noConnection": "Connect a Search Console property in project integrations to view page indexing.",
+      "noConnection": "Connect a Search Console property in project providers to view page indexing.",
       "urls": "URLs",
       "url": "URL",
       "urlsCaption": "Each row is the latest stored result for a URL. Opening a row makes no Google request.",

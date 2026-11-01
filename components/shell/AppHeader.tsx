@@ -2,6 +2,7 @@ import { AppHeaderFrame } from "@/components/shell/AppHeaderFrame";
 import { NotificationBell } from "@/components/shell/NotificationBell";
 import type { PlanStatus } from "@/components/shell/plan-status";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
+import type { WorkspaceProjectLimit } from "@/components/shell/WorkspaceSwitcher";
 import { appVersion } from "@/lib/app-version";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
@@ -12,6 +13,8 @@ export type AppHeaderProps = {
   accountActions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  /** Set when the account owns as many projects as it may: creation shows as blocked. */
+  projectLimit?: WorkspaceProjectLimit | null;
   canSetDefault?: boolean;
   context?: ReactNode;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
@@ -32,6 +35,7 @@ export function AppHeader({
   accountActions,
   activeProjectId,
   canCreateWorkspace,
+  projectLimit = null,
   canSetDefault,
   context,
   enabledExperimentalModules = [],
@@ -52,6 +56,7 @@ export function AppHeader({
       accountActions={accountActions}
       activeProjectId={activeProjectId}
       canCreateWorkspace={canCreateWorkspace}
+      projectLimit={projectLimit}
       canSetDefault={canSetDefault}
       context={context}
       enabledExperimentalModules={enabledExperimentalModules}

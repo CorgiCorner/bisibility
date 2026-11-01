@@ -6,7 +6,10 @@ import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { ProviderCredentials } from "@/lib/providers/types";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchRankedKeywords, listEligibleRankedKeywordConnections } from "./service";
 
@@ -501,6 +504,17 @@ describe("ranked-keyword service", () => {
     await expect(run()).resolves.toMatchObject({ ok: false, reason });
     expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
+
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "preserves the admission error for %s before paid dispatch",
+    async (reason) => {
+      const error = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+      testOwnAdmission.reserve.mockRejectedValueOnce(error);
+      await expect(run()).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+      expect(mocks.fetchPage).toHaveBeenCalledOnce();
+      expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
+    },
+  );
 
   it("maps provider rate limits before the lookup", async () => {
     mocks.consumeLimit.mockResolvedValue({ resetAt: 123, success: false });

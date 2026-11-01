@@ -1,15 +1,25 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
 import type { ProviderCredentials } from "@/lib/providers/types";
 
+export type DataForSeoStatusDetails = { statusCode?: number; statusMessage?: string };
+
 export class DataForSeoError extends ProviderCallError {
+  /** Provider envelope `status_code`, when the response carried one. */
+  readonly statusCode?: number;
+  /** Provider envelope `status_message`, already redacted by the caller. */
+  readonly statusMessage?: string;
+
   constructor(
     message: string,
     readonly retryable = false,
     readonly httpStatus?: number,
     costCents: number | null = null,
+    details: DataForSeoStatusDetails = {},
   ) {
     super(message, costCents);
     this.name = "DataForSeoError";
+    if (details.statusCode !== undefined) this.statusCode = details.statusCode;
+    if (details.statusMessage !== undefined) this.statusMessage = details.statusMessage;
   }
 }
 
@@ -53,11 +63,29 @@ export class DataForSeoValidationError extends ProviderCallError {
   }
 }
 
+function credentialForms(credentials: ProviderCredentials) {
+  const raw = [credentials.login, credentials.password, credentials.apiKey].filter(
+    (value): value is string => Boolean(value && value.length >= 3),
+  );
+  const forms = new Set<string>();
+  for (const value of raw) {
+    forms.add(value);
+    forms.add(encodeURIComponent(value));
+  }
+  if (credentials.login && credentials.password) {
+    // A provider or proxy may echo the Basic Authorization value in its error text.
+    const pair = `${credentials.login}:${credentials.password}`;
+    forms.add(pair);
+    forms.add(Buffer.from(pair).toString("base64"));
+  }
+  return [...forms].filter((value) => value.length >= 3).sort((a, b) => b.length - a.length);
+}
+
+/** Removes credentials, their URL-encoded forms and the Basic Authorization value from text. */
 export function redactedMessage(message: string, credentials: ProviderCredentials) {
-  const values = [credentials.login, credentials.password, credentials.apiKey]
-    .filter((value): value is string => Boolean(value && value.length >= 3))
-    .sort((a, b) => b.length - a.length);
-  return values.reduce((safe, value) => safe.split(value).join("[redacted]"), message);
+  return credentialForms(credentials)
+    .reduce((safe, value) => safe.split(value).join("[redacted]"), message)
+    .replace(/(authorization["']?\s*[:=]\s*["']?(?:basic|bearer)\s+)[^\s"',;]+/gi, "$1[redacted]");
 }
 
 export function messageWithSentParameters(
@@ -84,4 +112,30 @@ export function unsupportedLabsRequest(statusCode: number | undefined, message: 
   const unsupportedLanguage =
     statusCode === 40501 && /invalid field:\s*['"]language_(?:code|name)['"]/i.test(message);
   return unsupportedLocation || unsupportedLanguage;
+}
+
+const STATUS_MESSAGE_LIMIT = 200;
+
+/** A provider `status_message` that is safe to store and log: redacted first, then bounded. */
+export function safeDataForSeoStatusMessage(value: unknown, credentials: ProviderCredentials) {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  return redactedMessage(value.trim(), credentials).slice(0, STATUS_MESSAGE_LIMIT);
+}
+
+/** A definite HTTP rejection of a task submission, keeping the provider status fields. */
+export function dataForSeoSubmissionRejection(
+  httpStatus: number,
+  body: { status_code?: unknown; status_message?: unknown } | null,
+  credentials: ProviderCredentials,
+) {
+  const statusCode = typeof body?.status_code === "number" ? body.status_code : undefined;
+  const statusMessage = safeDataForSeoStatusMessage(body?.status_message, credentials);
+  const status = statusCode === undefined ? "" : `, status ${statusCode}`;
+  return new DataForSeoError(
+    `DataForSEO task submission failed with HTTP ${httpStatus}${status}: ${(statusMessage ?? "no status message").replace(/\.+$/, "")}.`,
+    httpStatus === 429,
+    httpStatus,
+    null,
+    { statusCode, statusMessage },
+  );
 }

@@ -47,7 +47,7 @@ export function queuedDataForSeoObservation(
     completeness:
       stopOnMatch && matched
         ? "truncated_by_stop_on_match"
-        : stopPolicyKnown && !stopOnMatch
+        : row?.status_code !== 40106 && stopPolicyKnown && !stopOnMatch
           ? "complete"
           : "unknown",
     requestPolicy: {

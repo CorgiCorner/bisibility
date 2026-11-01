@@ -34,7 +34,7 @@ describe("notificationDisplay", () => {
 
   it("scopes the default href when the payload has no safe href", () => {
     expect(notificationDisplay(NotificationType.import_failed, null, null, project).href).toBe(
-      "/app/prj_example/integrations",
+      "/app/prj_example/providers",
     );
   });
 

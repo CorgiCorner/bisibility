@@ -7,6 +7,7 @@ import type { CheckAttempt, CheckAttemptOutcome } from "./contract";
 type JsonRecord = Record<string, unknown>;
 
 const ATTEMPT_OUTCOMES = new Set<CheckAttemptOutcome>([
+  "account_blocked",
   "credentials_unavailable",
   "ok",
   "provider_failed",
@@ -34,6 +35,7 @@ function numberFor(...values: unknown[]) {
 }
 
 function inferredOutcome(record: JsonRecord, detail: string | null): CheckAttemptOutcome {
+  if (record.reason === "account_blocked") return "account_blocked";
   const stored = stringFor(record.outcome, record.code);
   if (stored && ATTEMPT_OUTCOMES.has(stored as CheckAttemptOutcome)) {
     return stored as CheckAttemptOutcome;

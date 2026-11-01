@@ -3,6 +3,7 @@ import {
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
+import type { CapabilityScope, RecoveryAdmissionReason } from "./account-health/types";
 import { ProviderCostLimitError } from "./cost-limit";
 import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
 
@@ -23,6 +24,7 @@ export type ProviderUsageObserver = {
   settle(attemptId: string, receipt: ProviderUsageReceipt): Promise<void>;
   beforeDispatch?(attemptId: string): Promise<void>;
   cancel?(attemptId: string): Promise<void>;
+  observeResponse?(status: number, body: unknown, attemptId?: string): Promise<void>;
 };
 
 export type ProviderUsageFailurePhase =
@@ -49,6 +51,18 @@ export class ProviderUsagePersistenceError extends Error {
 /** A connection snapshot no longer owns the paid request, before any provider dispatch. */
 export class ProviderConnectionChangedError extends ProviderUsagePersistenceError {
   constructor(options?: ErrorOptions) {
+    super({ ...options, phase: "admission" });
+  }
+}
+
+export class ProviderRecoveryAdmissionError extends ProviderUsagePersistenceError {
+  constructor(
+    readonly reason: RecoveryAdmissionReason,
+    readonly scope: CapabilityScope,
+    options?: ErrorOptions,
+    readonly incidentId: string | null = null,
+    readonly legacyVersion: number | null = null,
+  ) {
     super({ ...options, phase: "admission" });
   }
 }
@@ -101,9 +115,20 @@ export async function readObservedResponse<T>(input: {
     }
     if (attemptId) await input.observer?.beforeDispatch?.(attemptId);
   } catch (cause) {
-    if (attemptId) await input.observer?.cancel?.(attemptId);
+    if (attemptId) {
+      try {
+        await input.observer?.cancel?.(attemptId);
+      } catch (cancelCause) {
+        throw new ProviderUsagePersistenceError({
+          cause: cancelCause,
+          phase: "admission",
+          attemptId,
+        });
+      }
+    }
     if (
       cause instanceof ProviderCostLimitError ||
+      cause instanceof ProviderRecoveryAdmissionError ||
       cause instanceof DeploymentAdmissionExhaustedError ||
       cause instanceof BudgetExhaustedError ||
       cause instanceof ProviderAllocationExhaustedError
@@ -148,6 +173,11 @@ export async function readObservedResponse<T>(input: {
     data = (await response.json()) as T;
   } catch (cause) {
     bodyFailure = cause;
+  }
+  try {
+    await input.observer?.observeResponse?.(response.status, data, attemptId);
+  } catch (cause) {
+    throw new ProviderUsagePersistenceError({ cause, phase: "settlement", attemptId });
   }
   if (!attemptId && !input.requireMeasuredUsage) return { data, response };
   let receipt: ProviderUsageReceipt;

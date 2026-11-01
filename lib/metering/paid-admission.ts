@@ -1,5 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { assertConnectionRecoveryAdmission } from "@/lib/integrations/provider-recovery/admission";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { preparePaidAttempt } from "./current-paid-quote";
 import {
   PaidAttemptAdmissionError,
@@ -44,8 +46,27 @@ export async function reservePaidAttempts(
   const ordered = [...prepared].sort((a, b) =>
     a.request.scope.connection.localeCompare(b.request.scope.connection),
   );
+  const rank = (input: PaidAttemptInput) =>
+    input.context.feature === "rank_check" || input.reservation.operation === "rank_check";
   for (const { input, request } of ordered)
-    await verifyPaidBinding(tx, request, input.context, options);
+    await verifyPaidBinding(tx, request, input.context, options, rank(input));
+  const refusals = new Map<string, ProviderRecoveryAdmissionError>();
+  if (!options.verifyBinding)
+    for (const { input, request } of ordered) {
+      if (!rank(input)) continue;
+      try {
+        await assertConnectionRecoveryAdmission(
+          tx,
+          request,
+          input.context.providerCredentialVersion,
+          options.clock?.now() ?? new Date(),
+          input.context.feature ?? request.operation,
+        );
+      } catch (error) {
+        if (!(error instanceof ProviderRecoveryAdmissionError)) throw error;
+        refusals.set(request.operationId, error);
+      }
+    }
   for (const { request } of ordered) await lockPaidOperation(tx, request);
   await lockScopes(
     createSql(tx, { statements: 0, changes: 0n, rowsRead: 0 }),
@@ -55,6 +76,13 @@ export async function reservePaidAttempts(
   const results = new Map<string, PaidAttemptReservation>();
   for (const { input, request } of prepared) {
     const result = await meter.reserve(request);
+    const refusal = refusals.get(request.operationId);
+    if (
+      refusal &&
+      (result.outcome === "reserved" ||
+        (result.outcome === "exceeded" && result.exceeded.budget.scope.kind === "connection"))
+    )
+      throw refusal;
     if (result.outcome !== "reserved")
       throw new PaidAttemptAdmissionError(result, {
         surface: request.surface,

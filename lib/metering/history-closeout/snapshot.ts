@@ -7,7 +7,13 @@ import { decode, key } from "@/lib/metering/store/codec";
 import { createSql } from "@/lib/metering/store/host-sql";
 import { hydrate, operationRow } from "@/lib/metering/store/records";
 import type { Operation } from "@usagekit/core";
-import { type CloseoutManifest, historyMigration } from "./manifest";
+import { type LiveConnectionFacts, liveConnectionFacts } from "./live-connection";
+import {
+  type CloseoutManifest,
+  closeoutPolicy,
+  historyMigration,
+  retiredSettingsCloseoutPolicy,
+} from "./manifest";
 
 export type CloseoutBody = {
   manifestHash: string;
@@ -15,6 +21,12 @@ export type CloseoutBody = {
   targetHash: string;
   finalOperation: Operation;
 };
+/** A deleted project keeps only its internal group ID in the retained operations. */
+async function retiredProject(tx: Prisma.TransactionClient, id: string) {
+  if (await tx.project.count({ where: { id } }))
+    throw new Error("A retired project must no longer exist.");
+  return { id, publicId: null };
+}
 export async function closeoutSnapshot(tx: Prisma.TransactionClient, manifest: CloseoutManifest) {
   const sql = createSql(tx, { statements: 0, changes: 0n, rowsRead: 0 });
   await sql.verifyTimestampContract();
@@ -40,14 +52,23 @@ export async function closeoutSnapshot(tx: Prisma.TransactionClient, manifest: C
       deactivatedAt: true,
     },
   });
-  const project = await tx.project.findUnique({
-    where: { publicId: manifest.projectPublicId },
-    select: { id: true, publicId: true },
-  });
+  const project: { id: string; publicId: string | null } | null =
+    manifest.retiredProjectId === undefined
+      ? await tx.project.findUnique({
+          where: { publicId: manifest.projectPublicId },
+          select: { id: true, publicId: true },
+        })
+      : await retiredProject(tx, manifest.retiredProjectId);
   if (!identity || !project)
     throw new Error("An exact project and database identity are required.");
-  const connection = await tx.providerConnection.count({ where: { id: manifest.connection } });
-  if (connection) throw new Error("Only a retired connection is eligible.");
+  let live: LiveConnectionFacts | null = null;
+  let retiredSettings: LiveConnectionFacts | undefined;
+  if (manifest.policy === closeoutPolicy || manifest.policy === retiredSettingsCloseoutPolicy) {
+    const connection = await tx.providerConnection.count({ where: { id: manifest.connection } });
+    if (connection) throw new Error("Only a retired connection is eligible.");
+    if (manifest.policy === retiredSettingsCloseoutPolicy)
+      retiredSettings = await liveConnectionFacts(tx, manifest);
+  } else live = await liveConnectionFacts(tx, manifest);
   const [migration] = await tx.$queryRaw<
     { checksum: string; finished: boolean; verified: boolean }[]
   >`
@@ -62,6 +83,13 @@ export async function closeoutSnapshot(tx: Prisma.TransactionClient, manifest: C
   const [schema] = await tx.$queryRaw<
     { available: boolean }[]
   >`SELECT to_regclass('metering_history_closeout') IS NOT NULL AS available`;
+  const [policySchema] =
+    manifest.policy === retiredSettingsCloseoutPolicy
+      ? await tx.$queryRaw<{ supported: boolean }[]>`
+      SELECT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('metering_history_closeout')
+        AND conname='metering_history_closeout_policy_check'
+        AND strpos(pg_get_constraintdef(oid),${retiredSettingsCloseoutPolicy})>0) AS supported`
+      : [{ supported: true }];
   const entries = [];
   for (const item of manifest.operations) {
     const row = await operationRow(sql, manifest.namespace, item.operationId);
@@ -129,7 +157,9 @@ export async function closeoutSnapshot(tx: Prisma.TransactionClient, manifest: C
     actor,
     project,
     migration,
-    schemaAvailable: schema?.available === true,
+    schemaAvailable: schema?.available === true && policySchema?.supported === true,
+    live,
+    ...(retiredSettings ? { retiredSettings } : {}),
     entries,
   };
 }

@@ -180,7 +180,7 @@ export function DomainOverviewWorkspace({
         }
         reconnect={context.providerStatus === "needs_reauth"}
         providers={context.supportingProviders}
-        href={appPath(projectRef, "integrations")}
+        href={appPath(projectRef, "providers")}
       >
         <DomainOverviewAnalyzeCard
           catalogScopes={context.catalogScopes}
@@ -274,7 +274,7 @@ export function DomainOverviewWorkspace({
       ) : blockedState === "no_provider" || blockedState === "needs_reauth" ? (
         <ProviderAccessEmptyState
           surface="domain"
-          href={appPath(projectRef, "integrations")}
+          href={appPath(projectRef, "providers")}
           providers={context.supportingProviders}
           reconnect={blockedState === "needs_reauth"}
         />

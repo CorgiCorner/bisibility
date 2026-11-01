@@ -129,7 +129,7 @@ function SearchPerformanceEmpty({
             <p className="m-0 text-[13.5px] text-fg-muted">{t("connectDescription")}</p>
             <Link
               className="mt-3 inline-flex text-[13px] font-semibold text-fg underline decoration-fg underline-offset-3"
-              href={appPath(projectRef, "integrations")}
+              href={appPath(projectRef, "providers")}
             >
               {t("connect")}
             </Link>

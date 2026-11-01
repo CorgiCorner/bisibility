@@ -46,6 +46,10 @@ function localizedCredentialField(
       label: t("credentialApiToken"),
       placeholder: t("credentialApiTokenPlaceholder"),
     },
+    "ahrefs:secret": {
+      label: t("credentialApiKey"),
+      placeholder: t("credentialApiKeyPlaceholder"),
+    },
     "serpapi:secret": {
       label: t("credentialApiKey"),
       placeholder: t("credentialApiKeyPlaceholder"),

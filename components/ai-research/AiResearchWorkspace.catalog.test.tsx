@@ -33,7 +33,7 @@ describe("workspace without usable provider credentials", () => {
         />,
       );
       expect(
-        screen.getByText("Choose a supported data source in Integrations to run a search."),
+        screen.getByText("Choose a supported data source in Providers to run a search."),
       ).toBeVisible();
       expect(screen.getAllByText("Supported providers: Fixture AI provider.")).toHaveLength(1);
       if (mode === "prompt") {
@@ -41,7 +41,7 @@ describe("workspace without usable provider credentials", () => {
         expect(screen.queryByRole("button", { name: "estimateCost" })).toBeNull();
         expect(
           screen.getByRole("link", { name: sharedMessages.shared.providerAccess.connectAction }),
-        ).toHaveAttribute("href", "/app/prj_example/integrations");
+        ).toHaveAttribute("href", "/app/prj_example/providers");
         expect(screen.getByRole("link", { name: /Saved report/ })).toBeVisible();
         expect(analyze).not.toHaveBeenCalled();
         return;
@@ -50,14 +50,14 @@ describe("workspace without usable provider credentials", () => {
       expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
       expect(
         within(emptyPanel).getByRole("link", { name: "Choose a data source" }),
-      ).toHaveAttribute("href", "/app/prj_example/integrations");
+      ).toHaveAttribute("href", "/app/prj_example/providers");
       expect(screen.queryByText("noSource")).not.toBeInTheDocument();
       expect(screen.queryByText("estimateRequired")).not.toBeInTheDocument();
       expect(screen.getByRole("textbox", { name: "brand" })).toBeDisabled();
       expect(screen.getByRole("textbox", { name: "domain" })).toBeDisabled();
       expect(screen.getByRole("link", { name: "Choose a data source" })).toHaveAttribute(
         "href",
-        "/app/prj_example/integrations",
+        "/app/prj_example/providers",
       );
       expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
       expectExecutionBlocked();

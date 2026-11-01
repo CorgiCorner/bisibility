@@ -123,7 +123,7 @@
         "marketInactive": "市場が無効",
         "marketInactiveDescription": "このキーワードの市場が一時停止中のため、費用が発生する前にチェックが停止されました。",
         "noProvider": "利用可能なプロバイダーなし",
-        "noProviderDescription": "この実行を開始するには、連携で選択したデータソースを確認してください。",
+        "noProviderDescription": "この実行を開始するには、プロバイダーで選択したデータソースを確認してください。",
         "providerUnavailable": "プロバイダー利用不可",
         "providerUnavailableDescription": "現在プロバイダーに接続できません。再接続されると実行は自動的に開始されます。",
         "targetPaused": "一時停止中のターゲットです。再開すると処理が続行されます。",
@@ -192,7 +192,7 @@
           "detail": "このチェックに使えるプロバイダーがありませんでした。",
           "label": "プロバイダーなし"
         },
-        "openIntegrations": "連携を開く",
+        "openIntegrations": "プロバイダーを開く",
         "primary_provider_not_dataforseo": {
           "detail": "定期的なキューのチェックは、DataForSEO がプライマリプロバイダーのときだけ実行されます。",
           "label": "キューのチェックには DataForSEO が必要です"
@@ -200,6 +200,10 @@
         "project_ineligible": {
           "detail": "このプロジェクトは定期的な順位チェックの対象ではありません。",
           "label": "プロジェクトはチェックできません"
+        },
+        "provider_account_blocked": {
+          "detail": "プロバイダーアカウントの確認が必要なため、このチェックは送信されませんでした。",
+          "label": "プロバイダーアカウントの確認が必要です"
         },
         "project_read_only": {
           "detail": "このプロジェクトは読み取り専用のため、チェックは延期されました。",
@@ -332,7 +336,26 @@
       "operations": "操作数",
       "usageNotRecorded": "未記録",
       "estimatedOperations": "推定 {count}",
-      "skippedOrBlocked": "スキップまたはブロック"
+      "skippedOrBlocked": "スキップまたはブロック",
+      "retryReview": {
+        "title": "延期されたチェックを確認",
+        "cancel": "キャンセル",
+        "confirm": "これらのチェックを再試行",
+        "warning": "再試行はそれぞれ新しい有料リクエストとなり、現在のプロバイダーアカウントの状態が適用されます。接続が停止中の場合、再び延期されることがあります。",
+        "targets": "{count, plural, one {再試行するチェック # 件} other {再試行するチェック # 件}}",
+        "loadFailed": "チェックを読み込めませんでした。ダイアログを閉じて再試行してください。",
+        "desktop": "デスクトップ",
+        "mobile": "モバイル"
+      },
+      "sealedAccountPaused": "承認済みのプロバイダーは一時停止中です。新しい実行を開始すると、次の有料リクエストの前に新しい費用見積もりを確認できます。",
+      "startNewRun": "新しい実行を開始",
+      "accountBlock": {
+        "provider_billing": "{provider}: 支払いまたは利用枠の問題により送信されませんでした。",
+        "provider_auth": "{provider}: 認証情報が拒否されたため送信されませんでした。",
+        "provider_account_restricted": "{provider}: アクセス制限により送信されませんでした。",
+        "not_verified": "{provider}: アカウントが未確認のため送信されませんでした。",
+        "accounting_review": "{provider}: 会計確認待ちのため送信されませんでした。"
+      }
     }
   }
 }

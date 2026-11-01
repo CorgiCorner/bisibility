@@ -153,7 +153,7 @@ describe("notification queries", () => {
     });
 
     expect(result.items[0]).toMatchObject({
-      href: appPath("prj_abcdefghijklmnopqrstuvwx", "integrations"),
+      href: appPath("prj_abcdefghijklmnopqrstuvwx", "providers"),
       meta: "Provider import",
       time: "now",
     });

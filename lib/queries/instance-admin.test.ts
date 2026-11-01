@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   projectCount: vi.fn(),
   providerGroupBy: vi.fn(),
   rankGroupBy: vi.fn(),
+  recoveryAccounting: vi.fn(),
+  usageReport: vi.fn(),
   userCount: vi.fn(),
 }));
 
@@ -27,6 +29,10 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 vi.mock("@/lib/ops/config", () => ({ getOpsConfig: mocks.config }));
+vi.mock("./instance-recovery-accounting", () => ({
+  getInstanceRecoveryAccounting: mocks.recoveryAccounting,
+}));
+vi.mock("./instance-usage-report", () => ({ getInstanceUsageReport: mocks.usageReport }));
 vi.mock("@/lib/ops/heartbeat-data", () => ({
   collectOperationalHeartbeat: mocks.collectOperational,
   collectRankHeartbeatWindows: mocks.collectRanks,
@@ -71,6 +77,7 @@ describe("instance admin queries", () => {
   const now = new Date("2026-07-17T12:00:00.000Z");
 
   beforeEach(() => {
+    mocks.usageReport.mockResolvedValue(null);
     vi.unstubAllEnvs();
     vi.clearAllMocks();
     mocks.userCount.mockResolvedValue(3);
@@ -163,12 +170,16 @@ describe("instance admin queries", () => {
   });
 
   it("groups completed monthly usage by actual provider without tenant cost fields", async () => {
+    mocks.recoveryAccounting.mockResolvedValueOnce(null);
     await expect(getInstanceStats(now)).resolves.toEqual({
       activeProviderConnectionsByKind: [
         { count: 3, kind: "analytics" },
         { count: 1, kind: "serp" },
       ],
       keywords: 10,
+      recoveryAccounting: null,
+      usageReport: null,
+      usagePeriod: "all",
       projects: 2,
       providerUsage: [
         {
@@ -333,6 +344,8 @@ describe("instance admin queries", () => {
     expect(result.ops).toMatchObject({ configured: false, enabled: false });
     expect(result.worker).toMatchObject({ status: "ok" });
     expect(result.stats).toEqual({
+      usagePeriod: "all",
+      usageReport: null,
       activeProviderConnectionsByKind: [
         { count: 3, kind: "analytics" },
         { count: 1, kind: "serp" },

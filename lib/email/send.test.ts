@@ -67,6 +67,48 @@ describe("sendEmail orchestration", () => {
     vi.restoreAllMocks();
   });
 
+  it("serializes one-click headers through SES and excludes transactional mail", async () => {
+    sendMock.mockResolvedValue({});
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    await sendEmail({
+      ...input,
+      listUnsubscribeUrl: "https://app.example.com/unsubscribe?token=opaque",
+    });
+    expect(sendMock.mock.calls[0]?.[0]?.input.Content.Simple.Headers).toEqual([
+      { Name: "List-Unsubscribe", Value: "<https://app.example.com/unsubscribe?token=opaque>" },
+      { Name: "List-Unsubscribe-Post", Value: "List-Unsubscribe=One-Click" },
+    ]);
+    await sendEmail({ ...input, category: "transactional" });
+    expect(sendMock.mock.calls[1]?.[0]?.input.Content.Simple.Headers).toBeUndefined();
+  });
+
+  it("rejects an insecure unsubscribe URL", async () => {
+    await expect(
+      sendEmail({ ...input, listUnsubscribeUrl: "http://example.com/" }),
+    ).rejects.toThrow();
+  });
+
+  it.each([
+    "https://user:pass@example.com/",
+    "https://example.com/<bad>",
+    "https://example.com/\nInjected: value",
+  ])("rejects a malformed header URL %s", async (listUnsubscribeUrl) => {
+    await expect(sendEmail({ ...input, listUnsubscribeUrl })).rejects.toThrow();
+  });
+
+  it("rejects unsubscribe headers on transactional mail", async () => {
+    await expect(
+      sendEmail({
+        ...input,
+        category: "transactional",
+        listUnsubscribeUrl: "https://example.com/",
+      }),
+    ).rejects.toThrow();
+  });
+
   it("re-exports the typed send error for callers", () => {
     expect(new EmailSendError("failed", 429, 30)).toMatchObject({
       retryAfterSeconds: 30,

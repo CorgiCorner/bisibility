@@ -74,7 +74,7 @@
         "dashboard": "Pulpit",
         "domainOverview": "Przegląd domeny",
         "install": "Instalacja",
-        "integrations": "Integracje",
+        "integrations": "Dostawcy",
         "keywordResearch": "Analiza słów kluczowych",
         "markets": "Rynki",
         "rankTracker": "Monitor pozycji",
@@ -129,7 +129,16 @@
       "allNotifications": "Wszystkie powiadomienia",
       "filterError": "Nie udało się wczytać incydentów.",
       "allTab": "Wszystkie",
-      "incidentsTab": "Incydenty"
+      "incidentsTab": "Incydenty",
+      "accountBlock": {
+        "title": "Połączenie {provider} wstrzymane",
+        "body": "Sprawdź konto dostawcy w Dostawcach. Zapisany harmonogram pozostaje bez zmian.",
+        "resolvedTitle": "Konto {provider} zweryfikowane",
+        "resolvedBody": "Kolejne sprawdzenia mogą korzystać z tego połączenia, o ile nie pozostaje blokada rozliczeń. Pominięte sprawdzenia nie są ponawiane automatycznie.",
+        "billing": "Sprawdź płatności lub dostępny limit konta dostawcy w Dostawcach.",
+        "credentials": "Poproś właściciela projektu o aktualizację danych dostawcy w Dostawcach.",
+        "restricted": "Sprawdź uprawnienia konta dostawcy w Dostawcach."
+      }
     },
     "operations": {
       "actionError": "Nie udało się zaktualizować tej operacji. Odśwież stronę i spróbuj ponownie.",
@@ -156,7 +165,7 @@
           "budgetWithoutAmounts": "Zużycie wymaga sprawdzenia. Sprawdź budżet i nierozliczone operacje przed ponowieniem.",
           "keywordArchived": "To słowo kluczowe zostało zarchiwizowane przed startem sprawdzenia, więc zatrzymano je, zanim zdążyło wygenerować koszt.",
           "marketInactive": "Rynek tego słowa kluczowego jest wstrzymany, więc sprawdzenie zatrzymano, zanim zdążyło wygenerować koszt.",
-          "noProvider": "Sprawdź wybrane źródło danych w Integracjach, aby uruchomić ten przebieg.",
+          "noProvider": "Sprawdź wybrane źródło danych w sekcji Dostawcy, aby uruchomić ten przebieg.",
           "providerUnavailable": "Dostawca jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
           "waiting": "Ten przebieg czeka na start. Ruszy automatycznie, gdy będzie to możliwe.",
           "workerCloud": "Worker w tle jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
@@ -298,7 +307,7 @@
         "docs": "Dokumentacja",
         "domainOverview": "Przegląd domeny",
         "gettingStarted": "Pierwsze kroki",
-        "integrations": "Integracje",
+        "integrations": "Dostawcy",
         "install": "Instalacja",
         "importFromAnotherInstance": "Import z innej instancji",
         "instanceAdministration": "Administracja instancją",
@@ -353,7 +362,10 @@
         "label": "Domyślny projekt: {name}",
         "makeDefault": "Ustaw jako domyślny projekt",
         "makeDefaultDescription": "Otwiera się jako pierwszy po zalogowaniu."
-      }
+      },
+      "limitReached": "Osiągnięto limit {limit, plural, one {# projektu} few {# projektów} many {# projektów} other {# projektu}}",
+      "limitHelp": "Twoje konto może mieć maksymalnie {limit, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektu}}. Kliknij, aby poprosić pomoc techniczną o zwiększenie limitu, albo usuń niepotrzebny projekt.",
+      "limitSupportMessage": "Cześć, chcę zwiększyć limit projektów. Moje konto może mieć maksymalnie {limit, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektu}}."
     },
     "writeMode": {
       "migrationSettings": "Ustawienia migracji",

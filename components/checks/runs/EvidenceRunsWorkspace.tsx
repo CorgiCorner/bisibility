@@ -69,9 +69,9 @@ export function EvidenceRunsWorkspace({
         asOfDate={zonedDateInputValue(new Date(now), timeZone)}
         budget={{ blocked: [], forecast: null }}
         budgetSettingsHref={appPath(projectRef, "settings#provider-usage")}
-        connectProviderHref={appPath(projectRef, "integrations")}
-        reviewProvidersHref={appPath(projectRef, "integrations")}
-        reorderProvidersHref={appPath(projectRef, "integrations")}
+        connectProviderHref={appPath(projectRef, "providers")}
+        reviewProvidersHref={appPath(projectRef, "providers")}
+        reorderProvidersHref={appPath(projectRef, "providers")}
         timelineHref={evidenceRunsPath(projectRef, query)}
         keywordHref={(id) => appPath(projectRef, "rank-tracker", id)}
         filter={query.status}

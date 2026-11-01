@@ -4,7 +4,10 @@ import type { PlanStatus } from "@/components/shell/plan-status";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarNav } from "@/components/shell/SidebarNav";
-import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
+import {
+  type WorkspaceProjectLimit,
+  WorkspaceSwitcher,
+} from "@/components/shell/WorkspaceSwitcher";
 import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
@@ -16,6 +19,8 @@ export type MobileNavProps = {
   activeHref?: string;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  /** Set when the account owns as many projects as it may: creation shows as blocked. */
+  projectLimit?: WorkspaceProjectLimit | null;
   canSetDefault?: boolean;
   defaultOpen?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
@@ -36,6 +41,7 @@ export function MobileNav({
   activeHref,
   activeProjectId,
   canCreateWorkspace,
+  projectLimit = null,
   canSetDefault,
   defaultOpen = false,
   enabledExperimentalModules = [],
@@ -86,6 +92,7 @@ export function MobileNav({
             <WorkspaceSwitcher
               activeProjectId={activeProjectId}
               canCreateWorkspace={canCreateWorkspace}
+              projectLimit={projectLimit}
               canSetDefault={canSetDefault}
               className="mt-0 w-full"
               compact

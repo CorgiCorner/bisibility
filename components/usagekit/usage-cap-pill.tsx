@@ -172,7 +172,7 @@ export type UsageBoundPresentation = Pick<
   labels?: Partial<typeof usageBoundLabels>;
   formatBound?: (row: BudgetRow) => string;
   formatFigure?: (figure: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
+  formatUnit?: (unit: string, count?: string) => string;
 };
 /** Full budget projection preserves reserved usage and soft bounds with a separate hard limit. */
 export function usageCapFromBudget(
@@ -182,7 +182,8 @@ export function usageCapFromBudget(
   const { formatBound, formatFigure, formatUnit, labels: custom, ...links } = presentation;
   const labels = { ...usageBoundLabels, ...custom };
   if (row.redacted || row.level === "unavailable") return { ...links, state: "unavailable" };
-  const unit = formatUnit?.(row.unit) ?? row.unit;
+  const unitCount = typeof row.limit === "string" ? undefined : row.limit.text;
+  const unit = formatUnit?.(row.unit, unitCount) ?? row.unit;
   const name = formatBound?.(row) ?? `${row.kind} ${row.target}`;
   const display = (value: Figure) =>
     value === "unavailable"

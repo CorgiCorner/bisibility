@@ -49,7 +49,7 @@ export function commandPaletteCopy(
       "Docs and self-hosting": t("navigation.docs"),
       "Domain Overview": navigation("items.domainOverview"),
       Install: navigation("items.install"),
-      Integrations: navigation("items.integrations"),
+      Providers: navigation("items.integrations"),
       "Keyword Research": navigation("items.keywordResearch"),
       Markets: navigation("items.markets"),
       "Rank Tracker": navigation("items.rankTracker"),

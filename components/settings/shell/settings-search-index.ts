@@ -191,7 +191,7 @@ export const settingsSearchEntries = [
   ),
   searchEntry(
     (t) => t("search.sections.providerConnections"),
-    "integrations",
+    "providers",
     (t) => ({
       label: t("search.entries.providerConnections.label"),
       keywords: t("search.entries.providerConnections.keywords"),
@@ -200,7 +200,7 @@ export const settingsSearchEntries = [
   ),
   searchEntry(
     (t) => t("search.sections.providerUsage"),
-    "integrations",
+    "providers",
     (t) => ({
       label: t("search.entries.providerBudgets.label"),
       keywords: t("search.entries.providerBudgets.keywords"),

@@ -61,7 +61,7 @@ export type UsageTableProps = {
   /** A newer page is loading; the current rows stay visible but dimmed. */
   busy?: boolean;
   formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
+  formatUnit?: (unit: string, count?: string) => string;
   formatDimension?: (dimension: string, value: string, row: UsageView["rows"][number]) => ReactNode;
   showFunding?: boolean;
   formatFunding?: (source: UsageView["rows"][number]["fundingSource"]) => ReactNode;

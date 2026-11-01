@@ -1,4 +1,5 @@
 import { notificationTransaction } from "@/lib/notifications/transaction";
+import { closedUnknownOperations } from "@/lib/provider-usage/uncertainty-closeout-state";
 import { providerRecoveryScope } from "./scope";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
@@ -11,7 +12,11 @@ import { recoverySwitches } from "./switches";
 export async function captureRecoveryCandidate(
   tx: Prisma.TransactionClient,
   rankCheckId: string,
-  input: { stopReason?: AttemptStopReason; pollingStopped?: boolean; finishedAt?: Date } = {},
+  input: {
+    stopReason?: AttemptStopReason;
+    pollingStopped?: boolean;
+    finishedAt?: Date;
+  } = {},
   now = new Date(),
   onEnqueued?: OnRecoveryEnqueued,
 ) {
@@ -20,7 +25,12 @@ export async function captureRecoveryCandidate(
   const check = await tx.rankCheck.findUnique({ where: { id: rankCheckId } });
   if (!check) return;
   const attempts = await recoveryAttempts(tx, rankCheckId);
+  const closed = await closedUnknownOperations(
+    tx,
+    attempts.map((a) => a.operation.operation_pk),
+  );
   for (const attempt of attempts) {
+    if (closed.has(attempt.operation.operation_pk)) continue;
     if (!attempt.dispatch_lease_id || !attempt.fenced_at || attempt.operation.state === "released")
       continue;
     const dimensions = attemptDimensions(attempt, check);
@@ -46,12 +56,17 @@ export async function captureRecoveryCandidate(
       });
       await tx.providerOperationEvidence.upsert({
         where: { operationPk: attempt.operation.operation_pk },
-        create: { operationPk: attempt.operation.operation_pk, recoveryState: "not_needed" },
+        create: {
+          operationPk: attempt.operation.operation_pk,
+          recoveryState: "not_needed",
+        },
         update: { recoveryState: "not_needed" },
       });
       continue;
     }
-    const task = await tx.queuedRankCheckTask.findUnique({ where: { rankCheckId } });
+    const task = await tx.queuedRankCheckTask.findUnique({
+      where: { rankCheckId },
+    });
     const data = {
       ...(input.stopReason ? { stopReason: input.stopReason } : {}),
       ...(input.pollingStopped ? { pollingStoppedAt: now } : {}),
@@ -161,7 +176,9 @@ export async function acknowledgeOriginalRankAttempt(
 /** Called by the original persistReady lease finalizer after provider settlement and persistence. */
 export async function acknowledgeQueuedRankAttempt(tx: Prisma.TransactionClient, taskId: string) {
   if (!recoverySwitches().capture) return;
-  const task = await tx.queuedRankCheckTask.findUnique({ where: { id: taskId } });
+  const task = await tx.queuedRankCheckTask.findUnique({
+    where: { id: taskId },
+  });
   if (!task || !["completed", "failed", "deferred"].includes(task.state)) return;
   const scope = providerRecoveryScope();
   await tx.meteringPaidAttemptContext.updateMany({
@@ -171,7 +188,10 @@ export async function acknowledgeQueuedRankAttempt(tx: Prisma.TransactionClient,
       completionAcknowledgedAt: null,
       submissionCompletedAt: { not: null },
       operation: {
-        providerDispatchIdentity: { instanceId: scope.instanceId, queuedTaskId: taskId },
+        providerDispatchIdentity: {
+          instanceId: scope.instanceId,
+          queuedTaskId: taskId,
+        },
       },
     },
     data: { completionAcknowledgedAt: new Date() },

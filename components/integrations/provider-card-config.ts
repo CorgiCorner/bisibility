@@ -7,6 +7,14 @@ export function providerConsumerStatuses(provider: IntegrationProviderData) {
     : undefined;
 }
 
+// A lost property grant or missing scope gets its remedy, not the generic reconnect copy.
+export function reauthMessageKey(provider: Pick<IntegrationProviderData, "id" | "reauthReason">) {
+  if (provider.reauthReason === "permission") return "oauth.googlePropertyPermission";
+  if (provider.reauthReason === "scope") return "oauth.googlePropertyScope";
+  if (provider.id === "gsc") return "provider.reauthGsc";
+  return provider.id === "ga4" ? "provider.reauthGa4" : "provider.reauthGeneric";
+}
+
 export const actionLabels = {
   connected: "Manage",
   needs_reauth: "Reconnect",

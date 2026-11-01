@@ -30,7 +30,7 @@ export type MeasurementCardProps = {
   variant?: "card" | "plain";
   className?: string;
   formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
+  formatUnit?: (unit: string, count?: string) => string;
 };
 
 const certaintyTone: Record<"measured" | "estimated" | "unknown" | "unavailable", UsageTone> = {
@@ -79,7 +79,7 @@ export function MeasurementValue({
       </span>
       {value.unit && (
         <span className="text-sm text-fg-muted">
-          {formatUnit?.(value.unit) ??
+          {formatUnit?.(value.unit, value.text) ??
             (["customer_cents", "cents"].includes(value.unit) ? labels.cents : value.unit)}
         </span>
       )}

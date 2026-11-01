@@ -78,6 +78,17 @@ describe("dashboard optional read isolation", () => {
     mocks.health.mockResolvedValue({ budget: { exhausted: false }, failed24h: { count: 0 } });
     mocks.competitors.mockResolvedValue({ retained: "competitor-data" });
   });
+  it.each(["empty", "no-data"])(
+    "keeps the personal layout available in the %s state",
+    async (state) => {
+      mocks.overview.mockResolvedValue({ state, isEmpty: true });
+      const result = await readData();
+      expect(result.props.personal.scopeKey).toBe("personal-scope");
+      expect(result.props.overview.state).toBe(state);
+      expect(result.props.canManageProviders).toBe(false);
+      expect(result.props.canRunChecks).toBe(false);
+    },
+  );
   it("keeps organic data and exposes an error for a failed optional competitor read", async () => {
     mocks.competitors.mockRejectedValue(new Error("private DB detail"));
     const result = await readData();

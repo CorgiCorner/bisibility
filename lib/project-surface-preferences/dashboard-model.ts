@@ -75,6 +75,7 @@ export function dashboardLayoutFor(
 export function defaultPersonalDashboardLayout(preset: DashboardPreset): DashboardLayout {
   // Preserve the existing full-width cards and the two secondary cards in the first personal layout.
   const wide = new Set([
+    "domain_rating",
     "organic_kpis",
     "position_trend",
     "data_source",

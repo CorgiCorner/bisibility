@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   contentProps: undefined as unknown,
   getSettings: vi.fn(),
+  getDomainRating: vi.fn(),
   loadCoreMessages: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveRegionalDocumentLocale: vi.fn(),
@@ -18,6 +19,10 @@ vi.mock("@/components/settings/data-sources/DataSourcesSettingsContent", () => (
     mocks.contentProps = props;
     return <div data-data-sources-content-test="" />;
   },
+}));
+vi.mock("@/lib/queries/domain-rating", () => ({ getDomainRating: mocks.getDomainRating }));
+vi.mock("@/components/domain-rating/DomainRatingSettings", () => ({
+  DomainRatingSettings: () => <div />,
 }));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.getSettings }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));

@@ -1,4 +1,5 @@
 import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
+import { closedUnknownOperations } from "@/lib/provider-usage/uncertainty-closeout-state";
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { deliverIncident } from "./delivery";
@@ -18,7 +19,9 @@ export async function refreshOperationIncident(
   initial = false,
 ) {
   if (!recoverySwitches().incidentBell) return;
-  const link = await tx.providerIncidentOperation.findUnique({ where: { operationPk } });
+  const link = await tx.providerIncidentOperation.findUnique({
+    where: { operationPk },
+  });
   if (!link) return;
   const identity = await tx.providerIncident.findUniqueOrThrow({
     where: { id: link.incidentId },
@@ -40,10 +43,14 @@ export async function refreshOperationIncident(
   });
   // A deleted/unclassified evidence row is unresolved, never silently omitted.
   const frozen = await frozenIncidentOperations(tx, links);
+  const closed = await closedUnknownOperations(
+    tx,
+    links.map((row) => row.operationPk),
+  );
   const operations: IncidentDimensions[] = [];
   for (const row of links) {
     const current = evidence.find((item) => item.operationPk === row.operationPk);
-    const dimensions: IncidentDimensions =
+    const baseDimensions: IncidentDimensions =
       frozen.has(row.operationPk) && row.customerEvidence
         ? (row.customerEvidence as IncidentDimensions)
         : {
@@ -53,10 +60,10 @@ export async function refreshOperationIncident(
             exhaustionStatus: current?.exhaustionStatus ?? null,
             exhaustionReason: current?.exhaustionReason ?? null,
           };
+    const dimensions = { ...baseDimensions, operatorClosedUnknown: closed.has(row.operationPk) };
     operations.push(dimensions);
     const previous = row.customerEvidence as IncidentDimensions | null;
     if (
-      !frozen.has(row.operationPk) &&
       Object.entries(dimensions).some(
         ([key, value]) => previous?.[key as keyof IncidentDimensions] !== value,
       )

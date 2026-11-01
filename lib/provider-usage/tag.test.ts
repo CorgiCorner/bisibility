@@ -1,8 +1,9 @@
 import { parseProviderInstanceSlug } from "@/lib/instance-setting-definitions";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildProviderTag,
   createProviderRequestAttribution,
+  deploymentProviderStage,
   PROVIDER_REQUEST_SOURCES,
   type ProviderRequestContext,
   providerStage,
@@ -200,6 +201,33 @@ describe("buildProviderTag", () => {
     );
   });
 
+  it("normalizes explicit stages independently of the demo environment", () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    try {
+      expect(providerStage("production")).toBe("prod");
+      expect(providerStage("demo")).toBe("demo");
+      expect(buildProviderTag({ context, instanceSlug: "fixture", stage: "prod" })).toContain(
+        ";stage=prod;",
+      );
+      expect(buildProviderTag({ context, instanceSlug: "fixture" })).toContain(";stage=demo;");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it.each([
+    { DEMO_MODE: "editable" },
+    { READ_ONLY_DEMO: "1" },
+    { TEMPORAL_NAMESPACE: "bisibility-demo" },
+  ])("resolves demo deployment signal %s", (signal) => {
+    expect(deploymentProviderStage({ DEPLOYMENT_ENV: "production", ...signal })).toBe("demo");
+  });
+
+  it("resolves production and NODE_ENV fallback without demo signals", () => {
+    expect(deploymentProviderStage({ DEPLOYMENT_ENV: "production" })).toBe("prod");
+    expect(deploymentProviderStage({ NODE_ENV: "production" })).toBe("prod");
+  });
+
   it("normalizes deployment stages and validates stable instance slugs", () => {
     expect(providerStage("staging")).toBe("stage");
     expect(providerStage("preview")).toBe("dev");
@@ -212,6 +240,15 @@ describe("buildProviderTag", () => {
 });
 
 describe("createProviderRequestAttribution", () => {
+  it("uses the deployment stage for new requests", async () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEPLOYMENT_ENV", "production");
+    try {
+      expect((await createProviderRequestAttribution(context)).tag).toContain(";stage=demo;");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("carries the given credential without changing the tag", async () => {
     const credential = { id: "key_1", kind: "project_key" } as const;
     const [withCredential, withoutCredential] = await Promise.all([

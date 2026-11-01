@@ -1,3 +1,4 @@
+import { assertConnectionRecoveryAdmission } from "@/lib/integrations/provider-recovery/admission";
 import { requireProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -12,6 +13,7 @@ export async function verifyPaidBinding(
   input: MeterReserveInput,
   context: PaidAttemptContext,
   options: PaidAttemptOptions,
+  deferRecoveryAdmission = false,
 ) {
   if (
     context.recoveryGrantExpiresAt &&
@@ -76,4 +78,12 @@ export async function verifyPaidBinding(
   )
     throw new Error("Original paid attempt credential binding changed");
   await requireProjectSpendingBudget(tx, input.scope.namespace, context.projectId);
+  if (!deferRecoveryAdmission)
+    await assertConnectionRecoveryAdmission(
+      tx,
+      input,
+      context.providerCredentialVersion,
+      options.clock?.now() ?? new Date(),
+      context.feature ?? input.operation,
+    );
 }

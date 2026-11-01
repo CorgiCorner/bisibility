@@ -273,7 +273,7 @@ it.each(["no connections", "empty snapshot"])(
     setRows([]);
     dialog(vi.fn(), state === "no connections" ? [] : connections);
     const link = await screen.findByRole("link", { name: dialogCopy.connect });
-    expect(link).toHaveAttribute("href", "/app/prj_story/integrations");
+    expect(link).toHaveAttribute("href", "/app/prj_story/providers");
     const modal = within(screen.getByRole("dialog"));
     expect(modal.getByText(dialogCopy.empty, { exact: false })).toBeVisible();
     expect(modal.queryAllByRole("status", { hidden: true })).toHaveLength(0);
@@ -337,12 +337,14 @@ it("localizes exact unit and money figures in Polish allocation rows", async () 
   await screen.findByLabelText(surfaceLabel(copy.appBudgetField, "SerpApi"));
   const modal = screen.getByRole("dialog");
   expect(modal.textContent).not.toMatch(/\b(units|cents)\b/);
-  expect(within(modal).getAllByText(`${copy.perMonth} (${copy.searchesAdornment})`)).toHaveLength(
-    2,
-  );
+  expect(
+    within(modal).getAllByText(
+      `${copy.perMonth} (${polishShared.shared.usageViews.units.searches})`,
+    ),
+  ).toHaveLength(2);
   expect(within(modal).getAllByText(`${copy.perMonth} (USD)`)).toHaveLength(2);
   expect(within(modal).getAllByText(`${copy.perMonth} (Credits)`)).toHaveLength(4);
-  expect(within(modal).getAllByText("9 007 199 254 740 993 wyszukiwań")).toHaveLength(2);
+  expect(within(modal).getAllByText("9 007 199 254 740 993 wyszukiwania")).toHaveLength(2);
   expect(within(modal).getAllByText("9 007 199 254 741,00 USD")).toHaveLength(2);
   expect(within(modal).getAllByText("900 719 925 474 099,5 Credits")).toHaveLength(4);
   expect(

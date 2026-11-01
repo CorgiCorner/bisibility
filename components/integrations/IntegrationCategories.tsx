@@ -1,6 +1,7 @@
 "use client";
 
 import { ProviderUiProvider } from "@/components/provider-management/ProviderUiProvider";
+import { groupIntegrationCategories } from "@/lib/integrations/category-groups";
 import type { IntegrationCategoryData } from "@/lib/integrations/types";
 import { useState } from "react";
 import { IntegrationCategory, type IntegrationCategoryProps } from "./IntegrationCategory";
@@ -11,18 +12,16 @@ type Props = Omit<IntegrationCategoryProps, "category" | "projectId" | "cardOrde
 };
 
 export function IntegrationCategories({ categories, projectId, ...props }: Readonly<Props>) {
+  const grouped = groupIntegrationCategories(categories);
   const [orders] = useState(() =>
     Object.fromEntries(
-      categories.map((category) => [
-        category.id,
-        category.providers.map((provider) => provider.id),
-      ]),
+      grouped.map((category) => [category.id, category.providers.map((provider) => provider.id)]),
     ),
   );
   return (
     <ProviderUiProvider projectId={projectId}>
       <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
-        {categories.map((category) => (
+        {grouped.map((category) => (
           <IntegrationCategory
             {...props}
             cardOrder={orders[category.id]}
