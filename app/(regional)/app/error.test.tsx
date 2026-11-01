@@ -2,10 +2,15 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import AppErrorBoundary from "@/app/(regional)/app/error";
 import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { recoverDeploymentSkew } from "@/lib/observability/deployment-skew";
+import { reportAppError } from "@/lib/observability/error-reporting";
 import { setNavigationState } from "@/tests/next-navigation";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/observability/deployment-skew", () => ({
+  recoverDeploymentSkew: vi.fn(() => false),
+}));
 vi.mock("@/lib/observability/error-reporting", () => ({ reportAppError: vi.fn() }));
 
 const productionRoots = ["app", "components", "lib"] as const;
@@ -56,5 +61,28 @@ describe("app error typography", () => {
     expect(existsSync("components/ui/MonoText.test.tsx")).toBe(false);
     expect(existsSync("components/ui/MonoText.stories.tsx")).toBe(false);
     expect(matches).toEqual([]);
+  });
+});
+
+describe("route error recovery", () => {
+  it("does not report a recovered error", () => {
+    vi.mocked(recoverDeploymentSkew).mockReturnValueOnce(true);
+    vi.mocked(reportAppError).mockClear();
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<AppErrorBoundary error={new Error("skew")} reset={vi.fn()} />);
+    expect(reportAppError).not.toHaveBeenCalled();
+    expect(log).not.toHaveBeenCalled();
+    expect(screen.queryByText("View error")).not.toBeInTheDocument();
+    log.mockRestore();
+  });
+
+  it("reports and renders an ordinary route error", () => {
+    vi.mocked(reportAppError).mockClear();
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("ordinary");
+    render(<AppErrorBoundary error={error} reset={vi.fn()} />);
+    expect(reportAppError).toHaveBeenCalledWith(error, expect.any(Object));
+    expect(screen.getByText("View error")).toBeInTheDocument();
+    log.mockRestore();
   });
 });

@@ -123,7 +123,7 @@
         "marketInactive": "Rynek nieaktywny",
         "marketInactiveDescription": "Rynek tego słowa kluczowego jest wstrzymany, więc sprawdzenie zatrzymano, zanim wygenerowało koszt.",
         "noProvider": "Brak działającego dostawcy",
-        "noProviderDescription": "Sprawdź wybrane źródło danych w Integracjach, aby uruchomić ten przebieg.",
+        "noProviderDescription": "Sprawdź wybrane źródło danych w sekcji Dostawcy, aby uruchomić ten przebieg.",
         "providerUnavailable": "Dostawca niedostępny",
         "providerUnavailableDescription": "Dostawca jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
         "targetPaused": "Cel wstrzymany – ruszy, gdy go wznowisz",
@@ -192,7 +192,7 @@
           "detail": "Dla tego sprawdzenia nie było dostępnego dostawcy.",
           "label": "Brak dostawcy"
         },
-        "openIntegrations": "Otwórz integracje",
+        "openIntegrations": "Otwórz dostawców",
         "primary_provider_not_dataforseo": {
           "detail": "Zaplanowane sprawdzenia w kolejce działają tylko wtedy, gdy DataForSEO jest dostawcą głównym.",
           "label": "Sprawdzenia w kolejce wymagają DataForSEO"
@@ -200,6 +200,10 @@
         "project_ineligible": {
           "detail": "Ten projekt nie kwalifikuje się do zaplanowanych sprawdzeń pozycji.",
           "label": "Projekt nie może uruchamiać sprawdzeń"
+        },
+        "provider_account_blocked": {
+          "detail": "To sprawdzenie nie zostało wysłane, ponieważ konto dostawcy wymaga uwagi.",
+          "label": "Konto dostawcy wymaga uwagi"
         },
         "project_read_only": {
           "detail": "Ten projekt jest tylko do odczytu, więc sprawdzenie zostało odłożone.",
@@ -332,7 +336,26 @@
       "operations": "Operacje",
       "usageNotRecorded": "Brak danych",
       "estimatedOperations": "szacunkowo {count}",
-      "skippedOrBlocked": "Pominięte lub zablokowane"
+      "skippedOrBlocked": "Pominięte lub zablokowane",
+      "retryReview": {
+        "title": "Sprawdź odroczone zadania",
+        "cancel": "Anuluj",
+        "confirm": "Ponów te sprawdzenia",
+        "warning": "Każde ponowienie jest nową płatną próbą i zależy od aktualnego stanu konta dostawcy. Zablokowane połączenie może ponownie odroczyć zadanie.",
+        "targets": "{count, plural, one {# sprawdzenie do ponowienia} other {# sprawdzeń do ponowienia}}",
+        "loadFailed": "Nie udało się wczytać sprawdzeń. Zamknij okno i spróbuj ponownie.",
+        "desktop": "Komputer",
+        "mobile": "Telefon"
+      },
+      "sealedAccountPaused": "Zatwierdzony dostawca jest wstrzymany. Rozpocznij nowe zadanie, aby przed kolejną płatną próbą zobaczyć nowy podgląd kosztów.",
+      "startNewRun": "Rozpocznij nowe zadanie",
+      "accountBlock": {
+        "provider_billing": "{provider}: nie wysłano z powodu płatności lub limitu.",
+        "provider_auth": "{provider}: nie wysłano, ponieważ dane dostępu zostały odrzucone.",
+        "provider_account_restricted": "{provider}: nie wysłano z powodu ograniczenia dostępu.",
+        "not_verified": "{provider}: nie wysłano, ponieważ konto nie zostało zweryfikowane.",
+        "accounting_review": "{provider}: nie wysłano w oczekiwaniu na rozliczenie."
+      }
     }
   }
 }

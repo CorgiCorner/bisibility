@@ -114,7 +114,13 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
   const noSearchResults =
     data.status_code === DATA_FOR_SEO_OK_STATUS &&
     task?.status_code === DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS;
-  if (!task || (!envelopeOk(data) && !noSearchResults)) {
+  const partial =
+    data.status_code === DATA_FOR_SEO_OK_STATUS &&
+    data.tasks?.length === 1 &&
+    task?.status_code === 40106 &&
+    Array.isArray(task.result) &&
+    task.result.some((result) => Array.isArray(result.items) && result.items.length > 0);
+  if (!task || (!envelopeOk(data) && !noSearchResults && !partial)) {
     const billingStatusCode = dataForSeoBillingStatusCode(data);
     const rawMessage =
       !task && data.status_code === DATA_FOR_SEO_OK_STATUS
@@ -153,7 +159,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       completeness:
         stopOnMatch && decision.outcome === "match"
           ? "truncated_by_stop_on_match"
-          : stopOnMatch
+          : stopOnMatch || partial
             ? "unknown"
             : "complete",
       configuredScope: {

@@ -1,5 +1,6 @@
 import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers";
 import { onRecoveryEnqueued } from "@/lib/provider-evidence/incidents/enqueue";
+import { closedUnknownOperations } from "@/lib/provider-usage/uncertainty-closeout-state";
 
 export { onRecoveryEnqueued } from "@/lib/provider-evidence/incidents/enqueue";
 
@@ -28,8 +29,13 @@ export async function enqueueWaitingRecovery(
     where: { ...providerRecoveryScope(), rankCheckId },
   });
   const attempts = await recoveryAttempts(tx, rankCheckId);
+  const closed = await closedUnknownOperations(
+    tx,
+    candidates.map((c) => c.operationPk),
+  );
   let count = 0;
   for (const candidate of candidates) {
+    if (closed.has(candidate.operationPk)) continue;
     const attempt = attempts.find(
       (a) =>
         a.operation.operation_pk === candidate.operationPk &&
@@ -84,7 +90,10 @@ export async function enqueueWaitingRecovery(
     });
     await tx.providerOperationEvidence.upsert({
       where: { operationPk: candidate.operationPk },
-      create: { operationPk: candidate.operationPk, recoveryState: "scheduled" },
+      create: {
+        operationPk: candidate.operationPk,
+        recoveryState: "scheduled",
+      },
       update: { recoveryState: "scheduled" },
     });
     const intent = await tx.providerRecoveryIntent.findUniqueOrThrow({

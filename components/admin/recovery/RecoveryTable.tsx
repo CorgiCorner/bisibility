@@ -144,12 +144,15 @@ export function RecoveryTable({
             value && (
               <span
                 className={
-                  value[axis] === "unknown" || value[axis] === "possibly_sent"
+                  !value.closedUnknown &&
+                  (value[axis] === "unknown" || value[axis] === "possibly_sent")
                     ? "text-warning"
                     : "text-fg"
                 }
               >
-                {t(`states.${value[axis]}`)}
+                {axis === "accounting" && value.closedUnknown
+                  ? t("closedUnknown")
+                  : t(`states.${value[axis]}`)}
               </span>
             )
           );
@@ -175,7 +178,10 @@ export function RecoveryTable({
         meta: { sortable: true },
         cell: ({ row }) => {
           const value = row.original.value;
-          return value && t(`triageStates.${value.triage.status}`);
+          return (
+            value &&
+            (value.closedUnknown ? t("closedUnknown") : t(`triageStates.${value.triage.status}`))
+          );
         },
       },
       {

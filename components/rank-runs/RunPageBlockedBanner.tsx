@@ -11,10 +11,10 @@ function actionHref(
   action: "connection_settings" | "edit_budget" | "worker_status" | "review_usage" | null,
   projectRef: ProjectRef,
 ) {
-  if (action === "connection_settings") return appPath(projectRef, "integrations");
-  if (action === "edit_budget") return appPath(projectRef, "settings", "usage?budget=edit");
+  if (action === "connection_settings") return appPath(projectRef, "providers");
+  if (action === "edit_budget") return `${appPath(projectRef, "providers")}?tab=usage&budget=edit`;
   if (action === "worker_status") return appRootPath("admin");
-  if (action === "review_usage") return `${appPath(projectRef, "integrations")}?tab=usage`;
+  if (action === "review_usage") return `${appPath(projectRef, "providers")}?tab=usage`;
   return null;
 }
 

@@ -3,6 +3,7 @@
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button } from "@/components/ui/Button";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { recoverDeploymentSkew } from "@/lib/observability/deployment-skew";
 import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
 import { retryViewError } from "@/lib/ui/retry-view-error";
@@ -25,10 +26,33 @@ type AppErrorBoundaryProps = {
  * synchronization rather than derived state.
  */
 function useReportViewError(error: Error & { digest?: string }, pathname: string) {
+  const recoveringError = useRef<Error | null>(null);
+  const [recovering, setRecovering] = useState(false);
   useEffect(() => {
+    if (recoveringError.current === error) return;
+    try {
+      if (
+        recoverDeploymentSkew({
+          stack: error.stack,
+          scriptUrls: Array.from(document.scripts, (script) => script.src),
+          deploymentId: process.env.NEXT_DEPLOYMENT_ID || undefined,
+          storage: window.sessionStorage,
+          reload: () => window.location.reload(),
+          url: window.location.href,
+          now: Date.now(),
+        })
+      ) {
+        recoveringError.current = error;
+        setRecovering(true);
+        return;
+      }
+    } catch {
+      // Storage access can itself throw; retain the ordinary error path.
+    }
     console.error("[app-shell] route error", error);
     reportAppError(error, { digest: error.digest, pathname });
   }, [error, pathname]);
+  return recovering;
 }
 
 function formatOccurredAt(date: Date) {
@@ -86,7 +110,9 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
   // on the readout in AppErrorDiagnostics.
   const [occurredAt] = useState(() => formatOccurredAt(new Date()));
 
-  useReportViewError(error, viewPath);
+  const recovering = useReportViewError(error, viewPath);
+
+  if (recovering) return null;
 
   return (
     <div className="py-8">

@@ -240,6 +240,127 @@ describe("database heartbeat aggregation", () => {
     });
   });
 
+  it("does not escalate history of disabled, disconnected or deleted connections", async () => {
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.opsFindMany.mockResolvedValue([]);
+    mocks.opsCount.mockResolvedValue(0);
+    mocks.providerFindMany.mockResolvedValue([
+      {
+        id: "connection_new",
+        project: { domain: "docs.example", id: "project_1", name: "Docs" },
+        provider: "gsc",
+        status: "connected",
+      },
+    ]);
+    const failedRun = (connectionId: string, projectId: string) => ({
+      connectionId,
+      errorClass: "provider_4xx",
+      finishedAt: new Date("2026-07-16T11:00:00.000Z"),
+      meta: { googleReason: "unknown", httpStatus: 400 },
+      projectId,
+      provider: "gsc",
+      startedAt: new Date("2026-07-16T11:00:00.000Z"),
+      status: "failed",
+    });
+    mocks.operationalFindMany.mockResolvedValue([
+      failedRun("connection_deleted", "project_1"),
+      failedRun("connection_disabled", "project_2"),
+    ]);
+
+    const database = await collectDatabaseHeartbeat(now);
+
+    expect(database.traffic).toEqual([
+      expect.objectContaining({ connectionId: "connection_new", status: "not_run" }),
+      expect.objectContaining({ connectionId: "connection_disabled", status: "inactive" }),
+    ]);
+    expect(database.traffic.some((row) => row.failureEscalated)).toBe(false);
+    const event = buildHeartbeatEvent({
+      database,
+      now,
+      schedulesEnabled: { "maintenance-traffic-sync": true },
+      suppressed: {},
+      sweep: { attempted: 0, delivered: 0 },
+      temporal: {
+        inspectionErrors: 0,
+        issueSchedules: [],
+        missedCatchupTotal: 0,
+        nextActionAt: null,
+        recentActions: 1,
+        scheduleIssues: [],
+        schedules: 1,
+        skippedOverlapTotal: 0,
+      },
+      temporalCounterState: {
+        status: "available",
+        totals: { missedCatchup: 0, skippedOverlap: 0 },
+      },
+      workerStartedAt: now,
+    });
+    expect(event.fields?.Traffic).toContain(
+      "GSC ok 0 · needs reauth 0 · stale 0 · failed 0 · not run 1",
+    );
+    expect(event.fields?.Traffic).not.toContain("provider_4xx");
+    expect(event.severity).toBe("warning");
+  });
+
+  it("counts a connection stopped by a permission failure under needs reauth", async () => {
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.providerFindMany.mockResolvedValue([
+      {
+        id: "connection_1",
+        project: { domain: "docs.example", id: "project_1", name: "Docs" },
+        provider: "gsc",
+        status: "needs_reauth",
+      },
+    ]);
+    mocks.operationalFindMany.mockResolvedValue([
+      {
+        connectionId: "connection_1",
+        errorClass: "config_invalid",
+        finishedAt: new Date("2026-07-16T11:00:00.000Z"),
+        meta: { googleReason: "permission", httpStatus: 403 },
+        projectId: "project_1",
+        provider: "gsc",
+        startedAt: new Date("2026-07-16T11:00:00.000Z"),
+        status: "failed",
+      },
+    ]);
+
+    const { traffic } = await collectDatabaseHeartbeat(now);
+
+    expect(traffic).toEqual([
+      expect.objectContaining({ connectionId: "connection_1", status: "needs_reauth" }),
+    ]);
+    expect(traffic[0]).not.toHaveProperty("failureEscalated");
+  });
+
+  it("keeps escalating a provider_4xx failure on an enabled connection", async () => {
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.operationalFindMany.mockResolvedValue([
+      {
+        connectionId: "connection_1",
+        errorClass: "provider_4xx",
+        finishedAt: new Date("2026-07-16T11:00:00.000Z"),
+        meta: { httpStatus: 400 },
+        projectId: "project_1",
+        provider: "gsc",
+        startedAt: new Date("2026-07-16T11:00:00.000Z"),
+        status: "failed",
+      },
+    ]);
+
+    const { traffic } = await collectDatabaseHeartbeat(now);
+
+    expect(traffic).toEqual([
+      expect.objectContaining({
+        connectionId: "connection_1",
+        errorClass: "provider_4xx",
+        failureEscalated: true,
+        status: "failed",
+      }),
+    ]);
+  });
+
   it("does not escalate an active provider from disabled or recovered historical failures", async () => {
     mocks.rankFindMany.mockResolvedValue([]);
     mocks.providerFindMany.mockResolvedValue(

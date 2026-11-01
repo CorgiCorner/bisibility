@@ -66,6 +66,14 @@ describe("serpApiUsageReceipt", () => {
 });
 
 describe("dataForSeoUsageReceipt", () => {
+  it("keeps a partial task marked failed for accounting with its reported cost", () => {
+    expect(
+      dataForSeoUsageReceipt(
+        { status_code: 20000, tasks: [{ id: "task-1", status_code: 40106, cost: 0.0012 }] },
+        { ok: true },
+      ),
+    ).toMatchObject({ failed: true, costCents: 0.12, quantity: 1, providerRequestId: "task-1" });
+  });
   it("keeps a fractional reported cost in cents", () => {
     const receipt = dataForSeoUsageReceipt(
       {

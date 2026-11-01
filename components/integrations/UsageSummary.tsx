@@ -81,7 +81,7 @@ export function UsageSummary({
       {!data.summary.funding.length && (
         <UsageSummaryCards
           hideMeasured
-          view={data.summary}
+          view={summary}
           labels={p.summary}
           measurementLabels={p.measurement}
           formatFigure={p.figure}

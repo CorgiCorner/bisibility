@@ -1,6 +1,7 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { describe, expect, it } from "vitest";
 import { fallbackAttempt } from "./fallback-attempt";
 import { RankCheckRunnerError } from "./runner-error";
@@ -68,3 +69,14 @@ it("retains positive measured charges through a runner error wrapper", () => {
   expect(wrapped.chargedCents).toBe(0.3);
   expect(fallbackAttempt(wrapped, "dataforseo")).toBeNull();
 });
+
+it.each(["account_blocked", "accounting_review"] as const)(
+  "allows fallback for a pre-send %s refusal",
+  (reason) => {
+    const error = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+    expect(fallbackAttempt(error, "dataforseo")).toMatchObject({
+      attempt: { provider: "dataforseo", reason: "account_blocked", recoveryReason: reason },
+      rateLimited: false,
+    });
+  },
+);

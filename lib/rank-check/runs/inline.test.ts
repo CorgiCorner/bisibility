@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
     undefined as unknown as typeof import("@/lib/temporal/rank-check-activities").runRankCheckActivity,
   createRunning: vi.fn(),
   fail: vi.fn(),
+  discard: vi.fn(),
   paidProvider: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
@@ -43,6 +44,7 @@ vi.mock("@/lib/temporal/rank-check-activities", async (importOriginal) => {
     ...actual,
     createRunningRankCheckActivity: mocks.createRunning,
     failRankCheckActivity: mocks.fail,
+    discardRankCheckActivity: mocks.discard,
     runRankCheckActivity: mocks.run,
   };
 });

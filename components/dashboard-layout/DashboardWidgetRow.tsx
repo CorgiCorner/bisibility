@@ -8,7 +8,6 @@ import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { DotsSixVerticalIcon } from "@phosphor-icons/react/dist/csr/DotsSixVertical";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { ButtonHTMLAttributes, Ref } from "react";
 import { useId } from "react";
 import { DashboardViewHelp } from "./DashboardViewHelp";
@@ -103,16 +102,9 @@ export function DashboardWidgetRow({
           >
             {title}
           </h3>
-          {reason ? (
-            <span
-              role="img"
-              aria-label={t("widgetUnavailable")}
-              className="inline-flex shrink-0 text-fg-muted"
-            >
-              <WarningCircleIcon weight="regular" aria-hidden size={16} />
-            </span>
-          ) : null}
+
           <DashboardViewHelp
+            warning={Boolean(reason)}
             label={t("widgetHelp", { title })}
             description={
               reason
@@ -126,16 +118,17 @@ export function DashboardWidgetRow({
         {definition.spans.length > 1 ? (
           <MenuSelect
             ariaLabel={t("span", { title })}
+            compact
             disabled={saving}
             value={selection.span}
-            triggerClassName="min-h-11 min-w-24 xl:min-h-[34px]"
+            triggerClassName="min-h-11 min-w-20 px-2 xl:min-h-7"
             options={definition.spans.map((span) => ({ value: span, label: t(`spans.${span}`) }))}
             onChange={(span) => {
               if (span === "standard" || span === "wide") onSpan(span);
             }}
           />
         ) : (
-          <span className="min-w-24 px-2 text-[12.5px] text-fg-muted">
+          <span className="min-w-20 px-2 text-xs text-fg-muted">
             {t(`spans.${selection.span}`)}
           </span>
         )}

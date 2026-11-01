@@ -31,7 +31,8 @@
         "aria": "Wprowadzenie do linków zwrotnych",
         "bullets": {
           "price": "Cena przed każdym uruchomieniem.",
-          "cache": "Zrzuty przechowywane w pamięci podręcznej przez 24 godziny – ponowne otwieranie i filtrowanie jest bezpłatne",
+          "cache": "Zrzuty przechowywane w pamięci podręcznej przez {duration} - ponowne otwieranie i filtrowanie jest bezpłatne",
+          "cacheLoading": "Zapisane zrzuty można otwierać i filtrować bezpłatnie, dopóki nie wygasną.",
           "diff": "Każde odświeżenie porównuje dane z poprzednim zrzutem: nowe i utracone linki są oznaczane"
         },
         "reconnect": "Połącz ponownie DataForSEO",
@@ -194,7 +195,7 @@
         "history": "Historia z 12 miesięcy",
         "linkRows": "Wiersze linków ({count, number})",
         "loadMore": "Doczytanie kolejnych wierszy",
-        "description": "Opłatę pobiera DataForSEO z Twojego konta. Zrzut pozostaje w pamięci podręcznej przez 24 godziny – ponowne otwarcie i przełączanie kart w jego obrębie jest bezpłatne.",
+        "description": "Opłatę pobiera DataForSEO z Twojego konta. Ponowne otwarcie i przełączanie kart w obrębie zapisanego zrzutu jest bezpłatne, dopóki nie wygaśnie.",
         "unavailable": "Cena niedostępna",
         "perHundred": "{price} / 100"
       },

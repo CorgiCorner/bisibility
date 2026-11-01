@@ -19,8 +19,8 @@
         "noSource": "Search Console のソースが接続されていません。",
         "noKeywordsDescription": "キーワードを追加して、Google での順位追跡を始めましょう。",
         "noKeywordsTitle": "キーワードはまだありません",
-        "openIntegrations": "連携を開く",
-        "providerMissing": "今すぐキーワードを追加できます。チェックを実行する準備ができたら、<providerLink>連携</providerLink>でデータソースを選択してください。",
+        "openIntegrations": "プロバイダーを開く",
+        "providerMissing": "今すぐキーワードを追加できます。チェックを実行する準備ができたら、<providerLink>プロバイダー</providerLink>でデータソースを選択してください。",
         "reconnectGoogle": "Google アカウントを再接続",
         "searchConsoleAuthorizationExpired": "Google の認可の有効期限が切れました。",
         "startMarketDescription": "市場は、順位を追跡する国、ロケーション、言語の組み合わせです。最初のキーワードと一緒に追加してください。",
@@ -105,6 +105,7 @@
       "completed": "完了",
       "connect": "接続",
       "cost": "費用",
+      "checkDeferred": "延期",
       "credentialsUnavailable": "認証情報が利用不可",
       "credentialsUnavailableLower": "認証情報が利用不可",
       "daysAgo": "{count, number}日前",
@@ -186,6 +187,8 @@
       "provider": "プロバイダー",
       "providerChain": "プロバイダーチェーン",
       "providerChainExhausted": "プロバイダーチェーンを使い切った後に{count, number}件が失敗しました。",
+      "providerConnectionPaused": "プロバイダー接続を一時停止",
+      "providerConnectionPausedLower": "プロバイダー接続を一時停止",
       "providerError": "プロバイダーエラー",
       "providerRateLimiting": "{provider} はレート制限中です。",
       "providers": "{count, number}{count, plural, other {件のプロバイダー}}",
@@ -280,7 +283,10 @@
         "customRangeCaption": "選択期間",
         "customRangeWindow": "選択した期間内"
       },
-      "partialNoMatch": "不完全: {depth, number} 位まで確認済み"
+      "partialNoMatch": "不完全: {depth, number} 位まで確認済み",
+      "monitoringTitle": "プロバイダー接続の確認が必要です",
+      "monitoringItem": "{provider}: 接続は一時停止中です。過去30日間にアカウントにより延期されたチェックは {count, plural, one {# 件} other {# 件}} です。",
+      "monitoringAction": "接続を表示"
     },
     "deletion": {
       "selection": "{keywords, plural, other {キーワード # 件}} · {targets, plural, other {市場/デバイスの組み合わせ # 件}}",

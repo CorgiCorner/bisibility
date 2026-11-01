@@ -38,7 +38,7 @@
       },
       "connect_source": {
         "active": "Search Console adds free traffic data. Choose a ranking data source for live position checks.",
-        "done": "Your ranking data source is set up. Review its source and usage settings in Integrations."
+        "done": "Your ranking data source is set up. Review its source and usage settings in Providers."
       },
       "first_check": {
         "active": "Run the first check to collect positions for the tracked keywords. Check settings live in the project's tracking settings.",

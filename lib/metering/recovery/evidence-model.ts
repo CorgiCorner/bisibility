@@ -1,5 +1,6 @@
 import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
 export type RecoveryEvidenceView = {
+  closedUnknown?: boolean;
   projection: EvidenceProjection | null;
   incident: { href: string; openedAt: string; ageMinutes: number } | null;
 };

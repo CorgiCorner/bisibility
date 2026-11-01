@@ -4,6 +4,7 @@ import { ApiNotFoundError } from "./errors";
 
 const mocks = vi.hoisted(() => ({
   evidence: vi.fn(async () => new Map()),
+  reasons: vi.fn(async () => new Map()),
   authenticate: vi.fn(),
   readRun: vi.fn(),
   readRuns: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   project: vi.fn(),
   keyword: vi.fn(),
 }));
+vi.mock("@/lib/queries/rank-check-run-reasons", () => ({ rankRunDeferralReasons: mocks.reasons }));
 vi.mock("@/lib/provider-evidence/projection/read-runs", () => ({
   readRunEvidence: mocks.evidence,
 }));
@@ -168,4 +170,17 @@ it("renews bearer authentication on each read and never gives a viewer launch ri
   expect(mocks.readRun).toHaveBeenCalledTimes(1);
   expect((await request("keywords/kw_aaaaaaaaaaaaaaaaaaaaaaaa/checks", "POST")).status).toBe(403);
   expect(mocks.keyword).not.toHaveBeenCalled();
+});
+
+it("includes distinct typed deferral reasons in public run reads", async () => {
+  mocks.readRun.mockResolvedValue(run("completed", "deferred"));
+  mocks.reasons.mockResolvedValueOnce(
+    new Map([[runRef, ["provider_account_blocked", "usage_unconfirmed"]]]),
+  );
+  const response = await request(`projects/${projectRef}/rank-check-runs/${runRef}`);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({
+    deferral_reasons: ["provider_account_blocked", "usage_unconfirmed"],
+  });
+  expect(mocks.reasons).toHaveBeenCalledWith(project.id, [runRef]);
 });

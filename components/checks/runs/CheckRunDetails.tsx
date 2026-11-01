@@ -51,7 +51,7 @@ function AttemptTone({
   if (attempt.outcome === "ok" && !failedRun) {
     return <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />;
   }
-  if (attempt.outcome === "rate_limited") {
+  if (attempt.outcome === "rate_limited" || attempt.outcome === "account_blocked") {
     return <WarningCircle aria-hidden className="text-yellow-text" size={15} weight="regular" />;
   }
   return <XCircle aria-hidden className="text-red-text" size={15} weight="regular" />;
@@ -69,6 +69,7 @@ function fallbackOutcome(run: CheckRunRow, index: number, t: CheckRunsTranslatio
   }
   if (!primary) return null;
   const reasons: Record<Exclude<CheckAttempt["outcome"], "ok">, string> = {
+    account_blocked: t("providerConnectionPausedLower"),
     credentials_unavailable: t("credentialsUnavailableLower"),
     provider_failed: t("failedLower"),
     rate_limited: t("rateLimitedLower"),

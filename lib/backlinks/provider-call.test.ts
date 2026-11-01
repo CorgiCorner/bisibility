@@ -4,7 +4,10 @@ import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
@@ -98,6 +101,16 @@ it.each([
 
 it.each([
   [new ProviderCallError("unknown charge"), "provider_transient", null],
+  [
+    new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" }),
+    "provider_usage_unconfirmed",
+    "admission",
+  ],
+  [
+    new ProviderRecoveryAdmissionError("accounting_review", { kind: "account" }),
+    "provider_usage_unconfirmed",
+    "admission",
+  ],
   [
     new ProviderUsagePersistenceError({ phase: "response_body", attemptId: "private" }),
     "provider_usage_unconfirmed",

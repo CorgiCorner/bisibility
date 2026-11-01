@@ -1,6 +1,4 @@
 import { track } from "@/lib/analytics/client";
-import { pendingConsent } from "@/lib/analytics/consent";
-import { readBrowserConsent } from "@/lib/analytics/consent-client";
 import {
   type NavigationClickSource,
   productModuleForPath,
@@ -10,7 +8,7 @@ export function trackModuleNavigation(href: string, source: NavigationClickSourc
   if (typeof document === "undefined") return;
   try {
     const module = productModuleForPath(href);
-    if (!module || !readBrowserConsent(pendingConsent()).analytics) return;
+    if (!module) return;
     track("module_navigation_clicked", { module, source });
   } catch {
     // Optional measurement must not interrupt navigation.
@@ -23,7 +21,6 @@ export function trackKeywordAction(
 ): void {
   if (typeof document === "undefined") return;
   try {
-    if (!readBrowserConsent(pendingConsent()).analytics) return;
     track("product_action_clicked", { module: "rank-tracker", action, source });
   } catch {
     // Optional measurement must not interrupt the action.

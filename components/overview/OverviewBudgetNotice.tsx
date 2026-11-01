@@ -23,7 +23,7 @@ export function OverviewBudgetNotice({
     <AlertBanner
       title={t(`${kind}Title`)}
       detail={t(`${kind}Detail`)}
-      action={{ href: `${appPath(projectRef, "integrations")}?tab=usage`, label: t("reviewUsage") }}
+      action={{ href: `${appPath(projectRef, "providers")}?tab=usage`, label: t("reviewUsage") }}
       tint="yellow"
     />
   );

@@ -6,7 +6,7 @@
     "pageLimitError": "Wybierz od 1 do 15 stron.",
     "run": "Uruchom audyt",
     "running": "Skanowanie witryny",
-    "cost": "Do 15 sekund · Bez kredytów dostawcy · Wyniki w pamięci podręcznej przez 5 minut",
+    "cost": "Do 15 sekund · Bez kredytów dostawcy · Wyniki wykorzystywane ponownie zgodnie z ustawieniami pamięci podręcznej projektu",
     "readOnly": "Twoja rola lub tryb tylko do odczytu uniemożliwia uruchamianie audytów. Zapisane raporty są dostępne.",
     "history": "Historia audytów",
     "loadingHistory": "Ładowanie zapisanego raportu...",

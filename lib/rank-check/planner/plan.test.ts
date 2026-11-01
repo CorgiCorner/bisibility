@@ -497,4 +497,44 @@ describe("rank-check run planner", () => {
       vi.unstubAllEnvs();
     }
   });
+  it("blocks a scheduled run visibly while the queued route is disabled", async () => {
+    mocks.queuedRoute.mockResolvedValue({ mode: "legacy", reason: "queued_dataforseo_disabled" });
+    const result = await scheduleAdmission(
+      {
+        keywords: [
+          { id: "a", text: "plain" },
+          { id: "b", text: "other" },
+        ],
+        project: { defaults: { serpDepth: 10 } },
+        projectId: "project_1",
+        providerPolicy: "project",
+        serpDepth: null,
+      },
+      new Date(),
+    );
+    expect(result).toMatchObject({
+      blockedReason: "queued_dataforseo_disabled",
+      connection: null,
+      estimatedCostCents: 0,
+      itemCosts: [null, null],
+    });
+    expect(mocks.loadChain).not.toHaveBeenCalled();
+    expect(mocks.assertBudget).not.toHaveBeenCalled();
+  });
+
+  it("keeps cutover admission on the per-keyword route", async () => {
+    mocks.queuedRoute.mockResolvedValue({ mode: "legacy", reason: "dispatcher_disabled" });
+    const result = await scheduleAdmission(
+      {
+        keywords: [{ id: "a", text: "plain" }],
+        project: { defaults: { serpDepth: 10 } },
+        projectId: "project_1",
+        providerPolicy: "project",
+        serpDepth: null,
+      },
+      new Date(),
+    );
+    expect(result.blockedReason).toBeNull();
+    expect(mocks.loadChain).toHaveBeenCalled();
+  });
 });

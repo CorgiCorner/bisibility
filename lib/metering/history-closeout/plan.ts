@@ -3,12 +3,25 @@ import { decimalQuantity } from "@/lib/metering/mapping";
 import { projectAdmissionMeasurements } from "@/lib/metering/paid-measurements";
 import { canonical, decode, hash } from "@/lib/metering/store/codec";
 import type { CorrectionInput, Receipt } from "@usagekit/core";
-import { type CloseoutManifest, closeoutPolicy } from "./manifest";
+import { assertLiveConnection, assertLiveOperation } from "./live-connection";
+import {
+  type CloseoutManifest,
+  closeoutPolicy,
+  liveConnectionCloseoutPolicy,
+  retiredSettingsCloseoutPolicy,
+} from "./manifest";
+import { assertRetiredSettings } from "./retired-settings";
 import type { CloseoutSnapshot } from "./snapshot";
 
 export const closeoutManifestHash = (manifest: CloseoutManifest) => hash(canonical(manifest));
 export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManifest, now: Date) {
   const manifestHash = closeoutManifestHash(manifest);
+  // The live policy replaces only v1's retired-connection rule (and its retained-identity facet).
+  const live = manifest.policy === liveConnectionCloseoutPolicy;
+  const retired = manifest.policy === retiredSettingsCloseoutPolicy;
+  const retiredFacts = retired
+    ? assertRetiredSettings(snapshot.retiredSettings, manifest, snapshot.project.id)
+    : null;
   const targetHash = hash(canonical(snapshot.identity));
   const approvalReady = Boolean(
     snapshot.actor?.isInstanceAdmin &&
@@ -35,7 +48,7 @@ export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManif
           entry.facts.binding ||
           entry.facts.evidence ||
           entry.facts.reference ||
-          entry.facts.retainedIdentity ||
+          (!live && !retired && entry.facts.retainedIdentity) ||
           entry.journal.source_hash !== historySourceHash(entry.source, entry.proofs)
         );
       })
@@ -54,8 +67,15 @@ export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManif
   if (recorded > now.getTime() || now.getTime() - recorded > 86400000)
     throw new Error("A current, nonfuture closeout timestamp is required.");
   // Schema presence intentionally excluded: a read-only preview may precede DDL rollout.
-  const { schemaAvailable: _, ...facts } = snapshot;
-  const planHash = hash(canonical({ policy: closeoutPolicy, manifest, facts }));
+  const { schemaAvailable: _, live: liveFacts, ...facts } = snapshot;
+  if (!live && liveFacts) throw new Error("Closeout policy and snapshot disagree.");
+  const connection = live
+    ? assertLiveConnection(liveFacts, manifest, snapshot.project.id)
+    : retiredFacts;
+  // v1 digests stay byte-identical; the live variant also binds connection identity and cutoff.
+  const planHash = connection
+    ? hash(canonical({ policy: manifest.policy, manifest, facts, live: connection }))
+    : hash(canonical({ policy: closeoutPolicy, manifest, facts }));
   const corrections: CorrectionInput[] = [];
   for (const [index, entry] of snapshot.entries.entries()) {
     const item = manifest.operations[index];
@@ -94,7 +114,7 @@ export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManif
       entry.facts.binding ||
       entry.facts.evidence ||
       entry.facts.reference ||
-      entry.facts.retainedIdentity ||
+      (!connection && entry.facts.retainedIdentity) ||
       entry.facts.commands !== 0n ||
       entry.proofs.length
     )
@@ -164,6 +184,7 @@ export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManif
       );
     if (recorded < Math.max(Date.parse(receipt.recordedAt), Date.parse(receipt.occurredAt)))
       throw new Error("Closeout cannot precede the original receipt.");
+    if (connection) assertLiveOperation(connection, op.createdAt, entry.facts.retainedIdentity);
     const id = hash(canonical([manifestHash, op.operationId]));
     const financial: Receipt & { metadata: Record<string, unknown> } = {
       id: `history-closeout:${id}`,
@@ -178,7 +199,7 @@ export function planCloseout(snapshot: CloseoutSnapshot, manifest: CloseoutManif
       measurements: projected.measurements,
       metadata: {
         historicalCloseout: {
-          policy: closeoutPolicy,
+          policy: manifest.policy,
           disposition: "financially_closed_identity_incomplete",
           omittedNativeDimensions: ["units"],
           providerIdentity: "unknown",

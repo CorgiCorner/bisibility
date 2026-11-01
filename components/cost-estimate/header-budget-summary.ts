@@ -12,10 +12,10 @@ import { parseProviderDecimal } from "@usagekit/views";
 const rank = { ok: 0, warning: 1, exceeded: 2 };
 
 /** The header summarizes project spending; per-provider controls remain in Usage. */
-export function headerDetailRows(rows: readonly BudgetRow[]) {
+export function headerDetailRows<Row extends BudgetRow>(rows: readonly Row[]) {
   const visible = rows.filter((row) => !row.redacted && row.unit !== "paid_attempts");
   const project = visible.filter((row) => row.kind === "group");
-  const selected: BudgetRow[] = [];
+  const selected: Row[] = [];
   for (const row of project.length ? project : visible) {
     const duplicate = selected.findIndex(
       (prior) =>

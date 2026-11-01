@@ -6,7 +6,7 @@ import { GeneralSettingsRouteLoading } from "@/components/settings/general/Gener
 import { NotificationsRouteLoading } from "@/components/settings/notifications/NotificationsLoading";
 import { LegacySettingsHashRedirect } from "@/components/settings/shell/LegacySettingsHashRedirect";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { SettingsShell } from "@/components/settings/shell/SettingsShell";
+import { SettingsShell, SettingsShellFrame } from "@/components/settings/shell/SettingsShell";
 import {
   FieldWidths as FieldWidthsStory,
   Loading as LoadingStory,
@@ -36,6 +36,9 @@ import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const deployment = vi.hoisted(() => vi.fn(() => "cloud"));
+vi.mock("@/lib/deployment/deployment", () => ({ deploymentMode: deployment }));
+
 const projectRef = "prj_7Kd2Qf9m";
 
 const nonEnglishSettingsShellMessages = {
@@ -58,7 +61,7 @@ const nonEnglishSettingsShellMessages = {
       resultsLabel: "Resultados de ajustes",
       sections: {
         ...settingsShellFeatureTestMessages.projectSettingsShell.search.sections,
-        providerUsage: "Integraciones / Uso",
+        providerUsage: "Proveedores / Uso",
       },
       entries: {
         ...settingsShellFeatureTestMessages.projectSettingsShell.search.entries,
@@ -119,8 +122,22 @@ function Shell() {
 }
 
 describe("SettingsShell", () => {
+  it("shows Usage as the active cloud story section", () => {
+    render(
+      <SettingsShellFrame activeSection="usage" projectRef={projectRef} showUsage>
+        Account usage
+      </SettingsShellFrame>,
+    );
+    const nav = document.querySelector("[data-settings-subnav]");
+    if (!nav) throw new Error("Missing settings navigation");
+    expect(
+      within(nav as HTMLElement).getByRole("link", { name: "Usage", hidden: true }),
+    ).toHaveAttribute("aria-current", "page");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    deployment.mockReturnValue("cloud");
   });
 
   afterEach(() => {
@@ -173,6 +190,15 @@ describe("SettingsShell", () => {
     expect(currentLink).not.toHaveClass("bg-nav-active");
     expect(inactiveLink).toHaveClass("hover:bg-bg-sunken");
     expect(inactiveLink).not.toHaveClass("hover:bg-nav-active");
+  });
+
+  it("hides account usage from both navigation menus on self-host", async () => {
+    deployment.mockReturnValue("self-host");
+    const user = userEvent.setup();
+    render(<Shell />);
+    expect(screen.queryByRole("link", { name: "Usage" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Settings section" }));
+    expect(screen.queryByRole("menuitem", { name: "Usage" })).toBeNull();
   });
 
   it("groups settings without duplicating links and keeps the same groups in the mobile menu", async () => {
@@ -259,9 +285,9 @@ describe("SettingsShell", () => {
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute(
       "href",
-      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
+      "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage",
     );
-    expect(links[0]).toHaveTextContent("Integrations / Usage");
+    expect(links[0]).toHaveTextContent("Providers / Usage");
     expect(screen.getByRole("list", { name: "Matching settings" })).toBeInTheDocument();
   });
 
@@ -283,17 +309,14 @@ describe("SettingsShell", () => {
     await user.type(search, "presupuesto");
 
     const result = screen.getByRole("link", { name: /Uso y presupuesto de proveedores/i });
-    expect(result).toHaveAttribute(
-      "href",
-      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
-    );
-    expect(result).toHaveTextContent("Integraciones / Uso");
+    expect(result).toHaveAttribute("href", "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage");
+    expect(result).toHaveTextContent("Proveedores / Uso");
     expect(screen.getByRole("list", { name: "Resultados de ajustes" })).toBeInTheDocument();
     expect(screen.getByText("1 ajuste encontrado")).toBeVisible();
 
     await user.keyboard("{Enter}");
     expect(routerMock.push).toHaveBeenCalledWith(
-      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
+      "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage",
     );
   });
 
@@ -433,7 +456,7 @@ describe("SettingsShell", () => {
     expect(legacySettingsHashMap).toEqual({
       "#api-keys": "developers",
       "#migration": "advanced",
-      "#provider-usage": "usage",
+      "#provider-usage": "provider-usage",
       "#usage-billing": "billing",
     });
     expect(resolveLegacySettingsHash("#api-keys")).toBe("developers");
@@ -447,8 +470,8 @@ describe("SettingsShell", () => {
       render(<LegacySettingsHashRedirect projectRef={projectRef} />);
 
       expect(routerMock.replace).toHaveBeenCalledWith(
-        section === "usage"
-          ? `/app/${projectRef}/integrations?tab=usage`
+        section === "provider-usage"
+          ? `/app/${projectRef}/providers?tab=usage`
           : `/app/${projectRef}/settings/${section}`,
       );
     },

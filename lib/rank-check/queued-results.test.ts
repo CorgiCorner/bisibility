@@ -6,6 +6,7 @@ import {
 import { hostDefinitionAdapters } from "@/lib/measurement-definitions/host-adapters";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { inspectQueuedRankCheckBatch } from "./queued-inspect";
 import { persistReadyQueuedRankCheckTasks } from "./queued-results";
 import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
 
@@ -14,6 +15,8 @@ function retainedSourceFixture(projectId: string, keywordId: string) {
   source.projectId = projectId;
   source.keywordId = keywordId;
   source.target.domain = "example.com";
+  if (!source.policy.defaults) throw new Error("Synthetic defaults are required.");
+  source.policy.defaults.serpDepth = 20;
   source.target.targetUrl = null;
   if (!source.policy.config) throw new Error("Synthetic policy configuration is required.");
   source.policy.config.adapters = hostDefinitionAdapters();
@@ -192,14 +195,42 @@ const mocks = vi.hoisted(() => {
     ),
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     queuedRankCheckBatch: {
+      findUniqueOrThrow: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       findUnique: vi.fn(async () => ({ state: "submitted" })),
     },
     queuedRankCheckTask: {
       findFirst: vi.fn(async () => null),
-      findMany: vi.fn(async ({ where }: { where: { state: { in: string[] } } }) =>
-        tasks
-          .filter((task) => where.state.in.includes(task.state))
-          .map((task) => ({ id: task.id })),
+      findMany: vi.fn(
+        async (args: {
+          where: {
+            state?: string | { in: string[] };
+            updatedAt?: { lt: Date };
+            id?: { notIn: string[] };
+          };
+          take?: number;
+        }) => {
+          const state = args.where.state;
+          if (state === "submitted")
+            return tasks
+              .filter(
+                (task) =>
+                  task.state === "submitted" && !(args.where.id?.notIn ?? []).includes(task.id),
+              )
+              .slice(0, args.take)
+              .map((task) => ({
+                ...task,
+                providerTag: (task as Task & { providerTag?: string }).providerTag ?? null,
+              }));
+          if (!state)
+            return tasks.map((task) => ({
+              ...task,
+              providerTag: (task as Task & { providerTag?: string }).providerTag ?? null,
+            }));
+          return tasks
+            .filter((task) => typeof state === "object" && state.in.includes(task.state))
+            .map((task) => ({ id: task.id }));
+        },
       ),
       findUniqueOrThrow: vi.fn(async ({ where }: { where: { id: string } }) => {
         const task = tasks.find((candidate) => candidate.id === where.id);
@@ -270,6 +301,10 @@ const mocks = vi.hoisted(() => {
     },
   };
   return {
+    admission: vi.fn(),
+    recoverOwn: vi.fn(),
+    recoverHosted: vi.fn(),
+    ready: vi.fn(),
     consumeProviderLimit: vi.fn(),
     defer: vi.fn(),
     fetchResult: vi.fn(),
@@ -293,8 +328,14 @@ vi.mock("@/lib/providers/rate-limit", () => ({
   writeCooldown: mocks.writeCooldown,
 }));
 vi.mock("@/lib/providers/serp/dataforseo-queued", () => ({
+  legacyDataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
+  readyDataForSeoQueuedTasks: mocks.ready,
   dataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
   fetchDataForSeoQueuedResult: mocks.fetchResult,
+}));
+vi.mock("@/lib/providers/execution-extension", async (original) => ({
+  ...(await original<typeof import("@/lib/providers/execution-extension")>()),
+  recoverQueuedDeploymentExecution: mocks.recoverHosted,
 }));
 vi.mock("./queued-lifecycle", () => ({
   deferQueuedRankCheckBatch: mocks.defer,
@@ -322,6 +363,18 @@ describe("queued result persistence", () => {
       mocks.makeTask("success", "persisting", null),
       mocks.makeTask("failure", "provider_failed", "one task was rejected"),
     );
+    mocks.admission.mockResolvedValue(false);
+    mocks.recoverHosted.mockResolvedValue(null);
+    mocks.ready.mockResolvedValue([]);
+    mocks.prisma.queuedRankCheckBatch.findUniqueOrThrow.mockImplementation(async () => ({
+      connection: mocks.tasks[0].batch.connection,
+      projectId: "project_1",
+      state: "submitted",
+      tasks: mocks.tasks.map((task) => ({
+        ...task,
+        providerTag: (task as typeof task & { providerTag?: string }).providerTag ?? null,
+      })),
+    }));
     mocks.resolveCredentials.mockReturnValue({ login: "login", password: "password" });
     mocks.prisma.rankCheck.findFirst.mockResolvedValue({
       position: 8,
@@ -388,6 +441,192 @@ describe("queued result persistence", () => {
       }
       return { completed: 1, failed: 0, pending: 0, state: "deferred" };
     });
+  });
+
+  it.each(["found", "absent", "indeterminate", "empty"])(
+    "handles partial results when the domain is %s",
+    async (scenario) => {
+      mocks.tasks.splice(1);
+      const items =
+        scenario === "empty"
+          ? []
+          : Array.from({ length: 10 }, (_, index) => ({
+              type: "organic",
+              rank_group: index + 1,
+              rank_absolute: index + 1,
+              domain:
+                (scenario === "found" || scenario === "indeterminate") && index === 6
+                  ? "example.com"
+                  : "other.test",
+              url:
+                (scenario === "found" || scenario === "indeterminate") && index === 6
+                  ? "https://example.com/rank"
+                  : `https://other.test/${index}`,
+            }));
+      if (scenario === "indeterminate") items[6].rank_group = 0;
+      mocks.tasks[0].costCents = 0.24;
+      mocks.fetchResult.mockResolvedValue({
+        status_code: 20000,
+        tasks: [
+          {
+            status_code: 40106,
+            cost: 0.0012,
+            status_message: "partial",
+            data: { stop_crawl_on_match: [] },
+            result: [{ items }],
+          },
+        ],
+      });
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      if (scenario === "found" || scenario === "absent") {
+        expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+        expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
+          rankCheck: {
+            position: scenario === "found" ? 7 : null,
+            requestedDepth: 20,
+            costCents: 0.12,
+            observation: { completeness: "unknown" },
+            raw: {
+              organic_results: expect.arrayContaining([
+                expect.objectContaining({ domain: "other.test" }),
+              ]),
+            },
+          },
+          providerCostCents: 0.12,
+        });
+        expect(mocks.persistFailed).not.toHaveBeenCalled();
+      } else {
+        expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+        expect(mocks.persistFailed).toHaveBeenCalledOnce();
+        expect(mocks.persistFailed).toHaveBeenCalledWith(
+          expect.objectContaining({
+            providerCostCents: 0.12,
+            error:
+              scenario === "empty"
+                ? "partial"
+                : "DataForSEO returned partial results (10 organic items); the domain was not found in the retrieved results.",
+          }),
+        );
+      }
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.persistRankCheck.mock.calls.length + mocks.persistFailed.mock.calls.length).toBe(
+        1,
+      );
+    },
+  );
+
+  it.each(["own", "hosted"])(
+    "retrieves the incident through fallback and records actual cost once (%s)",
+    async (kind) => {
+      const task = mocks.makeTask("incident", "submitted", null, 0.24);
+      Object.assign(task, {
+        batchId: "batch_1",
+        providerTag: kind === "hosted" ? "tag;cs=hosted;" : null,
+      });
+      if (kind === "hosted") task.batch.connection.credentialSource = "hosted";
+      mocks.tasks.splice(0, mocks.tasks.length, task);
+      const recovery = {
+        credentials: { login: "test", password: "test" },
+        reconcile: vi.fn(),
+        bindReadyTask: vi.fn(),
+        assertRetrieval: vi.fn(),
+        settleTask: vi.fn(async () => 0.12),
+        finish: vi.fn(),
+      };
+      mocks.recoverHosted.mockResolvedValue(kind === "hosted" ? recovery : null);
+      mocks.admission.mockResolvedValue(kind === "own");
+      const items = Array.from({ length: 10 }, (_, index) => ({
+        type: "organic",
+        rank_group: index + 1,
+        rank_absolute: index + 1,
+        domain: index === 6 ? "example.com" : "other.test",
+        url: index === 6 ? "https://example.com/rank" : `https://other.test/${index}`,
+      }));
+      mocks.fetchResult.mockResolvedValue({
+        status_code: 20000,
+        tasks: [{ id: task.providerTaskId, status_code: 40106, cost: 0.0012, result: [{ items }] }],
+      });
+      await inspectQueuedRankCheckBatch("batch_1");
+      expect(task.state).toBe("ready");
+      expect(mocks.recoverOwn).not.toHaveBeenCalled();
+      expect(recovery.settleTask).not.toHaveBeenCalled();
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.fetchResult).toHaveBeenCalledTimes(2);
+      expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+      expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
+        rankCheck: { position: 7, costCents: 0.12 },
+        providerCostCents: 0.12,
+      });
+      if (kind === "own")
+        expect(mocks.recoverOwn).toHaveBeenCalledExactlyOnceWith(
+          expect.anything(),
+          "connection_1",
+          "incident",
+          expect.objectContaining({ costCents: 0.12, failed: false }),
+        );
+      else
+        expect(recovery.settleTask).toHaveBeenCalledExactlyOnceWith(
+          "incident",
+          expect.objectContaining({ costCents: 0.12, failed: false }),
+        );
+    },
+  );
+
+  it.each(["own", "hosted"])("settles a partial domain miss once as failed (%s)", async (kind) => {
+    const task = mocks.makeTask("miss", "ready", null, 0.24);
+    Object.assign(task, {
+      batchId: "batch_1",
+      providerTag: kind === "hosted" ? "tag;cs=hosted;" : null,
+    });
+    if (kind === "hosted") task.batch.connection.credentialSource = "hosted";
+    mocks.tasks.splice(0, mocks.tasks.length, task);
+    const recovery = {
+      credentials: {},
+      assertRetrieval: vi.fn(),
+      settleTask: vi.fn(async () => 0.12),
+      knownCost: vi.fn(async () => 0.12),
+    };
+    mocks.recoverHosted.mockResolvedValue(kind === "hosted" ? recovery : null);
+    mocks.admission.mockResolvedValue(kind === "own");
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [
+        {
+          id: task.providerTaskId,
+          status_code: 40106,
+          cost: 0.0012,
+          result: [
+            {
+              items: [
+                {
+                  type: "organic",
+                  rank_group: 1,
+                  domain: "other.test",
+                  url: "https://other.test/",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+    expect(mocks.persistFailed).not.toHaveBeenCalled();
+    if (kind === "own")
+      expect(mocks.recoverOwn).toHaveBeenCalledExactlyOnceWith(
+        expect.anything(),
+        "connection_1",
+        "miss",
+        expect.objectContaining({ costCents: 0.12, failed: true }),
+      );
+    else
+      expect(recovery.settleTask).toHaveBeenCalledExactlyOnceWith(
+        "miss",
+        expect.objectContaining({ costCents: 0.12, failed: true }),
+      );
   });
 
   it.each([0, 0.725, null])(
@@ -849,6 +1088,7 @@ describe("queued result persistence", () => {
 vi.mock("@/lib/provider-usage/admission-extension", async () => ({
   ownAdmission: {
     ...(await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
-    assertRetrieval: async () => false,
+    assertRetrieval: mocks.admission,
+    recover: mocks.recoverOwn,
   },
 }));

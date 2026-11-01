@@ -8,11 +8,9 @@ import { useTranslations } from "next-intl";
 export function IntegrationsTabs({
   active,
   projectRef,
-  showCredits = true,
 }: Readonly<{
-  active: "connections" | "usage" | "byok";
+  active: "connections" | "usage";
   projectRef: string;
-  showCredits?: boolean;
 }>) {
   const router = useRouter();
   const t = useTranslations("projectIntegrations.tabs");
@@ -22,13 +20,12 @@ export function IntegrationsTabs({
         ariaLabel={t("aria")}
         onChange={(tab) =>
           router.push(
-            `${appPath(projectRef, "integrations")}${tab === "connections" ? "" : `?tab=${tab}`}`,
+            `${appPath(projectRef, "providers")}${tab === "connections" ? "" : `?tab=${tab}`}`,
           )
         }
         options={[
           { label: t("connections"), value: "connections" },
-          ...(showCredits ? [{ label: t("creditsUsage"), value: "usage" }] : []),
-          { label: t("byokUsage"), value: "byok" },
+          { label: t("usage"), value: "usage" },
         ]}
         panelId="integrations-panel"
         value={active}

@@ -36,6 +36,27 @@ describe("UnsubscribeButton", () => {
     );
   });
 
+  it("submits a project notification opt-out and shows success", async () => {
+    fetchMock.mockResolvedValue({ ok: true });
+    render(<UnsubscribeButton token="signed-token" stream="notification" />);
+    fireEvent.click(screen.getByRole("button", { name: "Unsubscribe" }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/email/unsubscribe/one-click?stream=notification&token=signed-token",
+        {
+          body: "List-Unsubscribe=One-Click",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          method: "POST",
+        },
+      ),
+    );
+    await waitFor(() =>
+      expect(routerMock.replace).toHaveBeenCalledWith(
+        "/email/unsubscribe/notifications?status=success",
+      ),
+    );
+  });
+
   it("shows a localized safe recovery message without exposing a network diagnostic", async () => {
     fetchMock.mockRejectedValue(new Error("unsubscribe transport rejected"));
     render(<UnsubscribeButton token="unsubscribe_example_token" />);

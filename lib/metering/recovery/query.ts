@@ -2,7 +2,12 @@ import { recoveryIncidentBody } from "@/lib/provider-usage/recovery-notification
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { Prisma as SQL } from "@/lib/metering/store/host-sql";
-import { finalReceiptJoin, unknownAccounting } from "@/lib/provider-usage/reconcile-state";
+import {
+  actionableUnknownAccounting,
+  finalReceiptJoin,
+  unknownAccounting,
+} from "@/lib/provider-usage/reconcile-state";
+import { closedUnknownAccounting } from "@/lib/provider-usage/uncertainty-closeout-state";
 import { resultRecoveryCutoff } from "@/lib/rank-check/recovery-result-grace";
 import { readRunRecoveryCoverage } from "@/lib/rank-check/recovery-run-coverage";
 import type { RecoveryFilters } from "./contract";
@@ -13,7 +18,8 @@ import { readUncertaintyGates } from "./uncertainty-gates";
 
 const rankReference = SQL.sql`COALESCE(c.context->>'rankCheckId',
   CASE WHEN o.input->>'operation'='rank_check' THEN o.input->>'correlationId' END)`;
-export function recoveryCasesSql(namespace: string, to: Date) {
+export const unfinishedRecoveryWork = SQL.sql`(candidate.kind='run' OR rc.status='running')`;
+export function recoveryCasesSql(namespace: string, to: Date, includeClosed = false) {
   return SQL.sql`
     SELECT 'operation:'||o.operation_id AS key,'operation' AS kind,o.operation_id AS id,
       o.operation_id,${rankReference} AS rank_check_id,NULL::text AS run_id,
@@ -23,11 +29,11 @@ export function recoveryCasesSql(namespace: string, to: Date) {
       o.input->>'fundingSource' AS funding
     FROM metering_operation o ${finalReceiptJoin}
     LEFT JOIN metering_paid_attempt_context c ON c.namespace=o.namespace AND c.operation_id=o.operation_id
-    WHERE o.namespace=${namespace} AND o.created_at<=${to} AND (
+    WHERE o.namespace=${namespace} AND o.created_at<=${to} AND (${includeClosed} OR NOT ${closedUnknownAccounting}) AND (
       ${unknownAccounting} OR EXISTS(SELECT 1 FROM provider_operation_evidence pe
         WHERE pe."operationPk"=o.operation_pk AND (pe.fulfillment IN ('partial','pending','provider_error','absent')
           OR pe."recoveryState"='operator_review' OR pe.accounting='conflict')) OR EXISTS(SELECT 1 FROM rank_checks rc WHERE rc.id=${rankReference}
-        AND rc.status IN ('running','deferred') AND rc."updatedAt"<(${new Date(to.getTime() - 15 * 60000)}::timestamptz AT TIME ZONE 'UTC'))
+        AND rc.status='running' AND rc."updatedAt"<(${new Date(to.getTime() - 15 * 60000)}::timestamptz AT TIME ZONE 'UTC'))
       OR EXISTS(SELECT 1 FROM rank_check_result_evidence re
         JOIN rank_checks rc ON rc.id=re."rankCheckId"
         WHERE re."rankCheckId"=${rankReference} AND re.namespace=${namespace} AND re."instanceId"=${recoveryInstance()} AND rc.status<>'completed' AND re."createdAt"<=${resultRecoveryCutoff(to)})
@@ -62,7 +68,7 @@ export function recoveryCasesSql(namespace: string, to: Date) {
     SELECT 'check:'||rc.id,'check',rc.id,NULL::text,rc.id,rc."runId",0,rc.status,
       rc."createdAt" AT TIME ZONE 'UTC',k."projectId",NULL::text,rc.provider,'rank_check',NULL::text
     FROM rank_checks rc JOIN keywords k ON k.id=rc."keywordId"
-    WHERE rc.status IN ('running','deferred') AND rc."updatedAt"<(${new Date(to.getTime() - 15 * 60000)}::timestamptz AT TIME ZONE 'UTC')
+    WHERE rc.status='running' AND rc."updatedAt"<(${new Date(to.getTime() - 15 * 60000)}::timestamptz AT TIME ZONE 'UTC')
       AND NOT EXISTS(SELECT 1 FROM metering_paid_attempt_context c WHERE c.context->>'rankCheckId'=rc.id)
       AND NOT EXISTS(SELECT 1 FROM metering_operation o WHERE o.input->>'operation'='rank_check' AND o.input->>'correlationId'=rc.id)
       AND NOT EXISTS(SELECT 1 FROM rank_check_result_evidence re WHERE re."rankCheckId"=rc.id)
@@ -99,18 +105,16 @@ export async function readRecoveryRecords(
     );
   if (options.filters?.provider)
     conditions.push(SQL.sql`candidate.provider=${options.filters.provider}`);
-  if (options.filters?.category === "accounting") conditions.push(unknownAccounting);
+  if (options.filters?.category === "accounting") conditions.push(actionableUnknownAccounting);
+  if (options.filters?.category === "closed_unknown") conditions.push(closedUnknownAccounting);
   if (options.filters?.category === "historical")
     conditions.push(
       SQL.sql`EXISTS(SELECT 1 FROM metering_history_import h WHERE h.namespace=${namespace} AND h.operation_id=candidate.operation_id)`,
     );
-  if (options.filters?.category === "unfinished")
-    conditions.push(
-      SQL.sql`(candidate.kind IN ('run','result') OR (rc.id IS NOT NULL AND rc.status<>'completed'))`,
-    );
+  if (options.filters?.category === "unfinished") conditions.push(unfinishedRecoveryWork);
   if (options.filters?.category === "failed") conditions.push(SQL.sql`error.current`);
   const rows = await tx.$queryRaw<RecoveryRecord[]>(SQL.sql`
-    WITH candidates AS (${recoveryCasesSql(namespace, options.to)})
+    WITH candidates AS (${recoveryCasesSql(namespace, options.to, options.filters?.category === "closed_unknown" || !!options.identity)})
     SELECT candidate.key,candidate.kind,candidate.id,${namespace}::text AS namespace,
       candidate.version,candidate.provider,candidate.feature,candidate.funding,
       candidate.project_id AS "projectId",p."publicId" AS "projectPublicId",
@@ -119,6 +123,7 @@ export async function readRecoveryRecords(
       rc.status AS "rankStatus",rc."updatedAt" AT TIME ZONE 'UTC' AS "rankUpdatedAt",
       p.id IS NOT NULL AS "projectExists",
       EXISTS(SELECT 1 FROM metering_history_import h WHERE h.namespace=${namespace} AND h.operation_id=candidate.operation_id) AS historical,
+      ${closedUnknownAccounting} AS "closedUnknown",
       COALESCE(${unknownAccounting},candidate.kind='evidence') AS "accountingUnknown",
       r.body->>'providerRequestId' AS "nativeId",c.operation_id IS NOT NULL AS binding,
       c.fenced_at IS NOT NULL AS fenced,candidate.state,o.lease_expires_at AS "leaseExpiresAt",

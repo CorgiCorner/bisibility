@@ -131,7 +131,13 @@ describe("queued alert digest delivery", () => {
       deliverAlertDigestEmailActivity({ job: digest, recipient: digest.recipients[0] }),
     ).resolves.toBe(true);
     expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ category: "bulk", to: "owner@example.com" }),
+      expect.objectContaining({
+        category: "bulk",
+        to: "owner@example.com",
+        listUnsubscribeUrl: expect.stringContaining("stream=notification"),
+        text: expect.stringContaining("Unsubscribe: https://"),
+        html: expect.stringContaining(">Unsubscribe</a>"),
+      }),
     );
     expect(mocks.prisma.deliveryAttempt.create).not.toHaveBeenCalled();
   });

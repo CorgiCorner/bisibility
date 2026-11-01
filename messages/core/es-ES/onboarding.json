@@ -10,7 +10,7 @@
         "stateExpired": "El proceso de inicio de sesión ha caducado o se ha reiniciado. Inténtalo una sola vez y en una única pestaña.",
         "storeFailed": "El inicio de sesión de Google ha funcionado, pero nuestro servidor no ha podido completar la conexión. El fallo es nuestro: reinténtalo y escríbenos si vuelve a ocurrir."
       },
-      "searchConsoleSync": "La sincronización con Search Console no ha terminado. Los datos observados pueden tardar un momento en aparecer. Puedes reintentarla desde Integraciones."
+      "searchConsoleSync": "La sincronización con Search Console no ha terminado. Los datos observados pueden tardar un momento en aparecer. Puedes reintentarla desde Proveedores."
     },
     "firstCheck": {
       "back": "Atrás",
@@ -30,6 +30,7 @@
       "description": {
         "completed": "Tus primeros resultados están listos.",
         "manual": "Todo está listo. Ejecuta tu primera comprobación cuando quieras: no se ejecuta nada hasta que tú lo inicies.",
+        "noKeywords": "Aún no has añadido palabras clave. Vuelve atrás para añadirlas, o abre la aplicación y añádelas más tarde.",
         "noProvider": "Tus palabras clave están listas. Elige una fuente de datos cuando quieras ejecutar comprobaciones.",
         "paused": "Todo está listo. Las comprobaciones están en pausa hasta que reanudes la programación.",
         "scheduled": "Tu programación está configurada como {frequency}. También puedes ejecutar ahora una comprobación de prueba."
@@ -199,7 +200,7 @@
         "clear": "Borrar",
         "connection": "Conexión",
         "connectionLabel": "Conexión de DataForSEO",
-        "description": "Usa tu cuenta de DataForSEO. Los resultados se guardan en caché durante 12 horas.",
+        "description": "Usa tu cuenta de DataForSEO. Los resultados en caché se pueden volver a abrir gratis hasta que caduquen.",
         "drawerDescription": "Palabras clave por las que tu sitio ya posiciona, ordenadas por tráfico estimado.",
         "drawerTitle": "Importar desde DataForSEO",
         "estimatedTraffic": "Tráfico est.",
@@ -322,7 +323,7 @@
           "idle": "Sin conectar",
           "tested": "Verificado"
         },
-        "tooltip": "Las posiciones actuales proceden de un proveedor de datos compatible. Elige cómo usarlo en Integraciones. Puedes añadir palabras clave primero y elegir una fuente más tarde."
+        "tooltip": "Las posiciones actuales proceden de un proveedor de datos compatible. Elige cómo usarlo en Proveedores. Puedes añadir palabras clave primero y elegir una fuente más tarde."
       },
       "credentials": {
         "connected": "Se ha conectado {provider}",
@@ -378,7 +379,7 @@
         },
         "watch": "Ver la guía de configuración"
       },
-      "description": "Elige cómo obtener los datos de posiciones. Puedes cambiarlo después en Integraciones."
+      "description": "Elige cómo obtener los datos de posiciones. Puedes cambiarlo después en Proveedores."
     },
     "residency": {
       "message": "Tus datos se almacenan y se procesan en {region}."

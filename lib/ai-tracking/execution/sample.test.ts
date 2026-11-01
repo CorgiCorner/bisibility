@@ -1,7 +1,10 @@
 import type { CostReceipt, DispatchState } from "@/lib/ai-tracking/contract";
 import type { TrackingEnvelope } from "@/lib/ai-tracking/providers/envelope";
 import { meteringNamespace } from "@/lib/metering/runtime";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
 import { samplePlan } from "./fixture";
 import { TrackingDispatchDeniedError, type TrackingExecutionPorts } from "./ports";
@@ -123,6 +126,16 @@ describe("durable tracking execution", () => {
     expect(await executeTrackingSample(test.ports, "project", "sample")).toBe("submission_unknown");
     expect(test.submit).not.toHaveBeenCalled();
   });
+  it.each(["account_blocked", "accounting_review"] as const)(
+    "propagates a %s admission refusal without dispatch",
+    async (reason) => {
+      const test = harness("claimed");
+      const error = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+      test.begin.mockRejectedValueOnce(error);
+      await expect(executeTrackingSample(test.ports, "project", "sample")).rejects.toBe(error);
+      expect(test.submit).not.toHaveBeenCalled();
+    },
+  );
   it("known task cancellation still collects and settles purchased work once", async () => {
     const test = harness("submitted");
     test.cancel();

@@ -106,6 +106,27 @@ describe("whole-scope reports and honest history", () => {
       recordedAt: "2026-10-12T10:01:00.000Z",
     });
   });
+  it("exposes an account refusal as a deferred attempt without an observation", () => {
+    const target = {
+      ...reportTarget(),
+      checks: [
+        reportCheck(null, {
+          observationRun: null,
+          status: "deferred",
+          deferredReason: "provider_account_blocked",
+          errorCode: null,
+        }),
+      ],
+    };
+    const record = rankReportRecords([target], reportPolicy(), reportProject.id)[0];
+    expect(record.attempt).toMatchObject({
+      status: "deferred",
+      deferredReason: "provider_account_blocked",
+      errorCode: null,
+    });
+    expect(record.observation).toBeNull();
+  });
+
   it("separates a failed attempt from qualified observations without making absence or zero movement", () => {
     const target = {
       ...reportTarget(),

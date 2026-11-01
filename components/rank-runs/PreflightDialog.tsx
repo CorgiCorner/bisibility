@@ -66,6 +66,8 @@ export function PreflightDialog({
     },
   });
   const requestNumber = useRef(0);
+  // The server signs the provider requested for the preview.
+  const previewProviderId = useRef(initialProviderId);
   const launching = useRef(false);
   const validEstimate = useRef(true);
   const launchKey = useRef<string | null>(null);
@@ -110,6 +112,7 @@ export function PreflightDialog({
       const nextPreview = await previewAction({ ...input, projectId, spec: selection });
       if (request === requestNumber.current) {
         setActionBlock(null);
+        previewProviderId.current = input.providerId;
         setPreview(nextPreview);
         validEstimate.current = true;
         setPreviewValid(true);
@@ -139,7 +142,7 @@ export function PreflightDialog({
         ...input,
         acceptedPayment: { quoteToken: payment.quoteToken },
         paymentOptionId: payment.option.id,
-        providerId: payment.option.providerId,
+        providerId: previewProviderId.current,
         idempotencyKey: launchKey.current,
         previewToken: preview.previewToken,
         projectId,

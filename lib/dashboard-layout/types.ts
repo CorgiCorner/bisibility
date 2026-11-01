@@ -11,6 +11,7 @@ export const widgetIds = [
   "visibility_history",
   "contributors",
   "quality_history",
+  "domain_rating",
 ] as const;
 export type WidgetId = (typeof widgetIds)[number];
 export type DashboardPreset = "general" | "local" | "competitors";
@@ -109,6 +110,7 @@ export type DashboardMessageKey =
   | "presentationOnly"
   | "preset"
   | "resetPreset"
+  | "setDefault"
   | "show"
   | "hide"
   | "moveUp"

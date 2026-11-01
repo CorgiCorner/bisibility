@@ -16,11 +16,11 @@ function notice(mode: "prompt" | "visibility", reason?: "no_source") {
 describe("module-specific catalog guidance", () => {
   it("offers connection setup instead of claiming available provider presets without credentials", () => {
     notice("visibility", "no_source");
-    expect(screen.getByRole("alert")).toHaveTextContent("Connect DataForSEO in Integrations");
+    expect(screen.getByRole("alert")).toHaveTextContent("Connect DataForSEO in Providers");
     expect(screen.getByRole("alert")).not.toHaveTextContent("mini/nano");
-    expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(
       "href",
-      "/app/prj_fixture/integrations",
+      "/app/prj_fixture/providers",
     );
   });
   it("keeps AI Visibility guidance relevant and exposes coverage details on hover", async () => {

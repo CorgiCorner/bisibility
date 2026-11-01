@@ -62,7 +62,7 @@ it("locks the shared search/results gate before the first estimate", () => {
   expect(container.querySelector("[data-provider-locked] fieldset")).toBeDisabled();
   expect(
     screen.getByRole("link", { name: shared.shared.providerAccess.connectAction }),
-  ).toHaveAttribute("href", "/app/prj_public/integrations");
+  ).toHaveAttribute("href", "/app/prj_public/providers");
   expect(lookup).not.toHaveBeenCalled();
 });
 it("uses the same gate for an initial no_source outcome", () => {

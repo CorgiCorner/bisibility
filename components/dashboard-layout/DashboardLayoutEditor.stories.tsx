@@ -67,13 +67,10 @@ function ControlsPreview() {
     <div className="flex flex-wrap items-center justify-end gap-2 bg-bg p-6 text-fg">
       <DashboardPresetControl value="general" disabled={false} onChange={() => undefined} />
       <DashboardLayoutControl
-        menu
         trigger={trigger}
         pending={false}
         editing={false}
-        defaultDisabled={false}
         onToggleEditing={() => undefined}
-        onSetDefault={() => undefined}
       />
     </div>
   );

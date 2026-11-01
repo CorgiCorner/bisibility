@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   agentOptions: [] as unknown[],
   prisma: {
     dailySendCounter: { upsert: vi.fn() },
+    user: { findUnique: vi.fn() },
+    project: { findUnique: vi.fn() },
     deliveryAttempt: { create: vi.fn() },
     slackConnection: { findUnique: vi.fn() },
     webhookEndpoint: { updateMany: vi.fn() },
@@ -74,6 +76,8 @@ describe("alert delivery transports", () => {
       limit: 1_000,
       notificationDue: false,
     });
+    mocks.prisma.user.findUnique.mockResolvedValue({ id: "user_1" });
+    mocks.prisma.project.findUnique.mockResolvedValue({ id: "project_1" });
     mocks.prisma.deliveryAttempt.create.mockResolvedValue({});
     mocks.prisma.webhookEndpoint.updateMany.mockResolvedValue({ count: 1 });
   });
@@ -369,6 +373,9 @@ describe("alert delivery transports", () => {
 
     const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
     expect(body.html).toContain("&lt;script&gt;");
+    expect(body.headers["List-Unsubscribe"]).toContain("stream=notification");
+    expect(body.headers["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
+    expect(body.text).toContain("Unsubscribe: https://");
     expect(body.html).not.toContain("<script>");
     expect(mocks.prisma.dailySendCounter.upsert).toHaveBeenCalledWith(
       expect.objectContaining({

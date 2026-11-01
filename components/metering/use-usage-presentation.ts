@@ -6,8 +6,9 @@ import type { MeasurementCardLabels } from "@/components/usagekit/measurement-ca
 import type { UsageOverviewCardLabels } from "@/components/usagekit/usage-overview-card";
 import type { UsageSummaryCardsLabels } from "@/components/usagekit/usage-summary-cards";
 import type { UsageTableLabels } from "@/components/usagekit/usage-table";
+import { providerBillingUnit } from "@/lib/providers/billing-unit";
 import type { BudgetRow } from "@usagekit/views";
-import { useLocale, useMessages } from "next-intl";
+import { createTranslator, useLocale, useMessages } from "next-intl";
 import {
   createUsageNumberFormat,
   type UsagePresentationFigure,
@@ -34,6 +35,7 @@ type ViewMessages = {
   measurement: MeasurementCardLabels;
   dimensions: Record<string, string>;
   units: Record<string, string>;
+  unitCounts: Record<string, string>;
   other: Record<string, string>;
   states: Record<string, string>;
 };
@@ -47,8 +49,27 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
   const { options: savedOptions } = useUsageDisplaySettings();
   const presentationOptions = { ...savedOptions, ...options };
   const numbers = createUsageNumberFormat(locale, presentationOptions);
-  const unit = (value: string) =>
-    numbers.showCurrency(value) ? "" : (units[value] ?? units.units);
+  const countTranslator = createTranslator({ locale, messages: labels.unitCounts });
+  const unit = (value: string, count?: string) => {
+    if (numbers.showCurrency(value)) return "";
+    if (count !== undefined && value in labels.unitCounts && /^-?\d+(?:\.\d+)?$/.test(count)) {
+      // Preserve plural categories for very large integer strings without rounding their displayed value.
+      const pluralCount =
+        /^-?\d+$/.test(count) && count.replace("-", "").length > 15
+          ? 1000000 + Number((BigInt(count) < 0n ? -BigInt(count) : BigInt(count)) % 1000000n)
+          : Number(count);
+      return countTranslator(value, { count: pluralCount });
+    }
+    return units[value] ?? units.units;
+  };
+  const providerUnit = (value: string, provider: string | null | undefined, count?: string) =>
+    value === "units"
+      ? unit(providerBillingUnit(provider) ?? value, count)
+      : value in units
+        ? unit(value, count)
+        : numbers.showCurrency(value)
+          ? ""
+          : value;
   const figure = (value: UsagePresentationFigure) =>
     value.certainty === "unknown" ? "" : (numbers.figure(value) ?? labels.measurement.unknown);
   const date = (value: string) =>
@@ -91,6 +112,7 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
     measurement: labels.measurement,
     dimensions: labels.dimensions,
     unit,
+    providerUnit,
     figure,
     date,
     dimension,

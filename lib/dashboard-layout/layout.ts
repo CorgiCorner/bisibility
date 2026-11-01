@@ -38,6 +38,7 @@ const general: readonly WidgetId[] = [
   "data_source",
   "by_market",
   "movers",
+  "domain_rating",
 ];
 const presets: Readonly<Record<DashboardPreset, readonly WidgetId[]>> = Object.freeze({
   general,

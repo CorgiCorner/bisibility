@@ -211,6 +211,9 @@ function TooltipContent({
       }}
     >
       <Primitive.Tooltip
+        // The provider disables hoverable content globally; interactive tooltips must stay
+        // open while the pointer moves from the trigger onto their links and buttons.
+        disableHoverableContent={!interactive}
         open={open}
         onOpenChange={(next) => {
           if (next) {

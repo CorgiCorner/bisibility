@@ -19,8 +19,8 @@
         "noSource": "No hay ninguna fuente de Search Console conectada.",
         "noKeywordsDescription": "Añade palabras clave para empezar a seguir tus posiciones en Google.",
         "noKeywordsTitle": "Todavía no hay palabras clave",
-        "openIntegrations": "Abrir Integraciones",
-        "providerMissing": "Puedes añadir palabras clave ahora. Cuando quieras ejecutar comprobaciones, elige una fuente de datos en <providerLink>Integraciones</providerLink>.",
+        "openIntegrations": "Abrir Proveedores",
+        "providerMissing": "Puedes añadir palabras clave ahora. Cuando quieras ejecutar comprobaciones, elige una fuente de datos en <providerLink>Proveedores</providerLink>.",
         "reconnectGoogle": "Volver a conectar tu cuenta de Google",
         "searchConsoleAuthorizationExpired": "La autorización de Google ha caducado.",
         "startMarketDescription": "Un mercado es la combinación de país, ubicación e idioma en la que compites. Añade uno con tus primeras palabras clave.",
@@ -105,6 +105,7 @@
       "completed": "Completado",
       "connect": "Conectar",
       "cost": "Coste",
+      "checkDeferred": "Aplazada",
       "credentialsUnavailable": "Credenciales no disponibles",
       "credentialsUnavailableLower": "no ha tenido credenciales disponibles",
       "daysAgo": "Hace {count, number} d",
@@ -186,6 +187,8 @@
       "provider": "Proveedor",
       "providerChain": "Cadena de proveedores",
       "providerChainExhausted": "{count, number} con errores tras agotarse la cadena de proveedores.",
+      "providerConnectionPaused": "Conexión del proveedor pausada",
+      "providerConnectionPausedLower": "conexión del proveedor pausada",
       "providerError": "Error del proveedor",
       "providerRateLimiting": "{provider} está aplicando su límite de peticiones.",
       "providers": "{count, number} {count, plural, one {proveedor} other {proveedores}}",
@@ -280,7 +283,10 @@
         "customRangeCaption": "rango seleccionado",
         "customRangeWindow": "en el rango seleccionado"
       },
-      "partialNoMatch": "Incompleto: comprobado hasta la posición {depth, number}"
+      "partialNoMatch": "Incompleto: comprobado hasta la posición {depth, number}",
+      "monitoringTitle": "Las conexiones con proveedores necesitan atención",
+      "monitoringItem": "{provider}: conexión pausada. {count, plural, one {# comprobación aplazada por la cuenta} other {# comprobaciones aplazadas por la cuenta}} en los últimos 30 días.",
+      "monitoringAction": "Ver conexiones"
     },
     "deletion": {
       "selection": "{keywords, plural, one {# palabra clave} other {# palabras clave}} · {targets, plural, one {# variante de mercado/dispositivo} other {# variantes de mercado/dispositivo}}",

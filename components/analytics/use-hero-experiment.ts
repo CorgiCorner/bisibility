@@ -39,18 +39,10 @@ export function useHeroExperiment() {
 }
 
 export function useOnboardingEntryAnalytics() {
-  const { analyticsAllowed } = useSyncExternalStore(
-    subscribeHeroExperiment,
-    getHeroExperimentState,
-    getServerHeroExperimentState,
-  );
   const recorded = useRef(false);
-  return useCallback(
-    (element: HTMLElement | null) => {
-      if (!element || !analyticsAllowed || recorded.current) return;
-      recorded.current = true;
-      track("onboarding_entered", {});
-    },
-    [analyticsAllowed],
-  );
+  return useCallback((element: HTMLElement | null) => {
+    if (!element || recorded.current) return;
+    recorded.current = true;
+    track("onboarding_entered", {});
+  }, []);
 }

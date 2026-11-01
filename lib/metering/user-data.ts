@@ -3,6 +3,7 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-scope";
 import { getRequestPrimarySerpProvider } from "@/lib/queries/workspace-request-data";
 import type { AccessContext } from "@usagekit/core";
@@ -17,7 +18,7 @@ import { projectFundingStatuses } from "./project-budget-read";
 import { readProjectBudgetStatuses } from "./project-budget-statuses";
 import { parseProjectFundingBudgetId, projectBudgetId } from "./project-funding-budgets";
 import { meteringNamespace, meteringRuntime } from "./runtime";
-import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
+import { projectBudgetFigures, projectBudgetRow } from "./user-model";
 import { emptyProjectUsage, type ProjectUsageViews } from "./user-views";
 
 const connectionLimit = 20;
@@ -29,12 +30,17 @@ const projectContext = perRequestCache(async (projectRef: string) => {
   const now = new Date();
   const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const to = now.toISOString();
-  const connections = await prisma.providerConnection.findMany({
-    where: { projectId: project.id },
-    orderBy: { id: "asc" },
-    take: 50,
-    select: { id: true, publicId: true, provider: true, credentialSource: true },
-  });
+  // Free integrations (GSC, GA4, Plausible) are never metered, so they have no budgets to show.
+  const connections = (
+    await prisma.providerConnection.findMany({
+      where: { projectId: project.id },
+      orderBy: { id: "asc" },
+      take: 50,
+      select: { id: true, publicId: true, provider: true, credentialSource: true },
+    })
+  ).filter(
+    (connection) => providerAllocationMetadata(connection.provider)?.kind !== "non_billable",
+  );
   const empty = {
     ...emptyProjectUsage(now),
     canEditBudget: project.writeMode === "active" && scope.canManageProviders,
@@ -147,7 +153,7 @@ async function readProjectBudgetState(projectRef: string, header = false) {
         const row = projectBudgetRow(
           status,
           result.connection?.publicId ?? null,
-          projectBudgetFiguresKnown(status, operations, project.ownerId, completeProvenance),
+          projectBudgetFigures(status, operations, completeProvenance),
           result.connection?.provider ?? null,
           undefined,
           result.connection
@@ -174,7 +180,7 @@ async function readProjectBudgetState(projectRef: string, header = false) {
       const row = projectBudgetRow(
         status,
         null,
-        projectBudgetFiguresKnown(status, operations, project.ownerId, completeProvenance),
+        projectBudgetFigures(status, operations, completeProvenance),
         null,
         undefined,
         project.name,
@@ -199,11 +205,11 @@ async function readProjectBudgetState(projectRef: string, header = false) {
           result.binding.provider
       )
         continue;
-      for (const { status, figuresKnown } of result.budgets) {
+      for (const { status, figuresKnown, ...read } of result.budgets) {
         const row = projectBudgetRow(
           status,
           result.binding.publicConnection,
-          figuresKnown,
+          figuresKnown || ("estimated" in read && read.estimated ? "estimated" : false),
           result.binding.provider,
           result.binding,
           [

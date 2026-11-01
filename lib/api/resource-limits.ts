@@ -52,6 +52,21 @@ export async function assertKeywordCapacity(
   }
 }
 
+/**
+ * The owner's project limit when they already own that many projects, else `null`.
+ * Counts exactly what `assertProjectCapacity` counts, so the UI blocks creation only when
+ * the server would refuse it.
+ */
+export async function readReachedProjectLimit(
+  client: Pick<ResourceCountClient, "project">,
+  ownerId: string,
+): Promise<number | null> {
+  const limit = positiveIntFromEnv(process.env.BISIBILITY_MAX_PROJECTS_PER_USER, 0);
+  if (limit <= 0) return null;
+  const currentCount = await client.project.count({ where: { isSample: false, ownerId } });
+  return currentCount >= limit ? limit : null;
+}
+
 export async function assertProjectCapacity(
   client: Pick<ResourceCountClient, "$executeRaw" | "project">,
   ownerId: string,

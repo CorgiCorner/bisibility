@@ -54,7 +54,7 @@ describe("durable rank data revision in isolated PostgreSQL", () => {
       database: "lu_revision_test",
     });
     let ready = false;
-    for (let attempt = 0; attempt < 40 && !ready; attempt++) {
+    for (let attempt = 0; attempt < 300 && !ready; attempt++) {
       try {
         await pool.query("SELECT 1");
         ready = true;
@@ -67,7 +67,8 @@ describe("durable rank data revision in isolated PostgreSQL", () => {
       const sql = Prisma.sql(strings, ...values);
       return (await pool.query(sql.text, sql.values)).rows;
     });
-  });
+    // Pulling the image and initializing a cold container exceeds the default 10 s hook limit on CI runners.
+  }, 120_000);
   afterAll(async () => {
     await pool?.end();
     execFileSync("docker", ["rm", "-f", "-v", container], { stdio: "pipe" });

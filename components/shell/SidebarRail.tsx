@@ -204,7 +204,7 @@ const navigationItemKeys = {
   Dashboard: "items.dashboard",
   "Domain Overview": "items.domainOverview",
   Install: "items.install",
-  Integrations: "items.integrations",
+  Providers: "items.integrations",
   "Keyword Research": "items.keywordResearch",
   Markets: "items.markets",
   "Rank Tracker": "items.rankTracker",

@@ -13,6 +13,7 @@ import { deferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
 import { rankItemPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
 import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
+import { rankRunAccountBlocks } from "./rank-check-run-account-blocks";
 import {
   ledgerActualCostCents,
   ledgerActualUnits,
@@ -87,7 +88,13 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   const evidence = await readCheckEvidence(projectId, {
     checkIds: page.flatMap((row) => (row.rankCheck?.publicId ? [row.rankCheck.publicId] : [])),
   });
-  const ledgerActuals = await rankCheckRunTargetLedgerActuals(projectId, run.id);
+  const [ledgerActuals, accountBlocks] = await Promise.all([
+    rankCheckRunTargetLedgerActuals(projectId, run.id),
+    rankRunAccountBlocks(
+      projectId,
+      page.flatMap((row) => (row.rankCheck?.id ? [row.rankCheck.id] : [])),
+    ),
+  ]);
   return {
     data: await Promise.all(
       page.map(async ({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => {
@@ -103,6 +110,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
         return {
           ...row,
           deferralCode,
+          accountBlocks: storedRankCheck ? (accountBlocks.get(storedRankCheck.id) ?? []) : [],
           ...(payment ? { payment } : {}),
           actualCostCents: ledgerActualCostCents(ledger, null),
           finishedAt: iso(row.finishedAt),

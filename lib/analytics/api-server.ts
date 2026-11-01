@@ -26,7 +26,6 @@ export async function trackApiEvent(
   if (!identity) return;
   try {
     const consent = accountConsentState(await readAccountAnalyticsConsent(identity.userId));
-    if (!consent.analytics) return;
     const user = await prisma.user.findUnique({
       where: { id: identity.userId },
       select: { publicId: true, deactivatedAt: true },

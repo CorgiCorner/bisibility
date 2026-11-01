@@ -89,7 +89,7 @@
       "noData": "sin datos",
       "noRankingsYet": "Todavía no hay posiciones",
       "pausedMigrationHold": "en pausa: retención por migración",
-      "providerMissingDetail": "Elige una fuente de datos en Integraciones para ejecutar comprobaciones.",
+      "providerMissingDetail": "Elige una fuente de datos en Proveedores para ejecutar comprobaciones.",
       "providerMissingTitle": "Elige una fuente de datos",
       "providerNeedsAttention": "el proveedor requiere atención",
       "providerNeedsAttentionDetail": "{count, number} {count, plural, one {palabra clave está lista} other {palabras clave están listas}}. Revisa la fuente de datos seleccionada antes de la primera comprobación.",
@@ -143,7 +143,7 @@
       },
       "import": {
         "addError": "No se han podido añadir las palabras clave seleccionadas.",
-        "authorizationExpired": "La autorización de Google ha caducado. Vuelve a conectarla en Integraciones.",
+        "authorizationExpired": "La autorización de Google ha caducado. Vuelve a conectarla en Proveedores.",
         "drawer": {
           "add": "Añadir {count, plural, one {# palabra clave} other {# palabras clave}}",
           "cancel": "Cancelar",

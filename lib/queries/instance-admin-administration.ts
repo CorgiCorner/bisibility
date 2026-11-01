@@ -10,6 +10,15 @@ import {
   type ReferenceUsageRateBasis,
 } from "@/lib/rank-check/reference-usage";
 import { notFound } from "next/navigation";
+import {
+  getInstanceRecoveryAccounting,
+  type InstanceRecoveryAccounting,
+} from "./instance-recovery-accounting";
+import {
+  getInstanceUsageReport,
+  type InstanceUsagePeriod,
+  type InstanceUsageReport,
+} from "./instance-usage-report";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const GROWTH_DAYS = 30;
@@ -45,6 +54,9 @@ export type InstanceAdminAdministration = {
     users: GrowthMetric;
   };
   monthStart: string;
+  recoveryAccounting: InstanceRecoveryAccounting | null;
+  usagePeriod: InstanceUsagePeriod;
+  usageReport: InstanceUsageReport | null;
   topConsumption: readonly TopProjectConsumption[];
 };
 
@@ -103,6 +115,7 @@ function growthMetric(
 
 export async function getInstanceAdminAdministration(
   now = new Date(),
+  usagePeriod: InstanceUsagePeriod = "all",
 ): Promise<InstanceAdminAdministration> {
   const session = await getInstanceAdminSession();
   if (!session) {
@@ -116,7 +129,16 @@ export async function getInstanceAdminAdministration(
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
-  const [users, projects, keywords, rankChecks, activeAccounts, consumption] = await Promise.all([
+  const [
+    users,
+    projects,
+    keywords,
+    rankChecks,
+    activeAccounts,
+    consumption,
+    recoveryAccounting,
+    usageReport,
+  ] = await Promise.all([
     prisma.$queryRaw<GrowthRow[]>`
       SELECT to_char(date_trunc('day', ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
              COUNT(*)::bigint AS count
@@ -167,6 +189,8 @@ export async function getInstanceAdminAdministration(
         AND rc.status = 'completed'
       GROUP BY k."projectId", rc.provider, rc."requestedDepth", rc."billingUnits"
     `,
+    getInstanceRecoveryAccounting(),
+    getInstanceUsageReport(usagePeriod, now),
   ]);
 
   const consumptionGroups = new Map<string, { groups: ReferenceUsageGroup[]; projectId: string }>();
@@ -217,6 +241,9 @@ export async function getInstanceAdminAdministration(
     },
     mailerConfigured: isEmailConfigured(),
     monthStart: monthStart.toISOString(),
+    recoveryAccounting,
+    usagePeriod,
+    usageReport,
     topConsumption,
   };
 }

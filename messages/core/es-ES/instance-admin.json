@@ -7,6 +7,7 @@
       "description": "Diagnóstico operativo de toda la instancia. Los datos de los inquilinos se representan únicamente mediante identificadores."
     },
     "navigation": {
+      "instance": "Instancia",
       "label": "Secciones de administración de la instancia",
       "operations": "Operaciones",
       "administration": "Administración",
@@ -152,7 +153,7 @@
       },
       "stats": {
         "title": "Estadísticas de la instancia",
-        "description": "Recuentos de la instancia y uso de SERP completado en el mes UTC en curso.",
+        "description": "Totales de la instancia y uso de proveedores de todos los proyectos y tipos de operación. Selecciona el periodo abajo.",
         "unavailable": "Las estadísticas de la instancia no están disponibles.",
         "users": "Usuarios",
         "projects": "Proyectos",
@@ -262,7 +263,7 @@
       },
       "consumption": {
         "title": "Mayor consumo",
-        "description": "Top 10 de combinaciones de proyecto y proveedor por coste de referencia este mes. Las tarifas introducidas por el usuario se ignoran.",
+        "description": "Las 10 combinaciones de proyecto y proveedor por coste registrado en el periodo seleccionado, para todos los tipos de operación.",
         "empty": "No se ha registrado ninguna comprobación de SERP completada este mes.",
         "note": "Los costes de referencia usan las tarifas de proveedor que mantenemos y las unidades de petición registradas. Prevalecen las facturas del proveedor.",
         "tableLabel": "Mayor consumo por proyecto y proveedor este mes",
@@ -508,14 +509,16 @@
         "failed": "Recuperaciones fallidas",
         "unconfirmed": "Contabilidad sin confirmar",
         "historical": "Incertidumbre histórica",
-        "retainedResults": "Resultados para restaurar"
+        "retainedResults": "Resultados para restaurar",
+        "closedUnknown": "Cerradas, coste desconocido"
       },
       "categories": {
         "all": "Todos los casos",
         "unfinished": "Trabajo pendiente",
         "accounting": "Incertidumbre contable",
         "failed": "Recuperaciones fallidas",
-        "historical": "Contabilidad histórica"
+        "historical": "Contabilidad histórica",
+        "closed_unknown": "Cerradas con coste desconocido"
       },
       "states": {
         "not_started": "Sin iniciar",
@@ -526,7 +529,8 @@
         "unfinished": "Pendiente",
         "obsolete": "Ya no se aplica",
         "measured": "Medido",
-        "not_applicable": "Sin operación vinculada"
+        "not_applicable": "Sin operación vinculada",
+        "stopped": "Detenido"
       },
       "fundingSources": {
         "byok": "Cuenta propia del proveedor",
@@ -655,14 +659,17 @@
           "scheduled": "Programado",
           "attempting": "Consultando",
           "resolved": "Resuelto",
-          "operator_review": "Revisión del operador"
+          "operator_review": "Revisión del operador",
+          "closed_unknown": "Cerradas, coste desconocido"
         },
         "partialKinds": {
           "partial": "Parcial",
           "unresolved": "Sin resolver"
         },
         "utcTimestamp": "{timestamp} UTC"
-      }
+      },
+      "closedUnknown": "Cerradas, coste desconocido",
+      "closedUnknownNote": "Un operador cerró estas solicitudes. Su coste original sigue siendo desconocido. Se conserva el historial; estas mismas solicitudes no volverán a activar la recuperación ni los recordatorios."
     },
     "dangerousActions": {
       "notice": "Activa la autenticación de dos factores para {action}.",
@@ -678,6 +685,40 @@
         "repairUsage": "reparar los registros de uso",
         "importUsage": "importar registros de uso"
       }
+    },
+    "recoveryAccounting": {
+      "title": "Contabilidad de recuperación (todo el historial)",
+      "description": "Cierres conservados de todos los periodos. Sus costes registrados se incluyen en los totales de uso de todo el historial. Los importes desconocidos siguen siendo desconocidos.",
+      "historical": "Coste histórico conservado (identidad del proveedor incompleta)",
+      "closedUnknown": "Cerradas con coste desconocido",
+      "unknown": "Coste desconocido",
+      "requests": "{count, plural, one {# solicitud} other {# solicitudes}}",
+      "view": "Ver registros de recuperación",
+      "ledger": "Ver libro de uso",
+      "unavailable": "La contabilidad de recuperación no está disponible. Los importes desconocidos no se han sustituido por cero."
+    },
+    "instanceUsage": {
+      "period": "Periodo de uso",
+      "all": "Todo el historial",
+      "month": "Mes actual (UTC)",
+      "scope": "Uso registrado de todos los proyectos y tipos de operación, incluido el historial conservado.",
+      "operations": "Operaciones",
+      "cost": "Coste registrado",
+      "unknownEntries": "Coste desconocido (registros)",
+      "unknown": "Desconocido",
+      "provider": "Proveedor",
+      "project": "ID del proyecto",
+      "copyProject": "Copiar ID del proyecto",
+      "unattributed": "Proyecto sin atribuir",
+      "unknownProvider": "Proveedor desconocido",
+      "share": "Parte del coste registrado",
+      "providerTable": "Uso de proveedores de toda la instancia",
+      "topTable": "Mayor consumo de la instancia",
+      "empty": "No hay uso registrado en este periodo.",
+      "unavailable": "El uso de la instancia no está disponible. Los costes desconocidos no se han sustituido por cero.",
+      "note": "Los costes proceden del último recibo registrado de cada operación. Las correcciones se cuentan una vez. Los importes desconocidos se excluyen de los totales; las facturas de los proveedores siguen siendo la referencia oficial.",
+      "topNote": "Las 10 combinaciones de proyecto y proveedor con mayor coste registrado. Los porcentajes usan el coste registrado de toda la instancia. Se conservan los importes y las identidades desconocidas.",
+      "referenceTitle": "Costes de referencia SERP (mes UTC actual)"
     }
   }
 }

@@ -107,9 +107,9 @@ export function NoDataBanner({
   const copy = bannerText(state, keywordCount, t);
   const viewerBlocked = !canManageProviders && (state === "missing" || state === "needs_attention");
   let action: ReactNode = (
-    <ProviderAccessActions href={appPath(projectRef, "integrations#all-providers")}>
+    <ProviderAccessActions href={appPath(projectRef, "providers#all-providers")}>
       <FirstCheckBannerLink
-        href={appPath(projectRef, "integrations#all-providers")}
+        href={appPath(projectRef, "providers#all-providers")}
         label={t("connect")}
       />
     </ProviderAccessActions>
@@ -123,7 +123,7 @@ export function NoDataBanner({
   } else if (state === "needs_attention") {
     action = (
       <FirstCheckBannerLink
-        href={appPath(projectRef, "integrations#all-providers")}
+        href={appPath(projectRef, "providers#all-providers")}
         label={t("manageProvider")}
       />
     );

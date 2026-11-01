@@ -2,9 +2,14 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { alertsEmailFrom } from "@/lib/email/from";
+import {
+  notificationUnsubscribeFooter,
+  notificationUnsubscribeUrl,
+} from "@/lib/email/notification-unsubscribe";
 import { sendEmail } from "@/lib/email/send";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyTriggeredAlertDelivered } from "@/lib/notifications/events";
+import { resolveCanonicalOrigin } from "@/lib/seo/origin";
 import {
   classifyDeliveryFailure,
   deliveryFailureMessage,
@@ -91,8 +96,14 @@ export async function deliverAlertDigestEmailActivity(input: {
   recipient: AlertEmailRecipient;
 }) {
   try {
+    const url = notificationUnsubscribeUrl(
+      { userId: input.recipient.userId, projectId: input.job.projectId, stream: "alert" },
+      resolveCanonicalOrigin(),
+    );
     await sendEmail({
       ...input.job.email,
+      ...notificationUnsubscribeFooter(input.job.email, url),
+      listUnsubscribeUrl: url,
       category: "bulk",
       from: alertsEmailFrom(),
       to: input.recipient.email,

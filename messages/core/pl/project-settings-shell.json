@@ -13,8 +13,8 @@
       "results": "Znaleziono {count, plural, one {# ustawienie} few {# ustawienia} many {# ustawień} other {# ustawienia}}",
       "resultsLabel": "Pasujące ustawienia",
       "sections": {
-        "providerConnections": "Integracje / Połączenia",
-        "providerUsage": "Integracje / Zużycie"
+        "providerConnections": "Dostawcy / Połączenia",
+        "providerUsage": "Dostawcy / Zużycie"
       },
       "entries": {
         "apiKeys": {
@@ -118,6 +118,7 @@
     "sections": {
       "advanced": "Zaawansowane",
       "billing": "Rozliczenia",
+      "usage": "Zużycie",
       "competitors": "Konkurenci",
       "dataSources": "Źródła danych",
       "developers": "Deweloperzy",

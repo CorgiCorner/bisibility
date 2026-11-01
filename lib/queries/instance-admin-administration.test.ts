@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   getInstanceAdminSession: vi.fn(),
   isEmailConfigured: vi.fn(),
   queryRaw: vi.fn(),
+  recoveryAccounting: vi.fn(),
+  usageReport: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -13,6 +15,10 @@ vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.getInstanceAdminSession,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $queryRaw: mocks.queryRaw } }));
+vi.mock("./instance-recovery-accounting", () => ({
+  getInstanceRecoveryAccounting: mocks.recoveryAccounting,
+}));
+vi.mock("./instance-usage-report", () => ({ getInstanceUsageReport: mocks.usageReport }));
 vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.isEmailConfigured }));
 
 type SqlCall = readonly [readonly string[], ...unknown[]];
@@ -41,6 +47,8 @@ describe("getInstanceAdminAdministration", () => {
     });
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
     mocks.isEmailConfigured.mockReturnValue(true);
+    mocks.recoveryAccounting.mockResolvedValue(null);
+    mocks.usageReport.mockResolvedValue(null);
   });
 
   it("gates the read model before any database query", async () => {
@@ -50,6 +58,8 @@ describe("getInstanceAdminAdministration", () => {
 
     expect(notFound).toHaveBeenCalledOnce();
     expect(mocks.queryRaw).not.toHaveBeenCalled();
+    expect(mocks.recoveryAccounting).not.toHaveBeenCalled();
+    expect(mocks.usageReport).not.toHaveBeenCalled();
   });
 
   it("uses one UTC grouped query per growth model and pinned calendar boundaries", async () => {

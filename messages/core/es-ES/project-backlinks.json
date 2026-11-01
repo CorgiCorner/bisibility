@@ -31,7 +31,8 @@
         "aria": "Introducción a los backlinks",
         "bullets": {
           "price": "Precio antes de cada búsqueda.",
-          "cache": "Las instantáneas se guardan en caché 24 horas: volver a abrirlas y segmentarlas es gratis",
+          "cache": "Las instantáneas se guardan en caché {duration}: volver a abrirlas y segmentarlas es gratis",
+          "cacheLoading": "Las instantáneas en caché se pueden volver a abrir y segmentar gratis hasta que caduquen.",
           "diff": "Cada actualización se compara con la última instantánea: se marcan los enlaces nuevos y los perdidos"
         },
         "reconnect": "Volver a conectar DataForSEO",
@@ -194,7 +195,7 @@
         "history": "Histórico de 12 meses",
         "linkRows": "Filas de enlaces ({count, number})",
         "loadMore": "Cargar más filas después",
-        "description": "DataForSEO lo cobra en tu propia cuenta. Una instantánea permanece en caché 24 horas: volver a abrirla o cambiar de pestaña dentro de ella es gratis.",
+        "description": "DataForSEO lo cobra en tu propia cuenta. Volver a abrir una instantánea en caché o cambiar de pestaña dentro de ella es gratis hasta que caduque.",
         "unavailable": "Precio no disponible",
         "perHundred": "{price} / 100"
       },

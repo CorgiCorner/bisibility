@@ -8,6 +8,7 @@ import type {
   OwnAttemptInput,
 } from "@/lib/provider-usage/admission-extension-types";
 import { loadByokEvidence } from "@/lib/provider-usage/byok-evidence-storage";
+import { TASKSET_TRANSACTION_OPTIONS } from "@/lib/provider-usage/taskset-timeouts";
 import { assertProviderCostLimit } from "@/lib/providers/cost-limit";
 import { translatePaidAdmission } from "./admission-errors";
 import { reserveFromEntry } from "./mapping";
@@ -134,5 +135,5 @@ export async function fenceOwnTransports(
       paid.push({ operation, lease: operation.lease });
     }
     await fencePaidAttemptsInTransaction(tx, paid, { beforeFence });
-  });
+  }, TASKSET_TRANSACTION_OPTIONS);
 }

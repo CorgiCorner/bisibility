@@ -1,4 +1,5 @@
 import { registerErrorReportSink } from "@/lib/observability/error-reporting";
+import { isInjectedScriptEvent } from "@/lib/observability/injected-script-event";
 import { sentryNextBuildIdentity } from "@/lib/observability/next-build-identity";
 import type * as Sentry from "@sentry/nextjs";
 
@@ -32,6 +33,7 @@ async function initializeSentry() {
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process.env.NODE_ENV,
     ...sentryNextBuildIdentity("browser"),
     sendDefaultPii: false,
+    beforeSend: (event) => (isInjectedScriptEvent(event) ? null : event),
     tracesSampleRate: parseSampleRate(
       process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
       process.env.NODE_ENV === "production" ? 0.05 : 1,

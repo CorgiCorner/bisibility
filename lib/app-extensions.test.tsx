@@ -69,6 +69,7 @@ describe("app extension registry", () => {
       "getSupportWidgetPayload",
       "renderHead",
       "renderSupportWidget",
+      "supportAvailable",
       "renderOnboardingQuizSlot",
       "onboardingCostCalculatorPath",
     ];

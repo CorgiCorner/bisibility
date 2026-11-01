@@ -15,8 +15,13 @@ export function relativeTime(value: string | Date, now: Date) {
   return milliseconds > 0 ? `in ${amount}` : `${amount} ago`;
 }
 
+// History of disabled, disconnected or deleted connections stays out of the health counts.
+function activeTrafficRows(rows: readonly TrafficHeartbeatRow[]) {
+  return rows.filter((row) => row.status !== "inactive");
+}
+
 export function trafficCounts(rows: TrafficHeartbeatRow[]) {
-  return rows.reduce(
+  return activeTrafficRows(rows).reduce(
     (counts, row) => {
       if (row.status.startsWith("succeeded_")) counts.ok += 1;
       else if (row.status === "needs_reauth" || row.status === "skipped_needs_reauth") {
@@ -40,16 +45,17 @@ function providerTrafficLine(provider: string, rows: TrafficHeartbeatRow[]) {
 }
 
 export function trafficLines(database: DatabaseHeartbeat, now: Date) {
-  if (database.traffic.length === 0) return "No analytics connections configured.";
+  const rows = activeTrafficRows(database.traffic);
+  if (rows.length === 0) return "No analytics connections configured.";
   const grouped = new Map<string, TrafficHeartbeatRow[]>();
-  for (const row of database.traffic) {
+  for (const row of rows) {
     grouped.set(row.provider, [...(grouped.get(row.provider) ?? []), row]);
   }
   const summary = [...grouped.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([provider, rows]) => providerTrafficLine(provider, rows))
     .join("; ");
-  const unhealthy = database.traffic.filter((row) => !row.status.startsWith("succeeded_"));
+  const unhealthy = rows.filter((row) => !row.status.startsWith("succeeded_"));
   if (unhealthy.length === 0) return summary;
   const details = unhealthy.slice(0, 5).map((row) => {
     const fresh = row.latestSuccessAt ? relativeTime(row.latestSuccessAt, now) : "never";

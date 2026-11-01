@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-export function UnsubscribeButton({ token }: Readonly<{ token: string }>) {
+export function UnsubscribeButton({
+  token,
+  stream = "marketing",
+}: Readonly<{ token: string; stream?: "marketing" | "notification" }>) {
   const router = useRouter();
   const t = useTranslations("emailPreferences.button");
   const [busy, setBusy] = useState(false);
@@ -15,13 +18,24 @@ export function UnsubscribeButton({ token }: Readonly<{ token: string }>) {
     setBusy(true);
     setFailed(false);
     try {
-      const response = await fetch("/api/email/unsubscribe", {
-        body: JSON.stringify({ token }),
-        headers: { "Content-Type": "application/json" },
+      const endpoint =
+        stream === "notification"
+          ? `/api/email/unsubscribe/one-click?stream=notification&token=${encodeURIComponent(token)}`
+          : "/api/email/unsubscribe";
+      const response = await fetch(endpoint, {
+        body: stream === "notification" ? "List-Unsubscribe=One-Click" : JSON.stringify({ token }),
+        headers: {
+          "Content-Type":
+            stream === "notification" ? "application/x-www-form-urlencoded" : "application/json",
+        },
         method: "POST",
       });
       if (!response.ok) throw new Error("unsubscribe failed");
-      router.replace("/email/unsubscribe?status=success");
+      router.replace(
+        stream === "notification"
+          ? "/email/unsubscribe/notifications?status=success"
+          : "/email/unsubscribe?status=success",
+      );
     } catch {
       setFailed(true);
     } finally {

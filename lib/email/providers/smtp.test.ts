@@ -1,5 +1,5 @@
 import { EmailSendError } from "@/lib/email/types";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { smtpEmailProvider } from "./smtp";
 
 const { closeMock, createTransportMock, sendMailMock } = vi.hoisted(() => ({
@@ -23,6 +23,10 @@ const message = {
   to: "owner@example.com",
 };
 
+beforeEach(() => {
+  createTransportMock.mockReset().mockReturnValue({ close: closeMock, sendMail: sendMailMock });
+});
+
 describe("smtp email provider", () => {
   afterEach(() => {
     closeMock.mockReset();
@@ -30,6 +34,17 @@ describe("smtp email provider", () => {
     sendMailMock.mockReset();
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
+  });
+
+  it("passes one-click headers to the transport", async () => {
+    sendMailMock.mockResolvedValue({});
+    vi.stubEnv("SMTP_URL", "smtp://mail.example.com:1025");
+    const headers = {
+      "List-Unsubscribe": "<https://app.example.com/u?token=opaque>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+    await smtpEmailProvider.send({ ...message, headers });
+    expect(sendMailMock.mock.calls[0]?.[0].headers).toEqual(headers);
   });
 
   it("declares its catalog identity", () => {
@@ -149,6 +164,33 @@ describe("mail transport runtime compatibility", () => {
       expect(serialized).toContain("Content-Type: multipart/alternative");
       expect(serialized).toContain("Report ready");
       expect(serialized).toContain("<p>Report ready</p>");
+    } finally {
+      transport.close();
+    }
+  });
+
+  it.each([
+    {
+      kind: "nested comment",
+      to: "Victim (x(y) <attacker@attacker.test>) <recipient@example.com>",
+      recipient: "recipient@example.com",
+    },
+    {
+      kind: "semicolon inside a group comment",
+      to: "G: (a; <attacker@attacker.test>) <recipient@example.com>;",
+      recipient: "recipient@example.com",
+    },
+    {
+      kind: "angle bracket inside a quoted local part",
+      to: '<"a@attacker.test>"@example.com>',
+      recipient: expect.stringMatching(/@example\.com$/),
+    },
+  ])("preserves the intended recipient with a $kind", async ({ to, recipient }) => {
+    const { createTransport } = await vi.importActual<typeof import("nodemailer")>("nodemailer");
+    const transport = createTransport({ buffer: true, streamTransport: true });
+    try {
+      const result = await transport.sendMail({ ...message, to });
+      expect(result.envelope.to).toEqual([recipient]);
     } finally {
       transport.close();
     }

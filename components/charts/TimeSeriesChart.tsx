@@ -42,6 +42,8 @@ export type TimeSeriesChartProps = {
   xTickIndexes?: number[];
   formatValue?: (value: number) => string;
   showGrid?: boolean;
+  showVerticalGrid?: boolean;
+  gridDashed?: boolean;
   showYAxis?: boolean;
   tooltip?: boolean;
   /** Replaces the default tooltip body. The argument is the active point index. */
@@ -123,6 +125,8 @@ export function TimeSeriesChart({
   xTickIndexes,
   formatValue,
   showGrid = true,
+  showVerticalGrid = false,
+  gridDashed = false,
   showYAxis = true,
   tooltip = true,
   renderTooltip,
@@ -155,7 +159,13 @@ export function TimeSeriesChart({
       initialDimension={{ width: 600, height }}
     >
       <ComposedChart data={data} margin={margin} accessibilityLayer>
-        {showGrid ? <CartesianGrid vertical={false} stroke="var(--border)" /> : null}
+        {showGrid ? (
+          <CartesianGrid
+            vertical={showVerticalGrid}
+            stroke="var(--border)"
+            strokeDasharray={gridDashed ? "3 3" : undefined}
+          />
+        ) : null}
         <XAxis
           dataKey="index"
           type="category"

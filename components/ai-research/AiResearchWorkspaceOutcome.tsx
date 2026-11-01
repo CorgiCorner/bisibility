@@ -115,7 +115,7 @@ export function AiResearchWorkspaceOutcome({
       ) : noSource ? (
         <ProviderAccessEmptyState
           surface="ai"
-          href={appPath(projectId, "integrations")}
+          href={appPath(projectId, "providers")}
           providers={supportingProviders}
         />
       ) : !outcome ? (

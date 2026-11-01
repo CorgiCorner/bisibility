@@ -8,7 +8,6 @@ import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
 import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
 import { useTranslations } from "next-intl";
 import type { ComponentPropsWithoutRef } from "react";
-import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
 
 const six = ["traffic", "keywords", "top10", "value", "pos1", "new"] as const;
 const eight = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
@@ -150,12 +149,11 @@ function AnalyzeCardLoading() {
 
 function IdlePanelLoading() {
   const t = useTranslations("projectDomainOverview.workspace.state");
-  const duration = useDomainOverviewCacheDuration();
   return (
     <ResearchIdleLoading
       title={t("idleTitle")}
       icon={GlobeIcon}
-      bullets={[t("idleBullets.key"), t("idleBullets.cache", { duration }), t("idleBullets.track")]}
+      bullets={[t("idleBullets.key"), t("idleBullets.cacheLoading"), t("idleBullets.track")]}
     />
   );
 }

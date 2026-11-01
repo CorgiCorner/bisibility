@@ -29,8 +29,6 @@
     "app/(regional)/app/(workspace)/[project]/getting-started/page.tsx",
     "app/(regional)/app/(workspace)/[project]/install/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/install/page.tsx",
-    "app/(regional)/app/(workspace)/[project]/integrations/loading.tsx",
-    "app/(regional)/app/(workspace)/[project]/integrations/page.tsx",
     "app/(regional)/app/(workspace)/[project]/keyword-research/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/keyword-research/page.tsx",
     "app/(regional)/app/(workspace)/[project]/layout.tsx",
@@ -44,6 +42,8 @@
     "app/(regional)/app/(workspace)/[project]/overview/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/overview/page.tsx",
     "app/(regional)/app/(workspace)/[project]/prompt-tracker/loading.tsx",
+    "app/(regional)/app/(workspace)/[project]/providers/loading.tsx",
+    "app/(regional)/app/(workspace)/[project]/providers/page.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/[id]/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/[id]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/loading.tsx",
@@ -137,6 +137,7 @@
     "app/(regional)/cloud/import/loading.tsx",
     "app/(regional)/cloud/import/page.tsx",
     "app/(regional)/cloud/layout.tsx",
+    "app/(regional)/email/unsubscribe/notifications/page.tsx",
     "app/(regional)/email/unsubscribe/page.tsx",
     "app/(regional)/email/unsubscribe/UnsubscribeButton.tsx",
     "app/(regional)/install/page.tsx",
@@ -436,7 +437,6 @@
     "components/dashboard-competitors/DashboardComparisonCard.tsx",
     "components/dashboard-competitors/DashboardComparisonSurface.tsx",
     "components/dashboard-layout/dashboard-conflict.ts",
-    "components/dashboard-layout/dashboard-editor-escape.ts",
     "components/dashboard-layout/dashboard-translator.ts",
     "components/dashboard-layout/DashboardCompositor.tsx",
     "components/dashboard-layout/DashboardConflictReview.tsx",
@@ -552,12 +552,19 @@
     "components/integrations/IntegrationsPageLoading.tsx",
     "components/integrations/IntegrationsTabs.tsx",
     "components/integrations/IntegrationUsagePanel.tsx",
+    "components/integrations/OwnUsageDetails.tsx",
     "components/integrations/project-chain-labels.ts",
     "components/integrations/ProjectSerpChain.tsx",
     "components/integrations/provider-auth.ts",
     "components/integrations/provider-card-config.ts",
     "components/integrations/provider-credentials.ts",
     "components/integrations/provider-meta-copy.ts",
+    "components/integrations/provider-recovery/AffectedChecksTable.tsx",
+    "components/integrations/provider-recovery/MonitoringAccountBlocks.tsx",
+    "components/integrations/provider-recovery/MonitoringAccountBlocksServer.tsx",
+    "components/integrations/provider-recovery/ProviderAttentionNotice.tsx",
+    "components/integrations/provider-recovery/ProviderRecovery.tsx",
+    "components/integrations/ProviderBillingCard.tsx",
     "components/integrations/ProviderCard.tsx",
     "components/integrations/ProviderCardDescription.tsx",
     "components/integrations/ProviderCardDisconnectMenu.tsx",
@@ -569,6 +576,7 @@
     "components/integrations/ProviderCredentialWarning.tsx",
     "components/integrations/ProviderDisconnectAction.tsx",
     "components/integrations/ProviderSyncFailureAlert.tsx",
+    "components/integrations/UsageDetailsTable.tsx",
     "components/integrations/useProviderTrafficSync.ts",
     "components/integrations/WebMcpTools.tsx",
     "components/invite/InviteSignInForm.tsx",
@@ -967,6 +975,7 @@
     "components/overview/OverviewNoDataTop.tsx",
     "components/overview/OverviewPersonalDashboard.tsx",
     "components/overview/OverviewReportHistoryCard.tsx",
+    "components/overview/OverviewSetupNotice.tsx",
     "components/overview/OverviewSkeleton.tsx",
     "components/overview/OverviewToolbar.tsx",
     "components/overview/PositionDistributionCard.tsx",
@@ -1005,6 +1014,7 @@
     "components/rank-runs/PreflightOptionGroups.tsx",
     "components/rank-runs/PreflightOverlapNotice.tsx",
     "components/rank-runs/rank-run-copy.ts",
+    "components/rank-runs/RetryDeferredDialog.tsx",
     "components/rank-runs/run-page-summary-presentation.ts",
     "components/rank-runs/run-target-table-columns.tsx",
     "components/rank-runs/RunDetailLoading.tsx",
@@ -1248,10 +1258,9 @@
     "components/settings/tracking/UrlInspectionCard.tsx",
     "components/settings/tracking/use-defaults-form-review.ts",
     "components/settings/tracking/use-reviewed-defaults.ts",
+    "components/settings/usage/account-extension.tsx",
     "components/settings/usage/BudgetEditModal.tsx",
     "components/settings/usage/PlanCard.tsx",
-    "components/settings/usage/ProviderBudgetLists.tsx",
-    "components/settings/usage/ProviderBudgetRow.tsx",
     "components/settings/usage/ProviderUsageCard.tsx",
     "components/settings/usage/UsageCard.tsx",
     "components/settings/usage/UsageLoading.tsx",
@@ -5264,6 +5273,21 @@
       },
       {
         "arguments": [],
+        "key": "emailPreferences.page.notificationDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "emailPreferences.page.notificationSuccess",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "emailPreferences.page.notificationTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "emailPreferences.page.successDescription",
         "tags": []
       },
@@ -6782,6 +6806,111 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.instanceUsage.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.copyProject",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.month",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.note",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.operations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.period",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.project",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.provider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.providerTable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.referenceTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.scope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.share",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.topNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.topTable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.unattributed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.unknownEntries",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.instanceUsage.unknownProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.metering.allProjects",
         "tags": []
       },
@@ -6868,6 +6997,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.navigation.audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.instance",
         "tags": []
       },
       {
@@ -7303,6 +7437,11 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.recovery.categories.closed_unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.recovery.categories.failed",
         "tags": []
       },
@@ -7319,6 +7458,16 @@
       {
         "arguments": [],
         "key": "instanceAdmin.recovery.category",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.closedUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.closedUnknownNote",
         "tags": []
       },
       {
@@ -7354,6 +7503,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.recovery.connectionBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.counts.closedUnknown",
         "tags": []
       },
       {
@@ -7584,6 +7738,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.recovery.evidence.recoveryStates.attempting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.recoveryStates.closed_unknown",
         "tags": []
       },
       {
@@ -8078,6 +8237,11 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.recovery.states.stopped",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.recovery.states.unfinished",
         "tags": []
       },
@@ -8139,6 +8303,56 @@
       {
         "arguments": [],
         "key": "instanceAdmin.recovery.work",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.closedUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.historical",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.ledger",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "instanceAdmin.recoveryAccounting.requests",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recoveryAccounting.view",
         "tags": []
       },
       {
@@ -8722,6 +8936,11 @@
       {
         "arguments": [],
         "key": "onboarding.firstCheck.description.manual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "onboarding.firstCheck.description.noKeywords",
         "tags": []
       },
       {
@@ -15819,6 +16038,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.providerAccountBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.providerAllocationUpdated",
         "tags": []
       },
@@ -15839,7 +16063,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.providerPaymentRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.providerRateUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerRecoveryAccountChecked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerRecoveryAccountCheckStarted",
         "tags": []
       },
       {
@@ -16527,8 +16766,18 @@
         "tags": []
       },
       {
-        "arguments": [],
+        "arguments": [
+          [
+            "duration",
+            1
+          ]
+        ],
         "key": "projectBacklinks.workspace.idle.bullets.cache",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectBacklinks.workspace.idle.bullets.cacheLoading",
         "tags": []
       },
       {
@@ -21100,6 +21349,11 @@
       },
       {
         "arguments": [],
+        "key": "projectDomainOverview.workspace.state.idleBullets.cacheLoading",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDomainOverview.workspace.state.idleBullets.key",
         "tags": []
       },
@@ -23138,6 +23392,61 @@
       },
       {
         "arguments": [],
+        "key": "projectIntegrations.billingSources.creditsHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.creditsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.freeHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.freeTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.manage",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.billingSources.more",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.ownHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.ownTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.showLess",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.billingSources.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectIntegrations.byo.detail",
         "tags": []
       },
@@ -23154,6 +23463,16 @@
       {
         "arguments": [],
         "key": "projectIntegrations.categories.analyticsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.categories.enrichmentDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.categories.enrichmentTitle",
         "tags": []
       },
       {
@@ -24063,6 +24382,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectIntegrations.provider.ahrefsDescription",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "provider",
@@ -24080,6 +24404,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.provider.connectionFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.provider.connectionPaused",
         "tags": []
       },
       {
@@ -24110,6 +24439,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.provider.credentialUnreadable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.provider.dataforseoDescription",
         "tags": []
       },
       {
@@ -24170,6 +24504,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.provider.neverSyncedHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.provider.notConnected",
         "tags": []
       },
       {
@@ -24393,11 +24732,6 @@
       },
       {
         "arguments": [],
-        "key": "projectIntegrations.providerManagement.searches",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectIntegrations.providerManagement.staleEvidence",
         "tags": []
       },
@@ -24572,6 +24906,405 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectIntegrations.recovery.accountingCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectIntegrations.recovery.affected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.allLoaded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.billingDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.billingHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.billingSearchesDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.billingSearchesHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.check",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.checkHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.checking",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.checkingDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.checkingHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.checks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.checksDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.completed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.costRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.credentialsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.credentialsHeading",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectIntegrations.recovery.currentIncidentCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismiss",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismissedBilling",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismissedInternal",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismissedPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismissedReady",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.dismissedReview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.free",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.internalDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.internalHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.keyword",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectIntegrations.recovery.loaded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.loadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.loadMore",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.nextCheck",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.notCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectIntegrations.recovery.notSent",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.notSentCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.open",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.openProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.outcome",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.outcomeDeferred",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.outcomeFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.owner",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.pausedFallback",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.rangeThrough",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.readyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.readyHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.readyStatus",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.restrictedDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.restrictedHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.restrictedRankDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.retry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.reviewDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.reviewHeading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.reviewUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.savedSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.schedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.scrollMore",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.showDetails",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.unknownCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.recovery.unverifiedDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectIntegrations.recovery.unverifiedHeading",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectIntegrations.tabs.aria",
         "tags": []
@@ -24594,6 +25327,76 @@
       {
         "arguments": [],
         "key": "projectIntegrations.tabs.usage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.creditsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.mixedUnits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.ownKeysTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.partialUsage",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectIntegrations.usageDetailsTable.providerCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.retainedConnection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageApiRequests",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageAppRequests",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageBilled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageMonth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageMonthEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageMonthHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.usageDetailsTable.usageProvider",
         "tags": []
       },
       {
@@ -25635,6 +26438,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.checks.checkDeferred",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "range",
@@ -26391,6 +27199,30 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.checks.monitoringAction",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ],
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.checks.monitoringItem",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.monitoringTitle",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -26602,6 +27434,16 @@
           ]
         ],
         "key": "projectRankTracker.checks.providerChainExhausted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.providerConnectionPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.checks.providerConnectionPausedLower",
         "tags": []
       },
       {
@@ -38694,6 +39536,11 @@
       },
       {
         "arguments": [],
+        "key": "projectResearch.recent.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectResearch.recent.section",
         "tags": []
       },
@@ -39724,6 +40571,56 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.accountBlock.accounting_review",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.accountBlock.not_verified",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.accountBlock.provider_account_restricted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.accountBlock.provider_auth",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.accountBlock.provider_billing",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.rankRuns.actions.connectionSettings",
         "tags": []
@@ -40144,6 +41041,16 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.deferral.project_read_only.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.provider_account_blocked.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.provider_account_blocked.label",
         "tags": []
       },
       {
@@ -40854,6 +41761,51 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.desktop",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.loadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.mobile",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.rankRuns.retryReview.targets",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.retryReview.warning",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.retryRun",
         "tags": []
       },
@@ -40939,6 +41891,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.sealedAccountPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.selection",
         "tags": []
       },
@@ -41015,6 +41972,11 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.started",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.startNewRun",
         "tags": []
       },
       {
@@ -47599,6 +48561,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerAccountBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.providerAllocationUpdated",
         "tags": []
       },
@@ -47619,7 +48586,22 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerPaymentRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.providerRateUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerRecoveryAccountChecked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerRecoveryAccountCheckStarted",
         "tags": []
       },
       {
@@ -51354,6 +52336,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsShell.sections.usage",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsTeam.errors.action",
         "tags": []
       },
@@ -52740,6 +53727,279 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.apiHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.appHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.credits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.creditsScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.creditsTag",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.edit",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ],
+          [
+            "surface",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.editLimitFor",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.left",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.limitReached",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.nearLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.noLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.noMatches",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.noProviderLimitOwn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.noProviders",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.ownKeys",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.ownKeysScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.ownKeyTag",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "from",
+            1
+          ],
+          [
+            "to",
+            1
+          ],
+          [
+            "total",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.pageRange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.previous",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "project",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.projectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.projectTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.projectTitlePlural",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.providersDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.providersTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.resets",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.searchProviders",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.setLimit",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ],
+          [
+            "surface",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.setLimitFor",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.spentTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.limits.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ],
+          [
+            "month",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.usagePeriod",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.used",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.usedEstimated",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            1
+          ],
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.usedOf",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            1
+          ],
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.limits.usedOfEstimated",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "date",
@@ -53324,21 +54584,6 @@
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.saving",
-        "tags": []
-      },
-      {
-        "arguments": [
-          [
-            "count",
-            2
-          ]
-        ],
-        "key": "projectSettingsUsage.provider.budgetDialog.searches",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.budgetDialog.searchesAdornment",
         "tags": []
       },
       {
@@ -57804,6 +59049,16 @@
       },
       {
         "arguments": [],
+        "key": "shared.dashboardLayout.widgets.domain_rating.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.dashboardLayout.widgets.domain_rating.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.dashboardLayout.widgets.local_business_results.description",
         "tags": []
       },
@@ -57885,6 +59140,206 @@
       {
         "arguments": [],
         "key": "shared.dashboardLayout.widgetUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.attribution",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "value",
+            1
+          ]
+        ],
+        "key": "shared.domainRating.change",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "domain",
+            1
+          ]
+        ],
+        "key": "shared.domainRating.chartLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.connect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.daily",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.date",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "shared.domainRating.days",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.definition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.emptyHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.enable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.failure",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.history",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.hosted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "shared.domainRating.lastSuccess",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.latest",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.manageConnection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.missing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.noDomain",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.noSource",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.noValue",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.own",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.range",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.rating",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.saveError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.single",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.trackingHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.trackingTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.unchanged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.domainRating.waiting",
         "tags": []
       },
       {
@@ -63869,6 +65324,41 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.usageViews.unitCounts.apiUnits",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.usageViews.unitCounts.searches",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.usageViews.unitCounts.units",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.apiUnits",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "shared.usageViews.units.budget_cents",
         "tags": []
@@ -63891,6 +65381,11 @@
       {
         "arguments": [],
         "key": "shared.usageViews.units.requests",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.searches",
         "tags": []
       },
       {
@@ -64898,6 +66393,51 @@
       },
       {
         "arguments": [],
+        "key": "shell.notifications.accountBlock.billing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.accountBlock.body",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.accountBlock.credentials",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.accountBlock.resolvedBody",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "shell.notifications.accountBlock.resolvedTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.notifications.accountBlock.restricted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "shell.notifications.accountBlock.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.notifications.allNotifications",
         "tags": []
       },
@@ -65754,6 +67294,36 @@
           ]
         ],
         "key": "shell.workspace.keywordCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            6
+          ]
+        ],
+        "key": "shell.workspace.limitHelp",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            6
+          ]
+        ],
+        "key": "shell.workspace.limitReached",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            6
+          ]
+        ],
+        "key": "shell.workspace.limitSupportMessage",
         "tags": []
       },
       {

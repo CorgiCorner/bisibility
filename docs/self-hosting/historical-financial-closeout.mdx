@@ -9,10 +9,46 @@ until the exact policy, target and preview digest have been approved. Acceptance
 of a policy does not approve a later apply digest or an administrator role change.
 
 Use this only for untouched original BYOK imports from the completed accounting
-history migration. Cost must already be measured in USD. The original connection
-must be retired. Active attempts, unknown money, hosted charges, retained native
-proof, native/custom budgets and retrospective alert configurations are refused.
-The tool never accepts an amount, provider identity or native quantity to invent.
+history migration. Cost must already be measured in USD. Active attempts, unknown
+money, hosted charges, retained native proof, native/custom budgets and
+retrospective alert configurations are refused. The tool never accepts an amount,
+provider identity or native quantity to invent.
+
+## Policies
+
+The manifest selects one policy explicitly. Both keep every other eligibility rule.
+
+| Policy | Connection | Project |
+| --- | --- | --- |
+| `known-cost-incomplete-byok-v1` | Must be retired (no connection row). | Existing (`projectPublicId`) or retired (`retiredProjectId`). |
+| `known-cost-incomplete-byok-live-connection-v1` | Must still exist. | Must exist (`projectPublicId`). |
+
+The live-connection variant is for imports whose BYOK connection is still in use, so
+customers keep their own provider keys. It additionally requires that the connection:
+
+- still exists, belongs to the manifest project and uses your own credentials, not
+  hosted credentials;
+- is the operation's original connection, for every operation in the batch;
+- has exactly one retained history snapshot of itself, which proves it existed before the
+  import and was not re-created later. Retained settings and rates may describe only this
+  same connection, project and provider.
+
+Every operation must have been created before the original history snapshot. The
+connection identity, credential source and snapshot cutoff are bound into the
+preview digest. Closure never changes the connection row, its credentials, status,
+current budgets or any operation outside the manifest. Apply share-locks the connection row
+until it commits, so a concurrent credential switch or delete waits for it. Newer work on the same
+connection is never closed. Any remaining unresolved operation there, including
+newer in-flight work, keeps the connection gate blocked. Apply uses the same
+connection and scope locks as ordinary paid admission, so concurrent work waits
+instead of interleaving.
+
+For a project that was deleted after the import, use the retired policy with
+`retiredProjectId` (the operations' internal project ID) instead of `projectPublicId`.
+The project row and the connection row must both be absent. Every operation must
+belong to that project. The audit record then has no project reference and
+targets the instance operation; its plan digest identifies the batch. Audit records of both
+variants also carry the internal connection ID, and the retired project ID where used.
 
 This is a new trusted host operator policy. It uses the normal typed transaction-bound Store correction and an atomic host disposition journal. The new receipt retains source `import`; it is not a native provider probe or a fabricated invoice. Public Meter and HTTP import restrictions remain unchanged. Original snapshots and receipts
 remain unchanged. Provider identity and native units stay unknown, with an explicit
@@ -33,23 +69,36 @@ authorization for any role change, then run a fresh approval preview. Use the sa
 database role for preview and apply. Keep connection credentials out of manifests,
 logs, command arguments and review artifacts.
 
-Prepare a JSON manifest with policy `known-cost-incomplete-byok-v1`, namespace,
-projectPublicId, retired connection ID, operator public ID, an evidence-search
-reference and reason, recordedAt, and sorted unique operations. Each operation
-contains only operationId, expectedVersion and original receiptId. Maximum batch:
-100 operations from one project and connection. The timestamp must be current.
+Prepare a JSON manifest with the selected policy, namespace, projectPublicId (or
+retiredProjectId), connection ID, operator public ID, an evidence-search reference
+and reason, recordedAt, and sorted unique operations. Each operation contains only
+operationId, expectedVersion and original receiptId. Maximum batch: 100 operations
+from one project and connection. The timestamp must be current.
+
+A read-only listing helps build the operations list. It returns at most 100 untouched
+known-cost candidates per call, with `nextAfter` for the next page, and suggests the
+policy that matches the connection state. It is not an eligibility proof; the preview
+rechecks every rule.
 
 ```sh
 node --experimental-transform-types --import ./lib/temporal/register-loader.mjs \
+  scripts/ops/closeout-historical-finances.ts --list --namespace default \
+  --project prj_example --connection <connection-id>
+node --experimental-transform-types --import ./lib/temporal/register-loader.mjs \
   scripts/ops/closeout-historical-finances.ts --manifest ./closeout.json
 ```
+
+For the live-connection policy, also pass
+`--policy known-cost-incomplete-byok-live-connection-v1`; it must equal the manifest
+policy. For a deleted project, list with `--retired-project <internal-id>`.
 
 The dedicated operator transaction defaults to 180000 ms, explicitly bounded by
 `--timeout-ms` to 30000..300000 ms. This does not change application transaction
 timeouts. Default execution is a RepeatableRead read-only transaction, with no adoption,
 provider calls or wallet writes. Its target fingerprint hides database connection
 details. Preview can run before the closeout schema exists; apply requires migration
-`20261018190000_historical_financial_closeout` and matching application code.
+`20261018190000_historical_financial_closeout` and matching application code. The
+live-connection policy also requires `20261027210000_historical_closeout_live_connection_policy`.
 
 ## Approved apply and retained evidence
 

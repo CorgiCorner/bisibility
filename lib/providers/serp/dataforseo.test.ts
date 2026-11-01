@@ -82,6 +82,49 @@ const stopOnMatchParams = {
 };
 
 describe("dataForSeoProvider", () => {
+  it.each(["match", "miss", "empty"] as const)(
+    "handles partial live results: %s",
+    async (scenario) => {
+      const items =
+        scenario === "empty"
+          ? []
+          : [
+              {
+                type: "organic",
+                rank_group: 1,
+                domain: scenario === "match" ? "example.com" : "other.test",
+                url: scenario === "match" ? "https://example.com/" : "https://other.test/",
+              },
+            ];
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          jsonResponse({
+            status_code: 20000,
+            tasks: [{ status_code: 40106, cost: 0.0012, result: [{ items }] }],
+          }),
+        ),
+      );
+      const result = dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: false, depth: 20 }));
+      if (scenario === "empty") {
+        await expect(result).rejects.toBeInstanceOf(ProviderCallError);
+      } else {
+        await expect(result).resolves.toMatchObject({
+          position: scenario === "match" ? 1 : null,
+          costCents: 0.12,
+          observation: { completeness: "unknown" },
+          raw: {
+            organic_results: expect.arrayContaining([
+              expect.objectContaining({
+                domain: scenario === "match" ? "example.com" : "other.test",
+              }),
+            ]),
+          },
+        });
+      }
+    },
+  );
+
   it.each(["task", "envelope"] as const)(
     "classifies account verification by numeric %s status without retrying",
     async (level) => {

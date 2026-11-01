@@ -23,7 +23,7 @@ const previewFeed = {
     {
       body: "The connected provider rejected the latest scheduled check.",
       createdAt: "2026-06-30T07:30:00.000Z",
-      href: appPath("prj_story", "integrations"),
+      href: appPath("prj_story", "providers"),
       id: "notif_provider",
       meta: "DataForSEO",
       payload: null,

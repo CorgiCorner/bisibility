@@ -123,7 +123,7 @@
         "marketInactive": "Mercado inactivo",
         "marketInactiveDescription": "El mercado de esta palabra clave está en pausa, así que la comprobación se ha detenido sin generar ningún coste.",
         "noProvider": "Sin proveedor operativo",
-        "noProviderDescription": "Revisa la fuente de datos seleccionada en Integraciones para iniciar esta ejecución.",
+        "noProviderDescription": "Revisa la fuente de datos seleccionada en Proveedores para iniciar esta ejecución.",
         "providerUnavailable": "Proveedor no disponible",
         "providerUnavailableDescription": "Ahora mismo no se puede contactar con el proveedor. La ejecución se iniciará sola en cuanto se restablezca la conexión.",
         "targetPaused": "Objetivo en pausa: se reanudará cuando lo reactives",
@@ -192,7 +192,7 @@
           "detail": "No había un proveedor disponible para esta comprobación.",
           "label": "Sin proveedor"
         },
-        "openIntegrations": "Abrir Integraciones",
+        "openIntegrations": "Abrir Proveedores",
         "primary_provider_not_dataforseo": {
           "detail": "Las comprobaciones programadas en cola solo se ejecutan cuando DataForSEO es el proveedor principal.",
           "label": "Las comprobaciones en cola requieren DataForSEO"
@@ -200,6 +200,10 @@
         "project_ineligible": {
           "detail": "Este proyecto no puede ejecutar comprobaciones de posición programadas.",
           "label": "El proyecto no puede ejecutar comprobaciones"
+        },
+        "provider_account_blocked": {
+          "detail": "Esta comprobación no se envió porque la cuenta del proveedor requiere atención.",
+          "label": "La cuenta del proveedor requiere atención"
         },
         "project_read_only": {
           "detail": "Este proyecto es de solo lectura, así que la comprobación se aplazó.",
@@ -332,7 +336,26 @@
       "operations": "Operaciones",
       "usageNotRecorded": "Sin registrar",
       "estimatedOperations": "estimación: {count}",
-      "skippedOrBlocked": "Omitidos o bloqueados"
+      "skippedOrBlocked": "Omitidos o bloqueados",
+      "retryReview": {
+        "title": "Revisar comprobaciones aplazadas",
+        "cancel": "Cancelar",
+        "confirm": "Reintentar estas comprobaciones",
+        "warning": "Cada reintento es un nuevo intento de pago sujeto al estado actual de la cuenta del proveedor. Una conexión bloqueada puede aplazarlo de nuevo.",
+        "targets": "{count, plural, one {# comprobación para reintentar} other {# comprobaciones para reintentar}}",
+        "loadFailed": "No se pudieron cargar las comprobaciones. Cierra el diálogo y vuelve a intentarlo.",
+        "desktop": "Ordenador",
+        "mobile": "Móvil"
+      },
+      "sealedAccountPaused": "El proveedor aprobado está pausado. Inicia una nueva ejecución para revisar una nueva estimación del coste antes de pagar otro intento.",
+      "startNewRun": "Iniciar una nueva ejecución",
+      "accountBlock": {
+        "provider_billing": "{provider}: no se envió por un problema de pago o capacidad.",
+        "provider_auth": "{provider}: no se envió porque se rechazaron las credenciales.",
+        "provider_account_restricted": "{provider}: no se envió por una restricción de acceso.",
+        "not_verified": "{provider}: no se envió porque la cuenta no estaba verificada.",
+        "accounting_review": "{provider}: no se envió a la espera de revisión contable."
+      }
     }
   }
 }

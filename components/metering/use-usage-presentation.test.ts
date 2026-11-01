@@ -7,7 +7,8 @@ import { useUsagePresentation } from "./use-usage-presentation";
 
 const locale = vi.hoisted(() => ({ value: "en" }));
 const saved = vi.hoisted(() => ({ options: {} as UsagePresentationOptions }));
-vi.mock("next-intl", () => ({
+vi.mock("next-intl", async (original) => ({
+  ...(await original<object>()),
   useLocale: () => locale.value,
   useMessages: () => (locale.value === "pl" ? pl : en),
 }));
@@ -148,7 +149,22 @@ describe("funding-aware credit presentation", () => {
     expect(p.figure(amount("1000", "cents"))).toBe("$10.00");
     expect(p.figure(amount("1000", "budget_cents"))).toBe("$10.00");
     expect(p.figure(amount("3", "units"))).toBe("3");
-    expect(p.unit("units")).toBe("Units");
+    expect(p.unit("units")).toBe("Billing units");
+  });
+
+  it("uses count-aware provider units and nominative headers", () => {
+    const p = useUsagePresentation();
+    expect(p.unit("units")).toBe("Billing units");
+    expect(p.providerUnit("units", "SerpApi", "1")).toBe("search");
+    expect(p.providerUnit("units", "SerpApi", "2")).toBe("searches");
+    locale.value = "pl";
+    const plp = useUsagePresentation();
+    expect(plp.unit("units")).toBe("Jednostki rozliczeniowe");
+    expect(plp.unit("units", "1")).toBe("jednostka rozliczeniowa");
+    expect(plp.unit("units", "2")).toBe("jednostki rozliczeniowe");
+    expect(plp.unit("units", "5")).toBe("jednostek rozliczeniowych");
+    expect(plp.unit("units", "1000000000000001")).toBe("jednostek rozliczeniowych");
+    expect(plp.providerUnit("units", "SerpApi", "22")).toBe("wyszukiwania");
   });
 
   it("does not let the BYOK currency/raw-unit preference change the credit denomination", () => {

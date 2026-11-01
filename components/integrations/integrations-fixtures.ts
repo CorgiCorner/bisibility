@@ -184,4 +184,27 @@ export const integrationCategories = [
       },
     ],
   },
+  {
+    id: "enrichment",
+    ...INTEGRATION_CATEGORY_COPY.enrichment,
+    providers: [
+      {
+        id: "ahrefs",
+        kind: "enrichment",
+        name: "Ahrefs",
+        icon: "chart",
+        logoDomain: "ahrefs.com",
+        tint: "#FF8800",
+        description:
+          "Daily Domain Rating history for your domain. Connect your own Ahrefs API key.",
+        status: "ready",
+        meta: [{ labelKey: "lastUsed", valueKey: "never" }],
+        drawer: makeDrawer({
+          activities: activities("never"),
+          costHelp: "One free Domain Rating request per day. No bisibility credits are used.",
+          credentialFields: providerCredentialFieldsFor("ahrefs", { connected: false }),
+        }),
+      },
+    ],
+  },
 ] satisfies readonly IntegrationCategoryFixture[];

@@ -1,4 +1,15 @@
+import { recordConnectionAccountFailure } from "@/lib/integrations/provider-recovery/account-failure";
+import { recordRankRefusals } from "@/lib/integrations/provider-recovery/refusal-journal";
+import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { resetRecordedWorkerDefinition } from "@/lib/rank-check/recorded-worker-definition.test-fixture";
+import { persistQueuedRefusal } from "./queued-account-observation";
+
+vi.mock("@/lib/integrations/provider-recovery/account-failure", () => ({
+  recordConnectionAccountFailure: vi.fn(async () => true),
+}));
+vi.mock("@/lib/integrations/provider-recovery/refusal-journal", () => ({
+  recordRankRefusals: vi.fn(async () => undefined),
+}));
 
 vi.mock("@/lib/measurement-definitions/worker-queued", async (importOriginal) => {
   const actual =
@@ -133,12 +144,17 @@ const mocks = vi.hoisted(() => {
         },
       ),
     },
+    providerBlockedAttempt: { findMany: vi.fn().mockResolvedValue([]) },
+    meteringPaidAttemptContext: { findFirst: vi.fn().mockResolvedValue(null) },
     rankCheckRun: {
       findUnique: vi.fn().mockResolvedValue(null),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
-    rankCheckRunItem: { updateMany: vi.fn() },
+    rankCheckRunItem: {
+      updateMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([{ id: "item_1", rankCheckId: "rank_1" }]),
+    },
   };
   return {
     assertQueuedRankCheckBatchAllocation: vi.fn(),
@@ -251,6 +267,96 @@ describe("queued paid-call fence", () => {
       unknown: [],
     });
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
+  });
+
+  it.each([
+    ["account_blocked", "provider_account_blocked"],
+    ["accounting_review", "usage_unconfirmed"],
+  ])("resumes persisted %s refusal without another provider request", async (reason, expected) => {
+    mocks.state.batch = "submitting";
+    mocks.prisma.providerBlockedAttempt.findMany.mockResolvedValueOnce([
+      { rankCheckId: "rank_1", refusalKey: "incident", reason },
+    ]);
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith("batch_1", expected, {
+      preSend: true,
+    });
+    expect(mocks.submit).not.toHaveBeenCalled();
+  });
+
+  it("finishes a proven refusal even after scheduler cutover", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
+    mocks.state.batch = "submitting";
+    mocks.prisma.providerBlockedAttempt.findMany.mockResolvedValueOnce([
+      { rankCheckId: "rank_1", refusalKey: "incident", reason: "account_blocked" },
+    ]);
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+    expect(mocks.submit).not.toHaveBeenCalled();
+  });
+
+  it.each(["journal", "deferral"])(
+    "retries only persistence after the %s write fails",
+    async (failedWrite) => {
+      const refusal = new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+      mocks.beginJournal.mockRejectedValueOnce(refusal);
+      if (failedWrite === "journal")
+        vi.mocked(recordRankRefusals).mockRejectedValueOnce(new Error("temporary database error"));
+      else
+        mocks.deferQueuedRankCheckBatch.mockRejectedValueOnce(
+          new Error("temporary database error"),
+        );
+      const pending = await submitQueuedRankCheckBatch("batch_1");
+      expect(pending).toMatchObject({
+        state: "refusal_pending",
+        refusal: { reason: "account_blocked", rankCheckIds: ["rank_1"] },
+      });
+      if (!("refusal" in pending) || !pending.refusal) throw new Error("Missing refusal proof");
+      await expect(persistQueuedRefusal(pending.refusal)).resolves.toMatchObject({
+        state: "deferred",
+      });
+      expect(recordRankRefusals).toHaveBeenCalledTimes(2);
+      expect(mocks.deferQueuedRankCheckBatch).toHaveBeenLastCalledWith(
+        "batch_1",
+        "provider_account_blocked",
+        { preSend: true },
+      );
+      expect(mocks.submit).not.toHaveBeenCalled();
+    },
+  );
+
+  it("journals a pre-send batch refusal and a duplicate delivery never sends", async () => {
+    const refusal = new ProviderRecoveryAdmissionError("accounting_review", { kind: "account" });
+    mocks.beginJournal.mockRejectedValueOnce(refusal);
+    mocks.deferQueuedRankCheckBatch.mockImplementationOnce(async () => {
+      mocks.state.batch = "deferred";
+      return { state: "deferred" };
+    });
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+    expect(recordRankRefusals).toHaveBeenCalledOnce();
+    expect(recordRankRefusals).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        checks: [{ rankCheckId: "rank_1" }],
+        refusal,
+      }),
+    );
+    expect(mocks.submit).not.toHaveBeenCalled();
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith("batch_1", "usage_unconfirmed", {
+      preSend: true,
+    });
+  });
+
+  it("defers a pre-send account block with its distinct reason", async () => {
+    const refusal = new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+    mocks.beginJournal.mockRejectedValueOnce(refusal);
+    await submitQueuedRankCheckBatch("batch_1");
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith(
+      "batch_1",
+      "provider_account_blocked",
+      { preSend: true },
+    );
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it("uses hosted credentials and a credit journal with a retained key", async () => {
@@ -521,6 +627,82 @@ describe("queued paid-call fence", () => {
     expect(mocks.submit).toHaveBeenCalledOnce();
     expect(mocks.journal.discard).not.toHaveBeenCalled();
     expect(mocks.state.task).toBe("ambiguous");
+  });
+
+  it("logs one structured line with the rejection status fields and no credentials", async () => {
+    const fake = { login: "fake-login@example.test", password: "Fake-Pass-9137" };
+    const basic = Buffer.from(`${fake.login}:${fake.password}`).toString("base64");
+    mocks.resolveProviderCredentials.mockReturnValue(fake);
+    const actual = await vi.importActual<typeof import("@/lib/providers/serp/dataforseo-queued")>(
+      "@/lib/providers/serp/dataforseo-queued",
+    );
+    mocks.submit.mockImplementationOnce((input) =>
+      actual.prepareDataForSeoQueuedTasks(input).submit(),
+    );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status_code: 40200,
+          status_message: `Payment Required: ${fake.login}/${fake.password} Authorization: Basic ${basic}`,
+        }),
+        { status: 402 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "ambiguous" });
+      expect(recordConnectionAccountFailure).toHaveBeenCalledWith(
+        expect.objectContaining({
+          connectionId: "connection_1",
+          credentialVersion: expect.any(String),
+          fact: {
+            kind: "failure",
+            code: "provider_billing",
+            scope: { kind: "capability", capability: "rank_check" },
+          },
+        }),
+      );
+
+      const lines = warn.mock.calls.filter(
+        ([message]) => message === "[queued-rank-check] submission not confirmed",
+      );
+      expect(lines).toHaveLength(1);
+      expect(lines[0]?.[1]).toEqual({
+        outcome: "ambiguous",
+        batchId: "batch_1",
+        connectionId: "connection_1",
+        phase: "rejected",
+        httpStatus: 402,
+        dataforseoStatusCode: 40200,
+        dataforseoStatusMessage: expect.stringContaining("Payment Required: [redacted]"),
+        errorName: "DataForSeoError",
+      });
+      const logged = JSON.stringify(warn.mock.calls);
+      for (const secret of [
+        fake.login,
+        fake.password,
+        basic,
+        "private keyword text",
+        "example.com",
+      ])
+        expect(logged).not.toContain(secret);
+      const sentHeaders = fetchMock.mock.calls[0]?.[1]?.headers as Record<string, string>;
+      expect(logged).not.toContain(sentHeaders.Authorization);
+      expect(mocks.prisma.queuedRankCheckBatch.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            error: expect.stringContaining(
+              "DataForSEO submission rejection is not proof of zero charge: DataForSEO task submission failed with HTTP 402, status 40200: Payment Required: [redacted]",
+            ),
+            state: "ambiguous",
+          }),
+        }),
+      );
+    } finally {
+      warn.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it("retains unknown receipts when a POST throttle response has no native zero-charge proof", async () => {

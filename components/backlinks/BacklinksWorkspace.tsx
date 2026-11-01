@@ -168,7 +168,7 @@ export function BacklinksWorkspace({
         }
         reconnect={context.providerStatus === "needs_reauth"}
         providers={context.supportingProviders}
-        href={appPath(projectId, "integrations")}
+        href={appPath(projectId, "providers")}
       >
         <AnalyzeCard
           disabled={unresolved}
@@ -287,12 +287,12 @@ export function BacklinksWorkspace({
       ) : failedSummary ? null : context.providerStatus !== "connected" ? (
         <ProviderAccessEmptyState
           surface="backlinks"
-          href={appPath(projectId, "integrations")}
+          href={appPath(projectId, "providers")}
           providers={context.supportingProviders}
           reconnect={context.providerStatus === "needs_reauth"}
         />
       ) : (
-        <BacklinksIdleState projectRef={projectId} />
+        <BacklinksIdleState cacheTtlSeconds={context.cacheTtlSeconds} projectRef={projectId} />
       )}
     </section>
   );

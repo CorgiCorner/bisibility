@@ -10,6 +10,7 @@ import {
 import { warnDeprecatedInspectionDailyBudget } from "../deployment/deprecated-inspection-budget";
 import { notifyOps } from "../ops/notify";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
+import { queuedRankCheckConfig } from "../rank-check/queued-config";
 import { assertRankCheckRunsScheduleEnabled } from "../rank-check/run-maintenance-config";
 import {
   rankCheckSchedulerMode,
@@ -22,6 +23,7 @@ import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
 import { deleteRetiredJobProcessorSchedule, RECONCILER_SCHEDULE_ID } from "./bootstrap";
 import { temporalConnectionOptions, temporalSdkConnectionOptions } from "./connection-options";
 import { temporalDeploymentConfig } from "./deployment-config";
+import { ensureDomainRatingSchedule } from "./domain-rating-bootstrap";
 import {
   ensureAlertDigestFlushSchedule,
   ensureAlertHealthSchedule,
@@ -39,6 +41,7 @@ import {
   ensureWeeklyDigestSchedule,
 } from "./maintenance-schedule-bootstrap";
 import { ensureMeteringMaintenanceSchedule } from "./metering-maintenance-bootstrap";
+import { ensureProviderAccountCheckSchedule } from "./provider-account-check-bootstrap";
 import { ensureProviderUsageReconciliationSchedule } from "./provider-usage-reconcile-bootstrap";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 // Imported directly, not through bootstrap.ts: search-insights-bootstrap.ts already depends on
@@ -132,6 +135,7 @@ async function enforceWorkerSchemaGuard() {
 async function run() {
   warnDeprecatedInspectionDailyBudget();
   warnRetiredRankSchedulerConfiguration();
+  queuedRankCheckConfig(); // Warns once when an invalid queue setting disables the route.
   assertTemporalSchedulerEnabled();
   console.error("[temporal] worker startup config", {
     address,
@@ -198,6 +202,7 @@ async function run() {
         ensureAlertDeliverySweepSchedule(),
         ensureCheckNotificationSummariesSchedule(),
         ensureAuditPurgeSchedule(),
+        ensureDomainRatingSchedule(),
         ensureRankCheckRawPurgeSchedule(),
         ensureQueuedRankCheckRetentionSchedule(),
         ensureAlertDigestFlushSchedule(),
@@ -211,6 +216,7 @@ async function run() {
         ensureSearchInsightsSyncSchedule(),
         ensureSearchInsightsQueueReconciliationSchedule(),
         ensureProviderUsageReconciliationSchedule(),
+        ensureProviderAccountCheckSchedule(),
         ensureMeteringMaintenanceSchedule(),
         ensureSitemapSyncSchedule(),
         ensurePresenceSyncSchedule(),

@@ -37,3 +37,12 @@ export const ACTIVE_QUEUED_BATCH_STATES = Object.entries(QUEUED_BATCH_TRANSITION
 export function queuedTaskStateForRankCheck(status: string) {
   return status === "completed" || status === "deferred" || status === "failed" ? status : null;
 }
+
+export function countQueuedStates(
+  groups: readonly { _count: { _all: number }; state: string }[],
+  states: readonly string[],
+) {
+  return groups
+    .filter((group) => states.includes(group.state))
+    .reduce((sum, group) => sum + group._count._all, 0);
+}

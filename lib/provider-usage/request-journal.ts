@@ -10,12 +10,14 @@ import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-atte
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
+  ProviderRecoveryAdmissionError,
   type ProviderUsageObserver,
   ProviderUsagePersistenceError,
   type ProviderUsageReceipt,
 } from "@/lib/providers/usage";
 import { formatQuantity } from "@usagekit/core";
 import type { ProviderRequest } from "@usagekit/providers";
+import { recordRankAccountResponse } from "./account-evidence";
 import { type OwnAttemptGrant, ownAdmission } from "./admission-extension";
 import { captureByokEvidence, discardByokEvidence, recordByokEvidence } from "./byok-evidence";
 import { type RequestCostLimit, requestCostLimit } from "./request-cost-limit";
@@ -41,6 +43,7 @@ type JournalInput = {
 export function createProviderRequestJournal(db: PrismaClient, input: JournalInput) {
   const consent = input.costLimit ?? requestCostLimit(input.maxCostCents);
   let started = 0;
+  let fenced = 0;
   let quantity: number | null = 0;
   let costCents: number | null = 0;
   let lastRequestCostCents: number | null = null;
@@ -49,6 +52,18 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
   const grants = new Map<string, OwnAttemptGrant>();
   let ordinal = 0;
   const observer: ProviderUsageObserver = {
+    async observeResponse(status, body, attemptId) {
+      await recordRankAccountResponse({
+        feature: input.attribution.context.feature,
+        provider: input.provider,
+        projectId: input.projectId,
+        connectionId: input.connectionId,
+        credentialVersion: input.credentialVersion ?? null,
+        status,
+        body,
+        estimate: attemptId ? grants.get(attemptId)?.pricedRequest?.estimate : undefined,
+      });
+    },
     async prepare(attempt) {
       const next = consent.admit(() => begin(attempt.attemptKey, attempt.request));
       const attemptId = await next;
@@ -83,6 +98,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       const grant = grants.get(id);
       if (!grant) throw new Error("Paid transport grant is unavailable");
       await ownAdmission.fence(db, [grant], input.beforeFence);
+      fenced++;
     },
     async cancel(id) {
       await db.$transaction(async (tx) => {
@@ -177,6 +193,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
         throw new ActionPaymentError("payment_already_executed");
       if (
         cause instanceof ProviderCostLimitError ||
+        cause instanceof ProviderRecoveryAdmissionError ||
         cause instanceof DeploymentAdmissionExhaustedError ||
         cause instanceof BudgetExhaustedError ||
         cause instanceof ProviderAllocationExhaustedError
@@ -266,6 +283,9 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
     },
     get started() {
       return started > 0;
+    },
+    get fenced() {
+      return fenced;
     },
     get quantity() {
       return quantity;

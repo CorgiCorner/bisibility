@@ -74,7 +74,7 @@
         "dashboard": "ダッシュボード",
         "domainOverview": "ドメイン概要",
         "install": "インストール",
-        "integrations": "連携",
+        "integrations": "プロバイダー",
         "keywordResearch": "キーワードリサーチ",
         "markets": "市場",
         "rankTracker": "順位トラッカー",
@@ -129,7 +129,16 @@
       "allNotifications": "すべての通知",
       "filterError": "インシデントを読み込めませんでした。",
       "allTab": "すべて",
-      "incidentsTab": "インシデント"
+      "incidentsTab": "インシデント",
+      "accountBlock": {
+        "title": "{provider} の接続を一時停止中",
+        "body": "プロバイダー画面でプロバイダーのアカウントを確認してください。保存されたスケジュールは維持されます。",
+        "resolvedTitle": "{provider} アカウントを確認しました",
+        "resolvedBody": "残っている会計上の保留がなければ、今後のチェックでこの接続を利用できます。未実行のチェックは自動で再試行されません。",
+        "billing": "プロバイダー画面でプロバイダーの支払い状況または利用可能な枠を確認してください。",
+        "credentials": "プロジェクトのオーナーにプロバイダー画面でプロバイダーの認証情報を更新するよう依頼してください。",
+        "restricted": "プロバイダー画面でプロバイダーアカウントの権限を確認してください。"
+      }
     },
     "operations": {
       "actionError": "この処理を更新できませんでした。再読み込みして再試行してください。",
@@ -156,7 +165,7 @@
           "budgetWithoutAmounts": "使用量の確認が必要です。再試行する前に予算と未確定の処理を確認してください。",
           "keywordArchived": "このキーワードはチェック開始前にアーカイブされたため、費用が発生する前に停止しました。",
           "marketInactive": "このキーワードの市場が一時停止中のため、費用が発生する前にチェックを停止しました。",
-          "noProvider": "この実行を開始するには、連携で選択したデータソースを確認してください。",
+          "noProvider": "この実行を開始するには、プロバイダーで選択したデータソースを確認してください。",
           "providerUnavailable": "現在プロバイダーに接続できません。再接続されると実行は自動的に開始されます。",
           "waiting": "この実行は開始待ちです。可能になり次第、自動的に続行されます。",
           "workerCloud": "現在バックグラウンドワーカーに接続できません。再接続されると実行は自動的に開始されます。",
@@ -298,7 +307,7 @@
         "docs": "ドキュメント",
         "domainOverview": "ドメイン概要",
         "gettingStarted": "セットアップ",
-        "integrations": "連携",
+        "integrations": "プロバイダー",
         "install": "インストール",
         "importFromAnotherInstance": "別のインスタンスからインポート",
         "instanceAdministration": "インスタンス管理",
@@ -353,7 +362,10 @@
         "label": "デフォルトのプロジェクト: {name}",
         "makeDefault": "デフォルトのプロジェクトに設定",
         "makeDefaultDescription": "サインイン時に最初に開きます。"
-      }
+      },
+      "limitReached": "プロジェクト数の上限（{limit, plural, other {#件}}）に達しました",
+      "limitHelp": "このアカウントで所有できるプロジェクトは最大{limit, plural, other {#件}}です。クリックしてサポートに上限の引き上げを依頼するか、不要なプロジェクトを削除してください。",
+      "limitSupportMessage": "プロジェクト数の上限を引き上げたいです。現在、このアカウントで所有できるプロジェクトは最大{limit, plural, other {#件}}です。"
     },
     "writeMode": {
       "migrationSettings": "移行設定",

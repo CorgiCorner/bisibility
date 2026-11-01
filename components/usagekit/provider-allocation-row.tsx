@@ -71,7 +71,7 @@ export function AllocationRow({
   projection?: BudgetProjectionInput;
   inputPolicy?: AllocationInputPolicy;
   formatFigure?: (figure: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
+  formatUnit?: (unit: string, count?: string) => string;
   formatTime?: (iso: string) => string;
   onRefreshBalance?: (row: ProviderAllocationRow) => Promise<ProviderAllocationRow | null>;
   renderEvidence?: (evidence: ProviderAllocationRow | null) => ReactNode;
@@ -90,7 +90,7 @@ export function AllocationRow({
   const refreshVisible = canRefreshBalance?.(row) ?? true;
   const display = (value: Figure) =>
     value !== "unavailable" && value.certainty !== "unknown"
-      ? `${formatFigure?.(value) ?? `${value.certainty === "estimated" ? `${feedback.estimated} ` : ""}${value.text}`} ${formatUnit?.(value.unit) ?? (value.unit === "cents" || value.unit === "customer_cents" ? feedback.cents : value.unit)}`
+      ? `${formatFigure?.(value) ?? `${value.certainty === "estimated" ? `${feedback.estimated} ` : ""}${value.text}`} ${formatUnit?.(value.unit, value.text) ?? (value.unit === "cents" || value.unit === "customer_cents" ? feedback.cents : value.unit)}`
       : figureText(value, feedback);
   const available =
     (availability ? (suggestionEligible?.(availability) ?? fresh) : fresh) &&

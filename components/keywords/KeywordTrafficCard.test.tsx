@@ -146,7 +146,7 @@ describe("KeywordTrafficCard", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Connect Search Console" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
   });
 

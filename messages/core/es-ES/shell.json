@@ -74,7 +74,7 @@
         "dashboard": "Panel",
         "domainOverview": "Visión general del dominio",
         "install": "Conexión de agentes",
-        "integrations": "Integraciones",
+        "integrations": "Proveedores",
         "keywordResearch": "Investigación",
         "markets": "Mercados",
         "rankTracker": "Seguimiento de posiciones",
@@ -129,7 +129,16 @@
       "allNotifications": "Todas las notificaciones",
       "filterError": "No se pudieron cargar los incidentes.",
       "allTab": "Todas",
-      "incidentsTab": "Incidentes"
+      "incidentsTab": "Incidentes",
+      "accountBlock": {
+        "title": "Conexión de {provider} pausada",
+        "body": "Revisa la cuenta del proveedor en Proveedores. La programación guardada se conserva.",
+        "resolvedTitle": "Cuenta de {provider} verificada",
+        "resolvedBody": "Las próximas comprobaciones pueden usar esta conexión si no queda ningún bloqueo contable. Las comprobaciones omitidas no se reintentan automáticamente.",
+        "billing": "Revisa el pago o la capacidad disponible de la cuenta del proveedor en Proveedores.",
+        "credentials": "Pide a un propietario del proyecto que actualice las credenciales del proveedor en Proveedores.",
+        "restricted": "Revisa los permisos de la cuenta del proveedor en Proveedores."
+      }
     },
     "operations": {
       "actionError": "No se ha podido actualizar esta operación. Actualiza la página e inténtalo de nuevo.",
@@ -156,7 +165,7 @@
           "budgetWithoutAmounts": "El uso requiere revisión. Revisa el presupuesto y las operaciones sin conciliar antes de reintentarlo.",
           "keywordArchived": "Esta palabra clave se ha archivado antes de que empezara la comprobación, así que se ha detenido sin llegar a costar nada.",
           "marketInactive": "El mercado de esta palabra clave está en pausa, así que la comprobación se ha detenido sin llegar a costar nada.",
-          "noProvider": "Revisa la fuente de datos seleccionada en Integraciones para iniciar esta ejecución.",
+          "noProvider": "Revisa la fuente de datos seleccionada en Proveedores para iniciar esta ejecución.",
           "providerUnavailable": "Ahora mismo no se puede contactar con el proveedor. La ejecución se iniciará sola en cuanto vuelva a conectarse.",
           "waiting": "Esta ejecución está esperando para empezar. Continuará automáticamente en cuanto sea posible.",
           "workerCloud": "Ahora mismo no se puede contactar con el proceso en segundo plano. La ejecución se iniciará sola en cuanto vuelva a conectarse.",
@@ -298,7 +307,7 @@
         "docs": "Documentación",
         "domainOverview": "Visión general del dominio",
         "gettingStarted": "Puesta en marcha",
-        "integrations": "Integraciones",
+        "integrations": "Proveedores",
         "install": "Conexión de agentes",
         "importFromAnotherInstance": "Importar desde otra instancia",
         "instanceAdministration": "Administración de la instancia",
@@ -353,7 +362,10 @@
         "label": "Proyecto predeterminado: {name}",
         "makeDefault": "Establecer como proyecto predeterminado",
         "makeDefaultDescription": "Se abre primero al iniciar sesión."
-      }
+      },
+      "limitReached": "Has alcanzado el límite de {limit, plural, one {# proyecto} other {# proyectos}}",
+      "limitHelp": "Tu cuenta puede tener hasta {limit, plural, one {# proyecto} other {# proyectos}}. Haz clic para pedir a soporte que amplíe el límite o elimina un proyecto que ya no necesites.",
+      "limitSupportMessage": "Hola, me gustaría ampliar mi límite de proyectos. Mi cuenta puede tener hasta {limit, plural, one {# proyecto} other {# proyectos}}."
     },
     "writeMode": {
       "migrationSettings": "Ajustes de migración",

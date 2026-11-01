@@ -14,7 +14,8 @@ export function explicitQueuedGetCostCents(
   if (
     matches[0].status_code !== 20000 &&
     matches[0].status_code !== DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS &&
-    matches[0].status_code !== 40501
+    matches[0].status_code !== 40501 &&
+    matches[0].status_code !== 40106
   )
     return null;
   const value = matches[0].cost;

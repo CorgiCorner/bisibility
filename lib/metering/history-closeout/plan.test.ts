@@ -152,3 +152,19 @@ it("manifest rejects arbitrary amounts/providers, duplicate IDs and unsorted sco
     }).success,
   ).toBe(false);
 });
+
+it("keeps accepted v1 digests, receipt identity and corrections byte-identical", () => {
+  const { snapshot, manifest, now } = closeoutFixture();
+  const plan = planCloseout(snapshot, manifest, now);
+  // Pinned from the accepted v1 implementation before the live-connection variant existed.
+  expect(plan.planHash).toBe("e7b5847a22561e3882d79d9ac51703035c417d6d30ecae79afda82e0fd000b4d");
+  expect(plan.manifestHash).toBe(
+    "d56d57b258fde39871942c5f22e75e81f7f68dd8931a09ed31fbabe237f1857f",
+  );
+  expect(plan.corrections[0]!.receipt.id).toBe(
+    "history-closeout:902c994cc430c98c50793b5f6fbb6c1b5cc4179e6250e9b5521233cd9bcd75ab",
+  );
+  expect(hash(canonical(plan.corrections))).toBe(
+    "d444b0a06064ee10bee02a4baf4a1b5a5739fc75ef9f8c3bd1f88f1c60b9afe6",
+  );
+});

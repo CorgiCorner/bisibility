@@ -100,9 +100,9 @@ describe("hero experiment measurement", () => {
     ).toHaveLength(1);
   });
 
-  it("can start measuring on the onboarding page after consent is granted", () => {
+  it("counts onboarding entry before consent and does not repeat it after consent", () => {
     render(<OnboardingEntryAnalytics />);
-    expect(track).not.toHaveBeenCalled();
+    expect(track).toHaveBeenCalledExactlyOnceWith("onboarding_entered", {});
     act(() => syncHeroExperiment(true, undefined));
     expect(track).toHaveBeenCalledExactlyOnceWith("onboarding_entered", {});
   });

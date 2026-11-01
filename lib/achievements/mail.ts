@@ -4,6 +4,7 @@ import { parseActiveLocale } from "@/i18n/config";
 import { prisma } from "@/lib/db/prisma";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
+import { oneClickUnsubscribeUrl } from "@/lib/email/one-click-link";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { EmailBudgetExceededError, sendEmail } from "@/lib/email/send";
 import { normalizeOrigin } from "@/lib/seo/origin";
@@ -125,6 +126,7 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
       try {
         await sendEmail({
           category: "bulk",
+          listUnsubscribeUrl: oneClickUnsubscribeUrl(unsubscribe, "achievement"),
           to: eligible.user.email,
           subject: t("emailSubject"),
           text,

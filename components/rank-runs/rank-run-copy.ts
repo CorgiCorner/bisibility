@@ -84,6 +84,14 @@ export function localizedBlockedRunCopy(
       title: t("blocked.noProvider"),
     };
   }
+  if (reason === "queued_dataforseo_disabled") {
+    return {
+      action: null,
+      compact: t("deferral.queued_dataforseo_disabled.label"),
+      description: t("deferral.queued_dataforseo_disabled.detail"),
+      title: t("deferral.queued_dataforseo_disabled.label"),
+    };
+  }
   if (reason === "market_inactive") {
     return {
       action: null,

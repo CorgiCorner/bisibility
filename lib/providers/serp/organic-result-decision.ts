@@ -56,6 +56,20 @@ function candidateDomain(value: unknown) {
   return typeof value === "string" ? normalizeDomain(value) : null;
 }
 
+function unresolvedRedirect(value: unknown) {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      normalizeDomain(url.hostname) === "google.com" &&
+      (url.pathname === "/goto" || url.pathname === "/goto/")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function organicRank(value: unknown) {
   if (value === null || value === undefined) return { state: "missing" as const };
   return typeof value === "number" && Number.isFinite(value) && Number.isInteger(value) && value > 0
@@ -93,8 +107,16 @@ export function decideOrganicResult(input: {
   const matches: NormalizedOrganicResult[] = [];
   let matchingRankUncertain = false;
   let usableCandidates = 0;
+  let unresolvedRank = Number.POSITIVE_INFINITY;
 
   input.candidates.forEach((candidate, index) => {
+    if (unresolvedRedirect(candidate.url)) {
+      addAnomaly(anomalies, "organic_result_unclassifiable", index);
+      const ranked = organicRank(candidate.rank);
+      // A redirect host cannot prove which destination occupies this position.
+      unresolvedRank = Math.min(unresolvedRank, ranked.state === "valid" ? ranked.rank : 0);
+      return;
+    }
     const classified = domainState(candidate, input.domain);
     if (classified.state !== "known") {
       addAnomaly(anomalies, "organic_result_unclassifiable", index);
@@ -132,7 +154,14 @@ export function decideOrganicResult(input: {
     if (classified.matches) matches.push(result);
   });
 
-  if (matchingRankUncertain || (input.candidates.length > 0 && usableCandidates === 0)) {
+  const best = matches.sort((left, right) => left.rank - right.rank)[0];
+  const unresolvedCouldChangeResult =
+    unresolvedRank <= Math.min(input.depth, best?.rank ?? input.depth);
+  if (
+    matchingRankUncertain ||
+    unresolvedCouldChangeResult ||
+    (input.candidates.length > 0 && usableCandidates === 0)
+  ) {
     return {
       anomalies,
       organicResults,
@@ -142,7 +171,6 @@ export function decideOrganicResult(input: {
     };
   }
 
-  const best = matches.sort((left, right) => left.rank - right.rank)[0];
   return best
     ? {
         anomalies,

@@ -5,6 +5,7 @@ import type { SerpDepth } from "@/lib/serp/constants";
 export type RankCheckAttempt = {
   provider: string;
   message: string;
+  reason?: "allocation_exhausted" | "funding_exhausted" | "account_blocked" | "provider_failed";
 };
 
 type RankCheckPersistenceGuard = (tx: Prisma.TransactionClient) => Promise<void>;

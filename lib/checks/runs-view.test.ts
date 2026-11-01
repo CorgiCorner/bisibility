@@ -203,6 +203,19 @@ describe("checks runs view", () => {
     );
   });
 
+  it("does not count pre-send refusals as provider failures", () => {
+    const rows = Array.from({ length: 13 }, () => ({
+      provider: "dataforseo",
+      status: "deferred",
+      attempts: [
+        { provider: "dataforseo", message: "provider_account_blocked", reason: "account_blocked" },
+      ],
+    }));
+    expect(buildProviderHealth([], rows, [{ provider: "dataforseo" }])).toMatchObject([
+      { provider: "dataforseo", failed: 0, rateLimited: 0 },
+    ]);
+  });
+
   it("uses the extra fetched row for exact checkedAt and id cursor edges", () => {
     const first = buildCheckRunsView(
       [

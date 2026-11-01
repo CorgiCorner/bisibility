@@ -132,7 +132,7 @@ export function AiResearchWorkspace({
         surface="ai"
         blocked={noSource}
         providers={supportingProviders}
-        href={appPath(projectId, "integrations")}
+        href={appPath(projectId, "providers")}
       >
         {noSource && mode === "prompt" ? null : (
           <Card>

@@ -143,8 +143,8 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return sectionMeta("Markets", "Manage locations, keyword defaults, and market lifecycle.");
   }
 
-  if (matches(sectionPath, "/integrations")) {
-    return sectionMeta("Integrations", "Connect data providers and analytics sources.");
+  if (matches(sectionPath, "/providers")) {
+    return sectionMeta("Providers", "Connect data providers and analytics sources.");
   }
 
   if (matches(sectionPath, "/getting-started")) {

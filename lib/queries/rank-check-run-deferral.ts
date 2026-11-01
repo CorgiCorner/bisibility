@@ -21,3 +21,16 @@ export async function sharedRankCheckRunDeferralCode(
   if (codes.size !== 1) return null;
   return [...codes][0] ?? null;
 }
+
+export async function hasAccountDeferredRankCheck(projectId: string, runPublicId: string) {
+  return Boolean(
+    await prisma.rankCheck.findFirst({
+      where: {
+        run: { projectId, publicId: runPublicId, deletedAt: null },
+        status: "deferred",
+        deferredReason: "provider_account_blocked",
+      },
+      select: { id: true },
+    }),
+  );
+}

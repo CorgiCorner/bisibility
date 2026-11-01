@@ -2,7 +2,6 @@ import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers"
 import { notificationTransaction } from "@/lib/notifications/transaction";
 import { loadContext, preparedKeyword } from "./queued-prepare-context";
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { sameDefinitionBytes } from "@/lib/measurement-definitions/canonical";
@@ -14,6 +13,7 @@ import { queuedDefinitionRequests } from "@/lib/measurement-definitions/worker-q
 import { captureWorkerDefinition } from "@/lib/measurement-definitions/worker-session";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { ProviderQuoteUnavailableError } from "@/lib/provider-rates/native-quote";
+import { TASKSET_TRANSACTION_OPTIONS } from "@/lib/provider-usage/taskset-timeouts";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
 import { storedDeferralReason } from "./deferral-reason";
 import { queuedBatchBudgetDeferral, queuedBatchOrigin } from "./queued-attribution";
@@ -233,7 +233,7 @@ export async function prepareQueuedRankCheckBatch(
       startedAt: batch.createdAt.toISOString(),
       state: batch.state,
     };
-  });
+  }, TASKSET_TRANSACTION_OPTIONS);
   await publishOperationChanged({ projectId: input.projectId }).catch(() => undefined);
   return result;
 }

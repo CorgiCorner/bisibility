@@ -272,7 +272,13 @@ type ProviderCatalogItemBase = {
   /** When true, a missing login credential defaults to the project's tracked domain. */
   loginDefaultsToProjectDomain?: boolean;
   logoDomain?: string;
+  /** What the provider bills in when it counts its own units instead of money. */
+  billingUnit?: ProviderBillingUnit;
+  accountUrl?: string;
 };
+
+/** Provider-defined billed quantities; one request can bill zero or many of them. */
+export type ProviderBillingUnit = "searches" | "apiUnits";
 
 export type ProviderCatalogItem = ProviderCatalogItemBase;
 export type ProviderCatalogEntry = ProviderCatalogItemBase & {

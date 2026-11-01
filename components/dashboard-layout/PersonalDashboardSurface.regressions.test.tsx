@@ -106,6 +106,7 @@ describe("dashboard preference regressions", () => {
   it("keeps a failed conflict read locked and allows an explicit reload before review", async () => {
     actions.read.mockRejectedValueOnce(new Error("Temporary read failure"));
     surface("local");
+    fireEvent.click(screen.getByRole("button", { name: "Customize dashboard" }));
     fireEvent.click(screen.getByRole("button", { name: "Set as my default" }));
     const review = await screen.findByRole("region", { name: "Review the current saved layout" });
     await waitFor(() =>
@@ -123,6 +124,7 @@ describe("dashboard preference regressions", () => {
   });
   it("requires explicit review of a newer revision after default conflict, then retries it", async () => {
     surface("local");
+    fireEvent.click(screen.getByRole("button", { name: "Customize dashboard" }));
     fireEvent.click(screen.getByRole("button", { name: "Set as my default" }));
     const review = await screen.findByRole("region", { name: "Review the current saved layout" });
     expect(actions.read).toHaveBeenCalledExactlyOnceWith(initial.projectId);

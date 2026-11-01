@@ -123,7 +123,7 @@
         "marketInactive": "Market not active",
         "marketInactiveDescription": "This keyword's market is paused, so the check was stopped before it cost anything.",
         "noProvider": "No working provider",
-        "noProviderDescription": "Review the selected data source in Integrations to start this run.",
+        "noProviderDescription": "Review the selected data source in Providers to start this run.",
         "providerUnavailable": "Provider unavailable",
         "providerUnavailableDescription": "The provider isn't reachable right now. The run starts on its own once it reconnects.",
         "targetPaused": "Paused target - resumes when you unpause it",
@@ -192,7 +192,7 @@
           "detail": "No provider was available for this check.",
           "label": "No provider"
         },
-        "openIntegrations": "Open Integrations",
+        "openIntegrations": "Open Providers",
         "primary_provider_not_dataforseo": {
           "detail": "Scheduled queued checks run only when DataForSEO is the primary provider.",
           "label": "Queued checks need DataForSEO"
@@ -200,6 +200,10 @@
         "project_ineligible": {
           "detail": "This project is not eligible for scheduled rank checks.",
           "label": "Project cannot run checks"
+        },
+        "provider_account_blocked": {
+          "detail": "This check was not sent because the provider account needs attention.",
+          "label": "Provider account needs attention"
         },
         "project_read_only": {
           "detail": "This project is read-only, so the check was deferred.",
@@ -332,7 +336,26 @@
       "operations": "Operations",
       "usageNotRecorded": "Not recorded",
       "estimatedOperations": "estimate {count}",
-      "skippedOrBlocked": "Skipped or blocked"
+      "skippedOrBlocked": "Skipped or blocked",
+      "retryReview": {
+        "title": "Review deferred checks",
+        "cancel": "Cancel",
+        "confirm": "Retry these checks",
+        "warning": "Each retry is a new paid attempt and is subject to the current provider account state. A blocked connection may defer again.",
+        "targets": "{count, plural, one {# check to retry} other {# checks to retry}}",
+        "loadFailed": "Could not load the checks. Close this dialog and try again.",
+        "desktop": "Desktop",
+        "mobile": "Mobile"
+      },
+      "sealedAccountPaused": "The approved provider is paused. Start a new run to review a fresh cost preview before paying for another attempt.",
+      "startNewRun": "Start a new run",
+      "accountBlock": {
+        "provider_billing": "{provider}: not sent because billing or capacity needs attention.",
+        "provider_auth": "{provider}: not sent because credentials were rejected.",
+        "provider_account_restricted": "{provider}: not sent because access was restricted.",
+        "not_verified": "{provider}: not sent because the account was not verified.",
+        "accounting_review": "{provider}: not sent pending accounting review."
+      }
     }
   }
 }

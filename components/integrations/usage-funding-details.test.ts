@@ -66,11 +66,12 @@ describe("funding-specific usage details", () => {
       { ...row, fundingSource: "platform", measurements: required(data.detail.rows[1]).units },
     ];
     const view = usageFundingSummary(data.summary);
-    expect(view.funding[0]).toEqual(row);
+    const { requests: _requests, ...ownMeasurements } = row.measurements;
+    expect(view.funding[0]).toEqual({ ...row, measurements: ownMeasurements });
     expect(view.funding[1]?.measurements).toEqual({
-      requests: amount("3", "requests"),
       customer_cents: amount("13.0001", "customer_cents"),
     });
+    expect(view.measurements).not.toHaveProperty("requests");
     expect(data.summary.funding[1]?.measurements.units).toBeDefined();
   });
 });

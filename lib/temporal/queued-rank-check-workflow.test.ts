@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   continueAsNew: vi.fn(),
   inspect: vi.fn(),
   persist: vi.fn(),
+  persistRefusal: vi.fn(),
   prepare: vi.fn(),
   progress: vi.fn(),
   proxies: [] as unknown[],
@@ -21,7 +22,7 @@ vi.mock("@temporalio/workflow", () => ({
   isCancellation: vi.fn(() => false),
   proxyActivities: vi.fn((options) => {
     mocks.proxies.push(options);
-    if (options.startToCloseTimeout === "45 seconds") {
+    if (options.startToCloseTimeout === "6 minutes") {
       return { submitQueuedRankCheckBatchActivity: mocks.submit };
     }
     if (options.startToCloseTimeout === "2 minutes") {
@@ -34,6 +35,7 @@ vi.mock("@temporalio/workflow", () => ({
       authorizeQueuedRankCheckBatchActivity: mocks.authorize,
       prepareQueuedRankCheckBatchActivity: mocks.prepare,
       queuedRankCheckBatchProgressActivity: mocks.progress,
+      persistQueuedRefusalActivity: mocks.persistRefusal,
       timeoutQueuedRankCheckBatchActivity: mocks.timeout,
     };
   }),
@@ -98,6 +100,60 @@ describe("queuedRankCheckBatchWorkflow", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
+  });
+
+  it("hands a pre-send refusal to a persistence-only activity without inspection or replay", async () => {
+    const refusal = {
+      batchId: "batch_1",
+      connectionId: "connection",
+      credentialVersion: "version",
+      incidentId: "incident",
+      legacyVersion: null,
+      rankCheckIds: ["check"],
+      reason: "account_blocked",
+      scope: { kind: "account" },
+    };
+    mocks.submit.mockResolvedValue({ state: "refusal_pending", refusal });
+    mocks.persistRefusal.mockResolvedValue({
+      completed: 0,
+      failed: 0,
+      pending: 0,
+      state: "deferred",
+    });
+    await expect(queuedRankCheckBatchWorkflow(input)).resolves.toEqual({
+      completed: 0,
+      failed: 0,
+      pending: 0,
+      state: "deferred",
+    });
+    expect(mocks.persistRefusal).toHaveBeenCalledWith(refusal);
+    expect(mocks.submit).toHaveBeenCalledOnce();
+    expect(mocks.inspect).not.toHaveBeenCalled();
+  });
+
+  it("continues evidence recovery if a pending refusal already crossed the fence", async () => {
+    const refusal = {
+      batchId: "batch_1",
+      connectionId: "connection",
+      credentialVersion: "version",
+      incidentId: "incident",
+      legacyVersion: null,
+      rankCheckIds: ["check"],
+      reason: "account_blocked",
+      scope: { kind: "account" },
+    };
+    mocks.submit.mockResolvedValue({ state: "refusal_pending", refusal });
+    mocks.persistRefusal.mockResolvedValue({
+      completed: 0,
+      failed: 0,
+      pending: 1,
+      state: "ambiguous",
+    });
+    await expect(queuedRankCheckBatchWorkflow(input)).resolves.toMatchObject({
+      state: "completed",
+    });
+    expect(mocks.inspect).toHaveBeenCalledOnce();
+    expect(mocks.submit).toHaveBeenCalledOnce();
   });
 
   it("uses a Temporal timer between readiness checks", async () => {
@@ -472,7 +528,7 @@ describe("queuedRankCheckBatchWorkflow", () => {
       mocks.proxies.some(
         (options) =>
           (options as { retry?: { maximumAttempts?: number } }).retry?.maximumAttempts === 3 &&
-          (options as { startToCloseTimeout?: string }).startToCloseTimeout === "45 seconds",
+          (options as { startToCloseTimeout?: string }).startToCloseTimeout === "6 minutes",
       ),
     ).toBe(true);
   });

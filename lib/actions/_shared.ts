@@ -217,7 +217,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
     projectPage("alerts"),
     projectPage("competitors"),
     projectPage("settings", "audit"),
-    projectPage("integrations"),
+    projectPage("providers"),
   ]);
 }
 
@@ -225,7 +225,7 @@ export function revalidateProviderViews() {
   revalidateTargets([
     projectPage("rank-tracker"),
     marketPage("rank-tracker"),
-    projectPage("integrations"),
+    projectPage("providers"),
     projectPage("dashboard"),
     projectPage("settings"),
     projectPage("settings", "audit"),

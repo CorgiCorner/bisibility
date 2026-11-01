@@ -11,6 +11,11 @@ export function isTruthyFlag(raw: string | undefined) {
   return value === "1" || value === "true" || value === "yes" || value === "on";
 }
 
+export function isFalsyFlag(raw: string | undefined) {
+  const value = raw?.trim().toLowerCase();
+  return value === "0" || value === "false" || value === "no" || value === "off";
+}
+
 export function isRankCheckDispatcherEnabled() {
   return dispatcherClaimsAllowed();
 }

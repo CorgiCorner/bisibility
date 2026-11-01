@@ -78,7 +78,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
     const sectionUrl = (section: string) =>
       input.projectRef ? absoluteUrl(input.origin, appPath(input.projectRef, section)) : appUrl;
     const alertsUrl = sectionUrl("alerts");
-    const integrationsUrl = sectionUrl("integrations");
+    const integrationsUrl = sectionUrl("providers");
     const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
     const pricingUrl = "https://bisibility.com/pricing";
 
@@ -90,7 +90,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
       "While it runs, three things worth switching on:",
       "",
       `- Alerts, so you hear about ranking moves without checking in ${alertsUrl}`,
-      `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${integrationsUrl}`,
+      `- Search Console and GA4 (in Providers), to see impressions and clicks next to rankings ${integrationsUrl}`,
       `- API and webhooks, if you want the data in your own tools ${apiDocsUrl}`,
       "",
       "Nothing is charged unless you add a card yourself. Plans and credits are explained at https://bisibility.com/pricing.",
@@ -110,7 +110,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
         `- Alerts, so you hear about ranking moves without checking in ${anchor(alertsUrl, alertsUrl)}`,
       ),
       paragraph(
-        `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${anchor(integrationsUrl, integrationsUrl)}`,
+        `- Search Console and GA4 (in Providers), to see impressions and clicks next to rankings ${anchor(integrationsUrl, integrationsUrl)}`,
       ),
       paragraph(
         `- API and webhooks, if you want the data in your own tools ${anchor(apiDocsUrl, apiDocsUrl)}`,

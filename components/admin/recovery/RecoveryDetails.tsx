@@ -86,7 +86,9 @@ export function RecoveryDetails({
               </p>
             </div>
           )}
-          {row.action ? (
+          {row.closedUnknown ? (
+            <p className="text-sm text-fg-muted">{t("closedUnknownNote")}</p>
+          ) : row.action ? (
             <p className="text-sm">
               {t("recommended")}: {t(`actions.${row.action}`)}
             </p>
@@ -102,7 +104,9 @@ export function RecoveryDetails({
           {row.spendingBlocked?.connection && (
             <p className="text-sm text-warning">{t("connectionBlocked")}</p>
           )}
-          <RecoveryTriageForm key={row.version} row={row} onSaved={onSaved} />
+          {!row.closedUnknown && (
+            <RecoveryTriageForm key={row.version} row={row} onSaved={onSaved} />
+          )}
         </div>
       )}
     </AppDrawer>

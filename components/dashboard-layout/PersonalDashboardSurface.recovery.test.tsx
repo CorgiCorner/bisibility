@@ -72,7 +72,9 @@ describe("unsupported dashboard layout explicit recovery", () => {
     expect(screen.getByText("Current layout revision: 8")).toBeVisible();
     fireEvent.click(review);
     expect(screen.getByRole("switch", { name: "Organic metrics" })).not.toBeChecked();
-    expect(screen.getByRole("button", { name: "Customize dashboard" })).toHaveFocus();
+    expect(screen.getByRole("dialog", { name: "Customize dashboard" })).toContainElement(
+      document.activeElement as HTMLElement,
+    );
     expect(screen.getByRole("button", { name: /^Save$/ })).toBeEnabled();
     expect(mocks.save).not.toHaveBeenCalled();
   });
@@ -111,7 +113,7 @@ describe("unsupported dashboard layout explicit recovery", () => {
     expect(mocks.save).not.toHaveBeenCalled();
     expect(mocks.setDefault).not.toHaveBeenCalled();
   });
-  it("closes an unsaved editor with Escape and restores the trigger focus", () => {
+  it("closes an unsaved editor with Escape and restores the trigger focus", async () => {
     render(<PersonalDashboardSurface {...fixture()} />);
     const trigger = screen.getByRole("button", { name: "Customize dashboard" });
     fireEvent.click(trigger);
@@ -119,11 +121,11 @@ describe("unsupported dashboard layout explicit recovery", () => {
     expect(
       screen.getByText("Unsaved layout draft. The stored layout has not changed."),
     ).toBeVisible();
-    fireEvent.keyDown(screen.getByRole("group", { name: "Customize dashboard" }), {
+    fireEvent.keyDown(screen.getByRole("dialog", { name: "Customize dashboard" }), {
       key: "Escape",
     });
     expect(screen.queryByRole("button", { name: /^Save$/ })).not.toBeInTheDocument();
-    expect(trigger).toHaveFocus();
+    await waitFor(() => expect(trigger).toHaveFocus());
     expect(mocks.save).not.toHaveBeenCalled();
     expect(
       screen.queryByText("Unsaved layout draft. The stored layout has not changed."),

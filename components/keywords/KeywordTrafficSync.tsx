@@ -109,7 +109,7 @@ export function KeywordTrafficSync({
       {!connected || needsAttention ? (
         <Link
           className="mt-2 inline-flex text-[12px] font-semibold text-accent-text hover:underline"
-          href={appPath(projectRef, "integrations")}
+          href={appPath(projectRef, "providers")}
         >
           {t("integrations")}
         </Link>

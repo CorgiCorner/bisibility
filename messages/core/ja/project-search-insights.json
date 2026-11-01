@@ -414,7 +414,7 @@
       "discoveredUrls": "検出した URL",
       "sitemapStoredOnly": "保存データから検出されたサイトマップファイルと URL 数です。Search Console に送信された合計数やサイトマップインデックスの階層ではありません。",
       "noSitemaps": "保存済みのサイトマップ URL がありません。Search Console でサイトマップを送信し、検出をお待ちください。サイトマップが未送信であるとは限りません。",
-      "noConnection": "ページのインデックス登録を表示するには、プロジェクトの連携設定で Search Console のプロパティを接続してください。",
+      "noConnection": "ページのインデックス登録を表示するには、プロジェクトのプロバイダーで Search Console のプロパティを接続してください。",
       "urls": "URL 一覧",
       "url": "URL",
       "urlsCaption": "各行は URL の最新の保存結果です。行を開いても Google へのリクエストは発生しません。",

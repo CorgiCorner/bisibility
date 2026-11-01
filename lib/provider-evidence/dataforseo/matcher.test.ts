@@ -6,6 +6,54 @@ import { matchHistoryTask } from "./matcher";
 const retained = { nativeTag: payload.tag, endpointPath: scope.submittedEndpointPath, payload };
 
 describe("unique tag and canonical submitted payload (AD-3)", () => {
+  it("matches queued Task GET metadata for the retained submission", () => {
+    const submitted = {
+      depth: 50,
+      device: "mobile",
+      find_targets_in: ["organic"],
+      keyword: "learn to surf at an older age",
+      language_code: "en",
+      location_name: "United States",
+      priority: 2,
+      search_param: "&nfpr=1",
+      stop_crawl_on_match: [{ match_type: "with_subdomains", match_value: "swellsurfcamp.com" }],
+      tag: "app=bisibility;stage=prod;src=app;trg=scheduled;f=rank_check;p=fixture;c=qtask_fixture",
+    };
+    const submission = {
+      nativeTag: submitted.tag,
+      endpointPath: scope.submittedEndpointPath,
+      payload: submitted,
+    };
+    const metadata = {
+      api: "serp",
+      function: "task_get",
+      se: "google",
+      se_type: "organic",
+      ...submitted,
+      os: "android",
+    };
+    const task = candidate({ tag: submitted.tag, metadata });
+    expect(matchHistoryTask(submitted.tag, submission, [task])).toEqual({ kind: "match", task });
+    for (const change of [
+      { depth: 10 },
+      { keyword: "different" },
+      { function: "live" },
+      { function: "task_ready" },
+      { se: "bing" },
+    ]) {
+      expect(
+        matchHistoryTask(submitted.tag, submission, [
+          { ...task, metadata: { ...metadata, ...change } },
+        ]),
+      ).toEqual({ kind: "no_match" });
+    }
+    expect(
+      matchHistoryTask(submitted.tag, submission, [
+        { ...task, metadata: { ...metadata, function: "task_post" } },
+      ]),
+    ).toMatchObject({ kind: "match" });
+  });
+
   it("matches the exact submission, tolerating only object key order", () => {
     const task = candidate({ metadata: Object.fromEntries(Object.entries(payload).reverse()) });
     expect(matchHistoryTask(payload.tag, retained, [task])).toEqual({ kind: "match", task });
@@ -177,6 +225,7 @@ describe("live priority is not applicable; queued priority stays exact", () => {
     { priority: null },
     { priority: undefined },
     { function: "task_post" },
+    { function: "task_get" },
   ])("rejects live candidate difference %s", (change) => {
     expect(
       matchHistoryTask(payload.tag, live, [

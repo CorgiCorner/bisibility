@@ -318,3 +318,57 @@ it.each(["restricted admin", "Meter failure", "21st connection"])(
     expect(mocks.execute).not.toHaveBeenCalled();
   },
 );
+
+it("self-host excludes hosted connections, usage and Credits limits", async () => {
+  const data = projectUsageFixture();
+  data.connections.push({
+    connectionId: "hosted",
+    provider: "SerpApi",
+    credentialSource: "hosted",
+  });
+  data.detail = {
+    ...data.detail,
+    rows: [
+      ...data.detail.rows,
+      {
+        ...data.detail.rows[0],
+        key: "hosted",
+        fundingSource: "platform",
+        dimensions: {
+          ...data.detail.rows[0].dimensions,
+          connection: "hosted",
+          provider: "SerpApi",
+        },
+      },
+    ],
+  };
+  mocks.metering.mockResolvedValue(data);
+  render(
+    await IntegrationUsagePanel({
+      projectRef: "prj_p",
+      editBudget: false,
+      connections: [
+        {
+          connectionId: "one",
+          providerId: "serpapi",
+          label: "Own source",
+          credentialSource: "own",
+          billable: true,
+        },
+        {
+          connectionId: "two",
+          providerId: "dataforseo",
+          label: "Hosted source",
+          credentialSource: "hosted",
+          billable: true,
+        },
+      ],
+    }),
+  );
+  expect(screen.getByText("Own source")).toBeVisible();
+  expect(screen.getByText("October 2026 · resets November 1")).toBeVisible();
+  expect(screen.queryByText("Hosted source")).toBeNull();
+  expect(screen.queryByRole("button", { name: /Credits.*provider/ })).toBeNull();
+  expect(screen.getByRole("button", { name: /Your keys.*provider/ })).toBeVisible();
+  expect(screen.queryByText("Project Credits limit")).toBeNull();
+});

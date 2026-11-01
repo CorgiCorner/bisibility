@@ -53,8 +53,8 @@ export function formatMoney(cents: number, { locale }: Pick<FormatContext, "loca
 }
 
 export function formatRunCost(run: CheckRunRow, context: FormatContext) {
-  if (run.status === "failed") return context.t("notAvailable");
   if (typeof run.costCents === "number") return formatMoney(run.costCents, context);
+  if (run.status === "failed") return context.t("notAvailable");
   if (typeof run.estimatedCostCents === "number") {
     return context.t("estimatedCost", { amount: formatMoney(run.estimatedCostCents, context) });
   }
@@ -119,6 +119,7 @@ export function presentCheckError(error: string, t: CheckRunsTranslations): stri
 
 export function formatResult(run: CheckRunRow, now: Date, context: FormatContext) {
   if (run.status === "running") return formatElapsed(run.startedAt, now, context);
+  if (run.status === "deferred") return context.t("checkDeferred");
   if (run.status === "failed") return context.t("allProvidersFailed");
   return typeof run.position === "number"
     ? context.t("position", { position: run.position })
@@ -134,6 +135,7 @@ export function formatAttemptOutcome(
   context: Pick<FormatContext, "t">,
   failedRun = false,
 ) {
+  if (attempt.outcome === "account_blocked") return context.t("providerConnectionPaused");
   if (failedRun && attempt.outcome === "ok") return context.t("providerError");
   const fallback = {
     credentials_unavailable: context.t("credentialsUnavailable"),

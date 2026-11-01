@@ -6,6 +6,7 @@ import type { PlanStatus } from "@/components/shell/plan-status";
 import { RealtimeIndicator } from "@/components/shell/RealtimeIndicator";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
+import type { WorkspaceProjectLimit } from "@/components/shell/WorkspaceSwitcher";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import type { ReactNode } from "react";
@@ -15,6 +16,8 @@ export type AppHeaderFrameProps = {
   accountActions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  /** Set when the account owns as many projects as it may: creation shows as blocked. */
+  projectLimit?: WorkspaceProjectLimit | null;
   canSetDefault?: boolean;
   /**
    * The context slot, already rendered by the route that knows there is one. It is the market
@@ -43,6 +46,7 @@ export function AppHeaderFrame({
   accountActions,
   activeProjectId,
   canCreateWorkspace,
+  projectLimit = null,
   canSetDefault,
   context,
   enabledExperimentalModules = [],
@@ -66,6 +70,7 @@ export function AppHeaderFrame({
         <MobileNav
           activeProjectId={activeProjectId}
           canCreateWorkspace={canCreateWorkspace}
+          projectLimit={projectLimit}
           canSetDefault={canSetDefault}
           enabledExperimentalModules={enabledExperimentalModules}
           planStatus={planStatus}

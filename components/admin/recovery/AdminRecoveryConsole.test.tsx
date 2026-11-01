@@ -101,7 +101,8 @@ it("caps selection at 25 eligible cases", () => {
   });
   expect(boxes[25]).toBeDisabled();
   expect(screen.getByRole("button", { name: "Review selected (25)" })).toBeEnabled();
-});
+  // Rendering 26 rows and 25 clicks exceeded 5 s under public coverage CI (v0.45.0-rc.1).
+}, 20_000);
 it("discloses normal provider spending when waking an originally authorized run", async () => {
   actions.preview.mockResolvedValue({
     ok: true,

@@ -1,12 +1,13 @@
 "use client";
-
 import { AdminEmailAllowance } from "@/components/admin/AdminEmailAllowance";
 import { AdminFailureBreakdown } from "@/components/admin/AdminFailureBreakdown";
 import { AdminHealthPills } from "@/components/admin/AdminHealthPills";
+import { AdminInstanceUsage } from "@/components/admin/AdminInstanceUsage";
 import { AdminOpsActions } from "@/components/admin/AdminOpsActions";
 import { displayTime, Metric, Panel, RankWindow } from "@/components/admin/AdminPrimitives";
 import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
+import { AdminRecoveryAccounting } from "@/components/admin/AdminRecoveryAccounting";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminTemporalHealth } from "@/components/admin/AdminTemporalHealth";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
@@ -200,7 +201,14 @@ export function AdminDashboard({
                 />
               ))}
             </div>
-            <AdminProviderUsageTable usage={data.stats.providerUsage} />
+            <AdminInstanceUsage report={data.stats.usageReport} period={data.stats.usagePeriod} />
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs font-medium">
+                {t("instanceUsage.referenceTitle")}
+              </summary>
+              <AdminProviderUsageTable usage={data.stats.providerUsage} />
+            </details>
+            <AdminRecoveryAccounting data={data.stats.recoveryAccounting} />
           </>
         )}
       </Panel>

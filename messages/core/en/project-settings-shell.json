@@ -13,8 +13,8 @@
       "results": "{count, plural, one {# setting found} other {# settings found}}",
       "resultsLabel": "Matching settings",
       "sections": {
-        "providerConnections": "Integrations / Connections",
-        "providerUsage": "Integrations / Usage"
+        "providerConnections": "Providers / Connections",
+        "providerUsage": "Providers / Usage"
       },
       "entries": {
         "apiKeys": {
@@ -118,6 +118,7 @@
     "sections": {
       "advanced": "Advanced",
       "billing": "Billing",
+      "usage": "Usage",
       "competitors": "Competitors",
       "dataSources": "Data sources",
       "developers": "Developers",

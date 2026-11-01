@@ -47,6 +47,7 @@ export async function fixture(
       "../../../prisma/migrations/20261011020000_accounting_history_snapshot/migration.sql",
       "../../../prisma/migrations/20261012001000_metering_utc_writers/migration.sql",
       "../../../prisma/migrations/20261018190000_historical_financial_closeout/migration.sql",
+      "../../../prisma/migrations/20261028190200_metering_unknown_closeout/migration.sql",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);

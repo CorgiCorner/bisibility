@@ -163,13 +163,13 @@ export function useRunPreflight({
       ) : null}
       {active ? (
         <PreflightDialog
-          budgetHref={`/app/${projectId}/integrations?tab=usage&budget=edit`}
+          budgetHref={`/app/${projectId}/providers?tab=usage&budget=edit`}
           cancelRunAction={cancelOverlappingRunFromApp}
           duplicateRunHref={projectRunsPath(projectId)}
           initialDepth={active.depth}
           initialPreview={active.preview}
           initialProviderId={providerId ?? undefined}
-          integrationsHref={`/app/${projectId}/integrations`}
+          integrationsHref={`/app/${projectId}/providers`}
           launchAction={launchRankCheckRunAction}
           onClose={() => setActive(null)}
           onStarted={(result) => {

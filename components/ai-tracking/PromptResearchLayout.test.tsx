@@ -84,7 +84,7 @@ it("offers shared Integrations access and locks retry for a missing source", () 
   view({ ok: false, reason: "no_source", message: "raw" });
   expect(
     screen.getByRole("link", { name: shared.shared.providerAccess.connectAction }),
-  ).toHaveAttribute("href", "/app/prj_public/integrations");
+  ).toHaveAttribute("href", "/app/prj_public/providers");
   expect(screen.getByText("Supported providers: DataForSEO.")).toBeVisible();
   expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
   expect(screen.queryByRole("button", { name: "Refresh estimate" })).not.toBeInTheDocument();

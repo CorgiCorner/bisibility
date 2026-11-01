@@ -38,7 +38,7 @@
       },
       "connect_source": {
         "active": "Search Console añade datos de tráfico gratuitos. Elige una fuente de datos de posiciones para comprobarlas en tiempo real.",
-        "done": "Tu fuente de datos de posiciones está configurada. Revisa su origen y los ajustes de uso en Integraciones."
+        "done": "Tu fuente de datos de posiciones está configurada. Revisa su origen y los ajustes de uso en Proveedores."
       },
       "first_check": {
         "active": "Ejecuta la primera comprobación para recoger las posiciones de las palabras clave que sigues. Los ajustes de las comprobaciones están en los ajustes de seguimiento del proyecto.",

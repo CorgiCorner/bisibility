@@ -7,6 +7,7 @@ import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-ext
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
 import {
   ProviderConnectionChangedError,
+  ProviderRecoveryAdmissionError,
   ProviderUsagePersistenceError,
 } from "@/lib/providers/usage";
 import { afterEach, expect, it, vi } from "vitest";
@@ -18,6 +19,22 @@ vi.mock("server-only", () => ({}));
 const report = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 vi.mock("@/lib/observability/server-message", () => ({ reportServerMessage: report }));
 afterEach(() => vi.clearAllMocks());
+
+it.each(["account_blocked", "accounting_review"] as const)(
+  "preserves the existing admission mapping for %s",
+  (reason) => {
+    const error = new ProviderRecoveryAdmissionError(reason, {
+      kind: "capability",
+      capability: "rank_check",
+    });
+    const previous = new ProviderUsagePersistenceError({ phase: "admission" });
+    expect(error).toBeInstanceOf(ProviderUsagePersistenceError);
+    expect(error.message).toBe(previous.message);
+    expect(error.phase).toBe(previous.phase);
+    expect(domainOverviewFailure(error)).toEqual(domainOverviewFailure(previous));
+    expect(error.reason).toBe(reason);
+  },
+);
 
 it.each([
   [new ProviderConnectionChangedError(), "provider_connection_changed", "before_dispatch"],

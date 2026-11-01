@@ -21,6 +21,7 @@ const DETAIL = {
   primary_provider_not_dataforseo: "deferral.primary_provider_not_dataforseo.detail",
   project_ineligible: "deferral.project_ineligible.detail",
   project_read_only: "deferral.project_read_only.detail",
+  provider_account_blocked: "deferral.provider_account_blocked.detail",
   queued_dataforseo_disabled: "deferral.queued_dataforseo_disabled.detail",
   queued_submission_disabled: "deferral.queued_submission_disabled.detail",
   quote_unavailable: "deferral.quote_unavailable.detail",
@@ -43,6 +44,7 @@ const LABEL = {
   primary_provider_not_dataforseo: "deferral.primary_provider_not_dataforseo.label",
   project_ineligible: "deferral.project_ineligible.label",
   project_read_only: "deferral.project_read_only.label",
+  provider_account_blocked: "deferral.provider_account_blocked.label",
   queued_dataforseo_disabled: "deferral.queued_dataforseo_disabled.label",
   queued_submission_disabled: "deferral.queued_submission_disabled.label",
   quote_unavailable: "deferral.quote_unavailable.label",
@@ -58,18 +60,19 @@ export function deferralDetail(code: DeferralReasonCode, t: RankRunTranslator) {
 
 function deferralAction(code: DeferralReasonCode, projectRef: ProjectRef) {
   if (
+    code === "provider_account_blocked" ||
     code === "credentials_unavailable" ||
     code === "no_provider" ||
     code === "primary_provider_not_dataforseo"
   ) {
     return {
-      href: appPath(projectRef, "integrations"),
+      href: appPath(projectRef, "providers"),
       labelKey: "deferral.openIntegrations" as const,
     };
   }
   if (code === "budget_exhausted" || code === "budget_missing" || code === "credits_exhausted") {
     return {
-      href: appPath(projectRef, "settings", "usage"),
+      href: `${appPath(projectRef, "providers")}?tab=usage`,
       labelKey: "deferral.reviewBudget" as const,
     };
   }
@@ -85,8 +88,20 @@ export function DeferralReasonText({
 }>) {
   const t = useTranslations("projectRuns.rankRuns");
   const action = deferralAction(code, projectRef);
+  if (code === "provider_account_blocked") {
+    return (
+      <span className="block text-[11.5px] leading-[1.4] text-fg-muted">
+        {deferralDetail(code, t)}{" "}
+        {action ? (
+          <Link className={dataLinkClassName} href={action.href}>
+            {t(action.labelKey)}
+          </Link>
+        ) : null}
+      </span>
+    );
+  }
   return (
-    <span className="block text-end text-[11.5px] leading-[1.4]">
+    <span className="block text-[11.5px] leading-[1.4]">
       <span className="block font-semibold text-fg">{t(LABEL[code])}</span>
       <span className="block text-fg-muted">{deferralDetail(code, t)}</span>
       {action ? (

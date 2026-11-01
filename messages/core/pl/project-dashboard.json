@@ -89,7 +89,7 @@
       "noData": "brak danych",
       "noRankingsYet": "Brak pozycji",
       "pausedMigrationHold": "wstrzymano – migracja",
-      "providerMissingDetail": "Wybierz źródło danych w Integracjach, aby uruchamiać sprawdzanie.",
+      "providerMissingDetail": "Wybierz źródło danych w sekcji Dostawcy, aby uruchamiać sprawdzanie.",
       "providerMissingTitle": "Wybierz źródło danych",
       "providerNeedsAttention": "dostawca wymaga reakcji",
       "providerNeedsAttentionDetail": "{count, number} {count, plural, one {słowo kluczowe jest gotowe} few {słowa kluczowe są gotowe} many {słów kluczowych jest gotowych} other {słowa kluczowego są gotowe}}. Sprawdź wybrane źródło danych przed pierwszym sprawdzeniem.",
@@ -143,7 +143,7 @@
       },
       "import": {
         "addError": "Nie udało się dodać wybranych słów kluczowych.",
-        "authorizationExpired": "Autoryzacja Google wygasła. Połącz ją ponownie w sekcji Integracje.",
+        "authorizationExpired": "Autoryzacja Google wygasła. Połącz ją ponownie w sekcji Dostawcy.",
         "drawer": {
           "add": "Dodaj {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
           "cancel": "Anuluj",

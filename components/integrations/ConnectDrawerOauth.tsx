@@ -74,14 +74,14 @@ export function ConnectDrawerOauth({
   const router = useRouter();
   const scopedProjectRef = projectRef ?? (projectId ? asProjectRef(projectId) : undefined);
   const returnPath = scopedProjectRef
-    ? `${appPath(scopedProjectRef, "integrations")}?connect=${oauthProviderId}`
+    ? `${appPath(scopedProjectRef, "providers")}?connect=${oauthProviderId}`
     : undefined;
   const href =
     projectId && scopedProjectRef
       ? googleInstallUrl({
           projectId,
           provider: oauthProviderId,
-          returnPath: returnPath ?? appPath(scopedProjectRef, "integrations"),
+          returnPath: returnPath ?? appPath(scopedProjectRef, "providers"),
         })
       : undefined;
   const ready = Boolean(projectId && scopedProjectRef) && !readOnly;

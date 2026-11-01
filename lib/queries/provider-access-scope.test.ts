@@ -2,12 +2,12 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ project: vi.fn(), demo: vi.fn() }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.project }));
-vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
+vi.mock("@/lib/demo/account-view", () => ({ resolveDemoAccountView: mocks.demo }));
 
 import { readProjectProviderAccessScope } from "./provider-access-scope";
 
 beforeEach(() => {
-  mocks.demo.mockReturnValue({ kind: "disabled" });
+  mocks.demo.mockResolvedValue("normal");
 });
 it.each([
   ["owner", true],
@@ -52,8 +52,8 @@ it("hides mutations on a read-only project", async () => {
     readOnly: true,
   });
 });
-it("hides commercial setup for demo identities", async () => {
-  mocks.demo.mockReturnValue({ kind: "editable" });
+it("hides commercial setup for demo visitors", async () => {
+  mocks.demo.mockResolvedValue("locked");
   mocks.project.mockResolvedValue({
     actor: { id: "actor", memberships: [{ projectId: "internal", role: "owner" }] },
     project: { id: "internal", publicId: "prj_example", writeMode: "active" },
@@ -62,4 +62,16 @@ it("hides commercial setup for demo identities", async () => {
     canManageProviders: false,
     readOnly: true,
   });
+});
+it("lets the configured demo owner manage providers and budgets", async () => {
+  mocks.demo.mockResolvedValue("normal");
+  mocks.project.mockResolvedValue({
+    actor: { id: "demo-owner", memberships: [{ projectId: "internal", role: "owner" }] },
+    project: { id: "internal", publicId: "prj_example", writeMode: "active" },
+  });
+  expect((await readProjectProviderAccessScope("prj_example")).scope).toMatchObject({
+    canManageProviders: true,
+    readOnly: false,
+  });
+  expect(mocks.demo).toHaveBeenCalledWith("demo-owner");
 });

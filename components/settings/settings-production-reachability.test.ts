@@ -212,5 +212,6 @@ describe("settings production reachability", () => {
       importsFor(source, sourceSet),
     );
     expect(unreachable).toEqual([]);
-  }, 10_000);
+    // Parsing the whole production graph took 14 s under public coverage CI (v0.45.0-rc.1).
+  }, 30_000);
 });

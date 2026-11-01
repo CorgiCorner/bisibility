@@ -1,5 +1,6 @@
 import type { ActiveIntegrationKind } from "@/lib/integrations/category-copy";
 import type { GooglePropertyFailure } from "@/lib/integrations/google-property-failure";
+import type { ConnectionRecoveryView } from "@/lib/integrations/provider-recovery/types";
 import type { ProviderFailureClass } from "@/lib/providers/failure-class";
 import type {
   ConnectProviderInput,
@@ -143,6 +144,8 @@ export type ProviderConnectionReadState = {
 };
 
 export type IntegrationProviderData = ProviderConnectionReadState & {
+  recovery?: ConnectionRecoveryView | null;
+  accountUrl?: string;
   credentialIssue?: "unreadable";
   consumerStatuses?: ProviderConsumerStatuses;
   description: string;
@@ -162,6 +165,7 @@ export type IntegrationProviderData = ProviderConnectionReadState & {
   meta: readonly ProviderMetaRow[];
   name: string;
   neverSynced?: boolean;
+  reauthReason?: "permission" | "scope";
   syncFailure?: {
     consecutiveFailures: number;
     errorClass: string;

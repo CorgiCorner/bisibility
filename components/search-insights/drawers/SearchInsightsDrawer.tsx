@@ -7,7 +7,6 @@ import { pageHref } from "@/lib/search-insights/queries/top-rows-model";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { searchConsoleQueryHref } from "@/lib/search-insights/search-console-link";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
@@ -72,7 +71,7 @@ function querySourceAction(
         rel="noopener noreferrer"
         target="_blank"
       >
-        <ArrowSquareOut aria-hidden size={12} weight="regular" />
+        <ArrowUpRight aria-hidden size={12} weight="regular" />
       </a>
     </Tooltip>
   );
@@ -203,7 +202,7 @@ export function SearchInsightsDrawer({
       {consoleHref ? (
         <div className="mb-4 flex min-w-0 justify-end">
           <Button
-            endIcon={<ArrowSquareOut aria-hidden size={14} weight="regular" />}
+            endIcon={<ArrowUpRight aria-hidden size={14} weight="regular" />}
             href={consoleHref}
             rel="noopener noreferrer"
             size="sm"

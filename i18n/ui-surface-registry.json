@@ -1944,6 +1944,7 @@
       "components/action-payment/useActionPaymentReview.ts",
       "components/action-payment/usePaymentQuoteExpiry.ts",
       "components/admin/admin-action-error.ts",
+      "components/admin/admin-usage-money.ts",
       "components/admin/recovery/recovery-sorting.ts",
       "components/ai-research/ai-research-failure-copy.ts",
       "components/ai-research/ai-research-presets.ts",
@@ -2000,7 +2001,6 @@
       "components/cost-estimate/useCostEstimate.ts",
       "components/cost-estimate/useNativeUsageFormat.ts",
       "components/dashboard-layout/dashboard-conflict.ts",
-      "components/dashboard-layout/dashboard-editor-escape.ts",
       "components/dashboard-layout/dashboard-translator.ts",
       "components/dashboard-layout/use-widget-reorder.ts",
       "components/dashboard-local/report-summary.ts",
@@ -2506,16 +2506,6 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/integrations/loading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/integrations/page.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/keyword-research/loading.tsx",
       "status": "migrated"
     },
@@ -2603,6 +2593,16 @@
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/prompt-tracker/page.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/providers/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/providers/page.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -3111,6 +3111,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/email/unsubscribe/notifications/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/email/unsubscribe/page.tsx",
       "status": "migrated"
     },
@@ -3570,6 +3575,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/admin/admin-usage-money.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/admin/AdminAccountActions.tsx",
       "status": "migrated"
@@ -3626,6 +3636,11 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AdminInstanceUsage.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/AdminMeteringFilters.tsx",
       "status": "pending"
     },
@@ -3668,6 +3683,11 @@
       "kind": "render",
       "path": "components/admin/AdminProviderUsageTable.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminRecoveryAccounting.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -3721,7 +3741,17 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/instance-usage-columns.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/InstanceMailSettings.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/InstanceUsagePeriodSelect.tsx",
       "status": "pending"
     },
     {
@@ -5045,11 +5075,6 @@
     },
     {
       "kind": "ui-data",
-      "path": "components/dashboard-layout/dashboard-editor-escape.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
       "path": "components/dashboard-layout/dashboard-translator.ts",
       "status": "migrated"
     },
@@ -5062,6 +5087,11 @@
       "kind": "render",
       "path": "components/dashboard-layout/DashboardConflictReview.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardCustomizationDialog.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -5337,6 +5367,21 @@
       "kind": "ui-data",
       "path": "components/domain-overview/useDomainOverviewTablePages.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/domain-rating/DomainRatingCard.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/domain-rating/DomainRatingSection.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/domain-rating/DomainRatingSettings.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -5624,6 +5669,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/integrations/OwnUsageDetails.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/integrations/project-chain-labels.ts",
       "status": "migrated"
@@ -5660,8 +5710,43 @@
     },
     {
       "kind": "render",
+      "path": "components/integrations/provider-recovery/AffectedChecksTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/provider-recovery/MonitoringAccountBlocks.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/provider-recovery/MonitoringAccountBlocksServer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/provider-recovery/ProviderAttentionNotice.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/provider-recovery/ProviderRecovery.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/ProviderBillingCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/integrations/ProviderCard.tsx",
       "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/ProviderCardActions.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -5717,6 +5802,11 @@
       "kind": "ui-data",
       "path": "components/integrations/usage-funding-details.ts",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/UsageDetailsTable.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -7838,6 +7928,11 @@
     },
     {
       "kind": "render",
+      "path": "components/overview/OverviewSetupNotice.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/overview/OverviewSkeleton.tsx",
       "status": "migrated"
     },
@@ -8089,6 +8184,11 @@
     {
       "kind": "ui-data",
       "path": "components/rank-runs/rank-run-copy.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/rank-runs/RetryDeferredDialog.tsx",
       "status": "migrated"
     },
     {
@@ -9523,6 +9623,11 @@
     },
     {
       "kind": "render",
+      "path": "components/settings/usage/account-extension.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/settings/usage/BudgetEditModal.tsx",
       "status": "migrated"
     },
@@ -9533,13 +9638,13 @@
     },
     {
       "kind": "render",
-      "path": "components/settings/usage/ProviderBudgetLists.tsx",
-      "status": "migrated"
+      "path": "components/settings/usage/ProjectLimitsCard.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
-      "path": "components/settings/usage/ProviderBudgetRow.tsx",
-      "status": "migrated"
+      "path": "components/settings/usage/ProviderLimitRows.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -9880,6 +9985,11 @@
       "kind": "ui-data",
       "path": "components/shell/workspace-menu-placement.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/WorkspaceCreateRow.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",

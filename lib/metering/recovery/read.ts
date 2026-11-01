@@ -10,17 +10,22 @@ import {
   unknownAccounting,
 } from "@/lib/provider-usage/reconcile-state";
 import { readReconciliationHealth } from "@/lib/provider-usage/reconciliation-health";
+import { closedUnknownAccounting } from "@/lib/provider-usage/uncertainty-closeout-state";
 import { resultRecoveryCutoff } from "@/lib/rank-check/recovery-result-grace";
 import { readResultRecoveryActivity } from "@/lib/rank-check/recovery-result-health";
 import { classifyRecoveryRecord } from "./classify";
 import type { RecoveryFilters, RecoveryPage } from "./contract";
 import { readPartialEvidence, readRecoveryEvidence } from "./evidence-read";
-import { readRecoveryRecords, recoveryCasesSql } from "./query";
+import { readRecoveryRecords, recoveryCasesSql, unfinishedRecoveryWork } from "./query";
 import { openRecoveryCursor, recoveryInstance, sealRecoveryCursor } from "./tokens";
 import { readUncertaintyGates } from "./uncertainty-gates";
 
 export function recoveryScope(actor: string) {
-  return { actor, namespace: meteringNamespace(), instance: recoveryInstance() };
+  return {
+    actor,
+    namespace: meteringNamespace(),
+    instance: recoveryInstance(),
+  };
 }
 export async function readRecoveryPage(
   actor: string,
@@ -36,7 +41,11 @@ export async function readRecoveryPage(
       const [health, activity, records, counts, gates, resultActivity] = await Promise.all([
         reconciliationHealth(tx, scope.namespace, now),
         readReconciliationHealth(tx, scope.namespace),
-        readRecoveryRecords(tx, scope.namespace, { to, after: cursor?.after, filters }),
+        readRecoveryRecords(tx, scope.namespace, {
+          to,
+          after: cursor?.after,
+          filters,
+        }),
         recoveryCounts(tx, scope.namespace, now),
         readUncertaintyGates(tx, scope.namespace),
         readResultRecoveryActivity(tx, scope.namespace),
@@ -52,13 +61,17 @@ export async function readRecoveryPage(
         namespace: scope.namespace,
         asOf: to.toISOString(),
         summary: {
+          closedUnknown: counts.closedUnknown,
           unconfirmed: health.unconfirmed,
           overdue: health.overdue,
           failed: counts.failed,
           historical: counts.historical,
           unfinished: counts.unfinished,
           retainedResults: counts.retainedResults,
-          blockedScopes: { projects: gates.projects.size, connections: gates.connections.size },
+          blockedScopes: {
+            projects: gates.projects.size,
+            connections: gates.connections.size,
+          },
           lastActivityAt: activity?.lastActivityAt ?? null,
           lastCompletedAt: activity?.lastCompletedAt ?? null,
           lastCleanAt: activity?.lastCleanAt ?? null,
@@ -81,9 +94,16 @@ export async function readRecoveryPage(
 }
 async function recoveryCounts(tx: Prisma.TransactionClient, namespace: string, now: Date) {
   const [row] = await tx.$queryRaw<
-    { historical: bigint; failed: bigint; unfinished: bigint; retainedResults: bigint }[]
+    {
+      closedUnknown: bigint;
+      historical: bigint;
+      failed: bigint;
+      unfinished: bigint;
+      retainedResults: bigint;
+    }[]
   >(SQL.sql`
     SELECT
+      (SELECT count(*) FROM metering_operation o ${finalReceiptJoin} WHERE o.namespace=${namespace} AND ${closedUnknownAccounting}) AS "closedUnknown",
       (SELECT count(DISTINCT h.operation_id) FROM metering_history_import h
         JOIN metering_operation o ON o.namespace=h.namespace AND o.operation_id=h.operation_id
         ${finalReceiptJoin}
@@ -92,11 +112,12 @@ async function recoveryCounts(tx: Prisma.TransactionClient, namespace: string, n
         AND ${recoveryIncidentBody}->>'namespace'=${namespace}) AS failed,
       (SELECT count(DISTINCT COALESCE(candidate.rank_check_id,candidate.run_id))
         FROM (${recoveryCasesSql(namespace, now)}) candidate LEFT JOIN rank_checks rc ON rc.id=candidate.rank_check_id
-        WHERE (candidate.kind='run' OR rc.status<>'completed')
+        WHERE ${unfinishedRecoveryWork}
           AND EXISTS(SELECT 1 FROM projects p WHERE p.id=candidate.project_id)) AS unfinished,
       (SELECT count(*) FROM rank_check_result_evidence e JOIN rank_checks rc ON rc.id=e."rankCheckId"
         WHERE e.namespace=${namespace} AND e."instanceId"=${recoveryInstance()} AND rc.status<>'completed' AND e."expiresAt">${now} AND e."createdAt"<=${resultRecoveryCutoff(now)}) AS "retainedResults"`);
   return {
+    closedUnknown: Number(row?.closedUnknown ?? 0n),
     historical: Number(row?.historical ?? 0n),
     failed: Number(row?.failed ?? 0n),
     unfinished: Number(row?.unfinished ?? 0n),

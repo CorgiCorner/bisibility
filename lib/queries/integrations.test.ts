@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getIntegrationCategories, getIntegrationsView, isProviderConnected } from "./integrations";
 
 const mocks = vi.hoisted(() => ({
+  recovery: vi.fn(),
   compareIdentity: vi.fn(),
   deploymentConfig: vi.fn(),
   liveness: vi.fn(),
@@ -35,6 +36,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/integrations/provider-recovery/read", () => ({
+  readConnectionRecovery: mocks.recovery,
+}));
 vi.mock("@/lib/ops/liveness", () => ({ getWorkerLivenessDetails: mocks.liveness }));
 vi.mock("@/lib/ops/worker-temporal-identity", () => ({
   compareWorkerTemporalIdentity: mocks.compareIdentity,
@@ -108,6 +112,7 @@ describe("integration queries", () => {
   afterEach(() => vi.unstubAllEnvs());
 
   beforeEach(() => {
+    mocks.recovery.mockResolvedValue(null);
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
@@ -183,13 +188,15 @@ describe("integration queries", () => {
     });
   });
 
-  it("omits planned enrichment from app integration categories", async () => {
+  it("exposes the ready domain rating integration to every project", async () => {
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
 
     const categories = await getIntegrationCategories("prj_1", { now });
 
-    expect(categories.map((category) => category.id)).toEqual(["serp", "analytics"]);
-    expect(JSON.stringify(categories)).not.toContain("SEO enrichment");
+    expect(categories.map((category) => category.id)).toEqual(["serp", "analytics", "enrichment"]);
+    expect(categories.find((category) => category.id === "enrichment")?.providers).toEqual([
+      expect.objectContaining({ id: "ahrefs", status: "ready" }),
+    ]);
   });
 
   it("does not assign an own-key source to an unconfigured provider catalog entry", async () => {
@@ -583,6 +590,50 @@ describe("integration queries", () => {
       status: "needs_reauth",
     });
     expect(JSON.stringify(provider)).not.toContain("revoked-token");
+  });
+
+  it("names a lost property grant as the reason a connection stopped", async () => {
+    const gsc = (overrides: Record<string, unknown> = {}) =>
+      connection({
+        id: "connection_gsc",
+        kind: "analytics",
+        provider: "gsc",
+        status: "needs_reauth",
+        ...overrides,
+      });
+    const permissionFailure = {
+      connectionId: "connection_gsc",
+      errorClass: "config_invalid",
+      meta: { googleCode: "forbidden", googleReason: "permission", httpStatus: 403 },
+      startedAt: new Date("2026-06-28T10:30:00.000Z"),
+      status: "failed",
+    };
+    mocks.prisma.operationalRun.findMany.mockResolvedValue([
+      {
+        connectionId: "connection_gsc",
+        errorClass: null,
+        meta: { rowsFetched: 0 },
+        startedAt: new Date("2026-06-28T11:30:00.000Z"),
+        status: "skipped_needs_reauth",
+      },
+      permissionFailure,
+    ]);
+    const read = async () =>
+      (await getIntegrationCategories("prj_1", { now })).find(
+        (category) => category.id === "analytics",
+      )?.providers[0];
+
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([gsc()]);
+    expect(await read()).toMatchObject({ reauthReason: "permission", status: "needs_reauth" });
+
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      gsc({ firstSyncRequestedAt: new Date("2026-06-28T11:00:00.000Z") }),
+    ]);
+    expect((await read())?.reauthReason).toBeUndefined();
+
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([gsc({ status: "connected" })]);
+    mocks.prisma.operationalRun.findMany.mockResolvedValue([permissionFailure]);
+    expect((await read())?.reauthReason).toBeUndefined();
   });
 
   it("routes pending Google OAuth setup only to its GA4 provider", async () => {

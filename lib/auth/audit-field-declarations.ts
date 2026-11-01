@@ -25,6 +25,11 @@ function declare(actions: readonly string[], policy: AuditPayloadPolicy = {}) {
   }
 }
 
+declare(["project.domain_rating.update"], {
+  before: f.booleans("enabled"),
+  after: f.booleans("enabled"),
+});
+
 const project = strings("domain", "id", "name", "publicId", "trackingScope", "writeMode");
 const projectCounts = {
   ...f.numbers(

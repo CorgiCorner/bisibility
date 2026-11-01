@@ -16,6 +16,8 @@ import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identit
 import { aggregateProviderReferenceUsage } from "@/lib/rank-check/reference-usage";
 import { schedulerDriver } from "@/lib/scheduler/driver";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import { getInstanceRecoveryAccounting } from "./instance-recovery-accounting";
+import { getInstanceUsageReport, type InstanceUsagePeriod } from "./instance-usage-report";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -26,28 +28,37 @@ function numericOpsField(fields: unknown, key: string) {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
-export async function getInstanceStats(now: Date) {
+export async function getInstanceStats(now: Date, usagePeriod: InstanceUsagePeriod = "all") {
   const monthStart = monthStartUtc(now);
   const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  const [users, projects, keywords, providerConnectionGroups, monthlyUsageGroups] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.project.count(),
-      prisma.keyword.count(),
-      prisma.providerConnection.groupBy({
-        _count: { _all: true },
-        by: ["kind"],
-        where: { enabled: true, status: "connected" },
-      }),
-      prisma.rankCheck.groupBy({
-        _count: { _all: true },
-        by: ["provider", "requestedDepth", "billingUnits"],
-        where: {
-          checkedAt: { gte: monthStart, lt: nextMonthStart },
-          status: "completed",
-        },
-      }),
-    ]);
+  const [
+    users,
+    projects,
+    keywords,
+    providerConnectionGroups,
+    monthlyUsageGroups,
+    recoveryAccounting,
+    usageReport,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.project.count(),
+    prisma.keyword.count(),
+    prisma.providerConnection.groupBy({
+      _count: { _all: true },
+      by: ["kind"],
+      where: { enabled: true, status: "connected" },
+    }),
+    prisma.rankCheck.groupBy({
+      _count: { _all: true },
+      by: ["provider", "requestedDepth", "billingUnits"],
+      where: {
+        checkedAt: { gte: monthStart, lt: nextMonthStart },
+        status: "completed",
+      },
+    }),
+    getInstanceRecoveryAccounting(),
+    getInstanceUsageReport(usagePeriod, now),
+  ]);
 
   return {
     activeProviderConnectionsByKind: providerConnectionGroups.map((group) => ({
@@ -55,6 +66,9 @@ export async function getInstanceStats(now: Date) {
       kind: group.kind,
     })),
     keywords,
+    recoveryAccounting,
+    usagePeriod,
+    usageReport,
     projects,
     providerUsage: aggregateProviderReferenceUsage(
       monthlyUsageGroups.map((group) => ({
@@ -110,6 +124,9 @@ const unavailableStats: Awaited<ReturnType<typeof getInstanceStats>> = {
   keywords: 0,
   projects: 0,
   providerUsage: [],
+  recoveryAccounting: null,
+  usagePeriod: "all",
+  usageReport: null,
   users: 0,
 };
 
@@ -126,7 +143,10 @@ async function loadDashboardSection<T>(
   }
 }
 
-export async function getInstanceAdminDashboard(now = new Date()) {
+export async function getInstanceAdminDashboard(
+  now = new Date(),
+  usagePeriod: InstanceUsagePeriod = "all",
+) {
   const oneDayAgo = new Date(now.getTime() - DAY_MS);
   const sevenDaysAgo = new Date(now.getTime() - 7 * DAY_MS);
   const opsConfig = getOpsConfig();
@@ -190,7 +210,11 @@ export async function getInstanceAdminDashboard(now = new Date()) {
         }),
       null,
     ),
-    loadDashboardSection("instance stats", () => getInstanceStats(now), unavailableStats),
+    loadDashboardSection(
+      "instance stats",
+      () => getInstanceStats(now, usagePeriod),
+      unavailableStats,
+    ),
   ]);
   const workerLiveness = workerResult.data;
   const worker = {

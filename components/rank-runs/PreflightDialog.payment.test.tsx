@@ -38,7 +38,7 @@ function props(overrides: Partial<PreflightDialogProps> = {}): PreflightDialogPr
     initialDepth: 20,
     initialPreview: preview,
     initialProviderId: "provider-dataforseo",
-    integrationsHref: "/app/prj_story/integrations",
+    integrationsHref: "/app/prj_story/providers",
     launchAction: vi.fn(),
     onClose: vi.fn(),
     open: true,

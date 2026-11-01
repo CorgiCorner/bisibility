@@ -12,7 +12,10 @@
       "successDescription": "Nie będziemy wysyłać Ci wiadomości powitalnych ani innych e-maili marketingowych. Wiadomości dotyczące konta i usługi pozostają bez zmian.",
       "successTitle": "Wypisano Cię",
       "validDescription": "Przestaniesz otrzymywać wiadomości od założyciela i inne e-maile marketingowe. Wiadomości dotyczące konta i usługi będą nadal przychodzić.",
-      "validTitle": "Wypisać się z wiadomości od założyciela?"
+      "validTitle": "Wypisać się z wiadomości od założyciela?",
+      "notificationTitle": "Wypisać się z tych e-maili projektu?",
+      "notificationDescription": "Przestaniesz otrzymywać ten rodzaj e-maili dla tego projektu. Pozostałe preferencje pozostaną bez zmian.",
+      "notificationSuccess": "Nie będziesz już otrzymywać tego rodzaju e-maili dla tego projektu."
     },
     "button": {
       "error": "Nie udało się zaktualizować preferencji. Spróbuj ponownie.",

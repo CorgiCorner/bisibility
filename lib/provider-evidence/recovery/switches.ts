@@ -28,6 +28,6 @@ export function recoverySwitches(
     proofWrites: on,
     restore: on,
     incidentBell: on,
-    incidentDigest: on,
+    incidentDigest: on && (env.PROVIDER_RECOVERY_DIGEST ?? "on") === "on",
   };
 }

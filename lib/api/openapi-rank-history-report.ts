@@ -181,7 +181,11 @@ const observation = object({
 const attempt = object({
   evidence_projection: evidenceProjectionSchema,
   ...times,
-  deferred_reason: nullable(text),
+  deferred_reason: nullable({
+    ...text,
+    description:
+      "Stable deferral reason, including provider_account_blocked for a provider account pre-send refusal and usage_unconfirmed for unresolved accounting.",
+  }),
   error_code: nullable(text),
   finished_at: nullable(date),
   id: check,

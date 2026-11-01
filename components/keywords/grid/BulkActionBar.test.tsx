@@ -179,7 +179,7 @@ describe("BulkActionBar", () => {
 
     expect(screen.getByRole("link", { name: "Connect a SERP provider" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
     expect(
       screen.getByRole("link", { name: "Connect a SERP provider" }).querySelector("svg"),

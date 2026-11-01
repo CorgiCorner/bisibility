@@ -12,7 +12,10 @@ import type { ReactNode } from "react";
 export function AdminShell({
   children,
   extraTabs,
-}: Readonly<{ children: ReactNode; extraTabs?: readonly { href: string; label: string }[] }>) {
+}: Readonly<{
+  children: ReactNode;
+  extraTabs?: readonly { href: string; label: string; section?: string }[];
+}>) {
   const t = useTranslations("instanceAdmin.shell");
   return (
     <div className="min-h-screen bg-bg text-fg">

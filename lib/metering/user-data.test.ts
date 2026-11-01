@@ -14,6 +14,10 @@ const mocks = vi.hoisted(() => ({
   demo: vi.fn(),
 }));
 vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
+// These actors are never the configured demo owner, so any demo mode locks them.
+vi.mock("@/lib/demo/account-view", () => ({
+  resolveDemoAccountView: async () => (mocks.demo().kind === "disabled" ? "normal" : "locked"),
+}));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.access }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -294,6 +298,23 @@ describe("verified project Meter queries", () => {
     ]);
     fixture([], [openGroup, hostedZero]);
   }
+  it("leaves free integrations out of budget connections and budget reads", async () => {
+    mocks.connections.mockResolvedValue([
+      { id: "dfs", publicId: "prc_dfs", provider: "dataforseo", credentialSource: "own" },
+      { id: "gsc", publicId: "prc_gsc", provider: "gsc", credentialSource: "own" },
+      { id: "ga4", publicId: "prc_ga4", provider: "ga4", credentialSource: "own" },
+      {
+        id: "plausible",
+        publicId: "prc_plausible",
+        provider: "plausible",
+        credentialSource: "own",
+      },
+    ]);
+    fixture([], []);
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data.connections.map((connection) => connection.provider)).toEqual(["dataforseo"]);
+    expect(mocks.ownBudgets.mock.calls.map(([input]) => input.connectionId)).toEqual(["dfs"]);
+  });
   it("blocks paid work from any connection while the project is unsplit", async () => {
     exhaustedHostedConnection();
     expect(await getProjectMeteringBudgets("prj_public")).toMatchObject({
@@ -399,7 +420,7 @@ describe("verified project Meter queries", () => {
       oldestUnresolvedAt: "2026-09-30T10:00:00.000Z",
     });
   });
-  it("does not expose the previous owner's frozen wallet charges or pending operations after transfer", async () => {
+  it("keeps the previous owner's operations private but shows the project's limit counters after transfer", async () => {
     const f = fixture();
     await record(f.meter, "old-wallet-operation", "project", true, occurredAt, "old-owner");
     await record(f.meter, "new-owner-operation", "project");
@@ -410,14 +431,13 @@ describe("verified project Meter queries", () => {
       cost: { text: "1.0000", unit: "cents", certainty: "measured" },
     });
     expect(data.unresolved).toBe(0);
-    expect(
-      data.budgets.every(
-        (budget) =>
-          budget.used === "unavailable" &&
-          budget.reserved === "unavailable" &&
-          budget.remaining === "unavailable",
-      ),
-    ).toBe(true);
+    // Connections are unique per project, so the counter is this project's consumption; the
+    // former owner's still-open work makes it an estimate rather than hiding it.
+    expect(data.budgets.find((budget) => budget.unit === "units")).toMatchObject({
+      used: { text: "2", certainty: "estimated" },
+    });
+    // Platform-funded provider cost stays private regardless of who owns the project.
+    expect(data.budgets.find((budget) => budget.unit === "cents")?.used).toBe("unavailable");
     expect(JSON.stringify(data)).not.toMatch(/0\.050000|old-wallet|old-owner/);
     // Evidence stays retained for the original principal; a project display never rewrites it.
     const retained = await f.meter.getOperation(
@@ -435,7 +455,7 @@ describe("verified project Meter queries", () => {
     if (retained.outcome === "ok")
       expect(retained.value?.creditAccountRef).toBe("private-old-wallet");
   });
-  it("does not present an unobserved connection budget as zero when another connection has usage", async () => {
+  it("shows an unused connection budget as zero when another connection has usage", async () => {
     const emptyBudget: Budget = {
       ...budgets[1],
       id: "empty-connection-budget",
@@ -451,9 +471,8 @@ describe("verified project Meter queries", () => {
     expect(data.summary.state).toBe("ok");
     expect(data.budgets.find((budget) => budget.id.startsWith("prc_empty:"))).toMatchObject({
       target: "SerpApi · webscraping",
-      used: "unavailable",
-      reserved: "unavailable",
-      remaining: "unavailable",
+      used: { text: "0", certainty: "measured" },
+      reserved: { text: "0" },
     });
   });
   it.each(["member", "admin", "viewer", "auditor"])(
@@ -610,7 +629,19 @@ it.each(["member", "owner"])(
       expect(data.detail.rows).toEqual([]);
       expect(reads).not.toHaveBeenCalled();
       expect(JSON.stringify(data)).not.toMatch(/one-request|blocked-reservation/);
-    } else expect(data.budgets.every((row) => row.level === "unavailable")).toBe(true);
+    }
+    // Only a zero counter is shown without a complete epoch read.
+    else
+      expect(
+        data.budgets.every(
+          (row) =>
+            row.level === "unavailable" ||
+            (typeof row.used !== "string" &&
+              row.used.text === "0" &&
+              typeof row.reserved !== "string" &&
+              row.reserved.text === "0"),
+        ),
+      ).toBe(true);
   },
 );
 

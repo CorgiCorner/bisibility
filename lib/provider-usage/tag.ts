@@ -80,11 +80,22 @@ function oneOf<T extends string>(value: unknown, field: string, allowed: readonl
   return value as T;
 }
 
-export function providerStage(value = process.env.DEPLOYMENT_ENV ?? process.env.NODE_ENV) {
+export function providerStage(value?: string) {
   const normalized = value?.trim().toLowerCase();
+  if (normalized === "demo") return "demo";
   if (normalized === "prod" || normalized === "production") return "prod";
   if (normalized === "stage" || normalized === "staging") return "stage";
   return "dev";
+}
+
+export function deploymentProviderStage(env: Record<string, string | undefined> = process.env) {
+  if (
+    env.DEMO_MODE === "editable" ||
+    env.READ_ONLY_DEMO === "1" ||
+    env.TEMPORAL_NAMESPACE === "bisibility-demo"
+  )
+    return "demo";
+  return providerStage(env.DEPLOYMENT_ENV ?? env.NODE_ENV);
 }
 
 function normalizedContext(context: ProviderRequestContext): ProviderRequestContext {
@@ -126,7 +137,8 @@ export function buildProviderTag(input: BuildProviderTagInput) {
   let app = (configuredSlug ?? DEFAULT_INSTANCE_SLUG).slice(0, MAX_INSTANCE_SLUG_LENGTH);
   let projectId = sanitizedIdentifier(context.projectId, "projectId", MAX_PROJECT_ID_LENGTH);
   const credentialPart = credentialSource === null ? "" : `;cs=${credentialSource}`;
-  const fixed = `app=;stage=${providerStage(input.stage)};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=;c=${context.correlationId}`;
+  const stage = input.stage === undefined ? deploymentProviderStage() : providerStage(input.stage);
+  const fixed = `app=;stage=${stage};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=;c=${context.correlationId}`;
   let excess = byteLength(fixed) + byteLength(app) + byteLength(projectId) - MAX_TAG_LENGTH;
   if (excess > 0) {
     const projectReduction = Math.min(excess, projectId.length - MIN_NON_KEY_VALUE_LENGTH);
@@ -141,7 +153,7 @@ export function buildProviderTag(input: BuildProviderTagInput) {
   if (excess > 0) {
     throw new Error("Provider request correlationId is too long for the 255-byte provider tag.");
   }
-  const tag = `app=${app};stage=${providerStage(input.stage)};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=${projectId};c=${context.correlationId}`;
+  const tag = `app=${app};stage=${stage};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=${projectId};c=${context.correlationId}`;
   if (byteLength(tag) > MAX_TAG_LENGTH) {
     throw new Error("Provider request tag exceeds 255 bytes.");
   }
@@ -193,7 +205,7 @@ export async function createProviderRequestAttribution(
     context: normalized,
     credentialSource,
     instanceSlug,
-    stage: process.env.DEPLOYMENT_ENV,
+    stage: deploymentProviderStage(),
   });
   if (credential === undefined) return { context: normalized, tag };
   return { context: normalized, credential, tag };

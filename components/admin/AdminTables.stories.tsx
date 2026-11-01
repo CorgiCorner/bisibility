@@ -1,5 +1,7 @@
 import { AdminAuditTable } from "@/components/admin/AdminAuditTable";
+import { AdminInstanceUsage } from "@/components/admin/AdminInstanceUsage";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
+import { AdminRecoveryAccounting } from "@/components/admin/AdminRecoveryAccounting";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
 import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/DateFormatProvider";
@@ -15,6 +17,7 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { instanceUsageFixture } from "./instance-usage-test-fixture";
 
 const messages = mergeMessageCatalogs(sharedMessages, instanceAdminMessages);
 
@@ -160,9 +163,17 @@ export const ProviderUsage: Story = {
 export const TopConsumption: Story = {
   render: () => (
     <StoryTableCard titleKey="topConsumption">
-      <div className="mt-3">
-        <AdminAdministrationConsumptionTable rows={consumption} />
-      </div>
+      <p className="text-xs text-fg-muted">Synthetic Storybook data</p>
+      <AdminInstanceUsage report={instanceUsageFixture} period="all" projects />
+      <details className="mt-4">
+        <summary>Monthly SERP reference example</summary>
+        <div className="mt-3">
+          <AdminAdministrationConsumptionTable rows={consumption} />
+        </div>
+      </details>
+      <AdminRecoveryAccounting
+        data={{ historicalCount: 18, historicalCostUsdUnits: "256660", closedUnknownCount: 12 }}
+      />
     </StoryTableCard>
   ),
 };

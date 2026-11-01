@@ -91,7 +91,12 @@ export function RunPageTargets({
   const live = summary.active && filter === "all";
   const showNotes =
     run.status === "blocked" ||
-    items.some((item) => runTargetNote(item, run, deploymentMode, t, locale));
+    items.some(
+      (item) =>
+        item.status === "deferred" ||
+        Boolean(item.accountBlocks?.length) ||
+        runTargetNote(item, run, deploymentMode, t, locale),
+    );
   return (
     <section
       aria-labelledby="run-targets-title"
@@ -140,6 +145,11 @@ export function RunPageTargets({
         onSortingChange={ignoreSorting}
         rows={items}
         rowHeight={(row) => (row.rankCheck?.evidenceProjection ? 112 : undefined)}
+        rowClassName={(row) =>
+          row.status === "deferred" || row.accountBlocks?.length
+            ? "!h-auto min-h-[56px] py-2"
+            : undefined
+        }
         sorting={null}
       />
       <footer className="flex flex-wrap items-center gap-2.5 px-4 py-3">

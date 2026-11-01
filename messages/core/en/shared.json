@@ -40,7 +40,7 @@
       },
       "banner": {
         "ariaLabel": "Analytics consent",
-        "body": "We count visits without cookies. Optional analytics cookies and redacted replays help us improve bisibility.",
+        "body": "We count visits and product actions, such as sign-ups and setup steps, without cookies, a persistent profile or a link to your account. Optional analytics cookies and redacted replays help us improve bisibility.",
         "saveError": "Your choice could not be saved. Choices you turned off remain off. Try again.",
         "update": "Redacted replays can include app screens. Review your choice. Analytics stays unchanged."
       },
@@ -62,7 +62,7 @@
           "body": "Pages and setup steps you use, linked across visits with an analytics cookie.",
           "title": "Usage analytics"
         },
-        "visitCounts": "If you reject optional analytics, we still count visits without cookies or a persistent profile."
+        "visitCounts": "If you reject optional analytics, we still count visits and product actions, such as sign-ups and setup steps, without cookies, a persistent profile or a link to your account."
       },
       "title": "Privacy choices"
     },
@@ -653,6 +653,10 @@
         "quality_history": {
           "label": "Quality history",
           "description": "Read observed, fresh, and comparable counts separately from stored quality reports."
+        },
+        "domain_rating": {
+          "label": "Domain Rating",
+          "description": "Daily backlink authority history for the project domain. Display settings do not change collection."
         }
       },
       "reasons": {
@@ -822,7 +826,7 @@
       "definition": "Monitor configuration",
       "subject": "Business location",
       "manageSubjects": "Manage business locations",
-      "reviewIntegrations": "Review integrations",
+      "reviewIntegrations": "Review providers",
       "setupOnly": "Saving a monitor stores its configuration. It does not start checks or create charges.",
       "noSubjects": "Add an active business location first, then choose it explicitly.",
       "moreSubjects": "More business locations",
@@ -853,7 +857,7 @@
       "archiveConfirm": "Archive this monitor? Its configuration and history will be retained.",
       "confirmArchive": "Confirm archive",
       "mode": "Saved schedule intent",
-      "launchUnavailable": "Running checks from this monitor is not available yet. Review integrations for provider availability.",
+      "launchUnavailable": "Running checks from this monitor is not available yet. Review providers for provider availability.",
       "configuredPoints": "Configured points",
       "pointHelp": "These are the saved sampling coordinates. Results are unavailable until a run is explicitly linked to this monitor revision.",
       "point": "Point",
@@ -959,7 +963,7 @@
         "help": "Choose a connection, review the full task count and provider charge, then confirm. Opening this panel or refreshing saved status does not contact the provider.",
         "connection": "Provider connection",
         "chooseConnection": "Choose a connection",
-        "noConnection": "Connect a supported provider in Integrations to run this monitor.",
+        "noConnection": "Connect a supported provider in Providers to run this monitor.",
         "preview": "Review run",
         "consent": "Confirm provider charge",
         "taskCount": "This run submits {count} keyword–point tasks.",
@@ -987,7 +991,7 @@
         },
         "unavailable": {
           "capability_unregistered": "This local search capability is not registered. Choose a supported configuration.",
-          "connection_unavailable": "This connection is unavailable. Review it in Integrations.",
+          "connection_unavailable": "This connection is unavailable. Review it in Providers.",
           "unsupported": "The provider does not support this monitor configuration. Edit its search settings.",
           "pricing_unavailable": "The complete provider charge is unknown. A paid run cannot start.",
           "worker_unavailable": "The execution worker is disabled. Enable the worker before queuing a run."
@@ -1769,13 +1773,13 @@
       "connect": "Choose a data source to use these fields.",
       "supported": "Supported providers: {providers}.",
       "unavailable": "No supported data source is available for this feature.",
-      "action": "Open Integrations",
+      "action": "Open Providers",
       "reconnect": "Reconnect the selected data source to use these fields.",
       "reconnectAction": "Reconnect provider",
       "emptyTitle": "Choose a data source",
       "reconnectTitle": "Reconnect the selected data source",
-      "emptyDescription": "Choose a supported data source in Integrations to run a search.",
-      "reconnectDescription": "Reconnect the selected data source in Integrations before running another search.",
+      "emptyDescription": "Choose a supported data source in Providers to run a search.",
+      "reconnectDescription": "Reconnect the selected data source in Providers before running another search.",
       "connectAction": "Choose a data source",
       "askAdmin": "Ask a project admin to choose a data source before checks can start."
     },
@@ -1803,8 +1807,8 @@
       "duplicate": "Every selected keyword is being checked by another run right now, so there is nothing to start.",
       "editBudget": "Edit budget",
       "noProvider": "No provider",
-      "noProviderBlocked": "Choose a data source in Integrations before running these checks.",
-      "openIntegrations": "Open Integrations",
+      "noProviderBlocked": "Choose a data source in Providers before running these checks.",
+      "openIntegrations": "Open Providers",
       "openRun": "Open run",
       "pricePerTarget": "price per target",
       "primaryProvider": "Primary provider",
@@ -2097,10 +2101,17 @@
       "units": {
         "cents": "cents",
         "customer_cents": "Credits",
-        "units": "Units",
+        "units": "Billing units",
+        "searches": "Searches",
+        "apiUnits": "API units",
         "requests": "Requests",
         "budget_cents": "cents",
         "paid_attempts": "Paid attempts"
+      },
+      "unitCounts": {
+        "units": "{count, plural, one {billing unit} other {billing units}}",
+        "searches": "{count, plural, one {search} other {searches}}",
+        "apiUnits": "{count, plural, one {API unit} other {API units}}"
       },
       "dimensions": {
         "connection": "Connection",
@@ -2130,6 +2141,44 @@
         "settled": "Settled",
         "released": "Released"
       }
+    },
+    "domainRating": {
+      "title": "Domain Rating",
+      "definition": "The strength of your backlink profile on a logarithmic scale from 0 to 100.",
+      "attribution": "Domain Rating by Ahrefs",
+      "chartLabel": "Domain Rating history for {domain}",
+      "daily": "One check per day",
+      "own": "Your Ahrefs key",
+      "hosted": "Managed connection",
+      "noSource": "No Ahrefs connection",
+      "connect": "Connect Ahrefs",
+      "manageConnection": "Manage connection",
+      "settings": "Tracking settings",
+      "empty": "Your Domain Rating history starts here",
+      "emptyHelp": "Connect Ahrefs to record your first measurement. Daily checks build your history automatically.",
+      "waiting": "Waiting for the first daily check. Your connection is ready.",
+      "paused": "Tracking paused",
+      "noDomain": "Add a project domain to start tracking.",
+      "failure": "The last check failed. Your history is preserved; the next check runs tomorrow.",
+      "latest": "Latest rating",
+      "change": "{value} over this period",
+      "unchanged": "No change over this period",
+      "single": "First observation",
+      "noValue": "No measurement yet",
+      "range": "History range",
+      "days": "{count} days",
+      "trackingTitle": "Domain Rating tracking",
+      "trackingHelp": "Record one Ahrefs Domain Rating measurement for this project domain each day (UTC). Turning this off keeps your history.",
+      "enable": "Track Domain Rating daily",
+      "save": "Save",
+      "saved": "Tracking settings saved.",
+      "saveError": "Could not save tracking settings. Try again.",
+      "lastSuccess": "Last successful check: {date}",
+      "unknown": "No check completed yet",
+      "missing": "No measurement",
+      "history": "Measurement history",
+      "date": "Date",
+      "rating": "Rating"
     }
   }
 }

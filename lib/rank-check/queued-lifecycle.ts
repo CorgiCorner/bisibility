@@ -19,9 +19,11 @@ import {
   claimQueuedPersistenceLease,
   transitionQueuedPersistenceLease,
 } from "./queued-persistence-lease";
+import { withKeptReason } from "./queued-reason";
 import {
   ACTIVE_QUEUED_BATCH_STATES,
   ACTIVE_QUEUED_TASK_STATES,
+  countQueuedStates,
   queuedTaskStateForRankCheck,
 } from "./queued-state";
 import {
@@ -33,14 +35,6 @@ import { applyRunItemTransition } from "./runs/items";
 
 const RETENTION_MS = 30 * 86_400_000;
 
-type StateCount = { _count: { _all: number }; state: string };
-
-function countStates(groups: StateCount[], states: string[]) {
-  return groups
-    .filter((group) => states.includes(group.state))
-    .reduce((sum, group) => sum + group._count._all, 0);
-}
-
 async function taskStateCounts(
   client: Pick<Prisma.TransactionClient, "queuedRankCheckTask">,
   batchId: string,
@@ -51,10 +45,10 @@ async function taskStateCounts(
     where: { batchId },
   });
   return {
-    completed: countStates(groups, ["completed"]),
-    deferred: countStates(groups, ["deferred"]),
-    failed: countStates(groups, ["failed"]),
-    pending: countStates(groups, ACTIVE_QUEUED_TASK_STATES),
+    completed: countQueuedStates(groups, ["completed"]),
+    deferred: countQueuedStates(groups, ["deferred"]),
+    failed: countQueuedStates(groups, ["failed"]),
+    pending: countQueuedStates(groups, ACTIVE_QUEUED_TASK_STATES),
   };
 }
 
@@ -92,6 +86,7 @@ async function reconcileTaskAtDeadline(
   },
   now: Date,
   reason: string,
+  preSend: boolean,
 ) {
   await lockRecoveryTask(tx, task.id);
   const [current] = await tx.$queryRaw<
@@ -150,10 +145,13 @@ async function reconcileTaskAtDeadline(
       if (!(error instanceof RankCheckClosedBeforePersistenceError)) throw error;
     }
   }
+  // The deferral code names the expiry; the stored text keeps the first failure reason too.
+  const detail = withKeptReason(task.error, reason);
   const closed = await tx.rankCheck.updateMany({
     data: {
       deferredReason: storedDeferralReason(reason),
-      error: reason,
+      ...(preSend ? { attemptCount: 0 } : {}),
+      error: detail,
       estimatedCostCents: null,
       comparisonAllowed: false,
       terminalPersistedAt: new Date(),
@@ -174,7 +172,7 @@ async function reconcileTaskAtDeadline(
   const terminalState = queuedTaskStateForRankCheck(taskState);
   if (!terminalState) return;
   const transition = {
-    ...(terminalState === "deferred" ? { error: reason } : {}),
+    ...(terminalState === "deferred" ? { error: detail } : {}),
     state: terminalState,
   };
   if (lease) {
@@ -212,7 +210,11 @@ async function reconcileTaskAtDeadline(
   );
 }
 
-export async function deferQueuedRankCheckBatch(batchId: string, reason: string) {
+export async function deferQueuedRankCheckBatch(
+  batchId: string,
+  reason: string,
+  options?: { preSend: true },
+) {
   const now = new Date();
   const projectIds = await notificationTransaction(
     async (tx) => {
@@ -233,7 +235,7 @@ export async function deferQueuedRankCheckBatch(batchId: string, reason: string)
         where: { batchId, state: { in: ACTIVE_QUEUED_TASK_STATES } },
       });
       for (const task of tasks) {
-        await reconcileTaskAtDeadline(tx, task, now, reason);
+        await reconcileTaskAtDeadline(tx, task, now, reason, options?.preSend === true);
       }
       return [...new Set(tasks.map((task) => task.keyword.projectId))];
     },
@@ -262,9 +264,18 @@ export async function finalizeQueuedBatchState(batchId: string, deferredReason?:
   }
   const state = terminalBatchState(counts);
   const now = new Date();
+  const current =
+    state === "deferred" && deferredReason
+      ? await prisma.queuedRankCheckBatch.findUniqueOrThrow({
+          select: { error: true },
+          where: { id: batchId },
+        })
+      : null;
   await prisma.queuedRankCheckBatch.updateMany({
     data: {
-      ...(state === "deferred" && deferredReason ? { error: deferredReason } : {}),
+      ...(state === "deferred" && deferredReason
+        ? { error: withKeptReason(current?.error, deferredReason) }
+        : {}),
       expiresAt: new Date(now.getTime() + RETENTION_MS),
       state,
       terminalAt: now,

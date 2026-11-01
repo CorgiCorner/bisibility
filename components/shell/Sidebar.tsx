@@ -8,7 +8,10 @@ import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarRailGroups } from "@/components/shell/SidebarRail";
 import { SidebarToggleIcon } from "@/components/shell/SidebarToggleIcon";
-import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
+import {
+  type WorkspaceProjectLimit,
+  WorkspaceSwitcher,
+} from "@/components/shell/WorkspaceSwitcher";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { navContextFromPathname, navItems } from "@/lib/nav/nav-items";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
@@ -23,6 +26,8 @@ export type SidebarProps = {
   activeHref?: string;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  /** Set when the account owns as many projects as it may: creation shows as blocked. */
+  projectLimit?: WorkspaceProjectLimit | null;
   canSetDefault?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   planStatus?: PlanStatus | null;
@@ -41,6 +46,7 @@ export function Sidebar({
   activeHref,
   activeProjectId,
   canCreateWorkspace,
+  projectLimit = null,
   canSetDefault,
   enabledExperimentalModules = [],
   planStatus = null,
@@ -96,6 +102,7 @@ export function Sidebar({
             <WorkspaceSwitcher
               activeProjectId={activeProjectId}
               canCreateWorkspace={canCreateWorkspace}
+              projectLimit={projectLimit}
               canSetDefault={canSetDefault}
               className="mt-0 min-w-0 flex-1"
               collapsed={collapsed}

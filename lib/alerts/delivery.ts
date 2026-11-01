@@ -6,10 +6,15 @@ import type { LookupFunction } from "node:net";
 import { prisma } from "@/lib/db/prisma";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { alertsEmailFrom } from "@/lib/email/from";
+import {
+  notificationUnsubscribeFooter,
+  notificationUnsubscribeUrl,
+} from "@/lib/email/notification-unsubscribe";
 import { sendEmail } from "@/lib/email/send";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { parseRetryAfterSeconds } from "@/lib/http/retry-after";
 import { decryptSecret } from "@/lib/providers/crypto";
+import { resolveCanonicalOrigin } from "@/lib/seo/origin";
 import { Agent, type Dispatcher } from "undici";
 import type { TriggeredAlertDeliveryPayload } from "./alert-delivery-payload";
 import { DeliveryHttpError } from "./delivery-http-error";
@@ -130,13 +135,29 @@ function pinnedAgent(vetted: WebhookResolvedAddress[]) {
 }
 
 export async function sendAlertEmail(to: string, payload: TriggeredAlertDeliveryPayload) {
+  const [user, project] = await Promise.all([
+    prisma.user.findUnique({ where: { email: to }, select: { id: true } }),
+    prisma.project.findUnique({ where: { publicId: payload.projectId }, select: { id: true } }),
+  ]);
+  if (!user || !project) throw new Error("Alert recipient is no longer available.");
+  const url = notificationUnsubscribeUrl(
+    { userId: user.id, projectId: project.id, stream: "alert" },
+    resolveCanonicalOrigin(),
+  );
+  const content = notificationUnsubscribeFooter(
+    {
+      html: `<p><strong>${escapeHtml(payload.headline)}</strong></p><p>${escapeHtml(payload.action)}</p>`,
+      text: `${payload.headline}\n\n${payload.action}`,
+    },
+    url,
+  );
   await sendEmail({
     category: "bulk",
     from: alertsEmailFrom(),
-    html: `<p><strong>${escapeHtml(payload.headline)}</strong></p><p>${escapeHtml(payload.action)}</p>`,
+    ...content,
     subject: `[bisibility] ${payload.headline}`,
-    text: `${payload.headline}\n\n${payload.action}`,
     to,
+    listUnsubscribeUrl: url,
   });
 }
 

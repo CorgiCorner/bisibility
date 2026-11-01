@@ -6,6 +6,7 @@ import {
   type CheckRunsTranslations,
   formatAttemptOutcome,
   formatResult,
+  formatRunCost,
   isInternalErrorString,
   presentCheckError,
 } from "./check-runs-format";
@@ -90,6 +91,10 @@ describe("presentCheckError", () => {
 });
 
 describe("formatResult", () => {
+  it("labels a deferred check without implying a ranking result", () => {
+    expect(formatResult({ ...failedRun(null), status: "deferred" }, now, context)).toBe("Deferred");
+  });
+
   it("uses the terminal failure label for every failed run", () => {
     expect(formatResult(failedRun(prismaError), now, context)).toBe("All providers failed");
     expect(formatResult(failedRun("stale running check"), now, context)).toBe(
@@ -136,5 +141,13 @@ describe("formatAttemptOutcome", () => {
         true,
       ),
     ).toBe("Provider error");
+  });
+});
+
+describe("formatRunCost", () => {
+  it("shows confirmed failed-check cost, including zero, and keeps unknown distinct", () => {
+    expect(formatRunCost({ ...failedRun(null), costCents: 0.12 }, context)).toBe("$0.0012");
+    expect(formatRunCost({ ...failedRun(null), costCents: 0 }, context)).toBe("$0.00");
+    expect(formatRunCost(failedRun(null), context)).toBe("-");
   });
 });

@@ -62,12 +62,12 @@ describe("DomainOverviewWorkspace", () => {
         within(emptyPanel).getByRole("link", {
           name: reconnect ? "Reconnect provider" : "Choose a data source",
         }),
-      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      ).toHaveAttribute("href", "/app/prj_1/providers");
       expect(
         screen.getAllByRole("link", {
           name: reconnect ? "Reconnect provider" : "Choose a data source",
         })[0],
-      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      ).toHaveAttribute("href", "/app/prj_1/providers");
       expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(1);
       expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toBeDisabled();
       expect(screen.queryByText("Connect DataForSEO to analyze domains")).not.toBeInTheDocument();

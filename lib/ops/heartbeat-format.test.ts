@@ -228,6 +228,27 @@ describe("heartbeat Slack digest", () => {
     expect(event.severity).toBe("warning");
   });
 
+  it("keeps inactive connection history out of counts, details and severity", () => {
+    const input = healthyInput();
+    input.database.traffic.push({
+      errorClass: "provider_4xx",
+      latestSuccessAt: null,
+      project: "project_2",
+      provider: "gsc",
+      rowsFetched: 0,
+      rowsMatched: 0,
+      rowsUpserted: 0,
+      status: "inactive",
+    });
+
+    const event = buildHeartbeatEvent(input);
+
+    expect(event.fields?.Traffic).toBe(
+      "GSC ok 1 · needs reauth 0 · stale 0 · failed 0 · not run 0",
+    );
+    expect(event.severity).toBe("info");
+  });
+
   it("identifies a never-successful config_invalid GA4 connection without escalating", () => {
     const input = healthyInput();
     const traffic = input.database.traffic[0];

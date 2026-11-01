@@ -11,9 +11,12 @@ The header loads its usage indicator separately so you can navigate and read the
 
 ## Integration kinds
 
+The **SEO data** section groups DataForSEO, SerpApi and Ahrefs. Their capabilities stay distinct:
+
 | Kind | What it is for | What it is not for |
 | - | - | - |
 | SERP providers | Google rank checks for tracked search terms. | Traffic, click, or conversion reporting. |
+| SEO enrichment | Daily Ahrefs Domain Rating history for the project domain. | Search positions or traffic estimates. |
 | Analytics sources | Traffic and index context from Google Search Console, GA4, or Plausible. | Determining rank positions. |
 
 Positions come from completed SERP rank checks. Analytics sources add context,
@@ -340,3 +343,21 @@ Plausible connects with these fields:
 | `API base URL` | Leave blank for Plausible Cloud. Set this only for a self-hosted Plausible instance. |
 
 Plausible imports add traffic and sessions context; they do not run rank checks.
+
+## Ahrefs Domain Rating
+
+Connect Ahrefs under **Integrations > SEO data** using an APIv3 key from
+[Ahrefs account settings](https://app.ahrefs.com/account/api-keys). A free Ahrefs account can generate a key.
+The [Domain Rating endpoint](https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free)
+is free to call; it does not use the paid Site Explorer API.
+
+The dashboard shows daily observations for the project's current domain with
+30, 90 and 365-day views. Tracking is on by default and requires a running
+Temporal worker. The worker discovers new connections hourly and records at
+most one automatic attempt per project domain per UTC day. Failed or missing
+observations remain gaps; they are never converted to zero or backfilled.
+A domain change starts a separate history for the new domain.
+
+Use **Settings > Data sources > Domain Rating tracking** to pause collection.
+Pausing keeps the existing history. A real zero remains a valid measurement.
+Each chart links the required **Domain Rating by Ahrefs** attribution to Ahrefs.

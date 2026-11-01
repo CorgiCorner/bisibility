@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   readRuns: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/queries/rank-check-run-reasons", () => ({
+  rankRunDeferralReasons: vi.fn(async () => new Map()),
+}));
 vi.mock("@/lib/provider-evidence/projection/read", () => ({ readCheckEvidence: mocks.evidence }));
 vi.mock("@/lib/provider-evidence/projection/read-runs", () => ({
   readRunEvidence: mocks.runsEvidence,

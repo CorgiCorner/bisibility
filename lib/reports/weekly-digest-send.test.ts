@@ -175,6 +175,7 @@ describe("sendWeeklyDigestForProject", () => {
     vi.restoreAllMocks();
   });
   beforeEach(() => {
+    vi.stubEnv("BISIBILITY_SECRETS_KEY", Buffer.alloc(32, 7).toString("base64"));
     vi.clearAllMocks();
     mocks.prisma.$transaction.mockImplementation((run) => run(mocks.prisma));
     mocks.sendEmail.mockResolvedValue(undefined);
@@ -214,6 +215,8 @@ describe("sendWeeklyDigestForProject", () => {
       expect.objectContaining({
         category: "bulk",
         subject: "Weekly rank report - Example",
+        listUnsubscribeUrl: expect.stringContaining("stream=notification"),
+        text: expect.stringContaining("Unsubscribe: https://"),
         to: "owner@example.com",
       }),
     );
@@ -360,7 +363,7 @@ describe("sendWeeklyDigestForProject", () => {
     const result = await sendWeeklyDigestForProject("project_1", now);
     const email = mocks.sendEmail.mock.calls[0][0];
     expect(info).toHaveBeenCalledExactlyOnceWith(
-      `[email] ${email.subject.replace(/^\[bisibility\] /, "")} for owner@example.com\n${email.text}`,
+      `[email] ${email.subject.replace(/^\[bisibility\] /, "")} for owner@example.com\n${email.text.split("\n\nUnsubscribe:")[0]}`,
     );
     expect(String(info.mock.calls[0][0])).not.toContain("member@example.com");
     expect(mocks.prisma.weeklyDigestSend.updateMany).toHaveBeenCalledWith(

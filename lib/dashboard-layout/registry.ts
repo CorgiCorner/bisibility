@@ -23,6 +23,7 @@ function widget(
 
 /** These are planning hints, not executable queries or evidence of a shipped capability. */
 export const dashboardWidgetRegistry: readonly WidgetDefinition[] = Object.freeze([
+  widget("domain_rating", [], [], { resultKinds: [] }),
   widget("organic_kpis", ["organic_summary"], ["organic_reports"]),
   widget("position_trend", ["position_history"], ["position_history"]),
   widget("position_distribution", ["organic_summary"], ["organic_reports"]),

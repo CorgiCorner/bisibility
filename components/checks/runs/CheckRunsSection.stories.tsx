@@ -24,10 +24,10 @@ const callbacks = {
 };
 
 const links = {
-  connectProviderHref: appPath("prj_story", "integrations"),
+  connectProviderHref: appPath("prj_story", "providers"),
   keywordHref: (keywordPublicId: string) => appPath("prj_story", "rank-tracker", keywordPublicId),
-  reorderProvidersHref: appPath("prj_story", "integrations"),
-  reviewProvidersHref: appPath("prj_story", "integrations"),
+  reorderProvidersHref: appPath("prj_story", "providers"),
+  reviewProvidersHref: appPath("prj_story", "providers"),
   timelineHref: appPath("prj_story", "activity"),
 };
 

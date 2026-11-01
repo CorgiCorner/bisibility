@@ -9,6 +9,7 @@ import type { Receipt } from "@usagekit/core";
 import { expect, test, vi } from "vitest";
 import { budget, paidFixture, required } from "./paid-attempt-test-fixture";
 import { ensureProjectSpendingBudget } from "./project-budget-bootstrap";
+import { createRecoveryAdmissionFixture } from "./recovery-admission-test-fixture";
 
 // Self-host native retention uses the accounting receipt history alone.
 vi.mock("./transport-proof-extension", () => ({
@@ -26,6 +27,7 @@ async function transportFixture() {
   await f.run(async (tx) => {
     await tx.$executeRaw`CREATE TABLE projects(id text primary key, "ownerId" text, "budgetCapCents" int)`;
     await tx.$executeRaw`CREATE TABLE provider_connections(id text primary key, "projectId" text, "publicId" text, provider text, "credentialSource" text, enabled boolean, status text, "credentialsEncrypted" text)`;
+    await createRecoveryAdmissionFixture(tx);
     await tx.$executeRaw`CREATE TABLE keywords(id text primary key, "projectId" text)`;
     await tx.$executeRaw`CREATE TABLE rank_checks(id text primary key, "keywordId" text, "runId" text)`;
     await tx.$executeRaw`CREATE TABLE rank_check_run_items(id text primary key, "runId" text NOT NULL, "keywordId" text NOT NULL, "rankCheckId" text)`;
@@ -199,6 +201,83 @@ test("queued taskset denial rolls back every shared child before the batch POST"
     await f.close();
   }
 });
+
+test("a real aborted taskset retries all children before exactly one provider POST", async () => {
+  const f = await transportFixture();
+  try {
+    const transaction = f.db.$transaction.bind(f.db);
+    let attempts = 0;
+    const admission = vi.spyOn(f.db, "$transaction").mockImplementation((body, options) =>
+      transaction(async (tx) => {
+        if (typeof body !== "function") throw new Error("Expected interactive admission");
+        const result = await body(tx);
+        attempts += 1;
+        if (attempts === 1)
+          await tx.$executeRaw`DO $$ BEGIN RAISE EXCEPTION 'retry fixture' USING ERRCODE = '40001'; END $$`;
+        if (attempts === 2) await tx.$executeRaw`DO $$ BEGIN PERFORM pg_sleep(5.1); END $$`;
+        return result;
+      }, options),
+    );
+    const post = vi.fn(async () => undefined);
+    const taskset = await beginProviderTaskset(f.db, [
+      { ...f.input("a"), keywordId: "keyword-a" },
+      { ...f.input("b"), keywordId: "keyword-b" },
+    ]);
+    expect(admission).toHaveBeenCalledTimes(2);
+    expect(post).not.toHaveBeenCalled();
+    expect(await f.db.meteringUsageEvidence.count()).toBe(2);
+    expect(await f.db.meteringOperation.count()).toBe(2);
+    expect(await f.db.meteringPaidAttemptContext.count()).toBe(2);
+    await ownAdmission.fence(f.db, taskset.grants);
+    await post();
+    await expect(ownAdmission.fence(f.db, taskset.grants)).rejects.toThrow();
+    expect(post).toHaveBeenCalledOnce();
+  } finally {
+    vi.restoreAllMocks();
+    await f.close();
+  }
+}, 20_000);
+
+test("a provider account block rolls back admission without retrying or creating paid work", async () => {
+  const f = await transportFixture();
+  try {
+    await f.db
+      .$executeRaw`INSERT INTO provider_connection_recovery ("connectionId", "credentialVersion", "accountState") VALUES ('connection', ${f.input().credentialVersion}, 'payment_required')`;
+    const admission = vi.spyOn(f.db, "$transaction");
+    await expect(
+      beginProviderTaskset(f.db, [{ ...f.input(), keywordId: "keyword" }]),
+    ).rejects.toMatchObject({ name: "ProviderUsagePersistenceError", phase: "admission" });
+    expect(admission).toHaveBeenCalledOnce();
+    expect(await f.db.meteringUsageEvidence.count()).toBe(0);
+    expect(await f.db.meteringOperation.count()).toBe(0);
+  } finally {
+    vi.restoreAllMocks();
+    await f.close();
+  }
+});
+
+test("the largest supported queued taskset admits and fences one hundred distinct children", async () => {
+  const f = await transportFixture();
+  try {
+    const taskset = await beginProviderTaskset(
+      f.db,
+      Array.from({ length: 100 }, (_, index) => ({
+        ...f.input(`queued-${index}`),
+        keywordId: `keyword-${index}`,
+      })),
+    );
+    expect(new Set(taskset.identities.map((child) => child.id)).size).toBe(100);
+    expect(await f.db.meteringOperation.count()).toBe(100);
+    await ownAdmission.fence(f.db, taskset.grants);
+    expect(
+      await f.db.meteringPaidAttemptContext.count({
+        where: { fenced_at: { not: null } },
+      }),
+    ).toBe(100);
+  } finally {
+    await f.close();
+  }
+}, 60_000);
 
 test("unknown live proof keeps its reservation and forbids paid retry", async () => {
   const f = await transportFixture();

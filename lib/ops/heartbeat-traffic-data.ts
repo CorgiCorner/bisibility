@@ -86,6 +86,7 @@ export async function collectTrafficHeartbeat(now: Date, since: Date) {
     const key = `${run.projectId ?? "instance"}:${run.provider ?? "unknown"}`;
     const existing = grouped.get(key);
     if (!existing) {
+      // No enabled analytics connection owns this history any more, so it is not an ops failure.
       grouped.set(key, {
         connectionId: run.connectionId,
         errorClass: run.errorClass,
@@ -102,9 +103,9 @@ export async function collectTrafficHeartbeat(now: Date, since: Date) {
         rowsFetched: 0,
         rowsMatched: 0,
         rowsUpserted: 0,
-        status: run.status,
+        status: "inactive",
       });
-    } else if (existing.status === "not_run") {
+    } else if (existing.status === "not_run" && run.connectionId === existing.connectionId) {
       existing.status = run.status;
       existing.errorClass = run.errorClass;
     }

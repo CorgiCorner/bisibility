@@ -38,6 +38,29 @@ describe("ProviderCard", () => {
     expect(screen.queryByRole("button", { name: "Sync now" })).not.toBeInTheDocument();
   });
 
+  it.each([
+    [
+      "permission",
+      "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
+    ],
+    ["scope", "Reconnect your Google account and approve the requested permissions for this app."],
+  ] as const)("names the %s remedy for a stopped Google connection", (reauthReason, copy) => {
+    const provider = {
+      ...integrationCategories[1].providers[0],
+      enabled: true,
+      reauthReason,
+      status: "needs_reauth" as const,
+    };
+
+    render(
+      <ProviderCard canManageProviders canUpdateProject projectId="prj_1" provider={provider} />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(copy);
+    expect(screen.getByRole("alert")).not.toHaveTextContent("no longer valid");
+    expect(screen.getByRole("button", { name: "Reconnect" })).toBeInTheDocument();
+  });
+
   it("does not claim GA4 resumes index-status syncs", () => {
     const ga4 = integrationCategories[1].providers.find(({ id }) => id === "ga4");
     if (!ga4) throw new Error("GA4 fixture is missing");

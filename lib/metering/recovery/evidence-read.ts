@@ -93,6 +93,7 @@ export async function readRecoveryEvidence(
     const openedAt = incident ? incidentOpenTime(incident) : null;
     const projection = projections.get(row.rankCheckId ?? identity?.rankCheckId ?? "") ?? null;
     byRecord.set(row.key, {
+      closedUnknown: row.closedUnknown,
       projection,
       incident:
         incident && openedAt

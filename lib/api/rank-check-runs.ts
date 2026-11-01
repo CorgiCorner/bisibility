@@ -1,5 +1,6 @@
 import "server-only";
 import { readRunEvidence } from "@/lib/provider-evidence/projection/read-runs";
+import { rankRunDeferralReasons } from "@/lib/queries/rank-check-run-reasons";
 import {
   getRankCheckRun as readRun,
   listRankCheckRuns as readRuns,
@@ -16,14 +17,16 @@ export async function listProjectRankCheckRuns(ctx: ApiContext, projectId: strin
   if (denied) return denied;
   requireApiActor(ctx);
   const page = await readRuns(ctx.auth.project.id, ctx.url, { includeUnlaunched: true });
-  const evidence = await readRunEvidence(
-    ctx.auth.project.id,
-    page.data.map((run) => run.id),
-  );
+  const runIds = page.data.map((run) => run.id);
+  const [evidence, reasons] = await Promise.all([
+    readRunEvidence(ctx.auth.project.id, runIds),
+    rankRunDeferralReasons(ctx.auth.project.id, runIds),
+  ]);
   return listResponse(
     page.data.map((run) => ({
       ...publicRankCheckRun(run, projectId),
       evidence_projections: evidence.get(run.id) ?? null,
+      deferral_reasons: reasons.get(run.id) ?? [],
     })),
     page.nextCursor,
     { headers: ctx.headers },
@@ -34,9 +37,16 @@ export async function getProjectRankCheckRun(ctx: ApiContext, projectId: string,
   if (denied) return denied;
   requireApiActor(ctx);
   const run = await readRun(ctx.auth.project.id, requireApiPublicId(runId, "rcr"));
-  const evidence = await readRunEvidence(ctx.auth.project.id, [run.id]);
+  const [evidence, reasons] = await Promise.all([
+    readRunEvidence(ctx.auth.project.id, [run.id]),
+    rankRunDeferralReasons(ctx.auth.project.id, [run.id]),
+  ]);
   return resourceResponse(
-    { ...publicRankCheckRun(run, projectId), evidence_projections: evidence.get(run.id) ?? null },
+    {
+      ...publicRankCheckRun(run, projectId),
+      evidence_projections: evidence.get(run.id) ?? null,
+      deferral_reasons: reasons.get(run.id) ?? [],
+    },
     { headers: ctx.headers },
   );
 }

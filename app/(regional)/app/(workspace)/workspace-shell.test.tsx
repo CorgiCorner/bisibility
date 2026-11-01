@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   paletteProps: vi.fn(),
   projectMarkets: vi.fn(),
   querySession: vi.fn(),
+  reachedProjectLimit: vi.fn(),
+  supportAvailable: vi.fn(),
   sidebarProps: vi.fn(),
   workerLiveness: vi.fn(),
 }));
@@ -139,6 +141,12 @@ vi.mock("@/lib/queries/workspace-budget-summary", () => ({
   loadWorkspaceBudgetSummary: mocks.budgetSummary,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
+vi.mock("@/lib/queries/project-limit", () => ({
+  readActorReachedProjectLimit: mocks.reachedProjectLimit,
+}));
+vi.mock("@/lib/app-extensions", () => ({
+  appExtensions: { supportAvailable: mocks.supportAvailable },
+}));
 vi.mock("@/lib/queries/experimental-modules", () => ({
   getExperimentalModules: mocks.experimentalModules,
 }));
@@ -172,6 +180,8 @@ describe("workspace layout", () => {
       user: { email: "admin@example.com", id: "user-1", name: "Admin" },
     });
     mocks.adminSession.mockResolvedValue(null);
+    mocks.reachedProjectLimit.mockResolvedValue(null);
+    mocks.supportAvailable.mockReturnValue(false);
     mocks.listWorkspaces.mockResolvedValue([
       {
         domain: "example.com",
@@ -275,6 +285,50 @@ describe("workspace layout", () => {
     expect(mocks.paletteProps).toHaveBeenCalledWith(
       expect.objectContaining({ enabledExperimentalModules: ["timeline", "competitors"] }),
     );
+  });
+
+  it.each([true, false])(
+    "blocks project creation at the account limit with support available: %s",
+    async (canContactSupport) => {
+      mocks.reachedProjectLimit.mockResolvedValue(3);
+      mocks.supportAvailable.mockReturnValue(canContactSupport);
+
+      renderToStaticMarkup(
+        await WorkspaceShell({
+          activeProjectId: "project_1",
+          children: <div>Workspace content</div>,
+          projectRef: "prj_f00000000000000000000000",
+        }),
+      );
+
+      expect(mocks.sidebarProps).toHaveBeenCalledWith(
+        expect.objectContaining({ projectLimit: { canContactSupport, limit: 3 } }),
+      );
+    },
+  );
+
+  it("leaves project creation open below the limit and skips the count in demo", async () => {
+    renderToStaticMarkup(
+      await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Workspace content</div>,
+        projectRef: "prj_f00000000000000000000000",
+      }),
+    );
+    expect(mocks.sidebarProps).toHaveBeenCalledWith(
+      expect.objectContaining({ canCreateWorkspace: true, projectLimit: null }),
+    );
+
+    mocks.demo.config = { kind: "editable" };
+    mocks.reachedProjectLimit.mockClear();
+    renderToStaticMarkup(
+      await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Workspace content</div>,
+        projectRef: "prj_f00000000000000000000000",
+      }),
+    );
+    expect(mocks.reachedProjectLimit).not.toHaveBeenCalled();
   });
 
   it("shows getting started while setup is incomplete", async () => {

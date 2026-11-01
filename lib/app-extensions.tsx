@@ -45,6 +45,11 @@ function renderSupportWidget(_session: SupportWidgetSession): Promise<ReactNode>
   return Promise.resolve(null);
 }
 
+/** Self-hosted builds have no in-app support channel. */
+function supportAvailable() {
+  return false;
+}
+
 async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode> {
   return children;
 }
@@ -57,6 +62,7 @@ export const appExtensions = {
   getSupportWidgetPayload,
   renderHead,
   renderSupportWidget,
+  supportAvailable,
   renderOnboardingQuizSlot,
   onboardingCostCalculatorPath,
 };

@@ -7,12 +7,12 @@ import {
   projectBudgetId,
   projectFundingTag,
 } from "./project-funding-budgets";
-import { sharedBudgetRow } from "./shared-budget-row";
+import { type BudgetFigures, type BudgetFiguresInput, sharedBudgetRow } from "./shared-budget-row";
 
 export function projectBudgetRow(
   status: BudgetStatus,
   connection: string | null,
-  figuresKnown = false,
+  figures: BudgetFiguresInput = false,
   provider: string | null = null,
   binding?: VerifiedOwnBudgetBinding | VerifiedPlatformBudgetBinding,
   displayLabel?: string,
@@ -39,12 +39,7 @@ export function projectBudgetRow(
   )
     return null;
   const connectionScope = verifiedTag || status.budget.scope.kind === "connection";
-  const row = sharedBudgetRow(
-    status,
-    connectionScope ? connection : null,
-    figuresKnown,
-    displayLabel,
-  );
+  const row = sharedBudgetRow(status, connectionScope ? connection : null, figures, displayLabel);
   return row
     ? {
         ...row,
@@ -65,27 +60,54 @@ export function projectBudgetRow(
     : null;
 }
 
-/** A connection/group bound can retain another owner's charges after transfer. Only
- * expose its figures after a complete epoch read proves observation and sole ownership. */
-export function projectBudgetFiguresKnown(
+/** Whether a provider-measured receipt fixes this operation's share of a budget unit. */
+export function contributionCertainty(operation: Operation, unit: string): BudgetFigures {
+  // A released admission never reached the provider and adds nothing to the counter.
+  if (operation.state === "released") return "measured";
+  if (operation.state !== "settled") return "estimated";
+  const measurement = operation.receipts
+    .at(-1)
+    ?.measurements.find((candidate) => candidate.unit === unit);
+  return measurement?.quantity && measurement.certainty === "measured" ? "measured" : "estimated";
+}
+
+/** The counter itself was read: present, in the budget's own unit and not redacted. */
+export function readableBudgetCounter(status: BudgetStatus) {
+  return (
+    !status.redacted &&
+    status.used?.unit === status.budget.unit &&
+    status.reserved?.unit === status.budget.unit
+  );
+}
+
+export function zeroBudgetCounter(status: BudgetStatus) {
+  return (
+    readableBudgetCounter(status) && status.used?.value === 0n && status.reserved?.value === 0n
+  );
+}
+
+/**
+ * Limit figures come from the project's own counter: provider connections are unique per
+ * project, so the counter is this key's consumption in this project, also after an owner
+ * transfer. Certainty only says whether every contributing operation has a provider-measured
+ * receipt. Unknown means the read failed: no readable counter, or a non-zero counter whose
+ * epoch operations could not be read completely or do not match it.
+ */
+export function projectBudgetFigures(
   status: BudgetStatus,
   operations: readonly Operation[],
-  principal: string,
   complete: boolean,
   ownBinding?: VerifiedOwnBudgetBinding,
-  originalProof?: ReadonlySet<Operation>,
-  verifiedEmptyOwnEpoch = false,
-) {
-  if (!complete) return false;
+): BudgetFigures {
   if (
-    ownBinding &&
-    (status.redacted ||
-      status.budget.scope.kind !== "tag" ||
-      status.budget.scope.namespace !== ownBinding.namespace ||
-      status.budget.scope.tag !== ownBinding.tag ||
-      status.budget.unit !== ownBinding.unit)
+    !readableBudgetCounter(status) ||
+    (ownBinding &&
+      (status.budget.scope.kind !== "tag" ||
+        status.budget.scope.namespace !== ownBinding.namespace ||
+        status.budget.scope.tag !== ownBinding.tag ||
+        status.budget.unit !== ownBinding.unit))
   )
-    return false;
+    return "unknown";
   const funding = ownBinding ? null : parseProjectFundingBudgetId(status.budget.id);
   // A split budget's opening usage came from this source's work on the shared group cap.
   const contributes = (operation: Operation) =>
@@ -97,6 +119,20 @@ export function projectBudgetFiguresKnown(
             epoch.budgetId === projectBudgetId(funding.projectId) &&
             operation.fundingSource === funding.fundingSource)),
     );
+  const unit = status.budget.unit;
+  const contributing = operations.filter(contributes);
+  // Platform provider cost stays private to the platform; it is never a customer figure.
+  if (unit === "cents" && contributing.some((operation) => operation.fundingSource === "platform"))
+    return "unknown";
+  const certainty = contributing.every(
+    (operation) => contributionCertainty(operation, unit) === "measured",
+  )
+    ? "measured"
+    : "estimated";
+  // A zero counter needs no epoch proof; unmeasured work seen in the read still marks it.
+  if (zeroBudgetCounter(status)) return certainty;
+  if (!complete) return "unknown";
+  // Own-key work on this surface that never reached its counter means the read is corrupt.
   if (
     ownBinding &&
     operations.some(
@@ -106,48 +142,6 @@ export function projectBudgetFiguresKnown(
         !contributes(operation),
     )
   )
-    return false;
-  const contributing = operations.filter(contributes);
-  // Store spending-cap counters can prove zero without a provider receipt.
-  if (!contributing.length)
-    return (
-      !status.redacted &&
-      ((status.budget.scope.kind === "group" && status.budget.unit === "budget_cents") ||
-        funding !== null ||
-        Boolean(
-          ownBinding &&
-            verifiedEmptyOwnEpoch &&
-            originalProof?.size === 0 &&
-            ownBinding.principal === principal &&
-            status.budget.id === `own-connection:${ownBinding.connection}:${status.budget.surface}`,
-        )) &&
-      status.used?.unit === status.budget.unit &&
-      status.reserved?.unit === status.budget.unit &&
-      status.used.value === 0n &&
-      status.reserved.value === 0n
-    );
-  return contributing.every(
-    (operation) =>
-      operation.scope.principal === principal &&
-      (!ownBinding ||
-        (operation.scope.namespace === ownBinding.namespace &&
-          operation.scope.group === ownBinding.group &&
-          operation.scope.connection === ownBinding.connection &&
-          operation.scope.tags?.includes(ownBinding.tag) &&
-          operation.provider === ownBinding.provider &&
-          originalProof?.has(operation) === true &&
-          operation.fundingSource === "byok" &&
-          operation.costOwner === ownBinding.principal &&
-          (operation.state === "released" ||
-            (operation.state === "settled" &&
-              operation.receipts
-                .at(-1)
-                ?.measurements.some(
-                  (measurement) =>
-                    measurement.unit === ownBinding.unit &&
-                    measurement.certainty === "measured" &&
-                    measurement.quantity !== null,
-                ))))) &&
-      !(status.budget.unit === "cents" && operation.fundingSource === "platform"),
-  );
+    return "unknown";
+  return certainty;
 }

@@ -20,6 +20,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 }));
 vi.mock("@/lib/queries/rank-check-run-deferral", () => ({
   sharedRankCheckRunDeferralCode: mocks.sharedDeferral,
+  hasAccountDeferredRankCheck: vi.fn(async () => false),
 }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
   getRankCheckRun: mocks.getRankCheckRun,

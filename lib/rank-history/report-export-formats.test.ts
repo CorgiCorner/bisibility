@@ -90,6 +90,29 @@ describe("shared report download safety", () => {
     }
   });
 
+  it("exports the provider account deferral code in CSV and XLSX", async () => {
+    const prepared = await prepareRankHistoryExport(
+      context,
+      { version: "2", range: "all", stream: "attempts" },
+      reportProject.publicId,
+      options,
+    );
+    const row = prepared.reportRows.find(
+      (entry) => "kind" in entry && entry.kind === "logical_rank_check",
+    );
+    if (!row || !("deferredReason" in row)) throw new Error("Missing logical check fixture");
+    prepared.reportRows = [
+      { ...row, status: "deferred", deferredReason: "provider_account_blocked" },
+    ];
+    expect(reportHistoryCsv(prepared)).toContain("provider_account_blocked");
+    const book = new ExcelJS.Workbook();
+    await book.xlsx.read(Readable.from([Buffer.from(await reportHistoryXlsx(prepared), "base64")]));
+    const sheet = book.getWorksheet("Attempts");
+    expect(sheet?.getCell(2, historyReportHeaders.indexOf("deferred_reason") + 1).value).toBe(
+      "provider_account_blocked",
+    );
+  });
+
   it("uses the historical URL and preserves text/number types and unknown fields in CSV/XLSX", async () => {
     const result = await prepareRankHistoryExport(
       context,

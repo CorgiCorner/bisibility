@@ -3,16 +3,17 @@ import type { ProviderOperationEvidence } from "@/lib/generated/prisma/client";
 export type IncidentDimensions = Pick<
   ProviderOperationEvidence,
   "acceptance" | "fulfillment" | "accounting" | "exhaustionStatus" | "exhaustionReason"
->;
+> & { operatorClosedUnknown?: boolean };
 
-/** Operator follow-up and recoveryState never establish customer resolution. */
+/** Only a validated operator disposition can end review without native proof. */
 export function operationResolved(value: IncidentDimensions): boolean {
   return (
-    (value.acceptance === "accepted" || value.acceptance === "rejected") &&
-    (value.fulfillment === "complete" ||
-      value.fulfillment === "partial" ||
-      value.fulfillment === "provider_error") &&
-    (value.accounting === "measured" || finallyUnknown(value))
+    value.operatorClosedUnknown === true ||
+    ((value.acceptance === "accepted" || value.acceptance === "rejected") &&
+      (value.fulfillment === "complete" ||
+        value.fulfillment === "partial" ||
+        value.fulfillment === "provider_error") &&
+      (value.accounting === "measured" || finallyUnknown(value)))
   );
 }
 
@@ -26,8 +27,9 @@ function finallyUnknown(value: IncidentDimensions): boolean {
 
 /** Results and costs are independent; pending uncertainty is never a zero cost. */
 export function customerDimensions(value: IncidentDimensions) {
-  const result =
-    value.fulfillment === "complete"
+  const result = value.operatorClosedUnknown
+    ? "resultMissingCount"
+    : value.fulfillment === "complete"
       ? "resultRecoveredCount"
       : value.fulfillment === "partial"
         ? "resultPartialCount"
@@ -39,7 +41,7 @@ export function customerDimensions(value: IncidentDimensions) {
   const cost =
     value.accounting === "measured"
       ? "costMeasuredCount"
-      : finallyUnknown(value)
+      : value.operatorClosedUnknown || finallyUnknown(value)
         ? "costUnknownCount"
         : "costUnderReviewCount";
   return { result, cost } as const;
@@ -66,5 +68,8 @@ export function aggregateIncident(operations: IncidentDimensions[]) {
     counts[result]++;
     counts[cost]++;
   }
-  return { counts, resolved: operations.length > 0 && operations.every(operationResolved) };
+  return {
+    counts,
+    resolved: operations.length > 0 && operations.every(operationResolved),
+  };
 }

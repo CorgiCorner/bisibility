@@ -10,6 +10,7 @@ import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verificat
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { collectInitialDomainRating } from "@/lib/domain-rating/collect";
 import { dollarsToCents } from "@/lib/format/currency";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { guardConnectionFundingMutation } from "@/lib/metering/budget-mirror";
@@ -228,6 +229,10 @@ export async function connectProviderConnection(
 
   const result = await prisma.$transaction(writeConnection);
   if (result.shouldWake) wakeTrafficFirstSyncWorker();
+  if (item.id === "ahrefs" && result.connection.enabled) {
+    // Saving a connection succeeds even if its separate initial measurement is unavailable.
+    await collectInitialDomainRating(context.projectId).catch(() => undefined);
+  }
   return result.connection;
 }
 

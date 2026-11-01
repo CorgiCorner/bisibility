@@ -7,7 +7,8 @@ import { canonical, encode, key } from "@/lib/metering/store/codec";
 import { createSql, lock } from "@/lib/metering/store/host-sql";
 import { createTransactionBoundStore } from "@/lib/metering/store/transactional";
 import { reconcileSpendingGates } from "@/lib/provider-usage/reconcile-gates";
-import { closeoutManifest, closeoutPolicy, historyMigration } from "./manifest";
+import { lockLiveConnection } from "./live-connection";
+import { closeoutManifest, historyMigration, liveConnectionCloseoutPolicy } from "./manifest";
 import { planCloseout } from "./plan";
 import { identityIncompleteHistoryCount } from "./read";
 import { closeoutSnapshot } from "./snapshot";
@@ -34,7 +35,7 @@ export async function previewCloseout(
   const snapshot = await closeoutSnapshot(tx, manifest);
   const plan = planCloseout(snapshot, manifest, now);
   return {
-    policy: closeoutPolicy,
+    policy: manifest.policy,
     planHash: plan.planHash,
     targetHash: plan.targetHash,
     replayed: plan.replayed,
@@ -78,6 +79,8 @@ export async function applyCloseout(
   // Immutable source additions are blocked for this bounded transaction; read preview is lock-free.
   await tx.$executeRaw`LOCK TABLE metering_legacy_proof_source,metering_legacy_reference_source,metering_legacy_setting_source,metering_history_reference IN SHARE MODE`;
   const sql = createSql(tx, { statements: 0, changes: 0n, rowsRead: 0 });
+  if (manifest.policy === liveConnectionCloseoutPolicy)
+    await lockLiveConnection(tx, manifest.connection);
   await lockConnectionAccounting(sql, manifest.namespace, manifest.connection);
   for (const id of manifest.operations.map((i) => key(manifest.namespace, i.operationId)).sort())
     await lock(sql, `metering:operation:${id}`);
@@ -110,25 +113,33 @@ export async function applyCloseout(
     const body = { ...plan, corrections: undefined, manifest, finalOperation: result.operation };
     await tx.$executeRaw`INSERT INTO metering_history_closeout
       (operation_pk,namespace,operation_id,migration_id,source_id,source_hash,target_hash,original_receipt_id,receipt_id,version,policy,disposition,body,recorded_at)
-      VALUES(${key(manifest.namespace, correction.operationId)},${manifest.namespace},${correction.operationId},${historyMigration},${entry.journal.source_id},${entry.journal.source_hash},${entry.journal.target_hash},${correction.replacesReceiptId},${correction.receipt.id},${result.operation.version},${closeoutPolicy},'financially_closed_identity_incomplete',${encode(body)}::jsonb,${new Date(manifest.recordedAt)})`;
+      VALUES(${key(manifest.namespace, correction.operationId)},${manifest.namespace},${correction.operationId},${historyMigration},${entry.journal.source_id},${entry.journal.source_hash},${entry.journal.target_hash},${correction.replacesReceiptId},${correction.receipt.id},${result.operation.version},${manifest.policy},'financially_closed_identity_incomplete',${encode(body)}::jsonb,${new Date(manifest.recordedAt)})`;
   }
+  // A retired project has no row to reference; the plan digest identifies the batch.
+  const target = snapshot.project.publicId
+    ? { projectId: snapshot.project.id, targetType: "project", targetId: snapshot.project.publicId }
+    : { projectId: null, targetType: "instance_ops", targetId: "retired-project-closeout" };
   await writeAudit(
     {
       action: "instance_admin.metering_history_closed",
       actorId: operator.id,
-      projectId: snapshot.project.id,
-      targetType: "project",
-      targetId: snapshot.project.publicId,
+      ...target,
       after: {
-        policy: closeoutPolicy,
+        policy: manifest.policy,
         planHash: plan.planHash,
         count: manifest.operations.length,
         disposition: "financially_closed_identity_incomplete",
+        // Opaque internal identifiers for the variants that have no public project or connection.
+        ...(manifest.policy === liveConnectionCloseoutPolicy || manifest.retiredProjectId
+          ? { connection: manifest.connection }
+          : {}),
+        ...(manifest.retiredProjectId ? { retiredProjectId: manifest.retiredProjectId } : {}),
       },
     },
     tx,
   );
-  // Manifest eligibility binds every row to the same project and connection.
+  // Manifest eligibility binds every row to the same project and connection. On a live connection
+  // the gate opens only when no other unresolved operation, including newer work, remains there.
   const representative = snapshot.entries[0];
   if (representative) await reconcileSpendingGates(tx, representative.operation);
   return { planHash: plan.planHash, replayed: false, closed: plan.corrections.length };

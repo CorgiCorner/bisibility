@@ -7,9 +7,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { AdminDashboard } from "./AdminDashboard";
 import { AdminDashboardLoading } from "./AdminDashboardLoading";
 import { baseData, busyTemporal } from "./admin-dashboard-test-fixtures";
+import { instanceUsageFixture } from "./instance-usage-test-fixture";
 
 const data = {
   ...baseData,
+  stats: { ...baseData.stats, usageReport: instanceUsageFixture },
   worker: {
     ...baseData.worker,
     appliedMigration: "20261012201100_measurement_settings_mutation_receipt",

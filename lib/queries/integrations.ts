@@ -10,6 +10,7 @@ import {
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import { providerIcon } from "@/lib/integrations/provider-icon";
 import { readableProviderIdentity } from "@/lib/integrations/provider-identity";
+import { readConnectionRecovery } from "@/lib/integrations/provider-recovery/read";
 import { COST_ESTIMATE_PER_CHECK_HELP } from "@/lib/integrations/settings-copy";
 import type {
   GoogleOAuthSetup,
@@ -18,6 +19,7 @@ import type {
   ProviderStatusKind,
 } from "@/lib/integrations/types";
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
+import { accountHealthProviders } from "@/lib/providers/account-health/registry";
 import { PROVIDER_CATALOG, tintFor } from "@/lib/providers/registry";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { loadGscConsumerStatuses } from "@/lib/queries/integration-consumer-status";
@@ -35,8 +37,14 @@ import {
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
+import { trafficReauthCause } from "@/lib/traffic/failure-policy";
+import { integrationRecoveryView } from "./integration-recovery-presentation";
 
 type SyncFailure = NonNullable<IntegrationProvider["syncFailure"]>;
+type TrafficRunState = {
+  reauthReason?: IntegrationProvider["reauthReason"];
+  syncFailure?: SyncFailure;
+};
 type ConsumerStatuses = IntegrationProvider["consumerStatuses"];
 
 export type IntegrationsView = {
@@ -48,6 +56,7 @@ export type IntegrationsView = {
 const activeIntegrationKinds = [
   "serp",
   "analytics",
+  "enrichment",
 ] as const satisfies readonly ActiveIntegrationKind[];
 
 function statusFor(itemStatus: ProviderStatusKind, connection?: ProviderConnectionRow) {
@@ -83,7 +92,7 @@ function integrationProvider(
   now: Date,
   primaryProvider: string | null,
   googleOAuth?: GoogleOAuthSetup,
-  syncFailure?: SyncFailure,
+  { reauthReason, syncFailure }: TrafficRunState = {},
   consumerStatuses?: ConsumerStatuses,
 ): IntegrationProvider {
   const { connection, item } = row;
@@ -101,6 +110,7 @@ function integrationProvider(
 
   return {
     connectionId: connection?.publicId,
+    accountUrl: "accountUrl" in item ? item.accountUrl : undefined,
     connectionUpdatedAt: connection?.updatedAt.toISOString(),
     credentialSource: connection ? (connection.credentialSource ?? "own") : undefined,
     hasStoredCredentials: Boolean(connection?.credentialsEncrypted),
@@ -153,6 +163,7 @@ function integrationProvider(
         : undefined,
     primary: primary || undefined,
     priority: connection?.priority,
+    reauthReason: connection?.status === "needs_reauth" ? reauthReason : undefined,
     secondaryAction:
       connection?.status === "connected" && connection.credentialSource !== "hosted"
         ? "Test"
@@ -179,15 +190,29 @@ async function categoriesForProject(
   dateFormat: DateFormat = "month_first",
 ): Promise<IntegrationCategory[]> {
   const connections = await loadProviderConnections(projectId);
+  const recovery = new Map(
+    await Promise.all(
+      connections
+        .filter(
+          (connection) =>
+            accountHealthProviders().includes(connection.provider) &&
+            connection.credentialSource === "own",
+        )
+        .map(
+          async (connection) =>
+            [connection.id, await readConnectionRecovery(projectId, connection.id, now)] as const,
+        ),
+    ),
+  );
   const [runs, gscConsumerStatuses] = await Promise.all([
     prisma.operationalRun.findMany({
       orderBy: { startedAt: "desc" },
-      select: { connectionId: true, errorClass: true, startedAt: true, status: true },
+      select: { connectionId: true, errorClass: true, meta: true, startedAt: true, status: true },
       where: { kind: "traffic_sync", projectId },
     }),
     loadGscConsumerStatuses(projectId, connections, now, dateFormat),
   ]);
-  const failuresByConnection = new Map<string, SyncFailure>();
+  const runStateByConnection = new Map<string, TrafficRunState>();
   for (const connection of connections) {
     if (connection.kind !== "analytics") continue;
     const connectionRuns = runs.filter(
@@ -195,16 +220,21 @@ async function categoriesForProject(
         run.connectionId === connection.id &&
         (!connection.firstSyncRequestedAt || run.startedAt >= connection.firstSyncRequestedAt),
     );
+    const reauthReason = trafficReauthCause(connectionRuns);
+    if (reauthReason) runStateByConnection.set(connection.id, { reauthReason });
     if (connectionRuns[0]?.status !== "failed") continue;
     const firstNonFailure = connectionRuns.findIndex((run) => run.status !== "failed");
     const failedRuns =
       firstNonFailure === -1 ? connectionRuns : connectionRuns.slice(0, firstNonFailure);
     const oldest = failedRuns.at(-1);
     if (!oldest) continue;
-    failuresByConnection.set(connection.id, {
-      consecutiveFailures: failedRuns.length,
-      errorClass: connectionRuns[0]?.errorClass ?? "unknown",
-      since: oldest.startedAt.toISOString(),
+    runStateByConnection.set(connection.id, {
+      reauthReason,
+      syncFailure: {
+        consecutiveFailures: failedRuns.length,
+        errorClass: connectionRuns[0]?.errorClass ?? "unknown",
+        since: oldest.startedAt.toISOString(),
+      },
     });
   }
   const dataCategories = activeIntegrationKinds.map((kind) => {
@@ -214,17 +244,23 @@ async function categoriesForProject(
       description: copy.description,
       eyebrow: copy.eyebrow,
       id: kind,
-      providers: orderedCatalog(kind, connections).map((row) =>
-        integrationProvider(
-          kind,
-          row,
-          now,
-          primaryProvider,
-          googleOAuth,
-          row.connection ? failuresByConnection.get(row.connection.id) : undefined,
-          row.item.id === "gsc" ? gscConsumerStatuses : undefined,
-        ),
-      ),
+      providers: orderedCatalog(kind, connections).map((row) => {
+        const view = row.connection ? recovery.get(row.connection.id) : null;
+        return {
+          ...integrationProvider(
+            kind,
+            row,
+            now,
+            primaryProvider,
+            googleOAuth,
+            row.connection ? runStateByConnection.get(row.connection.id) : undefined,
+            row.item.id === "gsc" ? gscConsumerStatuses : undefined,
+          ),
+          ...(view && row.connection
+            ? { recovery: integrationRecoveryView(view, row.connection.id, connections, recovery) }
+            : {}),
+        };
+      }),
       title: copy.title,
     };
   });
@@ -261,13 +297,4 @@ export async function getIntegrationCategories(
     options.dateFormat,
   );
 }
-
-export async function isProviderConnected(projectId: string, provider: string) {
-  const { project } = await requireReadableProject(projectId);
-  const connection = await prisma.providerConnection.findUnique({
-    select: { enabled: true, status: true },
-    where: { projectId_provider: { projectId: project.id, provider } },
-  });
-
-  return Boolean(connection?.enabled && connection.status === "connected");
-}
+export { isProviderConnected } from "./provider-connected";

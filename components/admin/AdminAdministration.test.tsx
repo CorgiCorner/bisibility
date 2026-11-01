@@ -5,7 +5,7 @@ import {
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import { setNavigationState } from "@/tests/next-navigation";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/admin/AdminAccountLookup", () => ({
@@ -45,6 +45,13 @@ const data = {
     users: metric(1),
   },
   monthStart: "2026-07-01T00:00:00.000Z",
+  usagePeriod: "all",
+  usageReport: null,
+  recoveryAccounting: {
+    historicalCount: 18,
+    historicalCostUsdUnits: "256660",
+    closedUnknownCount: 12,
+  },
   topConsumption: Array.from({ length: 11 }, (_, index) => ({
     billableUnits: 2_000 - index,
     checks: 1_000 - index,
@@ -60,6 +67,26 @@ const data = {
 
 describe("AdminAdministration", () => {
   afterEach(() => vi.restoreAllMocks());
+
+  it("shows retained historical cost separately from monthly reference costs and unknown closures", () => {
+    render(<AdminAdministration data={data} />);
+    const accounting = screen.getByRole("region", { name: "Recovery accounting (all time)" });
+    expect(within(accounting).getByText("$0.256660")).toBeInTheDocument();
+    expect(within(accounting).getByText("18 requests")).toBeInTheDocument();
+    expect(within(accounting).getByText("12 requests")).toBeInTheDocument();
+    expect(within(accounting).getByText("Cost unknown")).toBeInTheDocument();
+    expect(within(accounting).getByRole("link", { name: "View recovery records" })).toHaveAttribute(
+      "href",
+      "/app/admin/metering/recovery",
+    );
+  });
+
+  it("does not turn unavailable recovery accounting into a zero cost", () => {
+    render(<AdminAdministration data={{ ...data, recoveryAccounting: null }} />);
+    const accounting = screen.getByRole("region", { name: "Recovery accounting (all time)" });
+    expect(within(accounting).getByRole("status")).toHaveTextContent("unavailable");
+    expect(within(accounting).queryByText("$0.000000")).not.toBeInTheDocument();
+  });
 
   it("renders four 30-day growth sparklines and the approximate activity label", () => {
     const { container } = render(<AdminAdministration data={data} />);
@@ -83,6 +110,7 @@ describe("AdminAdministration", () => {
 
   it("renders at most ten project/provider rows with reference usage and share bars", () => {
     render(<AdminAdministration data={data} />);
+    fireEvent.click(screen.getByText("SERP reference costs (current UTC month)"));
 
     const table = screen.getByRole("table", {
       name: "Top project and provider consumption this month",
@@ -147,6 +175,8 @@ describe("AdminAdministration", () => {
       timeZone: "Europe/Warsaw",
     });
 
+    fireEvent.click(screen.getByText("SERP reference costs (current UTC month)"));
+
     for (const label of ["Flat Provider", "Plan Provider", "Unknown Provider"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
@@ -164,6 +194,7 @@ describe("AdminAdministration", () => {
   it("reserves room for sortable consumption headers and fills a wide table container", () => {
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1_200);
     render(<AdminAdministration data={data} />);
+    fireEvent.click(screen.getByText("SERP reference costs (current UTC month)"));
 
     const table = screen.getByRole("table", {
       name: "Top project and provider consumption this month",
@@ -278,6 +309,7 @@ describe("AdminAdministration", () => {
 
   it("renders honest consumption empty state", () => {
     render(<AdminAdministration data={{ ...data, topConsumption: [] }} />);
+    fireEvent.click(screen.getByText("SERP reference costs (current UTC month)"));
 
     expect(screen.getByText("No completed SERP checks recorded this month.")).toHaveClass(
       "text-fg-muted",

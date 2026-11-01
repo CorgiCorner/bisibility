@@ -107,7 +107,12 @@ it("shows each exception kind with localized state beside current budgets and hi
   };
   data.usage.asOf = "2026-09-30T23:59:59Z";
   render(<AdminMeteringView data={data} month="2026-09" />);
-  for (const text of ["Pending evidence", "Reservation expired", "Lease expired", "100 Units"])
+  for (const text of [
+    "Pending evidence",
+    "Reservation expired",
+    "Lease expired",
+    "100 billing units",
+  ])
     expect(screen.getByText(text)).toBeInTheDocument();
   expect(screen.getByRole("table", { name: "Usage detail" })).toHaveTextContent("$0.12");
   expect(screen.getAllByText("Pending")).toHaveLength(3);
@@ -147,7 +152,7 @@ it("renders compact budget rows with readable scope and exact unknown semantics"
   render(<AdminMeteringView data={data} />);
   const table = screen.getByRole("table", { name: "Current budgets" });
   expect(within(table).getAllByText("Example project")).toHaveLength(2);
-  expect(within(table).getByText("62 Units")).toBeInTheDocument();
+  expect(within(table).getByText("62 billing units")).toBeInTheDocument();
   expect(within(table).getAllByText("Unavailable").length).toBeGreaterThan(0);
   expect(within(table).getAllByRole("button", { name: "Copy ID" })).toHaveLength(2);
   expect(within(table).getAllByRole("row")).toHaveLength(3);
@@ -178,14 +183,18 @@ it("preserves a hard spending ceiling and conceals every redacted amount", () =>
     },
   ];
   const view = render(<AdminMeteringView data={data} />);
-  expect(screen.getByText("Hard limit:", { exact: false })).toHaveTextContent("120 Units");
+  expect(screen.getByText("Hard limit:", { exact: false })).toHaveTextContent("120 billing units");
   view.rerender(
     <AdminMeteringView
       data={{ ...data, budgets: [{ ...(data.budgets[0] as typeof seed), redacted: true }] }}
     />,
   );
   const table = screen.getByRole("table", { name: "Current budgets" });
-  expect(within(table).queryByText(/120 Units|62 Units|38 Units|100 Units/)).toBeNull();
+  expect(
+    within(table).queryByText(
+      /120 billing units|62 billing units|38 billing units|100 billing units/,
+    ),
+  ).toBeNull();
   expect(within(table).getByText(/figures are hidden/)).toBeInTheDocument();
 });
 

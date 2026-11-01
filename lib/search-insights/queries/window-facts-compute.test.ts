@@ -64,6 +64,59 @@ describe("window facts compute", () => {
     mocks.prune.mockResolvedValue(0);
   });
 
+  it("serializes worker refresh queries across concurrent imports", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "");
+    let active = 0;
+    let peak = 0;
+    const track = (value: unknown) => async () => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((resolve) => setImmediate(resolve));
+      active -= 1;
+      return value;
+    };
+    mocks.coverage.mockImplementation(track({}));
+    mocks.counts.mockImplementation(track({}));
+    mocks.signals.mockImplementation(track({}));
+    mocks.totals.mockImplementation(track({}));
+    mocks.topQueries.mockImplementation(track({ rows: [], total: 0 }));
+    mocks.queryRaw.mockImplementation(track([{ days: 7n }]));
+    await Promise.all([
+      refreshWindowFacts({ ...key, importId: "one", readyWindowDays: [7] }),
+      refreshWindowFacts({ ...key, importId: "two", readyWindowDays: [7] }),
+    ]);
+    expect(peak).toBe(1);
+    expect(mocks.coverage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      true,
+    );
+    expect(mocks.signals).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      true,
+    );
+    vi.unstubAllEnvs();
+  });
+
+  it("keeps the server refresh reads concurrent", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    const releases: (() => void)[] = [];
+    mocks.coverage.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          releases.push(() => resolve({}));
+        }),
+    );
+    const refresh = refreshWindowFacts({ ...key, importId: "web", readyWindowDays: [7] });
+    expect(mocks.counts).toHaveBeenCalledTimes(2);
+    for (const release of releases) release();
+    await refresh;
+    vi.unstubAllEnvs();
+  });
+
   it("reads the default lens at a hundred rows, not the first view's fifty", async () => {
     await computeWindowFacts(key);
     expect(mocks.topQueries).toHaveBeenCalledWith(

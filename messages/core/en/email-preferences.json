@@ -12,7 +12,10 @@
       "successDescription": "We will not send you welcome follow-ups or other marketing emails. Account and service messages are unaffected.",
       "successTitle": "You are unsubscribed",
       "validDescription": "You will stop receiving founder check-ins and other marketing emails. Account and service messages will still arrive.",
-      "validTitle": "Stop founder check-ins?"
+      "validTitle": "Stop founder check-ins?",
+      "notificationTitle": "Stop these project emails?",
+      "notificationDescription": "You will stop receiving this type of email for this project. Other email preferences stay unchanged.",
+      "notificationSuccess": "You will no longer receive this type of email for this project."
     },
     "button": {
       "error": "We could not update your preference. Please try again.",

@@ -58,9 +58,11 @@ export function RecoveryEvidence({
             : t("unclassified")}
         </div>
         <div>
-          {projection.recovery?.state
-            ? t(`recoveryStates.${projection.recovery.state}`)
-            : t("unclassified")}
+          {value?.closedUnknown
+            ? t("recoveryStates.closed_unknown")
+            : projection.recovery?.state
+              ? t(`recoveryStates.${projection.recovery.state}`)
+              : t("unclassified")}
         </div>
       </div>
     );

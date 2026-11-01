@@ -4,6 +4,7 @@ import "server-only";
 import { backlinksPaymentHistory } from "@/lib/backlinks/payment-history";
 import { snapshotProvider } from "@/lib/backlinks/stored";
 import { prisma } from "@/lib/db/prisma";
+import { effectiveProjectLookupTtl } from "@/lib/provider-lookups/effective-lookup-ttl";
 import { getSerpProvider, serpProviderCapabilities } from "@/lib/providers/registry";
 import { providerChainOrderBy } from "@/lib/rank-check/provider-chain-order";
 import { trackedProjectDomain } from "@/lib/schemas/project";
@@ -19,7 +20,7 @@ function recentResultLimit(fetchedRowCount: number) {
 
 export async function getBacklinksPageContext(projectId: string) {
   const { project } = await requireReadableProject(projectId);
-  const [recentSnapshots, costContext, providerConnections] = await Promise.all([
+  const [recentSnapshots, costContext, providerConnections, settings] = await Promise.all([
     prisma.backlinkSnapshot.findMany({
       orderBy: { fetchedAt: "desc" },
       select: {
@@ -40,6 +41,10 @@ export async function getBacklinksPageContext(projectId: string) {
       select: { provider: true, status: true },
       where: { enabled: true, kind: "serp", projectId: project.id },
     }),
+    prisma.project.findUniqueOrThrow({
+      select: { lookupCacheTtlSeconds: true },
+      where: { id: project.id },
+    }),
   ]);
   const capableConnections = providerConnections.filter((connection) => {
     if (!serpProviderCapabilities(connection.provider)?.backlinks) return false;
@@ -57,6 +62,7 @@ export async function getBacklinksPageContext(projectId: string) {
         .map((connection) => connection.provider),
     ),
   ].map((id) => ({ label: getSerpProvider(id).label, value: id }));
+  const cacheTtlSeconds = effectiveProjectLookupTtl(settings.lookupCacheTtlSeconds, "backlinks");
   const seen = new Set<string>();
   const recentTargets = recentSnapshots
     .flatMap((snapshot) => {
@@ -73,7 +79,12 @@ export async function getBacklinksPageContext(projectId: string) {
       return [
         {
           ...(originalPayment ? { originalPayment } : {}),
-          cachedUntil: snapshot.expiresAt.toISOString(),
+          cachedUntil: new Date(
+            Math.min(
+              snapshot.expiresAt.getTime(),
+              snapshot.fetchedAt.getTime() + cacheTtlSeconds * 1000,
+            ),
+          ).toISOString(),
           fetchedAt: snapshot.fetchedAt.toISOString(),
           includeSubdomains: snapshot.includeSubdomains,
           provider,
@@ -94,6 +105,7 @@ export async function getBacklinksPageContext(projectId: string) {
 
   return {
     ...moduleSupport("backlinks"),
+    cacheTtlSeconds,
     costContext,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
     providerStatus,

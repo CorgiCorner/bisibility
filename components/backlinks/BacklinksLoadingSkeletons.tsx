@@ -54,7 +54,7 @@ function IdleStateLoading() {
     <ResearchIdleLoading
       icon={LinkIcon}
       title={t("idleTitle")}
-      bullets={[t("bullets.price"), t("bullets.cache"), t("bullets.diff")]}
+      bullets={[t("bullets.price"), t("bullets.cacheLoading"), t("bullets.diff")]}
     />
   );
 }

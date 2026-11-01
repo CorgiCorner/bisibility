@@ -83,6 +83,7 @@ describe("BacklinksPage", () => {
     });
     mocks.demo.mockResolvedValue(null);
     mocks.context.mockResolvedValue({
+      cacheTtlSeconds: 2_592_000,
       costContext: { capCents: 5_000, spentCents: 0 },
       defaultTarget: "project.example",
       providerStatus: "connected",

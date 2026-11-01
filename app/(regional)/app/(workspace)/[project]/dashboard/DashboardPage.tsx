@@ -1,5 +1,6 @@
 import { DashboardComparisonSurface } from "@/components/dashboard-competitors/DashboardComparisonSurface";
 import { DashboardScopeUnavailable } from "@/components/dashboard-layout/DashboardScopeUnavailable";
+import { DomainRatingSection } from "@/components/domain-rating/DomainRatingSection";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { OverviewDashboardView } from "@/components/overview/OverviewDashboardView";
 import { OverviewPersonalDashboard } from "@/components/overview/OverviewPersonalDashboard";
@@ -128,10 +129,7 @@ async function OverviewData({
   const state = overview.state ?? (overview.isEmpty ? "empty" : "populated");
   const role = getProjectRole(readable.actor, readable.project.id);
 
-  if (
-    personal &&
-    (state === "populated" || personal.local?.state === "ready" || failedProjections.length > 0)
-  )
+  if (personal)
     return (
       <OverviewPersonalDashboard
         overview={{ ...overview, state }}
@@ -139,6 +137,8 @@ async function OverviewData({
         failedProjections={failedProjections}
         competitors={competitors}
         canCreateKeyword={canProjectAction(role, "create", "keyword")}
+        canManageProviders={canProjectAction(role, "manage", "provider_connection")}
+        canRunChecks={canProjectAction(role, "update", "keyword")}
         loadedProjections={personal.composition.projections.all}
         localReport={overview.localReport}
         personal={{
@@ -152,15 +152,24 @@ async function OverviewData({
     );
 
   return (
-    <OverviewDashboardView
-      competitors={competitors}
-      canCreateKeyword={canProjectAction(role, "create", "keyword")}
-      canManageProviders={canProjectAction(role, "manage", "provider_connection")}
-      canRunChecks={canProjectAction(role, "update", "keyword")}
-      checkHealth={checkHealth}
-      isSample={isSample}
-      overview={{ ...overview, state }}
-    />
+    <>
+      <OverviewDashboardView
+        competitors={competitors}
+        canCreateKeyword={canProjectAction(role, "create", "keyword")}
+        canManageProviders={canProjectAction(role, "manage", "provider_connection")}
+        canRunChecks={canProjectAction(role, "update", "keyword")}
+        checkHealth={checkHealth}
+        isSample={isSample}
+        overview={{ ...overview, state }}
+      />
+      {!isSample ? (
+        <div className="mt-4 grid grid-cols-1 gap-4">
+          <Suspense fallback={null}>
+            <DomainRatingSection projectRef={projectRef} />
+          </Suspense>
+        </div>
+      ) : null}
+    </>
   );
 }
 

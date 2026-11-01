@@ -179,7 +179,7 @@ export function KeywordsEmptyState({
                       {" "}
                       <Link
                         className="font-semibold text-accent-text"
-                        href={appPath(projectId, "integrations")}
+                        href={appPath(projectId, "providers")}
                       >
                         {importFeedback.kind === "needs_reauth"
                           ? t("reconnectGoogle")
@@ -195,7 +195,7 @@ export function KeywordsEmptyState({
                     providerLink: (chunks) => (
                       <Link
                         className="font-semibold text-accent-text"
-                        href={appPath(projectId, "integrations")}
+                        href={appPath(projectId, "providers")}
                       >
                         {chunks}
                       </Link>

@@ -1,4 +1,5 @@
 import { notificationTransaction } from "@/lib/notifications/transaction";
+import { ApplicationFailure } from "@temporalio/common";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -6,6 +7,7 @@ import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-che
 import type { SerpDepth } from "@/lib/serp/constants";
 import {
   createRunningRankCheckActivity,
+  discardRankCheckActivity,
   failRankCheckActivity,
   runRankCheckActivity,
 } from "@/lib/temporal/rank-check-activities";
@@ -75,6 +77,13 @@ export async function runInlineRankCheck(input: RunInlineRankCheckInput) {
       source: "manual",
     });
   } catch (error) {
+    if (
+      error instanceof ApplicationFailure &&
+      (error.type === "provider_account_blocked" || error.type === "usage_unconfirmed")
+    ) {
+      await discardRankCheckActivity({ rankCheckId: running.rankCheckId, reason: error.type });
+      throw error;
+    }
     await failRankCheckActivity({
       keywordId: input.keywordId,
       message: error instanceof Error ? error.message : "Rank check failed.",

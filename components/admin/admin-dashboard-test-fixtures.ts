@@ -45,6 +45,13 @@ export const baseData = {
   },
   rank7d: rankWindow,
   stats: {
+    usagePeriod: "all",
+    usageReport: null,
+    recoveryAccounting: {
+      historicalCount: 18,
+      historicalCostUsdUnits: "256660",
+      closedUnknownCount: 12,
+    },
     activeProviderConnectionsByKind: [
       { count: 3, kind: "analytics" },
       { count: 1, kind: "serp" },

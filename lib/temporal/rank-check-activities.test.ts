@@ -1267,6 +1267,85 @@ describe("rank-check activities", () => {
     });
   });
 
+  it.each([
+    ["account_blocked", "provider_account_blocked"],
+    ["accounting_review", "usage_unconfirmed"],
+  ] as const)("persists and defers a chain of %s refusals", async (reason, code) => {
+    const chain = new ProviderChainError([
+      {
+        provider: "primary",
+        message: "Not sent",
+        reason: "account_blocked",
+        recoveryReason: reason,
+      },
+      {
+        provider: "secondary",
+        message: "Not sent",
+        reason: "account_blocked",
+        recoveryReason: reason,
+      },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chain);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({ type: code, message: code, nonRetryable: true });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      data: {
+        attempts: [
+          { provider: "primary", message: "Not sent", reason: "account_blocked" },
+          { provider: "secondary", message: "Not sent", reason: "account_blocked" },
+        ],
+        errorCode: null,
+      },
+      where: { id: "rank_running_1", status: "running" },
+    });
+  });
+
+  it("finishes a refusal followed by a real provider failure without retrying paid work", async () => {
+    const chain = new ProviderChainError([
+      {
+        provider: "primary",
+        message: "provider_account_blocked",
+        reason: "account_blocked",
+        recoveryReason: "account_blocked",
+      },
+      {
+        provider: "secondary",
+        message: "Provider rejected the request",
+        reason: "provider_failed",
+        code: "provider_transient",
+      },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chain);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({ type: "provider_chain_failed", nonRetryable: true });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      data: {
+        attempts: [
+          { provider: "primary", message: "provider_account_blocked", reason: "account_blocked" },
+          {
+            provider: "secondary",
+            message: "Provider rejected the request",
+            reason: "provider_failed",
+          },
+        ],
+        errorCode: "provider_transient",
+      },
+      where: { id: "rank_running_1", status: "running" },
+    });
+  });
+
   it("makes provider billing failures non-retryable and stores chain metadata", async () => {
     const chainError = new ProviderChainError([
       { provider: "primary", message: "Payment Required", code: "provider_billing" },

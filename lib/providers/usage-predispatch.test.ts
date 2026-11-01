@@ -1,8 +1,87 @@
 import { expect, it, vi } from "vitest";
 import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
-import { ProviderUsagePersistenceError, readObservedResponse } from "./usage";
+import {
+  ProviderRecoveryAdmissionError,
+  ProviderUsagePersistenceError,
+  readObservedResponse,
+} from "./usage";
 
 const measurement = { cached: false, costCents: 2, quantity: 1, failed: false };
+
+it("records the sent response before reporting unknown measurement", async () => {
+  const observeResponse = vi.fn();
+  const settle = vi.fn();
+  const request = vi
+    .fn()
+    .mockResolvedValue(new Response(JSON.stringify({ error: "out of searches" }), { status: 429 }));
+  await expect(
+    readObservedResponse({
+      observer: { begin: vi.fn().mockResolvedValue("attempt"), settle, observeResponse },
+      request,
+      measure: () => ({ cached: false, costCents: null, quantity: null, failed: true }),
+    }),
+  ).rejects.toMatchObject({ phase: "measurement", attemptId: "attempt" });
+  expect(observeResponse).toHaveBeenCalledWith(429, { error: "out of searches" }, "attempt");
+  expect(settle).toHaveBeenCalledWith(
+    "attempt",
+    expect.objectContaining({ costCents: null, quantity: null }),
+  );
+  expect(request).toHaveBeenCalledOnce();
+});
+
+it.each(["account_blocked", "accounting_review"] as const)(
+  "preserves the %s admission refusal without dispatch",
+  async (reason) => {
+    const denial = new ProviderRecoveryAdmissionError(reason, { kind: "account" });
+    const request = vi.fn();
+    await expect(
+      readObservedResponse({
+        observer: { begin: vi.fn().mockRejectedValue(denial), settle: vi.fn() },
+        request,
+        measure: () => measurement,
+      }),
+    ).rejects.toBe(denial);
+    expect(request).not.toHaveBeenCalled();
+  },
+);
+
+it("withdraws the reservation when recovery admission changes at the dispatch fence", async () => {
+  const denial = new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+  const request = vi.fn();
+  const cancel = vi.fn().mockResolvedValue(undefined);
+  await expect(
+    readObservedResponse({
+      observer: {
+        begin: vi.fn().mockResolvedValue("attempt-1"),
+        beforeDispatch: vi.fn().mockRejectedValue(denial),
+        cancel,
+        settle: vi.fn(),
+      },
+      request,
+      measure: () => measurement,
+    }),
+  ).rejects.toBe(denial);
+  expect(cancel).toHaveBeenCalledWith("attempt-1");
+  expect(request).not.toHaveBeenCalled();
+});
+
+it("fails closed if cancellation at the final fence cannot be persisted", async () => {
+  const denial = new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+  const request = vi.fn();
+  await expect(
+    readObservedResponse({
+      observer: {
+        begin: vi.fn().mockResolvedValue("attempt-1"),
+        beforeDispatch: vi.fn().mockRejectedValue(denial),
+        cancel: vi.fn().mockRejectedValue(new Error("database unavailable")),
+        settle: vi.fn(),
+      },
+      request,
+      measure: () => measurement,
+    }),
+  ).rejects.toMatchObject({ phase: "admission", attemptId: "attempt-1" });
+  expect(request).not.toHaveBeenCalled();
+});
 
 it("retains a typed budget denial and makes zero provider requests", async () => {
   const denied = new DeploymentAdmissionExhaustedError("budget", {

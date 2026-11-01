@@ -17,3 +17,63 @@ model ProviderUiCommand {
   @@id([scope, principal, commandId])
   @@map("provider_ui_commands")
 }
+
+// A free account probe never establishes canonical cost for an earlier request.
+model ProviderConnectionRecovery {
+  connectionId String @id
+  connection ProviderConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  credentialVersion String
+  accountState String
+  checkedAt DateTime @default(now()) @db.Timestamp(3)
+  probeId String?
+  currentIncidentId String? @unique
+  currentIncident ProviderAccountIncident? @relation("CurrentAccountIncident", fields: [currentIncidentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  nextCheckAt DateTime? @db.Timestamp(3)
+  leaseOwner String?
+  leaseExpiresAt DateTime? @db.Timestamp(3)
+  lastManualCheckAt DateTime? @db.Timestamp(3)
+  lastProbeOutcome String?
+  providerCooldownUntil DateTime? @db.Timestamp(3)
+  cadenceAttempt Int @default(0)
+  version Int @default(1)
+
+  @@map("provider_connection_recovery")
+}
+
+model ProviderAccountIncident {
+  id String @id @default(cuid())
+  connectionId String
+  connection ProviderConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  credentialVersion String
+  scope Json
+  reason String
+  evidenceSource String
+  minimumCapacity Float?
+  capacityUnit String?
+  startedAt DateTime @default(now()) @db.Timestamp(3)
+  resolvedAt DateTime? @db.Timestamp(3)
+  currentRecovery ProviderConnectionRecovery? @relation("CurrentAccountIncident")
+  blockedAttempts ProviderBlockedAttempt[]
+
+  @@index([connectionId, startedAt])
+  @@map("provider_account_incidents")
+}
+
+model ProviderBlockedAttempt {
+  id String @id @default(cuid())
+  rankCheckId String
+  runItemId String?
+  connectionId String
+  connection ProviderConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  credentialVersion String
+  incidentId String?
+  incident ProviderAccountIncident? @relation(fields: [incidentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  refusalKey String
+  reason String
+  transportPhase String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+
+  @@unique([rankCheckId, connectionId, refusalKey])
+  @@index([connectionId, createdAt])
+  @@map("provider_blocked_attempts")
+}

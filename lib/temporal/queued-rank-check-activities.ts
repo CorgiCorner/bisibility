@@ -1,10 +1,12 @@
 import "server-only";
 
 import type { ClaimedRankCheckGroup } from "../rank-check/dispatcher-types";
+import { persistQueuedRefusal } from "../rank-check/queued-account-observation";
 import { inspectQueuedRankCheckBatch } from "../rank-check/queued-inspect";
 import { deferQueuedRankCheckBatch, queuedBatchProgress } from "../rank-check/queued-lifecycle";
 import { authorizeQueuedRankCheckBatch } from "../rank-check/queued-mode";
 import { prepareQueuedRankCheckBatch } from "../rank-check/queued-prepare";
+import type { QueuedRefusalProof } from "../rank-check/queued-refusal-contract";
 import { persistReadyQueuedRankCheckTasks } from "../rank-check/queued-results";
 import { queuedRankCheckRoute } from "../rank-check/queued-routing";
 import { submitQueuedRankCheckBatch } from "../rank-check/queued-submit";
@@ -38,6 +40,10 @@ export async function prepareQueuedRankCheckBatchActivity(
     };
   }
   return prepareQueuedRankCheckBatch(input);
+}
+
+export function persistQueuedRefusalActivity(input: QueuedRefusalProof) {
+  return persistQueuedRefusal(input);
 }
 
 export function submitQueuedRankCheckBatchActivity(input: { batchId: string }) {

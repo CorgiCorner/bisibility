@@ -53,6 +53,7 @@ const instanceOnlyActions = new Set([
   "instance_admin.first_run_completed",
   "instance_admin.mail_settings.clear",
   "instance_admin.mail_settings.save",
+  "instance_admin.metering_cost_unknown_closed",
   "instance_admin.metering_recovery_applied",
   "instance_admin.metering_recovery_requested",
   "instance_admin.metering_recovery_triaged",

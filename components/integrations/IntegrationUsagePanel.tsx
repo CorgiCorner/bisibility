@@ -6,16 +6,20 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { getProjectMeteringUsage } from "@/lib/metering/user-data";
 import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-scope";
-import { UsageSummary } from "./UsageSummary";
+import { appPath } from "@/lib/routing/app-path";
+import { OwnUsageDetails, OwnUsagePeriod } from "./OwnUsageDetails";
+import { type BillingConnection, ProviderBillingCard } from "./ProviderBillingCard";
 
 export async function IntegrationUsagePanel({
   projectRef,
   editBudget,
   fundingSource,
+  connections = [],
 }: Readonly<{
   projectRef: string;
   editBudget: boolean;
   fundingSource?: "platform" | "byok";
+  connections?: readonly BillingConnection[];
 }>) {
   const [access, runtime, metering] = await Promise.all([
     readProjectProviderAccessScope(projectRef),
@@ -50,17 +54,32 @@ export async function IntegrationUsagePanel({
     >
       <ProviderUiProvider projectId={projectRef}>
         <div className="flex max-w-[760px] flex-col gap-4">
+          <ProviderBillingCard
+            connections={
+              budgetExtension
+                ? connections
+                : connections.filter((item) => item.credentialSource !== "hosted")
+            }
+            manageHref={appPath(projectRef, "providers")}
+          />
           {budgetExtension?.overview ?? (
             <>
+              <OwnUsagePeriod data={metering} />
               <ProviderUsageCard
-                hostedBudgetLabels={budgetExtension?.hostedBudgetLabels}
+                projectName={access.project.name}
                 canEditBudget={canEditBudget}
                 initialBudgetEditOpen={editBudget}
                 projectId={projectRef}
                 projectRef={projectRef}
-                data={metering}
+                data={{
+                  ...metering,
+                  connections: metering.connections.filter(
+                    (item) => item.credentialSource !== "hosted",
+                  ),
+                  budgets: metering.budgets.filter((item) => item.unit !== "customer_cents"),
+                }}
               />
-              <UsageSummary data={metering} fundingSource={fundingSource} />
+              <OwnUsageDetails data={metering} />
             </>
           )}
           {budgetExtension?.content}

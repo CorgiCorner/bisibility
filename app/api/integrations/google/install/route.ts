@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       projectId: project.publicId,
       property: query.property,
       provider: query.provider,
-      returnPath: query.returnPath ?? appPath(project.publicId, "integrations"),
+      returnPath: query.returnPath ?? appPath(project.publicId, "providers"),
     };
 
     // A prefetch or a second click during consent must not invalidate the flow already in

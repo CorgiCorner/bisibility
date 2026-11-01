@@ -20,6 +20,7 @@ export const envClassification = {
     "NEXT_PUBLIC_APP_REVISION",
     "NEXT_PHASE",
     "NEXT_DIST_DIR",
+    "NEXT_DEPLOYMENT_ID",
     "PATH",
     "PORT",
     "VERCEL",

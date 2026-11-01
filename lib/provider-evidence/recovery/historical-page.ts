@@ -1,3 +1,4 @@
+import { closedUnknownAccounting } from "@/lib/provider-usage/uncertainty-closeout-state";
 import { deploymentRecoveryInventory } from "./historical-extension";
 import "server-only";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -68,7 +69,7 @@ export async function historicalRecoveryPage(
       LEFT JOIN keywords k ON k.id=rc."keywordId"
       LEFT JOIN projects p ON p.id=COALESCE(o.input->'scope'->>'group',k."projectId")
       LEFT JOIN LATERAL (SELECT * FROM metering_receipt rr WHERE rr.operation_pk=o.operation_pk ORDER BY sequence DESC LIMIT 1) r ON true
-      WHERE o.namespace=${scope.namespace} AND o.created_at<=${cutoff}
+      WHERE o.namespace=${scope.namespace} AND o.created_at<=${cutoff} AND NOT ${closedUnknownAccounting}
         AND NOT EXISTS(SELECT 1 FROM provider_dispatch_identities foreign_identity WHERE foreign_identity."operationPk"=o.operation_pk AND foreign_identity."instanceId"<>${scope.instanceId})
       UNION ALL
       SELECT 'j:'||j.id,'orphan_journal',NULL,NULL,j."createdAt",NULL,false,false,COALESCE(p."isSample",false),ARRAY[j.provider],j.feature,NULL,NULL,j.receipt->>'costCents' IS NOT NULL,j.receipt->>'quantity' IS NULL

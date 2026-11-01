@@ -1,5 +1,6 @@
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import type { Icon } from "@phosphor-icons/react";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar";
 import { CodeIcon as Code } from "@phosphor-icons/react/dist/ssr/Code";
 import { CreditCardIcon as CreditCard } from "@phosphor-icons/react/dist/ssr/CreditCard";
 import { CrosshairIcon as Crosshair } from "@phosphor-icons/react/dist/ssr/Crosshair";
@@ -23,13 +24,14 @@ export const settingsSections = [
   { icon: PaperPlaneTilt, id: "notifications" },
   { icon: UserPlus, id: "team" },
   { icon: CreditCard, id: "billing" },
+  { icon: ChartBar, id: "usage" },
   { icon: Code, id: "developers" },
   { icon: Flask, id: "experimental" },
   { icon: ShieldWarning, id: "advanced" },
 ] as const satisfies ReadonlyArray<{ icon: Icon; id: string }>;
 
-// Keep the old usage id valid for links into the new integrations section.
-export type SettingsSectionId = (typeof settingsSections)[number]["id"] | "usage";
+// Legacy links to project provider usage keep a routable id; it lives on the Integrations page.
+export type SettingsSectionId = (typeof settingsSections)[number]["id"] | "provider-usage";
 
 export type SettingsSection = (typeof settingsSections)[number];
 export type SettingsShellTranslations = ReturnType<typeof useTranslations<"projectSettingsShell">>;
@@ -37,7 +39,7 @@ export type SettingsShellTranslations = ReturnType<typeof useTranslations<"proje
 export const settingsSectionGroups = [
   { id: "project", sections: ["general", "context", "business-locations"] },
   { id: "measurement", sections: ["data-sources", "tracking", "competitors"] },
-  { id: "team", sections: ["notifications", "team", "billing"] },
+  { id: "team", sections: ["notifications", "team", "billing", "usage"] },
   { id: "administration", sections: ["developers", "experimental", "advanced"] },
 ] as const satisfies ReadonlyArray<{ id: string; sections: readonly SettingsSectionId[] }>;
 
@@ -68,7 +70,8 @@ export function settingsSectionLabel(t: SettingsShellTranslations, section: Sett
     case "tracking":
       return t("sections.tracking");
     case "usage":
-      return t("sections.billing");
+    case "provider-usage":
+      return t("sections.usage");
   }
 }
 
@@ -77,7 +80,7 @@ export function settingsSectionLabel(t: SettingsShellTranslations, section: Sett
 export const legacySettingsHashMap = {
   "#api-keys": "developers",
   "#migration": "advanced",
-  "#provider-usage": "usage",
+  "#provider-usage": "provider-usage",
   "#usage-billing": "billing",
 } as const satisfies Record<string, SettingsSectionId>;
 
@@ -87,8 +90,8 @@ export function getSettingsSection(id: string): SettingsSection | undefined {
 
 export function settingsSectionHref(projectRef: ProjectRef, section: SettingsSectionId) {
   if (section === "context") return appPath(projectRef, "context");
-  return section === "usage"
-    ? `${appPath(projectRef, "integrations")}?tab=usage`
+  return section === "provider-usage"
+    ? `${appPath(projectRef, "providers")}?tab=usage`
     : appPath(projectRef, "settings", section);
 }
 

@@ -375,7 +375,7 @@ describe("StepAddKeywords", () => {
     expect(await screen.findByText("Google authorization has expired.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Reconnect your Google account" })).toHaveAttribute(
       "href",
-      "/app/prj_1/integrations",
+      "/app/prj_1/providers",
     );
   });
 

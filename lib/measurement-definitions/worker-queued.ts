@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { PaidFenceHook } from "@/lib/metering/paid-attempt-types";
+import { runUnsentTasksetTransaction } from "@/lib/provider-usage/taskset-transaction";
 import type { claimQueuedSubmission } from "@/lib/rank-check/queued-submit-claim";
 import { frozenRequest, sameDefinitionBytes } from "./canonical";
 import { DefinitionConflictError, DefinitionUnavailableError } from "./errors";
@@ -35,7 +36,7 @@ export async function queuedWorkerSessions(
   batch: Awaited<ReturnType<typeof claimQueuedSubmission>>["batch"],
 ) {
   if (!batch.connection) throw new DefinitionUnavailableError();
-  return prisma.$transaction(async (tx) => {
+  return runUnsentTasksetTransaction(prisma, async (tx) => {
     const sessions = new Map<string, WorkerDefinitionSession>();
     for (const task of [...batch.tasks].sort((a, b) => a.id.localeCompare(b.id))) {
       const permit = await queuedDefinitionPermit(tx, task.rankCheckId, false);

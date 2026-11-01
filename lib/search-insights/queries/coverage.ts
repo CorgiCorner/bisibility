@@ -72,14 +72,16 @@ export async function getQueryCoverage(
   projectId: string,
   property: string,
   window: DateWindow,
+  sequential = false,
 ): Promise<SearchInsightsCoverage> {
   const filter = searchInsightsWindowFilter(projectId, property, window);
-  const [rows, capHitDays] = await Promise.all([
-    prisma.$queryRaw<CoverageRow[]>(coverageTotalsSql(filter)),
-    // Only the dimensional request sets: a capped aggregate request would be a different kind
-    // of problem and is not what the coverage sentence is about.
-    countCappedDays({ dimensions: PARTITION_DIMENSION_KEYS, projectId, property, window }),
-  ]);
+  const readRows = () => prisma.$queryRaw<CoverageRow[]>(coverageTotalsSql(filter));
+  // Only dimensional request sets; a capped aggregate request is a different problem.
+  const readCapDays = () =>
+    countCappedDays({ dimensions: PARTITION_DIMENSION_KEYS, projectId, property, window });
+  const [rows, capHitDays] = sequential
+    ? [await readRows(), await readCapDays()]
+    : await Promise.all([readRows(), readCapDays()]);
 
   const row = rows.at(0);
   if (!row) return { ...EMPTY_COVERAGE, capHitDays };

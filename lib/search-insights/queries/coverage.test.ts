@@ -36,6 +36,21 @@ describe("getQueryCoverage", () => {
     mocks.prisma.searchAnalyticsSyncPartition.groupBy.mockResolvedValue([]);
   });
 
+  it("runs the two worker coverage reads sequentially", async () => {
+    let release: () => void = () => {};
+    mocks.prisma.$queryRaw.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve([]);
+        }),
+    );
+    const result = getQueryCoverage("project_1", "example.com", window, true);
+    expect(mocks.prisma.searchAnalyticsSyncPartition.groupBy).not.toHaveBeenCalled();
+    release();
+    await result;
+    expect(mocks.prisma.searchAnalyticsSyncPartition.groupBy).toHaveBeenCalledOnce();
+  });
+
   it("divides the named query table by the aggregate table", async () => {
     const coverage = await getQueryCoverage("project_1", "sc-domain:example.com", window);
 

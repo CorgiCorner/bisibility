@@ -70,7 +70,7 @@ async function planned(key: string) {
     consentRevision: "consent",
     origin: "manual",
     entrySource: "api",
-    deadline: "2027-01-01T00:00:00Z",
+    deadline: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
   });
   return run.samples[0].plan as unknown as SamplePlan;
 }

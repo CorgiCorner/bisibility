@@ -54,7 +54,7 @@ describe("navItems", () => {
       "Markets",
       "Alerts",
       "Runs",
-      "Integrations",
+      "Providers",
       "Install",
       "Settings",
     ]);
@@ -93,7 +93,7 @@ describe("navItems", () => {
       "Markets",
       "Alerts",
       "Runs",
-      "Integrations",
+      "Providers",
       "Install",
       "Settings",
     ]);
@@ -124,7 +124,7 @@ describe("navItems", () => {
   it("keeps Install and Integrations in Project without making them landing preferences", () => {
     const items = navItems("prj_example", undefined, allExperimentalModules);
     const install = items.find((item) => item.label === "Install");
-    const integrations = items.find((item) => item.label === "Integrations");
+    const integrations = items.find((item) => item.label === "Providers");
 
     expect(install).toMatchObject({
       group: "project",
@@ -248,7 +248,7 @@ describe("navItems", () => {
       "Search Console": "own-axis",
       Markets: "project",
       Runs: "project",
-      Integrations: "project",
+      Providers: "project",
       Install: "project",
       Settings: "project",
     });

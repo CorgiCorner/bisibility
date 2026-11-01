@@ -257,7 +257,7 @@ describe("pre-R3 default behavior characterization", () => {
     );
 
     expect(screen.getByText(String(display), { exact: false })).toBeInTheDocument();
-    expect(screen.getByText(cacheLabel)).toBeInTheDocument();
+    expect(screen.getByText(referenceBase ? cacheLabel : "Saved search")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^standing desk/i }));
     expect(onOpen).toHaveBeenCalledWith(
       expect.objectContaining({ locationKey: "ES/ES-AN/Malaga" }),

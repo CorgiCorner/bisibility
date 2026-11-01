@@ -28,11 +28,10 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState, useTransition } from "react";
 import { DashboardCompositor, type DashboardCompositorProps } from "./DashboardCompositor";
 import { DashboardConflictReview } from "./DashboardConflictReview";
-import { DashboardLayoutEditor } from "./DashboardLayoutEditor";
+import { DashboardCustomizationDialog } from "./DashboardCustomizationDialog";
 import { DashboardPreferenceRecovery } from "./DashboardPreferenceRecovery";
-import { DashboardToolbarSurface } from "./DashboardToolbarContext";
+import { DashboardToolbarStatus, DashboardToolbarSurface } from "./DashboardToolbarContext";
 import { DashboardLayoutControl, DashboardPresetControl } from "./DashboardViewControls";
-import { canCancelDashboardEditor } from "./dashboard-editor-escape";
 import { dashboardTranslator } from "./dashboard-translator";
 
 type Props = Pick<DashboardCompositorProps, "shell" | "widgets"> & {
@@ -167,6 +166,11 @@ export function PersonalDashboardSurface({
       }
     });
   }
+  function cancelEditing(next = cancelDashboardDraft(state)) {
+    setState(next);
+    setEditing(false);
+    trigger.current?.focus();
+  }
   const presetControl = (
     <DashboardPresetControl
       value={preset}
@@ -176,33 +180,66 @@ export function PersonalDashboardSurface({
   );
   const layoutControl = (
     <DashboardLayoutControl
-      menu={integratedToolbar}
       trigger={trigger}
       pending={pending}
       editing={editing}
-      defaultDisabled={
-        pending ||
-        recoveryPreference.notice !== undefined ||
-        state.status === "conflict" ||
-        dashboardDraftIsDirty(state) ||
-        preference.defaultPreset === preset
-      }
-      onToggleEditing={() => setEditing((value) => !value)}
-      onSetDefault={setDefault}
+      onToggleEditing={() => {
+        trigger.current?.focus();
+        setEditing(true);
+      }}
     />
   );
-  return (
-    <fieldset
-      aria-label={t("title")}
-      className="m-0 flex min-w-0 flex-col gap-4.5 border-0 p-0"
-      onKeyDown={(event) => {
-        if (canCancelDashboardEditor(event, editing, pending, state.status)) {
-          setState((previous) => cancelDashboardDraft(previous));
-          setEditing(false);
-          trigger.current?.focus();
-        }
+  const defaultDisabled =
+    pending ||
+    recoveryPreference.notice !== undefined ||
+    state.status === "conflict" ||
+    dashboardDraftIsDirty(state) ||
+    preference.defaultPreset === preset;
+  const recovery = (
+    <DashboardPreferenceRecovery
+      preference={recoveryPreference}
+      onReview={(latest, choice) => {
+        if (
+          latest.notice ||
+          latest.projectId !== preference.projectId ||
+          latest.revision <= recoveryPreference.revision
+        )
+          return;
+        const next = beginDashboardDraft(
+          dashboardLayoutFor(latest, state.draft.preset),
+          latest.revision,
+        );
+        setState(choice === "keep_draft" ? { ...next, draft: state.draft } : next);
+        setPreference(latest);
+        setCurrent(null);
+        trigger.current?.focus();
       }}
-    >
+    />
+  );
+  const conflictReview =
+    state.status === "conflict" && !recoveryPreference.notice ? (
+      <DashboardConflictReview
+        state={state}
+        current={current}
+        projectId={preference.projectId}
+        pending={pending}
+        onReload={() => startTransition(reloadConflict)}
+        onReview={(next, latest) => {
+          setState(next);
+          setPreference(latest);
+          setCurrent(null);
+          setMessage("");
+          trigger.current?.focus();
+        }}
+      />
+    ) : null;
+  const dirtyNotice = dashboardDraftIsDirty(state) ? (
+    <p role="status" className="text-sm text-fg-muted">
+      {t("unsavedDraft")}
+    </p>
+  ) : null;
+  return (
+    <fieldset aria-label={t("title")} className="m-0 flex min-w-0 flex-col gap-4.5 border-0 p-0">
       <DashboardToolbarSurface
         integrated={integratedToolbar}
         authorized={composition.authorized}
@@ -211,73 +248,42 @@ export function PersonalDashboardSurface({
         scopeLabel={t("shell.scope")}
         unavailable={t("shellUnavailable")}
         status={
-          <p
-            role="status"
-            aria-live="polite"
-            className={integratedToolbar && !message ? "sr-only" : "text-sm text-fg-muted"}
-          >
-            {message}
-          </p>
+          <DashboardToolbarStatus
+            editing={editing}
+            integrated={integratedToolbar}
+            message={message}
+          />
         }
       />
-      {dashboardDraftIsDirty(state) ? (
-        <p role="status" className="text-sm text-fg-muted">
-          {t("unsavedDraft")}
-        </p>
-      ) : null}
-      <DashboardPreferenceRecovery
-        preference={recoveryPreference}
-        onReview={(latest, choice) => {
-          if (
-            latest.notice ||
-            latest.projectId !== preference.projectId ||
-            latest.revision <= recoveryPreference.revision
-          )
-            return;
-          const next = beginDashboardDraft(
-            dashboardLayoutFor(latest, state.draft.preset),
-            latest.revision,
-          );
-          setState(choice === "keep_draft" ? { ...next, draft: state.draft } : next);
-          setPreference(latest);
-          setCurrent(null);
-          trigger.current?.focus();
-        }}
-      />
+      {!editing ? dirtyNotice : null}
+      {!editing ? recovery : null}
       {localControl}
       {editing ? (
-        <DashboardLayoutEditor
-          state={state}
-          access={access}
-          translate={translate}
-          onChange={setState}
-          layoutForPreset={(next) => dashboardLayoutFor(preference, next)}
-          templateForPreset={defaultPersonalDashboardLayout}
-          onSave={save}
-          canSavePersonalLayout={!recoveryPreference.notice}
-          onCancel={(next) => {
-            setState(next);
-            setEditing(false);
-          }}
-          onClosedFocusReturn={() => trigger.current?.focus()}
-        />
-      ) : null}
-      {state.status === "conflict" && !recoveryPreference.notice ? (
-        <DashboardConflictReview
-          state={state}
-          current={current}
-          projectId={preference.projectId}
-          pending={pending}
-          onReload={() => startTransition(reloadConflict)}
-          onReview={(next, latest) => {
-            setState(next);
-            setPreference(latest);
-            setCurrent(null);
-            setMessage("");
-            trigger.current?.focus();
+        <DashboardCustomizationDialog
+          locked={pending || state.status === "conflict"}
+          onClose={() => cancelEditing()}
+          dirtyNotice={dirtyNotice}
+          recovery={recovery}
+          conflict={conflictReview}
+          message={message === t("saved") || message === t("conflict") ? "" : message}
+          editor={{
+            pending: pending,
+            defaultDisabled: defaultDisabled,
+            onSetDefault: setDefault,
+            state: state,
+            access: access,
+            translate: translate,
+            onChange: setState,
+            layoutForPreset: (next) => dashboardLayoutFor(preference, next),
+            templateForPreset: defaultPersonalDashboardLayout,
+            onSave: save,
+            canSavePersonalLayout: !recoveryPreference.notice,
+            onCancel: cancelEditing,
+            onClosedFocusReturn: () => trigger.current?.focus(),
           }}
         />
       ) : null}
+      {!editing ? conflictReview : null}
       <DashboardCompositor
         emptyState={emptyState}
         composition={

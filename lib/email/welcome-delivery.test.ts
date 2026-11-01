@@ -78,7 +78,13 @@ describe("welcome email delivery categories", () => {
       profileNameTrusted: true,
       unsubscribeUrl: "https://cloud.example.com/email/unsubscribe?token=signed",
     });
-    expect(mocks.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ category: "bulk" }));
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "bulk",
+        listUnsubscribeUrl:
+          "https://cloud.example.com/api/email/unsubscribe/one-click?stream=marketing&token=signed",
+      }),
+    );
   });
 
   it("does not call sendEmail during preparation", () => {

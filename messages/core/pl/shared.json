@@ -40,7 +40,7 @@
       },
       "banner": {
         "ariaLabel": "Zgoda na analitykę",
-        "body": "Liczymy wizyty bez plików cookie. Opcjonalne analityczne pliki cookie i nagrania pomagają nam ulepszać bisibility.",
+        "body": "Liczymy wizyty i działania w produkcie, takie jak rejestracja i kroki konfiguracji, bez plików cookie, trwałego profilu ani powiązania z Twoim kontem. Opcjonalne analityczne pliki cookie i nagrania pomagają nam ulepszać bisibility.",
         "saveError": "Nie udało się zapisać wyboru. Wyłączone opcje pozostają wyłączone. Spróbuj ponownie.",
         "update": "Nagrania mogą obejmować ekrany aplikacji. Sprawdź swój wybór. Analityka pozostaje bez zmian."
       },
@@ -62,7 +62,7 @@
           "body": "Strony i kroki konfiguracji, z których korzystasz, łączone między wizytami analitycznym plikiem cookie.",
           "title": "Analityka użycia"
         },
-        "visitCounts": "Jeśli odrzucisz opcjonalną analitykę, nadal będziemy liczyć wizyty – bez plików cookie i bez trwałego profilu."
+        "visitCounts": "Jeśli odrzucisz opcjonalną analitykę, nadal będziemy liczyć wizyty i działania w produkcie, takie jak rejestracja i kroki konfiguracji, bez plików cookie, trwałego profilu ani powiązania z Twoim kontem."
       },
       "title": "Wybory prywatności"
     },
@@ -653,6 +653,10 @@
         "quality_history": {
           "label": "Historia jakości",
           "description": "Czytaj osobno liczniki obserwacji, świeżych wyników i porównywalnych targetów z zapisanych raportów jakości."
+        },
+        "domain_rating": {
+          "label": "Domain Rating",
+          "description": "Codzienna historia autorytetu domeny projektu. Ustawienia widoku nie zmieniają zbierania danych."
         }
       },
       "reasons": {
@@ -822,7 +826,7 @@
       "definition": "Konfiguracja monitora",
       "subject": "Lokalizacja firmy",
       "manageSubjects": "Zarządzaj lokalizacjami firmy",
-      "reviewIntegrations": "Sprawdź integracje",
+      "reviewIntegrations": "Sprawdź dostawców",
       "setupOnly": "Zapis monitora zachowuje konfigurację. Nie uruchamia sprawdzeń ani nie nalicza opłat.",
       "noSubjects": "Najpierw dodaj aktywną lokalizację firmy, a następnie wybierz ją jawnie.",
       "moreSubjects": "Więcej lokalizacji",
@@ -853,7 +857,7 @@
       "archiveConfirm": "Zarchiwizować monitor? Konfiguracja i historia zostaną zachowane.",
       "confirmArchive": "Potwierdź archiwizację",
       "mode": "Zapisane ustawienie harmonogramu",
-      "launchUnavailable": "Uruchamianie sprawdzeń tego monitora nie jest jeszcze dostępne. Sprawdź dostępność dostawców w integracjach.",
+      "launchUnavailable": "Uruchamianie sprawdzeń tego monitora nie jest jeszcze dostępne. Sprawdź dostępność dostawców w sekcji Dostawcy.",
       "configuredPoints": "Skonfigurowane punkty",
       "pointHelp": "To zapisane współrzędne pomiarów. Wyniki będą dostępne po jawnym powiązaniu uruchomienia z tą wersją monitora.",
       "point": "Punkt",
@@ -959,7 +963,7 @@
         "help": "Wybierz połączenie, sprawdź liczbę zadań i opłatę dostawcy, a następnie potwierdź. Otwarcie panelu i odświeżenie zapisanego stanu nie kontaktuje się z dostawcą.",
         "connection": "Połączenie dostawcy",
         "chooseConnection": "Wybierz połączenie",
-        "noConnection": "Aby uruchomić monitor, podłącz obsługiwanego dostawcę w Integracjach.",
+        "noConnection": "Aby uruchomić monitor, podłącz obsługiwanego dostawcę w sekcji Dostawcy.",
         "preview": "Sprawdź uruchomienie",
         "consent": "Potwierdź opłatę dostawcy",
         "taskCount": "To uruchomienie wyśle {count} zadań słowo–punkt.",
@@ -987,7 +991,7 @@
         },
         "unavailable": {
           "capability_unregistered": "Ta funkcja wyszukiwania lokalnego nie jest zarejestrowana. Wybierz obsługiwaną konfigurację.",
-          "connection_unavailable": "Połączenie jest niedostępne. Sprawdź je w Integracjach.",
+          "connection_unavailable": "Połączenie jest niedostępne. Sprawdź je w sekcji Dostawcy.",
           "unsupported": "Dostawca nie obsługuje tej konfiguracji monitora. Edytuj ustawienia wyszukiwania.",
           "pricing_unavailable": "Pełna opłata dostawcy jest nieznana. Płatne uruchomienie nie może się rozpocząć.",
           "worker_unavailable": "Worker wykonujący zadania jest wyłączony. Włącz go przed zapisaniem uruchomienia w kolejce."
@@ -1769,13 +1773,13 @@
       "connect": "Wybierz źródło danych, aby korzystać z tych pól.",
       "supported": "Obsługiwani dostawcy: {providers}.",
       "unavailable": "Dla tej funkcji nie ma dostępnego obsługiwanego źródła danych.",
-      "action": "Otwórz integracje",
+      "action": "Otwórz dostawców",
       "reconnect": "Połącz ponownie wybrane źródło danych, aby korzystać z tych pól.",
       "reconnectAction": "Połącz ponownie",
       "emptyTitle": "Wybierz źródło danych",
       "reconnectTitle": "Połącz ponownie wybrane źródło danych",
-      "emptyDescription": "Wybierz obsługiwane źródło danych w Integracjach, aby rozpocząć wyszukiwanie.",
-      "reconnectDescription": "Przed kolejnym wyszukiwaniem połącz ponownie wybrane źródło danych w Integracjach.",
+      "emptyDescription": "Wybierz obsługiwane źródło danych w sekcji Dostawcy, aby rozpocząć wyszukiwanie.",
+      "reconnectDescription": "Przed kolejnym wyszukiwaniem połącz ponownie wybrane źródło danych w sekcji Dostawcy.",
       "connectAction": "Wybierz źródło danych",
       "askAdmin": "Poproś administratora projektu o wybór źródła danych do sprawdzania."
     },
@@ -1803,8 +1807,8 @@
       "duplicate": "Każde wybrane słowo kluczowe jest właśnie sprawdzane w innym przebiegu, więc nie ma czego uruchomić.",
       "editBudget": "Edytuj budżet",
       "noProvider": "Brak dostawcy",
-      "noProviderBlocked": "Przed uruchomieniem tych sprawdzeń wybierz źródło danych w Integracjach.",
-      "openIntegrations": "Otwórz integracje",
+      "noProviderBlocked": "Przed uruchomieniem tych sprawdzeń wybierz źródło danych w sekcji Dostawcy.",
+      "openIntegrations": "Otwórz dostawców",
       "openRun": "Otwórz przebieg",
       "pricePerTarget": "cena za cel",
       "primaryProvider": "Dostawca główny",
@@ -2097,10 +2101,17 @@
       "units": {
         "cents": "centy USD",
         "customer_cents": "Credits",
-        "units": "Jednostki",
+        "units": "Jednostki rozliczeniowe",
+        "searches": "Wyszukiwania",
+        "apiUnits": "Jednostki API",
         "requests": "Żądania",
         "budget_cents": "centy USD",
         "paid_attempts": "Płatne próby"
+      },
+      "unitCounts": {
+        "units": "{count, plural, one {jednostka rozliczeniowa} few {jednostki rozliczeniowe} many {jednostek rozliczeniowych} other {jednostki rozliczeniowej}}",
+        "searches": "{count, plural, one {wyszukiwanie} few {wyszukiwania} many {wyszukiwań} other {wyszukiwania}}",
+        "apiUnits": "{count, plural, one {jednostka API} few {jednostki API} many {jednostek API} other {jednostki API}}"
       },
       "dimensions": {
         "connection": "Połączenie",
@@ -2130,6 +2141,44 @@
         "settled": "Rozliczone",
         "released": "Zwolnione"
       }
+    },
+    "domainRating": {
+      "title": "Domain Rating",
+      "definition": "Siła profilu linków zwrotnych w skali logarytmicznej od 0 do 100.",
+      "attribution": "Domain Rating by Ahrefs",
+      "chartLabel": "Historia Domain Rating dla {domain}",
+      "daily": "Jeden pomiar dziennie",
+      "own": "Twój klucz Ahrefs",
+      "hosted": "Połączenie zarządzane",
+      "noSource": "Brak połączenia z Ahrefs",
+      "connect": "Połącz Ahrefs",
+      "manageConnection": "Zarządzaj połączeniem",
+      "settings": "Ustawienia śledzenia",
+      "empty": "Tu zaczyna się historia Domain Rating",
+      "emptyHelp": "Połącz Ahrefs, aby zapisać pierwszy pomiar. Codzienne pomiary automatycznie zbudują historię.",
+      "waiting": "Oczekiwanie na pierwszy pomiar dzienny. Połączenie jest gotowe.",
+      "paused": "Śledzenie wstrzymane",
+      "noDomain": "Dodaj domenę projektu, aby rozpocząć śledzenie.",
+      "failure": "Ostatni pomiar się nie powiódł. Historia jest zachowana; kolejny pomiar nastąpi jutro.",
+      "latest": "Najnowszy wynik",
+      "change": "{value} w tym okresie",
+      "unchanged": "Bez zmian w tym okresie",
+      "single": "Pierwszy pomiar",
+      "noValue": "Jeszcze brak pomiaru",
+      "range": "Zakres historii",
+      "days": "{count} dni",
+      "trackingTitle": "Śledzenie Domain Rating",
+      "trackingHelp": "Zapisuj jeden pomiar Ahrefs Domain Rating dla domeny projektu dziennie (UTC). Wyłączenie zachowuje historię.",
+      "enable": "Śledź Domain Rating codziennie",
+      "save": "Zapisz",
+      "saved": "Zapisano ustawienia śledzenia.",
+      "saveError": "Nie udało się zapisać ustawień. Spróbuj ponownie.",
+      "lastSuccess": "Ostatni udany pomiar: {date}",
+      "unknown": "Jeszcze nie ukończono pomiaru",
+      "missing": "Brak pomiaru",
+      "history": "Historia pomiarów",
+      "date": "Data",
+      "rating": "Wynik"
     }
   }
 }

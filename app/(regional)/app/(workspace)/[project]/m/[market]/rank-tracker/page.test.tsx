@@ -49,6 +49,9 @@ vi.mock("@/app/(regional)/app/(workspace)/workspace-shell", () => ({
     </div>
   ),
 }));
+vi.mock("@/components/integrations/provider-recovery/MonitoringAccountBlocksServer", () => ({
+  MonitoringAccountBlocksServer: () => null,
+}));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
   KeywordsGrid: (props: Record<string, unknown>) => {
     capturedGridProps = props;

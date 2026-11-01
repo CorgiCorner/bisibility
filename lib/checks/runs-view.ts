@@ -187,7 +187,7 @@ export function buildProviderHealth(
     for (const attempt of attempts) {
       const entry = entryFor(attempt.provider);
       if (attempt.outcome === "rate_limited") entry.rateLimited += 1;
-      else if (attempt.outcome !== "ok") entry.failed += 1;
+      else if (attempt.outcome !== "ok" && attempt.outcome !== "account_blocked") entry.failed += 1;
     }
     if (row.status === RANK_CHECK_STATUS.FAILED && attempts.length === 0) {
       entryFor(row.provider).failed += 1;

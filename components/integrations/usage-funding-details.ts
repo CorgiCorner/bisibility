@@ -36,21 +36,24 @@ export function usageFundingDetails(view: UsageView) {
   });
 }
 
-/** Provider quota is evidence of provider consumption, not the customer's credit price. */
+/**
+ * Summary cards show only figures a reader can act on. Credits rows drop provider quota, which
+ * is evidence of provider consumption rather than the customer's credit price, and native units;
+ * and every row drops the raw request count: it has no limit and no cost of its own.
+ */
 export function usageFundingSummary(view: UsageSummaryView): UsageSummaryView {
+  const hidden = (fundingSource: string, unit: string) =>
+    unit === "requests" || (fundingSource === "platform" && (unit === "units" || unit === "cents"));
   return {
     ...view,
-    funding: view.funding.map((row) =>
-      row.fundingSource === "platform"
-        ? {
-            ...row,
-            measurements: Object.fromEntries(
-              Object.entries(row.measurements).filter(
-                ([unit]) => unit !== "units" && unit !== "cents",
-              ),
-            ),
-          }
-        : row,
+    measurements: Object.fromEntries(
+      Object.entries(view.measurements).filter(([unit]) => unit !== "requests"),
     ),
+    funding: view.funding.map((row) => ({
+      ...row,
+      measurements: Object.fromEntries(
+        Object.entries(row.measurements).filter(([unit]) => !hidden(row.fundingSource, unit)),
+      ),
+    })),
   };
 }

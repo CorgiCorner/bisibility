@@ -72,6 +72,7 @@ export type DataTableProps<TRow extends DataTableRowBase> = DataTableLayoutContr
   selection?: ReadonlySet<string>;
   sorting: DataTableSort | null;
   sortingMode?: "server" | "client";
+  tabIndex?: number;
 };
 
 export type DataTableColumnsMenuProps<TRow extends DataTableRowBase> =

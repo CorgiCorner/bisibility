@@ -1,3 +1,4 @@
+import { ahrefsProvider } from "@/lib/domain-rating/provider";
 import { providerCredentialRequirementMessage } from "@/lib/providers/credential-requirements";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { getAnalyticsProvider, getSerpProvider } from "@/lib/providers/registry";
@@ -16,6 +17,7 @@ function hasCredentials(credentials: ProviderCredentials) {
 }
 
 export function providerAdapter(item: ProviderCatalogItem) {
+  if (item.id === "ahrefs") return ahrefsProvider;
   if (item.kind === "serp") return getSerpProvider(item.id);
   if (item.kind === "analytics") return getAnalyticsProvider(item.id);
   throw new Error("Provider does not expose a connection test adapter yet.");

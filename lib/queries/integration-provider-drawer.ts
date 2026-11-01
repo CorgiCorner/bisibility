@@ -19,6 +19,7 @@ export type ProviderConnectionRow = {
 };
 
 export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
+  if (item.id === "ahrefs") return "Free daily Domain Rating with your own Ahrefs API key.";
   if (item.id === "local-sequence") {
     return "Add [seq:5,15,15,4] to choose the ranks returned for a keyword.";
   }
@@ -69,7 +70,11 @@ export function providerMeta(
 
   return [
     ...(credentials.login ? [{ labelKey: "account" as const, value: credentials.login }] : []),
-    elapsedRow("lastRankCheck", connection?.lastUsedAt, now),
+    elapsedRow(
+      item.kind === "enrichment" ? "lastUsed" : "lastRankCheck",
+      connection?.lastUsedAt,
+      now,
+    ),
     { labelKey: "state", valueKey: stateValueKey(connection) },
   ];
 }

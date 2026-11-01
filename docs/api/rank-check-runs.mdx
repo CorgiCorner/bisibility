@@ -29,6 +29,8 @@ row whose `run_id` equals that ID. The matching row includes the final position
 and rank-check ID. `run_id` is `null` only for legacy history rows that predate
 runs.
 
+Versioned REST run reads and the corresponding MCP tools include `deferral_reasons`, a list of distinct typed reasons. `provider_account_blocked` identifies account refusals before sending; `usage_unconfirmed` identifies an accounting hold. Retry is a new paid attempt subject to current admission.
+
 ## Selection payload
 
 `POST /api/rank-check-runs/preview` and `POST /api/rank-check-runs` both take a
@@ -226,7 +228,10 @@ pass it back unchanged.
 Each item includes an opaque stable `id`, `status`, `estimatedCostCents`, `actualCostCents`,
 `blockedReason`, `notBefore`, `startedAt`, `finishedAt`, `keyword` (`publicId`,
 `text`, `location`, `device`), and `rankCheck` when one exists. `rankCheck`
-contains `publicId`, `position`, `rankingUrl`, and `errorCode`.
+contains `publicId`, `position`, `rankingUrl`, and `errorCode`. `deferralCode` is the
+typed reason for a deferred result. `accountBlocks` lists the connection public ID, provider
+label and typed account reason for each pre-send refusal, including attempts followed by a
+completed fallback or a later provider failure.
 
 ### Change a run
 
@@ -239,6 +244,10 @@ run in `data`.
 | `POST /api/rank-check-runs/{id}/run-now` | None | Starts a planned or blocked run now. |
 | `POST /api/rank-check-runs/{id}/skip` | None | Skips one planned occurrence and retains it in History. |
 | `POST /api/rank-check-runs/{id}/retry` | `relation`: `retry_failed` or `retry_deferred` | Creates a retry run for matching targets. |
+
+A `provider_account_blocked` deferral means the provider account prevented sending.
+`usage_unconfirmed` indicates unresolved accounting. Retrying deferred checks is an explicit
+paid action that checks current admission again; account verification does not requeue them.
 
 As with launch, a retry can return the `nothing_to_run` response instead of a
 run object.

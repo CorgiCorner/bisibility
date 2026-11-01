@@ -74,7 +74,13 @@ it.each(copies.flatMap((copy) => [true, false].map((blocked) => [copy, blocked] 
       data.budgets.reverse();
     }
     renderWithFeatureMessages(
-      <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
+      <ProviderUsageCard
+        projectName="Example"
+        projectId="p"
+        projectRef="prj_p"
+        canEditBudget={false}
+        data={data}
+      />,
       { locale, messages },
     );
     const message = isBlocked ? blocked : warning;

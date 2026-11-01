@@ -9,11 +9,13 @@ export type RunPageData = RankCheckOperation & {
   parentRunPublicId: string | null;
   requestedBy: { name: string | null } | null;
   selectionSpec: unknown;
+  hasAccountDeferred?: boolean;
   sharedDeferralCode?: DeferralReasonCode | null;
   skippedBy: { name: string } | null;
 };
 
 export type RunPageItem = {
+  accountBlocks?: import("@/lib/integrations/provider-recovery/types").RunAccountBlock[];
   deferralCode?: DeferralReasonCode | null;
   payment?: ActionPaymentReceipt;
   actualCostCents: number | null;

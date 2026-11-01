@@ -84,6 +84,21 @@ describe("signal counts", () => {
     mocks.tx.$queryRaw.mockResolvedValue([{ count: 34n }]);
   });
 
+  it("runs worker signal reads sequentially", async () => {
+    let release: () => void = () => {};
+    mocks.prisma.$queryRaw.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve([{ count: 34n }]);
+        }),
+    );
+    const result = getSearchInsightsSignals("project_1", "example.com", window, true);
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    release();
+    await result;
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+  });
+
   it("counts exactly the rows the drawer will list", async () => {
     await expect(getPositionBandCount("project_1", "sc-domain:example.com", window)).resolves.toBe(
       34,

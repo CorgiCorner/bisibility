@@ -22,6 +22,7 @@ export type ProviderPolicy = { perMinute: number; windowSeconds: number };
 // Defaults stay below DataForSEO's 2,000/min and 30-concurrent quotas plus GSC's
 // 1,200 QPM and 2,000/day inspection quotas; SerpApi and GA4 use minute approximations.
 const DEFAULT_POLICIES = {
+  ahrefs: { perMinute: 60, windowSeconds: 60 },
   dataforseo: { perMinute: 1800, windowSeconds: 60 },
   ga4: { perMinute: 60, windowSeconds: 60 },
   gsc: { perMinute: 600, windowSeconds: 60 },
@@ -32,6 +33,7 @@ const DEFAULT_POLICIES = {
 const FALLBACK_POLICY: ProviderPolicy = { perMinute: 600, windowSeconds: 60 };
 
 const PROVIDER_RATE_LIMIT_ENV = {
+  ahrefs: () => ({ perMinute: undefined, windowSeconds: undefined }),
   dataforseo: () => ({
     perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_PER_MINUTE,
     windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DATAFORSEO_WINDOW_SECONDS,
@@ -132,6 +134,7 @@ export function providerAccountKey(
       return c.login
         ? `dataforseo:${rateLimitBucketFingerprint(c.login)}`
         : projectFallback(providerId, options?.projectId);
+    case "ahrefs":
     case "serpapi":
       return apiKeyAccountKey(providerId, c.apiKey, options?.projectId);
     case "gsc":

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db/prisma";
 import { isLocalDevelopmentDeployment } from "@/lib/deployment/deployment";
 import { EmailNotSubmittedError, EmailProviderUnavailableError } from "@/lib/email/types";
 import { readDemoConfig } from "@/lib/demo/config";
+import { notificationUnsubscribeFooter, notificationUnsubscribeUrl } from "@/lib/email/notification-unsubscribe";
+import { resolveCanonicalOrigin } from "@/lib/seo/origin";
 import { sendEmail } from "@/lib/email/send";
 import { notifyOps } from "@/lib/ops/notify";
 import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
@@ -84,7 +86,13 @@ export async function sendWeeklyDigestForProject(
       continue;
     }
     try {
-      await sendEmail({ ...email, category: "bulk", to, requireProvider: true });
+      let url: string;
+      try {
+        url = notificationUnsubscribeUrl({ userId, projectId: project.id, stream: "report" }, resolveCanonicalOrigin());
+      } catch (error) {
+        throw new EmailNotSubmittedError(error);
+      }
+      await sendEmail({ ...email, ...notificationUnsubscribeFooter(email, url), listUnsubscribeUrl: url, category: "bulk", to, requireProvider: true });
     } catch (error) {
       if (
         error instanceof EmailNotSubmittedError &&

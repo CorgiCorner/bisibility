@@ -11,6 +11,7 @@ async function send({
   to,
   subject,
   html,
+  headers,
   replyTo,
   text,
   sendCounterReserved = false,
@@ -25,6 +26,7 @@ async function send({
     body: JSON.stringify({
       from,
       html,
+      ...(headers ? { headers } : {}),
       ...(replyTo ? { reply_to: [replyTo] } : {}),
       subject,
       text,

@@ -34,12 +34,12 @@ it("shows a monthly limit and uses the supplied existing settings link", () => {
       value={money("1000")}
       kind="limit"
       monthly
-      href="/app/prj_one/integrations?tab=usage&budget=edit"
+      href="/app/prj_one/providers?tab=usage&budget=edit"
     />,
   );
   expect(screen.getByRole("link", { name: "$10.00 / month" })).toHaveAttribute(
     "href",
-    "/app/prj_one/integrations?tab=usage&budget=edit",
+    "/app/prj_one/providers?tab=usage&budget=edit",
   );
 });
 

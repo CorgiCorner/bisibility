@@ -40,7 +40,7 @@
       },
       "banner": {
         "ariaLabel": "アナリティクスの同意",
-        "body": "訪問数の集計に Cookie は使用していません。任意のアナリティクス Cookie とリプレイは bisibility の改善に役立ちます。",
+        "body": "訪問や、登録・セットアップなどの操作を、Cookie や永続的なプロファイルを使わず、アカウントにも紐付けずに集計します。任意のアナリティクス Cookie とリプレイは bisibility の改善に役立ちます。",
         "saveError": "選択内容を保存できませんでした。オフにした項目はオフのままです。再試行してください。",
         "update": "リプレイにはアプリの画面が含まれる場合があります。選択内容をご確認ください。アナリティクスの設定は変更されません。"
       },
@@ -62,7 +62,7 @@
           "body": "利用したページとセットアップ手順を、アナリティクス Cookie で訪問をまたいで関連付けます。",
           "title": "利用状況アナリティクス"
         },
-        "visitCounts": "任意のアナリティクスを拒否した場合も、Cookie や永続的なプロファイルを使わずに訪問数を集計します。"
+        "visitCounts": "任意のアナリティクスを拒否した場合も、訪問や登録・セットアップなどの操作を、Cookie や永続的なプロファイルを使わず、アカウントにも紐付けずに集計します。"
       },
       "title": "プライバシー設定"
     },
@@ -653,6 +653,10 @@
         "quality_history": {
           "label": "品質の履歴",
           "description": "保存済みの品質レポートから、観測数、新鮮な結果数、比較可能数を別々に読み取ります。"
+        },
+        "domain_rating": {
+          "label": "Domain Rating",
+          "description": "プロジェクトドメインの被リンク評価の推移。表示設定はデータ収集に影響しません。"
         }
       },
       "reasons": {
@@ -822,7 +826,7 @@
       "definition": "モニター設定",
       "subject": "ビジネス拠点",
       "manageSubjects": "拠点を管理",
-      "reviewIntegrations": "連携を確認",
+      "reviewIntegrations": "プロバイダーを確認",
       "setupOnly": "保存は設定のみを記録します。チェックの実行や課金は発生しません。",
       "noSubjects": "有効な拠点を追加し、明示的に選択してください。",
       "moreSubjects": "他の拠点",
@@ -853,7 +857,7 @@
       "archiveConfirm": "このモニターをアーカイブしますか？設定と履歴は保持されます。",
       "confirmArchive": "アーカイブを確定",
       "mode": "保存済みスケジュール設定",
-      "launchUnavailable": "このモニターからのチェック実行はまだ利用できません。連携でプロバイダーの対応状況を確認してください。",
+      "launchUnavailable": "このモニターからのチェック実行はまだ利用できません。プロバイダーでプロバイダーの対応状況を確認してください。",
       "configuredPoints": "設定済みの地点",
       "pointHelp": "保存済みの測定座標です。このリビジョンに実行が明示的に関連付けられるまで結果は表示できません。",
       "point": "地点",
@@ -959,7 +963,7 @@
         "help": "接続を選び、タスク総数とプロバイダー料金を確認してから承認してください。このパネルの表示や保存済み状態の更新では、プロバイダーに接続しません。",
         "connection": "プロバイダー接続",
         "chooseConnection": "接続を選択",
-        "noConnection": "このモニターを実行するには、連携設定で対応プロバイダーを接続してください。",
+        "noConnection": "このモニターを実行するには、プロバイダーで対応プロバイダーを接続してください。",
         "preview": "実行内容を確認",
         "consent": "プロバイダー料金を確認",
         "taskCount": "この実行では、キーワードと地点の組み合わせを {count} 件送信します。",
@@ -987,7 +991,7 @@
         },
         "unavailable": {
           "capability_unregistered": "このローカル検索機能は登録されていません。対応する設定を選択してください。",
-          "connection_unavailable": "この接続は利用できません。連携設定を確認してください。",
+          "connection_unavailable": "この接続は利用できません。プロバイダーを確認してください。",
           "unsupported": "プロバイダーはこの設定に対応していません。検索設定を編集してください。",
           "pricing_unavailable": "プロバイダー料金の合計が不明なため、有料実行を開始できません。",
           "worker_unavailable": "実行ワーカーが無効です。キューに追加する前に有効にしてください。"
@@ -1769,13 +1773,13 @@
       "connect": "これらの項目を使用するにはデータソースを選択してください。",
       "supported": "対応プロバイダー: {providers}。",
       "unavailable": "この機能に対応するデータソースは利用できません。",
-      "action": "連携設定を開く",
+      "action": "プロバイダーを開く",
       "reconnect": "これらの項目を使用するには、選択したデータソースを再接続してください。",
       "reconnectAction": "プロバイダーを再接続",
       "emptyTitle": "データソースを選択",
       "reconnectTitle": "選択したデータソースを再接続",
-      "emptyDescription": "検索を実行するには、連携で対応するデータソースを選択してください。",
-      "reconnectDescription": "次の検索を実行する前に、連携で選択したデータソースを再接続してください。",
+      "emptyDescription": "検索を実行するには、プロバイダーで対応するデータソースを選択してください。",
+      "reconnectDescription": "次の検索を実行する前に、プロバイダーで選択したデータソースを再接続してください。",
       "connectAction": "データソースを選択",
       "askAdmin": "チェックを開始するには、プロジェクト管理者にデータソースの選択を依頼してください。"
     },
@@ -1803,8 +1807,8 @@
       "duplicate": "選択したキーワードはすべて別の実行でチェック中のため、開始するものがありません。",
       "editBudget": "予算を編集",
       "noProvider": "プロバイダーなし",
-      "noProviderBlocked": "これらのチェックを実行する前に、連携でデータソースを選択してください。",
-      "openIntegrations": "連携を開く",
+      "noProviderBlocked": "これらのチェックを実行する前に、プロバイダーでデータソースを選択してください。",
+      "openIntegrations": "プロバイダーを開く",
       "openRun": "実行を開く",
       "pricePerTarget": "ターゲット単価",
       "primaryProvider": "プライマリプロバイダー",
@@ -2097,10 +2101,17 @@
       "units": {
         "cents": "米セント",
         "customer_cents": "クレジット",
-        "units": "単位",
+        "units": "課金単位",
+        "searches": "検索",
+        "apiUnits": "APIユニット",
         "requests": "リクエスト",
         "budget_cents": "米セント",
         "paid_attempts": "有料の試行"
+      },
+      "unitCounts": {
+        "units": "{count, plural, other {課金単位}}",
+        "searches": "{count, plural, other {検索}}",
+        "apiUnits": "{count, plural, other {APIユニット}}"
       },
       "dimensions": {
         "connection": "接続",
@@ -2130,6 +2141,44 @@
         "settled": "確定済み",
         "released": "解放済み"
       }
+    },
+    "domainRating": {
+      "title": "Domain Rating",
+      "definition": "被リンクプロファイルの強さを0から100の対数スケールで示します。",
+      "attribution": "Domain Rating by Ahrefs",
+      "chartLabel": "{domain}のDomain Rating履歴",
+      "daily": "1日1回の測定",
+      "own": "自分のAhrefsキー",
+      "hosted": "管理された接続",
+      "noSource": "Ahrefs未接続",
+      "connect": "Ahrefsを接続",
+      "manageConnection": "接続を管理",
+      "settings": "追跡設定",
+      "empty": "Domain Ratingの履歴を始めましょう",
+      "emptyHelp": "Ahrefsを接続して最初の測定を記録します。毎日の測定で履歴が自動的に蓄積されます。",
+      "waiting": "最初の日次測定を待っています。接続は準備完了です。",
+      "paused": "追跡は一時停止中",
+      "noDomain": "追跡を開始するにはプロジェクトにドメインを追加してください。",
+      "failure": "前回の測定は失敗しました。履歴は保持され、次の測定は明日実行されます。",
+      "latest": "最新の評価",
+      "change": "この期間に{value}",
+      "unchanged": "この期間は変化なし",
+      "single": "最初の測定",
+      "noValue": "測定はまだありません",
+      "range": "履歴の期間",
+      "days": "{count}日",
+      "trackingTitle": "Domain Rating追跡",
+      "trackingHelp": "このドメインのAhrefs Domain Ratingを毎日1回（UTC）記録します。無効にしても履歴は保持されます。",
+      "enable": "Domain Ratingを毎日追跡",
+      "save": "保存",
+      "saved": "追跡設定を保存しました。",
+      "saveError": "設定を保存できませんでした。再試行してください。",
+      "lastSuccess": "前回の成功した測定: {date}",
+      "unknown": "完了した測定はまだありません",
+      "missing": "測定なし",
+      "history": "測定履歴",
+      "date": "日付",
+      "rating": "評価"
     }
   }
 }

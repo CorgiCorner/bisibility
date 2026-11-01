@@ -650,6 +650,39 @@ export async function testConnection() {
   return { balance: 1000, message: "Preview connection OK", ok: true };
 }
 
+export async function checkProviderRecoveryAccount(_input: unknown) {
+  return {
+    accountState: "verified" as const,
+    view: {
+      state: "review" as const,
+      accountVerified: true,
+      checkedAt: new Date().toISOString(),
+      affectedChecks: 11,
+      unconfirmedRequests: 11,
+      revision: "storybook-verified",
+      paused: true,
+    },
+  };
+}
+
+export async function loadProviderAffectedChecks(input: unknown) {
+  const request = input as { cursor: string | null };
+  const start = request.cursor ? Number(request.cursor.slice("storybook:".length)) : 0;
+  const total = 11;
+  const end = Math.min(start + 50, total);
+  return {
+    rows: Array.from({ length: end - start }, (_, i) => ({
+      id: `check-${start + i}`,
+      keyword: `Example keyword ${start + i + 1}`,
+      checkedAt: "2026-10-28T13:00:00Z",
+      outcome: "deferred",
+      accounting: "unknown" as const,
+    })),
+    total,
+    nextCursor: end < total ? `storybook:${end}` : null,
+  };
+}
+
 export async function startCreditsTrial(_input: unknown) {
   return { status: "unavailable" as const };
 }

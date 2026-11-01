@@ -1,5 +1,5 @@
 import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   baseData,
@@ -68,6 +68,7 @@ describe("AdminDashboard", () => {
 
   it("breaks monthly SERP usage down by provider using reference costs", () => {
     render(<AdminDashboard data={baseData} />);
+    fireEvent.click(screen.getByText("SERP reference costs (current UTC month)"));
 
     const table = screen.getByRole("table", { name: "SERP usage this month by provider" });
     const rows = within(table).getAllByRole("row");

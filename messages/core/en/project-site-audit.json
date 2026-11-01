@@ -6,7 +6,7 @@
     "pageLimitError": "Choose 1 to 15 pages.",
     "run": "Run audit",
     "running": "Crawling site",
-    "cost": "Up to 15 seconds · No provider credits · Results cached for 5 minutes",
+    "cost": "Up to 15 seconds · No provider credits · Results reused according to project cache settings",
     "readOnly": "Your project role or read-only mode prevents running audits. Saved reports remain available.",
     "history": "Audit history",
     "loadingHistory": "Loading saved report...",

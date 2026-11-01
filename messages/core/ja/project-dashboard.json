@@ -89,7 +89,7 @@
       "noData": "データなし",
       "noRankingsYet": "まだ順位がありません",
       "pausedMigrationHold": "一時停止（移行保留）",
-      "providerMissingDetail": "チェックを実行するには、連携でデータソースを選択してください。",
+      "providerMissingDetail": "チェックを実行するには、プロバイダーでデータソースを選択してください。",
       "providerMissingTitle": "データソースを選択",
       "providerNeedsAttention": "プロバイダー要対応",
       "providerNeedsAttentionDetail": "{count, plural, other {#件のキーワードの準備ができています。}}最初のチェック前に、選択したデータソースを確認してください。",
@@ -143,7 +143,7 @@
       },
       "import": {
         "addError": "選択したキーワードを追加できませんでした。",
-        "authorizationExpired": "Google の認可の有効期限が切れました。連携から再接続してください。",
+        "authorizationExpired": "Google の認可の有効期限が切れました。プロバイダーから再接続してください。",
         "drawer": {
           "add": "{count, plural, other {キーワード#件}}を追加",
           "cancel": "キャンセル",

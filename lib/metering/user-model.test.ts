@@ -6,7 +6,7 @@ import {
   projectFundingBudgetId,
   projectFundingTag,
 } from "./project-funding-budgets";
-import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
+import { projectBudgetFigures, projectBudgetRow } from "./user-model";
 
 const budget: BudgetStatus = {
   budget: {
@@ -47,8 +47,8 @@ const unusedProjectBudget: BudgetStatus = {
 
 describe("project Meter display boundary", () => {
   it("shows an authoritative unused project cap in both the card and header", () => {
-    const known = projectBudgetFiguresKnown(unusedProjectBudget, [], "owner", true);
-    expect(known).toBe(true);
+    const known = projectBudgetFigures(unusedProjectBudget, [], true);
+    expect(known).toBe("measured");
     const row = projectBudgetRow(unusedProjectBudget, null, known);
     expect(row).toMatchObject({
       used: { text: "0" },
@@ -63,39 +63,43 @@ describe("project Meter display boundary", () => {
       bounds: [{ remaining: { text: "5000" }, level: "ok" }],
     });
   });
-  it("requires a complete epoch read to show an unused project cap", () => {
-    expect(projectBudgetFiguresKnown(unusedProjectBudget, [], "owner", false)).toBe(false);
+  it("shows a zero counter without a complete epoch read", () => {
+    expect(projectBudgetFigures(unusedProjectBudget, [], false)).toBe("measured");
+    const connection = {
+      ...unusedProjectBudget,
+      budget: {
+        ...unusedProjectBudget.budget,
+        scope: { kind: "connection" as const, namespace: "n", connection: "private" },
+      },
+    };
+    expect(projectBudgetFigures(connection, [], false)).toBe("measured");
+    expect(projectBudgetRow(connection, "conn_public", "measured")).toMatchObject({
+      used: { text: "0", certainty: "measured" },
+    });
   });
   it.each([
     { used: null },
     { reserved: null },
-    { used: { value: 1n, scale: 4, unit: "budget_cents" } },
-    { reserved: { value: 1n, scale: 4, unit: "budget_cents" } },
     { used: { value: 0n, scale: 4, unit: "cents" } },
     { reserved: { value: 0n, scale: 4, unit: "cents" } },
     { redacted: true as const },
-  ])("keeps missing, nonzero or redacted counters unknown (case %#)", (change) => {
-    expect(
-      projectBudgetFiguresKnown({ ...unusedProjectBudget, ...change }, [], "owner", true),
-    ).toBe(false);
+  ])("keeps unread, foreign-unit or redacted counters unknown (case %#)", (change) => {
+    expect(projectBudgetFigures({ ...unusedProjectBudget, ...change }, [], true)).toBe("unknown");
   });
-  it("keeps unobserved provider usage and connection allocations unknown", () => {
-    expect(projectBudgetFiguresKnown(budget, [], "owner", true)).toBe(false);
-    expect(
-      projectBudgetFiguresKnown(
-        {
-          ...unusedProjectBudget,
-          budget: {
-            ...unusedProjectBudget.budget,
-            scope: { kind: "connection", namespace: "n", connection: "private" },
-          },
-        },
-        [],
-        "owner",
-        true,
-      ),
-    ).toBe(false);
-  });
+  it.each([
+    { used: { value: 1n, scale: 4, unit: "budget_cents" } },
+    { reserved: { value: 1n, scale: 4, unit: "budget_cents" } },
+  ])(
+    "keeps a nonzero counter unknown only when its epoch read is incomplete (case %#)",
+    (change) => {
+      expect(projectBudgetFigures({ ...unusedProjectBudget, ...change }, [], false)).toBe(
+        "unknown",
+      );
+      expect(projectBudgetFigures({ ...unusedProjectBudget, ...change }, [], true)).toBe(
+        "measured",
+      );
+    },
+  );
   it("preserves negative budget remainder and distinguishes warning from hard limit", () => {
     expect(projectBudgetRow(budget, "prc_public", true)).toMatchObject({
       kind: "group",
@@ -163,6 +167,18 @@ describe("project funding limits", () => {
     ({
       scope: { namespace: "n", principal: "owner", group: "g", connection: "c" },
       fundingSource,
+      state: "settled",
+      receipts: [
+        {
+          measurements: [
+            {
+              unit: "budget_cents",
+              certainty: "measured",
+              quantity: { value: 20000n, scale: 4, unit: "budget_cents" },
+            },
+          ],
+        },
+      ],
       budgetEpochs: [
         { budgetId, budgetVersion: 1, epoch: "private-epoch", startsAt: "", endsAt: null },
       ],
@@ -182,12 +198,11 @@ describe("project funding limits", () => {
 
   it("proves opening usage from the same source's work on the group cap", () => {
     const group = projectBudgetId("g");
-    expect(projectBudgetFiguresKnown(ownStatus(), [operation("byok", group)], "owner", true)).toBe(
-      true,
+    expect(projectBudgetFigures(ownStatus(), [operation("byok", group)], true)).toBe("measured");
+    // Credits work on the shared cap never counts toward the your-key limit, so the
+    // your-key counter stays its own measured reading.
+    expect(projectBudgetFigures(ownStatus(), [operation("platform", group)], true)).toBe(
+      "measured",
     );
-    // Credits work on the shared cap never counts toward the your-key limit.
-    expect(
-      projectBudgetFiguresKnown(ownStatus(), [operation("platform", group)], "owner", true),
-    ).toBe(false);
   });
 });

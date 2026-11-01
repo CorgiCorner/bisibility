@@ -7,6 +7,7 @@ export type EmailCategory = "bulk" | "transactional";
 export type EmailMessage = {
   from: string;
   html: string;
+  headers?: Record<string, string>;
   replyTo?: string;
   sendCounterReserved?: boolean;
   subject: string;

@@ -70,7 +70,7 @@ function figure(
   if (value === "unavailable") return labels.unavailable;
   if (value === "unlimited") return labels.unlimited;
   if (value.certainty === "unknown") return labels.unknown;
-  const unit = value.unit ? (formatUnit?.(value.unit) ?? value.unit) : "";
+  const unit = value.unit ? (formatUnit?.(value.unit, value.text) ?? value.unit) : "";
   return [formatFigure?.(value) ?? value.text, unit].filter(Boolean).join(" ");
 }
 /** An ISO instant reads as "2026-11-01 00:00 UTC"; hosts pass formatTime for local formats. */
@@ -90,7 +90,7 @@ export type BudgetCardProps = {
   formatTime?: (iso: string) => string;
   /** Formats known amounts for display; the row remains the source of meter semantics. */
   formatFigure?: (value: Exclude<Figure, "unavailable">) => string;
-  formatUnit?: (unit: string) => string;
+  formatUnit?: (unit: string, count?: string) => string;
   className?: string;
 };
 

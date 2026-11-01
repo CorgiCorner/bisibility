@@ -13,6 +13,7 @@ import { finalizeQueuedBatchState } from "./queued-lifecycle";
 import { queuedRankCheckModeAuthorization } from "./queued-mode";
 import { pollDataForSeoQueue } from "./queued-provider-poll";
 import { ACTIVE_QUEUED_BATCH_STATES } from "./queued-state";
+import { inspectQueuedTaskGetFallback } from "./queued-task-get-fallback";
 import { rankCheckSchedulerMode } from "./scheduler-mode";
 
 const ACTIVE_STATES = ["ambiguous", "prepared", "ready", "submitting", "submitted"] as const;
@@ -127,6 +128,22 @@ export async function inspectQueuedRankCheckBatch(
               });
             }
           });
+        }
+        if (polled.status === "ready") {
+          const readyIds = polled.value.flatMap((task) => {
+            const id = byTag.get(task.tag);
+            return id ? [id] : [];
+          });
+          const fallback = await inspectQueuedTaskGetFallback({
+            batchId,
+            projectId: batch.projectId,
+            credentials,
+            recovery,
+            readyIds,
+            deadlineAt: options.deadlineAt,
+            signal: options.signal,
+          });
+          if (fallback === "deadline_reached") deadlineReached = true;
         }
       }
     }

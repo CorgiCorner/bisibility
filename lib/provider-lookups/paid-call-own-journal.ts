@@ -4,7 +4,7 @@ import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { providerAllocationMetadata } from "@/lib/providers/runtime-allocation-metadata";
 
 export function createOwnPaidCallJournal(
   db: PrismaClient,

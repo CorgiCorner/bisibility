@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { domainOverviewSnapshotCachedUntil, domainOverviewSnapshotFreshness } from "./cache-policy";
 import { domainPaymentHistory } from "./payment-history";
 import type { DomainOverviewScope, DomainRecentTarget } from "./types";
@@ -14,6 +15,7 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
       fetchedAt: true,
       languageCode: true,
       locationCode: true,
+      project: { select: { lookupCacheTtlSeconds: true } },
       scope: true,
       target: true,
     },
@@ -29,7 +31,9 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
     const { originalPayment } = domainPaymentHistory(row.overview);
     recent.push({
       ...(originalPayment ? { originalPayment } : {}),
-      cachedUntil: domainOverviewSnapshotCachedUntil(row),
+      cachedUntil: withProjectCachePolicy(row.project.lookupCacheTtlSeconds, () =>
+        domainOverviewSnapshotCachedUntil(row),
+      ),
       fetchedAt: row.fetchedAt.toISOString(),
       languageCode: row.languageCode,
       locationCode: row.locationCode,

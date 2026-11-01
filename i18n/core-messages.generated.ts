@@ -799,6 +799,9 @@ export type CoreMessages = {
       readonly invalidDescription: "The link could not be verified. Reply to the email and we will update the preference for you.";
       readonly invalidTitle: "This unsubscribe link is invalid";
       readonly kicker: "EMAIL PREFERENCES";
+      readonly notificationDescription: "You will stop receiving this type of email for this project. Other email preferences stay unchanged.";
+      readonly notificationSuccess: "You will no longer receive this type of email for this project.";
+      readonly notificationTitle: "Stop these project emails?";
       readonly successDescription: "We will not send you welcome follow-ups or other marketing emails. Account and service messages are unaffected.";
       readonly successTitle: "You are unsubscribed";
       readonly validDescription: "You will stop receiving founder check-ins and other marketing emails. Account and service messages will still arrive.";
@@ -847,7 +850,7 @@ export type CoreMessages = {
       readonly consumption: {
         readonly checks: "Checks";
         readonly copyProjectId: "Copy project ID {projectId}";
-        readonly description: "Top 10 project/provider rows by reference cost this month. User-entered rates are ignored.";
+        readonly description: "Top 10 project/provider groups by recorded cost for the selected period, across all operation types.";
         readonly empty: "No completed SERP checks recorded this month.";
         readonly note: "Reference costs use maintained provider rates and recorded request units. Provider invoices remain authoritative.";
         readonly projectId: "Project ID";
@@ -1062,7 +1065,7 @@ export type CoreMessages = {
       readonly stats: {
         readonly analytics: "Analytics";
         readonly connections: "{kind} connections";
-        readonly description: "Instance counts and completed SERP usage for the current UTC month.";
+        readonly description: "Instance totals and provider usage across all projects and operation types. Select the usage period below.";
         readonly keywords: "Keywords";
         readonly projects: "Projects";
         readonly serp: "SERP";
@@ -1126,6 +1129,29 @@ export type CoreMessages = {
       readonly projectCount: "{count, plural, one {# project} other {# projects}}";
       readonly unavailable: "-";
     };
+    readonly instanceUsage: {
+      readonly all: "All history";
+      readonly copyProject: "Copy project ID";
+      readonly cost: "Recorded cost";
+      readonly empty: "No recorded usage in this period.";
+      readonly month: "Current month (UTC)";
+      readonly note: "Costs come from the final recorded receipt for each operation. Corrections count once. Unknown amounts are excluded from cost totals; provider invoices remain authoritative.";
+      readonly operations: "Operations";
+      readonly period: "Usage period";
+      readonly project: "Project ID";
+      readonly provider: "Provider";
+      readonly providerTable: "Provider usage for the whole instance";
+      readonly referenceTitle: "SERP reference costs (current UTC month)";
+      readonly scope: "Recorded usage across all projects and operation types, including retained history.";
+      readonly share: "Share of recorded cost";
+      readonly topNote: "Top 10 project/provider groups by recorded cost. Shares use the recorded cost of the entire instance. Unknown amounts and unknown provider identities are retained.";
+      readonly topTable: "Top instance consumption";
+      readonly unattributed: "Unattributed project";
+      readonly unavailable: "Instance usage is unavailable. Unknown costs have not been replaced by zero.";
+      readonly unknown: "Unknown";
+      readonly unknownEntries: "Cost unknown (entries)";
+      readonly unknownProvider: "Unknown provider";
+    };
     readonly metering: {
       readonly allProjects: "All projects";
       readonly budgetNote: "Budgets show the current cycle, independently of the selected usage month.";
@@ -1147,6 +1173,7 @@ export type CoreMessages = {
     readonly navigation: {
       readonly administration: "Administration";
       readonly audit: "Audit";
+      readonly instance: "Instance";
       readonly label: "Instance administration sections";
       readonly metering: "Metering";
       readonly operations: "Operations";
@@ -1233,11 +1260,14 @@ export type CoreMessages = {
       readonly categories: {
         readonly accounting: "Accounting uncertainty";
         readonly all: "All cases";
+        readonly closed_unknown: "Closed with unknown cost";
         readonly failed: "Failed recoveries";
         readonly historical: "Historical accounting";
         readonly unfinished: "Unfinished work";
       };
       readonly category: "Show";
+      readonly closedUnknown: "Closed, cost unknown";
+      readonly closedUnknownNote: "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again.";
       readonly commandStates: {
         readonly completed: "Recovery command finished";
         readonly failed: "Recovery command stopped";
@@ -1248,6 +1278,7 @@ export type CoreMessages = {
       readonly connection: "Connection";
       readonly connectionBlocked: "Connection spending is blocked by unresolved accounting.";
       readonly counts: {
+        readonly closedUnknown: "Closed, cost unknown";
         readonly failed: "Failed recoveries";
         readonly historical: "Historical uncertainty";
         readonly retainedResults: "Results ready to restore";
@@ -1306,6 +1337,7 @@ export type CoreMessages = {
         readonly reason: "Reason";
         readonly recoveryStates: {
           readonly attempting: "Looking up";
+          readonly closed_unknown: "Closed, cost unknown";
           readonly not_needed: "Not needed";
           readonly operator_review: "Operator review";
           readonly resolved: "Resolved";
@@ -1405,6 +1437,7 @@ export type CoreMessages = {
         readonly not_started: "Not started";
         readonly obsolete: "No longer applicable";
         readonly possibly_sent: "Possibly sent";
+        readonly stopped: "Stopped";
         readonly unfinished: "Unfinished";
         readonly unknown: "Unknown";
       };
@@ -1421,6 +1454,17 @@ export type CoreMessages = {
       readonly unknownDimensions: "Unconfirmed dimensions";
       readonly usageTab: "Usage and budgets";
       readonly work: "Result";
+    };
+    readonly recoveryAccounting: {
+      readonly closedUnknown: "Closed with unknown cost";
+      readonly description: "Retained recovery closures across all dates. Their recorded costs are included in the all-history usage totals. Unknown amounts remain unknown.";
+      readonly historical: "Historical cost retained (provider identity incomplete)";
+      readonly ledger: "View usage ledger";
+      readonly requests: "{count, plural, one {# request} other {# requests}}";
+      readonly title: "Recovery accounting (all time)";
+      readonly unavailable: "Recovery accounting is unavailable. Unknown amounts have not been replaced by zero.";
+      readonly unknown: "Cost unknown";
+      readonly view: "View recovery records";
     };
     readonly shell: {
       readonly backToApp: "Back to app";
@@ -1527,7 +1571,7 @@ export type CoreMessages = {
         readonly stateExpired: "The sign-in flow expired or was restarted. Try again once, in a single tab.";
         readonly storeFailed: "Google sign-in worked but our server could not finish the connection. This is on us - retry, and contact us if it repeats.";
       };
-      readonly searchConsoleSync: "Search Console sync did not finish. Observed data may take a moment. You can retry from Integrations.";
+      readonly searchConsoleSync: "Search Console sync did not finish. Observed data may take a moment. You can retry from Providers.";
     };
     readonly firstCheck: {
       readonly back: "Back";
@@ -1543,6 +1587,7 @@ export type CoreMessages = {
       readonly description: {
         readonly completed: "Your first results are ready.";
         readonly manual: "Everything's ready. Run your first check whenever you like - nothing runs until you start it.";
+        readonly noKeywords: "No keywords added yet. Go back to add keywords, or open the app and add them later.";
         readonly noProvider: "Your keywords are ready. Choose a data source whenever you are ready to run checks.";
         readonly paused: "Everything's ready. Checks are paused until you resume the schedule.";
         readonly scheduled: "Your schedule is set to {frequency}. You can also run a sample check now.";
@@ -1694,7 +1739,7 @@ export type CoreMessages = {
         readonly clear: "Clear";
         readonly connection: "Connection";
         readonly connectionLabel: "DataForSEO connection";
-        readonly description: "Uses your DataForSEO account. Results are cached for 12 hours.";
+        readonly description: "Uses your DataForSEO account. Cached results can be reopened for free until they expire.";
         readonly drawerDescription: "Keywords your site already ranks for, ordered by estimated traffic.";
         readonly drawerTitle: "Import from DataForSEO";
         readonly estimatedTraffic: "Est. traffic";
@@ -1839,7 +1884,7 @@ export type CoreMessages = {
           readonly idle: "Not connected";
           readonly tested: "Verified";
         };
-        readonly tooltip: "Live rankings come from a supported data provider. Choose how to use it in Integrations. You can add keywords first and choose a source later.";
+        readonly tooltip: "Live rankings come from a supported data provider. Choose how to use it in Providers. You can add keywords first and choose a source later.";
       };
       readonly credentials: {
         readonly connected: "{provider} connected";
@@ -1862,7 +1907,7 @@ export type CoreMessages = {
         readonly title: "API credentials";
         readonly verified: "{provider} verified";
       };
-      readonly description: "Choose how to power your rank checks. You can change this later in Integrations.";
+      readonly description: "Choose how to power your rank checks. You can change this later in Providers.";
       readonly errors: {
         readonly costPrecision: "Use up to 4 decimals.";
         readonly credentialTooLong: "Credentials must be {maximum, number} characters or fewer.";
@@ -2015,10 +2060,10 @@ export type CoreMessages = {
     readonly brand: "Brand";
     readonly brandMentioned: "Brand mentioned";
     readonly brandMentions: "Brand mentions";
-    readonly cacheHint: "Saved answers can be reused for 12 hours. Check the price to see who pays for this check.";
+    readonly cacheHint: "Saved answers can be reused while cached. Check the price to see who pays for this check.";
     readonly catalogHelp: "About available AI settings";
     readonly catalogRefreshing: "Updating available AI options";
-    readonly catalogUnavailable: "We could not load the available AI options. Check DataForSEO in Integrations. Saved reports are still available.";
+    readonly catalogUnavailable: "We could not load the available AI options. Check DataForSEO in Providers. Saved reports are still available.";
     readonly catalogUnavailableLegacy: "We could not load other models. You can still use quick check with GPT-4.1 mini and nano.";
     readonly catalogUnavailableVisibility: "Market list unavailable. ChatGPT for the United States in English is still available.";
     readonly chooseModels: "Choose specific models instead";
@@ -2069,7 +2114,7 @@ export type CoreMessages = {
     readonly modelAlreadySelected: "Already selected as the other model.";
     readonly modelLimit: "Compare up to 2 models per check.";
     readonly modelNeedsActualPayment: "Choose to pay with your own DataForSEO account to use this model.";
-    readonly modelNeedsOwnAccount: "Connect your own DataForSEO key in Integrations and choose to pay DataForSEO directly.";
+    readonly modelNeedsOwnAccount: "Connect your own DataForSEO key in Providers and choose to pay DataForSEO directly.";
     readonly modelPolicyPending: "This model cannot be used yet, even if a price is listed.";
     readonly modelPricingUnavailable: "Current pricing cannot be verified for this model. Try again later.";
     readonly modelsMode: "Models";
@@ -2081,10 +2126,10 @@ export type CoreMessages = {
     readonly noDomainCitation: "No domain citation";
     readonly noObservations: "No matching observations";
     readonly noSecondModel: "Use one model only";
-    readonly noSource: "Connect DataForSEO in Integrations to check prices and get answers.";
+    readonly noSource: "Connect DataForSEO in Providers to check prices and get answers.";
     readonly observedAt: "Observed {date}";
     readonly observedDataset: "Observed provider dataset";
-    readonly openIntegrations: "Open Integrations";
+    readonly openIntegrations: "Open Providers";
     readonly openReport: "Open saved report";
     readonly outputTokens: "Answer length limit (tokens)";
     readonly partialFailure: "The analysis could not be completed. Confirmed results are retained. Review provider usage before retrying.";
@@ -2881,11 +2926,15 @@ export type CoreMessages = {
         readonly projectTransferStarted: "Project transfer started";
         readonly projectUpdated: "Project updated";
         readonly projectWebsiteUpdated: "Project website updated";
+        readonly providerAccountBlocked: "Provider account paused";
         readonly providerAllocationUpdated: "Provider allocation updated";
         readonly providerConnected: "Provider connected";
         readonly providerCostUpdated: "Provider cost updated";
         readonly providerDisconnected: "Provider disconnected";
+        readonly providerPaymentRequired: "Provider payment required";
         readonly providerRateUpdated: "Provider rate updated";
+        readonly providerRecoveryAccountChecked: "Provider account checked";
+        readonly providerRecoveryAccountCheckStarted: "Provider account check started";
         readonly providerSettingsUpdated: "Provider settings updated";
         readonly providerSourceChanged: "Provider source changed";
         readonly providerSourceChangedDetail: "Provider source changed: {provider} → {source}";
@@ -3024,7 +3073,8 @@ export type CoreMessages = {
       readonly idle: {
         readonly aria: "Backlinks introduction";
         readonly bullets: {
-          readonly cache: "Snapshots cached for 24 hours - reopening and re-slicing is free";
+          readonly cache: "Snapshots cached for {duration} - reopening and re-slicing is free";
+          readonly cacheLoading: "Cached snapshots can be reopened and re-sliced for free until they expire.";
           readonly diff: "Every refresh diffs against the last snapshot: new and lost links flagged";
           readonly price: "Price shown before each run.";
         };
@@ -3038,7 +3088,7 @@ export type CoreMessages = {
       };
       readonly loadFailed: "Backlinks could not be loaded. Check the target, provider connection, and budget.";
       readonly pricing: {
-        readonly description: "Charged by DataForSEO to your own account. A snapshot stays cached for 24 hours - reopening or switching tabs within it is free.";
+        readonly description: "Charged by DataForSEO to your own account. Reopening or switching tabs within a cached snapshot is free until it expires.";
         readonly eyebrow: "Provider cost";
         readonly history: "12-month history";
         readonly linkRows: "Link rows ({count, number})";
@@ -3461,7 +3511,7 @@ export type CoreMessages = {
       };
       readonly import: {
         readonly addError: "Could not add the selected keywords.";
-        readonly authorizationExpired: "Google authorization has expired. Reconnect it under Integrations.";
+        readonly authorizationExpired: "Google authorization has expired. Reconnect it under Providers.";
         readonly drawer: {
           readonly add: "Add {count, plural, one {# keyword} other {# keywords}}";
           readonly cancel: "Cancel";
@@ -3670,7 +3720,7 @@ export type CoreMessages = {
       readonly noData: "no data";
       readonly noRankingsYet: "No rankings yet";
       readonly pausedMigrationHold: "paused - migration hold";
-      readonly providerMissingDetail: "Choose a data source in Integrations to run checks.";
+      readonly providerMissingDetail: "Choose a data source in Providers to run checks.";
       readonly providerMissingTitle: "Choose a data source";
       readonly providerNeedsAttention: "provider needs attention";
       readonly providerNeedsAttentionDetail: "{count, number} {count, plural, one {keyword is} other {keywords are}} ready. Review the selected data source before the first check.";
@@ -3808,6 +3858,7 @@ export type CoreMessages = {
         readonly expiredTitle: "This cached analysis has expired";
         readonly idleBullets: {
           readonly cache: "Results cached for {duration}, repeat lookups are free";
+          readonly cacheLoading: "Cached results can be reopened for free until they expire.";
           readonly key: "Price shown before each run";
           readonly track: "Turn findings into tracked keywords in one click";
         };
@@ -4073,7 +4124,7 @@ export type CoreMessages = {
       };
       readonly connect_source: {
         readonly active: "Search Console adds free traffic data. Choose a ranking data source for live position checks.";
-        readonly done: "Your ranking data source is set up. Review its source and usage settings in Integrations.";
+        readonly done: "Your ranking data source is set up. Review its source and usage settings in Providers.";
       };
       readonly create_project: {
         readonly active: "Name the project you want to track. You can update its details later in Project settings.";
@@ -4240,6 +4291,18 @@ export type CoreMessages = {
     };
   };
   readonly projectIntegrations: {
+    readonly billingSources: {
+      readonly creditsHelp: "Paid from your Credit balance";
+      readonly creditsTitle: "Credits";
+      readonly freeHelp: "Free data sources";
+      readonly freeTitle: "No usage cost";
+      readonly manage: "Manage connections";
+      readonly more: "+{count} more";
+      readonly ownHelp: "Billed to your provider account";
+      readonly ownTitle: "Your keys";
+      readonly showLess: "Show less";
+      readonly title: "Provider billing";
+    };
     readonly byo: {
       readonly detail: "In self-hosted bisibility you connect your own accounts. Credentials stay in your instance and provider usage is billed directly between you and each provider.";
       readonly title: "Bring your own providers.";
@@ -4247,8 +4310,10 @@ export type CoreMessages = {
     readonly categories: {
       readonly analyticsDescription: "Connect owned-data sources such as Google Search Console or Google Analytics 4 to add traffic and query performance context. Analytics sources are not used to determine rank positions.";
       readonly analyticsTitle: "Analytics sources";
-      readonly serpDescription: "Connect providers that run Google rank checks in Rank Tracker.";
-      readonly serpTitle: "SERP providers";
+      readonly enrichmentDescription: "Track your domain authority with one free Domain Rating check per day.";
+      readonly enrichmentTitle: "SEO enrichment";
+      readonly serpDescription: "Connect data providers for rank tracking, SEO research and domain metrics.";
+      readonly serpTitle: "SEO data";
     };
     readonly drawer: {
       readonly accountBalance: "Balance: {balance, number, ::currency/USD .0000}";
@@ -4426,14 +4491,17 @@ export type CoreMessages = {
     readonly provider: {
       readonly actions: "Actions for {provider}";
       readonly activity: "{provider} activity";
+      readonly ahrefsDescription: "Daily Domain Rating for your domain. This endpoint is free.";
       readonly analyticsDescription: "{provider} connection for owned data enrichment.";
       readonly connect: "Connect";
       readonly connectionFailed: "Connection failed.";
+      readonly connectionPaused: "Connection paused";
       readonly connectionSettings: "Connection settings";
       readonly connectionTestFailed: "Provider connection test failed.";
       readonly connectionVerified: "Connection verified.";
       readonly consecutiveFailures: "{count, number} consecutive {count, plural, one {failure} other {failures}}";
       readonly credentialUnreadable: "Stored credentials can't be read. Reconnect the provider.";
+      readonly dataforseoDescription: "Rank tracking, keyword research and backlink data. Billed by DataForSEO.";
       readonly disconnect: "Disconnect";
       readonly failingSince: "Failing since {value}";
       readonly failureUnknown: "unclassified (recorded before error-class upgrade)";
@@ -4444,6 +4512,7 @@ export type CoreMessages = {
       readonly manageKey: "Manage key";
       readonly neverSynced: "Never synced.";
       readonly neverSyncedHelp: "Use Sync now to load traffic data.";
+      readonly notConnected: "Not connected";
       readonly notSynced: "Not synced yet";
       readonly openSearchConsole: "Open Search Console";
       readonly property: "Property";
@@ -4486,7 +4555,6 @@ export type CoreMessages = {
       readonly reconcile: "Check save status";
       readonly reload: "Reload settings";
       readonly reserved: "Reserved";
-      readonly searches: "searches";
       readonly staleEvidence: "Stale evidence";
       readonly unavailable: "Provider settings could not be confirmed.";
       readonly unknownAuthority: "Unknown authority";
@@ -4525,12 +4593,94 @@ export type CoreMessages = {
       readonly version: "Version";
       readonly withoutYourRate: "Without your rate";
     };
+    readonly recovery: {
+      readonly accountingCount: "{count, plural, one {# earlier request needs accounting review} other {# earlier requests need accounting review}}";
+      readonly affected: "{count, plural, one {# affected check} other {# affected checks}}";
+      readonly allLoaded: "All affected checks loaded.";
+      readonly billingDescription: "The provider reported a payment or capacity issue. New rank checks on this connection are paused.";
+      readonly billingHeading: "Check the {provider} account";
+      readonly billingSearchesDescription: "The provider reported a payment or search limit issue. Check available searches; new rank checks on this connection are paused.";
+      readonly billingSearchesHeading: "Check searches in your {provider} account";
+      readonly check: "Check";
+      readonly checkHint: "Account checks do not retry rank checks.";
+      readonly checking: "Checking account";
+      readonly checkingDescription: "Checking account access and capacity. Existing results remain unchanged.";
+      readonly checkingHeading: "Checking the {provider} account";
+      readonly checks: "View checks not sent";
+      readonly checksDescription: "Checks not sent on this connection across all incident history. The final outcome may include fallback.";
+      readonly completed: "Completed";
+      readonly cost: "Provider cost";
+      readonly costRecorded: "Cost recorded";
+      readonly credentialsDescription: "The provider rejected these credentials. Update the connection to restore access.";
+      readonly credentialsHeading: "Update the {provider} credentials";
+      readonly currentIncidentCount: "{count, plural, one {# check not sent during the current incident} other {# checks not sent during the current incident}}";
+      readonly dismiss: "Dismiss";
+      readonly dismissedBilling: "The provider account needs attention. Monitoring remains paused.";
+      readonly dismissedInternal: "We are investigating. Monitoring remains paused.";
+      readonly dismissedPaused: "The notice is hidden. New paid attempts on this connection remain paused.";
+      readonly dismissedReady: "Provider review is complete. Your existing schedule is saved.";
+      readonly dismissedReview: "Earlier requests are under review. Monitoring remains paused.";
+      readonly failed: "Could not check the account or load checks. Try again shortly.";
+      readonly free: "Account verification is free.";
+      readonly internalDescription: "There is a problem on our side. Our team is reviewing it before monitoring resumes. Your provider account does not need to be reconnected.";
+      readonly internalHeading: "We could not start this check safely";
+      readonly keyword: "Keyword";
+      readonly loaded: "{count, number} of {total, number} checks loaded";
+      readonly loadFailed: "Could not load more checks. Your loaded checks are still available.";
+      readonly loading: "Loading more checks…";
+      readonly loadMore: "Load more";
+      readonly nextCheck: "Next account check: {date}.";
+      readonly notCompleted: "Not completed";
+      readonly notSent: "{count, plural, one {# check not sent} other {# checks not sent}}";
+      readonly notSentCost: "Not sent on this connection";
+      readonly open: "Open DataForSEO";
+      readonly openProvider: "Open {provider}";
+      readonly outcome: "Check outcome";
+      readonly outcomeDeferred: "Deferred";
+      readonly outcomeFailed: "Failed";
+      readonly owner: "Ask a project owner to review this provider connection.";
+      readonly paused: "Monitoring paused for this connection";
+      readonly pausedFallback: "This connection is paused; another provider is active.";
+      readonly rangeThrough: "All incidents through {date}.";
+      readonly readyDescription: "The connection is ready for future work. Your saved schedule and spending limits still apply.";
+      readonly readyHeading: "Provider review complete";
+      readonly readyStatus: "Connection ready";
+      readonly restrictedDescription: "The provider restricted account access. Review the account permissions.";
+      readonly restrictedHeading: "Check {provider} access";
+      readonly restrictedRankDescription: "The provider restricted access to rank checks. Review the account permissions.";
+      readonly retry: "Try again";
+      readonly reviewDescription: "Earlier requests have unconfirmed costs. New paid attempts on this connection remain paused.";
+      readonly reviewHeading: "Earlier requests need review";
+      readonly reviewUsage: "Review usage";
+      readonly savedSchedule: "Your schedule is saved. Missed checks will not be backfilled automatically.";
+      readonly schedule: "View schedule";
+      readonly scrollMore: "Scroll to load more checks.";
+      readonly showDetails: "Show details";
+      readonly unknownCost: "Awaiting confirmation";
+      readonly unverifiedDescription: "The account is not verified. New rank checks on this connection remain paused.";
+      readonly unverifiedHeading: "Verify the {provider} account";
+    };
     readonly tabs: {
-      readonly aria: "Integrations sections";
+      readonly aria: "Providers sections";
       readonly byokUsage: "BYOK usage";
       readonly connections: "Connections";
       readonly creditsUsage: "Credits usage";
       readonly usage: "Usage";
+    };
+    readonly usageDetailsTable: {
+      readonly creditsTitle: "Credits";
+      readonly mixedUnits: "Mixed units";
+      readonly ownKeysTitle: "Your keys";
+      readonly partialUsage: "Partial usage: these readings do not cover all activity.";
+      readonly providerCount: "{count, plural, one {# provider} other {# providers}}";
+      readonly retainedConnection: "Retained connection";
+      readonly usageApiRequests: "API requests";
+      readonly usageAppRequests: "App requests";
+      readonly usageBilled: "Billed";
+      readonly usageMonth: "Usage this month";
+      readonly usageMonthEmpty: "No paid requests this month yet. Rows appear after the first check or research run.";
+      readonly usageMonthHelp: "Requests are calls made by the app. Billed is the quantity counted by each provider.";
+      readonly usageProvider: "Provider";
     };
   };
   readonly projectMarkets: {
@@ -4705,6 +4855,7 @@ export type CoreMessages = {
       readonly budgetSkippedDescription: "The project budget cap paused these checks. They retry on schedule after budget is available.";
       readonly budgetWarning: "Estimated spend is at {percent, number}% of the {cap}/month limit.";
       readonly changeLimit: "Change limit";
+      readonly checkDeferred: "Deferred";
       readonly checkDelivery: "Check delivery · {range}";
       readonly checkDeliveryAria: "Check delivery, {range}";
       readonly checkRunFilters: "Check run filters";
@@ -4804,6 +4955,9 @@ export type CoreMessages = {
       readonly migrationHoldDescription: "These checks are on hold while the import finishes.";
       readonly minutesAgo: "{count, number}m ago";
       readonly mobile: "Mobile";
+      readonly monitoringAction: "View connections";
+      readonly monitoringItem: "{provider}: connection paused. {count, plural, one {# check deferred by the account} other {# checks deferred by the account}} in the last 30 days.";
+      readonly monitoringTitle: "Provider connections need attention";
       readonly monthlyBudgetReachedCount: "Monthly budget reached · {count, number} {count, plural, one {keyword} other {keywords}}";
       readonly newestFirst: "Newest first";
       readonly noPosition: "No position";
@@ -4834,6 +4988,8 @@ export type CoreMessages = {
       readonly provider: "Provider";
       readonly providerChain: "Provider chain";
       readonly providerChainExhausted: "{count, number} failed after the provider chain was exhausted.";
+      readonly providerConnectionPaused: "Provider connection paused";
+      readonly providerConnectionPausedLower: "provider connection paused";
       readonly providerError: "Provider error";
       readonly providerRateLimiting: "{provider} is rate-limiting.";
       readonly providers: "{count, number} {count, plural, one {provider} other {providers}}";
@@ -5086,7 +5242,7 @@ export type CoreMessages = {
         readonly keywords: "Keywords";
         readonly notRanked: "Not ranked in the top {depth, number} yet.";
         readonly oneKeyword: "1 keyword";
-        readonly openIntegrations: "Open integrations";
+        readonly openIntegrations: "Open providers";
         readonly processing: "The check is processing now.";
         readonly providerAuth: "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
         readonly providerCapacityUnavailable: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
@@ -5675,19 +5831,19 @@ export type CoreMessages = {
         readonly sync: {
           readonly action: "Fetch analytics";
           readonly empty: "Reports fetched. No matching query or page data was returned for the tracked keywords.";
-          readonly failed: "Analytics could not be fetched. Try again or check the connection in Integrations.";
+          readonly failed: "Analytics could not be fetched. Try again or check the connection in Providers.";
           readonly hint: "Fetches reports from this project’s connected analytics sources. Provider reporting delays still apply.";
-          readonly integrations: "Manage integrations";
-          readonly partial: "Some sources refreshed, but others could not finish. Available results are shown below. Check Integrations for details.";
+          readonly integrations: "Manage providers";
+          readonly partial: "Some sources refreshed, but others could not finish. Available results are shown below. Check Providers for details.";
           readonly pending: "Fetching analytics…";
           readonly rateLimited: "The analytics provider’s request limit was reached. Try again later.";
-          readonly reconnect: "An analytics source needs to be reconnected in Integrations.";
+          readonly reconnect: "An analytics source needs to be reconnected in Providers.";
           readonly scope: "Project data · all countries and devices";
           readonly sourceActive: "Active connection";
           readonly sourceInactive: "No active connection";
           readonly sources: "Analytics sources";
           readonly title: "Analytics";
-          readonly unavailable: "No connected source was available to fetch analytics. Check Integrations.";
+          readonly unavailable: "No connected source was available to fetch analytics. Check Providers.";
           readonly updated: "Analytics refreshed. Available results are shown below.";
         };
         readonly trailingDays: "Trailing {days, number} days";
@@ -6371,7 +6527,7 @@ export type CoreMessages = {
           readonly estimatedCostValue: "~{cost, number, ::currency/USD}";
           readonly keywords: "Keywords";
           readonly keywordsValue: "{count, plural, one {# keyword} other {# keywords}}";
-          readonly openIntegrations: "Open integrations";
+          readonly openIntegrations: "Open providers";
           readonly providerAccountRestricted: "The provider has restricted access to this account. Review the account in the provider dashboard or contact their support, then try again.";
           readonly providerAuth: "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
           readonly providerBilling: "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.";
@@ -6597,7 +6753,7 @@ export type CoreMessages = {
         readonly choose: "Choose keywords";
         readonly connection: "Connection";
         readonly connectionLabel: "DataForSEO connection";
-        readonly description: "Uses your DataForSEO account. Results are cached for 12 hours.";
+        readonly description: "Uses your DataForSEO account. Cached results can be reopened for free until they expire.";
         readonly import: "Import from DataForSEO";
         readonly importFor: "Import keywords {domain} ranks for";
         readonly lookupFailed: "Ranked-keyword lookup failed. Try again.";
@@ -6637,7 +6793,7 @@ export type CoreMessages = {
         readonly chooseSource: "Choose a source. Selected keywords go into Manual for review before you add them.";
         readonly failed: "Could not load keyword sources.";
         readonly loading: "Loading sources...";
-        readonly manageIntegrations: "Manage integrations";
+        readonly manageIntegrations: "Manage providers";
         readonly rankedDescription: "Keywords {domain} already ranks for. Uses your provider balance.";
         readonly rankedProvider: "DataForSEO";
         readonly retry: "Try again";
@@ -6698,8 +6854,8 @@ export type CoreMessages = {
         readonly noKeywordsTitle: "No keywords yet";
         readonly noQueries: "No queries observed yet - new Search Console properties can take a few days.";
         readonly noSource: "No Search Console source is connected.";
-        readonly openIntegrations: "Open Integrations";
-        readonly providerMissing: "You can add keywords now. Choose a data source in <providerLink>Integrations</providerLink> when you are ready to run checks.";
+        readonly openIntegrations: "Open Providers";
+        readonly providerMissing: "You can add keywords now. Choose a data source in <providerLink>Providers</providerLink> when you are ready to run checks.";
         readonly reconnectGoogle: "Reconnect your Google account";
         readonly searchConsoleAuthorizationExpired: "Google authorization has expired.";
         readonly startMarketDescription: "A market is the country, location and language you rank in. Add one with your first keywords.";
@@ -6949,7 +7105,7 @@ export type CoreMessages = {
       readonly title: "Keyword Research";
     };
     readonly pricing: {
-      readonly cache: "Repeat within 12 hours";
+      readonly cache: "Free while cached";
       readonly docs: "Read the pricing docs";
       readonly footer: "Charged by DataForSEO to your own account. Prices are per seed keyword.{seedCount, plural, =1 {} other { {seedCount, number} seeds are charged {seedCount, number} times.}}";
       readonly free: "free from cache";
@@ -6963,6 +7119,7 @@ export type CoreMessages = {
       readonly expired: "cache expired";
       readonly freeFor: "cached, free for {duration}";
       readonly remove: "Remove {seed} from recent searches";
+      readonly saved: "Saved search";
       readonly section: "Recent searches";
     };
     readonly results: {
@@ -7026,10 +7183,10 @@ export type CoreMessages = {
       readonly budgetBlockedTooltip: "Fresh lookups are disabled until the monthly provider budget resets. Cached recent searches remain available.";
       readonly budgetDescription: "Fresh provider lookups resume {resumeLabel}. Cached recent searches remain free and available. <docs>How budgets work</docs>";
       readonly budgetTitle: "Monthly provider budget reached";
-      readonly cacheCharged: "This lookup was charged once. Repeats within 12 hours are free.";
-      readonly cacheFree: "Served from the 12-hour cache, this repeat was free.";
+      readonly cacheCharged: "This lookup was charged once. Reopening the cached result is free until it expires.";
+      readonly cacheFree: "Served from cache, this repeat was free.";
       readonly connectAction: "Choose a data source";
-      readonly connectDescription: "Choose a supported data source in Integrations to run keyword research.";
+      readonly connectDescription: "Choose a supported data source in Providers to run keyword research.";
       readonly connectTitle: "Choose a data source";
       readonly defaultResume: "next month";
       readonly editSearch: "Edit search";
@@ -7037,18 +7194,18 @@ export type CoreMessages = {
       readonly emptySeedHint: "Broaden a seed: shorter, more generic phrasing";
       readonly emptyTitle: "No ideas found for these seeds in {scopeLabel}";
       readonly emptyTitleGeneric: "No keyword ideas found";
-      readonly failureAdvice: "If this keeps happening, check the provider status in <integrations>Integrations</integrations>.";
+      readonly failureAdvice: "If this keeps happening, check the provider status in <integrations>Providers</integrations>.";
       readonly failureCharged: "The provider reported a charge before it failed - check your DataForSEO dashboard.";
       readonly failureNotCharged: "You weren't charged for the failed attempt.";
       readonly failureRequest: "The request failed before any results came back.";
       readonly failureTitle: "That lookup did not go through";
-      readonly idleBulletCache: "Results cached for 12 hours, repeat lookups are free";
+      readonly idleBulletCache: "Cached results can be reopened for free until they expire.";
       readonly idleBulletGrouping: "Grouped variants and already-tracked phrases marked";
       readonly idleBulletProvider: "Runs on your own DataForSEO key";
       readonly idleTitle: "Research starts with a seed";
       readonly loadingAria: "Research loading";
       readonly reauthAction: "Reconnect DataForSEO";
-      readonly reauthDescription: "Reconnect the selected data source in Integrations to resume keyword research.";
+      readonly reauthDescription: "Reconnect the selected data source in Providers to resume keyword research.";
       readonly reauthTitle: "DataForSEO needs to be reconnected";
       readonly retry: "Retry";
       readonly retryCached: "Retry free, cached";
@@ -7190,6 +7347,13 @@ export type CoreMessages = {
       readonly schedules: "Schedules";
     };
     readonly rankRuns: {
+      readonly accountBlock: {
+        readonly accounting_review: "{provider}: not sent pending accounting review.";
+        readonly not_verified: "{provider}: not sent because the account was not verified.";
+        readonly provider_account_restricted: "{provider}: not sent because access was restricted.";
+        readonly provider_auth: "{provider}: not sent because credentials were rejected.";
+        readonly provider_billing: "{provider}: not sent because billing or capacity needs attention.";
+      };
       readonly actions: {
         readonly connectionSettings: "Connection settings";
         readonly editBudget: "Edit budget";
@@ -7213,7 +7377,7 @@ export type CoreMessages = {
         readonly marketInactive: "Market not active";
         readonly marketInactiveDescription: "This keyword's market is paused, so the check was stopped before it cost anything.";
         readonly noProvider: "No working provider";
-        readonly noProviderDescription: "Review the selected data source in Integrations to start this run.";
+        readonly noProviderDescription: "Review the selected data source in Providers to start this run.";
         readonly providerUnavailable: "Provider unavailable";
         readonly providerUnavailableDescription: "The provider isn't reachable right now. The run starts on its own once it reconnects.";
         readonly reviewUsage: "Review budget and usage";
@@ -7288,7 +7452,7 @@ export type CoreMessages = {
           readonly detail: "No provider was available for this check.";
           readonly label: "No provider";
         };
-        readonly openIntegrations: "Open Integrations";
+        readonly openIntegrations: "Open Providers";
         readonly primary_provider_not_dataforseo: {
           readonly detail: "Scheduled queued checks run only when DataForSEO is the primary provider.";
           readonly label: "Queued checks need DataForSEO";
@@ -7300,6 +7464,10 @@ export type CoreMessages = {
         readonly project_read_only: {
           readonly detail: "This project is read-only, so the check was deferred.";
           readonly label: "Project is read-only";
+        };
+        readonly provider_account_blocked: {
+          readonly detail: "This check was not sent because the provider account needs attention.";
+          readonly label: "Provider account needs attention";
         };
         readonly queued_dataforseo_disabled: {
           readonly detail: "Scheduled DataForSEO checks are turned off on this installation.";
@@ -7439,6 +7607,16 @@ export type CoreMessages = {
       readonly retryDeferred: "Retry {count, number} deferred {count, plural, one {target} other {targets}}";
       readonly retryFailed: "Retry {count, number} failed {count, plural, one {target} other {targets}}";
       readonly retryNow: "Retry now";
+      readonly retryReview: {
+        readonly cancel: "Cancel";
+        readonly confirm: "Retry these checks";
+        readonly desktop: "Desktop";
+        readonly loadFailed: "Could not load the checks. Close this dialog and try again.";
+        readonly mobile: "Mobile";
+        readonly targets: "{count, plural, one {# check to retry} other {# checks to retry}}";
+        readonly title: "Review deferred checks";
+        readonly warning: "Each retry is a new paid attempt and is subject to the current provider account state. A blocked connection may defer again.";
+      };
       readonly retryRun: "Retry run";
       readonly run: "Run";
       readonly runCount: "{count, plural, one {# run} other {# runs}}";
@@ -7455,6 +7633,7 @@ export type CoreMessages = {
       readonly scheduleActor: "Schedule";
       readonly scheduled: "Scheduled";
       readonly scheduledRun: "Scheduled run";
+      readonly sealedAccountPaused: "The approved provider is paused. Start a new run to review a fresh cost preview before paying for another attempt.";
       readonly selection: "Selection";
       readonly selectionKinds: {
         readonly all: "All tracked keywords";
@@ -7472,6 +7651,7 @@ export type CoreMessages = {
       readonly skipped: "Skipped";
       readonly skippedOrBlocked: "Skipped or blocked";
       readonly started: "Started";
+      readonly startNewRun: "Start a new run";
       readonly startRun: "Run now";
       readonly status: "Status";
       readonly summary: {
@@ -8360,7 +8540,7 @@ export type CoreMessages = {
       };
       readonly navigation: "Search Console views";
       readonly next: "Next";
-      readonly noConnection: "Connect a Search Console property in project integrations to view page indexing.";
+      readonly noConnection: "Connect a Search Console property in project providers to view page indexing.";
       readonly noHistory: "No recorded changes.";
       readonly noInspectionResults: "No inspection results yet. {total, number} URLs available.";
       readonly noInspectionTargets: "No URLs to inspect yet.";
@@ -8646,11 +8826,15 @@ export type CoreMessages = {
         readonly projectTransferStarted: "Project transfer started";
         readonly projectUpdated: "Project updated";
         readonly projectWebsiteUpdated: "Project website updated";
+        readonly providerAccountBlocked: "Provider account paused";
         readonly providerAllocationUpdated: "Provider allocation updated";
         readonly providerConnected: "Provider connected";
         readonly providerCostUpdated: "Provider cost updated";
         readonly providerDisconnected: "Provider disconnected";
+        readonly providerPaymentRequired: "Provider payment required";
         readonly providerRateUpdated: "Provider rate updated";
+        readonly providerRecoveryAccountChecked: "Provider account checked";
+        readonly providerRecoveryAccountCheckStarted: "Provider account check started";
         readonly providerSettingsUpdated: "Provider settings updated";
         readonly providerSourceChanged: "Provider source changed";
         readonly providerSourceChangedDetail: "Provider source changed: {provider} → {source}";
@@ -9468,8 +9652,8 @@ export type CoreMessages = {
       readonly results: "{count, plural, one {# setting found} other {# settings found}}";
       readonly resultsLabel: "Matching settings";
       readonly sections: {
-        readonly providerConnections: "Integrations / Connections";
-        readonly providerUsage: "Integrations / Usage";
+        readonly providerConnections: "Providers / Connections";
+        readonly providerUsage: "Providers / Usage";
       };
     };
     readonly sections: {
@@ -9485,6 +9669,7 @@ export type CoreMessages = {
       readonly notifications: "Notifications";
       readonly team: "Team";
       readonly tracking: "Tracking";
+      readonly usage: "Usage";
     };
   };
   readonly projectSettingsTeam: {
@@ -9764,6 +9949,46 @@ export type CoreMessages = {
     };
   };
   readonly projectSettingsUsage: {
+    readonly limits: {
+      readonly apiHelp: "Requests from the API, MCP, SDK and CLI. Protects against runaway agents.";
+      readonly appHelp: "Checks you start in the app and scheduled runs.";
+      readonly credits: "Credits";
+      readonly creditsScope: "Bisibility Credits spent by this project";
+      readonly creditsTag: "Credits";
+      readonly edit: "Edit";
+      readonly editLimitFor: "Edit {surface} limit for {provider}";
+      readonly left: "{amount} left";
+      readonly limitReached: "Limit reached";
+      readonly nearLimit: "Near limit";
+      readonly next: "Next";
+      readonly noLimit: "No limit";
+      readonly noMatches: "No connections match these filters.";
+      readonly noProviderLimitOwn: "No provider limit. Spend is capped by your provider account.";
+      readonly noProviders: "No paid providers are connected to this project.";
+      readonly ownKeys: "Your keys";
+      readonly ownKeysScope: "Spend on your own provider accounts";
+      readonly ownKeyTag: "Your key";
+      readonly pageRange: "{from}-{to} of {total}";
+      readonly partial: "Some readings unavailable";
+      readonly previous: "Previous";
+      readonly projectDescription: "Monthly caps for {project}. Paid work stops when a limit is reached.";
+      readonly projectTitle: "Project limit";
+      readonly projectTitlePlural: "Project limits";
+      readonly providersDescription: "Optional monthly caps per provider, set separately for the app and for API and agents.";
+      readonly providersTitle: "Provider limits";
+      readonly resets: "Resets {date}";
+      readonly searchProviders: "Find a provider or account";
+      readonly setLimit: "Set limit";
+      readonly setLimitFor: "Set {surface} limit for {provider}";
+      readonly spentTitle: "Spent this month";
+      readonly unavailable: "Limits are unavailable right now. Try again in a moment.";
+      readonly unknown: "Unknown";
+      readonly usagePeriod: "{month} · resets {date}";
+      readonly used: "{used} used";
+      readonly usedEstimated: "{used} used · estimated";
+      readonly usedOf: "{used} of {limit}";
+      readonly usedOfEstimated: "{used} of {limit} · estimated";
+    };
     readonly meter: {
       readonly asOf: "Read at {date} (UTC). This timestamp does not confirm provider billing freshness.";
       readonly certaintyValue: {
@@ -9860,7 +10085,7 @@ export type CoreMessages = {
         readonly perMonth: "Budget / month";
         readonly placeholder: "No budget";
         readonly positiveBudget: "Enter a positive monthly budget.";
-        readonly positiveUnits: "Enter a positive number of searches.";
+        readonly positiveUnits: "Enter a positive number.";
         readonly primary: "Primary";
         readonly programmaticBudget: "API & agents";
         readonly programmaticBudgetField: "{provider} API, MCP and SDK budget";
@@ -9877,8 +10102,6 @@ export type CoreMessages = {
         readonly saved: "Saved";
         readonly saveError: "Provider budget could not be saved.";
         readonly saving: "Saving";
-        readonly searches: "{count, number} searches";
-        readonly searchesAdornment: "searches";
         readonly sectionLabel: "{connection}: {source}, {surface}";
         readonly sourceCredits: "Credits";
         readonly sourceOwn: "Your keys";
@@ -9891,7 +10114,7 @@ export type CoreMessages = {
         readonly useProgrammaticCreditBalance: "Use credit balance for API & agents";
         readonly useProgrammaticProviderBalance: "Use provider balance for API & agents";
         readonly useProviderBalance: "Use provider balance";
-        readonly wholeUnits: "Enter a whole number of searches.";
+        readonly wholeUnits: "Enter a whole number.";
       };
       readonly connectionSettings: "Connection settings";
       readonly description: "Set how much each provider can spend in this project each month.";
@@ -9918,7 +10141,7 @@ export type CoreMessages = {
       readonly "3": "Links / images";
       readonly "4": "Issues";
     };
-    readonly cost: "Up to 15 seconds · No provider credits · Results cached for 5 minutes";
+    readonly cost: "Up to 15 seconds · No provider credits · Results reused according to project cache settings";
     readonly description: "Check HTTP, metadata, headings, indexability, links and image alt text for {domain}.";
     readonly descriptionLabel: "Meta description";
     readonly details: "Page details";
@@ -10203,7 +10426,7 @@ export type CoreMessages = {
       };
       readonly banner: {
         readonly ariaLabel: "Analytics consent";
-        readonly body: "We count visits without cookies. Optional analytics cookies and redacted replays help us improve bisibility.";
+        readonly body: "We count visits and product actions, such as sign-ups and setup steps, without cookies, a persistent profile or a link to your account. Optional analytics cookies and redacted replays help us improve bisibility.";
         readonly saveError: "Your choice could not be saved. Choices you turned off remain off. Try again.";
         readonly update: "Redacted replays can include app screens. Review your choice. Analytics stays unchanged.";
       };
@@ -10225,7 +10448,7 @@ export type CoreMessages = {
           readonly body: "Pages and setup steps you use, linked across visits with an analytics cookie.";
           readonly title: "Usage analytics";
         };
-        readonly visitCounts: "If you reject optional analytics, we still count visits without cookies or a persistent profile.";
+        readonly visitCounts: "If you reject optional analytics, we still count visits and product actions, such as sign-ups and setup steps, without cookies, a persistent profile or a link to your account.";
       };
       readonly title: "Privacy choices";
     };
@@ -10836,6 +11059,10 @@ export type CoreMessages = {
           readonly description: "Read stored connection and provider information; displaying it does not launch a check.";
           readonly label: "Data source";
         };
+        readonly domain_rating: {
+          readonly description: "Daily backlink authority history for the project domain. Display settings do not change collection.";
+          readonly label: "Domain Rating";
+        };
         readonly local_business_results: {
           readonly description: "Businesses with a map in regular Google results, for an explicitly selected confirmed branch.";
           readonly label: "Local Google results";
@@ -10870,6 +11097,44 @@ export type CoreMessages = {
         };
       };
       readonly widgetUnavailable: "This section's stored report is unavailable.";
+    };
+    readonly domainRating: {
+      readonly attribution: "Domain Rating by Ahrefs";
+      readonly change: "{value} over this period";
+      readonly chartLabel: "Domain Rating history for {domain}";
+      readonly connect: "Connect Ahrefs";
+      readonly daily: "One check per day";
+      readonly date: "Date";
+      readonly days: "{count} days";
+      readonly definition: "The strength of your backlink profile on a logarithmic scale from 0 to 100.";
+      readonly empty: "Your Domain Rating history starts here";
+      readonly emptyHelp: "Connect Ahrefs to record your first measurement. Daily checks build your history automatically.";
+      readonly enable: "Track Domain Rating daily";
+      readonly failure: "The last check failed. Your history is preserved; the next check runs tomorrow.";
+      readonly history: "Measurement history";
+      readonly hosted: "Managed connection";
+      readonly lastSuccess: "Last successful check: {date}";
+      readonly latest: "Latest rating";
+      readonly manageConnection: "Manage connection";
+      readonly missing: "No measurement";
+      readonly noDomain: "Add a project domain to start tracking.";
+      readonly noSource: "No Ahrefs connection";
+      readonly noValue: "No measurement yet";
+      readonly own: "Your Ahrefs key";
+      readonly paused: "Tracking paused";
+      readonly range: "History range";
+      readonly rating: "Rating";
+      readonly save: "Save";
+      readonly saved: "Tracking settings saved.";
+      readonly saveError: "Could not save tracking settings. Try again.";
+      readonly settings: "Tracking settings";
+      readonly single: "First observation";
+      readonly title: "Domain Rating";
+      readonly trackingHelp: "Record one Ahrefs Domain Rating measurement for this project domain each day (UTC). Turning this off keeps your history.";
+      readonly trackingTitle: "Domain Rating tracking";
+      readonly unchanged: "No change over this period";
+      readonly unknown: "No check completed yet";
+      readonly waiting: "Waiting for the first daily check. Your connection is ready.";
     };
     readonly durationUnits: {
       readonly days: "{count, plural, one {# day} other {# days}}";
@@ -11058,7 +11323,7 @@ export type CoreMessages = {
       };
       readonly includingArchived: "Include archived monitors";
       readonly keywords: "Keywords";
-      readonly launchUnavailable: "Running checks from this monitor is not available yet. Review integrations for provider availability.";
+      readonly launchUnavailable: "Running checks from this monitor is not available yet. Review providers for provider availability.";
       readonly manageSubjects: "Manage business locations";
       readonly manual: {
         readonly chooseConnection: "Choose a connection";
@@ -11079,7 +11344,7 @@ export type CoreMessages = {
         readonly keyword: "Keyword";
         readonly loadingRecorded: "Loading saved status…";
         readonly nativeCents: "US cents";
-        readonly noConnection: "Connect a supported provider in Integrations to run this monitor.";
+        readonly noConnection: "Connect a supported provider in Providers to run this monitor.";
         readonly noRun: "No saved run yet.";
         readonly point: "Point";
         readonly pointNumber: "Point {number}";
@@ -11110,7 +11375,7 @@ export type CoreMessages = {
         readonly title: "Run this monitor";
         readonly unavailable: {
           readonly capability_unregistered: "This local search capability is not registered. Choose a supported configuration.";
-          readonly connection_unavailable: "This connection is unavailable. Review it in Integrations.";
+          readonly connection_unavailable: "This connection is unavailable. Review it in Providers.";
           readonly pricing_unavailable: "The complete provider charge is unknown. A paid run cannot start.";
           readonly unsupported: "The provider does not support this monitor configuration. Edit its search settings.";
           readonly worker_unavailable: "The execution worker is disabled. Enable the worker before queuing a run.";
@@ -11306,7 +11571,7 @@ export type CoreMessages = {
         readonly selection: "Original points";
         readonly title: "Retry selected failed points";
       };
-      readonly reviewIntegrations: "Review integrations";
+      readonly reviewIntegrations: "Review providers";
       readonly revision: "Revision";
       readonly revisionNumber: "Revision {revision}";
       readonly row: "Row";
@@ -11929,15 +12194,15 @@ export type CoreMessages = {
       readonly title: "Page not found";
     };
     readonly providerAccess: {
-      readonly action: "Open Integrations";
+      readonly action: "Open Providers";
       readonly askAdmin: "Ask a project admin to choose a data source before checks can start.";
       readonly connect: "Choose a data source to use these fields.";
       readonly connectAction: "Choose a data source";
-      readonly emptyDescription: "Choose a supported data source in Integrations to run a search.";
+      readonly emptyDescription: "Choose a supported data source in Providers to run a search.";
       readonly emptyTitle: "Choose a data source";
       readonly reconnect: "Reconnect the selected data source to use these fields.";
       readonly reconnectAction: "Reconnect provider";
-      readonly reconnectDescription: "Reconnect the selected data source in Integrations before running another search.";
+      readonly reconnectDescription: "Reconnect the selected data source in Providers before running another search.";
       readonly reconnectTitle: "Reconnect the selected data source";
       readonly supported: "Supported providers: {providers}.";
       readonly unavailable: "No supported data source is available for this feature.";
@@ -11980,9 +12245,9 @@ export type CoreMessages = {
       readonly measurementPolicyUnsupported: "Measurement policy no longer matches the current adapters. Review and configure it again.";
       readonly nextScheduledCheck: "Next scheduled check";
       readonly noProvider: "No provider";
-      readonly noProviderBlocked: "Choose a data source in Integrations before running these checks.";
+      readonly noProviderBlocked: "Choose a data source in Providers before running these checks.";
       readonly nothingToCheck: "No keywords are available to check in this scope.";
-      readonly openIntegrations: "Open Integrations";
+      readonly openIntegrations: "Open Providers";
       readonly openRun: "Open run";
       readonly overlapCancelHint: "Cancel that run, or keep both and pay twice for these positions.";
       readonly overlapKeepHint: "Starting this run pays twice for these positions.";
@@ -12285,13 +12550,20 @@ export type CoreMessages = {
         readonly unknown: "Unknown";
         readonly unknownOperations: "Unknown operations";
       };
+      readonly unitCounts: {
+        readonly apiUnits: "{count, plural, one {API unit} other {API units}}";
+        readonly searches: "{count, plural, one {search} other {searches}}";
+        readonly units: "{count, plural, one {billing unit} other {billing units}}";
+      };
       readonly units: {
+        readonly apiUnits: "API units";
         readonly budget_cents: "cents";
         readonly cents: "cents";
         readonly customer_cents: "Credits";
         readonly paid_attempts: "Paid attempts";
         readonly requests: "Requests";
-        readonly units: "Units";
+        readonly searches: "Searches";
+        readonly units: "Billing units";
       };
     };
   };
@@ -12468,7 +12740,7 @@ export type CoreMessages = {
         readonly importFromAnotherInstance: "Import from another instance";
         readonly install: "Install";
         readonly instanceAdministration: "Instance administration";
-        readonly integrations: "Integrations";
+        readonly integrations: "Providers";
         readonly keywordDetails: "Keyword details";
         readonly keywordResearch: "Keyword Research";
         readonly markets: "Markets";
@@ -12539,7 +12811,7 @@ export type CoreMessages = {
         readonly dashboard: "Dashboard";
         readonly domainOverview: "Domain Overview";
         readonly install: "Install";
-        readonly integrations: "Integrations";
+        readonly integrations: "Providers";
         readonly keywordResearch: "Keyword Research";
         readonly markets: "Markets";
         readonly projectContext: "Project Context";
@@ -12554,6 +12826,15 @@ export type CoreMessages = {
       readonly menu: "Menu";
     };
     readonly notifications: {
+      readonly accountBlock: {
+        readonly billing: "Check the provider account payment or available capacity in Providers.";
+        readonly body: "Check the provider account in Providers. Your existing schedule is saved.";
+        readonly credentials: "Ask a project owner to update the provider credentials in Providers.";
+        readonly resolvedBody: "Future checks can use this connection, subject to any remaining accounting hold. Missed checks are not retried automatically.";
+        readonly resolvedTitle: "{provider} account verified";
+        readonly restricted: "Check the provider account permissions in Providers.";
+        readonly title: "{provider} connection paused";
+      };
       readonly allNotifications: "All notifications";
       readonly allTab: "All";
       readonly empty: "No notifications";
@@ -12622,7 +12903,7 @@ export type CoreMessages = {
           readonly budgetWithoutAmounts: "Usage needs review. Check budget and unresolved accounting before trying again.";
           readonly keywordArchived: "This keyword was archived before the check started, so it was stopped before it cost anything.";
           readonly marketInactive: "This keyword's market is paused, so the check was stopped before it cost anything.";
-          readonly noProvider: "Review the selected data source in Integrations to start this run.";
+          readonly noProvider: "Review the selected data source in Providers to start this run.";
           readonly providerUnavailable: "The provider isn't reachable right now. The run starts on its own once it reconnects.";
           readonly waiting: "This run is waiting to start. It will continue automatically when it can.";
           readonly workerCloud: "The background worker isn't reachable right now. The run starts on its own once it reconnects.";
@@ -12721,6 +13002,9 @@ export type CoreMessages = {
       readonly find: "Find project";
       readonly findPlaceholder: "Find project...";
       readonly keywordCount: "{count, plural, =0 {# keywords} one {# keyword} other {# keywords}}";
+      readonly limitHelp: "Your account can own up to {limit, plural, one {# project} other {# projects}}. Click to contact support and raise the limit, or delete a project you no longer need.";
+      readonly limitReached: "{limit, plural, one {# project} other {# projects}} limit reached";
+      readonly limitSupportMessage: "Hi, I'd like to raise my project limit. My account can own up to {limit, plural, one {# project} other {# projects}}.";
       readonly newProject: "New project";
       readonly noData: "{count, number} queued - no data";
       readonly project: "Project";

@@ -146,10 +146,13 @@ export function runTargetTableColumns({
       size: 108,
     },
     {
-      accessorFn: (item) => item.rankCheck?.position ?? null,
+      accessorFn: (item) =>
+        item.status === "deferred" ? null : (item.rankCheck?.position ?? null),
       cell: ({ row }) =>
-        row.original.rankCheck?.evidenceProjection?.result === "partial" ||
-        row.original.rankCheck?.evidenceProjection?.result === "recovered" ? (
+        row.original.status === "deferred" ? (
+          t("unavailable")
+        ) : row.original.rankCheck?.evidenceProjection?.result === "partial" ||
+          row.original.rankCheck?.evidenceProjection?.result === "recovered" ? (
           <RankResultMarker
             evidence={row.original.rankCheck.evidenceProjection}
             position={row.original.rankCheck.position}
@@ -167,12 +170,7 @@ export function runTargetTableColumns({
     {
       accessorFn: (item) => item.payment?.charge.value ?? "",
       cell: ({ row }) =>
-        row.original.status === "deferred" && !row.original.payment ? (
-          <DeferralReasonText
-            code={row.original.deferralCode ?? "unknown"}
-            projectRef={projectRef}
-          />
-        ) : (
+        row.original.status === "deferred" && !row.original.payment ? null : (
           <PaymentChargeLine payment={row.original.payment} />
         ),
       enableSorting: false,
@@ -188,7 +186,23 @@ export function runTargetTableColumns({
       accessorFn: (item) => runTargetNote(item, run, deploymentMode, t, locale),
       cell: ({ row }) => {
         const itemNote = runTargetNote(row.original, run, deploymentMode, t, locale);
-        return (
+        const hasDetails = row.original.status === "deferred" || row.original.accountBlocks?.length;
+        return hasDetails ? (
+          <div className="text-[11.5px] leading-[1.4] text-fg-muted">
+            {itemNote ? <p className="m-0">{itemNote}</p> : null}
+            {row.original.status === "deferred" ? (
+              <DeferralReasonText
+                code={row.original.deferralCode ?? "unknown"}
+                projectRef={projectRef}
+              />
+            ) : null}
+            {row.original.accountBlocks?.map((block) => (
+              <p className="m-0" key={`${block.connectionId}:${block.reason}`}>
+                {t(`accountBlock.${block.reason}`, { provider: block.provider })}
+              </p>
+            ))}
+          </div>
+        ) : (
           <span className="block truncate text-[11.5px] text-fg-muted" title={itemNote}>
             {itemNote}
           </span>
@@ -198,8 +212,8 @@ export function runTargetTableColumns({
       header: t("targetPresentation.note"),
       id: "note",
       meta: { flex: 0.9, lockResize: true, title: t("targetPresentation.note") },
-      minSize: 176,
-      size: 200,
+      minSize: 320,
+      size: 360,
     });
   }
   return columns;
