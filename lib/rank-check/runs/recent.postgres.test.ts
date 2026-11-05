@@ -14,7 +14,7 @@ let locationId: string;
 describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("UI-7 PostgreSQL recent runs", () => {
   beforeAll(async () => {
     const user = await prisma.user.create({
-      data: { email: `${randomUUID()}@example.test`, publicId: makePublicId("usr"), name: "Tray" },
+      data: { email: `${randomUUID()}@example.com`, publicId: makePublicId("usr"), name: "Tray" },
     });
     userId = user.id;
     const project = await prisma.project.create({
@@ -22,7 +22,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("UI-7 PostgreSQL rec
         publicId: makePublicId("prj"),
         ownerId: userId,
         name: "Tray",
-        domain: "example.test",
+        domain: "example.com",
       },
     });
     projectId = project.id;
@@ -180,6 +180,22 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)("UI-7 PostgreSQL rec
     } finally {
       vi.useRealTimers();
     }
+  });
+  it("keeps an expired schedule blocker in the realtime projection", async () => {
+    const row = await run(0, {
+      outcome: "deferred",
+      blockedReason: "occurrence_expired",
+      expiryBlockedReason: "provider_account_blocked",
+    });
+    expect(await readRecentRunOperations(projectId, userId, now)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: row.publicId,
+          blockedReason: "occurrence_expired",
+          expiryBlockedReason: "provider_account_blocked",
+        }),
+      ]),
+    );
   });
   it("reads recent operations without activation configuration", async () => {
     const row = await run();

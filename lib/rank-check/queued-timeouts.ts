@@ -1,6 +1,7 @@
 // Sandbox-safe constants shared by Temporal workflows, activities, and provider code.
 export const QUEUED_PERSISTENCE_LEASE_MS = 3 * 60_000;
 export const QUEUED_RESULT_GET_TIMEOUT_MS = 45_000;
+export const QUEUED_REDIRECT_TIMEOUT_MS = 60_000;
 export const QUEUED_RESULT_DB_MAX_WAIT_MS = 10_000;
 export const QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS = 30_000;
 export const QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS = 5_000;
@@ -12,6 +13,11 @@ export const QUEUED_RESULT_ATTEMPT_BUDGET_MS =
   QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS +
   QUEUED_RESULT_PROCESSING_ALLOWANCE_MS;
 export const QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS = 2 * 60_000;
+// A conversion starts only when this much of the activity remains after its own timeout:
+// the progress write and the lease release, each with its release transaction budget.
+export const QUEUED_REDIRECT_ACTIVITY_RESERVE_MS =
+  2 * (QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS + QUEUED_RESULT_RELEASE_DB_TRANSACTION_TIMEOUT_MS) +
+  5_000;
 export const QUEUED_RESULT_ACTIVITY_HEARTBEAT_TIMEOUT_MS = 15_000;
 export const QUEUED_RESULT_COMPLETE_OWNERSHIP_BUDGET_MS = Math.max(
   QUEUED_RESULT_DB_MAX_WAIT_MS +

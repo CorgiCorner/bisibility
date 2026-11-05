@@ -14,12 +14,14 @@ type RunningWorker = { run: () => Promise<unknown> };
 type WelcomeIntentRuntimeOptions = {
   connectionOptions: TemporalConnectionOptions;
   deliveryWorker: RunningWorker;
+  additionalWorkers?: RunningWorker[];
   worker: RunningWorker;
 };
 
 export async function runWelcomeIntentRuntime({
   connectionOptions,
   deliveryWorker,
+  additionalWorkers = [],
   worker,
 }: WelcomeIntentRuntimeOptions) {
   const webUiUrl = temporalWebUiUrl(connectionOptions);
@@ -49,7 +51,11 @@ export async function runWelcomeIntentRuntime({
   const workerExtensions = startWorkerExtensions();
   const recoveryProcessor = startRecoveryProcessor();
   try {
-    await Promise.all([worker.run(), deliveryWorker.run()]);
+    await Promise.all([
+      worker.run(),
+      deliveryWorker.run(),
+      ...additionalWorkers.map((current) => current.run()),
+    ]);
   } finally {
     clearInterval(livenessTimer);
     await Promise.all([

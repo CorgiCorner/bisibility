@@ -2,7 +2,7 @@ import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
-import { beginQueuedTaskUsageJournal } from "./queued-usage-journal";
+import { beginQueuedTaskUsageJournal, resumeSubmittedQueuedUsage } from "./queued-usage-journal";
 
 type LedgerRow = Record<string, unknown> & { id: string };
 
@@ -152,6 +152,79 @@ describe("beginQueuedTaskUsageJournal", () => {
     );
     expect(ledger.rows.find((row) => row.correlationId === "qtask_2")).toEqual(
       expect.objectContaining({ costCents: 0, measurementStatus: "unknown" }),
+    );
+  });
+
+  it("defers receipts that do not fit the remaining activity budget", async () => {
+    const ledger = fakeLedger();
+    const journal = await begin(ledger, 2);
+    let remaining = 1;
+
+    await expect(
+      journal.settle(
+        {
+          accepted: [
+            { correlationId: "qtask_1", costCents: 1.2, providerTaskId: "provider_1", tag: "t1" },
+            { correlationId: "qtask_2", costCents: 1.4, providerTaskId: "provider_2", tag: "t2" },
+          ],
+          failed: [],
+          unknown: [],
+        },
+        { allowsAnother: () => remaining-- > 0 },
+      ),
+    ).resolves.toEqual({ deferred: ["qtask_2"] });
+
+    expect(ledger.rows.find((row) => row.correlationId === "qtask_1")).toEqual(
+      expect.objectContaining({ measurementStatus: "recorded", providerRequestId: "provider_1" }),
+    );
+    expect(ledger.rows.find((row) => row.correlationId === "qtask_2")).toEqual(
+      expect.objectContaining({ measurementStatus: "unknown", providerRequestId: undefined }),
+    );
+  });
+
+  it("settles deferred receipts from retained proof without beginning another admission", async () => {
+    const ledger = fakeLedger();
+    const journal = await begin(ledger, 2);
+    const created = ledger.table.create.mock.calls.length;
+    await journal.settle(
+      {
+        accepted: [
+          { correlationId: "qtask_1", costCents: 1.2, providerTaskId: "provider_1", tag: "t1" },
+          { correlationId: "qtask_2", costCents: 1.4, providerTaskId: "provider_2", tag: "t2" },
+        ],
+        failed: [],
+        unknown: [],
+      },
+      { allowsAnother: () => false },
+    );
+
+    await expect(
+      resumeSubmittedQueuedUsage({
+        client: ledger.db,
+        connectionId: "connection_1",
+        projectId: "project_1",
+        tasks: [
+          { costCents: 1.2, id: "qtask_1", providerTaskId: "provider_1", state: "submitted" },
+          { costCents: 1.4, id: "qtask_2", providerTaskId: "provider_2", state: "submitted" },
+        ],
+      }),
+    ).resolves.toEqual({ deferred: [] });
+
+    expect(ledger.table.create).toHaveBeenCalledTimes(created);
+    expect(ledger.rows).toHaveLength(2);
+    expect(ledger.rows.find((row) => row.correlationId === "qtask_1")).toEqual(
+      expect.objectContaining({
+        costCents: 1.2,
+        measurementStatus: "recorded",
+        providerRequestId: "provider_1",
+      }),
+    );
+    expect(ledger.rows.find((row) => row.correlationId === "qtask_2")).toEqual(
+      expect.objectContaining({
+        costCents: 1.4,
+        measurementStatus: "recorded",
+        providerRequestId: "provider_2",
+      }),
     );
   });
 

@@ -39,6 +39,7 @@ for (const [, specifier] of deployMigration.matchAll(
   });
   assert(copied, `Final Docker runner must copy migration dependency ${dependency}`);
 }
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const historicalCloseoutOperator = "scripts/ops/closeout-historical-finances.ts";
 assert(
   runnerCopies.some(([, source, destination]) =>
@@ -47,7 +48,24 @@ assert(
   ),
   "Final Docker runner must package the historical financial closeout operator entrypoint",
 );
-const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+// The unknown-cost closeout also runs inside the worker image, which has no other ops scripts.
+const unknownCloseoutOperator = "scripts/ops/closeout-unknown-cost.ts";
+assert(
+  runnerCopies.some(([, source, destination]) =>
+    posix.normalize(source) === `/workspace/${unknownCloseoutOperator}` &&
+    posix.normalize(destination) === unknownCloseoutOperator,
+  ),
+  "Final Docker runner must package the unknown-cost closeout operator entrypoint",
+);
+for (const operator of [historicalCloseoutOperator, unknownCloseoutOperator])
+  assert(
+    workerDockerfile.includes(`COPY --from=worker-build /app/${operator} ./${operator}`),
+    `Worker image must package ${operator}`,
+  );
+assert(
+  packageJson.scripts?.["db:metering:closeout-unknown"]?.endsWith(` ${unknownCloseoutOperator}`),
+  "db:metering:closeout-unknown must run the unknown-cost closeout operator",
+);
 // The RUN may carry BuildKit flags such as a --mount cache; the guard is about what the
 // closure installs, not how the layer is built.
 const seedCliInstall =

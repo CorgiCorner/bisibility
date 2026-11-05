@@ -193,9 +193,16 @@ export async function getRankCheckRun(projectId: string, publicId: string) {
     row.blockedReason === "budget_exhausted" ? await getRequestMonthlySpendCents(projectId) : null,
   );
   const ledger = ledgerActuals.get(row.id);
+  const childRuns = await prisma.rankCheckRun.findMany({
+    where: { projectId, parentRunId: row.id, deletedAt: null },
+    orderBy: [{ createdAt: "desc" }, { publicId: "desc" }],
+    select: { publicId: true, parentRelation: true },
+  });
   return {
+    childRuns: childRuns ?? [],
     ...(await rankCheckRunReadModel(row, skippedBy.get(row.publicId) ?? null, budget)),
     costCents: ledgerActualCostCents(ledger, row.costCents),
+    executedProviders: [...new Set((usageGroups.get(row.id) ?? []).map((group) => group.provider))],
     selectionSpec: row.selectionSpec,
     usage: runUsage(
       { ...row, startedTargets: row._count.items },

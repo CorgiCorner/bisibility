@@ -256,13 +256,10 @@ export const organicResultGoldenFixtures: OrganicResultGoldenFixture[] = [
     depth: 100,
     expected: {
       anomalyCodes: ["organic_result_unclassifiable"],
-      dataForSeoUrl: "https://example.com/usable",
-      outcome: "match",
-      position: 4,
-      serpApiUrl: "https://example.com/usable",
-      urlKey: "example.com/usable",
+      outcome: "indeterminate",
+      position: null,
     },
-    name: "unclassifiable result is skipped when a usable result remains",
+    name: "unclassifiable result ahead of a usable result is indeterminate",
     serpApiResults: [
       { position: 1 },
       {

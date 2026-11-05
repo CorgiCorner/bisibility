@@ -5,9 +5,13 @@ import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { rankCheckBudgetAmounts } from "@/lib/metering/rank-check-budget-read";
 import { requireReadableProject } from "./_auth";
+import { projectConnectionNotice } from "./rank-check-run-deferral";
 import { getRequestPrimarySerpProvider } from "./workspace-request-data";
 
-export type CheckHealth = Awaited<ReturnType<typeof getCheckHealth>>;
+type LoadedCheckHealth = Awaited<ReturnType<typeof getCheckHealth>>;
+export type CheckHealth = Omit<LoadedCheckHealth, "connectionNotice"> & {
+  connectionNotice?: LoadedCheckHealth["connectionNotice"];
+};
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -87,7 +91,7 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   const now = options.now ?? new Date();
   const since = new Date(now.getTime() - DAY_MS);
   const { project } = await requireReadableProject(projectId);
-  const [reading, stats, provider] = await Promise.all([
+  const [reading, stats, provider, connectionNotice] = await Promise.all([
     rankCheckBudgetAmounts(project.id, now),
     loadCheckHealthStats(
       project.id,
@@ -95,6 +99,7 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
       new Date(now.getTime() - RECENT_CHECK_FAILURE_WINDOW_MS),
     ),
     getRequestPrimarySerpProvider(project.id),
+    projectConnectionNotice(project.id),
   ]);
   const { capCents, reservedCents, spentCents } = reading;
   const configuredCost =
@@ -121,6 +126,7 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
         (reading.limited && spentCents + reservedCents >= capCents),
       spentCents,
     },
+    connectionNotice,
     currentFailures: {
       count: stats.currentFailedCount ?? 0,
       latestCheckId: stats.latestCurrentFailedCheckId ?? null,

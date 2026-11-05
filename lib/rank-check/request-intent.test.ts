@@ -85,6 +85,13 @@ const mocks = vi.hoisted(() => ({
     $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
+    alertEvaluationIntent: {
+      create: vi.fn(async () => ({})),
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      upsert: vi.fn(async () => ({})),
+    },
     keyword: { findMany: vi.fn(), findUnique: vi.fn() },
     keywordSchedule: { update: vi.fn() },
     project: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn() },

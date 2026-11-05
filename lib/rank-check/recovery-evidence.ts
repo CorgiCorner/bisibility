@@ -65,9 +65,11 @@ export function decodeRankResult(row: {
     if (digest(body) !== row.identityHash) throw new Error();
     const value = retainedRankResultEnvelope.parse(JSON.parse(body));
     if (value.version !== row.schemaVersion) throw new Error();
+    const historicallyBound = value.version === 2 && value.historicalRepair === true;
     if (
       value.version === 2 &&
-      (value.completeness !== "complete" || !value.operationPk || !value.attemptId)
+      (value.completeness !== "complete" ||
+        (!historicallyBound && (!value.operationPk || !value.attemptId)))
     )
       throw new RetainedRankResultUnsupportedError(
         "Retained rank result version is not yet supported",

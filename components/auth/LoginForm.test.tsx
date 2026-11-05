@@ -278,7 +278,8 @@ describe("LoginForm capacity errors", () => {
     mocks.requestLoginCode.mockResolvedValue({ ok: true });
     const response = { data: { twoFactorRedirect: true }, error: null };
     mocks.emailOtpSignIn.mockResolvedValue(response);
-    window.history.replaceState(null, "", "/login#review-access");
+    const oauthSearch = "?client_id=client_1&ba_param=ba_param&ba_param=client_id&sig=signature";
+    window.history.replaceState(null, "", `/login${oauthSearch}#review-access`);
     const user = userEvent.setup();
     const returnTo =
       "/oauth/consent?client_id=client_1&redirect_uri=http%3A%2F%2F127.0.0.1%3A51008%2Fcallback&scope=openid";
@@ -300,6 +301,7 @@ describe("LoginForm capacity errors", () => {
         response,
         window.location.origin,
         `${returnTo}&section=review-access`,
+        oauthSearch,
       ),
     );
   });
@@ -328,6 +330,7 @@ describe("LoginForm capacity errors", () => {
         response,
         window.location.origin,
         returnTo,
+        window.location.search,
       ),
     );
   });

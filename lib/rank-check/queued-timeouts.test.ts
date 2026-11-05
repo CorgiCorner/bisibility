@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { queuedRedirectConversionTimeoutMs } from "./queued-result-attempt";
 import {
   QUEUED_PERSISTENCE_LEASE_MS,
+  QUEUED_REDIRECT_ACTIVITY_RESERVE_MS,
+  QUEUED_REDIRECT_TIMEOUT_MS,
   QUEUED_RESULT_ACTIVITY_HEARTBEAT_TIMEOUT_MS,
   QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS,
   QUEUED_RESULT_ATTEMPT_BUDGET_MS,
@@ -22,6 +25,29 @@ describe("queued result timeout budget", () => {
         QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS +
         QUEUED_RESULT_PROCESSING_ALLOWANCE_MS,
     );
+    expect(QUEUED_REDIRECT_TIMEOUT_MS).toBe(60_000);
+    expect(QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS).toBeGreaterThanOrEqual(
+      QUEUED_RESULT_ATTEMPT_BUDGET_MS +
+        2 *
+          (QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS + QUEUED_RESULT_RELEASE_DB_TRANSACTION_TIMEOUT_MS),
+    );
+    expect(QUEUED_RESULT_ATTEMPT_BUDGET_MS).toBeGreaterThanOrEqual(
+      QUEUED_RESULT_GET_TIMEOUT_MS +
+        QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS +
+        QUEUED_RESULT_RELEASE_DB_TRANSACTION_TIMEOUT_MS +
+        QUEUED_RESULT_DB_MAX_WAIT_MS +
+        QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS,
+    );
+    expect(QUEUED_RESULT_ATTEMPT_BUDGET_MS).toBeGreaterThanOrEqual(
+      QUEUED_REDIRECT_TIMEOUT_MS +
+        QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS +
+        QUEUED_RESULT_RELEASE_DB_TRANSACTION_TIMEOUT_MS,
+    );
+    expect(QUEUED_RESULT_ATTEMPT_BUDGET_MS).toBeGreaterThanOrEqual(
+      QUEUED_REDIRECT_TIMEOUT_MS +
+        QUEUED_RESULT_DB_MAX_WAIT_MS +
+        QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS,
+    );
     expect(QUEUED_RESULT_COMPLETE_OWNERSHIP_BUDGET_MS).toBeLessThan(QUEUED_PERSISTENCE_LEASE_MS);
     expect(QUEUED_RESULT_COMPLETE_OWNERSHIP_BUDGET_MS).toBeGreaterThanOrEqual(
       QUEUED_RESULT_DB_MAX_WAIT_MS +
@@ -40,5 +66,26 @@ describe("queued result timeout budget", () => {
       QUEUED_PERSISTENCE_LEASE_MS - QUEUED_RESULT_COMPLETE_OWNERSHIP_BUDGET_MS,
     );
     expect(QUEUED_RESULT_LEASE_SAFETY_MARGIN_MS).toBeGreaterThanOrEqual(30_000);
+  });
+
+  it("starts a redirect conversion only when it fits the activity attempt", () => {
+    expect(QUEUED_REDIRECT_ACTIVITY_RESERVE_MS).toBeGreaterThanOrEqual(
+      2 * (QUEUED_RESULT_RELEASE_DB_MAX_WAIT_MS + QUEUED_RESULT_RELEASE_DB_TRANSACTION_TIMEOUT_MS),
+    );
+    expect(QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS).toBeGreaterThanOrEqual(
+      QUEUED_REDIRECT_TIMEOUT_MS + QUEUED_REDIRECT_ACTIVITY_RESERVE_MS,
+    );
+    const now = Date.parse("2026-11-03T06:00:00.000Z");
+    const at = (ms: number) => new Date(now + ms);
+    expect(queuedRedirectConversionTimeoutMs(undefined, now)).toBe(QUEUED_REDIRECT_TIMEOUT_MS);
+    expect(
+      queuedRedirectConversionTimeoutMs(at(QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS), now),
+    ).toBe(QUEUED_REDIRECT_TIMEOUT_MS);
+    // Never a cut-down timeout: a conversion gets the full timeout or does not start.
+    const smallest = QUEUED_REDIRECT_TIMEOUT_MS + QUEUED_REDIRECT_ACTIVITY_RESERVE_MS;
+    expect(queuedRedirectConversionTimeoutMs(at(smallest), now)).toBe(QUEUED_REDIRECT_TIMEOUT_MS);
+    expect(queuedRedirectConversionTimeoutMs(at(smallest - 1), now)).toBeNull();
+    expect(queuedRedirectConversionTimeoutMs(at(50_000), now)).toBeNull();
+    expect(queuedRedirectConversionTimeoutMs(at(-1_000), now)).toBeNull();
   });
 });

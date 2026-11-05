@@ -11,6 +11,7 @@ import {
   requireAlertRule,
   updateAlertRuleRecord,
 } from "@/lib/api/alert-service";
+import { alertRuleAuditResource } from "@/lib/api/audit-resources";
 import { ApiConflictError, ApiInputError } from "@/lib/api/errors";
 import {
   createWebhookEndpointRecord,
@@ -51,12 +52,24 @@ export async function createAlertRule(input: unknown) {
     return rule;
   }
   revalidateAlertViews();
+  const id = requiredPublicAuditId(rule.publicId, "alr", "Alert rule");
+  if ("replayed" in rule && rule.replayed) {
+    return {
+      id,
+      ok: true as const,
+      persisted: {
+        ...alertRuleAuditResource(rule),
+        targetIds: (rule.targets ?? []).flatMap((target) => {
+          const publicId = target.keyword?.publicId ?? target.tag?.publicId;
+          return publicId ? [publicId] : [];
+        }),
+      },
+      replayed: true as const,
+      warning,
+    };
+  }
 
-  return {
-    id: requiredPublicAuditId(rule.publicId, "alr", "Alert rule"),
-    ok: true as const,
-    warning,
-  };
+  return { id, ok: true as const, warning };
 }
 
 export async function createKeywordAlertRule(input: { keywordId?: unknown; projectId?: unknown }) {

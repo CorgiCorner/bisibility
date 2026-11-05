@@ -155,6 +155,7 @@ export const rankCheckOperationSchema = z.object({
     .nullable()
     .optional(),
   blockedReason: z.string().nullable(),
+  expiryBlockedReason: z.string().nullable().optional(),
   etaSeconds: nonNegativeIntegerSchema.nullable().optional(),
   plannedFor: nullableIsoDatetimeSchema,
   nextCheckAt: nullableIsoDatetimeSchema,

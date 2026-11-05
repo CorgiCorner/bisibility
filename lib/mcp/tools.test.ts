@@ -155,6 +155,20 @@ describe("MCP tool dispatch", () => {
     });
   });
 
+  it("keeps forwarding project channel fields so the REST write can ignore them with warnings", async () => {
+    const project_id = "prj_a00000000000000000000000";
+    const result = await dispatchMcpTool(
+      "update_notification_preferences",
+      { alert_slack: false, alert_webhook: true, project_id },
+      "test",
+    );
+    expect(result.payload).toMatchObject({
+      method: "PATCH",
+      path: ["projects", project_id, "notification-preferences"],
+      body: { alert_slack: false, alert_webhook: true },
+    });
+  });
+
   it("publishes API key scope and expiry controls", () => {
     const createApiKey = getMcpToolDefinitions().find((tool) => tool.name === "create_api_key");
 

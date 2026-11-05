@@ -1,5 +1,8 @@
 // Server rendering and element/model assertions do not need a browser environment.
 export const nodeRenderTests = [
+  "app/(static)/layout.server.test.tsx",
+  "components/ui/ZonedTime.server.test.tsx",
+  "components/account/PersonalTokensSection.server.test.tsx",
   "components/marketing/features/inbound-links.test.tsx",
   "app/(regional)/(auth)/login/layout.test.tsx",
   "app/(regional)/(auth)/login/page.test.tsx",
@@ -47,4 +50,12 @@ export const nodeRenderTests = [
   "components/ui/SharedControls.server.test.tsx",
   "components/ui/provider-logo-url.test.tsx",
   "lib/app-extensions.test.tsx",
+];
+
+// Hydration can retain React renderer marks across files. The static layout script-queue test
+// also failed in a shared-worker run, so it uses a fresh process while its state leak is unresolved.
+export const isolatedNodeRenderTests = [
+  "app/(static)/layout.server.test.tsx",
+  "components/account/PersonalTokensSection.server.test.tsx",
+  "components/ui/ZonedTime.server.test.tsx",
 ];

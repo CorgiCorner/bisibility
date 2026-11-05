@@ -1,7 +1,14 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { skillCatalog } from "../../lib/agent-ready/skill-catalog.ts";
+import {
+  skillPackProblems,
+  skillPackSummary,
+  skillReferenceForm,
+  skillReferenceProblems,
+} from "../../lib/agent-ready/skill-packs.ts";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const output = path.join(root, "lib/agent-ready/plugin-skill-files.generated.json");
@@ -21,9 +28,34 @@ function filesAt(directory, prefix = "") {
     });
 }
 const license = { path: "LICENSE", content: readFileSync(path.join(root, "plugins/bisibility/LICENSE"), "utf8") };
-const skills = Object.fromEntries(skillCatalog.filter((skill) => skill.channels.plugin)
-  .map((skill) => [skill.slug, [license, ...filesAt(path.join(root, "plugins/bisibility/skills", skill.slug))]]));
-const rendered = `${JSON.stringify(skills, null, 2)}\n`;
+const entries = skillCatalog.filter((skill) => skill.channels.plugin);
+const sources = entries.map((skill) => ({
+  slug: skill.slug,
+  pack: skill.pack,
+  requires: skill.requires,
+  files: filesAt(path.join(root, "plugins/bisibility/skills", skill.slug)),
+}));
+const problems = [
+  ...skillReferenceProblems(sources, skillCatalog),
+  ...skillPackProblems(skillCatalog),
+];
+if (problems.length) throw new Error(`Skill reference check failed:\n${problems.join("\n")}`);
+// References are prose naming the skill, so the bundle carries the plugin files byte for byte.
+const bundle = {
+  version: 2,
+  referenceForm: skillReferenceForm,
+  packs: skillPackSummary(entries),
+  skills: Object.fromEntries(entries.map((skill, index) => [skill.slug, {
+    pack: skill.pack,
+    requires: skill.requires,
+    files: [license, ...sources[index].files],
+  }])),
+};
+const rendered = execFileSync(
+  path.join(root, "node_modules/.bin/biome"),
+  ["format", `--stdin-file-path=${output}`],
+  { input: `${JSON.stringify(bundle, null, 2)}\n`, encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
+);
 if (process.argv.includes("--check")) {
   if (readFileSync(output, "utf8") !== rendered) throw new Error("Frozen plugin skill files are stale; regenerate with scripts/generate/plugin-skill-files.mjs");
 } else writeFileSync(output, rendered);

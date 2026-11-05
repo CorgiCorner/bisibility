@@ -2,10 +2,13 @@ import { sweepHistoricalRecovery } from "@/lib/provider-evidence/recovery/histor
 import "server-only";
 import { processRecoveryLookups } from "@/lib/provider-evidence/recovery/job";
 import { sweepRecoveryCandidates } from "@/lib/provider-evidence/recovery/sweep";
+import { recoverySwitches } from "@/lib/provider-evidence/recovery/switches";
+import { maintainQueuedTaskCosts } from "@/lib/rank-check/queued-cost-recovery";
 import { maintainRetainedRankResults } from "@/lib/rank-check/recovery-maintenance";
 import { isScheduledMaintenanceEnabled } from "@/lib/temporal/maintenance-schedule-bootstrap";
 import { providerRecoveryWorkflowStop } from "@/lib/temporal/provider-recovery-probe";
 import { processRecoveryCommands } from "./execute";
+import { logRecoveryFailure, runRecoveryStep } from "./processor-steps";
 
 export function startRecoveryProcessor() {
   let closed = false,
@@ -14,16 +17,25 @@ export function startRecoveryProcessor() {
   function tick() {
     if (closed || inFlight) return;
     inFlight = (async () => {
-      await processRecoveryCommands();
+      await runRecoveryStep("commands", processRecoveryCommands);
       if (isScheduledMaintenanceEnabled() && Date.now() - lastResults >= 60000) {
-        await sweepRecoveryCandidates(providerRecoveryWorkflowStop);
-        await sweepHistoricalRecovery(providerRecoveryWorkflowStop);
-        await processRecoveryLookups();
-        await maintainRetainedRankResults();
+        // Each step is isolated: one failing step must not starve the rest of the cycle.
+        await runRecoveryStep("candidates", () =>
+          sweepRecoveryCandidates(providerRecoveryWorkflowStop),
+        );
+        await runRecoveryStep("historical", () =>
+          sweepHistoricalRecovery(providerRecoveryWorkflowStop),
+        );
+        await runRecoveryStep("lookups", processRecoveryLookups);
+        await runRecoveryStep("retained-results", maintainRetainedRankResults);
+        await runRecoveryStep("queued-costs", async () => {
+          if (recoverySwitches().proofWrites) await maintainQueuedTaskCosts();
+        });
         lastResults = Date.now();
       }
     })()
-      .catch(() => console.error("[metering] recovery worker requires retry"))
+      // A throw outside the isolated steps (for example the schedule check) is still logged.
+      .catch((error: unknown) => logRecoveryFailure("tick", error))
       .finally(() => {
         inFlight = null;
       });

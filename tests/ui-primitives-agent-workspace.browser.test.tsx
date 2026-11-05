@@ -160,7 +160,7 @@ describe.each([390, 768, 1440])("Agent workspace geometry at %ipx", (width) => {
           <AgentReportsLayout>
             <AgentReportsToolbar
               description={copy.reportsDescription}
-              action={writable ? <Button variant="secondary">{copy.addReport}</Button> : undefined}
+              action={writable ? <Button size="sm">{copy.addReport}</Button> : undefined}
             />
             {content}
           </AgentReportsLayout>,

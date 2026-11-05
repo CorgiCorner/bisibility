@@ -14,9 +14,11 @@ export const rankCheckRunSelect = {
   _count: {
     select: {
       items: { where: startedRunItemWhere },
+      rankChecks: { where: { status: "completed", position: { not: null } } },
     },
   },
   blockedReason: true,
+  expiryBlockedReason: true,
   cancelledCount: true,
   checkSchedule: {
     select: {
@@ -93,6 +95,7 @@ export function rankCheckRunDto(
   const parentRunPublicId = row.parentRun?.publicId ?? null;
   const operation: RankCheckOperation = {
     blockedReason: row.blockedReason,
+    expiryBlockedReason: row.expiryBlockedReason,
     budget: row.blockedReason === "budget_exhausted" ? budget : null,
     costCents: row.costCents,
     counts: {
@@ -122,6 +125,7 @@ export function rankCheckRunDto(
   };
   return {
     ...operation,
+    rankedCount: row._count.rankChecks ?? 0,
     checkScheduleArchived: Boolean(row.checkSchedule?.archivedAt),
     checkScheduleName: row.checkSchedule?.name ?? null,
     checkSchedulePublicId: row.checkSchedule?.publicId ?? null,

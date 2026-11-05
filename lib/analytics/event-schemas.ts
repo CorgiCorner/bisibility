@@ -85,10 +85,6 @@ export const analyticsEventSchemas = {
   }),
   landing_cost_estimate_opened: empty,
   landing_cta_submitted: z.object({ has_website: z.boolean() }),
-  landing_hero_viewed: z.object({
-    experiment: z.literal("landing-hero-actions"),
-    "$feature/landing-hero-actions": z.enum(["control", "dual_cta"]),
-  }),
   language_switched: z.object({
     from: activeLocale,
     surface: z.enum(["marketing_header", "marketing_mobile_menu"]),
@@ -112,6 +108,11 @@ export const analyticsEventSchemas = {
       "api",
       "integrations",
       "chrome",
+      "home",
+      "credits",
+      "byok",
+      "self-host",
+      "pricing",
     ]),
     cta: z.enum([
       "signup",
@@ -124,7 +125,8 @@ export const analyticsEventSchemas = {
       "features",
       "copy_command",
     ]),
-    slot: z.enum(["hero", "inline", "strip", "closing", "sticky", "menu_featured"]),
+    slot: z.enum(["hero", "inline", "strip", "closing", "sticky", "menu_featured", "nav"]),
+    page_version: z.enum(["legacy", "outcomes_v2"]).optional(),
   }),
   onboarding_entered: empty,
   onboarding_quiz_answered: z.object({

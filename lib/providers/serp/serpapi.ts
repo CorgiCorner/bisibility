@@ -7,9 +7,10 @@ import type {
 } from "@/lib/providers/types";
 import { resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import { serpApiObservationRun } from "./observation-extract-serpapi";
+import { OrganicCoverageError } from "./organic-coverage-error";
 import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
-import { requireDeterminateOrganicResult } from "./payload-contract-error";
-import { rawPayload, type SerpApiResponse, serpApiOrganicCandidates } from "./serpapi-payload";
+import { serpApiPageCoverage } from "./serpapi-page-coverage";
+import { rawPayload, requireSerpApiOrganicDecision, type SerpApiResponse } from "./serpapi-payload";
 import {
   buildSearchUrl,
   requestJson,
@@ -51,6 +52,8 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   const candidates: OrganicResultCandidate[] = [];
   const pageStarts = searchPageStarts(depth);
   const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
+  const acceptPage = serpApiPageCoverage();
+  let coveredPrefix = 0;
   let stoppedOnMatch = false;
   let reachedEnd = false;
   let billingUnits: number | null = 0;
@@ -82,9 +85,16 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
       throw new SerpApiError("SerpApi response did not include organic results.");
     }
 
+    const accepted = acceptPage(data, start, pageResults);
+    coveredPrefix = accepted.coveredPrefix;
     pages.push(data);
     sentPages.push(sentPage);
-    candidates.push(...serpApiOrganicCandidates(pageResults, start));
+    candidates.push(...accepted.candidates);
+    reachedEnd = !(
+      data.serpapi_pagination?.next ||
+      data.serpapi_pagination?.next_link ||
+      data.pagination?.next
+    );
 
     const decision = decideOrganicResult({ candidates, depth, domain: input.domain });
     if (stopOnMatch && decision.outcome === "match") {
@@ -92,26 +102,16 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
       break;
     }
 
-    if (
-      pageResults.length === 0 ||
-      !(
-        data.serpapi_pagination?.next ||
-        data.serpapi_pagination?.next_link ||
-        data.pagination?.next
-      )
-    ) {
-      reachedEnd = true;
-      break;
-    }
+    if (reachedEnd) break;
   }
 
   return {
     billingUnits,
     candidates,
+    coveredPrefix,
     depth,
     pages,
     reachedEnd,
-    requestedPageCount: pageStarts.length,
     sentPages,
     stoppedOnMatch,
   };
@@ -171,17 +171,22 @@ export const serpApiProvider: SerpProvider = {
     const {
       billingUnits,
       candidates,
+      coveredPrefix,
       depth,
       pages,
       reachedEnd,
-      requestedPageCount,
       sentPages,
       stoppedOnMatch,
     } = await fetchGoogleOrganicResults(input, requireApiKey(credentials));
-    const decision = requireDeterminateOrganicResult(
-      "SerpApi",
+    const decision = requireSerpApiOrganicDecision(
       decideOrganicResult({ candidates, depth, domain: input.domain }),
     );
+    const complete = reachedEnd || coveredPrefix >= depth;
+    if (!complete && (decision.position === null || decision.position > coveredPrefix)) {
+      throw new OrganicCoverageError(
+        `${coveredPrefix}/${depth} continuous organic ranks within the admitted page budget`,
+      );
+    }
 
     const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
     const checkedAt = new Date();
@@ -202,12 +207,13 @@ export const serpApiProvider: SerpProvider = {
           location: input.location,
           nextStart: pages.length * GOOGLE_ORGANIC_PAGE_SIZE,
           ended: reachedEnd,
+          organicReturned: candidates.length,
         },
       },
       observation: serpApiObservationRun({
         completeness: stoppedOnMatch
           ? "truncated_by_stop_on_match"
-          : reachedEnd || pages.length === requestedPageCount
+          : complete
             ? "complete"
             : "unknown",
         configuredScope: {

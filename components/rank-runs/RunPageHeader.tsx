@@ -4,8 +4,9 @@ import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { IdChip } from "@/components/ui/IdChip";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { providerLabel } from "@/lib/checks/provider-label";
 import { formatDisplayDateTime } from "@/lib/dates/format";
-import type { ProjectRef } from "@/lib/routing/app-path";
+import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import Link from "next/link";
@@ -109,14 +110,42 @@ export function RunPageHeader({
                 {fact.label}
               </span>
               <span className="mt-[5px] block text-[12.5px] leading-[1.45] text-fg">
-                {fact.value}
+                {fact.label === t("provider") && run.executedProviders?.length
+                  ? run.executedProviders.map(providerLabel).join(", ")
+                  : fact.value}
               </span>
               <span className="mt-[3px] block text-[10.5px] leading-[1.5] text-fg-muted">
-                {fact.note}
+                {fact.label === t("provider") && run.executedProviders?.length
+                  ? t("facts.executedBy")
+                  : fact.note}
               </span>
             </div>
           ))}
         </div>
+        {run.parentRunPublicId || run.childRuns?.length ? (
+          <nav
+            aria-label={t("retryLinks")}
+            className="flex flex-col gap-2 border-t border-border p-4 text-xs"
+          >
+            {run.parentRunPublicId ? (
+              <Link
+                className="w-fit break-all text-fg underline underline-offset-4"
+                href={appPath(projectRef, "rank-tracker", "runs", run.parentRunPublicId)}
+              >
+                {t("retryOf", { id: run.parentRunPublicId })}
+              </Link>
+            ) : null}
+            {run.childRuns?.map((child) => (
+              <Link
+                className="w-fit break-all text-fg underline underline-offset-4"
+                key={child.publicId}
+                href={appPath(projectRef, "rank-tracker", "runs", child.publicId)}
+              >
+                {t("retriedIn", { id: child.publicId })}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
       </section>
     </>
   );

@@ -191,13 +191,13 @@ describe("RetrievedResultsCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("says a provider cannot report AI overviews instead of claiming there was none", () => {
+  it("reports that overview presence was not recorded without blaming the provider", () => {
     renderCard(
       [entry({ provider: "serpapi", providerLabel: "SerpApi" })],
       fullResults({ aiOverview: null, provider: "serpapi", providerLabel: "SerpApi" }),
     );
 
-    expect(screen.getByText(/does not report AI overviews/)).toBeInTheDocument();
+    expect(screen.getByText(/AI overview presence was not recorded/)).toBeInTheDocument();
     expect(screen.queryByText(/An AI overview sat above them/)).not.toBeInTheDocument();
   });
 

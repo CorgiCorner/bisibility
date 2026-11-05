@@ -116,7 +116,8 @@ describe("RunPage", () => {
     const header = screen.getByRole("heading", { name: "Manual run" }).closest("section");
     expect(header).not.toBeNull();
     expect(within(header as HTMLElement).getByText("Duration")).toBeInTheDocument();
-    expect(within(header as HTMLElement).getAllByText("-")).toHaveLength(3);
+    expect(within(header as HTMLElement).getAllByText("-")).toHaveLength(2);
+    expect(within(header as HTMLElement).getByText("$1.51")).toBeInTheDocument();
     const counters = within(screen.getByLabelText("Run counters"));
     expect(counters.getByText("Cancelled")).toBeInTheDocument();
     expect(counters.getByText("stopped before sending")).toBeInTheDocument();
@@ -315,6 +316,22 @@ describe("RunPage", () => {
     });
 
     expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["operation_unavailable", "Blocked: plan required"],
+    ["provider_account_blocked", "Blocked: verify provider"],
+  ])("shows the expired block cause %s", (reason, label) => {
+    renderPage({
+      run: {
+        ...runPageFixture.run,
+        status: "completed",
+        outcome: "deferred",
+        blockedReason: "occurrence_expired",
+        expiryBlockedReason: reason,
+      },
+    });
+    expect(screen.getByRole("heading", { name: label })).toBeInTheDocument();
   });
 
   it("explains a blocked manual run and offers retry or cancellation", () => {

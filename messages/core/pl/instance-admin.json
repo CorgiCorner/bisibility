@@ -550,6 +550,8 @@
       },
       "blocked": {
         "proof_missing": "Brak wystarczającego dowodu od providera. Koszt pozostaje nieznany, potrzebny jest dowód.",
+        "provider_cost_pending": "Odzyskiwanie kosztu trwa. Provider nie zwrócił jeszcze użytecznego kosztu dla tego przyjętego zadania.",
+        "provider_cost_unrecoverable": "Nie udało się odzyskać kosztu od providera dla tego przyjętego zadania. Sprawdź powód, a następnie zostaw koszt jako nieznany albo zamknij go jako nieznany.",
         "wallet_coordination_required": "Brak zweryfikowanego pierwotnego dowodu do rozliczenia portfela platformy.",
         "request_not_linked": "Brak powiązanego pierwotnego zapytania.",
         "authorization_required": "Nowa płatna próba wymaga uprawnienia projektu do wydatków i zwykłej kontroli limitów.",

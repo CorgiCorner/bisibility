@@ -13,7 +13,12 @@ export const dataForSeoAccountAdapter: AccountAdapter = {
     available: true,
     cost: "non_billable",
     verifies: ["authentication", "access", "capacity"],
-    automaticRecheck: ["provider_billing", "provider_account_restricted", "provider_transient"],
+    automaticRecheck: [
+      "provider_billing",
+      "provider_account_restricted",
+      "provider_transient",
+      "legacy_unverified",
+    ],
   },
   capacity: {
     unit: "usd",

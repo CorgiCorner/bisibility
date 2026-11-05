@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { resolveFounderEmailIdentity } from "@/lib/email/founder-email-identity";
 import { createMarketingUnsubscribeToken } from "@/lib/email/marketing-unsubscribe";
+import { EmailSendError, EmailSuppressedError } from "@/lib/email/types";
 import {
   prepareWelcomeEmail,
   sendPreparedWelcomeEmail,
@@ -75,7 +76,7 @@ export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
   try {
     await sendPreparedWelcomeEmail(prepared);
   } catch (error) {
-    // Release permits retry, but a transport failure after provider acceptance can still make delivery ambiguous.
+    if (error instanceof EmailSendError && error.ambiguous) return { status: "unknown" as const };
     try {
       await prisma.notification.delete({ where: { id: claim.id } });
     } catch {
@@ -138,7 +139,8 @@ export async function sendWelcomeFollowupActivity({ userId }: { userId: string }
       unsubscribeUrl,
     });
   } catch (error) {
-    // Release permits retry, but a transport failure after provider acceptance can still make delivery ambiguous.
+    if (error instanceof EmailSendError && error.ambiguous) return { status: "unknown" as const };
+    if (error instanceof EmailSuppressedError) return { status: "suppressed" as const };
     try {
       await prisma.notification.delete({ where: { id: claim.id } });
     } catch {

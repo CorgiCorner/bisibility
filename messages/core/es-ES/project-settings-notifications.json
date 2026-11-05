@@ -13,8 +13,8 @@
       "invite": "Invitación",
       "weeklyReport": "Informe semanal",
       "unavailable": "{label} no está disponible",
-      "unavailableHelp": "Un guion indica que el canal no existe para ese evento: el informe semanal es un correo y solo se envía una vez a la semana.",
-      "saveError": "No se han podido guardar las preferencias.",
+      "unavailableHelp": "Un guion indica que el canal no existe para ese evento: el informe semanal es un correo y solo se envía una vez a la semana. Los correos de invitación son transaccionales y se envían a la persona invitada; estas preferencias no los controlan.",
+      "saveError": "No se ha podido confirmar el guardado. Se muestran las preferencias guardadas.",
       "providerIncident": "Incidentes del proveedor"
     },
     "delivery": {

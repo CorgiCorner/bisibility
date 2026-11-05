@@ -5,11 +5,12 @@ import {
   notifyProjectMembers,
   notifyRankCheckCompleted,
   notifyRankCheckFailed,
+  notifyScheduleBlocked,
   notifyTriggeredAlertDelivered,
 } from "./events";
 
 const mocks = vi.hoisted(() => ({
-  createNotification: vi.fn(() => Promise.resolve({ id: "notification_1" })),
+  createNotification: vi.fn((..._args: unknown[]) => Promise.resolve({ id: "notification_1" })),
   prisma: {
     keyword: { findUnique: vi.fn() },
     notification: { findFirst: vi.fn() },
@@ -64,6 +65,18 @@ describe("notification event producers", () => {
       expect.objectContaining({ idempotencyKey: "event_1" }),
       "event_1",
     );
+  });
+
+  it("exposes a member row creation failure so finalization can retry", async () => {
+    mocks.createNotification.mockRejectedValueOnce(new Error("notification database unavailable"));
+    await expect(
+      notifyProjectMembers({
+        idempotencyKey: "triggered-alert:alert_1:delivered",
+        projectId: "project_1",
+        title: "Ranking dropped",
+        type: NotificationType.alert_fired,
+      }),
+    ).rejects.toThrow("notification database unavailable");
   });
 
   it("notifyRankCheckCompleted skips when position is unchanged", async () => {
@@ -232,4 +245,62 @@ describe("notification event producers", () => {
       "cloud-import:job_2:done",
     );
   });
+});
+
+it("deduplicates schedule block notices by project and reason", async () => {
+  vi.clearAllMocks();
+  mocks.prisma.project.findUnique.mockResolvedValue({
+    members: [{ userId: "member_1" }],
+    ownerId: "owner_1",
+    publicId: "prj_1",
+  });
+  const keys = new Set<string>();
+  mocks.prisma.notification.findFirst.mockImplementation(async ({ where }) =>
+    keys.has(`${where.userId}:${where.idempotencyKey}`) ? { id: "existing" } : null,
+  );
+  mocks.createNotification.mockImplementation(
+    async (user, _project, _type, _title, _body, _payload, key) => {
+      keys.add(`${user}:${key}`);
+      return { id: "notification_1" };
+    },
+  );
+  const november = new Date("2026-11-03T10:00:00.000Z");
+  await notifyScheduleBlocked("project_1", "operation_unavailable", november);
+  await notifyScheduleBlocked(
+    "project_1",
+    "operation_unavailable",
+    new Date("2026-11-30T23:59:59.000Z"),
+  );
+  expect(mocks.createNotification).toHaveBeenCalledTimes(2);
+  await notifyScheduleBlocked("project_1", "provider_account_blocked", november);
+  expect(mocks.createNotification).toHaveBeenCalledTimes(4);
+});
+
+it("sends a new schedule block notice when the same block recurs in a later month", async () => {
+  vi.clearAllMocks();
+  mocks.prisma.project.findUnique.mockResolvedValue({
+    members: [],
+    ownerId: "owner_1",
+    publicId: "prj_1",
+  });
+  const keys = new Set<string>();
+  mocks.prisma.notification.findFirst.mockImplementation(async ({ where }) =>
+    keys.has(`${where.userId}:${where.idempotencyKey}`) ? { id: "existing" } : null,
+  );
+  mocks.createNotification.mockImplementation(
+    async (user, _project, _type, _title, _body, _payload, key) => {
+      keys.add(`${user}:${key}`);
+      return { id: "notification_1" };
+    },
+  );
+  await notifyScheduleBlocked("project_1", "trial_expired", new Date("2026-11-10T08:00:00.000Z"));
+  await notifyScheduleBlocked("project_1", "trial_expired", new Date("2026-11-20T08:00:00.000Z"));
+  expect(mocks.createNotification).toHaveBeenCalledTimes(1);
+  // The UTC month of the expiry decides the episode, not the local calendar.
+  await notifyScheduleBlocked("project_1", "trial_expired", new Date("2026-11-30T23:30:00.000Z"));
+  expect(mocks.createNotification).toHaveBeenCalledTimes(1);
+  await notifyScheduleBlocked("project_1", "trial_expired", new Date("2027-03-02T08:00:00.000Z"));
+  expect(mocks.createNotification).toHaveBeenCalledTimes(2);
+  const marchKey = mocks.createNotification.mock.calls[1]?.[6];
+  expect(marchKey).toMatch(/^schedule-block:project_1:2027-03:[0-9a-f]{64}$/);
 });

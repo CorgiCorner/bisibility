@@ -226,10 +226,11 @@ export async function dispatchMcpTool(
   name: string,
   input: ToolArgs,
   authorization: McpApiAuthorization,
+  clientHeader?: string,
 ) {
   const internalName = internalMcpToolName(name);
   if (internalName === "getSessionProfile") {
     return dispatchSessionProfile(authorization);
   }
-  return dispatchMcpRestCall(dispatchToRest(internalName, input), authorization);
+  return dispatchMcpRestCall(dispatchToRest(internalName, input), authorization, clientHeader);
 }

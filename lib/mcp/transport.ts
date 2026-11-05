@@ -3,9 +3,27 @@ import "server-only";
 import { type ApiAuth, ApiAuthError, authenticateBearer } from "@/lib/api/auth";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, methodNotAllowed } from "@/lib/api/responses";
+import { awaitWithSignal, withDeadline } from "@/lib/async/abort";
 import { MCP_RESOURCE_URL } from "@/lib/auth/auth";
+import {
+  isTransientRequestFailure,
+  reportRequestFailure,
+  requestFailureContext,
+  setRequestFailureMetadata,
+  setRequestFailureStage,
+  withRequestFailureContext,
+} from "@/lib/observability/request-failure";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import {
+  dshPluginMinVersion,
+  isBelowDshPluginFloor,
+  recordMcpClient,
+  resolveMcpClient,
+  updateRequiredResponse,
+} from "./client-version-gate";
+import { mcpFailureResponse, normalizeMcpFailure } from "./error-envelope";
 import { authenticateMcpOAuthRequest, isApiCredential, requireBearerToken } from "./oauth-auth";
+import { readMcpRequestMetadata } from "./request-id";
 import type { McpApiAuthorization } from "./rest-call";
 import { createBisibilityMcpServer } from "./server";
 
@@ -25,7 +43,7 @@ function hasInvalidOrigin(req: Request) {
   }
 }
 
-async function authenticateMcpRequest(req: Request) {
+async function authenticateMcpRequest(req: Request, signal: AbortSignal) {
   let credential: string | null = null;
   try {
     credential = requireBearerToken(req);
@@ -36,10 +54,12 @@ async function authenticateMcpRequest(req: Request) {
   let auth: ApiAuth;
   let authorization: McpApiAuthorization;
   if (credential && isApiCredential(credential)) {
-    auth = await authenticateBearer(req);
+    setRequestFailureStage("credential_auth");
+    auth = await awaitWithSignal(() => authenticateBearer(req), signal);
     authorization = credential;
   } else {
-    const oauth = await authenticateMcpOAuthRequest(req);
+    setRequestFailureStage("oauth_auth");
+    const oauth = await awaitWithSignal(() => authenticateMcpOAuthRequest(req), signal);
     if ("response" in oauth) return oauth;
     auth = oauth.auth;
     authorization = oauth.auth;
@@ -49,15 +69,92 @@ async function authenticateMcpRequest(req: Request) {
     auth.kind === "personal_token"
       ? ({ id: auth.token.id, kind: "personal-token" } as const)
       : ({ id: auth.apiKey.id, kind: "api-key" } as const);
-  const limit = await checkRateLimit(req, identity);
+  setRequestFailureStage("rate_limit");
+  const limit = await awaitWithSignal(() => checkRateLimit(req, identity), signal);
   if (!limit.success) {
     return { response: rateLimitExceeded(limit) };
   }
 
-  return { authorization };
+  return {
+    authorization,
+    oauthClientId: auth.kind === "personal_token" ? auth.oauthClientId : undefined,
+  };
 }
 
 export async function handleMcpHttpRequest(req: Request) {
+  const metadata = readMcpRequestMetadata(req);
+  const id = metadata.then((value) => value.id);
+  return withDeadline(req.signal, 260_000, (signal) =>
+    withRequestFailureContext(req.signal, async () => {
+      setRequestFailureMetadata(await metadata);
+      let dispatched = false;
+      try {
+        const response = await withDeadline(signal, 30_000, async (preSignal) => {
+          const context = requestFailureContext();
+          if (context) context.signal = preSignal;
+          const refused = requestRefusal(req);
+          if (refused) return refused;
+          const auth = await authenticateMcpRequest(req, preSignal);
+          if ("response" in auth) return auth.response;
+          setRequestFailureStage("client_gate");
+          const minVersion = dshPluginMinVersion();
+          const client = await awaitWithSignal(
+            () => resolveMcpClient(req.headers, auth.oauthClientId, minVersion),
+            preSignal,
+          );
+          recordMcpClient(client);
+          if (minVersion && isBelowDshPluginFloor(client, minVersion)) {
+            return updateRequiredResponse(req, client, minVersion, await id);
+          }
+          preSignal.throwIfAborted();
+          setRequestFailureStage("server_create");
+          const server = createBisibilityMcpServer({
+            authorization: auth.authorization,
+            clientHeader: req.headers.get("x-bisibility-client") ?? undefined,
+          });
+          const transport = new WebStandardStreamableHTTPServerTransport({
+            enableJsonResponse: true,
+            sessionIdGenerator: undefined,
+          });
+          setRequestFailureStage("server_connect");
+          await awaitWithSignal(() => server.connect(transport), preSignal);
+          return { transport };
+        });
+        const context = requestFailureContext();
+        if (context) context.signal = signal;
+        let result: Response;
+        if (response instanceof Response) result = response;
+        else {
+          setRequestFailureStage("transport_handle");
+          signal.throwIfAborted();
+          dispatched = true;
+          result = await awaitWithSignal(() => response.transport.handleRequest(req), signal);
+        }
+        setRequestFailureStage("response_encode");
+        return await normalizeMcpFailure(result, await id, signal);
+      } catch (error) {
+        if (error instanceof ApiAuthError) {
+          return normalizeMcpFailure(
+            errorResponse("unauthorized", "Invalid bearer credential.", 401, {
+              instance: instance(req),
+            }),
+            await id,
+            AbortSignal.timeout(100),
+          );
+        }
+        const status = req.signal.aborted
+          ? 400
+          : !dispatched && isTransientRequestFailure(error)
+            ? 503
+            : 500;
+        if (status >= 500) reportRequestFailure(error, requestFailureContext()?.stage, status);
+        return mcpFailureResponse(await id, status);
+      }
+    }),
+  );
+}
+
+function requestRefusal(req: Request) {
   const method = req.method.toUpperCase();
   if (!methods.includes(method as (typeof methods)[number])) {
     return methodNotAllowed(methods, { instance: instance(req) });
@@ -68,27 +165,5 @@ export async function handleMcpHttpRequest(req: Request) {
     });
   }
 
-  let auth: Awaited<ReturnType<typeof authenticateMcpRequest>>;
-  try {
-    auth = await authenticateMcpRequest(req);
-  } catch (error) {
-    if (!(error instanceof ApiAuthError)) {
-      throw error;
-    }
-    return errorResponse("unauthorized", error.message, 401, { instance: instance(req) });
-  }
-  if ("response" in auth) {
-    return auth.response;
-  }
-
-  const server = createBisibilityMcpServer({
-    authorization: auth.authorization,
-  });
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    enableJsonResponse: true,
-    sessionIdGenerator: undefined,
-  });
-  await server.connect(transport);
-
-  return transport.handleRequest(req);
+  return null;
 }

@@ -550,6 +550,8 @@
       },
       "blocked": {
         "proof_missing": "No hay pruebas suficientes del proveedor. Conserva el coste como desconocido y obtén pruebas nativas.",
+        "provider_cost_pending": "La recuperación del coste sigue reintentándose. El proveedor aún no ha devuelto un coste utilizable para esta tarea aceptada.",
+        "provider_cost_unrecoverable": "No se pudo recuperar el coste del proveedor para esta tarea aceptada. Revisa el motivo y mantén el coste como desconocido o ciérralo como desconocido.",
         "wallet_coordination_required": "No hay pruebas originales verificadas para conciliar la cartera de la plataforma.",
         "request_not_linked": "No hay una solicitud original vinculada.",
         "authorization_required": "Un intento de pago nuevo requiere permiso del proyecto y los controles habituales.",

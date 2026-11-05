@@ -72,6 +72,78 @@ describe("independent recovery facts", () => {
     expect(value.action).toBeNull();
     expect(value.blockedReason).toBe("proof_missing");
   });
+  describe("accepted task whose provider cost could not be recovered", () => {
+    const evidence = (status: string, reason: string) => ({
+      v: 1,
+      status,
+      reason,
+      attempts: 2,
+      at: "2026-10-13T09:00:00.000Z",
+      source: "task_get",
+      providerTaskId: "synthetic-task",
+      credentialVersion: "version",
+    });
+    it("names a final reason instead of the generic missing proof", () => {
+      const value = classifyRecoveryRecord(
+        record({
+          nativeId: "synthetic-task",
+          costEvidence: evidence("unrecoverable", "provider_task_unavailable"),
+        }),
+        scope,
+        now,
+      );
+      expect(value).toMatchObject({
+        action: null,
+        accounting: "unknown",
+        blockedReason: "provider_cost_unrecoverable",
+        proofAvailable: false,
+      });
+    });
+    it("names a pending reason while retries remain", () => {
+      const value = classifyRecoveryRecord(
+        record({
+          nativeId: "synthetic-task",
+          costEvidence: evidence("retry", "account_incident"),
+        }),
+        scope,
+        now,
+      );
+      expect(value).toMatchObject({ action: null, blockedReason: "provider_cost_pending" });
+    });
+    it("keeps the generic reason for absent, malformed or recovered evidence", () => {
+      for (const costEvidence of [
+        null,
+        { status: "unrecoverable" },
+        evidence("unrecoverable", "invented_reason"),
+        evidence("recovered", "provider_task_unavailable"),
+      ])
+        expect(classifyRecoveryRecord(record({ costEvidence }), scope, now).blockedReason).toBe(
+          "proof_missing",
+        );
+    });
+    it("does not hide an available proof action", () => {
+      const value = classifyRecoveryRecord(
+        record({
+          nativeId: "synthetic-task",
+          proof: true,
+          costEvidence: evidence("unrecoverable", "provider_task_unavailable"),
+        }),
+        scope,
+        now,
+      );
+      expect(value).toMatchObject({ action: "recover_proof", blockedReason: null });
+    });
+    it("changes the triage basis when the reason changes", () => {
+      const base = { nativeId: "synthetic-task" };
+      expect(
+        recoveryBasis(record({ ...base, costEvidence: evidence("retry", "provider_unreachable") })),
+      ).not.toBe(
+        recoveryBasis(
+          record({ ...base, costEvidence: evidence("unrecoverable", "provider_task_unavailable") }),
+        ),
+      );
+    });
+  });
   it("keeps delivered work and unknown cost separate", () => {
     const value = classifyRecoveryRecord(
       record({

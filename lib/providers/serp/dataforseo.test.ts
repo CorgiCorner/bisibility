@@ -5,6 +5,9 @@ import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderCallError } from "../call-error";
 import { dataForSeoProvider } from "./dataforseo";
+import gotoConverter from "./fixtures/goto/converter_full_page.json";
+import gotoSource from "./fixtures/goto/task_get_goto_heavy.json";
+import { UnresolvedRedirectError } from "./unresolved-redirect-error";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(
@@ -82,6 +85,67 @@ const stopOnMatchParams = {
 };
 
 describe("dataForSeoProvider", () => {
+  it.each([
+    ["server error", () => Promise.resolve(new Response("{}", { status: 503 }))],
+    ["timeout", () => Promise.reject(new DOMException("Timeout", "TimeoutError"))],
+  ])(
+    "fails a live result with unresolved redirects after a converter %s",
+    async (_name, failure) => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse(gotoSource))
+        .mockImplementationOnce(failure);
+      vi.stubGlobal("fetch", fetchMock);
+      const error = await dataForSeoProvider
+        .fetchRank(rankInput({ domain: "site18.example.com", depth: 20 }))
+        .catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(UnresolvedRedirectError);
+      expect(error).toMatchObject({ message: "Provider redirects could not be resolved." });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(String(fetchMock.mock.calls[1][0])).toContain("/appendix/goto_url_converter");
+    },
+  );
+
+  it("does not call the converter when the live decision is already determinate", async () => {
+    const source = structuredClone(gotoSource);
+    source.tasks[0].result[0].items = source.tasks[0].result[0].items.filter(
+      (item) => item.url !== "https://google.com/goto?url=SYNTHGOTO001",
+    );
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(source));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await dataForSeoProvider.fetchRank(
+      rankInput({ domain: "site1.example.com", depth: 20 }),
+    );
+    expect(result).toMatchObject({ position: 2, rankingUrl: "https://site1.example.com/page-1" });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("resolves a live result within the separate conversion phase", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(gotoSource))
+      .mockResolvedValueOnce(jsonResponse(gotoConverter.response));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await dataForSeoProvider.fetchRank(
+      rankInput({ domain: "site18.example.com", depth: 20 }),
+    );
+    expect(result).toMatchObject({
+      position: 3,
+      rankingUrl: "https://site18.example.com/page-39",
+      raw: {
+        redirect_resolutions: expect.arrayContaining([
+          expect.objectContaining({
+            status: "resolved",
+            originalUrl: "https://google.com/goto?url=SYNTHGOTO002",
+          }),
+        ]),
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1][0])).toContain("/appendix/goto_url_converter");
+    expect(fetchMock.mock.calls[1][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
   it.each(["match", "miss", "empty"] as const)(
     "handles partial live results: %s",
     async (scenario) => {

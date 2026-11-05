@@ -54,6 +54,10 @@ export const rankRunSchemas = {
       started_at: time,
       finished_at: time,
       blocked_reason: { type: ["string", "null"] },
+      expiry_blocked_reason: {
+        type: ["string", "null"],
+        description: "Original blocker when a scheduled occurrence expired.",
+      },
       deferral_reasons: {
         type: "array",
         items: {
@@ -105,6 +109,7 @@ export const rankRunSchemas = {
       "started_at",
       "finished_at",
       "blocked_reason",
+      "expiry_blocked_reason",
       "parent_run_id",
       "cost_cents",
       "usage",

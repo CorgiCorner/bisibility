@@ -108,6 +108,17 @@ export const triggeredAlertSchema = {
       items: {
         properties: {
           channel: alertRuleProperties.channels.items,
+          counts: {
+            description: "Measured recipient outcomes, omitted when counts are unavailable.",
+            properties: {
+              accepted_count: { minimum: 0, type: "integer" },
+              failed_count: { minimum: 0, type: "integer" },
+              unknown_count: { minimum: 0, type: "integer" },
+            },
+            required: ["accepted_count", "failed_count", "unknown_count"],
+            type: "object",
+            ...sdkName("AlertDeliveryCounts"),
+          },
           error: { type: ["string", "null"] },
           status: { type: "string" },
           webhook_endpoint_id: { ...publicIdSchema("we"), type: ["string", "null"] },

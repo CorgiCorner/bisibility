@@ -7,6 +7,7 @@ import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/pr
 import { providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
+import { OrganicCoverageError } from "@/lib/providers/serp/organic-coverage-error";
 import type { SerpProvider } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { SerpDepth } from "@/lib/serp/constants";
@@ -181,7 +182,8 @@ export async function runCheckWithFallback(
       if (
         attempts.some((attempt) => attempt.reason === "account_blocked") &&
         error instanceof RankCheckRunnerError &&
-        error.code === "provider_failed"
+        error.code === "provider_failed" &&
+        !(error.cause instanceof OrganicCoverageError)
       ) {
         attempts.push({
           provider: connection.provider,

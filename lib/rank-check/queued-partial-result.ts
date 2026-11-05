@@ -1,13 +1,19 @@
+import type { DataForSeoItem } from "@/lib/providers/serp/dataforseo-payload";
 import { dataForSeoOrganicDecision } from "@/lib/providers/serp/dataforseo-payload";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { dataForSeoQueuedResponseTask } from "./queued-provider-poll";
 
 type ProviderTask = NonNullable<ReturnType<typeof dataForSeoQueuedResponseTask>>;
 
-export function queuedPartialResult(task: ProviderTask, domain: string, depth: SerpDepth) {
-  const items = Array.isArray(task.result)
-    ? task.result.flatMap((result) => result.items ?? [])
-    : [];
+export function queuedPartialResult(
+  task: ProviderTask,
+  domain: string,
+  depth: SerpDepth,
+  resolvedItems?: readonly (DataForSeoItem | null)[],
+) {
+  const items =
+    resolvedItems ??
+    (Array.isArray(task.result) ? task.result.flatMap((result) => result.items ?? []) : []);
   const decision = dataForSeoOrganicDecision(items, domain, depth);
   const organicCount = items.filter((item) => item?.type === "organic").length;
   return {

@@ -103,6 +103,57 @@
       "body": {
         "data": [
           {
+            "action": "Review the latest rank check.",
+            "ctas": ["Open keyword"],
+            "current": "#12",
+            "delivery_attempts": [
+              {
+                "counts": {
+                  "accepted_count": 2,
+                  "failed_count": 1,
+                  "unknown_count": 1
+                },
+                "channel": "push",
+                "error": null,
+                "status": "partial",
+                "webhook_endpoint_label": null,
+                "when": "just now",
+                "webhook_endpoint_id": null
+              }
+            ],
+            "delivery_state": "delivered",
+            "feed_meta": {
+              "engine": "Google",
+              "module": "rank",
+              "severity": "urgent",
+              "source": "RANK"
+            },
+            "headline": "Drop",
+            "id": "al_a00000000000000000000000",
+            "keyword": "Unknown keyword",
+            "previous": "#8",
+            "ranking_url": null,
+            "rule": "Drop",
+            "severity": "urgent",
+            "target_url": null,
+            "unread": true,
+            "when": "187d ago"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listTriggeredAlerts",
+      "path": "/projects/{project_id}/triggered-alerts",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
             "change_pct": null,
             "channels": ["email"],
             "condition_type": "threshold",

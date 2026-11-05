@@ -2,6 +2,8 @@
 
 import { AlertRowActions } from "@/components/alerts/AlertRowActions";
 import {
+  attemptStatus,
+  currentAlertDeliveryOutcomes,
   type PresentedAlertFeedView,
   presentAlertFeed,
 } from "@/components/alerts/alert-feed-presentation";
@@ -20,7 +22,7 @@ import { LightbulbIcon as Lightbulb } from "@phosphor-icons/react/dist/csr/Light
 import { SirenIcon as Siren } from "@phosphor-icons/react/dist/csr/Siren";
 import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import type { Icon } from "@phosphor-icons/react/lib";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 const severityOrder: AlertSeverity[] = ["urgent", "warning", "info"];
 
@@ -77,12 +79,45 @@ function DeliveryStatus({
   const deliveryT = useTranslations("projectAlerts.delivery");
   const drawerT = useTranslations("projectAlerts.drawer");
   const meta = deliveryStateMeta[alert.deliveryState];
+  const outcomes = currentAlertDeliveryOutcomes(alert);
+  const summaries = alert.deliverySummary ?? outcomes.filter((item) => item.counts);
+  const partial =
+    outcomes.some((item) => item.status === "partial") ||
+    ((alert.deliveryState === "delivered" ||
+      alert.deliveryState === "digested" ||
+      outcomes.some((item) => item.status === "sent")) &&
+      outcomes.some((item) => item.status === "failed" || item.status === "skipped"));
+  const unknown = outcomes.some((item) => item.status === "unknown");
 
   return (
     <div className="mt-2 rounded-control border border-border bg-bg-sunken px-2.5 py-2 font-sans tabular-nums text-[10.5px]">
-      <div className={`font-semibold ${meta.className}`}>
-        {t("delivery", { state: deliveryT(meta.message) })}
+      <div className={`font-semibold ${partial || unknown ? "text-yellow-text" : meta.className}`}>
+        {t("delivery", {
+          state: partial
+            ? t("partialDelivery")
+            : unknown
+              ? t("acceptanceUnknown")
+              : deliveryT(meta.message),
+        })}
       </div>
+      {summaries.map((item, index) => (
+        <div className="mt-1 text-fg-muted" key={`${item.channel}:${index}`}>
+          {channelLabel(item.channel, drawerT)}:{" "}
+          {item.counts ? (
+            <span>
+              {t("deliveryCounts", {
+                accepted: item.counts.acceptedCount,
+                failed: item.counts.failedCount,
+                unknown: item.counts.unknownCount,
+                total:
+                  item.counts.acceptedCount + item.counts.failedCount + item.counts.unknownCount,
+              })}
+            </span>
+          ) : (
+            attemptStatus(item.status, t)
+          )}
+        </div>
+      ))}
       {attempts.map((attempt, index) => (
         <div className="mt-1 text-fg-muted" key={`${attempt.when}:${attempt.channel}:${index}`}>
           {t("attempt", {
@@ -145,18 +180,23 @@ export function UnreadSummary({
 
 export function AlertFeedRow({
   alert,
+  canUpdate = true,
+  onSnoozed,
   onSnooze,
   onError,
   projectId,
   unread,
 }: Readonly<{
   alert: TriggeredAlertFeedView;
+  canUpdate?: boolean;
+  onSnoozed?: (id: string, until: string) => void;
   onError: (message: string) => void;
   onSnooze: (id: string) => () => void;
   projectId: string;
   unread: boolean;
 }>) {
   const t = useTranslations("projectAlerts.feed");
+  const format = useFormatter();
   const presentation = presentAlertFeed(alert, t);
   const meta = severityMeta[alert.severity];
   const Icon = severityIcons[alert.severity];
@@ -200,8 +240,21 @@ export function AlertFeedRow({
           <span>{alert.rule}</span>
           <span>{presentation.when}</span>
         </div>
+        {alert.acknowledgedAt ? (
+          <p className="mt-2 text-xs text-fg-muted">
+            {t("acknowledgedBy", {
+              name: alert.acknowledgedByName ?? t("teamMember"),
+              time: format.dateTime(new Date(alert.acknowledgedAt), {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }),
+            })}
+          </p>
+        ) : null}
         <DeliveryStatus alert={alert} attempts={presentation.deliveryAttempts} />
         <AlertRowActions
+          canUpdate={canUpdate}
+          onSnoozed={onSnoozed}
           alertId={alert.id}
           ctas={presentation.ctas}
           keyword={presentation.keyword}

@@ -12,6 +12,7 @@ type ConfirmMessageKey =
   | "clearTargetUrls"
   | "deactivateAccount"
   | "deleteAccount"
+  | "deleteAlertRule"
   | "deleteBulk"
   | "deleteKeyword"
   | "deleteProject"
@@ -69,6 +70,13 @@ export const CONFIRM: Record<ConfirmMessageKey, ConfirmConfig> = {
     toastMessageKey: "deleteAccountToastMessage",
     requireType: true,
     typeWord: "you@example.com",
+  },
+  deleteAlertRule: {
+    icon: Trash,
+    bodyKey: "deleteAlertRuleBody",
+    dangerLabelKey: "deleteAlertRuleDangerLabel",
+    titleKey: "deleteAlertRuleTitle",
+    toastMessageKey: "deleteAlertRuleToastMessage",
   },
   deleteBulk: {
     icon: Trash,

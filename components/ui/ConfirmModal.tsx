@@ -20,6 +20,8 @@ export type ConfirmModalProps = {
   confirmationDisabled?: boolean;
   children?: ReactNode;
   failureDetail?: ReactNode;
+  /** Runs after the close transition and the default focus return, so it may move focus. */
+  onExited?: () => void;
   showConfirmationToast?: boolean;
   typeWord?: string;
   size?: ModalSize;
@@ -33,6 +35,7 @@ export function ConfirmModal({
   kind,
   onClose,
   onConfirm,
+  onExited,
   onUndo,
   open,
   showConfirmationToast = true,
@@ -87,6 +90,7 @@ export function ConfirmModal({
   function handleExited() {
     setTyped("");
     setConfirmationError(null);
+    onExited?.();
   }
 
   return (

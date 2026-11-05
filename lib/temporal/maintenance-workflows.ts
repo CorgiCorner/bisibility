@@ -200,16 +200,22 @@ export async function purgeExpiredSessionsWorkflow(): Promise<PurgeExpiredSessio
 
 export type PurgeQueuedRankCheckBatchesWorkflowState = {
   deleted: number;
+  sourceEvidenceDeleted?: number;
 };
 
 export async function purgeQueuedRankCheckBatchesWorkflow(
   state?: PurgeQueuedRankCheckBatchesWorkflowState,
 ): Promise<PurgeQueuedRankCheckBatchesActivityResult> {
   const chunk = await purgeQueuedRankCheckBatchesActivity();
-  const total = { ...chunk, deleted: (state?.deleted ?? 0) + chunk.deleted };
+  const total = {
+    ...chunk,
+    deleted: (state?.deleted ?? 0) + chunk.deleted,
+    sourceEvidenceDeleted: (state?.sourceEvidenceDeleted ?? 0) + (chunk.sourceEvidenceDeleted ?? 0),
+  };
   if (chunk.hasMore) {
     return continueAsNew<typeof purgeQueuedRankCheckBatchesWorkflow>({
       deleted: total.deleted,
+      sourceEvidenceDeleted: total.sourceEvidenceDeleted,
     });
   }
   return total;

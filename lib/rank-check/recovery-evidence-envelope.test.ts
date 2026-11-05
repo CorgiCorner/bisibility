@@ -57,6 +57,26 @@ describe("retained rank result envelopes", () => {
     ).toBe(1);
   });
 
+  it("allows a complete historical repair envelope to be restored", () => {
+    const historical = {
+      ...legacy,
+      completeness: "complete" as const,
+      finishedAt: "2026-10-23T06:04:00.000Z",
+      historicalRepair: true as const,
+      returnedDepth: 20,
+      version: 2 as const,
+    };
+    expect(readRetainedRankResultEnvelope(historical)).toMatchObject({ restorable: true });
+    const body = JSON.stringify(historical);
+    expect(
+      decodeRankResult({
+        identityHash: createHash("sha256").update(body).digest("hex"),
+        payloadEncrypted: encryptSecret(body),
+        schemaVersion: 2,
+      }),
+    ).toMatchObject({ historicalRepair: true });
+  });
+
   it.each(["complete", "partial"] as const)(
     "recognizes v2 %s without allowing restore",
     (completeness) => {

@@ -4,6 +4,8 @@ import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { createTriggeredAlertOnce } from "./transitions";
 
+type TriggeredAlertStore = Pick<Prisma.TransactionClient, "triggeredAlert">;
+
 export type AlertDeliveryMode = "deferred" | "immediate";
 
 type PersistAndDeliverInput = {
@@ -21,16 +23,22 @@ type PersistAndDeliverInput = {
   };
 };
 
-export async function persistAndDeliverTriggeredAlert(input: PersistAndDeliverInput) {
-  const alert = await createTriggeredAlertOnce({
-    afterPosition: input.afterPosition,
-    beforePosition: input.beforePosition,
-    deliveryState: input.deliveryMode === "deferred" ? "digest_pending" : "pending",
-    keywordId: input.keyword.id,
-    payload: input.payload,
-    publicId: makePublicId("al"),
-    rankCheckId: input.rankCheckId,
-    ruleId: input.rule.id,
-  });
+export async function persistAndDeliverTriggeredAlert(
+  input: PersistAndDeliverInput,
+  client?: TriggeredAlertStore,
+) {
+  const alert = await createTriggeredAlertOnce(
+    {
+      afterPosition: input.afterPosition,
+      beforePosition: input.beforePosition,
+      deliveryState: input.deliveryMode === "deferred" ? "digest_pending" : "pending",
+      keywordId: input.keyword.id,
+      payload: input.payload,
+      publicId: makePublicId("al"),
+      rankCheckId: input.rankCheckId,
+      ruleId: input.rule.id,
+    },
+    client,
+  );
   return alert;
 }

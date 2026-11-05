@@ -44,27 +44,28 @@ it("WD-8 retries reuse workflow periodEnd despite a changed activity clock; opti
     vi.useRealTimers();
   }
 });
-it.each(["legacy", "editable"])(
-  "INV-7 %s demo performs no project read, record work or send",
-  async (mode) => {
-    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
-    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
-    if (mode === "legacy") vi.stubEnv("READ_ONLY_DEMO", "1");
-    else {
-      vi.stubEnv("DEMO_MODE", "editable");
-      vi.stubEnv("DEMO_OWNER_ID", "usr_bcdefghijklmnopqrstuvwxy");
-    }
-    expect(await sendWeeklyReportDigestActivity()).toEqual({
-      projects: 0,
-      sent: 0,
-      skipped: 0,
-      ambiguous: 0,
-    });
-    expect(mocks.projects).not.toHaveBeenCalled();
-    expect(mocks.send).not.toHaveBeenCalled();
-    expect(mocks.switches).not.toHaveBeenCalled();
-  },
-);
+it("INV-7 legacy read-only demo performs no project read, record work or send", async () => {
+  vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+  vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+  vi.stubEnv("READ_ONLY_DEMO", "1");
+  expect(await sendWeeklyReportDigestActivity()).toEqual({
+    projects: 0,
+    sent: 0,
+    skipped: 0,
+    ambiguous: 0,
+  });
+  expect(mocks.projects).not.toHaveBeenCalled();
+  expect(mocks.send).not.toHaveBeenCalled();
+  expect(mocks.switches).not.toHaveBeenCalled();
+});
+it("editable demo sends digests like a normal deployment; the Viewer filter is per recipient", async () => {
+  vi.stubEnv("DEMO_MODE", "editable");
+  vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+  vi.stubEnv("DEMO_OWNER_ID", "usr_bcdefghijklmnopqrstuvwxy");
+  vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+  expect(await sendWeeklyReportDigestActivity()).toMatchObject({ projects: 1, sent: 1 });
+  expect(mocks.send).toHaveBeenCalledWith("project", expect.any(Date), false);
+});
 it("WD-9 never calls the operator notice policy during a digest run and records ambiguous outcomes", async () => {
   expect(await sendWeeklyReportDigestActivity()).toMatchObject({ ambiguous: 1, sent: 1 });
   expect(planRecoveryNotice).not.toHaveBeenCalled();

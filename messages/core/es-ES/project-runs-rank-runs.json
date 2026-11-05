@@ -135,7 +135,10 @@
         "reviewUsage": "Revisar presupuesto y uso",
         "reviewUsageDescription": "Esta ejecución está bloqueada. Revisa el uso y las operaciones sin conciliar antes de reintentarlo. El reinicio mensual puede no resolver el problema.",
         "usageUnconfirmed": "Uso pendiente de confirmación",
-        "usageUnconfirmedDescription": "El uso anterior no se ha confirmado. Revísalo antes de reintentarlo."
+        "usageUnconfirmedDescription": "El uso anterior no se ha confirmado. Revísalo antes de reintentarlo.",
+        "planRequired": "Blocked: plan required",
+        "verifyProvider": "Blocked: verify provider",
+        "reason": "Blocked: {reason}"
       },
       "cancelDialog": {
         "body": "Cancelar afecta solo a esta ejecución. No modifica la programación ni elimina los resultados ya completados.",
@@ -148,12 +151,13 @@
       },
       "counters": {
         "cancelledNote": "detenidos antes de enviarse",
-        "completedNote": "posiciones registradas",
+        "completedNote": "comprobaciones completadas",
         "deferredNote": "se reintentarán en la próxima ejecución",
         "failedNote": "sin posición registrada",
         "notTerminal": "en espera o en ejecución",
         "skippedBeforeStart": "{count, plural, one {# omitido antes de empezar} other {# omitidos antes de empezar}}",
-        "skippedOrBlocked": "Omitidos o bloqueados: {count}"
+        "skippedOrBlocked": "Omitidos o bloqueados: {count}",
+        "checkedRanked": "{checked, number} comprobados, {ranked, number} posicionados"
       },
       "deferral": {
         "budget_exhausted": {
@@ -267,7 +271,8 @@
         "startsIn": "Empieza dentro de",
         "startsWithinMinutes": "empieza en un margen de {count, number} min respecto a la hora programada",
         "waitingToStart": "Esperando para empezar",
-        "waitingForWorker": "Esperando al proceso en segundo plano"
+        "waitingForWorker": "Esperando al proceso en segundo plano",
+        "executedBy": "Proveedor que ejecutó las comprobaciones"
       },
       "filters": {
         "all": "Todos",
@@ -331,7 +336,13 @@
         "sendUnconfirmed": "Resultado sin confirmar; no se reintentó para evitar un consumo duplicado.",
         "stoppedAfterStart": "Detenido después de empezar",
         "providerCapacityUnavailable": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor.",
-        "scheduleChanged": "La programación ha cambiado. Cancelada antes de empezar."
+        "costNotRecorded": "Coste no registrado",
+        "scheduleChanged": "La programación ha cambiado. Cancelada antes de empezar.",
+        "organicDepthNotCovered": "Los resultados orgánicos devueltos no cubrieron la profundidad solicitada, por lo que no se pudo establecer una posición ni confirmar su ausencia.",
+        "waiting": "En espera",
+        "notInTop": "Fuera de los primeros {depth, number}",
+        "fallback": "{failed} falló ({detail}), completado con {completed}",
+        "coverageUnknown": "Cobertura desconocida"
       },
       "operations": "Operaciones",
       "usageNotRecorded": "Sin registrar",
@@ -347,6 +358,8 @@
         "desktop": "Ordenador",
         "mobile": "Móvil"
       },
+      "verifyConnection": "Verifica tu conexión con {provider}",
+      "connectionVerified": "Conexión verificada. Estas comprobaciones siguen aplazadas. La próxima ejecución programada puede usar esta conexión.",
       "sealedAccountPaused": "El proveedor aprobado está pausado. Inicia una nueva ejecución para revisar una nueva estimación del coste antes de pagar otro intento.",
       "startNewRun": "Iniciar una nueva ejecución",
       "accountBlock": {
@@ -355,7 +368,10 @@
         "provider_account_restricted": "{provider}: no se envió por una restricción de acceso.",
         "not_verified": "{provider}: no se envió porque la cuenta no estaba verificada.",
         "accounting_review": "{provider}: no se envió a la espera de revisión contable."
-      }
+      },
+      "retryLinks": "Ejecuciones relacionadas",
+      "retryOf": "Reintento de {id}",
+      "retriedIn": "Reintentado en {id}"
     }
   }
 }

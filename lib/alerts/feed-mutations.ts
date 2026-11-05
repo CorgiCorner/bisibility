@@ -38,8 +38,17 @@ function requiredPublicId(value: string | null, prefix: "al" | "prj", resource: 
 
 export async function markProjectAlertsRead(context: MutationContext) {
   const project = await writableProject(context.actor, context.projectId);
+  const user = await prisma.user.findUnique({
+    select: { name: true },
+    where: { id: context.actor.id },
+  });
   const result = await prisma.triggeredAlert.updateMany({
-    data: { status: "acknowledged" },
+    data: {
+      acknowledgedAt: new Date(),
+      acknowledgedById: context.actor.id,
+      acknowledgedByName: user?.name ?? null,
+      status: "acknowledged",
+    },
     where: { rule: { projectId: project.id }, status: "firing" },
   });
 

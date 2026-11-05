@@ -7,8 +7,13 @@ export function RunStatusSummary({
 }: Readonly<{ run: ProjectRun; progress?: boolean }>) {
   const t = useTranslations("projectRuns.table");
   let reason: string | null = null;
-  if (run.kind === "rank" && run.details.status === "blocked") {
+  if (
+    run.kind === "rank" &&
+    (run.details.status === "blocked" || run.details.expiryBlockedReason)
+  ) {
     const reasons = {
+      operation_unavailable: "planRequired",
+      provider_account_blocked: "verifyProvider",
       budget_exhausted: "reviewUsage",
       budget_missing: "reviewUsage",
       usage_reconciliation_required: "usageUnconfirmed",
@@ -20,7 +25,12 @@ export function RunStatusSummary({
       no_active_keywords: "noActiveKeywords",
     } as const;
     const key = reasons[run.details.blockedReason as keyof typeof reasons];
-    reason = t(key ?? "reviewBlocker");
+    const code = run.details.blockedReason;
+    reason = key
+      ? t(key)
+      : code && /^[a-z0-9_.:-]{1,128}$/i.test(code)
+        ? t("blockReason", { reason: code })
+        : t("reviewBlocker");
   } else if (run.kind === "rank" && run.details.blockedReason === "no_active_keywords") {
     reason = t("noActiveKeywords");
   }

@@ -2,6 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generatedArchivePluginSlugs } from "../../lib/agent-ready/archive-plugin-skills.ts";
+import { skillCatalog } from "../../lib/agent-ready/skill-catalog.ts";
+import { skillPackMetadata } from "../../lib/agent-ready/skill-packs.ts";
 import { skill as bisibility } from "../../lib/agent-ready/skills/bisibility.ts";
 import { skill as domainOnboarding } from "../../lib/agent-ready/skills/domain-onboarding.ts";
 import { skill as keywordImport } from "../../lib/agent-ready/skills/keyword-import.ts";
@@ -38,9 +40,14 @@ function pluginSkillMarkdown(skill) {
     .map((reference) => `Read [${reference.path}](${reference.path}) for the endpoint contract.`)
     .join("\n");
   const body = links ? `${skill.body}\n\n${links}` : skill.body;
-  return withTrailingNewline(
-    `---\nname: ${skill.slug}\ndescription: ${skill.description}\n---\n\n${body}`,
-  );
+  const entry = skillCatalog.find((candidate) => candidate.slug === skill.slug);
+  const metadata = entry ? skillPackMetadata(entry) : [];
+  const frontmatter = [
+    `name: ${skill.slug}`,
+    `description: ${skill.description}`,
+    ...(metadata.length ? ["metadata:", ...metadata] : []),
+  ].join("\n");
+  return withTrailingNewline(`---\n${frontmatter}\n---\n\n${body}`);
 }
 
 function renderedFiles(skill) {

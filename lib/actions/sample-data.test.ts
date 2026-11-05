@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => {
     location: { upsert: vi.fn() },
     membership: { findFirst: vi.fn() },
     providerIncident: { updateMany: vi.fn() },
-    notification: { deleteMany: vi.fn() },
+    notification: { deleteMany: vi.fn(), updateMany: vi.fn() },
     project: { create: vi.fn(), delete: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     providerConnection: { create: vi.fn() },
     rankCheck: { create: vi.fn() },
@@ -196,7 +196,7 @@ describe("sample-data actions", () => {
     expect(mocks.tx.project.delete).not.toHaveBeenCalled();
   });
 
-  it("IN-9 removes sample incident notifications before deleting the sample project", async () => {
+  it("retains and withdraws sample project notifications before deleting the project", async () => {
     mockActor("admin");
     mocks.prisma.project.findFirst.mockResolvedValue({
       id: "project_1",
@@ -210,10 +210,12 @@ describe("sample-data actions", () => {
       where: { id: "project_1" },
       data: { providerIncidentsRetiredThrough: retirementAt },
     });
-    expect(mocks.tx.notification.deleteMany).toHaveBeenCalledWith({
-      where: { projectId: "project_1", type: "provider_incident" },
+    expect(mocks.tx.notification.updateMany).toHaveBeenCalledWith({
+      where: { projectId: "project_1", withdrawnAt: null },
+      data: { withdrawnAt: retirementAt, version: { increment: 1 } },
     });
-    expect(mocks.tx.notification.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.tx.notification.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.tx.notification.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.tx.project.delete.mock.invocationCallOrder[0],
     );
   });

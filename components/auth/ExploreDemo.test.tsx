@@ -4,6 +4,7 @@ import {
   authFeatureTestMessages,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { stubLocation } from "@/tests/location-test-support";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,12 +15,14 @@ vi.mock("@/lib/auth/client", () => ({ authClient: { $fetch: mocks.fetch } }));
 const nextPath = "/app/prj_example/keyword-research?seed=ai%20tools%20directory";
 const serverUrl = "/app/prj_example/dashboard";
 
+let restoreLocation = () => {};
+
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.stubGlobal("location", { assign: mocks.assign, origin: "https://demo.example.com" });
+  restoreLocation = stubLocation({ assign: mocks.assign, url: "https://demo.example.com" });
   mocks.fetch.mockResolvedValue({ data: { url: serverUrl }, error: null });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => restoreLocation());
 
 describe.each([
   { name: "ExploreDemo", Component: ExploreDemo },

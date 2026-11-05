@@ -1,45 +1,30 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id";
-import type { Prisma } from "@/lib/generated/prisma/client";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { enqueueAlertDigestJob } from "@/lib/temporal/alert-delivery-client";
 import { recordSuppressed, reserveDeliveryBudgetOnce, utcDay } from "./daily-cap";
-import type { TriggeredAlertDeliveryPayload } from "./delivery";
-import { createDeliveryClaimToken, recoverStaleDigestClaims } from "./digest-claims";
+import {
+  claimPendingDigest,
+  createDeliveryClaimToken,
+  recoverStaleDigestClaims,
+  releaseUnsubmittedDigestClaim,
+} from "./digest-claims";
+import {
+  deliveryPayload,
+  type PendingAlertDigestRecord,
+  pendingAlertInclude,
+  requireDigestPublicId,
+} from "./digest-record";
+
+export type { PendingAlertDigestRecord } from "./digest-record";
+
 import { renderAlertDigest } from "./digest-render";
 import type { AlertDigestJob } from "./digest-types";
 import { ALERT_DIGEST_JOB_MAX_ALERTS, PENDING_ALERT_FLUSH_BATCH_LIMIT } from "./limits";
 import { sendAlertOverflowNotice } from "./overflow-notice";
 import { filterAlertEmailRecipients, resolveAlertRuleRecipients } from "./recipients";
 import { deliverableAlertWhere } from "./transitions";
-
-const pendingAlertInclude = {
-  keyword: { select: { publicId: true, text: true } },
-  rule: {
-    include: {
-      createdBy: { select: { email: true, id: true } },
-      project: {
-        select: {
-          domain: true,
-          id: true,
-          publicId: true,
-          name: true,
-          slackConnection: { select: { enabled: true, id: true } },
-          webhookEndpoints: {
-            select: { enabled: true, hmacSecret: true, id: true, url: true },
-          },
-        },
-      },
-      recipients: { select: { user: { select: { email: true, id: true } } } },
-    },
-  },
-} satisfies Prisma.TriggeredAlertInclude;
-
-export type PendingAlertDigestRecord = Prisma.TriggeredAlertGetPayload<{
-  include: typeof pendingAlertInclude;
-}>;
 
 export type FlushAlertDigestsResult = {
   alertsQueued: number;
@@ -62,38 +47,6 @@ const defaultDependencies: FlushAlertDigestDependencies = {
   enqueueDigestJob: enqueueAlertDigestJob,
   sendOverflowNotice: sendAlertOverflowNotice,
 };
-
-function payloadRecord(value: Prisma.JsonValue | null) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function requireDigestPublicId(value: string | null, prefix: PublicIdPrefix) {
-  if (!value || !isPublicIdOfType(value, prefix)) {
-    throw new Error(`Alert digest requires a v3 ${prefix} public ID.`);
-  }
-  return value;
-}
-
-function deliveryPayload(alert: PendingAlertDigestRecord): TriggeredAlertDeliveryPayload {
-  const stored = payloadRecord(alert.payload);
-  return {
-    action: String(stored.action ?? "Review the alert in bisibility."),
-    afterPosition: alert.afterPosition,
-    alertId: requireDigestPublicId(alert.publicId, "al"),
-    beforePosition: alert.beforePosition,
-    conditionType: alert.rule.conditionType,
-    firedAt: alert.firedAt.toISOString(),
-    headline: String(stored.headline ?? alert.rule.name),
-    keyword: alert.keyword.text,
-    keywordId: requireDigestPublicId(alert.keyword.publicId, "kw"),
-    projectDomain: trackedProjectDomain(alert.rule.project.domain) ?? "",
-    projectId: requireDigestPublicId(alert.rule.project.publicId, "prj"),
-    ruleId: requireDigestPublicId(alert.rule.publicId, "alr"),
-    ruleName: alert.rule.name,
-  };
-}
 
 type DigestBuildContext = {
   createdAt: Date;
@@ -209,7 +162,7 @@ export async function flushAlertDigests(
   });
   const pending = await prisma.triggeredAlert.findMany({
     include: pendingAlertInclude,
-    orderBy: { firedAt: "asc" },
+    orderBy: [{ firedAt: "asc" }, { id: "asc" }],
     take: PENDING_ALERT_FLUSH_BATCH_LIMIT,
     where: { deliveryState: "digest_pending", ...deliverableAlertWhere(now) },
   });
@@ -234,67 +187,42 @@ export async function flushAlertDigests(
     const digestIds = digestGroup.map((alert) => alert.id);
     const digestFirst = digestGroup[0];
     if (!digestFirst) continue;
-    const claimed = await prisma.triggeredAlert.updateMany({
-      data: { deliveryClaimedAt: now, deliveryClaimToken, deliveryState: "digesting" },
-      where: {
-        deliveryState: "digest_pending",
-        id: { in: digestIds },
-        ...deliverableAlertWhere(now),
-      },
-    });
+    const claimed = await claimPendingDigest(digestIds, deliveryClaimToken, now);
     if (claimed.count !== digestIds.length) {
-      await prisma.triggeredAlert.updateMany({
-        data: {
-          deliveryClaimedAt: null,
-          deliveryClaimToken: null,
-          deliveryState: "digest_pending",
-        },
-        where: { deliveryClaimToken, deliveryState: "digesting", id: { in: digestIds } },
-      });
+      await releaseUnsubmittedDigestClaim(digestIds, deliveryClaimToken);
       result.groupsFailed += 1;
       continue;
     }
-    const budget = await reserveDeliveryBudgetOnce({
-      alertId: digestFirst.id,
-      deliveryClaimToken,
-      deliveryState: "digesting",
-      now,
-      ruleId: first.ruleId,
-    });
-    if (!budget.granted) {
-      await suppressGroup(digestGroup, deliveryClaimToken, now, dependencies, true);
-      result.alertsSuppressed += digestGroup.length;
-      continue;
-    }
-    const recipients = await filterAlertEmailRecipients(
-      first.rule.project.id,
-      resolveAlertRuleRecipients(first.rule),
-    );
-    const suppressedByRule = new Map([[first.ruleId, await suppressedToday(first.ruleId, now)]]);
-    const job = buildAlertDigestGroups(digestGroup, {
-      createdAt: now,
-      deliveryClaimToken,
-      suppressedByRule,
-    })[0];
-    if (!job) continue;
-    job.recipients = recipients;
     try {
+      const budget = await reserveDeliveryBudgetOnce({
+        alertId: (digestGroup.find((alert) => alert.deliveryBudgetReservedAt) ?? digestFirst).id,
+        deliveryClaimToken,
+        deliveryState: "digesting",
+        now,
+        ruleId: first.ruleId,
+      });
+      if (!budget.granted) {
+        await suppressGroup(digestGroup, deliveryClaimToken, now, dependencies, true);
+        result.alertsSuppressed += digestGroup.length;
+        continue;
+      }
+      const recipients = await filterAlertEmailRecipients(
+        first.rule.project.id,
+        resolveAlertRuleRecipients(first.rule),
+      );
+      const suppressedByRule = new Map([[first.ruleId, await suppressedToday(first.ruleId, now)]]);
+      const job = buildAlertDigestGroups(digestGroup, {
+        createdAt: now,
+        deliveryClaimToken,
+        suppressedByRule,
+      })[0];
+      if (!job) continue;
+      job.recipients = recipients;
       await dependencies.enqueueDigestJob(job);
       result.digestsQueued += 1;
       result.alertsQueued += digestGroup.length;
     } catch {
-      await prisma.triggeredAlert.updateMany({
-        data: {
-          deliveryClaimedAt: null,
-          deliveryClaimToken: null,
-          deliveryState: "digest_pending",
-        },
-        where: {
-          deliveryClaimToken,
-          deliveryState: "digesting",
-          id: { in: job.alertIds },
-        },
-      });
+      await releaseUnsubmittedDigestClaim(digestIds, deliveryClaimToken);
       result.groupsFailed += 1;
     }
   }

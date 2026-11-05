@@ -92,7 +92,10 @@
       "sampleProgress": "{completed, number} / {total, number} samples",
       "costUnknown": "Cost not confirmed",
       "knownCost": "Known cost {cost} + unconfirmed",
-      "actualCost": "Cost {cost}"
+      "actualCost": "Cost {cost}",
+      "planRequired": "Blocked: plan required",
+      "verifyProvider": "Blocked: verify provider",
+      "blockReason": "Blocked: {reason}"
     },
     "actions": {
       "actionsFor": "Actions for {title}",

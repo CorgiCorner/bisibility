@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { parse as parseYaml } from "yaml";
 import { getSkillArchive, taskSkillSkillMd } from "./archive";
 import { getSkillZip } from "./plugin-skill-archive";
-import frozenFiles from "./plugin-skill-files.generated.json";
+import frozenBundle from "./plugin-skill-files.generated.json";
 import { skillCatalog } from "./skill-catalog";
 import { taskSkills } from "./skills";
 import { buildZip } from "./zip";
@@ -58,7 +58,12 @@ describe("desktop skill ZIP archives", () => {
       ["--experimental-strip-types", "scripts/generate/plugin-skill-files.mjs", "--check"],
       { cwd: root },
     );
-    for (const [slug, files] of Object.entries(frozenFiles)) {
+    execFileSync(
+      path.join(root, "node_modules/.bin/biome"),
+      ["format", "lib/agent-ready/plugin-skill-files.generated.json"],
+      { cwd: root },
+    );
+    for (const [slug, { files }] of Object.entries(frozenBundle.skills)) {
       expect(skillCatalog.find((skill) => skill.slug === slug)?.channels.plugin).toBe(true);
       for (const file of files) {
         expect(file.path).toMatch(
@@ -85,7 +90,7 @@ describe("desktop skill ZIP archives", () => {
       const actual = unzip(archive.bytes);
       const task = taskSkills.find((entry) => entry.slug === skill.slug);
       const files = skill.channels.plugin
-        ? frozenFiles[skill.slug as keyof typeof frozenFiles]
+        ? frozenBundle.skills[skill.slug as keyof typeof frozenBundle.skills].files
         : task
           ? [{ path: "SKILL.md", content: taskSkillSkillMd(task) }, ...(task.references ?? [])]
           : [];
@@ -141,7 +146,7 @@ describe("desktop skill ZIP archives", () => {
     }
     expect(index).not.toContain("github.com");
     expect(index).toContain("explicit approval");
-    expect(index).toContain("[Domain onboarding](./domain-onboarding/SKILL.md) (REST API)");
+    expect(index).toContain("[Domain onboarding](./domain-onboarding/SKILL.md) (REST API; pack");
     expect(index).toContain("[Project setup](./project-setup/SKILL.md) (MCP)");
   });
 

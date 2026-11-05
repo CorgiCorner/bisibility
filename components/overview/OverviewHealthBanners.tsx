@@ -19,6 +19,10 @@ export function OverviewHealthBanners({
     if (!latest) return null;
     const values = { keyword: latest.keyword };
     const code = providerFailurePresentation(latest.errorCode, latest.error).code;
+    if (code === "organic_depth_not_covered") return t("organicDepthNotCoveredDetail", values);
+    if (code === "provider_unresolved_redirects") return t("providerUnresolvedRedirectsDetail");
+    if (code === "organic_result_unclassifiable")
+      return t("organicResultUnclassifiableDetail", values);
     if (code === "provider_capacity_unavailable") return t("providerCapacityUnavailableDetail");
     if (code === "provider_billing") return t("providerBillingDetail", values);
     if (code === "provider_account_restricted") return t("providerAccountRestrictedDetail", values);
@@ -58,6 +62,18 @@ export function OverviewHealthBanners({
           })}
           tint="yellow"
           title={t("budgetTitle")}
+        />
+      ) : null}
+      {checkHealth.connectionNotice ? (
+        <AlertBanner
+          action={{
+            href: appPath(projectRef, "providers"),
+            icon: "arrow",
+            label: t("connectionSettings"),
+          }}
+          detail={t("verifyConnectionDetail")}
+          tint="yellow"
+          title={t("verifyConnectionTitle", { provider: checkHealth.connectionNotice.provider })}
         />
       ) : null}
     </AlertBannerStack>

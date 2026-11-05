@@ -135,7 +135,10 @@
         "reviewUsage": "予算と使用量を確認",
         "reviewUsageDescription": "この実行はブロックされています。再試行する前に使用量と未確定の処理を確認してください。月次リセットでは解決しない場合があります。",
         "usageUnconfirmed": "使用量の確認が必要",
-        "usageUnconfirmedDescription": "以前の使用量が確定していません。再試行する前に確認してください。"
+        "usageUnconfirmedDescription": "以前の使用量が確定していません。再試行する前に確認してください。",
+        "planRequired": "Blocked: plan required",
+        "verifyProvider": "Blocked: verify provider",
+        "reason": "Blocked: {reason}"
       },
       "cancelDialog": {
         "body": "キャンセルはこの実行にのみ影響します。スケジュールの変更や完了済みの結果の削除は行われません。",
@@ -148,12 +151,13 @@
       },
       "counters": {
         "cancelledNote": "送信前に停止",
-        "completedNote": "順位を記録",
+        "completedNote": "完了したチェック",
         "deferredNote": "次回の実行で再試行",
         "failedNote": "順位の記録なし",
         "notTerminal": "待機中または実行中",
         "skippedBeforeStart": "{count, plural, other {#件を開始前にスキップ}}",
-        "skippedOrBlocked": "{count} 件がスキップまたはブロック"
+        "skippedOrBlocked": "{count} 件がスキップまたはブロック",
+        "checkedRanked": "{checked, number} 件確認、{ranked, number} 件ランクイン"
       },
       "deferral": {
         "budget_exhausted": {
@@ -267,7 +271,8 @@
         "startsIn": "開始まで",
         "startsWithinMinutes": "予定時刻から{count, number}分以内に開始",
         "waitingToStart": "開始待ち",
-        "waitingForWorker": "ワーカーの応答待ち"
+        "waitingForWorker": "ワーカーの応答待ち",
+        "executedBy": "実行したプロバイダー"
       },
       "filters": {
         "all": "すべて",
@@ -331,7 +336,13 @@
         "sendUnconfirmed": "結果を確認できませんでした。重複消費を避けるため再試行していません。",
         "stoppedAfterStart": "開始後に停止",
         "providerCapacityUnavailable": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。",
-        "scheduleChanged": "スケジュールが変更されたため、開始前にキャンセルされました。"
+        "costNotRecorded": "コストは記録されていません",
+        "scheduleChanged": "スケジュールが変更されたため、開始前にキャンセルされました。",
+        "organicDepthNotCovered": "返された自然検索結果は指定された深さをカバーしていないため、順位も圏外であることも確認できませんでした。",
+        "waiting": "待機中",
+        "notInTop": "上位 {depth, number} 件に該当なし",
+        "fallback": "{failed} が失敗（{detail}）、{completed} で完了",
+        "coverageUnknown": "取得範囲は不明"
       },
       "operations": "操作数",
       "usageNotRecorded": "未記録",
@@ -347,6 +358,8 @@
         "desktop": "デスクトップ",
         "mobile": "モバイル"
       },
+      "verifyConnection": "{provider}との接続を確認してください",
+      "connectionVerified": "接続を確認しました。これらのチェックは延期されたままです。次回のスケジュール実行ではこの接続を使用できます。",
       "sealedAccountPaused": "承認済みのプロバイダーは一時停止中です。新しい実行を開始すると、次の有料リクエストの前に新しい費用見積もりを確認できます。",
       "startNewRun": "新しい実行を開始",
       "accountBlock": {
@@ -355,7 +368,10 @@
         "provider_account_restricted": "{provider}: アクセス制限により送信されませんでした。",
         "not_verified": "{provider}: アカウントが未確認のため送信されませんでした。",
         "accounting_review": "{provider}: 会計確認待ちのため送信されませんでした。"
-      }
+      },
+      "retryLinks": "関連する実行",
+      "retryOf": "{id} の再試行",
+      "retriedIn": "{id} で再試行"
     }
   }
 }

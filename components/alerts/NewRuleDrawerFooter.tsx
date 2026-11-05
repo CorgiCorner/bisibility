@@ -43,7 +43,7 @@ export function NewRuleDrawerFooter({
           startIcon={<BellRinging aria-hidden size={14} weight="regular" />}
           type="button"
         >
-          {isEdit ? t("saveRule") : t("createRule")}
+          {isEdit ? t("saveAndEnable") : t("createRule")}
         </Button>
       </ProjectReadOnlyTooltip>
     </div>

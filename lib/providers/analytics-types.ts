@@ -21,6 +21,7 @@ export type AnalyticsMetricRange = {
 };
 
 export type AnalyticsQueryStatsInput = {
+  signal?: AbortSignal;
   clicks?: AnalyticsMetricRange;
   country?: string;
   device?: "desktop" | "mobile" | "tablet";

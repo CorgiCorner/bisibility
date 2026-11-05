@@ -53,3 +53,18 @@ export const legacyCheckPreferenceWarning = {
   message:
     "check_in_app is read-only and ignored on writes. Use check_notification_setting instead.",
 } as const;
+
+export const ignoredProjectChannelWarnings = {
+  alertSlack: {
+    code: "deprecated_field",
+    field: "alert_slack",
+    message:
+      "alert_slack is a project channel and is ignored on personal preference writes. Managers enable or disable Slack delivery with the channel commands.",
+  },
+  alertWebhook: {
+    code: "deprecated_field",
+    field: "alert_webhook",
+    message:
+      "alert_webhook is a project channel and is ignored on personal preference writes. Managers enable or disable each webhook endpoint with the endpoint commands.",
+  },
+} as const;

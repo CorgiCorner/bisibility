@@ -12,7 +12,7 @@ import type { SerpOrganicResult } from "@/lib/providers/types";
 import { runCheckWithFallback } from "@/lib/rank-check/fallback";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { fallbackSchedule } from "@/lib/rank-check/runner";
-import { mergeSnapshotPage } from "./snapshot-extension";
+import { mergeSnapshotPage, snapshotPrecedingOrganicCount } from "./snapshot-extension";
 import { readSnapshotContinuation, readSnapshotPageEvidence } from "./snapshot-extension-state";
 import { claimSnapshotExtension, finishSnapshotExtension } from "./snapshot-extension-store";
 import {
@@ -71,6 +71,11 @@ export async function extendSnapshot(input: SnapshotPaymentInput) {
       source: "app",
       trigger: "manual",
     });
+    const precedingOrganicCount = snapshotPrecedingOrganicCount(
+      claim.raw.organic_results as unknown as SerpOrganicResult[],
+      claim.state.pages,
+      claim.context.organicReturned,
+    );
     const outcome = await runCheckWithFallback({
       payment: prepared.paidCall,
       projectId: input.projectId,
@@ -100,7 +105,12 @@ export async function extendSnapshot(input: SnapshotPaymentInput) {
           });
           if (!project) throw new Error("Project not found.");
           assertProjectWritable(project);
-          return fetchSerpApiSnapshotPage(rankInput, claim.context, claim.state.nextStart);
+          return fetchSerpApiSnapshotPage(
+            rankInput,
+            claim.context,
+            claim.state.nextStart,
+            precedingOrganicCount,
+          );
         },
       }),
     });
@@ -130,6 +140,9 @@ export async function extendSnapshot(input: SnapshotPaymentInput) {
             start: claim.state.nextStart,
             fetchedAt: outcome.result.rankCheck.checkedAt.toISOString(),
             ...merged,
+            ...(next.organicReturned === undefined
+              ? {}
+              : { organicReturned: next.organicReturned - precedingOrganicCount }),
             evidence: readSnapshotPageEvidence(raw),
           },
         ],

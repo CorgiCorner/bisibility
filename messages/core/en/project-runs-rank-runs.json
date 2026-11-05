@@ -135,7 +135,10 @@
         "reviewUsage": "Review budget and usage",
         "reviewUsageDescription": "This run is blocked. Review usage and any unresolved accounting before trying again. A monthly reset may not resolve the issue.",
         "usageUnconfirmed": "Usage needs confirmation",
-        "usageUnconfirmedDescription": "Earlier usage has not been confirmed. Review usage before trying again."
+        "usageUnconfirmedDescription": "Earlier usage has not been confirmed. Review usage before trying again.",
+        "planRequired": "Blocked: plan required",
+        "verifyProvider": "Blocked: verify provider",
+        "reason": "Blocked: {reason}"
       },
       "cancelDialog": {
         "body": "Cancelling changes only this run. It does not change the schedule or remove completed results.",
@@ -148,12 +151,13 @@
       },
       "counters": {
         "cancelledNote": "stopped before sending",
-        "completedNote": "positions written",
+        "completedNote": "checks completed",
         "deferredNote": "retry on the next run",
         "failedNote": "no position written",
         "notTerminal": "waiting or running",
         "skippedBeforeStart": "{count, plural, one {# skipped before start} other {# skipped before start}}",
-        "skippedOrBlocked": "{count} skipped or blocked"
+        "skippedOrBlocked": "{count} skipped or blocked",
+        "checkedRanked": "{checked, number} checked, {ranked, number} ranked"
       },
       "deferral": {
         "budget_exhausted": {
@@ -267,7 +271,8 @@
         "startsIn": "Starts in",
         "startsWithinMinutes": "starts within {count, number} min of the scheduled time",
         "waitingToStart": "Waiting to start",
-        "waitingForWorker": "Waiting for worker"
+        "waitingForWorker": "Waiting for worker",
+        "executedBy": "Executed provider"
       },
       "filters": {
         "all": "All",
@@ -331,7 +336,13 @@
         "sendUnconfirmed": "Result not confirmed; not retried to avoid duplicate usage.",
         "stoppedAfterStart": "Stopped after starting",
         "providerCapacityUnavailable": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.",
-        "scheduleChanged": "Schedule changed. Cancelled before it started."
+        "costNotRecorded": "Cost not recorded",
+        "scheduleChanged": "Schedule changed. Cancelled before it started.",
+        "organicDepthNotCovered": "The returned organic results did not cover the requested depth, so no position or absence could be established.",
+        "waiting": "Waiting",
+        "notInTop": "Not in top {depth, number}",
+        "fallback": "{failed} failed ({detail}), completed with {completed}",
+        "coverageUnknown": "Coverage unknown"
       },
       "operations": "Operations",
       "usageNotRecorded": "Not recorded",
@@ -347,6 +358,8 @@
         "desktop": "Desktop",
         "mobile": "Mobile"
       },
+      "verifyConnection": "Verify your {provider} connection",
+      "connectionVerified": "Connection verified. These checks remain deferred. The next scheduled run can use this connection.",
       "sealedAccountPaused": "The approved provider is paused. Start a new run to review a fresh cost preview before paying for another attempt.",
       "startNewRun": "Start a new run",
       "accountBlock": {
@@ -355,7 +368,10 @@
         "provider_account_restricted": "{provider}: not sent because access was restricted.",
         "not_verified": "{provider}: not sent because the account was not verified.",
         "accounting_review": "{provider}: not sent pending accounting review."
-      }
+      },
+      "retryLinks": "Related runs",
+      "retryOf": "Retry of {id}",
+      "retriedIn": "Retried in {id}"
     }
   }
 }

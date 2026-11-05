@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
+import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
 import { useZodForm } from "@/lib/forms/use-zod-form";
 import { cn } from "@/lib/ui/cn";
@@ -94,6 +95,12 @@ export function TwoFactorChallengeForm({
     }
 
     setNavigating(true);
+    // A signed OAuth authorize request resumes here: the server answers with its consent URL.
+    const redirectUrl = signInRedirectUrl(response, window.location.origin);
+    if (redirectUrl) {
+      window.location.assign(redirectUrl);
+      return;
+    }
     router.replace(destination);
     router.refresh();
   }

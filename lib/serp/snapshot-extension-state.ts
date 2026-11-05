@@ -24,6 +24,7 @@ const continuationSchema = z.object({
   }),
   nextStart: z.number().int().min(10).max(100).multipleOf(10),
   ended: z.boolean(),
+  organicReturned: z.number().int().min(0).max(100).optional(),
 });
 const rowSchema = z.object({
   rank: z.number().int().min(1).max(100),
@@ -72,6 +73,7 @@ const extensionSchema = z.object({
         start: z.number().int().min(10).max(90).multipleOf(10),
         fetchedAt: z.iso.datetime(),
         skippedDuplicates: z.number().int().min(0),
+        organicReturned: z.number().int().min(0).max(10).optional(),
         rows: z.array(rowSchema).max(10),
       }),
     )
@@ -136,7 +138,7 @@ export function snapshotExtensionView(
     ...(extension.payment ? { payment: extension.payment } : {}),
     expiresAt: new Date(expiry).toISOString(),
     nextStart: extension.nextStart,
-    pages: extension.pages.map((page) => ({
+    pages: extension.pages.map(({ organicReturned: _organicReturned, ...page }) => ({
       ...page,
       rows: page.rows.map((row) => ({
         position: row.rank,

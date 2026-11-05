@@ -126,6 +126,7 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/completed-da
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/accounting-cutover-preflight.ts ./scripts/deploy/accounting-cutover-preflight.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/data-migrations ./scripts/data-migrations
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/closeout-historical-finances.ts ./scripts/ops/closeout-historical-finances.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/closeout-unknown-cost.ts ./scripts/ops/closeout-unknown-cost.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/locked-verification.ts ./scripts/ops/locked-verification.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/provider-secret-rotation.ts ./scripts/ops/provider-secret-rotation.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/rotate-provider-secrets.ts ./scripts/ops/rotate-provider-secrets.ts

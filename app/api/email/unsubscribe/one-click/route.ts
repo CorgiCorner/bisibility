@@ -1,7 +1,7 @@
 import { unsubscribeAchievementEmail } from "@/lib/achievements/unsubscribe";
 import { unsubscribeFromMarketingEmails } from "@/lib/email/marketing-unsubscribe";
 import { unsubscribeNotificationEmail } from "@/lib/email/notification-unsubscribe";
-import { readBodyWithLimit } from "@/lib/http/bounded-body";
+import { validateOneClickForm } from "@/lib/http/one-click-form";
 import { NextResponse } from "next/server";
 
 function params(request: Request) {
@@ -33,17 +33,9 @@ export function GET(request: Request) {
 
 export async function POST(request: Request) {
   const input = params(request);
-  if (
-    !input ||
-    request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !==
-      "application/x-www-form-urlencoded"
-  )
-    return new Response(null, { status: 400 });
-  const body = await readBodyWithLimit(request, 4096);
-  if (!body.ok) return new Response(null, { status: body.reason === "too_large" ? 413 : 400 });
-  const form = new URLSearchParams(body.bytes.toString("utf8"));
-  if (form.getAll("List-Unsubscribe").length !== 1 || form.get("List-Unsubscribe") !== "One-Click")
-    return new Response(null, { status: 400 });
+  if (!input) return new Response(null, { status: 400 });
+  const formError = await validateOneClickForm(request);
+  if (formError) return new Response(null, { status: formError });
   const accepted =
     input.stream === "marketing"
       ? await unsubscribeFromMarketingEmails(input.token)

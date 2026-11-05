@@ -43,7 +43,7 @@ beforeEach(async () => {
   await db.exec(
     `DROP TABLE IF EXISTS rank_check_runs, rank_check_run_items, search_analytics_imports, ai_tracking_runs, ai_tracking_samples`,
   );
-  await db.exec(`CREATE TABLE rank_check_runs (id text PRIMARY KEY, "publicId" text, "projectId" text, status text, outcome text, "blockedReason" text, "createdAt" timestamp, "startedAt" timestamp, "finishedAt" timestamp, "launchedAt" timestamp, "plannedFor" timestamp, "deletedAt" timestamp);
+  await db.exec(`CREATE TABLE rank_check_runs (id text PRIMARY KEY, "publicId" text, "projectId" text, status text, outcome text, "blockedReason" text, "createdAt" timestamp, "startedAt" timestamp, "finishedAt" timestamp, "launchedAt" timestamp, "plannedFor" timestamp, "deletedAt" timestamp, "expiryBlockedReason" text);
     CREATE TABLE rank_check_run_items ("runId" text, status text, "notBefore" timestamp);
     CREATE TABLE search_analytics_imports (id text PRIMARY KEY, "projectId" text, state text, "pausedReason" text, source text, "searchType" text, "createdAt" timestamp, "syncStartedAt" timestamp, "lastSyncStartedAt" timestamp, "lastSyncFinishedAt" timestamp);
     CREATE TABLE ai_tracking_runs (id text PRIMARY KEY, "publicId" text, "projectId" text, state text, "createdAt" timestamp, "plannedAt" timestamp, "finishedAt" timestamp, "launchPayload" jsonb);
@@ -207,4 +207,19 @@ it("gives cancellation precedence over an old no-active-keywords reason", async 
   expect((await page(null, { status: "skipped", limit: 20 })).map((row) => row.publicId)).toEqual([
     "rcr_skipped",
   ]);
+});
+
+it("filters expired blocked occurrences as blocked and attention, not deferred", async () => {
+  await db.exec(
+    `INSERT INTO rank_check_runs VALUES ('expired','rcr_expired','project_1','completed','deferred','occurrence_expired','2026-10-01',NULL,'2026-10-07',NULL,'2026-10-01',NULL,'operation_unavailable');`,
+  );
+  expect((await page(null, { status: "blocked", limit: 20 })).map((row) => row.publicId)).toContain(
+    "rcr_expired",
+  );
+  expect(
+    (await page(null, { status: "attention", limit: 20 })).map((row) => row.publicId),
+  ).toContain("rcr_expired");
+  expect(
+    (await page(null, { status: "deferred", limit: 20 })).map((row) => row.publicId),
+  ).not.toContain("rcr_expired");
 });

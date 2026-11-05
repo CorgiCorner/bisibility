@@ -6,6 +6,7 @@ const projectPublicId = "prj_aaaaaaaaaaaaaaaaaaaaaaaa";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    user: { findUnique: vi.fn().mockResolvedValue({ name: "Team member" }) },
     project: { findFirst: vi.fn() },
     triggeredAlert: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
   },
@@ -51,7 +52,11 @@ describe("triggered alert mutation core", () => {
       updated: 3,
     });
     expect(mocks.prisma.triggeredAlert.updateMany).toHaveBeenCalledWith({
-      data: { status: "acknowledged" },
+      data: expect.objectContaining({
+        acknowledgedAt: expect.any(Date),
+        acknowledgedById: actor.id,
+        status: "acknowledged",
+      }),
       where: { rule: { projectId: "project_1" }, status: "firing" },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(

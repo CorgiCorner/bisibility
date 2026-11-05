@@ -154,6 +154,7 @@ hand.
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
 | `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
 | `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
+| `DSH_PLUGIN_MIN_VERSION` | Optional minimum version, as `X.Y.Z`, of the Bisibility plugin for DeepSeek Harness that the MCP endpoint accepts. Unset means no floor. An older plugin receives HTTP `426` with the minimum version and the plugin market link. Plugin `0.1.0` sends no version, so while a floor is set an OAuth client registered as `DeepSeek Harness` without a version counts as `0.1.0`. A value that is not `X.Y.Z` turns the floor off and logs a warning. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
 | `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Advanced outbound request throttling. See [Provider rate limits](#provider-rate-limits). |

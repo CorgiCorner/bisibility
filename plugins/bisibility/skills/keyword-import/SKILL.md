@@ -1,6 +1,9 @@
 ---
 name: keyword-import
 description: Reconcile a supplied keyword list with tracked identities and apply requested metadata changes. Use when importing or updating a project keyword set. Do not use for keyword research, clustering or unapproved fresh rank checks.
+metadata:
+  bisibility.pack: project-onboarding
+  bisibility.requires: "provider-setup"
 ---
 
 # Keyword import
@@ -84,7 +87,7 @@ counts and blocked reason. Read completed measurements through
 `GET /keywords/{id}/rank-checks?status=completed` when available. A queued run is
 not a completed ranking result. An inline 201 may return the measurement directly.
 
-Never expose bearer or provider credentials. Use **provider-setup** if connection
+Never expose bearer or provider credentials. Use the `provider-setup` skill if connection
 repair is needed, and report missing evidence rather than inventing ranks.
 
 Read [references/api.md](references/api.md) for the endpoint contract.

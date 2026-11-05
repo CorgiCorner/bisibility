@@ -1,18 +1,17 @@
-import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { RankResultMarker } from "@/components/checks/runs/RankResultMarker";
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { itemStatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import { providerLabel } from "@/lib/checks/provider-label";
 import { deviceLabel } from "@/lib/queries/keyword-row-format";
-import { isUnrunnableReason } from "@/lib/rank-check/runnable-reasons";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
+import { hasIncompleteObservation } from "@/lib/serp/rank-depth";
 import Link from "next/link";
 import type { useTranslations } from "next-intl";
 import { DeferralReasonText } from "./deferral-reason-copy";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
-import { localizedBlockedRunCopy } from "./rank-run-copy";
 
 type RunTargetTableColumnsOptions = {
   deploymentMode: ClientDeploymentMode;
@@ -24,55 +23,9 @@ type RunTargetTableColumnsOptions = {
   t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>;
 };
 
-export function runTargetNote(
-  item: RunPageItem,
-  run: RunPageData,
-  deploymentMode: ClientDeploymentMode,
-  t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>,
-  locale: string,
-) {
-  if (item.blockedReason === "send_unconfirmed") return t("targetPresentation.sendUnconfirmed");
-  if (
-    item.blockedReason === "target_paused" ||
-    item.blockedReason === "location_language_unavailable"
-  ) {
-    return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
-      .compact;
-  }
-  if (item.blockedReason === "schedule_changed") return t("targetPresentation.scheduleChanged");
-  if (isUnrunnableReason(item.blockedReason)) {
-    return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
-      .compact;
-  }
-  if (item.status === "skipped" || item.status === "blocked") {
-    return item.startedAt
-      ? t("targetPresentation.stoppedAfterStart")
-      : t("targetPresentation.skippedBeforeStart");
-  }
-  if (run.status === "blocked" && item.status === "queued") {
-    return localizedBlockedRunCopy(
-      {
-        budget: run.budget,
-        deploymentMode,
-        reason: run.blockedReason,
-      },
-      t,
-      locale,
-    ).compact;
-  }
-  if (item.rankCheck?.errorCode === "provider_capacity_unavailable")
-    return t("targetPresentation.providerCapacityUnavailable");
-  if (item.rankCheck?.errorCode === "provider_billing")
-    return t("targetPresentation.providerBilling");
-  if (item.rankCheck?.errorCode === "provider_account_restricted")
-    return t("targetPresentation.providerRestricted");
-  if (item.rankCheck?.errorCode === "provider_auth") return t("targetPresentation.providerAuth");
-  if (item.rankCheck?.errorCode === "provider_rate_limited")
-    return t("targetPresentation.providerRateLimited");
-  if (item.rankCheck?.errorCode === "provider_transient")
-    return t("targetPresentation.providerTransient");
-  return item.rankCheck?.errorCode ? t("targetPresentation.providerUnknown") : "";
-}
+export { runTargetNote } from "./run-target-presentation";
+
+import { runTargetNote, targetCost } from "./run-target-presentation";
 
 export function runTargetTableColumns({
   deploymentMode,
@@ -149,7 +102,7 @@ export function runTargetTableColumns({
       accessorFn: (item) =>
         item.status === "deferred" ? null : (item.rankCheck?.position ?? null),
       cell: ({ row }) =>
-        row.original.status === "deferred" ? (
+        row.original.status === "deferred" || row.original.status === "queued" ? (
           t("unavailable")
         ) : row.original.rankCheck?.evidenceProjection?.result === "partial" ||
           row.original.rankCheck?.evidenceProjection?.result === "recovered" ? (
@@ -158,7 +111,18 @@ export function runTargetTableColumns({
             position={row.original.rankCheck.position}
           />
         ) : (
-          (row.original.rankCheck?.position ?? t("unavailable"))
+          (row.original.rankCheck?.position ??
+          (row.original.status === "completed" &&
+          row.original.rankCheck &&
+          !row.original.rankCheck.errorCode &&
+          row.original.rankCheck.requestedDepth &&
+          row.original.rankCheck.requestedDepth > 0
+            ? !hasIncompleteObservation(row.original.rankCheck.observationCompleteness) &&
+              (row.original.rankCheck.organicCoverageDepth ?? 0) >=
+                row.original.rankCheck.requestedDepth
+              ? t("targetPresentation.notInTop", { depth: row.original.rankCheck.requestedDepth })
+              : t("targetPresentation.coverageUnknown")
+            : t("unavailable")))
         ),
       enableSorting: false,
       header: t("table.position"),
@@ -168,11 +132,23 @@ export function runTargetTableColumns({
       size: 200,
     },
     {
-      accessorFn: (item) => item.payment?.charge.value ?? "",
+      accessorFn: (item) => item.rankCheck?.provider ?? "",
       cell: ({ row }) =>
-        row.original.status === "deferred" && !row.original.payment ? null : (
-          <PaymentChargeLine payment={row.original.payment} />
-        ),
+        row.original.status === "queued"
+          ? t("unavailable")
+          : row.original.rankCheck?.provider
+            ? providerLabel(row.original.rankCheck.provider)
+            : t("unavailable"),
+      enableSorting: false,
+      header: t("provider"),
+      id: "provider",
+      meta: { lockResize: true, title: t("provider") },
+      minSize: 136,
+      size: 160,
+    },
+    {
+      accessorFn: (item) => item.payment?.charge.value ?? "",
+      cell: ({ row }) => targetCost(row.original, locale, t),
       enableSorting: false,
       header: t("cost"),
       id: "cost",
@@ -203,7 +179,10 @@ export function runTargetTableColumns({
             ))}
           </div>
         ) : (
-          <span className="block truncate text-[11.5px] text-fg-muted" title={itemNote}>
+          <span
+            className={`block text-[11.5px] text-fg-muted ${row.original.rankCheck?.errorCode === "organic_depth_not_covered" || row.original.rankCheck?.attempts?.some((attempt) => attempt.outcome !== "ok") ? "whitespace-normal leading-5" : "truncate"}`}
+            title={itemNote}
+          >
             {itemNote}
           </span>
         );

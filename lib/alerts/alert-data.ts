@@ -6,6 +6,7 @@ import type {
 import type { AlertSeverity as AlertSeverityValue } from "@/lib/alerts/severity";
 import type { FeedRowMetadata } from "@/lib/feeds/facets";
 import type { Device } from "@/lib/generated/prisma/client";
+import type { DeliveryCounts, DeliverySummary } from "./delivery-counts";
 import { ruleTemplates } from "./new-rule-data";
 
 export type { Device };
@@ -24,6 +25,7 @@ export type AlertDeliveryStateView =
   | "suppressed";
 
 export type AlertDeliveryAttemptView = {
+  counts?: DeliveryCounts;
   channel: AlertChannelInput;
   error: string | null;
   status: string;
@@ -70,7 +72,12 @@ export type TriggeredAlertFeedView = {
     topN: number | null;
   };
   conditionType: AlertConditionTypeInput;
+  acknowledgedAt?: string | null;
+  acknowledgedByName?: string | null;
+  deliveryOutcomes?: DeliverySummary[];
+  deliverySummary?: DeliverySummary[];
   deliveryAttempts: {
+    counts?: DeliveryCounts;
     attemptedAt: string;
     channel: AlertChannelInput;
     error: string | null;

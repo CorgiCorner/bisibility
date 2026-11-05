@@ -279,7 +279,7 @@ describe("loadRetrievedResultsForChecks", () => {
     }
   });
 
-  it("sets aiOverview to null for a serpapi check even when features are present", async () => {
+  it("uses recorded overview presence for a secondary provider check", async () => {
     mocks.prisma.rankCheck.findMany.mockResolvedValue([
       {
         checkedAt: CHECKED_AT,
@@ -301,7 +301,7 @@ describe("loadRetrievedResultsForChecks", () => {
     });
 
     if (result.tier === "full") {
-      expect(result.aiOverview).toBeNull();
+      expect(result.aiOverview).toBe(true);
       expect(result.features).toEqual(["ai overview", "sitelinks"]);
     }
   });

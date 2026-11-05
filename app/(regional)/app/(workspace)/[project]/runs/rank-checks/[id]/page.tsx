@@ -9,6 +9,7 @@ import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import {
   hasAccountDeferredRankCheck,
+  rankCheckConnectionNotice,
   sharedRankCheckRunDeferralCode,
 } from "@/lib/queries/rank-check-run-deferral";
 import { getRankCheckRun, listRankCheckRunItems } from "@/lib/queries/rank-check-runs";
@@ -28,12 +29,14 @@ export default async function RankCheckRunPage({ params }: Readonly<RankCheckRun
   const access = await resolveProjectAccess(project);
   const readable = await requireReadableProject(access.publicId);
   try {
-    const [run, items, sharedDeferralCode, hasAccountDeferred] = await Promise.all([
-      getRankCheckRun(access.projectId, id),
-      listRankCheckRunItems(access.projectId, id, itemsUrl(access.publicId)),
-      sharedRankCheckRunDeferralCode(access.projectId, id),
-      hasAccountDeferredRankCheck(access.projectId, id),
-    ]);
+    const [run, items, sharedDeferralCode, hasAccountDeferred, connectionNotice] =
+      await Promise.all([
+        getRankCheckRun(access.projectId, id),
+        listRankCheckRunItems(access.projectId, id, itemsUrl(access.publicId)),
+        sharedRankCheckRunDeferralCode(access.projectId, id),
+        hasAccountDeferredRankCheck(access.projectId, id),
+        rankCheckConnectionNotice(access.projectId, id),
+      ]);
     const canMutate =
       canProjectAction(getProjectRole(readable.actor, readable.project.id), "update", "keyword") &&
       !isProjectReadOnly(readable.project.writeMode);
@@ -46,7 +49,7 @@ export default async function RankCheckRunPage({ params }: Readonly<RankCheckRun
             nextCursor={items.nextCursor}
             now={new Date().toISOString()}
             projectRef={access.publicId}
-            run={{ ...run, sharedDeferralCode, hasAccountDeferred }}
+            run={{ ...run, sharedDeferralCode, hasAccountDeferred, connectionNotice }}
           />
         </PageContent>
       </ProjectRunsFeatureBoundary>

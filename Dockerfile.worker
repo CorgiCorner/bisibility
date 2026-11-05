@@ -22,6 +22,8 @@ COPY prisma ./prisma
 RUN npm run db:download-rds-ca && npx prisma generate && npm prune --omit=dev
 
 COPY scripts/self-host/upgrade-rank-scheduler.ts ./scripts/self-host/upgrade-rank-scheduler.ts
+COPY scripts/ops/closeout-historical-finances.ts ./scripts/ops/closeout-historical-finances.ts
+COPY scripts/ops/closeout-unknown-cost.ts ./scripts/ops/closeout-unknown-cost.ts
 COPY lib ./lib
 COPY i18n ./i18n
 COPY messages/core ./messages/core
@@ -51,6 +53,8 @@ COPY --from=worker-build /app/package.json ./package.json
 COPY --from=worker-build /app/node_modules ./node_modules
 COPY --from=worker-build /app/prisma ./prisma
 COPY --from=worker-build /app/scripts/self-host/upgrade-rank-scheduler.ts ./scripts/self-host/upgrade-rank-scheduler.ts
+COPY --from=worker-build /app/scripts/ops/closeout-historical-finances.ts ./scripts/ops/closeout-historical-finances.ts
+COPY --from=worker-build /app/scripts/ops/closeout-unknown-cost.ts ./scripts/ops/closeout-unknown-cost.ts
 COPY --from=worker-build /app/lib ./lib
 COPY --from=worker-build /app/i18n ./i18n
 COPY --from=worker-build /app/messages/core ./messages/core

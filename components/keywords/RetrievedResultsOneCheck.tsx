@@ -137,6 +137,12 @@ export function RetrievedResultsOneCheck({
       .filter((row) => row.position >= 1 && row.position <= coverageDepth)
       .map((row) => row.position),
   );
+  const missing = Array.from({ length: coverageDepth }, (_, index) => index + 1).filter(
+    (rank) => !savedPositions.has(rank),
+  );
+  const strongWarning =
+    missing.length >= Math.max(3, Math.ceil(coverageDepth / 4)) ||
+    missing.some((rank) => results.trackedPosition !== null && rank < results.trackedPosition);
   return (
     <div>
       <FeatureRow features={results.features} />
@@ -147,7 +153,10 @@ export function RetrievedResultsOneCheck({
         <Eyebrow>{t("yourResult")}</Eyebrow>
         <strong className="font-sans tabular-nums text-[14px] text-fg">
           {results.trackedPosition === null
-            ? t("notFound")
+            ? results.observationCompleteness === "unknown" ||
+              results.observationCompleteness === "truncated_by_stop_on_match"
+              ? t("resultIndeterminate")
+              : t("notFound")
             : t("position", { position: results.trackedPosition })}
         </strong>
         {results.requestedDepth ? (
@@ -183,7 +192,12 @@ export function RetrievedResultsOneCheck({
           className="m-0 border-b border-border px-4 py-2 text-[12px] text-yellow-text sm:px-5"
           role="status"
         >
-          {t("partialCompetitors", { depth: coverageDepth })}
+          {t("missingPositions", {
+            count: missing.length,
+            depth: coverageDepth,
+            ranks: missing.map((rank) => `#${rank}`).join(", "),
+          })}
+          {strongWarning ? ` ${t("partialCompetitors", { depth: coverageDepth })}` : ""}
         </p>
       ) : null}
       {results.aiOverview === null ? (
@@ -193,7 +207,7 @@ export function RetrievedResultsOneCheck({
       ) : null}
       {results.aiOverview ? (
         <p className="m-0 border-b border-border px-5 py-2 text-[12px] text-fg-muted">
-          {t("aiPresent")}
+          {results.aiOverviewContentLoaded === false ? t("aiContentNotLoaded") : t("aiPresent")}
         </p>
       ) : null}
       <RetrievedResultsLadder competitors={competitors} results={results} trackedRef={trackedRef} />

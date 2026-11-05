@@ -1,15 +1,14 @@
 import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
-import { persistProviderFailure } from "@/lib/rank-check/queued-results-failure";
+import {
+  persistProviderFailure,
+  queuedFailureOutcome,
+} from "@/lib/rank-check/queued-results-failure";
 import { persistQueuedBatchTasks } from "./queued-result-batch";
 import "server-only";
-import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { collectedQueuedDefinition } from "@/lib/measurement-definitions/worker-collection";
 import { loadDefinitionComparablePrevious } from "@/lib/measurement-definitions/worker-comparable";
 import { queuedDataForSeoObservation } from "@/lib/observation/queued-dataforseo";
-import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
-import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import {
   DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS,
@@ -17,11 +16,9 @@ import {
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
 } from "@/lib/providers/serp/dataforseo-payload";
-import {
-  dataForSeoQueuedTaskTag,
-  fetchDataForSeoQueuedResult,
-} from "@/lib/providers/serp/dataforseo-queued";
+import { dataForSeoQueuedTaskTag } from "@/lib/providers/serp/dataforseo-queued";
 import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
+import { UnresolvedRedirectError } from "@/lib/providers/serp/unresolved-redirect-error";
 import { rankCheckCostCents } from "@/lib/rank-check/cost";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
 import { organicDomainRanksFromV2Results } from "@/lib/rank-check/organic-ranks";
@@ -37,16 +34,11 @@ import {
   type QueuedPersistenceLease,
 } from "@/lib/rank-check/queued-persistence-lease";
 import {
-  dataForSeoQueuedResponseTask,
-  pollDataForSeoQueue,
-} from "@/lib/rank-check/queued-provider-poll";
-import {
   type QueuedResultAttemptOptions,
   QueuedResultDeadlineReachedError,
   queuedResultAttemptSignal,
   queuedResultTransactionOptions,
   throwIfQueuedResultAborted,
-  throwIfQueuedResultDeadlineReached,
 } from "@/lib/rank-check/queued-result-attempt";
 import {
   claimQueuedResultTask,
@@ -61,55 +53,33 @@ import type { QueuedTask } from "@/lib/rank-check/queued-results-load";
 import { persistRankCheck } from "@/lib/rank-check/runner";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import { queuedPartialResult } from "./queued-partial-result";
+import { QueuedSourceEvidenceError } from "./queued-source-evidence";
+import { collectQueuedSource, requiredQueuedDefinition } from "./queued-source-result";
 
 async function persistProviderResult(
   task: QueuedTask,
   lease: QueuedPersistenceLease,
   signal: AbortSignal,
-  deadlineAt?: Date,
+  options: QueuedResultAttemptOptions,
 ) {
-  if (!task.providerTaskId) throw new Error("Queued DataForSEO task is missing its provider id.");
-  const connection = task.batch.connection;
-  if (!connection) throw new Error("DataForSEO connection is unavailable.");
-  const recovery = await queuedHostedRecovery(task);
-  if (connection.credentialSource === "hosted" && !recovery)
-    throw new Error("Queued hosted execution is unavailable.");
-  const own = !recovery && (await ownAdmission.assertRetrieval(prisma, connection.id, [task.id]));
-  const credentials =
-    recovery?.credentials ??
-    resolveProviderCredentials("dataforseo", connection.credentialsEncrypted);
-  const polled = await pollDataForSeoQueue(
-    credentials,
-    task.keyword.projectId,
-    async () => {
-      if (recovery) await recovery.assertRetrieval();
-      else await ownAdmission.assertRetrieval(prisma, connection.id, [task.id]);
-      throwIfQueuedResultDeadlineReached(deadlineAt);
-      return fetchDataForSeoQueuedResult(credentials, task.providerTaskId as string, { signal });
-    },
-    { deadlineAt },
-  );
-  if (polled.status === "deadline_reached") throw new QueuedResultDeadlineReachedError();
-  if (polled.status === "pending") return "pending";
-  throwIfQueuedResultAborted(signal);
-  const data = polled.value;
-  const providerTask = dataForSeoQueuedResponseTask(
-    data,
-    recovery || own ? task.providerTaskId : undefined,
-  );
+  if (!task.providerTaskId) throw new Error("Queued provider task is missing its id.");
+  const collected = await collectQueuedSource(task, lease, signal, options);
+  if (collected === "pending") return collected;
+  const { connection, recovery, own, data, providerTask, items, resolution } = collected;
   const terminalCostCents =
     recovery || own
       ? explicitQueuedGetCostCents(data, task.providerTaskId)
       : dataForSeoResponseCostCents(data);
   if ((recovery || own) && terminalCostCents === null) return "pending";
   const partialDefinition =
-    providerTask?.status_code === 40106 ? await collectedQueuedDefinition(task, lease) : null;
+    providerTask.status_code === 40106 ? requiredQueuedDefinition(collected.definition) : null;
   const partial =
     providerTask && partialDefinition
       ? queuedPartialResult(
           providerTask,
           partialDefinition.request.domain,
           partialDefinition.request.depth,
+          items,
         )
       : null;
   const providerFailed =
@@ -128,6 +98,19 @@ async function persistProviderResult(
       })
     : null;
   if (recovery && frozenCost === null) return "pending";
+  // Usage is settled first: a result that could not be retained still fails its check cleanly.
+  if (collected.evidenceFailure) throw collected.evidenceFailure;
+  const decide = () => {
+    const { request } = requiredQueuedDefinition(collected.definition);
+    return partial?.decision ?? dataForSeoOrganicDecision(items, request.domain, request.depth);
+  };
+  if (
+    resolution?.resolutions.some((row) => row.status === "unresolved") &&
+    decide().outcome === "indeterminate"
+  )
+    throw new UnresolvedRedirectError(terminalCostCents, {
+      redirect_resolutions: resolution.resolutions,
+    } as unknown as Prisma.InputJsonObject);
   if ((!partial?.success && providerFailed) || !providerTask) {
     throw new DataForSeoError(
       partial?.error ?? providerTask?.status_message ?? "DataForSEO queued result was unavailable.",
@@ -136,13 +119,10 @@ async function persistProviderResult(
       terminalCostCents === 0 ? 0 : terminalCostCents,
     );
   }
-  // biome-ignore format: keep the queue persistence module under its enforced line cap.
-  const items = providerTask.status_code === DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS ? [] : Array.isArray(providerTask.result) ? providerTask.result.flatMap((result) => result.items ?? []) : [null];
   const checkedAt = new Date();
-  const definition = partialDefinition ?? (await collectedQueuedDefinition(task, lease));
+  const definition = requiredQueuedDefinition(collected.definition);
   const requestedDepth = definition.request.depth;
-  // biome-ignore format: keep the queue persistence module under its enforced line cap.
-  const decision = requireDeterminateOrganicResult("DataForSEO", partial?.decision ?? dataForSeoOrganicDecision(items, definition.request.domain, requestedDepth));
+  const decision = requireDeterminateOrganicResult("DataForSEO", decide());
   const reportedCost = recovery
     ? frozenCost
     : terminalCostCents !== null && terminalCostCents > 0
@@ -173,10 +153,13 @@ async function persistProviderResult(
     checkedAt,
   );
   const rawPayload = dataForSeoRawPayload(items, decision);
-  const raw = rawPayload as unknown as Prisma.InputJsonObject;
+  const raw = {
+    ...rawPayload,
+    ...(resolution ? { redirect_resolutions: resolution.resolutions } : {}),
+  } as unknown as Prisma.InputJsonObject;
   await persistRankCheck(
     // biome-ignore format: keep the queue persistence module under its enforced line cap.
-    { queuedTaskId: task.id, attempts: [], connectionId: connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: definition.request.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
+    { queuedTaskId: task.id, attempts: [], connectionId: connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: definition.request.targetUrl, predecessorRankCheckId: previous?.id ?? null, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
     {
       definitionBindingId: definition.id,
       recoveryContextHash: task.recoveryContextHash ?? undefined,
@@ -244,7 +227,7 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
       );
       return;
     }
-    const result = await persistProviderResult(task, lease, attempt.signal, options.deadlineAt);
+    const result = await persistProviderResult(task, lease, attempt.signal, options);
     if (result === "pending") {
       await transitionLease(lease, { state: "ready" });
       return;
@@ -254,6 +237,11 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
       await releaseAbortedLease(task, lease).catch(() => undefined);
       throw attempt.signal.reason ?? error;
     }
+    // A transient evidence store failure defers this task alone; permanent ones fail it below.
+    if (error instanceof QueuedSourceEvidenceError && !error.permanent) {
+      await releaseAbortedLease(task, lease).catch(() => undefined);
+      return;
+    }
     if (error instanceof QueuedResultDeadlineReachedError) {
       await releaseAbortedLease(task, lease);
       return "deadline";
@@ -262,7 +250,7 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
       await reconcileTaskWithRankCheck(lease);
       return;
     }
-    const message = error instanceof Error ? error.message : "DataForSEO queued result failed.";
+    const outcome = queuedFailureOutcome(error, task.id);
     const recovery = await queuedHostedRecovery(task);
     const settledCost = recovery ? await recovery.knownCost(task.id) : null;
     if (recovery && settledCost === null) {
@@ -274,7 +262,14 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
       chargedProviderCostCents(error) ??
       (task.costCents === null ? undefined : Number(task.costCents));
     try {
-      await persistProviderFailure(task, message, costCents, lease);
+      await persistProviderFailure(
+        task,
+        outcome.message,
+        costCents,
+        lease,
+        outcome.errorCode,
+        "raw" in outcome ? outcome.raw : undefined,
+      );
     } catch (failure) {
       if (!(failure instanceof RankCheckClosedBeforePersistenceError)) throw failure;
       await reconcileTaskWithRankCheck(lease);

@@ -166,6 +166,7 @@ const mocks = vi.hoisted(() => {
     consumeProviderLimit: vi.fn(),
     deferQueuedRankCheckBatch: vi.fn(),
     journal: { discard: vi.fn(), settle: vi.fn(), transportStarted: vi.fn() },
+    resumeUsage: vi.fn(async () => ({ deferred: [] as string[] })),
     prisma,
     resolveProviderCredentials: vi.fn(),
     state,
@@ -216,6 +217,7 @@ vi.mock("./queued-lifecycle", () => ({
 }));
 vi.mock("./queued-usage-journal", () => ({
   beginQueuedTaskUsageJournal: mocks.beginJournal,
+  resumeSubmittedQueuedUsage: mocks.resumeUsage,
 }));
 
 describe("queued paid-call fence", () => {
@@ -522,7 +524,7 @@ describe("queued paid-call fence", () => {
     expect(mocks.submit).not.toHaveBeenCalled();
   });
 
-  it("begins durable unknown receipts before the paid POST and settles before persistence", async () => {
+  it("begins durable unknown receipts before the paid POST and persists native ids before settlement", async () => {
     await submitQueuedRankCheckBatch("batch_1");
 
     expect(mocks.beginJournal).toHaveBeenCalledWith({
@@ -563,10 +565,44 @@ describe("queued paid-call fence", () => {
     const persistedAccepted = mocks.prisma.queuedRankCheckTask.updateMany.mock.calls.findIndex(
       ([input]) => input.data.state === "submitted",
     );
-    expect(settled).toBeLessThan(
+    expect(persistedAccepted).toBeGreaterThanOrEqual(0);
+    expect(
       mocks.prisma.queuedRankCheckTask.updateMany.mock.invocationCallOrder[persistedAccepted],
-    );
+    ).toBeLessThan(settled ?? 0);
     expect(mocks.journal.discard).not.toHaveBeenCalled();
+  });
+
+  it("persists accepted native ids when account-code recording fails", async () => {
+    mocks.submit.mockResolvedValueOnce({
+      accepted: [
+        {
+          correlationId: "qtask_1",
+          costCents: 1.2,
+          providerTaskId: "provider_1",
+          tag: "app=bisibility;stage=dev;src=app;trg=scheduled;f=rank_check;p=project_1;c=qtask_1",
+        },
+      ],
+      accountFailureCodes: [40200],
+      failed: [],
+      unknown: [],
+    });
+    vi.mocked(recordConnectionAccountFailure).mockRejectedValueOnce(new Error("lock contention"));
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "submitted" });
+
+    const persistedAccepted = mocks.prisma.queuedRankCheckTask.updateMany.mock.calls.findIndex(
+      ([input]) => input.data.state === "submitted",
+    );
+    expect(persistedAccepted).toBeGreaterThanOrEqual(0);
+    expect(mocks.journal.settle).toHaveBeenCalledOnce();
+    expect(mocks.submit).toHaveBeenCalledOnce();
+    expect(
+      mocks.prisma.queuedRankCheckTask.updateMany.mock.invocationCallOrder[persistedAccepted],
+    ).toBeLessThan(vi.mocked(recordConnectionAccountFailure).mock.invocationCallOrder[0] ?? 0);
+    expect(mocks.journal.settle.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(recordConnectionAccountFailure).mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mocks.state.batch).toBe("submitted");
   });
 
   it("keeps an accepted paid receipt when queue persistence fails afterwards", async () => {
@@ -742,6 +778,30 @@ describe("queued paid-call fence", () => {
       },
       where: { id: "qtask_2", state: "submitting" },
     });
+  });
+
+  it("resumes unsettled usage for a submitted batch without another task post", async () => {
+    mocks.state.batch = "submitted";
+    mocks.state.task = "submitted";
+    mocks.resumeUsage.mockResolvedValueOnce({ deferred: ["qtask_2"] });
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({
+      deferredUsage: ["qtask_2"],
+      state: "submitted",
+    });
+
+    expect(mocks.submit).not.toHaveBeenCalled();
+    expect(mocks.resumeUsage).toHaveBeenCalledOnce();
+  });
+
+  it("does not resume hosted usage through the own-key journal", async () => {
+    mocks.state.batch = "submitted";
+    mocks.state.credentialSource = "hosted";
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "submitted" });
+
+    expect(mocks.resumeUsage).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it("recovers a resumed submitting state without a second POST", async () => {

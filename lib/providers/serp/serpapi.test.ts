@@ -17,9 +17,20 @@ function searchResponse(results: unknown[], extras: Record<string, unknown> = {}
   return {
     organic_results: results,
     search_metadata: { status: "Success" },
-    serpapi_pagination: { next: "https://serpapi.com/search.json?start=10" },
+    serpapi_pagination: { next: "next-page" },
     ...extras,
   };
+}
+
+/** A complete ten-result page; SerpApi restarts `position` at 1 on every page. */
+function fullPage(tag: string, overrides: Record<number, Record<string, unknown>> = {}) {
+  return searchResponse(
+    Array.from({ length: 10 }, (_, index) => ({
+      link: `https://${tag}-${index + 1}.example.org/`,
+      position: index + 1,
+      ...overrides[index + 1],
+    })),
+  );
 }
 
 // Neutral, pre-resolved handles the runner hands the adapter (design §2.3). SerpApi
@@ -63,7 +74,7 @@ describe("serpApiProvider", () => {
       vi
         .fn()
         .mockResolvedValue(
-          jsonResponse(searchResponse([{ link: "https://example.org/page", position: 1 }])),
+          jsonResponse(searchResponse([{ link: "https://example.com/page", position: 1 }])),
         ),
     );
     const result = await serpApiProvider.fetchRank(rankInput({ depth: 10 }));
@@ -101,11 +112,11 @@ describe("serpApiProvider", () => {
       vi
         .fn()
         .mockResolvedValueOnce(
-          jsonResponse(searchResponse([{ link: "https://competitor.com/", position: 1 }])),
+          jsonResponse(searchResponse([{ link: "https://example.com/", position: 1 }])),
         )
         .mockResolvedValueOnce(jsonResponse({ search_metadata: { status: "Success" } })),
     );
-    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20 }));
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
     expect(result.billingUnits).toBe(2);
   });
 
@@ -122,9 +133,9 @@ describe("serpApiProvider", () => {
   ] as const)("uses %i-result depth across %i search request(s)", async (depth, requests) => {
     const fetchMock = vi
       .fn()
-      .mockImplementation(() =>
+      .mockImplementation((url: string) =>
         Promise.resolve(
-          jsonResponse(searchResponse([{ link: "https://competitor.com/page", position: 1 }])),
+          jsonResponse(fullPage(`depth-${new URL(url).searchParams.get("start") ?? 0}`)),
         ),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -169,9 +180,7 @@ describe("serpApiProvider", () => {
           const timeout = setTimeout(
             () =>
               resolve(
-                jsonResponse(
-                  searchResponse([{ link: "https://www.example.com/page", position: 3 }]),
-                ),
+                jsonResponse(fullPage("slow", { 3: { link: "https://www.example.com/page" } })),
               ),
             42_000,
           );
@@ -205,21 +214,9 @@ describe("serpApiProvider", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        jsonResponse(
-          searchResponse([
-            { link: "https://example.com/", position: 1 },
-            { link: "https://first.test/", position: 9 },
-          ]),
-        ),
+        jsonResponse(fullPage("first", { 1: { link: "https://example.com/" } })),
       )
-      .mockResolvedValueOnce(
-        jsonResponse(
-          searchResponse([
-            { link: "https://second.test/", position: 1 },
-            { link: "https://last.test/", position: 10 },
-          ]),
-        ),
-      );
+      .mockResolvedValueOnce(jsonResponse(fullPage("second")));
     vi.stubGlobal("fetch", fetchMock);
     const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -228,7 +225,9 @@ describe("serpApiProvider", () => {
       billingUnits: 2,
       observation: { completeness: "complete", requestPolicy: { depth: 20, stopOnMatch: false } },
     });
-    expect(result.raw?.organic_results?.map((row) => row.rank)).toEqual([1, 9, 11, 20]);
+    expect(result.raw?.organic_results?.map((row) => row.rank)).toEqual(
+      Array.from({ length: 20 }, (_, index) => index + 1),
+    );
   });
   it("does not invent twenty rows or complete-prefix proof when Google ends sooner", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
@@ -253,16 +252,11 @@ describe("serpApiProvider", () => {
     });
   });
   it("stops after the first page when the tracked domain is found", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse(
-        searchResponse([
-          {
-            link: "https://www.example.com/first-page",
-            position: 3,
-          },
-        ]),
-      ),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(fullPage("early", { 3: { link: "https://www.example.com/first-page" } })),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(serpApiProvider.fetchRank(rankInput({ depth: 100 }))).resolves.toMatchObject({
@@ -274,26 +268,21 @@ describe("serpApiProvider", () => {
   });
 
   it("fetches the full requested depth when stop on match is disabled", async () => {
-    const fetchMock = vi.fn().mockImplementation(() =>
-      Promise.resolve(
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      const start = Number(new URL(url).searchParams.get("start") ?? 0);
+      return Promise.resolve(
         jsonResponse(
-          searchResponse([
-            {
-              link: "https://www.example.com/first-page",
-              position: 3,
-            },
-          ]),
+          fullPage(
+            `full-${start}`,
+            start === 0 ? { 3: { link: "https://www.example.com/first-page" } } : {},
+          ),
         ),
-      ),
-    );
+      );
+    });
     vi.stubGlobal("fetch", fetchMock);
-
     await expect(
       serpApiProvider.fetchRank(rankInput({ depth: 100, stopOnMatch: false })),
-    ).resolves.toMatchObject({
-      billingUnits: 10,
-      position: 3,
-    });
+    ).resolves.toMatchObject({ billingUnits: 10, position: 3 });
     expect(fetchMock).toHaveBeenCalledTimes(10);
   });
 
@@ -316,7 +305,7 @@ describe("serpApiProvider", () => {
           ),
         ),
       )
-      .mockResolvedValueOnce(jsonResponse(searchResponse([])));
+      .mockResolvedValueOnce(jsonResponse(searchResponse([], { serpapi_pagination: {} })));
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await serpApiProvider.fetchRank(
@@ -422,11 +411,13 @@ describe("serpApiProvider", () => {
             ]),
           ),
         )
-        .mockResolvedValueOnce(jsonResponse(searchResponse([]))),
+        .mockResolvedValueOnce(jsonResponse(searchResponse([], { serpapi_pagination: {} }))),
     );
 
     await expect(
-      serpApiProvider.fetchRank(rankInput({ depth: 20, domain: "www.example.com" })),
+      serpApiProvider.fetchRank(
+        rankInput({ depth: 20, domain: "www.example.com", stopOnMatch: false }),
+      ),
     ).resolves.toMatchObject({
       position: 4,
       rankingUrl: "https://blog.example.com/first",
@@ -482,6 +473,7 @@ describe("serpApiProvider", () => {
               link: "https://example.com/best",
               position: 2,
             },
+            { link: "https://other.example.org/first", position: 1 },
           ]),
         ),
       ),
@@ -498,11 +490,14 @@ describe("serpApiProvider", () => {
       "fetch",
       vi.fn().mockImplementation(() =>
         jsonResponse(
-          searchResponse([
-            {
-              link: "https://example.com/missing-rank",
-            },
-          ]),
+          searchResponse(
+            [
+              {
+                link: "https://example.com/missing-rank",
+              },
+            ],
+            { serpapi_pagination: {} },
+          ),
         ),
       ),
     );
@@ -513,7 +508,7 @@ describe("serpApiProvider", () => {
     });
   });
 
-  it("records but skips a malformed rank on a known nonmatching organic item", async () => {
+  it("rejects an unproven prefix before a matching organic item", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -522,6 +517,7 @@ describe("serpApiProvider", () => {
             {
               link: "https://competitor.example.org/missing-rank",
             },
+            { link: "https://example.org/second", position: 2 },
             {
               link: "https://example.com/ranking",
               position: 3,
@@ -531,15 +527,10 @@ describe("serpApiProvider", () => {
       ),
     );
 
-    await expect(serpApiProvider.fetchRank(rankInput())).resolves.toMatchObject({
-      position: 3,
-      raw: {
-        normalization: {
-          anomalies: [{ code: "organic_rank_missing", index: 0 }],
-          outcome: "match",
-          version: "v2",
-        },
-      },
+    await expect(serpApiProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      name: "OrganicCoverageError",
+      code: "organic_depth_not_covered",
+      retryable: false,
     });
   });
 
@@ -549,12 +540,13 @@ describe("serpApiProvider", () => {
       .mockResolvedValueOnce(
         jsonResponse(searchResponse([{ link: "https://example.com/", position: 2 }])),
       )
-      .mockResolvedValueOnce(jsonResponse(searchResponse([])));
+      .mockResolvedValueOnce(jsonResponse(searchResponse([], { serpapi_pagination: {} })));
     vi.stubGlobal("fetch", fetchMock);
 
     await serpApiProvider.fetchRank(
       rankInput({
         depth: 20,
+        stopOnMatch: false,
         location: serpRankLocation({
           // A city resolved for the code-based provider still carries a code, but
           // SerpApi ignores it and pins on the canonical secondaryGeoName string.
@@ -583,27 +575,26 @@ describe("serpApiProvider", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        jsonResponse(searchResponse([{ link: "https://competitor.com/1", position: 1 }])),
+        jsonResponse(fullPage("p1", { 1: { link: "https://competitor.com/1" } })),
       )
       .mockResolvedValueOnce(
-        jsonResponse(searchResponse([{ link: "https://competitor.com/2", position: 1 }])),
+        jsonResponse(fullPage("p2", { 1: { link: "https://competitor.com/2" } })),
       )
       .mockResolvedValueOnce(
-        jsonResponse(searchResponse([{ link: "https://competitor.com/3", position: 1 }])),
+        jsonResponse(fullPage("p3", { 1: { link: "https://competitor.com/3" } })),
       )
       .mockResolvedValueOnce(
-        jsonResponse(searchResponse([{ link: "https://competitor.com/4", position: 1 }])),
+        jsonResponse(fullPage("p4", { 1: { link: "https://competitor.com/4" } })),
       )
       .mockResolvedValueOnce(
         jsonResponse(
-          searchResponse([
-            {
+          fullPage("p5", {
+            7: {
               displayed_link: "example.com",
               link: "https://example.com/fifth-page",
-              position: 7,
               title: "Fifth page result",
             },
-          ]),
+          }),
         ),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -614,20 +605,20 @@ describe("serpApiProvider", () => {
       billingUnits: 5,
       position: 47,
       rankingUrl: "https://example.com/fifth-page",
-      raw: {
-        organic_results: [
-          { domain: "competitor.com", rank: 1, title: null, url: "https://competitor.com/1" },
-          { domain: "competitor.com", rank: 11, title: null, url: "https://competitor.com/2" },
-          { domain: "competitor.com", rank: 21, title: null, url: "https://competitor.com/3" },
-          { domain: "competitor.com", rank: 31, title: null, url: "https://competitor.com/4" },
-          {
-            domain: "example.com",
-            rank: 47,
-            title: "Fifth page result",
-            url: "https://example.com/fifth-page",
-          },
-        ],
-      },
+    });
+    const rows = result.raw?.organic_results ?? [];
+    expect(rows).toHaveLength(50);
+    expect(rows.map((row) => row.rank)).toEqual(
+      Array.from({ length: 50 }, (_, index) => index + 1),
+    );
+    expect(rows.filter((row) => row.domain === "competitor.com").map((row) => row.rank)).toEqual([
+      1, 11, 21, 31,
+    ]);
+    expect(rows[46]).toMatchObject({
+      domain: "example.com",
+      rank: 47,
+      title: "Fifth page result",
+      url: "https://example.com/fifth-page",
     });
     expect(fetchMock).toHaveBeenCalledTimes(5);
     expect(String(fetchMock.mock.calls[0][0])).not.toContain("start=");
@@ -673,7 +664,7 @@ describe("serpApiProvider", () => {
             ]),
           ),
         )
-        .mockResolvedValueOnce(jsonResponse(searchResponse([]))),
+        .mockResolvedValueOnce(jsonResponse(searchResponse([], { serpapi_pagination: {} }))),
     );
 
     await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).resolves.toMatchObject({
@@ -870,11 +861,10 @@ describe("SerpApi observation capture", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        jsonResponse(
-          searchResponse([{ link: "https://competitor.example.com", position: 1 }], {
-            local_results: { places: [{ place_id: "local", title: "Local result" }] },
-          }),
-        ),
+        jsonResponse({
+          ...fullPage("local"),
+          local_results: { places: [{ place_id: "local", title: "Local result" }] },
+        }),
       ),
     );
 
@@ -934,13 +924,9 @@ describe("SerpApi observation completeness", () => {
   it("records a complete observation when an armed policy fetches every requested page", async () => {
     const fetchMock = vi
       .fn()
-      .mockImplementation(() =>
+      .mockImplementation((url: string) =>
         Promise.resolve(
-          jsonResponse(
-            searchResponse([
-              { link: "https://competitor.example.org/first", position: 1, title: "Competitor" },
-            ]),
-          ),
+          jsonResponse(fullPage(`observed-${new URL(url).searchParams.get("start") ?? 0}`)),
         ),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -976,7 +962,7 @@ describe("SerpApi observation completeness", () => {
         .mockResolvedValueOnce(
           jsonResponse(
             searchResponse([
-              { link: "https://competitor.example.org/first", position: 1, title: "Competitor" },
+              { link: "https://example.com/first", position: 1, title: "Competitor" },
             ]),
           ),
         )
@@ -1135,10 +1121,11 @@ describe("SerpApi provider request journal", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await serpApiProvider.fetchRank(journalRankInput(ledger));
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toThrow(
+      "organic_depth_not_covered",
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(result.billingUnits).toBe(2);
     // Only one durable row survives; the duplicate attempt row is withdrawn.
     expect(ledger.rows).toEqual([
       expect.objectContaining({
@@ -1153,17 +1140,18 @@ describe("SerpApi provider request journal", () => {
   it("keeps cached zero receipts distinct instead of deduplicating them", async () => {
     const ledger = createJournalLedger();
     const cachedPage = () =>
-      jsonResponse(
-        searchResponse([{ link: "https://competitor.com/", position: 1 }], {
-          search_metadata: { id: "cached-search", status: "Cached" },
-        }),
-      );
+      jsonResponse({
+        ...fullPage("cached"),
+        search_metadata: { id: "cached-search", status: "Cached" },
+      });
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(cachedPage()));
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await serpApiProvider.fetchRank(journalRankInput(ledger));
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toThrow(
+      "organic_depth_not_covered",
+    );
 
-    expect(result.billingUnits).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(ledger.rows).toHaveLength(2);
     for (const row of ledger.rows) {
       expect(row).toMatchObject({
@@ -1174,6 +1162,35 @@ describe("SerpApi provider request journal", () => {
       });
     }
   });
+
+  it.each(["Success", "Cached"])(
+    "retains %s receipts when organic depth is not covered",
+    async (status) => {
+      const ledger = createJournalLedger();
+      const fetchMock = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          jsonResponse({
+            ...fullPage("partial"),
+            organic_results: fullPage("partial").organic_results.slice(0, 9),
+            search_metadata: { id: `partial-${crypto.randomUUID()}`, status },
+          }),
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toThrow(
+        "organic_depth_not_covered",
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(ledger.rows).toHaveLength(2);
+      for (const row of ledger.rows)
+        expect(row).toMatchObject({
+          measurementStatus: "recorded",
+          usageQuantity: status === "Cached" ? 0 : 1,
+          cached: status === "Cached",
+        });
+    },
+  );
 });
 
 vi.mock("@/lib/provider-usage/admission-extension", async () => ({

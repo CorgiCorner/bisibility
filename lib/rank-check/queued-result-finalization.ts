@@ -8,6 +8,7 @@ import {
 } from "./queued-persistence-lease";
 import { queuedResultTransactionOptions } from "./queued-result-attempt";
 import { loadQueuedTask } from "./queued-results-load";
+import { finalizeQueuedSourceEvidence } from "./queued-source-retention";
 
 export function claimQueuedResultTask(taskId: string) {
   return prisma.$transaction(async (tx) => {
@@ -20,6 +21,7 @@ export function claimQueuedResultTask(taskId: string) {
 export function terminalizeLease(lease: QueuedPersistenceLease, state: "completed" | "failed") {
   return async (tx: Prisma.TransactionClient) => {
     await transitionQueuedPersistenceLease(lease, ["persisting"], { state }, tx);
+    await finalizeQueuedSourceEvidence(tx, lease.taskId, state);
     await acknowledgeQueuedRankAttempt(tx, lease.taskId);
   };
 }

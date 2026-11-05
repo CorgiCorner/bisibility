@@ -1,4 +1,5 @@
 import type { TriggeredAlertFeedView } from "@/lib/alerts/alert-data";
+import type { DeliveryCounts } from "@/lib/alerts/delivery-counts";
 import type { FeedFacetOptions, FeedRowMetadata } from "@/lib/feeds/facets";
 import type { useTranslations } from "next-intl";
 
@@ -16,6 +17,7 @@ export type PresentedAlertFeedView = {
   ctas: AlertFeedCta[];
   current: string;
   deliveryAttempts: {
+    counts?: DeliveryCounts;
     channel: string;
     endpoint: string | null;
     error: string | null;
@@ -28,6 +30,27 @@ export type PresentedAlertFeedView = {
   previous: string;
   when: string;
 };
+
+export function currentAlertDeliveryOutcomes(alert: TriggeredAlertFeedView) {
+  if (alert.deliverySummary?.length) return alert.deliverySummary;
+  if (alert.deliveryOutcomes) return alert.deliveryOutcomes;
+
+  const emailAttempts: TriggeredAlertFeedView["deliveryAttempts"] = [];
+  const latest = new Map<string, TriggeredAlertFeedView["deliveryAttempts"][number]>();
+  for (const attempt of alert.deliveryAttempts) {
+    // Email rows have no recipient identity, so a newer row cannot prove recovery.
+    if (attempt.channel === "email") {
+      emailAttempts.push(attempt);
+      continue;
+    }
+    const key = `${attempt.channel}:${attempt.webhookEndpoint?.id ?? ""}`;
+    const current = latest.get(key);
+    if (!current || Date.parse(attempt.attemptedAt) > Date.parse(current.attemptedAt)) {
+      latest.set(key, attempt);
+    }
+  }
+  return [...latest.values(), ...emailAttempts];
+}
 
 function positionLabel(position: number | null, t: FeedTranslations) {
   return position === null ? t("noRank") : t("rankPosition", { position });
@@ -144,9 +167,10 @@ function ctas(alert: TriggeredAlertFeedView): AlertFeedCta[] {
   return ["open_keyword", "view_serp"];
 }
 
-function attemptStatus(status: string, t: FeedTranslations) {
+export function attemptStatus(status: string, t: FeedTranslations) {
   if (status === "failed") return t("attemptStatusFailed");
   if (status === "pending") return t("attemptStatusPending");
+  if (status === "partial") return t("attemptStatusPartial");
   if (status === "sent") return t("attemptStatusSent");
   if (status === "skipped") return t("attemptStatusSkipped");
   return t("attemptStatusUnknown", { status });
@@ -163,6 +187,7 @@ export function presentAlertFeed(
     ctas: ctas(alert),
     current: positionLabel(alert.afterPosition, t),
     deliveryAttempts: alert.deliveryAttempts.map((attempt) => ({
+      counts: attempt.counts,
       channel: attempt.channel,
       endpoint:
         attempt.webhookEndpoint?.label ??
@@ -177,4 +202,18 @@ export function presentAlertFeed(
     previous: positionLabel(alert.beforePosition, t),
     when: relativeTime(alert.firedAt, t, now),
   };
+}
+
+export function filterAlerts(
+  alerts: TriggeredAlertFeedView[],
+  readIds: Set<string>,
+  filter: "all" | "unread" | "urgent",
+) {
+  if (filter === "unread") {
+    return alerts.filter((alert) => alert.unread && !readIds.has(alert.id));
+  }
+  if (filter === "urgent") {
+    return alerts.filter((alert) => alert.severity === "urgent");
+  }
+  return alerts;
 }

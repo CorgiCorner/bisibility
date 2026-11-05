@@ -42,6 +42,14 @@ export const dataMigrationManifest: readonly DataMigrationManifestEntry[] = [
     lifecycle: "active",
     prerequisiteSchemaMigrationId: "20261012200600_measurement_definition_authority",
   },
+  {
+    checksum: "21e3c54a67de022f5d8acadf956de5211c1207770444f36eed5fe925f3171a90",
+    contractMigrationId: "20261104063000_legacy_notification_quarantine_complete",
+    execution: "deploy-blocking",
+    id: "20261104061000_legacy_notification_quarantine",
+    lifecycle: "active",
+    prerequisiteSchemaMigrationId: "20261104060000_legacy_notification_quarantine",
+  },
 ];
 
 export function activeDataMigrationManifest() {

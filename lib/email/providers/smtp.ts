@@ -19,6 +19,18 @@ type SmtpError = {
   retryAfterSeconds?: number;
 };
 
+function ambiguousTransport(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const code = "code" in error ? (error as { code?: unknown }).code : undefined;
+  return (
+    error.name === "AbortError" ||
+    error.name === "TimeoutError" ||
+    code === "ECONNRESET" ||
+    code === "ESOCKETTIMEDOUT" ||
+    code === "ETIMEDOUT"
+  );
+}
+
 function toEmailSendError(error: unknown) {
   const smtpError = error as SmtpError;
   const status = smtpError?.responseCode ?? 500;
@@ -28,6 +40,7 @@ function toEmailSendError(error: unknown) {
     `SMTP transport send failed with status ${status}.`,
     status,
     retryAfterSeconds,
+    { ambiguous: ambiguousTransport(error) },
   );
 }
 

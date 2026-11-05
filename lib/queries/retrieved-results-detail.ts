@@ -18,7 +18,21 @@ type CheckRow = {
   requestedDepth: number | null;
   raw: unknown;
   organicRanks: unknown;
-  observationRun?: { completeness: string; projectId: string } | null;
+  observationRun?: {
+    completeness: string;
+    engine?: string;
+    surface?: string;
+    projectId: string;
+    configuredScope?: unknown;
+    effectiveScope?: unknown;
+    requestPolicy?: unknown;
+    items?: {
+      resultKind: string;
+      title: string | null;
+      rawFragment?: unknown;
+      [key: string]: unknown;
+    }[];
+  } | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -68,8 +82,30 @@ async function buildFullResult(
       const domain = typeof item.domain === "string" ? item.domain : "";
       const url = typeof item.url === "string" ? item.url : null;
       const title = typeof item.title === "string" ? item.title : null;
+      const resolutions =
+        isRecord(check.raw) && Array.isArray(check.raw.redirect_resolutions)
+          ? check.raw.redirect_resolutions
+          : [];
+      const redirect = resolutions.find(
+        (value) =>
+          url !== null &&
+          isRecord(value) &&
+          value.status !== "not_redirect" &&
+          (value.url === url || value.originalUrl === url),
+      );
       return {
         domain,
+        resultType: isRecord(redirect)
+          ? "redirect"
+          : typeof item.type === "string"
+            ? item.type
+            : "organic",
+        resolutionStatus:
+          isRecord(redirect) && typeof redirect.status === "string"
+            ? redirect.status
+            : typeof item.resolutionStatus === "string"
+              ? item.resolutionStatus
+              : null,
         position: rank,
         title,
         tracked: check.position !== null && rank === check.position,
@@ -78,8 +114,34 @@ async function buildFullResult(
     })
     .filter((r): r is RetrievedRow => r !== null);
 
+  const observation = check.observationRun?.projectId === projectId ? check.observationRun : null;
+  const overviewItems =
+    observation?.items?.filter((item) => item.resultKind === "ai_overview") ?? [];
+  const observationItems =
+    observation?.items?.map(({ rawFragment: _rawFragment, ...item }) => item) ?? [];
+  const policy =
+    observation && isRecord(observation.requestPolicy) ? observation.requestPolicy : null;
+  const evidence = policy && isRecord(policy.evidence) ? policy.evidence : null;
   return {
-    aiOverview: aiOverviewState(check.provider, features),
+    observedAt: evidence && typeof evidence.observedAt === "string" ? evidence.observedAt : null,
+    storedData: {
+      normalization: isRecord(check.raw) ? (check.raw.normalization ?? null) : null,
+      observationItems,
+      scope: observation
+        ? {
+            engine: observation.engine ?? null,
+            surface: observation.surface ?? null,
+            configured: observation.configuredScope,
+            effective: observation.effectiveScope,
+            requestPolicy: observation.requestPolicy,
+          }
+        : null,
+    },
+    observationCompleteness: observation?.completeness ?? null,
+    aiOverviewContentLoaded: overviewItems.length
+      ? overviewItems.some((item) => Boolean(item.title))
+      : undefined,
+    aiOverview: overviewItems.length ? true : aiOverviewState(check.provider, features),
     extension: await loadSnapshotExtensionView({
       projectId,
       checkId: check.publicId,

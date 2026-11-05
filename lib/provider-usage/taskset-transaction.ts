@@ -37,8 +37,7 @@ function confirmedRollback(error: unknown) {
   return false;
 }
 
-/** Only atomic, pre-transport admission belongs here. Never retry a fence, POST or settlement. */
-export async function runUnsentTasksetTransaction<T>(
+async function runReplayableTransaction<T>(
   db: Pick<PrismaClient, "$transaction">,
   body: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
@@ -58,4 +57,25 @@ export async function runUnsentTasksetTransaction<T>(
       await setTimeout(TASKSET_ADMISSION_RETRY_DELAY_MS * 2 ** (attempt - 1));
     }
   }
+}
+
+/** Only atomic, pre-transport admission belongs here. Never retry a fence, POST or settlement. */
+export function runUnsentTasksetTransaction<T>(
+  db: Pick<PrismaClient, "$transaction">,
+  body: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return runReplayableTransaction(db, body);
+}
+
+/**
+ * Records a provider response that was already received. The body must be a state-guarded
+ * business write with no provider I/O, fence or usage settlement inside, so replaying it after a
+ * confirmed rollback cannot send or charge again. Losing it would discard the native task
+ * identities that are the only reconciliation proof for accepted, possibly charged tasks.
+ */
+export function runAcceptedTasksetWrite<T>(
+  db: Pick<PrismaClient, "$transaction">,
+  body: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return runReplayableTransaction(db, body);
 }

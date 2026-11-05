@@ -1,6 +1,6 @@
 import { handleMcpHttpRequest } from "@/lib/mcp/transport";
 
-// Provider work has a 260-second aggregate budget, leaving time to settle usage and save results.
+// The transport has a 260-second application budget before the platform deadline.
 export const maxDuration = 300;
 
 export const dynamic = "force-dynamic";

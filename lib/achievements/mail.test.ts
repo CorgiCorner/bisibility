@@ -76,6 +76,33 @@ describe("milestone mail delivery", () => {
     m.claim.mockResolvedValue({ count: 1 });
     m.send.mockResolvedValue(undefined);
   });
+
+  it("does not deliver queued mail to the configured viewer", async () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_bcdefghijklmnopqrstuvwxy");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    m.state.mockResolvedValue({
+      enabled: true,
+      emailEnabled: true,
+      user: {
+        publicId: "usr_abcdefghijklmnopqrstuvwx",
+        email: "viewer@example.org",
+        emailVerified: true,
+        uiLocale: "en",
+        deactivatedAt: null,
+        marketingEmailUnsubscribedAt: null,
+      },
+    });
+    await sweepAchievementMail(10, now);
+    expect(m.send).not.toHaveBeenCalled();
+    expect(m.claim).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ reason: "recipient_ineligible" }),
+      }),
+    );
+  });
+
   it("combines both awards into one localized bulk message and persists its delivery", async () => {
     expect(await sweepAchievementMail(10, now)).toEqual({ sent: 1 });
     expect(m.send).toHaveBeenCalledTimes(1);

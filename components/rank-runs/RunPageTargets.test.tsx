@@ -170,13 +170,79 @@ describe("RunPageTargets", () => {
     expect(screen.queryByText("Payment details unavailable")).toBeNull();
   });
 
-  it("keeps the missing-payment text for a target that was not deferred", () => {
+  it("shows the confirmed ledger cost without a payment receipt", () => {
     renderTargets({
-      items: [{ ...runPageFixture.items[0], id: "priced-without-payment", status: "completed" }],
+      items: [
+        {
+          ...runPageFixture.items[0],
+          actualCostCents: 40,
+          id: "priced-without-payment",
+          status: "completed",
+        },
+      ],
     });
 
-    expect(screen.getByText("Payment details unavailable")).toBeVisible();
+    expect(screen.getByText("$0.40")).toBeVisible();
+    expect(screen.getByText("$0.40")).toHaveClass("text-[12px]", "tabular-nums", "text-fg-muted");
+    expect(screen.getByText("$0.40")).toBeVisible();
+    expect(screen.queryByText("$0.06")).toBeNull();
+    expect(screen.queryByText("Payment details unavailable")).toBeNull();
   });
+
+  it("formats a confirmed provider amount when the row has no receipt", () => {
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          actualCostCents: 40,
+          id: "own-key-cost",
+          status: "completed",
+        },
+      ],
+    });
+
+    expect(screen.queryByText("Cost not recorded")).toBeNull();
+    expect(screen.getByText("$0.40")).toBeVisible();
+    expect(screen.queryByText("Payment details unavailable")).toBeNull();
+  });
+
+  it("preserves a sub-cent ledger amount when the row has no receipt", () => {
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          actualCostCents: 0.4,
+          id: "own-key-subcent",
+          status: "failed",
+        },
+      ],
+    });
+
+    expect(screen.queryByText("Cost not recorded")).toBeNull();
+    expect(screen.getByText("$0.004")).toBeVisible();
+    expect(screen.queryByText("$0.00")).toBeNull();
+    expect(screen.queryByText("Payment details unavailable")).toBeNull();
+  });
+
+  it.each(["queued", "running", "cancelled", "skipped", "blocked"] as const)(
+    "leaves the cost blank for a %s target that was not sent",
+    (status) => {
+      renderTargets({
+        items: [
+          {
+            ...runPageFixture.items[0],
+            actualCostCents: 40,
+            id: `unsent-${status}`,
+            status,
+          },
+        ],
+      });
+
+      expect(screen.queryByText("Cost not recorded")).toBeNull();
+      expect(screen.queryByText("$0.40")).toBeNull();
+      expect(screen.queryByText("Payment details unavailable")).toBeNull();
+    },
+  );
 
   it.each(["budget_exhausted", "budget_missing", "credits_exhausted"] as const)(
     "links %s deferrals to provider usage",

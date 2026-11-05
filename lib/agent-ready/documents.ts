@@ -6,6 +6,7 @@ import packageJson from "@/package.json";
 import type { MetadataRoute } from "next";
 import { getSkillArchive } from "./archive";
 import { absoluteUrl } from "./origin";
+import { skillCatalog } from "./skill-catalog";
 import { taskSkills } from "./skills";
 
 export const contentSignal = "ai-train=yes, search=yes, ai-input=yes";
@@ -140,6 +141,16 @@ export function createApiCatalog(origin: string) {
   };
 }
 
+// Mirrors the archive SKILL.md metadata so a client can resolve packs before downloading.
+function archiveSkillMetadata(slug: string): Record<string, string> | null {
+  const entry = skillCatalog.find((candidate) => candidate.slug === slug);
+  if (!entry || (!entry.pack && !entry.requires.length)) return null;
+  return {
+    ...(entry.pack ? { "bisibility.pack": entry.pack } : {}),
+    ...(entry.requires.length ? { "bisibility.requires": entry.requires.join(" ") } : {}),
+  };
+}
+
 export function createAgentSkillsIndex(origin: string) {
   const skills = mcpToolCapabilities.map((tool) => {
     const slug = skillSlug(tool.name);
@@ -158,9 +169,11 @@ export function createAgentSkillsIndex(origin: string) {
 
   const archiveSkills = taskSkills.map((skill) => {
     const { sha256: hash } = getSkillArchive(skill);
+    const metadata = archiveSkillMetadata(skill.slug);
     return {
       description: skill.description,
       digest: `sha256:${hash}`,
+      ...(metadata ? { metadata } : {}),
       name: skill.slug,
       sha256: hash,
       type: "archive",

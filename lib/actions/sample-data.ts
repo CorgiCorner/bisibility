@@ -95,7 +95,7 @@ export async function removeSampleData(input: unknown) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await closeProjectIncidentsSilently(tx, project.id);
+    await closeProjectIncidentsSilently(tx, project.id, undefined, { retainNotifications: true });
     await tx.project.delete({ where: { id: project.id } });
     await writeAudit(
       {

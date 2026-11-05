@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   prisma: {
     providerIncident: { updateMany: vi.fn() },
-    notification: { deleteMany: vi.fn() },
+    notification: { deleteMany: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn() },
     project: {
       findFirst: vi.fn(),

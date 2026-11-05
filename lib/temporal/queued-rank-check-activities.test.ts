@@ -172,9 +172,14 @@ describe("queued rank-check provider activities", () => {
 
     expect(mocks.activityContext.heartbeat).toHaveBeenCalled();
     expect(mocks.persist).toHaveBeenCalledWith("batch_1", {
+      activityDeadlineAt: expect.any(Date),
       deadlineAt: new Date("2026-07-29T00:15:00.000Z"),
       signal: mocks.activityContext.cancellationSignal,
     });
+    // Conversion budgets end at this attempt's start-to-close timeout, not the queue deadline.
+    const options = mocks.persist.mock.calls[0]?.[1] as { activityDeadlineAt: Date };
+    expect(options.activityDeadlineAt.getTime() - Date.now()).toBeGreaterThan(110_000);
+    expect(options.activityDeadlineAt.getTime() - Date.now()).toBeLessThanOrEqual(120_000);
   });
 
   it("propagates Temporal cancellation through an in-flight persistence attempt", async () => {

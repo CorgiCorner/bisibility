@@ -79,9 +79,13 @@ export async function restoreRetainedRankResult(
     },
     resolveSerpDepth(check.requestedDepth ?? undefined),
   );
+  const originalFinish =
+    value.version === 2 && value.historicalRepair
+      ? (check.preRecoveryFinishedAt ?? check.finishedAt)
+      : check.preRecoveryFinishedAt;
   if (
     (value.version === 2 &&
-      (value.finishedAt !== check.preRecoveryFinishedAt?.toISOString() ||
+      (value.finishedAt !== originalFinish?.toISOString() ||
         value.result.rankCheck.checkedAt !== check.checkedAt.toISOString())) ||
     value.target.keywordId !== check.keywordId ||
     value.target.projectId !== current.projectId ||
@@ -132,6 +136,7 @@ export async function restoreRetainedRankResult(
       status: "completed",
       error: null,
       errorCode: null,
+      ...(value.version === 2 && value.historicalRepair ? { comparisonAllowed: false } : {}),
       deferredReason: null,
       finishedAt: check.preRecoveryFinishedAt ?? check.finishedAt ?? undefined,
     },
@@ -170,6 +175,7 @@ export async function restoreRetainedRankResult(
     tx,
   );
   await tx.rankCheckResultEvidence.delete({ where: { rankCheckId: checkId } });
-  await finalizeRestoredRecovery(tx, value);
+  // Historical repair must not refresh incidents or send mail for an old check.
+  if (!(value.version === 2 && value.historicalRepair)) await finalizeRestoredRecovery(tx, value);
   return true;
 }

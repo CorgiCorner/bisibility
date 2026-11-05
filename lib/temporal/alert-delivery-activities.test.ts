@@ -1,6 +1,7 @@
 import { ApplicationFailure } from "@temporalio/common";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeliveryHttpError, type TriggeredAlertDeliveryPayload } from "../alerts/delivery";
+import { allAlertsDeliverable } from "../alerts/send-gate";
 import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "../alerts/webhook-target";
 import { EmailBudgetExceededError, EmailSendError } from "../email/send";
 import {
@@ -21,13 +22,21 @@ const mocks = vi.hoisted(() => ({
   reserveDeliveryBudgetOnce: vi.fn(),
   sendEmail: vi.fn(),
   prisma: {
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn().mockResolvedValue([]),
     deliveryAttempt: { create: vi.fn((_input?: unknown) => Promise.resolve({})) },
     notificationPreference: { findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
     triggeredAlert: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(() => Promise.resolve({})),
+      updateMany: vi.fn(),
+    },
+    preparedEmailMessage: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
     webhookEndpoint: { findUnique: vi.fn(), updateMany: vi.fn() },
@@ -40,9 +49,10 @@ vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("../alerts/delivery", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../alerts/delivery")>()),
   postSignedWebhook: mocks.postSignedWebhook,
-  recordDeliveryAttempt: vi.fn((alertId, channel, status, error, webhookEndpointId) =>
+  recordDeliveryAttempt: vi.fn((alertId, channel, status, error, webhookEndpointId, counts) =>
     mocks.prisma.deliveryAttempt.create({
       data: {
+        ...counts,
         alertId,
         channel,
         error,
@@ -54,6 +64,22 @@ vi.mock("../alerts/delivery", async (importOriginal) => ({
   ),
   sendAlertEmail: mocks.sendAlertEmail,
   sendSlackAlert: mocks.sendSlackAlert,
+}));
+vi.mock("../alerts/send-gate", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../alerts/send-gate")>()),
+  allAlertsDeliverable: vi.fn().mockResolvedValue(true),
+  alertEmailSendGate: vi.fn().mockResolvedValue({
+    allowed: true,
+    email: "owner@example.com",
+    userId: "user_1",
+    projectId: "project_1",
+  }),
+  requireAlertEmailSend: vi.fn(async () => ({
+    allowed: true,
+    email: "owner@example.com",
+    projectId: "project_1",
+    userId: "user_1",
+  })),
 }));
 vi.mock("../alerts/daily-cap", () => ({
   recordSuppressed: mocks.recordSuppressed,
@@ -93,22 +119,53 @@ describe("alert delivery activities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
+    vi.stubEnv("EMAIL_PROVIDER", "");
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.deliveryAttempt.create.mockResolvedValue({});
     mocks.prisma.notificationPreference.findMany.mockResolvedValue([]);
     mocks.prisma.triggeredAlert.update.mockResolvedValue({});
+    mocks.prisma.triggeredAlert.findUnique.mockResolvedValue({
+      ruleId: "rule_1",
+      rule: { projectId: "project_1" },
+    });
+    mocks.prisma.user.findUnique.mockResolvedValue({ id: "user_1" });
     mocks.prisma.triggeredAlert.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.webhookEndpoint.updateMany.mockResolvedValue({ count: 1 });
+    const rows = new Map<string, Record<string, unknown>>();
+    mocks.prisma.preparedEmailMessage.findUnique.mockImplementation(async ({ where }) => {
+      const row = rows.get(where.deliveryIdentity);
+      return row ? { ...row } : null;
+    });
+    mocks.prisma.preparedEmailMessage.create.mockImplementation(async ({ data }) => {
+      const row = { id: "prepared_1", ...data };
+      rows.set(data.deliveryIdentity, row);
+      return row;
+    });
+    mocks.prisma.preparedEmailMessage.updateMany.mockImplementation(async ({ data, where }) => {
+      const row = rows.get(where.deliveryIdentity);
+      if (!row) return { count: 0 };
+      if (where.state && row.state !== where.state) return { count: 0 };
+      if (where.budgetReserved !== undefined && row.budgetReserved !== where.budgetReserved) {
+        return { count: 0 };
+      }
+      Object.assign(row, data);
+      return { count: 1 };
+    });
     mocks.sendAlertEmail.mockResolvedValue();
     mocks.sendSlackAlert.mockResolvedValue(true);
     mocks.postSignedWebhook.mockResolvedValue();
     mocks.notifyTriggeredAlertDelivered.mockResolvedValue();
     mocks.recordSuppressed.mockResolvedValue({ overflowNoticeDue: false });
     mocks.reserveDeliveryBudgetOnce.mockResolvedValue({ granted: true, reused: false });
-    mocks.sendEmail.mockResolvedValue(undefined);
+    mocks.sendEmail.mockImplementation(
+      async (input: { claimProviderSend?: () => Promise<void> }) => {
+        await input.claimProviderSend?.();
+      },
+    );
   });
 
   it("maps a 429 to retryable rate limiting with nextRetryDelay", async () => {
-    mocks.sendAlertEmail.mockRejectedValue(new EmailSendError("rate limited", 429, 30));
+    mocks.sendEmail.mockRejectedValue(new EmailSendError("rate limited", 429, 30));
     const error = await deliverAlertEmailActivity({
       alertId: "alert_1",
       payload: payload(),
@@ -126,7 +183,7 @@ describe("alert delivery activities", () => {
       1_000,
       new Date("2026-07-23T00:00:00.000Z"),
     );
-    mocks.sendAlertEmail.mockRejectedValue(budgetError);
+    mocks.sendEmail.mockRejectedValue(budgetError);
 
     await expect(
       deliverAlertEmailActivity({
@@ -195,7 +252,7 @@ describe("alert delivery activities", () => {
   });
 
   it("maps a 422 to a non-retryable failure", async () => {
-    mocks.sendAlertEmail.mockRejectedValue(new EmailSendError("invalid", 422, null));
+    mocks.sendEmail.mockRejectedValue(new EmailSendError("invalid", 422, null));
     const error = await deliverAlertEmailActivity({
       alertId: "alert_1",
       payload: payload(),
@@ -207,7 +264,7 @@ describe("alert delivery activities", () => {
 
   it("leaves a 5xx retryable and records one attempt", async () => {
     const transportError = new EmailSendError("temporary", 503, null);
-    mocks.sendAlertEmail.mockRejectedValue(transportError);
+    mocks.sendEmail.mockRejectedValue(transportError);
     await expect(
       deliverAlertEmailActivity({
         alertId: "alert_1",
@@ -432,6 +489,20 @@ describe("alert delivery activities", () => {
     const message = { body: "b", collapseId: "c", data: {}, threadId: "t", title: "t" };
     const input = { alertId: "alert_1", message, projectInternalId: "project_1" };
 
+    it("skips push for an alert that is no longer deliverable", async () => {
+      mocks.pushSender.mockReturnValue({ send: vi.fn(), topic: "com.example.app" });
+      vi.mocked(allAlertsDeliverable).mockResolvedValueOnce(false);
+      await expect(deliverAlertPushActivity(input)).resolves.toEqual({
+        delivered: false,
+        skipped: true,
+        reason: "Alert is no longer deliverable.",
+      });
+      expect(mocks.deliverPushToProject).not.toHaveBeenCalled();
+      expect(mocks.prisma.deliveryAttempt.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ channel: "push", status: "skipped" }),
+      });
+    });
+
     it("fails without retry when push is not configured", async () => {
       mocks.pushSender.mockReturnValue(null);
       await expect(deliverAlertPushActivity(input)).rejects.toMatchObject({ nonRetryable: true });
@@ -444,31 +515,50 @@ describe("alert delivery activities", () => {
       mocks.pushSender.mockReturnValue({ send: vi.fn(), topic: "com.example.app" });
       mocks.deliverPushToProject
         .mockResolvedValueOnce({
+          acceptedCount: 1,
+          failedCount: 1,
+          unknownCount: 0,
           devices: 2,
           failures: ["TooManyRequests"],
           retryable: true,
           sent: 1,
         })
-        .mockResolvedValueOnce({ devices: 0, failures: [], retryable: false, sent: 0 })
         .mockResolvedValueOnce({
+          acceptedCount: 0,
+          failedCount: 0,
+          unknownCount: 0,
+          devices: 0,
+          failures: [],
+          retryable: false,
+          sent: 0,
+        })
+        .mockResolvedValueOnce({
+          acceptedCount: 0,
+          failedCount: 1,
+          unknownCount: 0,
           devices: 1,
           failures: ["TooManyRequests"],
           retryable: true,
           sent: 0,
         });
-      await expect(deliverAlertPushActivity(input)).resolves.toEqual({
+      await expect(deliverAlertPushActivity(input)).resolves.toMatchObject({
         delivered: true,
         skipped: false,
+        counts: { acceptedCount: 1, failedCount: 1, unknownCount: 0 },
       });
-      await expect(deliverAlertPushActivity(input)).resolves.toEqual({
+      await expect(deliverAlertPushActivity(input)).resolves.toMatchObject({
         delivered: false,
         skipped: true,
       });
-      await expect(deliverAlertPushActivity(input)).rejects.toThrow(/TooManyRequests/);
+      await expect(deliverAlertPushActivity(input)).resolves.toMatchObject({
+        delivered: false,
+        skipped: false,
+        counts: { acceptedCount: 0, failedCount: 1, unknownCount: 0 },
+      });
       const statuses = mocks.prisma.deliveryAttempt.create.mock.calls.map(
         ([call]) => (call as { data: { status: string } }).data.status,
       );
-      expect(statuses).toEqual(["sent", "skipped", "failed"]);
+      expect(statuses).toEqual(["partial", "skipped", "failed"]);
     });
   });
 
@@ -495,11 +585,14 @@ describe("alert delivery activities", () => {
         id: "alert_1",
       },
     });
-    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledWith({
-      payload: payload(),
-      projectInternalId: "project_1",
-      triggeredAlertId: "alert_1",
-    });
+    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledWith(
+      {
+        payload: payload(),
+        projectInternalId: "project_1",
+        triggeredAlertId: "alert_1",
+      },
+      mocks.prisma,
+    );
   });
 
   it("records filtered email delivery as skipped without marking it delivered", async () => {
@@ -541,11 +634,14 @@ describe("alert delivery activities", () => {
         projectInternalId: "project_1",
       }),
     ).resolves.toEqual({ deliveryState: "skipped" });
-    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledWith({
-      payload: payload(),
-      projectInternalId: "project_1",
-      triggeredAlertId: "alert_1",
-    });
+    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledWith(
+      {
+        payload: payload(),
+        projectInternalId: "project_1",
+        triggeredAlertId: "alert_1",
+      },
+      mocks.prisma,
+    );
   });
 
   it("emits the in-app notification when every external channel failed", async () => {
@@ -561,6 +657,20 @@ describe("alert delivery activities", () => {
     expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledTimes(1);
   });
 
+  it("does not notify in-app for an alert that is no longer deliverable", async () => {
+    vi.mocked(allAlertsDeliverable).mockResolvedValueOnce(false);
+    await expect(
+      finalizeAlertDeliveryActivity({
+        alertId: "alert_1",
+        deliveryClaimToken: "claim_1",
+        outcomes: [{ channel: "email", delivered: true }],
+        payload: payload(),
+        projectInternalId: "project_1",
+      }),
+    ).resolves.toEqual({ deliveryState: "delivered" });
+    expect(mocks.notifyTriggeredAlertDelivered).not.toHaveBeenCalled();
+  });
+
   it("does not notify when another worker already finalized the claim", async () => {
     mocks.prisma.triggeredAlert.updateMany.mockResolvedValueOnce({ count: 0 });
     await finalizeAlertDeliveryActivity({
@@ -571,6 +681,25 @@ describe("alert delivery activities", () => {
       projectInternalId: "project_1",
     });
     expect(mocks.notifyTriggeredAlertDelivered).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 1])("records unknown outcomes only for an owned finalization (%s)", async (count) => {
+    mocks.prisma.triggeredAlert.updateMany.mockResolvedValueOnce({ count });
+    await finalizeAlertDeliveryActivity({
+      alertId: "alert_1",
+      deliveryClaimToken: "claim_1",
+      outcomes: [{ channel: "email", delivered: false, unknown: true, recordAttempt: true }],
+      payload: payload(),
+      projectInternalId: "project_1",
+    });
+    if (count === 0) {
+      expect(mocks.prisma.deliveryAttempt.create).not.toHaveBeenCalled();
+      expect(mocks.notifyTriggeredAlertDelivered).not.toHaveBeenCalled();
+    } else {
+      expect(mocks.prisma.deliveryAttempt.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ channel: "email", status: "unknown" }),
+      });
+    }
   });
 
   it("dead-letters and records missing-recipient failures", async () => {

@@ -1,6 +1,11 @@
 /// <reference types="vite/client" />
 
-import { describe, expect, it } from "vitest";
+import {
+  runOpsSweepNow,
+  sendTestSlackNotification,
+  setDomainRatingTracking,
+} from "@/.storybook/browser-runtime-stubs";
+import { describe, expect, it, vi } from "vitest";
 
 type StoryModule = {
   default?: unknown;
@@ -18,6 +23,17 @@ function storyExportNames(module: StoryModule) {
 }
 
 describe("storybook stories", () => {
+  it("fails closed for server actions without a network request", async () => {
+    const fetchSpy = vi.spyOn(window, "fetch");
+    try {
+      for (const action of [runOpsSweepNow, sendTestSlackNotification, setDomainRatingTracking]) {
+        await expect(action()).rejects.toThrow("Action unavailable in Storybook preview");
+      }
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
   // Import checks do not render or mutate the shared canvas; keep play tests sequential.
   it.concurrent.each(storyModules)("%s imports cleanly", async (_path, loadStoryModule) => {
     const module = await loadStoryModule();

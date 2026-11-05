@@ -59,9 +59,11 @@ export function runsTableColumns({
   t,
 }: RunsTableColumnsOptions): readonly DataTableColumn<RunsTableRow>[] {
   const statusPresentation = (run: RankRunRecord) =>
-    isSkippedOccurrence(run)
-      ? { label: statusT("skipped"), tone: "neutral" as const }
-      : statusCopy.rank(rankRunStatusKey(run.status, run.outcome));
+    run.expiryBlockedReason
+      ? statusCopy.rank("blocked")
+      : isSkippedOccurrence(run)
+        ? { label: statusT("skipped"), tone: "neutral" as const }
+        : statusCopy.rank(rankRunStatusKey(run.status, run.outcome));
   const selection = (run: RankRunRecord) => {
     switch (run.selectionKind) {
       case "all":
@@ -166,12 +168,12 @@ export function runsTableColumns({
         const run = row.original.run;
         const status = statusPresentation(run);
         const blocked =
-          run.status === "blocked"
+          run.status === "blocked" || run.expiryBlockedReason
             ? localizedBlockedRunCopy(
                 {
                   budget: run.budget,
                   deploymentMode,
-                  reason: run.blockedReason,
+                  reason: run.expiryBlockedReason ?? run.blockedReason,
                 },
                 t,
                 locale,

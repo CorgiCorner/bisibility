@@ -64,7 +64,7 @@ const settingsShellStories = [
   {
     activeSection: "Tracking",
     name: "Tracking state with the shell provider",
-    saveControl: "present",
+    saveControl: "review",
     sectionId: "tracking",
     story: composeSettingsStory(trackingStories, "Settled"),
   },
@@ -93,6 +93,9 @@ describe("Settings shell composed stories", () => {
           const saveControls = canvas.getAllByRole("button", { name: "Save" });
           expect(saveControls.length).toBeGreaterThan(0);
           for (const saveControl of saveControls) expect(saveControl).toBeVisible();
+        } else if (saveControl === "review") {
+          expect(canvas.getByRole("button", { name: "Review changes" })).toBeVisible();
+          expect(canvas.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
         } else {
           expect(canvas.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
         }

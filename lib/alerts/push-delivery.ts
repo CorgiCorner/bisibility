@@ -2,8 +2,9 @@ import "server-only";
 
 import type { PushMessage, PushSender } from "@/lib/notifications/apns";
 import { deleteInvalidPushToken, projectPushRecipients } from "@/lib/notifications/push-tokens";
+import type { DeliveryCounts } from "./delivery-counts";
 
-export type PushDeliveryResult = {
+export type PushDeliveryResult = DeliveryCounts & {
   devices: number;
   failures: string[];
   retryable: boolean;
@@ -21,6 +22,9 @@ export async function deliverPushToProject(
 ): Promise<PushDeliveryResult> {
   const recipients = await projectPushRecipients(projectInternalId, sender.topic);
   const result: PushDeliveryResult = {
+    acceptedCount: 0,
+    failedCount: 0,
+    unknownCount: 0,
     devices: recipients.length,
     failures: [],
     retryable: false,
@@ -31,15 +35,18 @@ export async function deliverPushToProject(
       const outcome = await sender.send(recipient.token, recipient.environment, message);
       if (outcome.kind === "sent") {
         result.sent += 1;
+        result.acceptedCount += 1;
       } else if (outcome.kind === "invalid_token") {
-        await deleteInvalidPushToken(recipient.token);
+        result.failedCount += 1;
+        await deleteInvalidPushToken(recipient.token).catch(() => undefined);
       } else {
+        result.failedCount += 1;
         result.failures.push(outcome.reason);
         if (outcome.kind === "retryable") result.retryable = true;
       }
     } catch (error) {
+      result.unknownCount += 1;
       result.failures.push(error instanceof Error ? error.name : "PushError");
-      result.retryable = true;
     }
   }
   return result;

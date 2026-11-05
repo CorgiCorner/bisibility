@@ -13,8 +13,8 @@
       "invite": "Invite",
       "weeklyReport": "Weekly report",
       "unavailable": "{label} is not available",
-      "unavailableHelp": "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week.",
-      "saveError": "Preferences could not be saved.",
+      "unavailableHelp": "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week. Invitation emails are transactional and sent to the invitee; these preferences do not control them.",
+      "saveError": "Save status could not be confirmed. Showing the saved preferences.",
       "providerIncident": "Provider incidents"
     },
     "delivery": {

@@ -24,6 +24,7 @@ type IndexRow = {
   requestedDepth: number | null;
   tier: StoredResultsTier;
   observationCompleteness?: string | null;
+  recordedNoMatchDepth?: number | null;
   retrieved: number | null;
 };
 
@@ -40,6 +41,7 @@ function mapIndexRow(row: IndexRow, retentionDays: number | null): StoredResults
   const fullDetailUntil =
     row.tier === "full" ? computeFullDetailUntil(row.checkedAt, retentionDays) : null;
   return {
+    ...(row.recordedNoMatchDepth ? { recordedNoMatchDepth: row.recordedNoMatchDepth } : {}),
     checkId: row.checkId,
     degradedToCountry: row.degradedToCountry ?? false,
     checkedAt: row.checkedAt.toISOString(),
@@ -80,6 +82,17 @@ export async function storedResultsIndex(input: {
       rc."provider",
       rc."requestedDepth",
       rc."degradedToCountry",
+      CASE WHEN rc."position" IS NULL AND rc."errorCode" IS NULL
+        AND rc."normalizationVersion" = 'v2'
+        AND rc."raw"->'normalization'->>'outcome' = 'no_match'
+        AND rc."requestedDepth" > 0
+        AND (rc."raw"->'normalization'->'anomalies' IS NULL OR rc."raw"->'normalization'->'anomalies' = '[]'::jsonb)
+        AND (SELECT count(DISTINCT CASE WHEN e->>'rank' ~ '^[0-9]{1,3}$' THEN (e->>'rank')::int END)
+          FROM jsonb_array_elements(CASE WHEN jsonb_typeof(rc."raw"->'organic_results')='array'
+            THEN rc."raw"->'organic_results' ELSE '[]'::jsonb END) e
+          WHERE (CASE WHEN e->>'rank' ~ '^[0-9]{1,3}$' THEN (e->>'rank')::int END)
+            BETWEEN 1 AND rc."requestedDepth") = rc."requestedDepth"
+        THEN rc."requestedDepth" ELSE NULL END AS "recordedNoMatchDepth",
       CASE
         WHEN jsonb_typeof("raw"->'organic_results') = 'array' THEN 'full'
         WHEN "organicRanks" IS NOT NULL OR jsonb_typeof("raw") NOT IN ('null') THEN 'compact'
@@ -140,7 +153,42 @@ export async function loadRetrievedResultsForChecks(input: {
     select: {
       checkedAt: true,
       organicRanks: true,
-      observationRun: { select: { completeness: true, projectId: true } },
+      observationRun: {
+        select: {
+          completeness: true,
+          engine: true,
+          surface: true,
+          projectId: true,
+          configuredScope: true,
+          effectiveScope: true,
+          requestPolicy: true,
+          items: {
+            orderBy: { ordinal: "asc" },
+            select: {
+              blockPosition: true,
+              businessName: true,
+              cid: true,
+              mapsUrl: true,
+              ordinal: true,
+              placeId: true,
+              positionInBlock: true,
+              rankScale: true,
+              promotion: true,
+              sourcePage: true,
+              sourceBlockId: true,
+              sourceOrdinal: true,
+              observedAt: true,
+              rating: true,
+              resultKind: true,
+              rankAbsolute: true,
+              rankGroup: true,
+              title: true,
+              url: true,
+              domain: true,
+            },
+          },
+        },
+      },
       position: true,
       provider: true,
       publicId: true,

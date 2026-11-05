@@ -83,6 +83,7 @@ const rankCheckRunSchema = z
         status: z.enum(RUN_STATUSES),
         trigger: z.enum(RUN_TRIGGERS),
         blockedReason: z.string().nullable().optional(),
+        expiryBlockedReason: z.string().nullable().optional(),
       })
       .strict(),
     id: z.string(),

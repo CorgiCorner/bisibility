@@ -45,7 +45,8 @@ describe("completed run with unconfirmed checks", () => {
     const table = within(screen.getByRole("table"));
     expect(table.getAllByRole("link")).toHaveLength(2);
     expect(table.getAllByText("Not confirmed")).toHaveLength(2);
-    expect(table.getAllByText("Payment details unavailable")).toHaveLength(2);
+    expect(table.queryByText("Cost not recorded")).toBeNull();
+    expect(table.queryByText("Payment details unavailable")).toBeNull();
     expect(table.queryByText("Not recorded")).toBeNull();
     expect(
       table.getAllByText("Result not confirmed; not retried to avoid duplicate usage."),

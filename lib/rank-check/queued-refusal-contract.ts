@@ -14,4 +14,9 @@ export type QueuedRefusalProof = {
   scope: CapabilityScope;
 };
 
-export type QueuedSubmissionResult = { state: string; refusal?: QueuedRefusalProof };
+export type QueuedSubmissionResult = {
+  state: string;
+  refusal?: QueuedRefusalProof;
+  /** Correlation ids left unknown so a later activity can settle them without a task post. */
+  deferredUsage?: readonly string[];
+};

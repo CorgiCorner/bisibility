@@ -6,12 +6,20 @@ import { type AlertSeverity, defaultAlertSeverity } from "@/lib/alerts/severity"
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
-import type { AlertConditionType } from "@/lib/generated/prisma/client";
+import { type AlertConditionType, Prisma } from "@/lib/generated/prisma/client";
 import { alertRuleAuditResource } from "./audit-resources";
 import { ApiConflictError } from "./errors";
 import { requireApiPublicId } from "./public-id";
 
 export type AlertMutationContext = { actorId: string | null; projectId: string };
+
+const ruleInclude = {
+  markets: { include: { projectMarket: { select: { publicId: true } } } },
+  recipients: { select: { userId: true } },
+  targets: {
+    include: { keyword: { select: { publicId: true } }, tag: { select: { publicId: true } } },
+  },
+} as const;
 
 type TargetCreate = { keywordId?: string; tagId?: string };
 type RecipientCreate = { userId: string };
@@ -139,11 +147,7 @@ function ruleData(
 
 export async function requireAlertRule(projectId: string, ruleId: string) {
   const rule = await prisma.alertRule.findFirst({
-    include: {
-      markets: { include: { projectMarket: { select: { publicId: true } } } },
-      recipients: { select: { userId: true } },
-      targets: true,
-    },
+    include: ruleInclude,
     where: isPublicIdOfType(ruleId, "alr")
       ? { projectId, publicId: ruleId }
       : { id: ruleId, projectId },
@@ -154,47 +158,78 @@ export async function requireAlertRule(projectId: string, ruleId: string) {
   return rule;
 }
 
-export async function createAlertRuleRecord(data: AlertRuleForm, context: AlertMutationContext) {
+export async function createAlertRuleRecord(
+  data: AlertRuleForm & { requestId?: string },
+  context: AlertMutationContext,
+) {
+  const existing = async () => {
+    if (!data.requestId || !context.actorId) return null;
+    return prisma.alertRule.findFirst({
+      where: {
+        publicId: data.requestId,
+        projectId: context.projectId,
+        createdById: context.actorId,
+      },
+      include: ruleInclude,
+    });
+  };
+  const prior = await existing();
+  if (prior) return { ...prior, replayed: true as const };
   const targets = await targetCreates(context.projectId, data.targetType, data.targetIds);
   const markets = await marketCreates(context.projectId, data.marketIds ?? []);
   const requestedRecipients = await createRecipientIds(data, context);
   const recipients = await recipientCreates(context.projectId, requestedRecipients);
-  const count = await prisma.alertRule.count({ where: { projectId: context.projectId } });
-  if (count >= MAX_ALERT_RULES_PER_PROJECT) {
-    throw new ApiConflictError(
-      `Alert rule limit reached: a project can have at most ${MAX_ALERT_RULES_PER_PROJECT} alert rules. Delete an existing rule before creating another.`,
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const lockKey = `alert-rule-capacity:${context.projectId}`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+        const count = await tx.alertRule.count({ where: { projectId: context.projectId } });
+        if (count >= MAX_ALERT_RULES_PER_PROJECT) {
+          throw new ApiConflictError(
+            `Alert rule limit reached: a project can have at most ${MAX_ALERT_RULES_PER_PROJECT} alert rules. Delete an existing rule before creating another.`,
+          );
+        }
+        const rule = await tx.alertRule.create({
+          data: {
+            ...ruleData(
+              data,
+              targets,
+              markets,
+              data.severity ?? defaultAlertSeverity(data.conditionType),
+            ),
+            createdById: context.actorId,
+            publicId: data.requestId ?? makePublicId("alr"),
+            projectId: context.projectId,
+            recipients: recipients.length ? { create: recipients } : undefined,
+          },
+          include: ruleInclude,
+        });
+        await writeAudit(
+          {
+            action: "alert_rule.create",
+            actorId: context.actorId,
+            after: alertRuleAuditResource(rule),
+            projectId: context.projectId,
+            targetId: requireApiPublicId(rule.publicId ?? "", "alr"),
+            targetType: "alert_rule",
+          },
+          tx,
+        );
+        return rule;
+      },
+      { timeout: 20_000 },
     );
+  } catch (error) {
+    if (
+      error instanceof ApiConflictError ||
+      (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
+    ) {
+      const rule = await existing();
+      if (rule) return { ...rule, replayed: true as const };
+    }
+    throw error;
   }
-  const rule = await prisma.alertRule.create({
-    data: {
-      ...ruleData(
-        data,
-        targets,
-        markets,
-        data.severity ?? defaultAlertSeverity(data.conditionType),
-      ),
-      createdById: context.actorId,
-      publicId: makePublicId("alr"),
-      projectId: context.projectId,
-      recipients: recipients.length ? { create: recipients } : undefined,
-    },
-    include: {
-      markets: { include: { projectMarket: { select: { publicId: true } } } },
-      recipients: { select: { userId: true } },
-      targets: true,
-    },
-  });
-
-  await writeAudit({
-    action: "alert_rule.create",
-    actorId: context.actorId,
-    after: alertRuleAuditResource(rule),
-    projectId: context.projectId,
-    targetId: requireApiPublicId(rule.publicId ?? "", "alr"),
-    targetType: "alert_rule",
-  });
-
-  return rule;
 }
 
 export async function updateAlertRuleRecord(
@@ -228,11 +263,7 @@ export async function updateAlertRuleRecord(
         ...ruleData(data, targets, markets, data.severity ?? before.severity),
         recipients: recipients.length ? { create: recipients } : undefined,
       },
-      include: {
-        markets: { include: { projectMarket: { select: { publicId: true } } } },
-        recipients: { select: { userId: true } },
-        targets: true,
-      },
+      include: ruleInclude,
       where: { id: before.id },
     });
     await writeAudit(
@@ -256,15 +287,19 @@ export async function deleteAlertRuleRecord(
   context: AlertMutationContext,
 ) {
   const before = await requireAlertRule(context.projectId, ruleId);
-  await prisma.alertRule.delete({ where: { id: before.id } });
-
-  await writeAudit({
-    action: "alert_rule.delete",
-    actorId: context.actorId,
-    before: alertRuleAuditResource(before),
-    projectId: context.projectId,
-    targetId: requireApiPublicId(before.publicId ?? "", "alr"),
-    targetType: "alert_rule",
+  await prisma.$transaction(async (tx) => {
+    await tx.alertRule.delete({ where: { id: before.id } });
+    await writeAudit(
+      {
+        action: "alert_rule.delete",
+        actorId: context.actorId,
+        before: alertRuleAuditResource(before),
+        projectId: context.projectId,
+        targetId: requireApiPublicId(before.publicId ?? "", "alr"),
+        targetType: "alert_rule",
+      },
+      tx,
+    );
   });
 
   return { deleted: true };

@@ -113,6 +113,8 @@ export type RetrievedRow = {
   url: string | null;
   title: string | null;
   tracked: boolean;
+  resultType?: string;
+  resolutionStatus?: string | null;
 };
 
 type RetrievedResultsBase = {
@@ -120,6 +122,7 @@ type RetrievedResultsBase = {
   rankingUrl?: string | null;
   checkId: string;
   checkedAt: string;
+  observedAt?: string | null;
   provider: string;
   providerLabel: string;
 };
@@ -128,6 +131,9 @@ export type RetrievedResults =
   | (RetrievedResultsBase & {
       tier: "full";
       extension?: SnapshotExtensionView;
+      storedData?: { normalization: unknown; observationItems: unknown[]; scope: unknown };
+      aiOverviewContentLoaded?: boolean;
+      observationCompleteness?: string | null;
       requestedDepth: number | null;
       retrievedPositions: number;
       trackedPosition: number | null;
@@ -135,7 +141,7 @@ export type RetrievedResults =
       stoppedAtResult: boolean;
       rows: RetrievedRow[];
       features: string[];
-      /** Null when the check's provider cannot report AI overviews at all. */
+      /** Null when overview presence was not recorded for this check. */
       aiOverview: boolean | null;
       fullDetailUntil: string | null;
     })
@@ -148,6 +154,7 @@ export type RetrievedResults =
 
 /** One row of the stored-checks picker on keyword detail. */
 export type StoredResultsIndexEntry = StoredResultsSummary & {
+  recordedNoMatchDepth?: number;
   checkId: string;
   checkedAt: string;
   position: number | null;

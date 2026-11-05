@@ -13,6 +13,12 @@ import { type OwnAttemptGrant, ownAdmission } from "./admission-extension";
 import { type ByokEvidenceInput, captureByokEvidence } from "./byok-evidence";
 import { runUnsentTasksetTransaction } from "./taskset-transaction";
 
+export function queuedEvidenceId(connectionId: string, correlationId: string) {
+  return createHash("sha256")
+    .update(JSON.stringify(["byok-queued", connectionId, correlationId]))
+    .digest("hex");
+}
+
 /** The whole native POST taskset owns one database commit and one possible-send fence. */
 export async function beginProviderTaskset(
   db: PrismaClient,
@@ -25,15 +31,7 @@ export async function beginProviderTaskset(
 ) {
   const identities = structuredClone(inputs).map((input) => ({
     input,
-    id: createHash("sha256")
-      .update(
-        JSON.stringify([
-          "byok-queued",
-          input.connectionId,
-          input.attribution.context.correlationId,
-        ]),
-      )
-      .digest("hex"),
+    id: queuedEvidenceId(input.connectionId, input.attribution.context.correlationId),
   }));
   if (
     beforeReserve &&

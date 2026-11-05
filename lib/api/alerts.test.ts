@@ -1,11 +1,16 @@
 import { hashApiKey } from "@/lib/providers/crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetIdempotencyForTests } from "./idempotency";
+import { getOpenApiDocument } from "./openapi";
+import { triggeredAlertSchema } from "./openapi-alert-response-components";
+import { captureFindingsChecker } from "./openapi-response-findings.test-support";
+import { responseValidatorFactory } from "./openapi-response-schemas.test-support";
 import { resetRateLimitStateForTests } from "./ratelimit";
 import { handleApiRequest } from "./router";
 
 const mocks = vi.hoisted(() => {
   const prisma = {
+    $executeRaw: vi.fn(),
     $transaction: vi.fn(),
     alertRule: {
       count: vi.fn(),
@@ -163,6 +168,7 @@ describe("alert API routes", () => {
     process.env.BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE = "100";
     process.env.REDIS_URL = "";
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.prisma.$executeRaw.mockResolvedValue(0);
     mocks.prisma.apiKey.findMany.mockResolvedValue([authRow()]);
     mocks.prisma.apiKey.update.mockResolvedValue({ id: "api_key_1" });
     mocks.prisma.auditLog.create.mockResolvedValue({});
@@ -230,11 +236,17 @@ describe("alert API routes", () => {
       include: {
         markets: { include: { projectMarket: { select: { publicId: true } } } },
         recipients: { select: { userId: true } },
-        targets: true,
+        targets: {
+          include: {
+            keyword: { select: { publicId: true } },
+            tag: { select: { publicId: true } },
+          },
+        },
       },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: null }),
+      mocks.prisma,
     );
   });
 
@@ -266,7 +278,12 @@ describe("alert API routes", () => {
       include: {
         markets: { include: { projectMarket: { select: { publicId: true } } } },
         recipients: { select: { userId: true } },
-        targets: true,
+        targets: {
+          include: {
+            keyword: { select: { publicId: true } },
+            tag: { select: { publicId: true } },
+          },
+        },
       },
     });
   });
@@ -295,6 +312,7 @@ describe("alert API routes", () => {
     await expect(response.json()).resolves.toEqual({ deleted: true });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.delete", actorId: null }),
+      mocks.prisma,
     );
   });
 
@@ -313,6 +331,74 @@ describe("alert API routes", () => {
         }),
       }),
     );
+  });
+
+  it("documents measured delivery counts in the actual triggered-alert response", async () => {
+    mocks.prisma.triggeredAlert.findMany.mockResolvedValue([
+      {
+        ...triggeredAlertRow(),
+        deliveryAttempts: [
+          {
+            channel: "push",
+            status: "partial",
+            acceptedCount: 2,
+            failedCount: 1,
+            unknownCount: 1,
+            error: null,
+            webhookEndpoint: null,
+            attemptedAt: new Date(),
+          },
+        ],
+      },
+    ]);
+    const response = await call(
+      authedRequest("GET", `/projects/${projectPublicId}/triggered-alerts`),
+      `/projects/${projectPublicId}/triggered-alerts`,
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.data[0].delivery_attempts).toEqual([
+      expect.objectContaining({
+        channel: "push",
+        status: "partial",
+        counts: { accepted_count: 2, failed_count: 1, unknown_count: 1 },
+      }),
+    ]);
+    expect(
+      captureFindingsChecker(getOpenApiDocument())({
+        body,
+        contentType: response.headers.get("content-type"),
+        method: "GET",
+        operationId: "listTriggeredAlerts",
+        path: "/projects/{project_id}/triggered-alerts",
+        status: response.status,
+      }),
+    ).toEqual([]);
+
+    const validate = responseValidatorFactory(getOpenApiDocument())(triggeredAlertSchema).closed;
+    const resource = body.data[0];
+    const attempt = resource.delivery_attempts[0];
+    expect(
+      validate({
+        ...resource,
+        delivery_attempts: [
+          { ...attempt, counts: { accepted_count: 0, failed_count: 0, unknown_count: 0 } },
+        ],
+      }),
+    ).toBe(true);
+    const measuredCounts = { accepted_count: 2, failed_count: 1, unknown_count: 1 };
+    for (const field of ["accepted_count", "failed_count", "unknown_count"] as const) {
+      for (const invalid of [-1, 0.5]) {
+        const counts = { ...measuredCounts, [field]: invalid };
+        expect(validate({ ...resource, delivery_attempts: [{ ...attempt, counts }] })).toBe(false);
+      }
+      const { [field]: _value, ...incomplete } = measuredCounts;
+      expect(
+        validate({ ...resource, delivery_attempts: [{ ...attempt, counts: incomplete }] }),
+      ).toBe(false);
+    }
+    const { counts: _counts, ...legacyAttempt } = attempt;
+    expect(validate({ ...resource, delivery_attempts: [legacyAttempt] })).toBe(true);
   });
 
   it("maps missing alert rules to problem details", async () => {

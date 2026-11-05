@@ -356,22 +356,25 @@ describe("maintenance workflows", () => {
       deleted: 100,
       hasMore: true,
       pageSize: 100,
+      sourceEvidenceDeleted: 7,
     });
 
     await purgeQueuedRankCheckBatchesWorkflow();
 
-    expect(mocks.continueAsNew).toHaveBeenCalledWith({ deleted: 100 });
+    expect(mocks.continueAsNew).toHaveBeenCalledWith({ deleted: 100, sourceEvidenceDeleted: 7 });
     const continuation = mocks.continueAsNew.mock.calls[0]?.[0];
     mocks.continueAsNew.mockClear();
     mocks.activities.purgeQueuedRankCheckBatchesActivity.mockResolvedValueOnce({
       deleted: 5,
       hasMore: false,
       pageSize: 100,
+      sourceEvidenceDeleted: 1,
     });
     await expect(purgeQueuedRankCheckBatchesWorkflow(continuation)).resolves.toEqual({
       deleted: 105,
       hasMore: false,
       pageSize: 100,
+      sourceEvidenceDeleted: 8,
     });
     expect(mocks.continueAsNew).not.toHaveBeenCalled();
   });

@@ -38,6 +38,11 @@ export function readDemoConfig(env: DemoEnvironment = process.env): DemoConfig {
   return { kind: "editable", ownerPublicId, ...viewer };
 }
 
+/** True when the environment selects any demo mode, whether or not its identity is valid. */
+export function demoModeDeclared(env: DemoEnvironment = process.env): boolean {
+  return Boolean(env.DEMO_MODE) || env.READ_ONLY_DEMO === "1";
+}
+
 export function readOnlyDemoConfig(env: DemoEnvironment = process.env) {
   const config = readDemoConfig(env);
   if (config.kind !== "legacy-read-only") return null;
@@ -46,4 +51,9 @@ export function readOnlyDemoConfig(env: DemoEnvironment = process.env) {
 
 export function assertDemoAccountMutable() {
   if (readDemoConfig().kind !== "disabled") throw new Error(DEMO_ACCOUNT_LOCKED);
+}
+
+export function isDemoViewer(publicId: string | undefined): boolean {
+  const config = readDemoConfig();
+  return config.kind !== "disabled" && config.viewerPublicId === publicId;
 }

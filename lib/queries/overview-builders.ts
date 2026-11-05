@@ -211,10 +211,10 @@ export function buildKpis(
   const visibilityKpi =
     metrics.visibility === null
       ? {
-          ...waitingKpi("visibility", null),
-          delta: hasFailedChecks
-            ? waitingCopy
-            : ({ kind: "awaitingTop20" } satisfies OverviewKpiDelta),
+          delta: { kind: "awaitingTop20" } satisfies OverviewKpiDelta,
+          deltaTone: "neutral" as const,
+          id: "visibility" as const,
+          value: null,
         }
       : kpi(
           "visibility",

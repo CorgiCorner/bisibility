@@ -6,6 +6,7 @@ import {
   alertRuleDeleteSchema,
   alertRuleFormBaseSchema,
   alertRuleToggleSchema,
+  idSchema,
   refineAlertRuleForm,
   slackConnectionPlaceholderSchema,
 } from "./schema";
@@ -28,24 +29,27 @@ function validatePublicId(
   }
 }
 
-export const alertRuleFormServerSchema = alertRuleFormBaseSchema.superRefine((value, ctx) => {
-  refineAlertRuleForm(value, ctx);
-  validatePublicId(value.projectId, "prj", ["projectId"], ctx);
-  validatePublicId(value.ruleId, "alr", ["ruleId"], ctx);
-  value.marketIds?.forEach((id, index) => {
-    validatePublicId(id, "pmkt", ["marketIds", index], ctx);
-  });
-  value.recipientIds?.forEach((id, index) => {
-    validatePublicId(id, "usr", ["recipientIds", index], ctx);
-  });
-  const targetPrefix =
-    value.targetType === "keyword" ? "kw" : value.targetType === "tag" ? "tag" : null;
-  if (targetPrefix) {
-    value.targetIds.forEach((id, index) => {
-      validatePublicId(id, targetPrefix, ["targetIds", index], ctx);
+export const alertRuleFormServerSchema = alertRuleFormBaseSchema
+  .extend({ requestId: idSchema.optional() })
+  .superRefine((value, ctx) => {
+    refineAlertRuleForm(value, ctx);
+    validatePublicId(value.projectId, "prj", ["projectId"], ctx);
+    validatePublicId(value.ruleId, "alr", ["ruleId"], ctx);
+    validatePublicId(value.requestId, "alr", ["requestId"], ctx);
+    value.marketIds?.forEach((id, index) => {
+      validatePublicId(id, "pmkt", ["marketIds", index], ctx);
     });
-  }
-});
+    value.recipientIds?.forEach((id, index) => {
+      validatePublicId(id, "usr", ["recipientIds", index], ctx);
+    });
+    const targetPrefix =
+      value.targetType === "keyword" ? "kw" : value.targetType === "tag" ? "tag" : null;
+    if (targetPrefix) {
+      value.targetIds.forEach((id, index) => {
+        validatePublicId(id, targetPrefix, ["targetIds", index], ctx);
+      });
+    }
+  });
 export const alertRuleToggleServerSchema = alertRuleToggleSchema.superRefine((value, ctx) => {
   validatePublicId(value.projectId, "prj", ["projectId"], ctx);
   validatePublicId(value.ruleId, "alr", ["ruleId"], ctx);

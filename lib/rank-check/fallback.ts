@@ -173,6 +173,7 @@ async function runKeywordCheckWithFallbackOriginal(input: RunKeywordCheckWithFal
       keywordTargetUrl: outcome.result.definitionBindingId
         ? expectedUrl.url
         : (keyword.targetUrl ?? null),
+      predecessorRankCheckId: previous?.id ?? null,
       previousRaw: previous?.raw ?? null,
       previousRankingUrl: previous?.rankingUrl ?? null,
       projectId: keyword.projectId,

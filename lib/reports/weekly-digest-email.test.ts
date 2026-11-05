@@ -26,7 +26,27 @@ const mailFixture: WeeklyDigestData = {
   },
 };
 
-it("keeps the switch-off mail byte-identical to the frozen base renderer", () => {
+it("distinguishes checked keywords from comparable keywords", () => {
+  const email = renderWeeklyDigestEmail({
+    ...mailFixture,
+    avgPositionDelta: null,
+    checkedKeywords: 2,
+    failedChecksCount: 0,
+    topMovers: [],
+    quality: {
+      metric: { counts: { expected: 2, comparable: 0, unknown: 0 }, dataCoverage: 1 },
+    } as ReportSummary,
+  });
+  expect(email.text).toContain("Checked keywords: 2");
+  expect(email.text).toContain("Comparable: 0");
+  expect(email.text).not.toContain("Comparable keywords");
+  expect(email.text).not.toContain("Checked keywords: 0");
+  expect(email.html).toContain("Checked keywords: 2");
+  expect(email.html).toContain("Comparable: 0");
+  expect(email.html).not.toContain("Comparable keywords");
+});
+
+it("renders checked keywords separately from the comparable evidence line", () => {
   expect(renderWeeklyDigestEmail(mailFixture)).toMatchSnapshot();
 });
 

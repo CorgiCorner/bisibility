@@ -175,7 +175,7 @@ export function loopClosurePaths(input: {
     },
     "/projects/{project_id}/triggered-alerts/mark-read": {
       post: input.bearer(
-        "Mark all firing project alerts as read",
+        "Acknowledge firing alerts for the project team",
         "markProjectAlertsRead",
         input.ref("TriggeredAlertsReadResult"),
         undefined,

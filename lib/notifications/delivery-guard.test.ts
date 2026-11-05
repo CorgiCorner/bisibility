@@ -1,7 +1,11 @@
 import { makePublicId } from "@/lib/db/public-id";
 import { NotificationType } from "@/lib/generated/prisma/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { guardedNotificationType, notificationDeliveryAllowed } from "./delivery-guard";
+import {
+  guardedNotificationType,
+  notificationDeliveryAllowed,
+  notificationRequiresProject,
+} from "./delivery-guard";
 import { notificationPreferencesForMissingRow } from "./preference-defaults";
 import { incidentUpdateMarksUnread } from "./upsert";
 
@@ -78,5 +82,21 @@ it("IN-9 locks the project before the live retirement and membership guard", asy
   expect(db.$queryRaw).toHaveBeenCalledOnce();
   expect(db.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
     db.project.findFirst.mock.invocationCallOrder[0],
+  );
+});
+
+it("classifies project-only types exhaustively without changing account and team notices", () => {
+  expect(Object.values(NotificationType).filter(notificationRequiresProject).sort()).toEqual([
+    "alert_fired",
+    "check_complete",
+    "check_failed",
+    "import_done",
+    "import_failed",
+    "manual_run_summary",
+    "provider_incident",
+    "scheduled_window_summary",
+  ]);
+  expect(() => notificationRequiresProject("future_type" as NotificationType)).toThrow(
+    "Unhandled notification type",
   );
 });

@@ -25,6 +25,13 @@ type RunPageTargetsProps = {
 };
 
 const ignoreSorting = () => undefined;
+function expandedTargetRow(row: RunPageItem) {
+  return (
+    row.status === "deferred" ||
+    row.accountBlocks?.length ||
+    row.rankCheck?.attempts?.some((attempt) => attempt.outcome !== "ok")
+  );
+}
 
 function RunPageFilters({
   filter,
@@ -145,11 +152,7 @@ export function RunPageTargets({
         onSortingChange={ignoreSorting}
         rows={items}
         rowHeight={(row) => (row.rankCheck?.evidenceProjection ? 112 : undefined)}
-        rowClassName={(row) =>
-          row.status === "deferred" || row.accountBlocks?.length
-            ? "!h-auto min-h-[56px] py-2"
-            : undefined
-        }
+        rowClassName={(row) => (expandedTargetRow(row) ? "!h-auto min-h-[56px] py-2" : undefined)}
         sorting={null}
       />
       <footer className="flex flex-wrap items-center gap-2.5 px-4 py-3">

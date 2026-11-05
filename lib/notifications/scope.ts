@@ -19,5 +19,6 @@ export function notificationFeedWhere(
     ...readScope,
     userId,
     withdrawnAt: null,
+    legacyProjectQuarantinedAt: null,
   };
 }

@@ -5,29 +5,26 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import type { AlertChannelInput } from "@/lib/alerts/schema";
 import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { SlackLogoIcon as SlackLogo } from "@phosphor-icons/react/dist/csr/SlackLogo";
 import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr/WebhooksLogo";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useTranslations } from "next-intl";
-import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
+import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
 
 type DeliveryChannelsFieldProps = {
-  register: UseFormRegister<NewRuleForm>;
   setValue: UseFormSetValue<NewRuleForm>;
   watch: UseFormWatch<NewRuleForm>;
 };
 
-export function DeliveryChannelsField({
-  register,
-  setValue,
-  watch,
-}: Readonly<DeliveryChannelsFieldProps>) {
+export function DeliveryChannelsField({ setValue, watch }: Readonly<DeliveryChannelsFieldProps>) {
   const t = useTranslations("projectAlerts.drawer");
   const channels = watch("channels") ?? [];
   const deliveryChannels = [
     { Icon: EnvelopeSimple, label: t("email"), name: "email" },
+    { Icon: DeviceMobile, label: t("push"), name: "push" },
     { Icon: SlackLogo, label: t("slack"), name: "slack" },
     { Icon: WebhooksLogo, label: t("webhook"), name: "webhook" },
   ] satisfies { Icon: Icon; label: string; name: AlertChannelInput }[];
@@ -92,7 +89,6 @@ export function DeliveryChannelsField({
                 aria-label={label}
                 id={`delivery-channel-${name}`}
                 value={name}
-                {...register("channels")}
                 checked={checked}
                 onChange={() => toggleChannel(name)}
               />

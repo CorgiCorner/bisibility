@@ -1,3 +1,4 @@
+import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { providerAccountKey } from "@/lib/providers/rate-limit";
 import type { AnalyticsQueryStatsInput, ProviderCredentials } from "@/lib/providers/types";
 import { type GoogleFetchContext, googleApiFetch, refreshGoogleAccessToken } from "./google-client";
@@ -12,6 +13,7 @@ export type GscSearchType = "discover" | "googleNews" | "image" | "news" | "vide
 export type GscDataState = "all" | "final";
 
 export type GscQueryInput = {
+  signal?: AbortSignal;
   country?: AnalyticsQueryStatsInput["country"];
   credentials: ProviderCredentials;
   dataState?: GscDataState;
@@ -126,7 +128,7 @@ async function requestEnvelope(
   const data = await googleApiFetch<GscSearchAnalyticsResponse>(
     gscQueryUrl(property),
     accessToken,
-    { body: JSON.stringify(searchAnalyticsBody(query)), method: "POST" },
+    { body: JSON.stringify(searchAnalyticsBody(query)), method: "POST", signal: query.signal },
     gscFetchContext(credentials, property),
   );
   const metadata = readMetadata(data);
@@ -139,16 +141,44 @@ async function requestEnvelope(
   };
 }
 
-// One access token for a whole batch. A refresh is a separate POST to the token endpoint,
-// which the provider rate-limit gate does not cover, so refreshing per request would double
-// every round trip and leave that half ungoverned; an issued token outlives any batch.
+// Batch calls share a token; each data attempt still passes through provider limiting.
 export async function createGscSearchAnalyticsSession(
   credentials: ProviderCredentials,
+  signal?: AbortSignal,
 ): Promise<GscSearchAnalyticsSession> {
+  signal?.throwIfAborted();
   const { property, refreshToken } = readGscCredentials(credentials);
-  const accessToken = await refreshGoogleAccessToken(refreshToken, credentials.onRefreshToken);
+  let accessToken = await refreshGoogleAccessToken(
+    refreshToken,
+    credentials.onRefreshToken,
+    signal,
+    credentials.tokenCacheIdentity,
+  );
   return {
-    fetchEnvelope: (query) => requestEnvelope(credentials, property, accessToken, query),
+    async fetchEnvelope(query) {
+      const request = {
+        ...query,
+        signal:
+          signal && query.signal
+            ? AbortSignal.any([signal, query.signal])
+            : (signal ?? query.signal),
+      };
+      request.signal?.throwIfAborted();
+      try {
+        return await requestEnvelope(credentials, property, accessToken, request);
+      } catch (error) {
+        if (!(error instanceof ProviderAuthError)) throw error;
+        request.signal?.throwIfAborted();
+        accessToken = await refreshGoogleAccessToken(
+          credentials.apiKey,
+          credentials.onRefreshToken,
+          request.signal,
+          credentials.tokenCacheIdentity,
+        );
+        // Only this read operation retries, once; each attempt still consumes its quota.
+        return requestEnvelope(credentials, property, accessToken, request);
+      }
+    },
     property,
   };
 }
@@ -158,12 +188,8 @@ export async function createGscSearchAnalyticsSession(
 export async function fetchSearchAnalyticsEnvelope(
   input: GscQueryInput,
 ): Promise<GscSearchAnalyticsEnvelope> {
-  const { property, refreshToken } = readGscCredentials(input.credentials);
-  const accessToken = await refreshGoogleAccessToken(
-    refreshToken,
-    input.credentials.onRefreshToken,
-  );
-  return requestEnvelope(input.credentials, property, accessToken, input);
+  const session = await createGscSearchAnalyticsSession(input.credentials, input.signal);
+  return session.fetchEnvelope(input);
 }
 
 export async function fetchSearchAnalyticsRows(input: GscQueryInput): Promise<GscRow[]> {

@@ -1075,8 +1075,9 @@ model RankCheck {
   recoveryProvenance   Json?
   partialEvidence      ProviderPartialEvidence[]
   attemptCount         Int                  @default(1)
-  triggeredAlerts      TriggeredAlert[]
-  queuedTask           QueuedRankCheckTask?
+  triggeredAlerts       TriggeredAlert[]
+  alertEvaluationIntent AlertEvaluationIntent?
+  queuedTask            QueuedRankCheckTask?
   recoveryResult       RankCheckResultEvidence?
   observationRun       ObservationRun?
   createdAt            DateTime             @default(now())
@@ -1121,6 +1122,8 @@ model RankCheckRun {
   /// Allowed values when set: "succeeded", "partial", "failed", "deferred".
   outcome                 String?
   blockedReason           String?
+  /// Original blocker when an unmaterialized scheduled occurrence expires.
+  expiryBlockedReason     String?
   requestedCount          Int                    @default(0)
   totalCount              Int                    @default(0)
   skippedCount            Int                    @default(0)
@@ -1342,6 +1345,8 @@ model QueuedRankCheckTask {
   recoveryContextHash       String?
   state                     String
   costCents                 Decimal?             @db.Decimal(10, 4)
+  /// Provider cost recovery state: evidence for a recovered cost or the operator-facing reason it is unavailable.
+  costEvidence              Json?
   error                     String?
   persistenceLeaseOwner     String?              @unique
   persistenceLeaseExpiresAt DateTime?
@@ -1892,12 +1897,19 @@ model TriggeredAlert {
   afterPosition            Int?
   status                   TriggeredAlertStatus @default(firing)
   snoozedUntil             DateTime?
+  acknowledgedAt           DateTime?
+  acknowledgedById         String?
+  acknowledgedByName       String?
   resolvedAt               DateTime?
   payload                  Json?
   deliveredAt              DateTime?
   deliveryState            AlertDeliveryState   @default(pending)
+  deliverySummary          Json?
   deliveryClaimedAt        DateTime?
   deliveryClaimToken       String?
+  /// Null preserves legacy uncertainty; false permits fenced admission.
+  digestSubmissionStarted  Boolean?             @default(false)
+  digestSends              AlertDigestSend[]
   deliveryBudgetReservedAt DateTime?
   deliveryAttempts         DeliveryAttempt[]
   createdAt                DateTime             @default(now())
@@ -1911,6 +1923,36 @@ model TriggeredAlert {
   @@index([deliveryState, firedAt])
   @@index([firedAt])
   @@map("triggered_alerts")
+}
+
+model AlertDigestSend {
+  alertId     String
+  alert       TriggeredAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  channel     String
+  destination String
+  ownerToken  String
+  state       String
+  createdAt   DateTime       @default(now())
+
+  @@id([alertId, channel, destination])
+  @@map("alert_digest_sends")
+}
+
+/// One alert evaluation for a completed rank check. Pending rows retry with backoff until done or failed.
+model AlertEvaluationIntent {
+  rankCheckId            String    @id
+  rankCheck              RankCheck @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
+  /// Allowed values: "pending", "done", "failed".
+  state                  String    @default("pending")
+  leaseUntil             DateTime?
+  createdAt              DateTime  @default(now())
+  completedAt            DateTime?
+  attempts               Int       @default(0)
+  /// Fast-path predecessor. Recovery reads that row instead of the latest check.
+  predecessorRankCheckId String?
+
+  @@index([state, leaseUntil, createdAt])
+  @@map("alert_evaluation_intents")
 }
 
 model AlertRuleDailyStat {
@@ -1937,12 +1979,41 @@ model DeliveryAttempt {
   channel           AlertChannel
   status            String
   error             String?
+  acceptedCount     Int?
+  failedCount       Int?
+  unknownCount      Int?
   attemptedAt       DateTime         @default(now())
 
   @@index([triggeredAlertId])
   @@index([webhookEndpointId])
   @@index([attemptedAt])
   @@map("delivery_attempts")
+}
+
+/// Frozen alert or digest email. Retries reuse these bytes and the idempotency key.
+model PreparedEmailMessage {
+  id                 String   @id @default(cuid())
+  deliveryIdentity   String   @unique
+  /// Canonical digest inputs for audit. Not part of the unique index.
+  deliveryInputs     String?
+  idempotencyKey     String   @unique
+  fromAddress        String
+  toAddress          String
+  subject            String
+  html               String
+  text               String
+  headers            Json
+  listUnsubscribeUrl String
+  state              String
+  providerId         String?
+  idempotent         Boolean  @default(false)
+  budgetReserved     Boolean  @default(false)
+  providerCode       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([state])
+  @@map("prepared_email_messages")
 }
 
 model WebhookEndpoint {
@@ -2066,6 +2137,7 @@ model Notification {
   version        Int              @default(1)
   updatedAt      DateTime         @default(now()) @updatedAt
   withdrawnAt    DateTime?
+  legacyProjectQuarantinedAt DateTime?
   checkSummary   CheckNotificationSummary?
 
   @@unique([userId, idempotencyKey])
@@ -2716,6 +2788,8 @@ model RoadmapDelivery {
   nextAttemptAt     DateTime?
   claimedAt         DateTime?
   claimToken        String?
+  /// For sending rows, null denotes legacy submission uncertainty.
+  submissionStarted Boolean?
   providerMessageId String?
   acceptedAt        DateTime?
   deliveredAt       DateTime?
@@ -2895,4 +2969,33 @@ model DomainRatingCheck {
   @@unique([projectId, domain, day])
   @@index([projectId, domain, day(sort: Desc)])
   @@map("domain_rating_checks")
+}
+
+/// Correlates a provider's accepted message with its intended recipient.
+model MailProviderReceipt {
+  id        String   @id @default(cuid())
+  provider  String
+  messageId String
+  recipient String
+  createdAt DateTime @default(now())
+
+  @@unique([provider, messageId])
+  @@map("mail_provider_receipts")
+}
+
+/// Shared bulk mail suppression; transactional messages remain independent.
+model MailSuppression {
+  recipient String   @id
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@map("mail_suppressions")
+}
+
+model MailFeedbackEvent {
+  id        String   @id
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@map("mail_feedback_events")
 }

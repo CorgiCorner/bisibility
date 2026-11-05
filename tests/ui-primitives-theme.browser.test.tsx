@@ -279,6 +279,9 @@ function headerFixture(operations: OperationSnapshot[] = []) {
             }
           />
           <p className="p-6">Header utilities remain quiet beside workspace actions.</p>
+          <button className="sr-only" type="button">
+            Keyboard boundary
+          </button>
         </main>
       </AppRealtimeContext.Provider>
     </FeatureMessagesProvider>
@@ -311,7 +314,10 @@ it.each([1440, 834, 390].flatMap((width) => ["light", "dark"].map((theme) => ({ 
       checkText(control, getComputedStyle(control).backgroundColor);
       await userEvent.keyboard("{Tab}");
       control.focus();
-      await userEvent.keyboard("{Tab}{Shift>}{Tab}{/Shift}");
+      await userEvent.keyboard("{Tab}");
+      if (control === account)
+        expect(screen.getByRole("button", { name: "Keyboard boundary" })).toHaveFocus();
+      await userEvent.keyboard("{Shift>}{Tab}{/Shift}");
       await waitFor(() => expect(control).toHaveFocus());
       expect(getComputedStyle(control).outlineWidth).toBe("2px");
       expect(contrast(getComputedStyle(control).outlineColor, surface)).toBeGreaterThanOrEqual(3);

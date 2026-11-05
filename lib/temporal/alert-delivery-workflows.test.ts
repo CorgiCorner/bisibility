@@ -1,5 +1,7 @@
 import { ApplicationFailure } from "@temporalio/common";
+import type { ActivityOptions } from "@temporalio/workflow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PUSH_NOT_CONFIGURED_TYPE } from "../alerts/delivery-counts";
 import type { AlertDigestJob } from "../alerts/digest-types";
 import { buildAlertDigestWebhookBody } from "../alerts/webhook-envelope";
 import type { AlertDeliveryContext } from "./alert-delivery-activities";
@@ -30,12 +32,25 @@ const mocks = vi.hoisted(() => {
     sweepAlertDeliveriesActivity: vi.fn(),
     sweepFirstTrafficSyncIntentActivity: vi.fn(),
   };
-  return { activities, proxyActivities: vi.fn(() => activities), uuid4: vi.fn(() => "claim_1") };
+  return {
+    activities,
+    patched: vi.fn(() => true),
+    proxyActivities: vi.fn((_options: ActivityOptions) => activities),
+    uuid4: vi.fn(() => "claim_1"),
+  };
 });
 vi.mock("@temporalio/workflow", () => ({
+  patched: mocks.patched,
   proxyActivities: mocks.proxyActivities,
   uuid4: mocks.uuid4,
 }));
+
+const configuredPolicies = mocks.proxyActivities.mock.calls.map(([options]) => options);
+it("disables automatic replay for both push activity proxies", () => {
+  expect(configuredPolicies.filter((options) => options.retry?.maximumAttempts === 1)).toHaveLength(
+    2,
+  );
+});
 
 function context(overrides: Partial<AlertDeliveryContext> = {}): AlertDeliveryContext {
   return {
@@ -57,12 +72,21 @@ function context(overrides: Partial<AlertDeliveryContext> = {}): AlertDeliveryCo
     },
     recipients: [{ email: "owner@example.com", userId: "user_1" }],
     projectInternalId: "project_db_1",
+    ruleInternalId: "rule_db_1",
     slackConnectionId: "slack_1",
     triggeredAlertId: "triggered_alert_db_1",
     webhookEndpointIds: ["webhook_1", "webhook_2"],
     ...overrides,
   };
 }
+
+vi.mock("./fenced-digest-proxies", () => ({
+  fencedDigestProxies: () => ({
+    prepare: mocks.activities.prepareAlertDigestDeliveryActivity,
+    finalize: mocks.activities.finalizeAlertDigestDeliveryActivity,
+    channels: mocks.activities,
+  }),
+}));
 
 describe("alertDeliveryWorkflow", () => {
   beforeEach(() => {
@@ -76,6 +100,32 @@ describe("alertDeliveryWorkflow", () => {
     mocks.activities.finalizeAlertDeliveryActivity.mockResolvedValue({
       deliveryState: "delivered",
     });
+  });
+
+  it("records ambiguous push completion as unknown without a second activity call", async () => {
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({
+        channels: ["push"],
+        push: {
+          body: "Fixture",
+          title: "Fixture",
+          collapseId: "fixture",
+          threadId: "fixture",
+          data: {},
+        },
+      }),
+    );
+    mocks.activities.deliverAlertPushActivity.mockRejectedValueOnce(new Error("receipt lost"));
+    const result = await alertDeliveryWorkflow({ alertId: "alert_1" });
+    expect(mocks.activities.deliverAlertPushActivity).toHaveBeenCalledOnce();
+    expect(result.outcomes).toContainEqual(
+      expect.objectContaining({
+        channel: "push",
+        delivered: false,
+        unknown: true,
+        recordAttempt: true,
+      }),
+    );
   });
 
   it("delivers every configured channel and finalizes delivered", async () => {
@@ -106,6 +156,45 @@ describe("alertDeliveryWorkflow", () => {
     );
   });
 
+  it("keeps the historical activity input when replaying without the patch", async () => {
+    mocks.patched.mockReturnValueOnce(false);
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({ channels: ["email"] }),
+    );
+    await alertDeliveryWorkflow({ alertId: "alert_1" });
+    expect(mocks.activities.deliverAlertEmailActivity).toHaveBeenCalledWith({
+      alertId: "triggered_alert_db_1",
+      payload: context().payload,
+      recipientEmail: "owner@example.com",
+    });
+  });
+
+  it("passes a refused email attempt to finalization as skipped", async () => {
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({ channels: ["email"] }),
+    );
+    mocks.activities.deliverAlertEmailActivity.mockResolvedValue({
+      delivered: false,
+      skipped: true,
+      reason: "Alert email consent is disabled.",
+    });
+    mocks.activities.finalizeAlertDeliveryActivity.mockResolvedValue({ deliveryState: "skipped" });
+    const result = await alertDeliveryWorkflow({ alertId: "alert_1" });
+    expect(result.status).toBe("skipped");
+    expect(mocks.activities.finalizeAlertDeliveryActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcomes: [
+          {
+            channel: "email",
+            delivered: false,
+            skipped: true,
+            reason: "Alert email consent is disabled.",
+          },
+        ],
+      }),
+    );
+  });
+
   it("delivers push with the context message and records a skipped push without devices", async () => {
     const push = { body: "b", collapseId: "c", data: {}, threadId: "t", title: "t" };
     mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
@@ -130,7 +219,7 @@ describe("alertDeliveryWorkflow", () => {
       context({ channels: ["email", "push"], push }),
     );
     mocks.activities.deliverAlertPushActivity.mockRejectedValueOnce(
-      ApplicationFailure.nonRetryable("Push delivery is not configured."),
+      ApplicationFailure.nonRetryable("Push delivery is not configured.", PUSH_NOT_CONFIGURED_TYPE),
     );
     const result = await alertDeliveryWorkflow({ alertId: "alert_1" });
     expect(result.outcomes).toEqual([
@@ -377,6 +466,32 @@ describe("alertDigestDeliveryWorkflow", () => {
     mocks.activities.finalizeAlertDigestDeliveryActivity.mockResolvedValue({
       deliveryState: "digested",
     });
+  });
+
+  it("passes digest refusals and reasons to finalization", async () => {
+    const refusal = { delivered: false, skipped: true, reason: "Alert is no longer deliverable." };
+    mocks.activities.deliverAlertDigestEmailActivity.mockResolvedValue(refusal);
+    mocks.activities.deliverAlertDigestSlackActivity.mockResolvedValue(refusal);
+    mocks.activities.deliverAlertDigestWebhookActivity.mockResolvedValue(refusal);
+    mocks.activities.finalizeAlertDigestDeliveryActivity.mockResolvedValue({
+      deliveryState: "skipped",
+    });
+    const result = await alertDigestDeliveryWorkflow(job);
+    expect(result.status).toBe("skipped");
+    expect(result.outcomes).toEqual([
+      { channel: "email", ...refusal },
+      { channel: "webhook", ...refusal, webhookEndpointId: "webhook_1" },
+      { channel: "webhook", ...refusal, webhookEndpointId: "webhook_2" },
+      { channel: "slack", ...refusal },
+    ]);
+  });
+
+  it("prepares the digest once before the first channel attempt", async () => {
+    await alertDigestDeliveryWorkflow(job);
+    expect(mocks.activities.prepareAlertDigestDeliveryActivity).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.activities.prepareAlertDigestDeliveryActivity.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.activities.deliverAlertDigestEmailActivity.mock.invocationCallOrder[0]);
   });
 
   it("sends one summary push for a digest", async () => {

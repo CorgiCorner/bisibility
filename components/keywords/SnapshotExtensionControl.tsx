@@ -145,7 +145,7 @@ export function SnapshotExtensionControl({
   }
 
   return (
-    <div className="my-4 w-full rounded-card border border-border-control bg-bg-sunken p-4">
+    <div className="w-full rounded-card border border-border-control bg-bg-sunken p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-60">
           <p className="m-0 text-[13px] font-semibold text-fg">{t("title")}</p>
@@ -158,8 +158,9 @@ export function SnapshotExtensionControl({
               : messages[reason]}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Button
+            className="min-h-11 w-full sm:min-h-0 sm:w-auto"
             disabled={pending}
             onClick={reload}
             size="sm"
@@ -170,6 +171,7 @@ export function SnapshotExtensionControl({
           </Button>
           {["available", "running", "failed", "not_sent"].includes(reason) && action ? (
             <Button
+              className="min-h-11 w-full sm:min-h-0 sm:w-auto"
               disabled={!available || pending}
               onClick={() => {
                 setError(null);

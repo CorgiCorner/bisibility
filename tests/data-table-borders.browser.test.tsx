@@ -44,7 +44,7 @@ function expectInternalRowEdge(row: HTMLElement) {
   const { cells } = rowEdgeElements(row);
   expect(getComputedStyle(row).borderTopWidth).toBe("0px");
   for (const cell of cells) expect(getComputedStyle(cell).borderTopWidth).toBe("0px");
-  if (row.hasAttribute("aria-level")) {
+  if (cells.some((cell) => cell.hasAttribute("aria-colspan"))) {
     const style = getComputedStyle(row);
     expect(style.borderBottomWidth).toBe("1px");
     expect(style.borderBottomColor).toBe(resolveColor(row, "var(--border-soft)"));

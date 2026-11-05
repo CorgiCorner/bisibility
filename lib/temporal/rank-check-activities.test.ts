@@ -1236,6 +1236,49 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("records a Live unresolved redirect failure under its stable code and stops retries", async () => {
+    const { RankCheckRunnerError } = await import("../rank-check/runner-error");
+    const { UnresolvedRedirectError } = await import("../providers/serp/unresolved-redirect-error");
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(
+      new RankCheckRunnerError("provider_failed", "Provider redirects could not be resolved.", {
+        cause: new UnresolvedRedirectError(0.2),
+        chargedCents: 0.2,
+      }),
+    );
+
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({ nonRetryable: true, type: "provider_unresolved_redirects" });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      where: { id: "rank_running_1", status: "running" },
+      data: { errorCode: "provider_unresolved_redirects" },
+    });
+  });
+
+  it("records incomplete organic coverage under its stable code and stops retries", async () => {
+    const { RankCheckRunnerError } = await import("../rank-check/runner-error");
+    const { OrganicCoverageError } = await import("../providers/serp/organic-coverage-error");
+    const cause = new OrganicCoverageError("19/20");
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(
+      new RankCheckRunnerError("provider_failed", cause.message, { cause, chargedCents: 0 }),
+    );
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({ nonRetryable: true, type: "organic_depth_not_covered" });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      where: { id: "rank_running_1", status: "running" },
+      data: { errorCode: "organic_depth_not_covered" },
+    });
+  });
+
   it("maps a missing project domain to a non-retryable Temporal failure", async () => {
     mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProjectDomainRequiredError());
 
@@ -1750,4 +1793,65 @@ it("refuses hosted capacity before the one-shot paid claim and makes it non-retr
     where: { id: "check-1", status: "running" },
     data: { errorCode: "provider_capacity_unavailable" },
   });
+});
+
+it("persists the stored unresolved redirect code when the Live check fails", async () => {
+  mocks.prisma.keyword.findUnique.mockResolvedValue({
+    id: "keyword_1",
+    project: { defaults: { serpDepth: 50 }, domain: "example.com" },
+    projectId: "project_1",
+    publicId: "kw_a00000000000000000000000",
+    rankChecks: [],
+    schedule: { serpDepth: 20 },
+    text: "rank tracker",
+  });
+  mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+    attempts: [],
+    errorCode: "provider_unresolved_redirects",
+  });
+  mocks.persistFailedRankCheck.mockResolvedValue({
+    attempts: [],
+    id: "rank_running_1",
+    provider: "primary",
+    scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
+    startedAt: new Date("2026-01-01T06:00:05.000Z"),
+  });
+  await failRankCheckActivity({
+    keywordId: "keyword_1",
+    message: "Provider redirects could not be resolved.",
+    rankCheckId: "rank_running_1",
+  });
+  expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith(
+    expect.objectContaining({ errorCode: "provider_unresolved_redirects" }),
+  );
+});
+
+it("preserves the incomplete-coverage code when terminalizing the running failure", async () => {
+  mocks.prisma.keyword.findUnique.mockResolvedValue({
+    id: "keyword_1",
+    project: { defaults: { serpDepth: 20 }, domain: "example.com" },
+    projectId: "project_1",
+    publicId: "kw_a00000000000000000000000",
+    rankChecks: [],
+    schedule: { serpDepth: 20 },
+    text: "rank tracker",
+  });
+  mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+    attempts: [],
+    errorCode: "organic_depth_not_covered",
+  });
+  mocks.persistFailedRankCheck.mockResolvedValue({
+    id: "rank_failed_1",
+    publicId: "check_abcdefghijklmnopqrstuvwx",
+    checkedAt: new Date(),
+    provider: "serpapi",
+  });
+  await failRankCheckActivity({
+    keywordId: "keyword_1",
+    message: "Incomplete organic coverage",
+    rankCheckId: "rank_running_1",
+  });
+  expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith(
+    expect.objectContaining({ errorCode: "organic_depth_not_covered" }),
+  );
 });

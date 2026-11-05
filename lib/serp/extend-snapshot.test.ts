@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   payment: vi.fn(),
   receipt: vi.fn(),
   child: vi.fn(),
+  fetchPage: vi.fn(),
 }));
 vi.mock("./snapshot-payment", () => ({
   prepareSnapshotExtensionPayment: mocks.payment,
@@ -28,6 +29,13 @@ vi.mock("@/lib/provider-usage/tag", () => ({
   createProviderRequestAttribution: mocks.attribution,
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/providers/serp/serpapi-snapshot", () => ({
+  fetchSerpApiSnapshotPage: mocks.fetchPage,
+}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: { project: { findUnique: vi.fn(async () => ({ id: "project-1", writeMode: "open" })) } },
+}));
+vi.mock("@/lib/deployment/project-write-mode", () => ({ assertProjectWritable: vi.fn() }));
 const input = {
   actorId: "actor-1",
   projectId: "project-1",
@@ -253,5 +261,66 @@ describe("extend snapshot service", () => {
       result: { usageRecorded: false, rankCheck: { raw: {}, checkedAt: new Date() } },
     });
     expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
+  });
+  it("passes the organic count already stored, not the nominal offset, to the page fetch", async () => {
+    // Page 1 returned nine organic results, so the page requested at start=10 continues at rank 10.
+    mocks.claim.mockResolvedValue({
+      ...claim,
+      definition: capturedDefinition,
+      state: { ...claim.state, nextStart: 10 },
+      raw: {
+        organic_results: Array.from({ length: 9 }, (_, index) => ({
+          ...row,
+          rank: index + 1,
+          url: `https://example.com/p${index + 1}`,
+        })),
+      },
+    });
+    mocks.fetchPage.mockResolvedValue({});
+    await extendSnapshot({ ...input, nextStart: 10 });
+    const options = mocks.run.mock.calls[0][0];
+    await options.resolveProvider().fetchRank({ keyword: "k" });
+    expect(mocks.fetchPage).toHaveBeenCalledWith(expect.anything(), expect.anything(), 10, 9);
+    expect(mocks.fetchPage).not.toHaveBeenCalledWith(expect.anything(), expect.anything(), 10, 10);
+  });
+  it("continues after the persisted organic count when a trailing row was not stored", async () => {
+    // Ten organic results were returned for page 1 but only nine were stored (rank 10 was dropped).
+    mocks.claim.mockResolvedValue({
+      ...claim,
+      definition: capturedDefinition,
+      context: { ...context, organicReturned: 10 },
+      state: { ...claim.state, nextStart: 10 },
+      raw: {
+        organic_results: Array.from({ length: 9 }, (_, index) => ({
+          ...row,
+          rank: index + 1,
+          url: `https://example.com/p${index + 1}`,
+        })),
+      },
+    });
+    mocks.fetchPage.mockResolvedValue({});
+    await extendSnapshot({ ...input, nextStart: 10 });
+    const options = mocks.run.mock.calls[0][0];
+    await options.resolveProvider().fetchRank({ keyword: "k" });
+    expect(mocks.fetchPage).toHaveBeenCalledWith(expect.anything(), expect.anything(), 10, 10);
+  });
+  it("persists how many organic results the page returned", async () => {
+    mocks.run.mockResolvedValue({
+      result: {
+        usageRecorded: true,
+        rankCheck: {
+          checkedAt: new Date(),
+          raw: {
+            snapshotContinuation: { ...context, nextStart: 30, organicReturned: 29 },
+            organic_results: [{ ...row, rank: 21 }],
+          },
+        },
+      },
+    });
+    await extendSnapshot(input);
+    // Preceding stored count is 1 (one stored row), so the page returned 28 organic results.
+    expect(mocks.finish.mock.calls.at(-1)?.[0].state.pages.at(-1)).toMatchObject({
+      organicReturned: 28,
+    });
   });
 });

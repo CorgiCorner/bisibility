@@ -107,6 +107,17 @@ describe("smtp email provider", () => {
     expect(error.message).not.toContain("mail.example.com");
   });
 
+  it("marks a socket timeout as an ambiguous acceptance", async () => {
+    const timeout = Object.assign(new Error("socket timed out"), { code: "ETIMEDOUT" });
+    sendMailMock.mockRejectedValue(timeout);
+    vi.stubEnv("SMTP_URL", "smtp://mail.example.com:1025");
+
+    const error = await smtpEmailProvider.send(message).catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(EmailSendError);
+    expect(error).toMatchObject({ ambiguous: true, status: 500 });
+  });
+
   it("defaults to status 500 when SMTP reports no response code", async () => {
     sendMailMock.mockRejectedValue(new Error("socket hang up"));
     vi.stubEnv("SMTP_URL", "smtp://mail.example.com:1025");

@@ -175,7 +175,8 @@ async function deleteInTransaction(
     where: { ownerId: userId },
     select: { id: true },
   });
-  for (const project of ownedProjects) await closeProjectIncidentsSilently(tx, project.id);
+  for (const project of ownedProjects)
+    await closeProjectIncidentsSilently(tx, project.id, undefined, { retainNotifications: true });
   await tx.user.delete({ where: { id: userId } });
   return "deleted";
 }

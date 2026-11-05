@@ -9,9 +9,9 @@ import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
 import { publishOperationChanged } from "../notifications/realtime";
 import { markRecoveryAttemptStopped } from "../provider-evidence/recovery/capture";
-import { isProviderErrorCode } from "../providers/provider-error-code";
 import { storedDeferralReason } from "../rank-check/deferral-reason";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
+import { isRankCheckFailureCode } from "../rank-check/failure-presentation";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import { wrapLegacyRankCheck } from "../rank-check/planner/legacy-wrap";
 import { persistFailedRankCheck } from "../rank-check/runner";
@@ -254,7 +254,7 @@ export async function failRankCheckActivity(
   // biome-ignore format: compact call keeps this activity module under the line cap.
   const rankCheck = await persistFailedRankCheck({
     error: input.message,
-    errorCode: isProviderErrorCode(running?.errorCode) ? running.errorCode : undefined,
+    errorCode: isRankCheckFailureCode(running?.errorCode) ? running.errorCode : undefined,
     attempts: storedAttempts, existingRankCheckId: input.rankCheckId, expectedUrlAtCheck: originalIntent?.targetUrl ?? null, keywordId: keyword.id,
     keywordPublicId: keyword.publicId, keywordText: originalIntent?.keyword ?? keyword.text,
     previousPosition: null,

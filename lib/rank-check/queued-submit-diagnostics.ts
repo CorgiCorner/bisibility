@@ -56,7 +56,7 @@ export function queuedSubmissionDiagnostic(
 }
 
 export function logQueuedSubmissionDiagnostic(
-  outcome: "ambiguous" | "failed" | "partial",
+  outcome: "ambiguous" | "failed" | "partial" | "unsettled",
   diagnostic: QueuedSubmissionDiagnostic,
   warn: Warn = console.warn,
 ) {

@@ -69,6 +69,27 @@ Self-hosted instances use their own app origin for both sign-in and MCP. Discove
 their metadata instead of copying Cloud addresses. See
 [Authentication](/authentication#oauth-for-mcp) for the credential differences.
 
+## HTTP failures
+
+The Streamable HTTP endpoint returns JSON-RPC error envelopes for caught application
+failures, with `Cache-Control: no-store` and an `X-Bisibility-Request-Id` for support.
+Authentication challenges, rate-limit headers and HTTP statuses remain meaningful:
+`401` requires authentication, `403` refuses access, `426` requires a client update,
+and `429` enforces a rate limit. SDK parse and validation errors retain their codes.
+
+Transient dependency failures before tool dispatch return `503`; unexpected failures
+return `500`. A `Retry-After` header does not establish that replaying a tool is safe.
+After dispatch, an operation may have completed even if its response failed. Check its
+outcome before retrying mutating or paid work.
+
+The application allows 30 seconds for authentication and transport setup, and 260
+seconds overall. Live search-performance query reads default to a 25-second provider
+deadline (`ANALYTICS_READ_TIMEOUT_MS`, from 1000 to 120000 milliseconds). Invalid
+configuration retains the default. A provider timeout returns a `504` API problem inside the usual MCP tool
+error result; caller cancellation does not mark the connection for reauthorization.
+Runtime termination, framework startup failures and upstream responses can still
+produce a non-JSON response outside this application boundary.
+
 ## Start the local server
 
 This copyable quickstart starts the docs-tested stdio server.

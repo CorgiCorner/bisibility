@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { EvidenceProjection } from "@/lib/provider-evidence/projection/model";
 import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
+import { QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION } from "@/lib/rank-check/queued-source-schema";
 import { appPath } from "@/lib/routing/app-path";
 import {
   incidentAgeMinutes,
@@ -113,7 +114,11 @@ export async function readPartialEvidence(
   namespace: string,
 ): Promise<PartialEvidenceView[]> {
   const rows = await tx.providerPartialEvidence.findMany({
-    where: { namespace, instanceId: recoveryInstance() },
+    where: {
+      namespace,
+      instanceId: recoveryInstance(),
+      schemaVersion: { not: QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION },
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 50,
     select: {

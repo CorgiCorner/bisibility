@@ -22542,9 +22542,13 @@
             "type": "boolean"
           },
           "alert_slack": {
+            "deprecated": true,
+            "description": "Project Slack delivery, not a personal preference. Ignored on writes; managers use the Slack channel commands. Sending this field returns a Deprecation header and a warnings entry naming it.",
             "type": "boolean"
           },
           "alert_webhook": {
+            "deprecated": true,
+            "description": "Project webhook delivery, not a personal preference. Ignored on writes; managers use the webhook endpoint commands. Sending this field returns a Deprecation header and a warnings entry naming it.",
             "type": "boolean"
           },
           "check_email": {
@@ -22664,7 +22668,7 @@
             "type": "boolean"
           },
           "warnings": {
-            "description": "Present when a deprecated check_in_app write was ignored. Also returned through MCP.",
+            "description": "Present when a deprecated check_in_app, alert_slack or alert_webhook write was ignored. Also returned through MCP.",
             "items": {
               "properties": {
                 "code": {
@@ -27652,6 +27656,10 @@
             },
             "type": ["array", "null"]
           },
+          "expiry_blocked_reason": {
+            "description": "Original blocker when a scheduled occurrence expired.",
+            "type": ["string", "null"]
+          },
           "finished_at": {
             "format": "date-time",
             "type": ["string", "null"]
@@ -28699,6 +28707,7 @@
           "started_at",
           "finished_at",
           "blocked_reason",
+          "expiry_blocked_reason",
           "parent_run_id",
           "cost_cents",
           "usage",
@@ -40341,6 +40350,26 @@
                   "x-bisibility-enum": "open",
                   "x-bisibility-name": "AlertChannel"
                 },
+                "counts": {
+                  "description": "Measured recipient outcomes, omitted when counts are unavailable.",
+                  "properties": {
+                    "accepted_count": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "failed_count": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "unknown_count": {
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": ["accepted_count", "failed_count", "unknown_count"],
+                  "type": "object",
+                  "x-bisibility-name": "AlertDeliveryCounts"
+                },
                 "error": {
                   "type": ["string", "null"]
                 },
@@ -48691,6 +48720,16 @@
               }
             },
             "description": "Rate limited"
+          },
+          "504": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The search-performance provider read deadline was reached."
           }
         },
         "security": [
@@ -60304,6 +60343,16 @@
               }
             },
             "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Save status could not be confirmed. When available, details.current_preferences contains the persisted state."
           }
         },
         "security": [
@@ -81903,7 +81952,7 @@
             "AppOAuth": ["api:write"]
           }
         ],
-        "summary": "Mark all firing project alerts as read",
+        "summary": "Acknowledge firing alerts for the project team",
         "tags": ["alerts"],
         "x-bisibility-cost": {
           "kind": "free"

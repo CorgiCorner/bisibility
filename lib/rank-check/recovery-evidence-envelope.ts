@@ -46,6 +46,8 @@ export const retainedRankResultEnvelopeV2 = retainedRankResultEnvelopeV1.extend(
   attemptId: z.string().optional(),
   completeness: z.enum(["complete", "partial"]),
   returnedDepth: z.number().int().min(0).max(100),
+  /** Historical GoTo repair. It keeps the original check and does not open incidents. */
+  historicalRepair: z.literal(true).optional(),
 });
 
 export const retainedRankResultEnvelope = z.discriminatedUnion("version", [
@@ -72,7 +74,8 @@ export function readRetainedRankResultEnvelope(value: unknown) {
     envelope,
     finishedAt: envelope.finishedAt,
     restorable:
-      envelope.completeness === "complete" && !!envelope.operationPk && !!envelope.attemptId,
+      envelope.completeness === "complete" &&
+      (envelope.historicalRepair === true || (!!envelope.operationPk && !!envelope.attemptId)),
     returnedDepth: envelope.returnedDepth,
   };
 }

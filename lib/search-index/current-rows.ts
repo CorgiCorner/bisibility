@@ -3,11 +3,10 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { presenceUrl } from "@/lib/presence/url";
 import { gscPropertyContainsUrl } from "@/lib/providers/analytics/gsc-property-membership";
 
-export async function currentPageIndexingScope(
+async function currentPageIndexingQuery(
   projectId: string,
-  property: string,
-  includeManual = false,
-  db: Prisma.TransactionClient = prisma,
+  includeManual: boolean,
+  db: Prisma.TransactionClient,
 ) {
   const [defaults, targets] = await Promise.all([
     db.projectDefaults.findUnique({ where: { projectId } }),
@@ -20,7 +19,8 @@ export async function currentPageIndexingScope(
     const url = presenceUrl(targetUrl);
     return url ? [url] : [];
   });
-  const candidates = await db.urlPresence.findMany({
+  return {
+    defaults,
     where: {
       projectId,
       OR: [
@@ -35,7 +35,39 @@ export async function currentPageIndexingScope(
             ]
           : []),
       ],
+    } satisfies Prisma.UrlPresenceWhereInput,
+  };
+}
+
+export async function currentPageIndexingRows(
+  projectId: string,
+  property: string,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const { defaults, where } = await currentPageIndexingQuery(projectId, false, db);
+  const rows = await db.urlPresence.findMany({
+    where,
+    select: {
+      url: true,
+      checkedAt: true,
+      inspectionError: true,
+      verdict: true,
+      coverageState: true,
+      source: true,
     },
+  });
+  return { defaults, rows: rows.filter(({ url }) => gscPropertyContainsUrl(property, url)) };
+}
+
+export async function currentPageIndexingScope(
+  projectId: string,
+  property: string,
+  includeManual = false,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const { defaults, where } = await currentPageIndexingQuery(projectId, includeManual, db);
+  const candidates = await db.urlPresence.findMany({
+    where,
     select: { url: true },
   });
   return {

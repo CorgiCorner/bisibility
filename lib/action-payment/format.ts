@@ -127,3 +127,16 @@ export function formatPaymentMaximum(
 ): string {
   return formatPaymentAmount({ ...maximum, certainty: "measured" }, locale);
 }
+
+/** Retained measured provider money keeps its exact decimal tail, including sub-cent amounts. */
+export function formatMeasuredPaymentAmount(amount: PaymentAmount, locale: string): string {
+  const parsed = paymentAmountSchema.safeParse(amount);
+  if (
+    parsed.success &&
+    parsed.data.certainty === "measured" &&
+    parsed.data.unit.kind === "currency" &&
+    parsed.data.value !== null
+  )
+    return exactDecimal(parsed.data.value, parsed.data.unit, locale);
+  return formatPaymentAmount(amount, locale);
+}

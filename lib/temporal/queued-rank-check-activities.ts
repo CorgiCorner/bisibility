@@ -13,6 +13,7 @@ import { submitQueuedRankCheckBatch } from "../rank-check/queued-submit";
 import {
   QUEUED_INSPECTION_ACTIVITY_HEARTBEAT_MS,
   QUEUED_RESULT_ACTIVITY_HEARTBEAT_MS,
+  QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS,
 } from "../rank-check/queued-timeouts";
 import { heartbeatingActivity } from "./heartbeating-activity";
 import type { QueuedRankCheckWorkflowInput } from "./queued-rank-check-contract";
@@ -91,6 +92,7 @@ export async function persistReadyQueuedRankCheckTasksActivity(input: {
   batchId: string;
   deadlineAt: string;
 }) {
+  const startedAt = Date.now();
   const authorization = await authorizeQueuedRankCheckBatch(input.batchId);
   if (!authorization.allowPaidRetrieval) {
     return deferQueuedRankCheckBatch(
@@ -105,6 +107,7 @@ export async function persistReadyQueuedRankCheckTasksActivity(input: {
     },
     (signal) =>
       persistReadyQueuedRankCheckTasks(input.batchId, {
+        activityDeadlineAt: new Date(startedAt + QUEUED_RESULT_ACTIVITY_START_TO_CLOSE_MS),
         deadlineAt: new Date(input.deadlineAt),
         signal,
       }),

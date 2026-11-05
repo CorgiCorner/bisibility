@@ -25,6 +25,12 @@ export function localizedBlockedRunCopy(
   t: RankRunsTranslator,
   locale: string,
 ): BlockedCopy {
+  if (reason === "operation_unavailable" || reason === "provider_account_blocked") {
+    const text = t(
+      reason === "operation_unavailable" ? "blocked.planRequired" : "blocked.verifyProvider",
+    );
+    return { action: null, compact: text, description: text, title: text };
+  }
   if (reason === "temporal_unavailable") {
     return deploymentMode === "self-host"
       ? {
@@ -132,10 +138,11 @@ export function localizedBlockedRunCopy(
       title: t("blocked.providerUnavailable"),
     };
   }
+  const safeReason = reason && /^[a-z0-9_.:-]{1,128}$/i.test(reason) ? reason : null;
   return {
     action: null,
-    compact: t("blocked.waiting"),
+    compact: safeReason ? t("blocked.reason", { reason: safeReason }) : t("blocked.waiting"),
     description: t("blocked.waitingDescription"),
-    title: t("blocked.waiting"),
+    title: safeReason ? t("blocked.reason", { reason: safeReason }) : t("blocked.waiting"),
   };
 }

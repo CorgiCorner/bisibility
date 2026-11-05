@@ -53,7 +53,7 @@ export async function deleteProjectById(
       },
       tx,
     );
-    await closeProjectIncidentsSilently(tx, projectId);
+    await closeProjectIncidentsSilently(tx, projectId, undefined, { retainNotifications: true });
     return tx.project.delete({ where: { id: projectId } });
   });
 }

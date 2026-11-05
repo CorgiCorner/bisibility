@@ -109,6 +109,26 @@ describe("rank-check run app routes", () => {
     });
   });
 
+  it("returns each item page without adding a cost field", async () => {
+    const data = [
+      { id: "own", status: "failed", actualCostCents: 0.4 },
+      { id: "hosted", status: "completed", actualCostCents: 0.4 },
+    ];
+    mocks.listItems.mockResolvedValueOnce({
+      data,
+      nextCursor: "page-2",
+      ownKeyReportedCostCents: { own: 0.4 },
+    });
+    const response = await items(
+      new Request(`https://example.com/api/rank-check-runs/${publicId}/items?project=${projectId}`),
+      context,
+    );
+    await expect(response.json()).resolves.toEqual({
+      data,
+      meta: { next_cursor: "page-2" },
+    });
+  });
+
   it("observes a completed result only after authorized item retrieval", async () => {
     mocks.listItems.mockResolvedValueOnce({
       data: [{ id: "item_1", status: "completed" }],

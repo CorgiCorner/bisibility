@@ -235,8 +235,9 @@ export function LoginForm({
     setAuthStatus("idle");
     setResentCode(false);
     clearCooldown();
-    const destination = mergeReturnToHash(returnTo, window.location.hash);
-    const redirectUrl = signInRedirectUrl(response, window.location.origin, destination);
+    const { hash, origin, search } = window.location;
+    const destination = mergeReturnToHash(returnTo, hash);
+    const redirectUrl = signInRedirectUrl(response, origin, destination, search);
 
     if (redirectUrl) {
       window.location.assign(redirectUrl);

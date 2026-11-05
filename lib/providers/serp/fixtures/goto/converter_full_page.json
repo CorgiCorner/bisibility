@@ -1,0 +1,127 @@
+{
+  "request": [
+    {
+      "goto_urls": [
+        "https://google.com/goto?url=SYNTHGOTO001",
+        "https://google.com/goto?url=SYNTHGOTO002",
+        "https://google.com/goto?url=SYNTHGOTO003",
+        "https://google.com/goto?url=SYNTHGOTO004",
+        "https://google.com/goto?url=SYNTHGOTO006",
+        "https://google.com/goto?url=SYNTHGOTO007",
+        "https://google.com/goto?url=SYNTHGOTO009",
+        "https://google.com/goto?url=SYNTHGOTO010",
+        "https://google.com/goto?url=SYNTHGOTO011",
+        "https://google.com/goto?url=SYNTHGOTO013",
+        "https://google.com/goto?url=SYNTHGOTO014",
+        "https://google.com/goto?url=SYNTHGOTO015",
+        "https://google.com/goto?url=SYNTHGOTO017",
+        "https://google.com/goto?url=SYNTHGOTO019",
+        "https://google.com/goto?url=SYNTHGOTO020"
+      ]
+    }
+  ],
+  "elapsed_s": 1.3,
+  "response": {
+    "version": "0.1.20261022",
+    "status_code": 20000,
+    "status_message": "Ok.",
+    "time": "1.1949 sec.",
+    "cost": 0,
+    "tasks_count": 1,
+    "tasks_error": 0,
+    "tasks": [
+      {
+        "id": "11021648-0000-0000-0000-000000000005",
+        "status_code": 20000,
+        "status_message": "Ok.",
+        "time": "1.1825 sec.",
+        "cost": 0,
+        "result_count": 15,
+        "path": ["v3", "appendix", "goto_url_converter"],
+        "data": {
+          "api": "appendix",
+          "function": "goto_url_converter",
+          "goto_urls": [
+            "https://google.com/goto?url=SYNTHGOTO001",
+            "https://google.com/goto?url=SYNTHGOTO002",
+            "https://google.com/goto?url=SYNTHGOTO003",
+            "https://google.com/goto?url=SYNTHGOTO004",
+            "https://google.com/goto?url=SYNTHGOTO006",
+            "https://google.com/goto?url=SYNTHGOTO007",
+            "https://google.com/goto?url=SYNTHGOTO009",
+            "https://google.com/goto?url=SYNTHGOTO010",
+            "https://google.com/goto?url=SYNTHGOTO011",
+            "https://google.com/goto?url=SYNTHGOTO013",
+            "https://google.com/goto?url=SYNTHGOTO014",
+            "https://google.com/goto?url=SYNTHGOTO015",
+            "https://google.com/goto?url=SYNTHGOTO017",
+            "https://google.com/goto?url=SYNTHGOTO019",
+            "https://google.com/goto?url=SYNTHGOTO020"
+          ]
+        },
+        "result": [
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO001",
+            "url": "https://site4.example.com/page-45"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO002",
+            "url": "https://site18.example.com/page-39"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO003",
+            "url": "https://site25.example.com/page-40"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO004",
+            "url": "https://site4.example.com/page-10"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO006",
+            "url": "https://site3.example.com/page-46"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO007",
+            "url": "https://site27.example.com/page-43"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO009",
+            "url": "https://site4.example.com/page-12"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO010",
+            "url": "https://site21.example.com/page-30"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO011",
+            "url": "https://site10.example.com/page-13"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO013",
+            "url": "https://site5.example.com/page-31"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO014",
+            "url": "https://site6.example.com/page-35"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO015",
+            "url": "http://site28.example.com/page-47"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO017",
+            "url": "https://site11.example.com/page-14"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO019",
+            "url": "https://site29.example.com/page-48"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO020",
+            "url": "https://site30.example.com/page-49"
+          }
+        ]
+      }
+    ]
+  }
+}

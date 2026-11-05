@@ -59,6 +59,7 @@ function user(
     email,
     emailVerified: options.emailVerified ?? true,
     id,
+    publicId: id,
     notificationPreferences:
       options.reportEmail === undefined ? [] : [{ reportEmail: options.reportEmail }],
   };
@@ -173,6 +174,7 @@ describe("sendWeeklyDigestForProject", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
+    mocks.prisma.project.findFirst.mockReset();
   });
   beforeEach(() => {
     vi.stubEnv("BISIBILITY_SECRETS_KEY", Buffer.alloc(32, 7).toString("base64"));
@@ -251,6 +253,47 @@ describe("sendWeeklyDigestForProject", () => {
         targetType: "project",
       },
       mocks.prisma,
+    );
+  });
+
+  it("delivers to the demo Owner and members but never the shared Viewer in editable demo", async () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_bcdefghijklmnopqrstuvwxy");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    const viewer = { ...user("viewer_1", "viewer@example.org"), publicId: "usr_abcdefghijklmnopqrstuvwx" };
+    const owner = { ...user("owner_1", "owner@example.com"), publicId: "usr_bcdefghijklmnopqrstuvwxy" };
+    const access = { ...accessProject(), owner };
+    access.members.push({ user: viewer });
+    mockDigestData();
+    let reads = 0;
+    mocks.prisma.project.findFirst
+      .mockReset()
+      .mockImplementation(async () => (reads++ === 1 ? dataProject() : access));
+    mocks.prisma.user.findFirst.mockImplementation(async ({ where }) =>
+      where.id === "viewer_1"
+        ? viewer
+        : where.id === "owner_1"
+          ? owner
+          : user(where.id, "member@example.com"),
+    );
+
+    const result = await sendWeeklyDigestForProject("project_1", now);
+
+    expect(result).toMatchObject({ status: "sent" });
+    // Count real deliveries: the result tally comes from the mocked send-record read.
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(2);
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ category: "bulk", to: "owner@example.com" }),
+    );
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "member@example.com" }),
+    );
+    expect(mocks.sendEmail).not.toHaveBeenCalledWith(
+      expect.objectContaining({ to: "viewer@example.org" }),
+    );
+    expect(mocks.prisma.weeklyDigestSend.createMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ userId: "viewer_1" }) }),
     );
   });
 

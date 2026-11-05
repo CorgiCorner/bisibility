@@ -24,7 +24,9 @@ vi.mock("./client", () => ({
 describe("alert delivery client", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.start.mockResolvedValue({});
+    mocks.start.mockImplementation(async (_type, options) => ({
+      describe: async () => ({ memo: options.memo }),
+    }));
   });
 
   it("starts a deterministic workflow on the dedicated task queue", async () => {
@@ -88,11 +90,36 @@ describe("alert delivery client", () => {
     };
     expect(alertDigestDeliveryWorkflowId(job)).toBe("alert-digest-rule_1-alert_1-2");
     await enqueueAlertDigestJob(job);
-    expect(mocks.start).toHaveBeenCalledWith("alertDigestDeliveryWorkflow", {
-      args: [job],
-      taskQueue: ALERT_DELIVERY_TASK_QUEUE,
-      workflowId: "alert-digest-rule_1-alert_1-2",
+    expect(mocks.start.mock.calls.at(-1)?.[1]).toMatchObject({
+      workflowIdConflictPolicy: "USE_EXISTING",
+      workflowIdReusePolicy: "ALLOW_DUPLICATE",
     });
+    expect(mocks.start).toHaveBeenCalledWith(
+      "alertDigestDeliveryWorkflow",
+      expect.objectContaining({
+        args: [job],
+        taskQueue: `${ALERT_DELIVERY_TASK_QUEUE}-fenced-v1`,
+        workflowId: "alert-digest-rule_1-alert_1-2",
+      }),
+    );
+    expect(
+      alertDigestDeliveryWorkflowId({
+        ...job,
+        alertIds: [...job.alertIds].reverse(),
+        deliveryClaimToken: "other",
+      }),
+    ).toBe(alertDigestDeliveryWorkflowId(job));
+    for (const changed of [
+      { digestClaimToken: "foreign" },
+      { digestBatchIdentity: "different-batch" },
+    ]) {
+      mocks.start.mockImplementationOnce(async (_type, options) => ({
+        describe: async () => ({ memo: { ...options.memo, ...changed } }),
+      }));
+      await expect(enqueueAlertDigestJob(job)).rejects.toThrow("another batch or claim owner");
+    }
+    mocks.start.mockResolvedValueOnce({ describe: async () => ({}) });
+    await expect(enqueueAlertDigestJob(job)).rejects.toThrow("another batch or claim owner");
     expect(JSON.stringify(job)).not.toContain("hmacSecret");
   });
 });

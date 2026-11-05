@@ -55,10 +55,18 @@ export async function finishAccountCheck(
               : { searches: incident.minimumCapacity ?? undefined },
           )
         : null;
+    const legacyCapacity =
+      matches &&
+      (incident.reason === "legacy_unverified" || incident.evidenceSource === "legacy_probe") &&
+      incident.minimumCapacity === null &&
+      result.fact.kind === "capacity" &&
+      result.fact.unit === claim.adapter.capacity.unit &&
+      Number.isFinite(result.fact.value) &&
+      result.fact.value > 0;
     const ready =
       matches &&
       sameAccountScope(incident.scope, result.fact.scope) &&
-      capacityReadiness(result.fact, minimum) === "ready" &&
+      (legacyCapacity || capacityReadiness(result.fact, minimum) === "ready") &&
       !(
         incident.reason === "provider_account_restricted" &&
         typeof incident.scope === "object" &&
@@ -85,6 +93,45 @@ export async function finishAccountCheck(
         resolved: true,
       });
     }
+    const legacyEvidence =
+      matches &&
+      (incident.reason === "legacy_unverified" ||
+        (incident.reason === "provider_transient" && incident.evidenceSource === "legacy_probe")) &&
+      sameAccountScope(incident.scope, result.fact.scope);
+    const legacyFailure = legacyEvidence
+      ? result.fact.kind === "failure"
+        ? result.fact.code === "provider_rate_limited"
+          ? "provider_transient"
+          : [
+                "provider_auth",
+                "provider_billing",
+                "provider_account_restricted",
+                "provider_transient",
+              ].includes(result.fact.code)
+            ? result.fact.code
+            : null
+        : result.fact.kind === "capacity" &&
+            result.fact.unit === claim.adapter.capacity.unit &&
+            Number.isFinite(result.fact.value) &&
+            result.fact.value <= 0
+          ? "provider_billing"
+          : result.fact.kind === "not_verified"
+            ? "provider_transient"
+            : null
+      : null;
+    if (legacyFailure && incident) {
+      await tx.providerAccountIncident.update({
+        where: { id: incident.id },
+        data: { reason: legacyFailure, evidenceSource: "legacy_probe" },
+      });
+      await deliverAccountIncident(tx, {
+        projectId: input.projectId,
+        connectionId: current.id,
+        incidentId: incident.id,
+        provider: current.provider,
+        reason: legacyFailure,
+      });
+    }
     const other = ready
       ? await tx.providerAccountIncident.findFirst({
           where: {
@@ -96,7 +143,12 @@ export async function finishAccountCheck(
           orderBy: { startedAt: "asc" },
         })
       : null;
-    const state = ready && !other ? "verified" : existing.accountState;
+    const state =
+      ready && !other
+        ? "verified"
+        : legacyFailure === "provider_billing"
+          ? "payment_required"
+          : existing.accountState;
     const authIncident = await tx.providerAccountIncident.findFirst({
       where: {
         connectionId: current.id,
@@ -116,7 +168,7 @@ export async function finishAccountCheck(
         ? "provider_auth"
         : result.fact.kind === "failure"
           ? result.fact.code
-          : "not_verified";
+          : (legacyFailure ?? "not_verified");
     const retryMs = result.fact.kind === "failure" ? result.fact.retryAfterMs : undefined;
     const maximumDate = 8_640_000_000_000_000;
     const cooldownMs = Math.max(
@@ -133,7 +185,11 @@ export async function finishAccountCheck(
             attempt: 0,
             retryAt: cooldown,
           })
-        : !authPaused && !ready && matches && autoCheckEligible(claim.adapter, incident.reason)
+        : !authPaused &&
+            !ready &&
+            matches &&
+            (incident.reason !== "legacy_unverified" || legacyFailure !== null) &&
+            autoCheckEligible(claim.adapter, legacyFailure ?? incident.reason)
           ? nextAccountCheck({
               startedAt: incident.startedAt,
               now,

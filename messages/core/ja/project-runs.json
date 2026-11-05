@@ -92,7 +92,10 @@
       "sampleProgress": "{completed, number} / {total, number} サンプル",
       "costUnknown": "コスト未確認",
       "knownCost": "確認済みコスト {cost} + 未確認",
-      "actualCost": "コスト {cost}"
+      "actualCost": "コスト {cost}",
+      "planRequired": "Blocked: plan required",
+      "verifyProvider": "Blocked: verify provider",
+      "blockReason": "Blocked: {reason}"
     },
     "actions": {
       "actionsFor": "{title}の操作",

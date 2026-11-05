@@ -1,9 +1,10 @@
 import "server-only";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
-import { readDemoConfig } from "@/lib/demo/config";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { oneClickOrigin } from "@/lib/email/one-click-link";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { getPurposeSecretKeys } from "@/lib/providers/crypto";
 
 const PURPOSE = "notification-email-unsubscribe";
@@ -57,15 +58,22 @@ export function verifyNotificationUnsubscribeToken(token: string) {
 }
 
 export async function unsubscribeNotificationEmail(token: string) {
-  if (readDemoConfig().kind !== "disabled") return false;
+  // Editable demo mail ships normally, so its unsubscribe must work; the legacy snapshot sends none.
+  if (readOnlyDemoConfig()) return false;
   const scope = readToken(token, new Date());
   if (!scope) return false;
   const data = scope.stream === "alert" ? { alertEmail: false } : { reportEmail: false };
-  await prisma.notificationPreference.upsert({
-    where: { userId_projectId: { userId: scope.userId, projectId: scope.projectId } },
-    create: { userId: scope.userId, projectId: scope.projectId, ...data },
-    update: data,
-  });
+  try {
+    await prisma.notificationPreference.upsert({
+      where: { userId_projectId: { userId: scope.userId, projectId: scope.projectId } },
+      create: { userId: scope.userId, projectId: scope.projectId, ...data },
+      update: data,
+    });
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003")) {
+      throw error;
+    }
+  }
   return true;
 }
 

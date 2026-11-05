@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 6effa9e73f755aec098db8897c9b5199588916772bf3ad80bf715ca91e6b21aa
+# Source hash: 74c3819447ac9843f303ca18da2f233cda36e62ebd27a71d10b7a76d198dd200
 name: CI
 
 on:
@@ -25,7 +25,7 @@ permissions:
   contents: read
 
 env:
-  GOMEMLIMIT: 4GiB
+  GOMEMLIMIT: 6GiB
 
 jobs:
   static:

@@ -31,7 +31,12 @@ export function DashboardCompositor({
 }: DashboardCompositorProps) {
   const shellSection = (id: ShellId) =>
     composition.authorized && (shell[id] == null || shell[id] === false) ? null : (
-      <section key={id} aria-label={t(`shell.${id}`)} data-dashboard-shell={id}>
+      <section
+        key={id}
+        aria-label={t(`shell.${id}`)}
+        className={id === "health" || id === "budget" ? "w-full min-w-0 basis-full" : ""}
+        data-dashboard-shell={id}
+      >
         {composition.authorized && shell[id] != null && shell[id] !== false ? (
           shell[id]
         ) : (

@@ -5,6 +5,7 @@
         "alert_email": true,
         "alert_in_app": true,
         "alert_push": false,
+        "provider_incident_in_app": false,
         "check_email": false,
         "check_in_app": true,
         "check_notification_setting": "important",
@@ -15,7 +16,6 @@
         "invite_email": true,
         "invite_in_app": true,
         "report_email": true,
-        "provider_incident_in_app": false,
         "alert_slack": false,
         "alert_webhook": false,
         "project_id": "prj_a00000000000000000000000"
@@ -31,6 +31,7 @@
         "alert_email": true,
         "alert_in_app": true,
         "alert_push": true,
+        "provider_incident_in_app": true,
         "check_email": false,
         "check_in_app": false,
         "check_notification_setting": "none",
@@ -43,39 +44,14 @@
         "report_email": true,
         "alert_slack": false,
         "alert_webhook": false,
-        "project_id": "prj_a00000000000000000000000"
-      },
-      "contentType": "application/json",
-      "method": "PATCH",
-      "operationId": "updateNotificationPreferences",
-      "path": "/projects/{project_id}/notification-preferences",
-      "status": 200
-    },
-    {
-      "body": {
-        "alert_email": true,
-        "alert_in_app": true,
-        "alert_push": true,
-        "check_email": false,
-        "check_in_app": false,
-        "check_notification_setting": "none",
-        "check_notification_top_n": 100,
-        "check_notification_position_move": 1,
-        "import_email": true,
-        "import_in_app": true,
-        "invite_email": true,
-        "invite_in_app": true,
-        "report_email": true,
+        "project_id": "prj_a00000000000000000000000",
         "warnings": [
           {
             "code": "deprecated_field",
             "field": "check_in_app",
             "message": "check_in_app is read-only and ignored on writes. Use check_notification_setting instead."
           }
-        ],
-        "alert_slack": false,
-        "alert_webhook": false,
-        "project_id": "prj_a00000000000000000000000"
+        ]
       },
       "contentType": "application/json",
       "method": "PATCH",

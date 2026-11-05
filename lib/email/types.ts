@@ -8,6 +8,7 @@ export type EmailMessage = {
   from: string;
   html: string;
   headers?: Record<string, string>;
+  idempotencyKey?: string;
   replyTo?: string;
   sendCounterReserved?: boolean;
   subject: string;
@@ -21,18 +22,27 @@ export type EmailProvider = {
   /** True when the transport has the credentials it needs. */
   isConfigured(): boolean;
   /** Delivers one message or throws EmailSendError. Never retries internally. */
-  send(message: EmailMessage): Promise<void>;
+  send(message: EmailMessage): Promise<void> | Promise<{ messageId: string | null }>;
 };
 
 export class EmailSendError extends Error {
   readonly status: number;
   readonly retryAfterSeconds: number | null;
+  readonly providerCode: string | null;
+  readonly ambiguous: boolean;
 
-  constructor(message: string, status: number, retryAfterSeconds: number | null) {
+  constructor(
+    message: string,
+    status: number,
+    retryAfterSeconds: number | null,
+    details?: { ambiguous?: boolean; providerCode?: string | null },
+  ) {
     super(message);
     this.name = "EmailSendError";
     this.status = status;
     this.retryAfterSeconds = retryAfterSeconds;
+    this.providerCode = details?.providerCode ?? null;
+    this.ambiguous = details?.ambiguous ?? false;
   }
 }
 
@@ -66,5 +76,13 @@ export class EmailNotSubmittedError extends Error {
   constructor(cause: unknown) {
     super(cause instanceof Error ? cause.message : "Email preparation failed.", { cause });
     this.name = "EmailNotSubmittedError";
+  }
+}
+
+/** A bulk recipient is blocked before provider submission. */
+export class EmailSuppressedError extends Error {
+  constructor() {
+    super("Bulk email recipient is suppressed.");
+    this.name = "EmailSuppressedError";
   }
 }

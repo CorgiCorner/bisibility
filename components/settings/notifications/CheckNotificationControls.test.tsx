@@ -32,7 +32,10 @@ describe("UI-2 check notification controls", () => {
     expect(screen.getByLabelText("Minimum position move")).toHaveValue("5");
     expect(screen.getByRole("switch", { name: "Provider incidents In-app" })).toBeChecked();
     expect(screen.queryByRole("switch", { name: "Check notifications In-app" })).toBeNull();
-    expect(screen.getByRole("switch", { name: "Check notifications Email" })).toBeVisible();
+    expect(
+      screen.queryByRole("switch", { name: "Check notifications Email" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Check notifications Email is not available")).toBeVisible();
     expect(container.querySelector("select")).toBeNull();
   });
   it("ties the selected explanation to the check row and places the footnote before compact thresholds", () => {
@@ -119,11 +122,10 @@ describe("UI-2 check notification controls", () => {
       expect(mocks.save).toHaveBeenCalledWith(
         expect.objectContaining({
           checkNotificationSetting: "none",
-          checkNotificationTopN: 10,
-          checkNotificationPositionMove: 5,
         }),
       ),
     );
+    expect(screen.getByLabelText("Top-N entry or exit")).toHaveValue("10");
     expect(screen.getByLabelText("Top-N entry or exit")).toBeDisabled();
     expect(screen.queryByRole("alert")).toBeNull();
   });

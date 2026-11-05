@@ -6,7 +6,6 @@ import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ProviderRecovery } from "./ProviderRecovery";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 vi.mock("@/lib/actions/provider-recovery", () => ({
   checkProviderRecoveryAccount: vi.fn(),
   loadProviderAffectedChecks: vi.fn(),

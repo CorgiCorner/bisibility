@@ -1,11 +1,14 @@
 import "server-only";
 import { sweepAchievementMail } from "../achievements/mail";
 import { sweepAchievementFacts } from "../achievements/process";
+import { processPendingAlertEvaluationIntents } from "../alerts/evaluation-intent";
 import { produceDueRecurringMonitors } from "../local-monitor-recurring/producer";
+import { redactOpsText } from "../ops/redact-text";
 import { reconcileRequestedSearchInsightsSyncs } from "../search-insights/sync/requested-sync-reconciler";
 import { hasPendingWorkerIntent } from "../worker-intents/pending-probe";
 import { subscribeToWorkerIntents, workerIntentPollIntervalMs } from "../worker-intents/realtime";
 import { dispatchAiTrackingIntents } from "./ai-tracking-intent-dispatch";
+import { enqueueAlertDeliveries } from "./alert-delivery-client";
 import { dispatchLocalMonitorIntents } from "./local-monitor-intent-dispatch";
 import { dispatchProviderComparisonIntents } from "./provider-comparison-intents";
 import { dispatchQueuedRankCheckRunIntents } from "./rank-run-intent-dispatch";
@@ -13,6 +16,7 @@ import { dispatchFirstTrafficSyncIntent } from "./traffic-intent-dispatch";
 import { sweepWelcomeFollowupIntents } from "./welcome-intent-processor";
 
 type SweepOptions = {
+  processAlertEvaluations?: typeof processPendingAlertEvaluationIntents;
   produceLocalMonitors?: typeof produceDueRecurringMonitors;
   dispatchLocalMonitors?: typeof dispatchLocalMonitorIntents;
   dispatchComparisons?: typeof dispatchProviderComparisonIntents;
@@ -28,6 +32,15 @@ type SweepOptions = {
 export async function sweepWorkerIntents(options: SweepOptions = {}) {
   // A person is usually waiting on a rank run, so it goes before the background syncs.
   const rankRuns = await (options.dispatchRankRuns ?? dispatchQueuedRankCheckRunIntents)();
+  const alertEvaluations = await (
+    options.processAlertEvaluations ?? processPendingAlertEvaluationIntents
+  )().catch((error: unknown) => {
+    console.error("[alerts] evaluation intent sweep failed", { error: redactOpsText(error) });
+    return { failed: 1, immediateAlertIds: [] as string[], processed: 0 };
+  });
+  if (alertEvaluations.immediateAlertIds.length > 0) {
+    await enqueueAlertDeliveries(alertEvaluations.immediateAlertIds).catch(() => undefined);
+  }
   const localRecurring = await (options.produceLocalMonitors ?? produceDueRecurringMonitors)();
   const localMonitors = await (options.dispatchLocalMonitors ?? dispatchLocalMonitorIntents)();
   const comparisons = await (options.dispatchComparisons ?? dispatchProviderComparisonIntents)();
@@ -47,6 +60,7 @@ export async function sweepWorkerIntents(options: SweepOptions = {}) {
   const welcome = await (options.sweepWelcome ?? sweepWelcomeFollowupIntents)();
   return {
     rankRuns,
+    alertEvaluations,
     localRecurring,
     localMonitors,
     comparisons,

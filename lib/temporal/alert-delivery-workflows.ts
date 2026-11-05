@@ -1,4 +1,5 @@
-import { proxyActivities, uuid4 } from "@temporalio/workflow";
+import { patched, proxyActivities, uuid4 } from "@temporalio/workflow";
+import { PUSH_NOT_CONFIGURED_TYPE } from "../alerts/delivery-counts";
 import type { AlertDigestJob } from "../alerts/digest-types";
 import type {
   AlertDeliveryContext,
@@ -20,6 +21,8 @@ import type {
   sweepAlertDeliveriesActivity as sweepActivity,
   deliverAlertWebhookActivity as webhookActivity,
 } from "./alert-delivery-activities";
+import { DIGEST_CLAIM_FENCING_PATCH } from "./digest-fencing";
+import { fencedDigestProxies } from "./fenced-digest-proxies";
 
 type LifecycleActivities = {
   claimAlertDeliveryActivity: typeof claimActivity;
@@ -54,16 +57,18 @@ const { deliverAlertSlackActivity } = proxyActivities<{
   retry: { ...channelRetry, maximumAttempts: 3 },
   startToCloseTimeout: "1 minute",
 });
-// Push retries less: a late notification is worth less than an on-time one.
+// A lost push receipt must never replay the batch on already accepted devices.
 const { deliverAlertPushActivity } = proxyActivities<{
   deliverAlertPushActivity: typeof pushActivity;
-}>({ retry: { ...channelRetry, maximumAttempts: 3 }, startToCloseTimeout: "1 minute" });
-const digestChannels = proxyActivities<{
+}>({ retry: { maximumAttempts: 1 }, startToCloseTimeout: "1 minute" });
+const legacyDigestChannels = proxyActivities<{
   deliverAlertDigestEmailActivity: typeof digestEmailActivity;
-  deliverAlertDigestPushActivity: typeof digestPushActivity;
   deliverAlertDigestSlackActivity: typeof digestSlackActivity;
   deliverAlertDigestWebhookActivity: typeof digestWebhookActivity;
 }>({ retry: channelRetry, startToCloseTimeout: "1 minute" });
+const { deliverAlertDigestPushActivity } = proxyActivities<{
+  deliverAlertDigestPushActivity: typeof digestPushActivity;
+}>({ retry: { maximumAttempts: 1 }, startToCloseTimeout: "1 minute" });
 const { finalizeAlertDigestDeliveryActivity } = proxyActivities<{
   finalizeAlertDigestDeliveryActivity: typeof finalizeDigestActivity;
 }>({
@@ -83,6 +88,21 @@ function reason(error: unknown) {
   return error instanceof Error ? error.message : "Alert delivery failed.";
 }
 
+function pushFailure(error: unknown) {
+  const cause = (error as { cause?: unknown })?.cause ?? error;
+  const knownUnsent =
+    cause &&
+    typeof cause === "object" &&
+    "type" in cause &&
+    cause.type === PUSH_NOT_CONFIGURED_TYPE;
+  return {
+    channel: "push" as const,
+    delivered: false,
+    reason: reason(error),
+    ...(knownUnsent ? {} : { unknown: true }),
+  };
+}
+
 async function deliverEmail(context: AlertDeliveryContext, outcomes: AlertDeliveryOutcome[]) {
   if (!context.channels.includes("email")) return;
   if (context.recipients.length === 0) {
@@ -97,12 +117,22 @@ async function deliverEmail(context: AlertDeliveryContext, outcomes: AlertDelive
   }
   for (const recipient of context.recipients) {
     try {
-      await deliverAlertEmailActivity({
+      const result = await deliverAlertEmailActivity({
         alertId: context.triggeredAlertId,
         payload: context.payload,
         recipientEmail: recipient.email,
+        // Prepared bytes stay in the activity, so this patch only adds recipient ids.
+        ...(patched("alert-email-send-gate-v1")
+          ? {
+              projectInternalId: context.projectInternalId,
+              ruleId: context.ruleInternalId,
+              recipientUserId: recipient.userId,
+            }
+          : {}),
       });
-      outcomes.push({ channel: "email", delivered: true });
+      outcomes.push(
+        result ? { channel: "email", ...result } : { channel: "email", delivered: true },
+      );
     } catch (error) {
       outcomes.push({ channel: "email", delivered: false, reason: reason(error) });
     }
@@ -121,12 +151,14 @@ async function deliverWebhooks(context: AlertDeliveryContext, outcomes: AlertDel
   }
   for (const endpointId of context.webhookEndpointIds) {
     try {
-      await deliverAlertWebhookActivity({
+      const result = await deliverAlertWebhookActivity({
         alertId: context.triggeredAlertId,
         endpointId,
         payload: context.payload,
       });
-      outcomes.push({ channel: "webhook", delivered: true });
+      outcomes.push(
+        result ? { channel: "webhook", ...result } : { channel: "webhook", delivered: true },
+      );
     } catch (error) {
       outcomes.push({ channel: "webhook", delivered: false, reason: reason(error) });
     }
@@ -145,12 +177,12 @@ async function deliverSlack(context: AlertDeliveryContext, outcomes: AlertDelive
     return;
   }
   try {
-    await deliverAlertSlackActivity({
+    const result = await deliverAlertSlackActivity({
       alertId: context.triggeredAlertId,
       payload: context.payload,
       slackConnectionId: context.slackConnectionId,
     });
-    outcomes.push({ channel: "slack", delivered: true });
+    outcomes.push(result ? { channel: "slack", ...result } : { channel: "slack", delivered: true });
   } catch (error) {
     outcomes.push({ channel: "slack", delivered: false, reason: reason(error) });
   }
@@ -166,7 +198,8 @@ async function deliverPush(context: AlertDeliveryContext, outcomes: AlertDeliver
     });
     outcomes.push({ channel: "push", ...result });
   } catch (error) {
-    outcomes.push({ channel: "push", delivered: false, reason: reason(error) });
+    const failure = pushFailure(error);
+    outcomes.push({ ...failure, ...(failure.unknown ? { recordAttempt: true } : {}) });
   }
 }
 
@@ -195,7 +228,12 @@ export async function alertDeliveryWorkflow(input: { alertId: string }) {
 }
 
 export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
-  const job = await prepareAlertDigestDeliveryActivity(input);
+  // Prepare re-checks every alert and rebuilds the email, Slack and webhook content for the
+  // deliverable subset once, before the first send attempt. Channel retries reuse this job and
+  // never rebuild it; AL4 will freeze the prepared message per logical delivery.
+  const fenced = patched(DIGEST_CLAIM_FENCING_PATCH) ? fencedDigestProxies() : null;
+  const digestChannels = fenced?.channels ?? legacyDigestChannels;
+  const job = await (fenced?.prepare ?? prepareAlertDigestDeliveryActivity)(input);
   if (!job) return { alertIds: input.alertIds, outcomes: [], status: "skipped" as const };
   const outcomes: AlertDigestDeliveryOutcome[] = [];
   if (job.channels.includes("email")) {
@@ -209,8 +247,12 @@ export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
     }
     for (const recipient of job.recipients) {
       try {
-        const delivered = await digestChannels.deliverAlertDigestEmailActivity({ job, recipient });
-        outcomes.push({ channel: "email", delivered, skipped: !delivered });
+        const result = await digestChannels.deliverAlertDigestEmailActivity({ job, recipient });
+        outcomes.push(
+          typeof result === "boolean"
+            ? { channel: "email", delivered: result, skipped: !result }
+            : { channel: "email", ...result },
+        );
       } catch (error) {
         outcomes.push({ channel: "email", delivered: false, reason: reason(error) });
       }
@@ -222,14 +264,10 @@ export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
     }
     for (const endpointId of job.webhookEndpointIds) {
       try {
-        const delivered = await digestChannels.deliverAlertDigestWebhookActivity({
-          endpointId,
-          job,
-        });
+        const result = await digestChannels.deliverAlertDigestWebhookActivity({ endpointId, job });
         outcomes.push({
           channel: "webhook",
-          delivered,
-          skipped: !delivered,
+          ...(typeof result === "boolean" ? { delivered: result, skipped: !result } : result),
           webhookEndpointId: endpointId,
         });
       } catch (error) {
@@ -244,21 +282,32 @@ export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
   }
   if (job.channels.includes("slack")) {
     try {
-      const delivered = await digestChannels.deliverAlertDigestSlackActivity(job);
-      outcomes.push({ channel: "slack", delivered, skipped: !delivered });
+      const result = await digestChannels.deliverAlertDigestSlackActivity(job);
+      outcomes.push({
+        channel: "slack",
+        ...(typeof result === "boolean" ? { delivered: result, skipped: !result } : result),
+      });
     } catch (error) {
       outcomes.push({ channel: "slack", delivered: false, reason: reason(error) });
     }
   }
   if (job.channels.includes("push")) {
     try {
-      const delivered = await digestChannels.deliverAlertDigestPushActivity(job);
-      outcomes.push({ channel: "push", delivered, skipped: !delivered });
+      const result = await (
+        fenced?.channels.deliverAlertDigestPushActivity ?? deliverAlertDigestPushActivity
+      )(job);
+      outcomes.push({
+        channel: "push",
+        ...(typeof result === "boolean" ? { delivered: result, skipped: !result } : result),
+      });
     } catch (error) {
-      outcomes.push({ channel: "push", delivered: false, reason: reason(error) });
+      outcomes.push(pushFailure(error));
     }
   }
-  const finalized = await finalizeAlertDigestDeliveryActivity({ job, outcomes });
+  const finalized = await (fenced?.finalize ?? finalizeAlertDigestDeliveryActivity)({
+    job,
+    outcomes,
+  });
   return { alertIds: job.alertIds, outcomes, status: finalized.deliveryState };
 }
 

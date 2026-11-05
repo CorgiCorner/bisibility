@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   purgeAuditLogs: vi.fn(),
   purgeExpiredSessions: vi.fn(),
   purgeExpiredQueuedRankCheckBatches: vi.fn(),
+  sweepExpiredQueuedSourceEvidence: vi.fn(),
   purgeRankCheckRawPayloads: vi.fn(),
   sendWeeklyDigestForProject: vi.fn(),
   sweepRankCheckRawPurgeProgress: vi.fn(),
@@ -61,6 +62,9 @@ vi.mock("../presence/sync", () => ({
 }));
 vi.mock("../rank-check/raw-retention-fences", () => ({
   sweepRankCheckRawPurgeProgress: mocks.sweepRankCheckRawPurgeProgress,
+}));
+vi.mock("../rank-check/queued-source-retention", () => ({
+  sweepExpiredQueuedSourceEvidence: mocks.sweepExpiredQueuedSourceEvidence,
 }));
 vi.mock("../rank-check/queued-retention", () => ({
   purgeExpiredQueuedRankCheckBatches: mocks.purgeExpiredQueuedRankCheckBatches,
@@ -256,12 +260,32 @@ describe("maintenance activities", () => {
       pageSize: 100,
     });
 
+    mocks.sweepExpiredQueuedSourceEvidence.mockResolvedValue({ deleted: 3, hasMore: false });
+
     await expect(purgeQueuedRankCheckBatchesActivity()).resolves.toEqual({
       deleted: 100,
       hasMore: true,
       pageSize: 100,
+      sourceEvidenceDeleted: 3,
     });
     expect(mocks.purgeExpiredQueuedRankCheckBatches).toHaveBeenCalledWith(expect.any(Date));
+    expect(mocks.sweepExpiredQueuedSourceEvidence).toHaveBeenCalledWith(
+      mocks.purgeExpiredQueuedRankCheckBatches.mock.calls[0]?.[0],
+    );
+  });
+
+  it("continues while expired retained queued sources remain", async () => {
+    mocks.purgeExpiredQueuedRankCheckBatches.mockResolvedValue({
+      deleted: 0,
+      hasMore: false,
+      pageSize: 100,
+    });
+    mocks.sweepExpiredQueuedSourceEvidence.mockResolvedValue({ deleted: 500, hasMore: true });
+
+    await expect(purgeQueuedRankCheckBatchesActivity()).resolves.toMatchObject({
+      hasMore: true,
+      sourceEvidenceDeleted: 500,
+    });
   });
 
   it("serializes the stale running-check sweep summary's Date to an ISO string", async () => {

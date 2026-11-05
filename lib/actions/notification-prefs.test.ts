@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => {
   }
   const roleRank = { admin: 2, auditor: 0.5, member: 1, owner: 3, viewer: 0 };
   const prisma = {
+    $transaction: vi.fn(),
     notificationPreference: { findUnique: vi.fn(), upsert: vi.fn() },
     project: { findFirst: vi.fn() },
     slackConnection: { findUnique: vi.fn(), update: vi.fn() },
@@ -37,6 +38,7 @@ const mocks = vi.hoisted(() => {
       return { actorId: actor.id, projectId: resource.projectId, role };
     }),
     prisma,
+    readPreferences: vi.fn(),
     requireSession: vi.fn(),
     revalidatePath: vi.fn(),
     writeAudit: vi.fn(),
@@ -54,13 +56,14 @@ vi.mock("@/lib/auth/audit", () => ({
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/queries/notification-prefs", () => ({
+  readNotificationPreferencesFor: mocks.readPreferences,
+}));
 
 function input(overrides: Record<string, unknown> = {}) {
   return {
     alertEmail: true,
     alertInApp: true,
-    alertSlack: false,
-    alertWebhook: false,
     checkEmail: false,
     checkInApp: true,
     importEmail: true,
@@ -85,6 +88,7 @@ describe("notification preference actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockActor();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.project.findFirst.mockResolvedValue({
       id: "project_1",
       ownerId: "user_1",
@@ -97,6 +101,20 @@ describe("notification preference actions", () => {
     mocks.prisma.slackConnection.findUnique.mockResolvedValue(null);
     mocks.prisma.webhookEndpoint.count.mockResolvedValue(0);
     mocks.writeAudit.mockResolvedValue({});
+  });
+
+  it("keeps project endpoints unchanged during a personal off then on patch", async () => {
+    mocks.prisma.webhookEndpoint.count.mockResolvedValue(2);
+    await updateNotificationPreferences({
+      projectId: "prj_a00000000000000000000000",
+      alertEmail: false,
+    });
+    await updateNotificationPreferences({
+      projectId: "prj_a00000000000000000000000",
+      alertEmail: true,
+    });
+    expect(mocks.prisma.webhookEndpoint.updateMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.slackConnection.update).not.toHaveBeenCalled();
   });
 
   it("rejects invalid input before resolving the actor", async () => {
@@ -130,6 +148,7 @@ describe("notification preference actions", () => {
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "notification_preferences.update" }),
+      mocks.prisma,
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "settings"), "page");
   });
@@ -137,38 +156,43 @@ describe("notification preference actions", () => {
   it("denies preference updates to viewers", async () => {
     mockActor("viewer");
 
+    mocks.readPreferences.mockResolvedValue({ alertEmail: true, projectId: "prj_1" });
+
     await expect(updateNotificationPreferences(input())).rejects.toThrow("not authorized");
 
     expect(mocks.prisma.notificationPreference.upsert).not.toHaveBeenCalled();
+    expect(mocks.readPreferences).not.toHaveBeenCalled();
   });
 
-  it("requires channel management rights before toggling Slack and webhook delivery", async () => {
-    mocks.prisma.slackConnection.findUnique.mockResolvedValue({ enabled: false, id: "slack_1" });
-    mocks.prisma.webhookEndpoint.count.mockResolvedValueOnce(2).mockResolvedValueOnce(0);
+  it("answers an unconfirmed write with the persisted preferences", async () => {
+    mocks.writeAudit.mockRejectedValueOnce(new Error("audit store unavailable"));
+    mocks.readPreferences.mockResolvedValue({ alertEmail: true, projectId: "prj_1" });
 
-    await expect(
-      updateNotificationPreferences(input({ alertSlack: true, alertWebhook: true })),
-    ).rejects.toThrow("not authorized");
+    const result = await updateNotificationPreferences({
+      alertEmail: false,
+      projectId: "prj_a00000000000000000000000",
+    });
 
-    expect(mocks.prisma.slackConnection.update).not.toHaveBeenCalled();
+    expect(result).toEqual({ alertEmail: true, projectId: "prj_1", saveFailed: true });
+  });
+
+  it("ignores project channel fields in personal input and warns about each", async () => {
+    const result = await updateNotificationPreferences(
+      input({ alertSlack: true, alertWebhook: false, checkInApp: undefined }),
+    );
+
+    expect(result).toMatchObject({
+      warnings: [
+        { code: "deprecated_field", field: "alert_slack" },
+        { code: "deprecated_field", field: "alert_webhook" },
+      ],
+    });
+    const upsert = mocks.prisma.notificationPreference.upsert.mock.calls[0]?.[0];
+    expect(upsert?.update).not.toHaveProperty("alertSlack");
+    expect(upsert?.update).not.toHaveProperty("alertWebhook");
+    expect(upsert?.create).not.toHaveProperty("alertSlack");
     expect(mocks.prisma.webhookEndpoint.updateMany).not.toHaveBeenCalled();
-  });
-
-  it("updates project alert delivery channels for admins", async () => {
-    mockActor("admin");
-    mocks.prisma.slackConnection.findUnique.mockResolvedValue({ enabled: false, id: "slack_1" });
-    mocks.prisma.webhookEndpoint.count.mockResolvedValueOnce(2).mockResolvedValueOnce(0);
-
-    await updateNotificationPreferences(input({ alertSlack: true, alertWebhook: true }));
-
-    expect(mocks.prisma.slackConnection.update).toHaveBeenCalledWith({
-      data: { enabled: true },
-      where: { projectId: "project_1" },
-    });
-    expect(mocks.prisma.webhookEndpoint.updateMany).toHaveBeenCalledWith({
-      data: { enabled: true },
-      where: { projectId: "project_1" },
-    });
+    expect(mocks.prisma.slackConnection.update).not.toHaveBeenCalled();
   });
   it.each(["all", "important", "none"] as const)(
     "ignores old form echoes for stored %s",

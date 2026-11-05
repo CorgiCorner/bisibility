@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     providerIncident: { updateMany: vi.fn() },
-    notification: { deleteMany: vi.fn() },
+    notification: { deleteMany: vi.fn(), updateMany: vi.fn() },
     project: { delete: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
   };
 
@@ -74,10 +74,11 @@ describe("deleteProjectById", () => {
       where: { projectId: "project_internal_1", state: "open" },
       data: { state: "resolved", resolvedAt: expect.any(Date), openSlot: null },
     });
-    expect(mocks.prisma.notification.deleteMany).toHaveBeenCalledWith({
-      where: { projectId: "project_internal_1", type: "provider_incident" },
+    expect(mocks.prisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { projectId: "project_internal_1", withdrawnAt: null },
+      data: { withdrawnAt: retirementAt, version: { increment: 1 } },
     });
-    expect(mocks.prisma.notification.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.prisma.notification.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.prisma.project.delete.mock.invocationCallOrder[0],
     );
     expect(mocks.writeAudit.mock.invocationCallOrder[0]).toBeLessThan(

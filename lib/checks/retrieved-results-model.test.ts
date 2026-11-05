@@ -53,7 +53,8 @@ describe("retrieved-results-model", () => {
   it("aiOverviewState returns true, false, and null for the three cases", () => {
     expect(aiOverviewState("dataforseo", ["ai overview"])).toBe(true);
     expect(aiOverviewState("dataforseo", ["paid"])).toBe(false);
-    expect(aiOverviewState("other", ["ai overview"])).toBeNull();
+    expect(aiOverviewState("other", ["ai overview"])).toBe(true);
+    expect(aiOverviewState("other", [])).toBeNull();
     expect(AI_OVERVIEW_REPORTING_PROVIDERS).toEqual(["dataforseo"]);
   });
 

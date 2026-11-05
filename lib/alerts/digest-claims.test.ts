@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   reserveDeliveryBudgetOnce: vi.fn(),
   sendAlertOverflowNotice: vi.fn(),
   prisma: {
+    alertDigestSend: { deleteMany: vi.fn() },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
     alertRuleDailyStat: { findUnique: vi.fn() },
     membership: { findMany: vi.fn() },
     project: { findUnique: vi.fn() },
@@ -48,6 +51,7 @@ function alert(
     deliveredAt: null,
     deliveryClaimedAt,
     deliveryClaimToken,
+    digestSubmissionStarted: false,
     deliveryState,
     firedAt: new Date("2026-07-21T10:00:00.000Z"),
     id,
@@ -84,6 +88,7 @@ function alert(
 describe("alert digest claims", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.alertRuleDailyStat.findUnique.mockResolvedValue({ suppressedCount: 0 });
     // Every recipient in these fixtures is a current project member.
     mocks.prisma.membership.findMany.mockImplementation((input) =>
@@ -96,7 +101,9 @@ describe("alert digest claims", () => {
   it("rollback releases only rows claimed by this flush", async () => {
     const rows = [alert("alert_1", "digest_pending"), alert("alert_2", "digest_pending")];
     let ownToken: string | null = null;
-    mocks.prisma.triggeredAlert.findMany.mockResolvedValue(rows);
+    mocks.prisma.triggeredAlert.findMany.mockImplementation((input) =>
+      Promise.resolve(input.select ? [] : rows),
+    );
     mocks.prisma.triggeredAlert.updateMany.mockImplementation((input) => {
       const ids = (input.where?.id?.in ?? []) as string[];
       if (input.data.deliveryState === "digesting") {
@@ -128,12 +135,14 @@ describe("alert digest claims", () => {
     });
   });
 
-  it("stale digesting claims are recovered, fresh ones are not", async () => {
+  it("new unsubmitted stale claims are recovered, fresh ones are not", async () => {
     const stale = alert("alert_stale", "digesting", new Date("2026-07-21T10:29:00.000Z"), "old");
     const fresh = alert("alert_fresh", "digesting", new Date("2026-07-21T10:59:00.000Z"), "fresh");
     const rows = [stale, fresh];
-    mocks.prisma.triggeredAlert.findMany.mockImplementation(() =>
-      Promise.resolve(rows.filter((row) => row.deliveryState === "digest_pending")),
+    mocks.prisma.triggeredAlert.findMany.mockImplementation((input) =>
+      Promise.resolve(
+        input.select ? [stale] : rows.filter((row) => row.deliveryState === "digest_pending"),
+      ),
     );
     mocks.prisma.triggeredAlert.updateMany.mockImplementation((input) => {
       if (input.where?.deliveryClaimedAt?.lt) {

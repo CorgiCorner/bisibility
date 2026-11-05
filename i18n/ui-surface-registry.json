@@ -1958,11 +1958,13 @@
       "components/alerts/alert-rule-enabled-queue.ts",
       "components/alerts/alert-rule-presentation.ts",
       "components/alerts/new-rule-form-defaults.ts",
+      "components/alerts/new-rule-save-outcome.ts",
+      "components/alerts/use-alert-snoozes.ts",
       "components/analytics/consent-banner-state.ts",
       "components/analytics/consent-copy.ts",
       "components/analytics/use-account-consent-sync.ts",
       "components/analytics/use-analytics-provider-sync.ts",
-      "components/analytics/use-hero-experiment.ts",
+      "components/analytics/use-onboarding-entry-analytics.ts",
       "components/audit/audit-export.ts",
       "components/audit/audit-filtering.ts",
       "components/audit/audit-presentation.ts",
@@ -2040,6 +2042,7 @@
       "components/integrations/useProviderTrafficSync.ts",
       "components/keyword-detail-history/history-chart-model.ts",
       "components/keyword-detail-history/history-page-state.ts",
+      "components/keyword-detail-history/no-match-presentation.ts",
       "components/keyword-detail-history/use-keyword-detail-history.ts",
       "components/keywords/AddKeywordCsvReviewModel.ts",
       "components/keywords/action-utils.ts",
@@ -2100,6 +2103,7 @@
       "components/keywords/safe-action-error.ts",
       "components/keywords/saved/saved-keywords-export.ts",
       "components/keywords/saved/saved-keywords-table-model.ts",
+      "components/keywords/snapshot-export.ts",
       "components/keywords/snapshot-extension-payment.ts",
       "components/keywords/use-rank-check-batch-poll.ts",
       "components/keywords/use-rank-check-batch-progress.ts",
@@ -2225,6 +2229,7 @@
       "components/settings/migration/useMigrationWizardState.helpers.ts",
       "components/settings/migration/useMigrationWizardState.ts",
       "components/settings/notifications/notification-card-layout.ts",
+      "components/settings/notifications/notification-form-defaults.ts",
       "components/settings/shell/settings-layout.ts",
       "components/settings/shell/settings-search-index.ts",
       "components/settings/shell/settings-sections.ts",
@@ -4120,6 +4125,11 @@
       "status": "pending"
     },
     {
+      "kind": "render",
+      "path": "components/alerts/AcknowledgeAllButton.tsx",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "components/alerts/alert-feed-facet-labels.ts",
       "status": "migrated"
@@ -4147,6 +4157,11 @@
     {
       "kind": "render",
       "path": "components/alerts/AlertRowActions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/alerts/AlertRuleDeleteConfirm.tsx",
       "status": "migrated"
     },
     {
@@ -4195,6 +4210,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/alerts/new-rule-save-outcome.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/alerts/NewRuleAction.tsx",
       "status": "migrated"
@@ -4228,6 +4248,21 @@
       "kind": "render",
       "path": "components/alerts/NewRuleMarketFields.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/alerts/RuleDrawerCloseConfirm.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/alerts/RuleNameField.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/alerts/use-alert-snoozes.ts",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -4301,7 +4336,7 @@
     },
     {
       "kind": "ui-data",
-      "path": "components/analytics/use-hero-experiment.ts",
+      "path": "components/analytics/use-onboarding-entry-analytics.ts",
       "status": "migrated"
     },
     {
@@ -5874,6 +5909,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/keyword-detail-history/no-match-presentation.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/keyword-detail-history/ObservationHistoryTable.tsx",
       "status": "migrated"
@@ -6950,8 +6990,18 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/keywords/snapshot-export.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/keywords/snapshot-extension-payment.ts",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/SnapshotDownloads.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -8198,6 +8248,11 @@
     },
     {
       "kind": "render",
+      "path": "components/rank-runs/run-target-presentation.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/rank-runs/run-target-table-columns.tsx",
       "status": "migrated"
     },
@@ -9409,6 +9464,11 @@
     {
       "kind": "ui-data",
       "path": "components/settings/notifications/notification-card-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/settings/notifications/notification-form-defaults.ts",
       "status": "migrated"
     },
     {

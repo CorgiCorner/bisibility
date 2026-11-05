@@ -33,6 +33,7 @@ function withUnprocessable(operation: object) {
       ...responses,
       "404": problemResponse("No eligible search-performance source is connected."),
       "422": problemResponse("Provider authorization must be renewed (re-auth needed)."),
+      "504": problemResponse("The search-performance provider read deadline was reached."),
     },
   };
 }

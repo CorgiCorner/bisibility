@@ -1,12 +1,19 @@
 import { skillCatalog, skillGroup } from "@/lib/agent-ready/skill-catalog";
+import { skillInstallSet } from "@/lib/agent-ready/skill-packs";
 
 export const API_VERSION = "v1";
 const SKILLS_PACKAGE = "CorgiCorner/bisibility";
 
+const installableSlugs = skillCatalog
+  .filter((skill) => skill.channels.plugin && skill.status !== "coming-soon")
+  .map((skill) => skill.slug);
+
+/** A pack member or a skill with requirements installs with its whole set, never alone. */
 export function skillsInstallCommand(slug?: string) {
-  return slug
-    ? `npx skills add ${SKILLS_PACKAGE} --skill ${slug}`
-    : `npx skills add ${SKILLS_PACKAGE}`;
+  const set = slug ? skillInstallSet(slug, skillCatalog) : installableSlugs;
+  return installableSlugs.every((skill) => set.includes(skill))
+    ? `npx skills add ${SKILLS_PACKAGE}`
+    : `npx skills add ${SKILLS_PACKAGE} --skill ${set.join(" ")}`;
 }
 
 export function curlExample(origin: string) {

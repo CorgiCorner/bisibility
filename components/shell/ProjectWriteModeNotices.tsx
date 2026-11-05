@@ -12,12 +12,16 @@ export function ProjectReadOnlyTooltip({
   children,
   className = "inline-flex",
   focusable = false,
+  disabledReason,
 }: Readonly<{
   children: ReactNode;
   className?: string;
   focusable?: boolean;
+  disabledReason?: string;
 }>) {
-  const { readOnly, readOnlyReason } = useProjectWriteMode();
+  const writeMode = useProjectWriteMode();
+  const readOnly = writeMode.readOnly || Boolean(disabledReason);
+  const readOnlyReason = writeMode.readOnlyReason ?? disabledReason;
   // Always render the wrapper span so callers can rely on it for layout (flex
   // containers, flex-1 sizing) in both the writable and read-only states.
   const wrapped = (

@@ -5,15 +5,21 @@ import {
   type AlertDeliveryChannel,
   postSignedWebhook,
   recordDeliveryAttempt,
-  sendAlertEmail,
   sendSlackAlert,
   stampWebhookDelivery,
   type TriggeredAlertDeliveryPayload,
 } from "../alerts/delivery";
+import {
+  countedDeliveryStatus,
+  type DeliveryCounts,
+  PUSH_NOT_CONFIGURED_TYPE,
+} from "../alerts/delivery-counts";
 import { deliverPushToProject } from "../alerts/push-delivery";
+import { ALERT_NOT_DELIVERABLE, allAlertsDeliverable } from "../alerts/send-gate";
 import { prisma } from "../db/prisma";
 import { defaultPushSender, type PushMessage } from "../notifications/apns";
 import { notifyTriggeredAlertDelivered } from "../notifications/events";
+import { notificationTransaction } from "../notifications/transaction";
 import {
   classifyDeliveryFailure,
   deliveryFailureMessage,
@@ -26,25 +32,13 @@ export const PUSH_NOT_CONFIGURED = "Push delivery is not configured.";
 export type AlertDeliveryOutcome = {
   channel: AlertDeliveryChannel;
   delivered: boolean;
-  recordAttempt?: boolean;
   reason?: string;
+  recordAttempt?: boolean;
   skipped?: boolean;
+  unknown?: boolean;
 };
 
-export async function deliverAlertEmailActivity(input: {
-  alertId: string;
-  payload: TriggeredAlertDeliveryPayload;
-  recipientEmail: string;
-}) {
-  try {
-    await sendAlertEmail(input.recipientEmail, input.payload);
-    await recordDeliveryAttempt(input.alertId, "email", "sent", null);
-  } catch (error) {
-    const errorMessage = deliveryFailureMessage(error);
-    await recordDeliveryAttempt(input.alertId, "email", "failed", errorMessage);
-    throw classifyDeliveryFailure(error, "email", errorMessage);
-  }
-}
+export { deliverAlertEmailActivity } from "../alerts/alert-email-activity";
 
 export async function deliverAlertWebhookActivity(input: {
   alertId: string;
@@ -53,6 +47,11 @@ export async function deliverAlertWebhookActivity(input: {
 }) {
   let resolvedEndpointId: string | undefined;
   try {
+    if (!(await allAlertsDeliverable({ alertIds: [input.alertId] }))) {
+      const reason = ALERT_NOT_DELIVERABLE;
+      await recordDeliveryAttempt(input.alertId, "webhook", "skipped", reason);
+      return { delivered: false, skipped: true, reason };
+    }
     const endpoint = await prisma.webhookEndpoint.findUnique({
       select: { enabled: true, hmacSecret: true, id: true, url: true },
       where: { id: input.endpointId },
@@ -62,6 +61,7 @@ export async function deliverAlertWebhookActivity(input: {
     await postSignedWebhook(endpoint, input.payload);
     await stampWebhookDelivery(endpoint.id);
     await recordDeliveryAttempt(input.alertId, "webhook", "sent", null, resolvedEndpointId);
+    return { delivered: true, skipped: false };
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error);
     await recordDeliveryAttempt(
@@ -81,12 +81,18 @@ export async function deliverAlertSlackActivity(input: {
   slackConnectionId: string;
 }) {
   try {
+    if (!(await allAlertsDeliverable({ alertIds: [input.alertId] }))) {
+      const reason = ALERT_NOT_DELIVERABLE;
+      await recordDeliveryAttempt(input.alertId, "slack", "skipped", reason);
+      return { delivered: false, skipped: true, reason };
+    }
     const sent = await sendSlackAlert(
       { enabled: true, id: input.slackConnectionId },
       input.payload,
     );
     if (!sent) throw nonRetryableFailure("Slack delivery is not configured.");
     await recordDeliveryAttempt(input.alertId, "slack", "sent", null);
+    return { delivered: true, skipped: false };
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error);
     await recordDeliveryAttempt(input.alertId, "slack", "failed", errorMessage);
@@ -94,36 +100,41 @@ export async function deliverAlertSlackActivity(input: {
   }
 }
 
-export type PushActivityResult = { delivered: boolean; skipped: boolean };
+export type PushActivityResult = {
+  delivered: boolean;
+  reason?: string;
+  skipped: boolean;
+  counts?: DeliveryCounts;
+};
 
 /**
  * Sends the alert to every registered device of the project's members. A
- * partial success counts as delivered so retries never duplicate pushes on
- * devices that already received it.
+ * measured batch completes without replaying devices, including ambiguous sends.
  */
 export async function deliverAlertPushActivity(input: {
   alertId: string;
   message: PushMessage;
   projectInternalId: string;
 }): Promise<PushActivityResult> {
+  if (!(await allAlertsDeliverable({ alertIds: [input.alertId] }))) {
+    await recordDeliveryAttempt(input.alertId, "push", "skipped", ALERT_NOT_DELIVERABLE);
+    return { delivered: false, skipped: true, reason: ALERT_NOT_DELIVERABLE };
+  }
   const sender = defaultPushSender();
   if (!sender) {
     await recordDeliveryAttempt(input.alertId, "push", "failed", PUSH_NOT_CONFIGURED);
-    throw nonRetryableFailure(PUSH_NOT_CONFIGURED);
+    throw nonRetryableFailure(PUSH_NOT_CONFIGURED, PUSH_NOT_CONFIGURED_TYPE);
   }
   const result = await deliverPushToProject(sender, input.projectInternalId, input.message);
-  if (result.sent > 0) {
-    await recordDeliveryAttempt(input.alertId, "push", "sent", null);
-    return { delivered: true, skipped: false };
-  }
-  if (result.failures.length === 0) {
-    await recordDeliveryAttempt(input.alertId, "push", "skipped", "No registered devices.");
-    return { delivered: false, skipped: true };
-  }
-  const message = `Push delivery failed: ${[...new Set(result.failures)].join(", ")}`;
-  await recordDeliveryAttempt(input.alertId, "push", "failed", message);
-  if (result.retryable) throw new Error(message);
-  throw nonRetryableFailure(message);
+  const counts = {
+    acceptedCount: result.acceptedCount,
+    failedCount: result.failedCount,
+    unknownCount: result.unknownCount,
+  };
+  const status = countedDeliveryStatus(counts);
+  const reason = status === "skipped" ? "No registered devices." : undefined;
+  await recordDeliveryAttempt(input.alertId, "push", status, reason ?? null, undefined, counts);
+  return { delivered: counts.acceptedCount > 0, skipped: status === "skipped", counts };
 }
 
 export async function finalizeAlertDeliveryActivity(input: {
@@ -133,39 +144,64 @@ export async function finalizeAlertDeliveryActivity(input: {
   payload: AlertExternalDeliveryPayload;
   projectInternalId: string;
 }) {
-  for (const outcome of input.outcomes) {
-    if (outcome.recordAttempt) {
-      await recordDeliveryAttempt(
-        input.alertId,
-        outcome.channel,
-        outcome.delivered ? "sent" : outcome.skipped ? "skipped" : "failed",
-        outcome.reason ?? null,
-      );
-    }
-  }
   const deliveryState = deliveryStateForOutcomes(input.outcomes, "delivered");
   const delivered = deliveryState === "delivered";
-  const updated = await prisma.triggeredAlert.updateMany({
-    data: {
-      deliveredAt: delivered ? new Date() : null,
-      deliveryClaimedAt: null,
-      deliveryClaimToken: null,
-      deliveryState,
-    },
-    where: {
-      deliveryClaimToken: input.deliveryClaimToken,
-      deliveryState: "delivering",
-      id: input.alertId,
-    },
+  await notificationTransaction(async (tx) => {
+    // Project deletion takes this lock before cascading through alerts.
+    await tx.$queryRaw`SELECT id FROM projects WHERE id=${input.projectInternalId} FOR KEY SHARE`;
+    const updated = await tx.triggeredAlert.updateMany({
+      data: {
+        deliveredAt: delivered ? new Date() : null,
+        deliveryClaimedAt: null,
+        deliveryClaimToken: null,
+        deliveryState,
+      },
+      where: {
+        deliveryClaimToken: input.deliveryClaimToken,
+        deliveryState: "delivering",
+        id: input.alertId,
+      },
+    });
+    if (updated.count !== 1) return;
+    for (const outcome of input.outcomes) {
+      if (outcome.recordAttempt) {
+        await tx.deliveryAttempt.create({
+          data: {
+            triggeredAlertId: input.alertId,
+            channel: outcome.channel,
+            status: outcome.unknown
+              ? "unknown"
+              : outcome.delivered
+                ? "sent"
+                : outcome.skipped
+                  ? "skipped"
+                  : "failed",
+            error: outcome.reason?.slice(0, 500) ?? null,
+          },
+        });
+      }
+    }
+    // The in-app notification is its own channel: it must not depend on an external channel
+    // being configured or succeeding. Suppressed alerts (snooze, daily cap) never reach here, and
+    // a rule switched off or an alert resolved before finalization gets no notification.
+    if (
+      await allAlertsDeliverable(
+        {
+          alertIds: [input.alertId],
+          projectId: input.projectInternalId,
+        },
+        tx,
+      )
+    ) {
+      await notifyTriggeredAlertDelivered(
+        {
+          payload: input.payload,
+          projectInternalId: input.projectInternalId,
+          triggeredAlertId: input.alertId,
+        },
+        tx,
+      );
+    }
   });
-  // The in-app notification is its own channel: it must not depend on an external channel
-  // being configured or succeeding. Suppressed alerts (snooze, daily cap) never reach here.
-  if (updated.count === 1) {
-    await notifyTriggeredAlertDelivered({
-      payload: input.payload,
-      projectInternalId: input.projectInternalId,
-      triggeredAlertId: input.alertId,
-    }).catch(() => undefined);
-  }
   return { deliveryState };
 }

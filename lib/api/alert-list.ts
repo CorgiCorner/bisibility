@@ -5,6 +5,7 @@ import type {
   TriggeredAlertView,
 } from "@/lib/alerts/alert-data";
 import { getRequestAlertKeywordData } from "@/lib/alerts/alert-request-data";
+import { storedDeliveryCounts, storedDeliverySummary } from "@/lib/alerts/delivery-counts";
 import { visibleAlertSnoozeWhere } from "@/lib/alerts/snooze";
 import {
   legacyPositionText,
@@ -16,6 +17,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { loadAlertDeliveryOutcomes } from "./alert-delivery-outcomes";
 
 export type AlertFeedQuery = {
   marketsByLocation?: ReadonlyMap<string, { id: string; label: string; language: string }>;
@@ -93,6 +95,7 @@ function alertView(
     ctas: payloadStrings(payload, "ctas") ?? ["Open keyword"],
     current: payloadString(payload, "current") ?? legacyPositionText(alert.afterPosition),
     deliveryAttempts: alert.deliveryAttempts.map((attempt) => ({
+      ...(storedDeliveryCounts(attempt) ? { counts: storedDeliveryCounts(attempt) } : {}),
       channel: attempt.channel,
       error: attempt.error,
       status: attempt.status,
@@ -139,6 +142,15 @@ function alertFeedView(
     storedSeverity === "info" || storedSeverity === "urgent" ? storedSeverity : "warning";
 
   return {
+    ...(alert.deliverySummary
+      ? { deliverySummary: storedDeliverySummary(alert.deliverySummary) }
+      : {}),
+    ...(alert.acknowledgedAt
+      ? {
+          acknowledgedAt: alert.acknowledgedAt.toISOString(),
+          acknowledgedByName: alert.acknowledgedByName,
+        }
+      : {}),
     afterPosition: alert.afterPosition,
     beforePosition: alert.beforePosition,
     condition: {
@@ -152,6 +164,7 @@ function alertFeedView(
     conditionType: alert.rule.conditionType,
     deliveryAttempts: alert.deliveryAttempts.map((attempt) => ({
       attemptedAt: attempt.attemptedAt.toISOString(),
+      ...(storedDeliveryCounts(attempt) ? { counts: storedDeliveryCounts(attempt) } : {}),
       channel: attempt.channel,
       error: attempt.error,
       status: attempt.status,
@@ -279,5 +292,13 @@ export async function listTriggeredAlertFeedViews(
     loadAlerts(projectId, query.where),
     getRequestAlertKeywordData(projectId),
   ]);
-  return alerts.map((alert) => alertFeedView(alert, keywordData.labels, query.marketsByLocation));
+  const deliveryOutcomes = await loadAlertDeliveryOutcomes(
+    alerts
+      .filter((alert) => storedDeliverySummary(alert.deliverySummary).length === 0)
+      .map((alert) => alert.id),
+  );
+  return alerts.map((alert) => ({
+    ...alertFeedView(alert, keywordData.labels, query.marketsByLocation),
+    deliveryOutcomes: deliveryOutcomes.get(alert.id),
+  }));
 }

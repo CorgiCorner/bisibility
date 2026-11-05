@@ -167,6 +167,11 @@ export default async function KeywordDetailPage({
 
   const positionHistory = (
     <KeywordDetailHistory
+      noMatchDepths={Object.fromEntries(
+        storedChecks.flatMap((check) =>
+          check.recordedNoMatchDepth ? [[check.checkId, check.recordedNoMatchDepth]] : [],
+        ),
+      )}
       keyword={keyword.keyword}
       timeZone={historyTimeZone}
       history={{

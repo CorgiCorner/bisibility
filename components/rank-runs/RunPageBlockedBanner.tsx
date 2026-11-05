@@ -36,13 +36,25 @@ export function RunPageBlockedBanner({
   const deploymentMode = useDeploymentMode();
   const locale = useLocale();
   const t = useTranslations("projectRuns.rankRuns");
-  if (run.status !== "blocked") return null;
+  const notice = run.connectionNotice ? (
+    <section className="flex flex-wrap items-center gap-3 rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3">
+      <h2 className="m-0 min-w-0 flex-1 text-[13px] font-semibold text-fg">
+        {run.connectionNotice.state === "verified"
+          ? t("connectionVerified")
+          : t("verifyConnection", { provider: run.connectionNotice.provider })}
+      </h2>
+      <Button href={appPath(projectRef, "providers")} size="xs" variant="secondary">
+        {t("actions.connectionSettings")}
+      </Button>
+    </section>
+  ) : null;
+  if (run.status !== "blocked" && !run.expiryBlockedReason) return notice;
 
   const presentation = localizedBlockedRunCopy(
     {
       budget: run.budget,
       deploymentMode,
-      reason: run.blockedReason,
+      reason: run.expiryBlockedReason ?? run.blockedReason,
     },
     t,
     locale,
@@ -51,21 +63,24 @@ export function RunPageBlockedBanner({
   const href = actionHref(presentation.action, projectRef);
 
   return (
-    <section
-      aria-label={t("blocked.guidance")}
-      className="flex flex-wrap items-center gap-3 rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3"
-    >
-      <div className="min-w-0 flex-1">
-        <h2 className="m-0 text-[13px] font-semibold text-fg">{presentation.title}</h2>
-        <p className="m-0 mt-0.5 text-[12px] leading-[1.5] text-fg-muted">
-          {presentation.description}
-        </p>
-      </div>
-      {action && href ? (
-        <Button href={href} size="xs" variant="secondary">
-          {action}
-        </Button>
-      ) : null}
-    </section>
+    <>
+      {notice}
+      <section
+        aria-label={t("blocked.guidance")}
+        className="flex flex-wrap items-center gap-3 rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3"
+      >
+        <div className="min-w-0 flex-1">
+          <h2 className="m-0 text-[13px] font-semibold text-fg">{presentation.title}</h2>
+          <p className="m-0 mt-0.5 text-[12px] leading-[1.5] text-fg-muted">
+            {presentation.description}
+          </p>
+        </div>
+        {action && href ? (
+          <Button href={href} size="xs" variant="secondary">
+            {action}
+          </Button>
+        ) : null}
+      </section>
+    </>
   );
 }

@@ -1,8 +1,11 @@
 import "server-only";
 
+import { awaitWithSignal, withDeadline } from "@/lib/async/abort";
 import { prisma } from "@/lib/db/prisma";
+import { reportRequestFailure } from "@/lib/observability/request-failure";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import { gscQueryDimensions } from "@/lib/providers/analytics/gsc-query-pagination";
+import { analyticsReadDeadlineMs } from "@/lib/providers/analytics/read-deadline";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { getAnalyticsProvider } from "@/lib/providers/registry";
@@ -153,9 +156,15 @@ export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId
       },
     );
   try {
-    const rows = await selected.provider.fetchQueryStats(
-      trafficRuntimeCredentials(selected.connection),
-      requested,
+    const rows = await withDeadline(ctx.req.signal, analyticsReadDeadlineMs(), (signal) =>
+      awaitWithSignal(
+        () =>
+          selected.provider.fetchQueryStats(trafficRuntimeCredentials(selected.connection), {
+            ...requested,
+            signal,
+          }),
+        signal,
+      ),
     );
     const truncated = rows.length === input.limit;
     return resourceResponse(
@@ -187,6 +196,17 @@ export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId
       { headers: ctx.headers },
     );
   } catch (error) {
+    if (ctx.req.signal.aborted || (error instanceof Error && error.name === "TimeoutError")) {
+      if (!ctx.req.signal.aborted) reportRequestFailure(error, "api_dispatch", 504);
+      return errorResponse(
+        "provider_unavailable",
+        ctx.req.signal.aborted
+          ? "Provider request was cancelled."
+          : "Provider request deadline reached.",
+        ctx.req.signal.aborted ? 400 : 504,
+        { headers: ctx.headers, instance: ctx.instance },
+      );
+    }
     if (!(error instanceof ProviderAuthError)) throw error;
     await markProviderNeedsReauth({
       connectionId: selected.connection.id,

@@ -34,24 +34,43 @@ function groupedCount(value: number | { _all: number }) {
 export async function collectAlertDeliveryHealth(now: Date, config: AlertHealthConfig) {
   const rows = await prisma.deliveryAttempt.groupBy({
     _count: { _all: true },
-    by: ["channel", "status"],
+    _sum: { acceptedCount: true, failedCount: true, unknownCount: true },
+    by: ["channel", "status", "failedCount", "unknownCount"],
     where: {
       attemptedAt: { gte: new Date(now.getTime() - config.windowHours * 60 * 60 * 1000) },
     },
   });
   const perChannel: Record<
     string,
-    { failed: number; sent: number; skipped: number; total: number }
+    { failed: number; sent: number; skipped: number; total: number; unknown: number }
   > = {};
   let failed = 0;
   let total = 0;
+  let unknown = 0;
+  let partial = 0;
+  const recipientCounts = { acceptedCount: 0, failedCount: 0, unknownCount: 0 };
   for (const row of rows) {
     const count = groupedCount(row._count);
+    recipientCounts.acceptedCount += row._sum?.acceptedCount ?? 0;
+    recipientCounts.failedCount += row._sum?.failedCount ?? 0;
+    recipientCounts.unknownCount += row._sum?.unknownCount ?? 0;
     if (!perChannel[row.channel]) {
-      perChannel[row.channel] = { failed: 0, sent: 0, skipped: 0, total: 0 };
+      perChannel[row.channel] = { failed: 0, sent: 0, skipped: 0, total: 0, unknown: 0 };
     }
     const channel = perChannel[row.channel];
-    if (row.status === "failed") {
+    if (row.status === "partial") {
+      partial += count;
+      channel.total += count;
+      total += count;
+      if ((row.failedCount ?? 0) > 0) {
+        channel.failed += count;
+        failed += count;
+      }
+      if ((row.unknownCount ?? 0) > 0) {
+        channel.unknown += count;
+        unknown += count;
+      }
+    } else if (row.status === "failed") {
       channel.failed += count;
       channel.total += count;
       failed += count;
@@ -60,17 +79,26 @@ export async function collectAlertDeliveryHealth(now: Date, config: AlertHealthC
       channel.sent += count;
       channel.total += count;
       total += count;
+    } else if (row.status === "unknown") {
+      channel.unknown += count;
+      channel.total += count;
+      unknown += count;
+      total += count;
     } else if (row.status === "skipped") {
       channel.skipped += count;
     }
   }
   const failureRate = total > 0 ? failed / total : 0;
   return {
+    attemptCount: total,
     alarm: total >= config.minAttempts && failureRate >= config.failureRateThreshold,
     failed,
     failureRate,
     perChannel,
+    partial,
+    recipientCounts,
     total,
+    unknown,
     windowHours: config.windowHours,
   };
 }

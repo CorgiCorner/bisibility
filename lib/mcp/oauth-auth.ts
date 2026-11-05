@@ -4,13 +4,19 @@ import { createHash } from "node:crypto";
 import { ApiAuthError, type PersonalTokenAuth } from "@/lib/api/auth";
 import { errorResponse } from "@/lib/api/responses";
 import { grantedApiScopes } from "@/lib/api/scope-policy";
+import { awaitWithSignal } from "@/lib/async/abort";
 import { AUTH_URL, AUTH_URL_CONFIGURED, MCP_RESOURCE_URL } from "@/lib/auth/auth";
 import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
 import { isFirstPartyApiOAuthClient } from "@/lib/auth/oauth-policy";
 import { prisma } from "@/lib/db/prisma";
 import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
-import { APIError } from "better-auth/api";
+import {
+  reportRequestFailure,
+  requestFailureContext,
+  setRequestFailureStage,
+} from "@/lib/observability/request-failure";
 import { verifyAccessToken } from "better-auth/oauth2";
+import { APIError } from "better-call";
 
 type OAuthAuthentication = { auth: PersonalTokenAuth } | { response: Response };
 
@@ -63,19 +69,23 @@ function oauthVerificationOptions() {
 }
 
 export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAuthentication> {
+  const signal = requestFailureContext()?.signal;
   const rawToken = bearerToken(req);
   if (!rawToken) {
     return { response: unauthorized(req) };
   }
 
+  setRequestFailureStage("oauth_verify");
   const verificationOptions = oauthVerificationOptions();
   let payload: Awaited<ReturnType<typeof verifyAccessToken>>;
   try {
-    payload = await verifyAccessToken(rawToken, verificationOptions);
+    payload = await awaitWithSignal(() => verifyAccessToken(rawToken, verificationOptions), signal);
   } catch (error) {
+    signal?.throwIfAborted();
     if (error instanceof APIError && (error.statusCode === 401 || error.statusCode === 403)) {
       return { response: unauthorized(req, "Invalid or expired OAuth access token.") };
     }
+    reportRequestFailure(error, "oauth_verify", 503);
     return {
       response: errorResponse(
         "internal_server_error",
@@ -88,25 +98,37 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
 
   const userId = typeof payload.sub === "string" ? payload.sub : null;
   const clientId = oauthClientId(payload);
+  signal?.throwIfAborted();
+  setRequestFailureStage("oauth_scope");
   // App grants belong to /api/v1 only (ADR-021); `api:*` never maps to MCP scopes either.
   const scopes = isFirstPartyApiOAuthClient(clientId)
     ? []
-    : grantedApiScopes(await allowedOAuthTokenScopes(clientId, tokenScopes(payload)));
+    : grantedApiScopes(
+        await awaitWithSignal(
+          () => allowedOAuthTokenScopes(clientId, tokenScopes(payload)),
+          signal,
+        ),
+      );
   if (!userId || scopes.length === 0) {
     return { response: unauthorized(req, "Invalid OAuth access token claims.") };
   }
 
-  const user = await prisma.user.findUnique({
-    select: {
-      deactivatedAt: true,
-      email: true,
-      id: true,
-      memberships: { select: { projectId: true, role: true } },
-      name: true,
-      publicId: true,
-    },
-    where: { id: userId },
-  });
+  setRequestFailureStage("user_lookup");
+  const user = await awaitWithSignal(
+    () =>
+      prisma.user.findUnique({
+        select: {
+          deactivatedAt: true,
+          email: true,
+          id: true,
+          memberships: { select: { projectId: true, role: true } },
+          name: true,
+          publicId: true,
+        },
+        where: { id: userId },
+      }),
+    signal,
+  );
   if (!user || user.deactivatedAt) {
     return { response: unauthorized(req, "Invalid or expired OAuth access token.") };
   }

@@ -165,7 +165,7 @@ const cases = sizes.flatMap(([width, height]) =>
   ]),
 );
 it.each(cases)(
-  "keeps the toolbar against one header rule at $width/$theme/$grouped/$density",
+  "keeps the summary between toolbar and header at $width/$theme/$grouped/$density",
   async ({ width, height, theme, grouped, density, filtered }) => {
     await setup(width, height, theme);
     render(table(grouped, density, filtered));
@@ -176,6 +176,9 @@ it.each(cases)(
       document.querySelector<HTMLElement>("[data-keywords-toolbar]") ??
       screen.getByRole("searchbox").closest("label")?.parentElement?.parentElement?.parentElement;
     if (!toolbar) throw new Error("Expected toolbar");
+    const summary = toolbar.nextElementSibling as HTMLElement | null;
+    if (!summary) throw new Error("Expected report summary");
+    expect(summary).toHaveAttribute("role", "status");
     await waitFor(() => expect(header.getBoundingClientRect().width).toBeGreaterThan(100));
     await page.screenshot({
       path: `../.tmp/ui-comparison/rank-${width}-${theme}-${grouped ? "grouped" : "flat"}.png`,
@@ -183,7 +186,10 @@ it.each(cases)(
     expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: /Grouped|Flat/ })).not.toBeInTheDocument();
     expect(
-      Math.abs(header.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom),
+      Math.abs(summary.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom),
+    ).toBeLessThan(1);
+    expect(
+      Math.abs(header.getBoundingClientRect().top - summary.getBoundingClientRect().bottom),
     ).toBeLessThan(1);
     expect(getComputedStyle(toolbar).borderBottomWidth).toBe("0px");
     expect(getComputedStyle(header).borderTopWidth).toBe("1px");
@@ -211,10 +217,17 @@ it.each(sizes.flatMap(([width, height]) => themes.map((theme) => ({ width, heigh
       document.querySelector<HTMLElement>("[data-keywords-toolbar]") ??
       document.querySelector<HTMLElement>('[class*="py-3.5"]');
     if (!toolbar) throw new Error("Expected loading toolbar");
-    const header = toolbar.nextElementSibling?.firstElementChild?.firstElementChild as HTMLElement;
+    const summary = toolbar.nextElementSibling as HTMLElement | null;
+    if (!summary?.hasAttribute("data-loading-report-summary"))
+      throw new Error("Expected loading summary");
+    const header = summary.nextElementSibling?.firstElementChild?.firstElementChild as HTMLElement;
+    if (!header) throw new Error("Expected loading header");
     await page.screenshot({ path: `../.tmp/ui-comparison/rank-${width}-${theme}-loading.png` });
     expect(
-      Math.abs(header.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom),
+      Math.abs(summary.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom),
+    ).toBeLessThan(1);
+    expect(
+      Math.abs(header.getBoundingClientRect().top - summary.getBoundingClientRect().bottom),
     ).toBeLessThan(1);
     expect(getComputedStyle(toolbar).borderBottomWidth).toBe("0px");
     expect(getComputedStyle(header).borderTopWidth).toBe("1px");

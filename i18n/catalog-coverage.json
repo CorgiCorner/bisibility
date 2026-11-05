@@ -264,6 +264,7 @@
     "components/alerts/alert-rule-presentation.ts",
     "components/alerts/AlertFeedSections.tsx",
     "components/alerts/AlertRowActions.tsx",
+    "components/alerts/AlertRuleDeleteConfirm.tsx",
     "components/alerts/AlertRulesList.tsx",
     "components/alerts/AlertsEmptyStates.tsx",
     "components/alerts/AlertSeveritySelect.tsx",
@@ -273,6 +274,7 @@
     "components/alerts/AlertTemplateButtons.tsx",
     "components/alerts/DeliveryChannelsField.tsx",
     "components/alerts/new-rule-form-defaults.ts",
+    "components/alerts/new-rule-save-outcome.ts",
     "components/alerts/NewRuleAction.tsx",
     "components/alerts/NewRuleConditionFields.tsx",
     "components/alerts/NewRuleDeliveryFields.tsx",
@@ -292,7 +294,7 @@
     "components/analytics/PrivacyChoicesLink.tsx",
     "components/analytics/ReplaySurface.tsx",
     "components/analytics/use-analytics-provider-sync.ts",
-    "components/analytics/use-hero-experiment.ts",
+    "components/analytics/use-onboarding-entry-analytics.ts",
     "components/audit/audit-columns.tsx",
     "components/audit/audit-export.ts",
     "components/audit/audit-filtering.ts",
@@ -589,6 +591,7 @@
     "components/keyword-detail-history/HistoryScope.tsx",
     "components/keyword-detail-history/HistoryTime.tsx",
     "components/keyword-detail-history/KeywordDetailHistory.tsx",
+    "components/keyword-detail-history/no-match-presentation.ts",
     "components/keyword-detail-history/ObservationHistoryTable.tsx",
     "components/keyword-detail-history/RecordedHistoryChart.tsx",
     "components/keyword-detail-history/RecordedUrlHistory.tsx",
@@ -796,6 +799,8 @@
     "components/keywords/saved/SavedKeywordsTableRows.tsx",
     "components/keywords/saved/SavedKeywordsWorkspace.tsx",
     "components/keywords/SerpCompetitorComparison.tsx",
+    "components/keywords/snapshot-export.ts",
+    "components/keywords/SnapshotDownloads.tsx",
     "components/keywords/SnapshotExtensionControl.tsx",
     "components/keywords/SnapshotExtensionResults.tsx",
     "components/keywords/TargetSwitcher.tsx",
@@ -1016,6 +1021,7 @@
     "components/rank-runs/rank-run-copy.ts",
     "components/rank-runs/RetryDeferredDialog.tsx",
     "components/rank-runs/run-page-summary-presentation.ts",
+    "components/rank-runs/run-target-presentation.tsx",
     "components/rank-runs/run-target-table-columns.tsx",
     "components/rank-runs/RunDetailLoading.tsx",
     "components/rank-runs/RunPage.tsx",
@@ -1219,6 +1225,7 @@
     "components/settings/migration/useMigrationWizardState.helpers.ts",
     "components/settings/migration/useMigrationWizardState.ts",
     "components/settings/notifications/notification-card-layout.ts",
+    "components/settings/notifications/notification-form-defaults.ts",
     "components/settings/notifications/NotificationChannelsCard.tsx",
     "components/settings/notifications/NotificationPreferences.tsx",
     "components/settings/notifications/NotificationsLoading.tsx",
@@ -7393,6 +7400,16 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.recovery.blocked.provider_cost_pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.blocked.provider_cost_unrecoverable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.recovery.blocked.request_not_linked",
         "tags": []
       },
@@ -13265,6 +13282,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.drawer.alreadyCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.drawer.alwaysOn",
         "tags": []
       },
@@ -13375,6 +13397,21 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.drawer.discard",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.drawer.discardDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.drawer.discardTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.drawer.dropPositions",
         "tags": []
       },
@@ -13406,6 +13443,11 @@
       {
         "arguments": [],
         "key": "projectAlerts.drawer.intro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.drawer.keepEditing",
         "tags": []
       },
       {
@@ -13474,6 +13516,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "recipients",
+            1
+          ]
+        ],
+        "key": "projectAlerts.drawer.recipientsSummary",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectAlerts.drawer.reviewFields",
         "tags": []
@@ -13481,6 +13533,16 @@
       {
         "arguments": [],
         "key": "projectAlerts.drawer.ruleName",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.drawer.saveAndEnable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.drawer.savedRule",
         "tags": []
       },
       {
@@ -13495,7 +13557,7 @@
       },
       {
         "arguments": [],
-        "key": "projectAlerts.drawer.saveRule",
+        "key": "projectAlerts.drawer.savePending",
         "tags": []
       },
       {
@@ -13740,6 +13802,39 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.feed.acceptanceUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ],
+          [
+            "project",
+            1
+          ]
+        ],
+        "key": "projectAlerts.feed.acknowledgeConfirm",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "name",
+            1
+          ],
+          [
+            "time",
+            1
+          ]
+        ],
+        "key": "projectAlerts.feed.acknowledgedBy",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.feed.actionCompetitor",
         "tags": []
       },
@@ -13821,6 +13916,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.feed.attemptStatusPartial",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.feed.attemptStatusPending",
         "tags": []
       },
@@ -13851,7 +13951,17 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.feed.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.feed.ctaCompareSerp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.feed.ctaError",
         "tags": []
       },
       {
@@ -13897,6 +14007,28 @@
           ]
         ],
         "key": "projectAlerts.feed.delivery",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "accepted",
+            2
+          ],
+          [
+            "failed",
+            2
+          ],
+          [
+            "total",
+            2
+          ],
+          [
+            "unknown",
+            2
+          ]
+        ],
+        "key": "projectAlerts.feed.deliveryCounts",
         "tags": []
       },
       {
@@ -14191,6 +14323,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectAlerts.feed.partialDelivery",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "url",
@@ -14208,6 +14345,11 @@
           ]
         ],
         "key": "projectAlerts.feed.rankPosition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.feed.readOnly",
         "tags": []
       },
       {
@@ -14245,6 +14387,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "time",
+            1
+          ]
+        ],
+        "key": "projectAlerts.feed.snoozedUntil",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectAlerts.feed.snoozeError",
         "tags": []
@@ -14257,6 +14409,11 @@
           ]
         ],
         "key": "projectAlerts.feed.targetUrl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.feed.teamMember",
         "tags": []
       },
       {
@@ -14402,6 +14559,11 @@
           ]
         ],
         "key": "projectAlerts.rules.delete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAlerts.rules.deleteUnconfirmed",
         "tags": []
       },
       {
@@ -18850,6 +19012,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectDashboard.dashboard.connectionSettings",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -18862,6 +19029,26 @@
       {
         "arguments": [],
         "key": "projectDashboard.dashboard.kpisAriaLabel",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "keyword",
+            1
+          ]
+        ],
+        "key": "projectDashboard.dashboard.organicDepthNotCoveredDetail",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "keyword",
+            1
+          ]
+        ],
+        "key": "projectDashboard.dashboard.organicResultUnclassifiableDetail",
         "tags": []
       },
       {
@@ -18920,6 +19107,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectDashboard.dashboard.providerUnresolvedRedirectsDetail",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "keyword",
@@ -18927,6 +19119,21 @@
           ]
         ],
         "key": "projectDashboard.dashboard.rankCheckFailedDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.dashboard.verifyConnectionDetail",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectDashboard.dashboard.verifyConnectionTitle",
         "tags": []
       },
       {
@@ -30523,6 +30730,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.checkedDepth",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.columns.absoluteRank",
         "tags": []
@@ -30887,12 +31104,32 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noRankingUrl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noRankToCompare",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.noRecordsDescription",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.noRetainedItems",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.notInTop",
         "tags": []
       },
       {
@@ -30923,6 +31160,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.openSnapshot",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.organicDepthNotCovered",
         "tags": []
       },
       {
@@ -31189,6 +31431,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.aiContentNotLoaded",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.aiPresent",
         "tags": []
       },
@@ -31329,6 +31576,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.downloadCsv",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.downloadJson",
         "tags": []
       },
       {
@@ -31772,8 +32029,61 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ],
+          [
+            "depth",
+            2
+          ],
+          [
+            "ranks",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.missingPositions",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.missingRank",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.missingStoppedRank",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.missingStoredRank",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.needTwo",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.normalizedDownloadNote",
         "tags": []
       },
       {
@@ -31883,6 +32193,11 @@
           ]
         ],
         "key": "projectRankTracker.keywordDetail.results.resultAria",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.resultIndeterminate",
         "tags": []
       },
       {
@@ -40740,12 +41055,27 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.planRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.blocked.providerUnavailable",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.blocked.providerUnavailableDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "reason",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.blocked.reason",
         "tags": []
       },
       {
@@ -40771,6 +41101,11 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.blocked.usageUnconfirmedDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.verifyProvider",
         "tags": []
       },
       {
@@ -40855,6 +41190,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.connectionVerified",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.copyParentRunId",
         "tags": []
       },
@@ -40876,6 +41216,20 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.counters.cancelledNote",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "checked",
+            2
+          ],
+          [
+            "ranked",
+            2
+          ]
+        ],
+        "key": "projectRuns.rankRuns.counters.checkedRanked",
         "tags": []
       },
       {
@@ -41239,6 +41593,11 @@
           ]
         ],
         "key": "projectRuns.rankRuns.facts.estimateWithCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.facts.executedBy",
         "tags": []
       },
       {
@@ -41730,6 +42089,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "id",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.retriedIn",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.rankRuns.retry",
         "tags": []
@@ -41756,7 +42125,22 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.retryLinks",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.retryNow",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "id",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.retryOf",
         "tags": []
       },
       {
@@ -42157,7 +42541,50 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.costNotRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.coverageUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "completed",
+            1
+          ],
+          [
+            "detail",
+            1
+          ],
+          [
+            "failed",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.targetPresentation.fallback",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.targetPresentation.note",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRuns.rankRuns.targetPresentation.notInTop",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.organicDepthNotCovered",
         "tags": []
       },
       {
@@ -42216,6 +42643,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.waiting",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -42248,6 +42680,16 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.usageNotRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRuns.rankRuns.verifyConnection",
         "tags": []
       },
       {
@@ -43870,6 +44312,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "reason",
+            1
+          ]
+        ],
+        "key": "projectRuns.table.blockReason",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.table.connectProvider",
         "tags": []
@@ -43951,6 +44403,11 @@
       {
         "arguments": [],
         "key": "projectRuns.table.plannedUpdateFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.planRequired",
         "tags": []
       },
       {
@@ -44118,6 +44575,11 @@
       {
         "arguments": [],
         "key": "projectRuns.table.usageUnconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.verifyProvider",
         "tags": []
       },
       {
@@ -57410,6 +57872,26 @@
       {
         "arguments": [],
         "key": "shared.controls.confirmation.deleteAccountToastMessage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteAlertRuleBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteAlertRuleDangerLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteAlertRuleTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteAlertRuleToastMessage",
         "tags": []
       },
       {

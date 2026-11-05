@@ -1,6 +1,9 @@
 ---
 name: bisibility
 description: Resolve a Bisibility instance and route to the matching task skill. Use when the task or endpoint is not yet clear. Do not use for executing that task, running a health audit or making unrequested writes.
+metadata:
+  bisibility.pack: router
+  bisibility.requires: "ai-prompt-research ai-visibility-audit alert-triage competitive-landscape competitor-analysis domain-onboarding keyword-import keyword-opportunity-research local-seo provider-setup self-host-health team-api-governance weekly-report"
 ---
 
 # bisibility (router)
@@ -32,7 +35,7 @@ unrequested health audit, provider probe or write workflow.
    executing the routed task unless the user also requested that execution.
 
 For example: the user asks for last week's ranking changes. Resolve example.com,
-then route to **weekly-report**, which reads saved checks and reports data gaps.
+then route to the `weekly-report` skill, which reads saved checks and reports data gaps.
 No paid checks or project changes are needed for this routing decision.
 
 Personal-token paths containing `/projects/{project_id}` select that project.
@@ -43,25 +46,27 @@ parameter) when selection would otherwise be ambiguous.
 
 | User goal | Skill | Credential tier |
 |-|-|-|
-| Connect or diagnose an intended provider | provider-setup | write |
-| Create a domain project and initial targets | domain-onboarding | write personal token for creation |
-| Add or reconcile a supplied keyword list after research and an explicit choice | keyword-import | write |
-| Investigate triggered alerts | alert-triage | write for changes |
-| Audit retained AI mentions and citations | ai-visibility-audit | read |
-| Summarize saved weekly ranking changes | weekly-report | read |
-| Choose category questions for Prompt Tracker | ai-prompt-research | read; separate consent for generation or writes |
-| Explain local map results from a retained Local monitor | local-seo | read |
-| Diagnose a self-hosted instance | self-host-health | read |
-| Audit or manage keys, team access or migration tokens | team-api-governance | admin |
+| Connect or diagnose an intended provider | `provider-setup` skill | write |
+| Create a domain project and initial targets | `domain-onboarding` skill | write personal token for creation |
+| Add or reconcile a supplied keyword list after research and an explicit choice | `keyword-import` skill | write |
+| Investigate triggered alerts | `alert-triage` skill | write for changes |
+| Audit retained AI mentions and citations | `ai-visibility-audit` skill | read |
+| Summarize saved weekly ranking changes | `weekly-report` skill | read |
+| Choose category questions for Prompt Tracker | `ai-prompt-research` skill | read; separate consent for generation or writes |
+| Explain local map results from a retained Local monitor | `local-seo` skill | read |
+| Diagnose a self-hosted instance | `self-host-health` skill | read |
+| Audit or manage keys, team access or migration tokens | `team-api-governance` skill | admin |
 
 ## Research before tracking
 
 Route research before new tracking. Research means queries the project already
-shows up for in Search Console, keyword opportunity research, and one-competitor
-or landscape comparison. For AI assistant questions, route to ai-prompt-research,
-which reuses saved topics, prompts and free hypotheses before optional generation.
-Choose what to track from that evidence. Only then
-route to tracking setup (`keyword-import` or `domain-onboarding`).
+shows up for in Search Console, keyword opportunity research with the
+`keyword-opportunity-research` skill, and one-competitor or landscape comparison
+with the `competitor-analysis` or `competitive-landscape` skill. For AI
+assistant questions, route to the `ai-prompt-research` skill, which reuses saved
+topics, prompts and free hypotheses before optional generation. Choose what to
+track from that evidence. Only then route to tracking setup (the
+`keyword-import` or `domain-onboarding` skill).
 
 Before recommending a new research run, the chosen skill must reuse what was
 already collected: saved keywords, saved or cached ranked keyword suggestions,
@@ -80,7 +85,7 @@ project. Each skill retains its own write, access and spending constraints.
 - `/.well-known/agent-skills/index.json`: published archive skill catalog.
 - `/.well-known/mcp/server-card.json`: MCP server card when available.
 
-Use **self-host-health** for liveness/readiness investigation rather than adding
+Use the `self-host-health` skill for liveness/readiness investigation rather than adding
 those calls to every routing task. If a required feature is absent, report the
 missing prerequisite and stop instead of guessing an endpoint.
 

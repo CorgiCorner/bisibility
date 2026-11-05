@@ -1,5 +1,4 @@
-/* The pre-paint session hint avoids auth-nav flash; specificity must outrank
-   component display classes. */
+/* Keep the pre-paint session hint more specific than component display classes. */
 html[data-authed="true"] .bv-anon-only {
   display: none;
 }
@@ -293,4 +292,9 @@ body {
     transform: none;
     transition: opacity 160ms ease;
   }
+}
+
+a:has(.bv-arrow-link-label):is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-underline-offset: 0.25em;
 }

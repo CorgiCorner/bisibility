@@ -13,7 +13,13 @@ path. See [Authentication](/authentication) for scopes.
 | `PATCH` | `/projects/{project_id}/notification-preferences` | Update notification preferences. |
 
 Preferences affect future notifications; they do not delete existing feed or
-delivery-attempt records.
+delivery-attempt records. PATCH updates personal fields only. Managers control
+project Slack and webhook delivery through the individual channel commands.
+The deprecated `alert_slack` and `alert_webhook` fields are still accepted but
+ignored on PATCH; sending either returns a `Deprecation` header and a
+`warnings` entry naming the field. If a
+save cannot be confirmed, a 500 problem response includes the current persisted
+preferences in `details.current_preferences` when they can be read.
 
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the

@@ -92,6 +92,15 @@ describe("ses email provider", () => {
     });
   });
 
+  it("returns the SES message ID for later feedback correlation", async () => {
+    sendMock.mockResolvedValue({ MessageId: "ses-message-123" });
+    vi.stubEnv("SES_REGION", "eu-central-1");
+
+    await expect(sesEmailProvider.send(message)).resolves.toEqual({
+      messageId: "ses-message-123",
+    });
+  });
+
   it("serializes both unsubscribe headers into the SES request body", async () => {
     sendMock.mockResolvedValue({});
     vi.stubEnv("SES_REGION", "eu-central-1");
@@ -200,6 +209,16 @@ describe("ses email provider", () => {
     expect(error).toBeInstanceOf(EmailSendError);
     expect(error).toMatchObject({ retryAfterSeconds: null, status: 400 });
     expect(error.message).toContain("MessageRejected");
+  });
+
+  it("marks a transport timeout as an ambiguous acceptance", async () => {
+    sendMock.mockRejectedValue(awsError("TimeoutError"));
+    vi.stubEnv("SES_REGION", "eu-central-1");
+
+    const error = await sesEmailProvider.send(message).catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(EmailSendError);
+    expect(error).toMatchObject({ ambiguous: true, status: 500 });
   });
 
   it("defaults to status 500 when AWS reports no HTTP status", async () => {

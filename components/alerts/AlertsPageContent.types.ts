@@ -23,6 +23,9 @@ export type AlertsPageContentProps = {
   hasTrackedKeywords: boolean;
   projectDomain?: string | null;
   projectId: string;
+  projectName?: string;
+  unacknowledgedCount?: number;
+  snoozedAlertIds?: string[];
   projectRef: string;
   rules: AlertRuleView[];
   snoozedInWindowCount: number;

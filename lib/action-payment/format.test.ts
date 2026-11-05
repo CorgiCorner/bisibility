@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { PaymentAmount, PaymentUnit } from "./contract";
-import { formatPaymentAmount, formatPaymentMaximum, formatPaymentUnit } from "./format";
+import {
+  formatMeasuredPaymentAmount,
+  formatPaymentAmount,
+  formatPaymentMaximum,
+  formatPaymentUnit,
+} from "./format";
 
 const usd: PaymentUnit = { kind: "currency", code: "USD" };
 const credits: PaymentUnit = {
@@ -159,4 +164,19 @@ describe("project display precision", () => {
       "9.8889 Credits",
     );
   });
+});
+
+it("retains exact measured currency below one cent without Number coercion", () => {
+  const amount = {
+    unit: { kind: "currency" as const, code: "USD" },
+    value: "0.0012",
+    certainty: "measured" as const,
+  };
+  expect(formatMeasuredPaymentAmount(amount, "en")).toBe("$0.0012");
+  expect(formatMeasuredPaymentAmount({ ...amount, value: "9007199254740993.0012" }, "en")).toBe(
+    "$9,007,199,254,740,993.0012",
+  );
+  expect(formatMeasuredPaymentAmount({ ...amount, value: null, certainty: "unknown" }, "en")).toBe(
+    "-",
+  );
 });

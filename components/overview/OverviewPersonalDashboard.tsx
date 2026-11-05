@@ -194,7 +194,10 @@ export async function OverviewPersonalDashboard({
             <p className="text-sm text-fg-muted">{t("readOnly")}</p>
           ) : null,
           health:
-            checkHealth && (overview.state !== "populated" || checkHealth.failed24h.count > 0) ? (
+            checkHealth &&
+            (overview.state !== "populated" ||
+              checkHealth.failed24h.count > 0 ||
+              checkHealth.connectionNotice) ? (
               <>
                 <OverviewSetupNotice
                   overview={overview}
@@ -203,7 +206,8 @@ export async function OverviewPersonalDashboard({
                   canManageProviders={canManageProviders}
                   canRunChecks={canRunChecks}
                 />
-                {checkHealth && checkHealth.failed24h.count > 0 ? (
+                {checkHealth &&
+                (checkHealth.failed24h.count > 0 || checkHealth.connectionNotice) ? (
                   <OverviewHealthBanners checkHealth={checkHealth} projectRef={projectRef} />
                 ) : null}
               </>

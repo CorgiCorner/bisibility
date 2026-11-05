@@ -17,7 +17,7 @@ function FormHarness({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      <DeliveryChannelsField register={form.register} setValue={form.setValue} watch={form.watch} />
+      <DeliveryChannelsField setValue={form.setValue} watch={form.watch} />
       <output aria-label="Channels value">{currentChannels.join(",")}</output>
       <button type="submit">Save</button>
     </form>
@@ -25,6 +25,14 @@ function FormHarness({
 }
 
 describe("DeliveryChannelsField", () => {
+  it("shows every selected channel and allows removing push without changing the others", async () => {
+    const onSubmit = vi.fn();
+    render(<FormHarness channels={["email", "push", "slack", "webhook"]} onSubmit={onSubmit} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Mobile push" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0].channels).toEqual(["email", "slack", "webhook"]);
+  });
   it("shows the always-on in-app feed with an accent bell icon", () => {
     render(<FormHarness channels={[]} onSubmit={vi.fn()} />);
 

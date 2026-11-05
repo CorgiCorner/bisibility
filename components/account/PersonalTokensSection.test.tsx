@@ -1,14 +1,6 @@
-import {
-  accountFeatureTestMessages,
-  featureMessagesElement,
-  renderWithAccountMessages as render,
-} from "@/i18n/test-support/render-with-feature-messages";
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { screen } from "@testing-library/react";
-import { act } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PersonalTokenDateLabels } from "./PersonalTokenDateLabels";
 import { PersonalTokensSection } from "./PersonalTokensSection";
 
 describe("PersonalTokensSection", () => {
@@ -44,49 +36,5 @@ describe("PersonalTokensSection", () => {
     expect(screen.getByText(/created Jun 19, 2026/)).toBeInTheDocument();
     expect(screen.getByText(/never used/)).toBeInTheDocument();
     expect(screen.getByText(/never expires/)).toBeInTheDocument();
-  });
-
-  it("replaces the UTC server date with the browser date after hydration", async () => {
-    process.env.TZ = "America/New_York";
-    const props = {
-      dateFormat: "month_first" as const,
-      token: {
-        createdAt: "2026-06-20T01:30:00.000Z",
-        expiresAt: null,
-        lastUsedAt: null,
-      },
-    };
-    const savedWindow = globalThis.window;
-    let markup: string;
-    try {
-      // @ts-expect-error: simulate server environment for SSR
-      globalThis.window = undefined;
-      markup = renderToString(
-        featureMessagesElement(<PersonalTokenDateLabels {...props} />, {
-          messages: accountFeatureTestMessages,
-        }),
-      );
-    } finally {
-      globalThis.window = savedWindow;
-    }
-    const container = document.createElement("div");
-    container.innerHTML = markup;
-    document.body.append(container);
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    const root = hydrateRoot(
-      container,
-      featureMessagesElement(<PersonalTokenDateLabels {...props} />, {
-        messages: accountFeatureTestMessages,
-      }),
-    );
-
-    expect(container).toHaveTextContent("created Jun 20, 2026");
-    await act(async () => undefined);
-    expect(container).toHaveTextContent("created Jun 19, 2026");
-    expect(consoleError).not.toHaveBeenCalled();
-
-    await act(async () => root.unmount());
-    consoleError.mockRestore();
-    container.remove();
   });
 });

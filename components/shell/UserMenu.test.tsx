@@ -1,5 +1,6 @@
 import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
+import { stubLocation } from "@/tests/location-test-support";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -49,6 +50,7 @@ vi.mock("./UserMenuRow", () => ({
 import { UserMenu } from "./UserMenu";
 
 let assignedHref: string | null = null;
+let restoreLocation = () => {};
 
 function renderMenu(roleLine = "Member") {
   render(
@@ -70,11 +72,9 @@ async function clickSignOut() {
 
 function interceptLocation() {
   assignedHref = null;
-  vi.stubGlobal("window", {
-    location: {
-      set href(href: string) {
-        assignedHref = href;
-      },
+  restoreLocation = stubLocation({
+    setHref: (href) => {
+      assignedHref = href;
     },
   });
 }
@@ -86,7 +86,7 @@ describe("UserMenu", () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    restoreLocation();
   });
 
   it("renders the server-derived avatar URL", () => {

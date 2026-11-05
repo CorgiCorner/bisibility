@@ -13,6 +13,7 @@ import {
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
+import { runUnsentTasksetTransaction } from "@/lib/provider-usage/taskset-transaction";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { startQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
 import {
@@ -44,7 +45,6 @@ import { rankCheckSchedulerMode } from "@/lib/rank-check/scheduler-mode";
 import {
   deferQueuedRefusal,
   queuedMinimumCapacity,
-  recordQueuedCodes,
   resumePriorRefusal,
   resumeUnclaimedBatch,
 } from "./queued-account-observation";
@@ -172,7 +172,7 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       priority: claimed.batch.priority === "normal" ? "normal" : "high",
       tasks,
     });
-    await prisma.$transaction(async (tx) => {
+    await runUnsentTasksetTransaction(prisma, async (tx) => {
       for (const task of tasks) {
         const persisted = await tx.queuedRankCheckTask.updateMany({
           data: { providerTag: task.tag },
@@ -222,13 +222,14 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       throw error;
     }
     phase = "responded";
-    await recordQueuedCodes(
+    return await completeQueuedResponse(
+      batchId,
       connection,
       claimed.batch.projectId,
-      result.accountFailureCodes ?? [],
+      result,
+      execution,
       journal,
     );
-    return await completeQueuedResponse(batchId, connection.id, result, execution, journal);
   } catch (error) {
     const message = error instanceof Error ? error.message : "DataForSEO task submission failed.";
     const diagnostic = queuedSubmissionDiagnostic(batchId, connection.id, submissionPhase(), error);

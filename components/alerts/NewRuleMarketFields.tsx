@@ -3,6 +3,8 @@
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
 import type { UseFormSetValue } from "react-hook-form";
 
@@ -82,13 +84,16 @@ export function NewRuleMarketFields({
   );
 }
 
-export function RulePreview({ children }: Readonly<{ children: string }>) {
+export function RulePreview({
+  children,
+  heading,
+}: Readonly<{ children: string; heading?: string }>) {
   const t = useTranslations("projectAlerts.drawer");
 
   return (
     <section>
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        {t("preview")}
+        {heading ?? t("preview")}
       </div>
       <div className="rounded-control border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">
         {children}
@@ -98,10 +103,12 @@ export function RulePreview({ children }: Readonly<{ children: string }>) {
 }
 
 export function CurrentRulePreview({
+  heading,
   projectDomain,
   values,
   targets,
 }: Readonly<{
+  heading?: string;
   projectDomain?: string | null;
   values: NewRuleForm;
   targets: AlertTargetOptions;
@@ -121,7 +128,7 @@ export function CurrentRulePreview({
     : t("allMarkets");
   const topN = Number(values.topN);
   return (
-    <RulePreview>
+    <RulePreview heading={heading}>
       {t("templatePreview", {
         condition: values.conditionType,
         domain: projectDomain ?? targets.projectDomain ?? t("defaultProjectDomain"),
@@ -136,5 +143,51 @@ export function CurrentRulePreview({
         markets,
       })}
     </RulePreview>
+  );
+}
+
+export function RuleSaveStatus({
+  actionError,
+  actionWarning,
+  persistedRule,
+  projectDomain,
+  savedHeading,
+  targets,
+}: Readonly<{
+  actionError: string | null;
+  actionWarning: string | null;
+  persistedRule: NewRuleForm | null;
+  projectDomain?: string | null;
+  savedHeading: string;
+  targets: AlertTargetOptions;
+}>) {
+  return (
+    <>
+      {persistedRule ? (
+        <CurrentRulePreview
+          heading={savedHeading}
+          projectDomain={projectDomain}
+          targets={targets}
+          values={persistedRule}
+        />
+      ) : null}
+      <div className="h-14 overflow-y-auto" data-testid="alert-rule-action-error">
+        {actionError ? (
+          <p
+            className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text"
+            role="alert"
+          >
+            <X aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
+            {actionError}
+          </p>
+        ) : null}
+      </div>
+      {actionWarning ? (
+        <p className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-yellow-text">
+          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
+          {actionWarning}
+        </p>
+      ) : null}
+    </>
   );
 }

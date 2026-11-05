@@ -40,10 +40,11 @@ export function timelineCandidatesSql(
           WHEN r.status IN ('running', 'cancelling') OR (r.status = 'blocked' AND r."startedAt" IS NOT NULL) THEN COALESCE(r."startedAt", r."launchedAt", r."createdAt")
           ELSE COALESCE((SELECT MIN(i."notBefore") FROM rank_check_run_items i WHERE i."runId" = r.id AND i.status = 'queued'), r."plannedFor", r."launchedAt", r."createdAt") END AS "sortAt",
         CASE WHEN r.status = 'completed' AND r.outcome = 'cancelled' THEN 'cancelled'
+          WHEN r.status = 'completed' AND r."expiryBlockedReason" IS NOT NULL THEN 'blocked'
           WHEN r.status = 'completed' AND r."blockedReason" = 'no_active_keywords' AND r."startedAt" IS NULL THEN 'skipped'
           WHEN r.status = 'completed' THEN COALESCE(r.outcome, 'not_confirmed') ELSE r.status END AS "statusKey",
         r.status IN ('queued', 'running', 'cancelling') AS active,
-        (r.status = 'blocked' OR (r.status = 'completed' AND r.outcome = 'failed')) AS attention
+        (r.status = 'blocked' OR (r.status = 'completed' AND (r.outcome = 'failed' OR r."expiryBlockedReason" IS NOT NULL))) AS attention
       FROM rank_check_runs r
       WHERE r."projectId" = ${projectId} AND r."deletedAt" IS NULL AND ${query.source === "all" || query.source === "rank_checks"}
       UNION ALL

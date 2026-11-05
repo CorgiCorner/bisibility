@@ -1,3 +1,4 @@
+import { alertCreateInput } from "@/lib/api/alert-input";
 import { describe, expect, it } from "vitest";
 import { newRuleSchema, ruleTemplates } from "./new-rule-data";
 import { alertRuleUpdateFormSchema } from "./schema";
@@ -29,6 +30,25 @@ describe("CTR drop alert schema", () => {
     if (result.success) {
       expect(result.data.ruleId).toBeUndefined();
     }
+  });
+
+  it("accepts a rule request public ID and rejects other identities", () => {
+    expect(
+      alertRuleFormServerSchema.safeParse({ ...ctrRule, requestId: "alr_a00000000000000000000000" })
+        .success,
+    ).toBe(true);
+    expect(
+      alertRuleFormServerSchema.safeParse({ ...ctrRule, requestId: "prj_a00000000000000000000000" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("keeps action request identity out of the REST create input", () => {
+    const parsed = alertCreateInput.parse({
+      ...ctrRule,
+      requestId: "alr_a00000000000000000000000",
+    });
+    expect(parsed).not.toHaveProperty("requestId");
   });
 
   it("accepts slack as a delivery channel for the API-only preview", () => {

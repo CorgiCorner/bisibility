@@ -1,4 +1,5 @@
 import { closedUnknownAccounting } from "@/lib/provider-usage/uncertainty-closeout-state";
+import { QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION } from "@/lib/rank-check/queued-source-schema";
 import { deploymentRecoveryInventory } from "./historical-extension";
 import "server-only";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -92,7 +93,7 @@ export async function historicalRecoveryPage(
       UNION ALL
       SELECT 'p:'||e.id,'partial_result',NULL,e."rankCheckId",e."createdAt",e."expiresAt",false,false,p."isSample",ARRAY[rc.provider],'rank_check',rc.status,rc.position,false,true
       FROM provider_partial_evidence e JOIN rank_checks rc ON rc.id=e."rankCheckId" JOIN keywords k ON k.id=rc."keywordId" JOIN projects p ON p.id=k."projectId"
-      WHERE e.namespace=${scope.namespace} AND e."instanceId"=${scope.instanceId} AND e."createdAt"<=${cutoff}
+      WHERE e.namespace=${scope.namespace} AND e."instanceId"=${scope.instanceId} AND e."schemaVersion"<>${QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION} AND e."createdAt"<=${cutoff}
       ${deploymentRecoveryInventory(scope, cutoff)}
     ), ordered AS (
       SELECT *,CASE WHEN source='operation' AND "identityComplete" AND deadline>${cutoff} THEN 0 ELSE 1 END AS priority,

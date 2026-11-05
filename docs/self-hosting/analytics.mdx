@@ -36,12 +36,17 @@ details, passwords, API keys, and credentials are never event properties.
 | `$pageview` | Client | The SDK records a page view. | Redacted `$current_url` |
 | `module_navigation_clicked` | Client | A product module is selected. | `module`, `source` |
 | `product_action_clicked` | Client | An add, import or export action is selected. | `module`, `action`, `source` |
-| `landing_hero_viewed` | Client | A resolved hero experiment variant is rendered with analytics consent. | `experiment`, `$feature/landing-hero-actions: "control" \| "dual_cta"` |
 | `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
+| `affiliate_waitlist_joined` | Client | The affiliate waitlist form is submitted. | `locale` |
+| `ios_beta_joined` | Client | The iOS beta form is submitted. | `locale` |
+| `newsletter_joined` | Client | The home newsletter form is submitted. | `locale`, `placement: "home"` |
+| `onboarding_quiz_answered` | Client | An onboarding quiz question is answered. | `quizVersion`, `questionId`, `answerIds` |
+| `onboarding_quiz_completed` | Client | The onboarding quiz is completed. | `quizVersion` |
+| `onboarding_quiz_skipped` | Client | The onboarding quiz is skipped. | `quizVersion` |
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
 | `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
 | `language_switched` | Client | The marketing language switcher changes the locale. | `from`, `to`, `surface: "marketing_header" \| "marketing_mobile_menu"` |
-| `marketing_cta_clicked` | Client | A call to action on a hosted marketing feature page, the integrations page or the site menu is selected. | `page`, `cta`, `slot` |
+| `marketing_cta_clicked` | Client | A call to action on a hosted marketing page is selected. | `page`, `cta`, `slot`, optional `page_version: "legacy" \| "outcomes_v2"` |
 | `user_signed_up` | Server | A user account is created. | `method: "otp" \| "github" \| "google"` |
 | `onboarding_project_created` | Server | The onboarding project is created. | `frequency` |
 | `provider_connection_tested` | Server | A provider connection test finishes. | `provider`, `ok`, `error_category` |

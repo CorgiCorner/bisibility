@@ -1,6 +1,5 @@
-import { prisma } from "@/lib/db/prisma";
 import type { UrlPresence } from "@/lib/generated/prisma/client";
-import { currentPageIndexingScope } from "./current-rows";
+import { currentPageIndexingRows } from "./current-rows";
 import { getPageIndexingSettings } from "./settings";
 
 export function pageIndexingGroup(
@@ -27,7 +26,11 @@ export function resultFreshness(rows: Pick<UrlPresence, "checkedAt">[]) {
   };
 }
 
-function estimateRemainingDays(rows: UrlPresence[], mode: string, limit: number) {
+function estimateRemainingDays(
+  rows: Pick<UrlPresence, "checkedAt" | "source">[],
+  mode: string,
+  limit: number,
+) {
   if (mode !== "fixed" || limit <= 0) return null;
   const remaining = rows.filter((row) => !row.checkedAt);
   const targets = rows.filter((row) => row.source === "keyword_target").length;
@@ -39,8 +42,7 @@ function estimateRemainingDays(rows: UrlPresence[], mode: string, limit: number)
 
 export async function getPageIndexingReport(projectId: string, now = new Date()) {
   const settings = await getPageIndexingSettings(projectId, now);
-  const { defaults, where } = await currentPageIndexingScope(projectId, settings.property);
-  const rows = await prisma.urlPresence.findMany({ where });
+  const { defaults, rows } = await currentPageIndexingRows(projectId, settings.property);
   const budget = {
     budgetMode: settings.budgetMode,
     todayCount: settings.todayCount,
@@ -64,7 +66,7 @@ export async function getPageIndexingReport(projectId: string, now = new Date())
     groups: (["indexed", "not_indexed", "inspection_failed", "not_checked"] as const).map(
       (group) => {
         const members = rows.filter((row) => pageIndexingGroup(row) === group);
-        const reasons = new Map<string | null, UrlPresence[]>();
+        const reasons = new Map<string | null, typeof rows>();
         for (const row of members) {
           const reason =
             group === "inspection_failed" || group === "not_checked"

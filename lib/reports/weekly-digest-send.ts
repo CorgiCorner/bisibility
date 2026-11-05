@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { isLocalDevelopmentDeployment } from "@/lib/deployment/deployment";
 import { EmailNotSubmittedError, EmailProviderUnavailableError } from "@/lib/email/types";
-import { readDemoConfig } from "@/lib/demo/config";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { notificationUnsubscribeFooter, notificationUnsubscribeUrl } from "@/lib/email/notification-unsubscribe";
 import { resolveCanonicalOrigin } from "@/lib/seo/origin";
 import { sendEmail } from "@/lib/email/send";
@@ -50,7 +50,8 @@ export async function sendWeeklyDigestForProject(
   now: Date,
   incidentDigest = recoverySwitches().incidentDigest,
 ): Promise<WeeklyDigestSendResult> {
-  if (readDemoConfig().kind !== "disabled") return { status: "skipped", reason: "demo" };
+  // Only the legacy read-only snapshot has no mail; editable demo filters the Viewer per recipient.
+  if (readOnlyDemoConfig()) return { status: "skipped", reason: "demo" };
   const period = weeklyDigestPeriod(now);
   const userSelect = {
     ...digestUserSelect,

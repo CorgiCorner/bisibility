@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
+    user: { findUnique: vi.fn().mockResolvedValue({ name: "Fixture actor" }) },
     rankCheck: { count: vi.fn(), findMany: vi.fn() },
     apiKey: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn() },

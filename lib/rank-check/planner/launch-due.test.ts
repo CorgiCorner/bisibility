@@ -12,6 +12,7 @@ vi.mock("@/lib/provider-usage/enforcement", async (load) => ({
   })),
 }));
 
+import { notifyScheduleBlocked } from "@/lib/notifications/events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchDuePlannedRuns, launchPlannedRun } from "./launch-due";
 import { materializePlannedRun } from "./materialize";
@@ -36,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   nativeCosts: vi.fn(),
   queuedRoute: vi.fn(),
   occurrenceKeys: new Map<string, string>(),
+  blockedReasons: new Map<string, string>(),
   items: new Map<string, { id: string }[]>(),
   members: new Map<string, { id: string }[]>(),
   queryRaw: vi.fn(),
@@ -46,6 +48,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/notifications/events", () => ({ notifyScheduleBlocked: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $transaction: mocks.transaction,
@@ -106,6 +109,7 @@ function run(id: string) {
       providerAllocationsInitializedAt: null,
     },
     projectId: "project_1",
+    blockedReason: mocks.blockedReasons.get(id) ?? null,
     selectionSpec: { occurrenceKey: mocks.occurrenceKeys.get(id) ?? "2026-09-02" },
     status: mocks.status.get(id),
     items: mocks.items.get(id) ?? [],
@@ -149,6 +153,7 @@ describe("planned run launching", () => {
     mocks.items.clear();
     mocks.members.clear();
     mocks.occurrenceKeys.clear();
+    mocks.blockedReasons.clear();
     mocks.status.clear();
     mocks.updateMany.mockImplementation(updateStatus);
     mocks.txUpdateMany.mockImplementation(updateStatus);
@@ -501,6 +506,7 @@ describe("planned run launching", () => {
     mocks.status.set("run_1", "blocked");
     mocks.members.set("run_1", [{ id: "keyword_1" }]);
     const now = new Date("2026-09-03T08:00:00.000Z");
+    mocks.blockedReasons.set("run_1", "operation_unavailable");
 
     await expect(launchPlannedRun("run_1", vi.fn(), now)).resolves.toEqual({
       launched: false,
@@ -510,12 +516,29 @@ describe("planned run launching", () => {
     expect(mocks.updateMany).toHaveBeenCalledWith({
       data: {
         blockedReason: "occurrence_expired",
+        expiryBlockedReason: "operation_unavailable",
         finishedAt: now,
         outcome: "deferred",
         status: "completed",
       },
-      where: { id: "run_1", status: "blocked" },
+      where: { id: "run_1", status: "blocked", blockedReason: "operation_unavailable" },
     });
+    // The expiry instant selects the notice episode, so a later recurrence notifies again.
+    expect(notifyScheduleBlocked).toHaveBeenCalledWith("project_1", "operation_unavailable", now);
+  });
+
+  it("does not expire a run when its blocker changes concurrently", async () => {
+    mocks.status.set("run_1", "blocked");
+    mocks.blockedReasons.set("run_1", "operation_unavailable");
+    mocks.updateMany.mockResolvedValueOnce({ count: 0 });
+    await expect(materializePlannedRun("run_1", new Date("2026-09-03T08:00:00Z"))).resolves.toBe(
+      "not_ready",
+    );
+    expect(mocks.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "run_1", status: "blocked", blockedReason: "operation_unavailable" },
+      }),
+    );
   });
 
   it("launches only the most recent blocked occurrence after budget capacity returns", async () => {
@@ -539,7 +562,7 @@ describe("planned run launching", () => {
     expect(startRun).toHaveBeenCalledTimes(1);
     expect(mocks.updateMany).toHaveBeenCalledWith({
       data: expect.objectContaining({ blockedReason: "occurrence_expired", status: "completed" }),
-      where: { id: "older", status: "blocked" },
+      where: { id: "older", status: "blocked", blockedReason: null },
     });
   });
 

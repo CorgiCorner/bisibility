@@ -26,6 +26,18 @@ export async function getProviderUiBindingAction() {
   return null;
 }
 
+export async function runOpsSweepNow() {
+  throw new Error("Action unavailable in Storybook preview");
+}
+
+export async function sendTestSlackNotification() {
+  throw new Error("Action unavailable in Storybook preview");
+}
+
+export async function setDomainRatingTracking() {
+  throw new Error("Action unavailable in Storybook preview");
+}
+
 export async function readProviderUiAction() {
   return { outcome: "forbidden" as const };
 }
@@ -475,6 +487,8 @@ export const auth = {
 export async function getSession() {
   return null;
 }
+
+export const getSessionReference = getSession;
 
 export async function requireSession() {
   return {

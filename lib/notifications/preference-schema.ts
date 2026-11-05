@@ -8,8 +8,6 @@ export const notificationPreferenceSchema = z.object({
   alertInApp: z.boolean(),
   /** Optional: forms without a push toggle keep the stored value. */
   alertPush: z.boolean().optional(),
-  alertSlack: z.boolean(),
-  alertWebhook: z.boolean(),
   checkEmail: z.boolean(),
   checkInApp: z.boolean().optional(),
   ...checkPreferencePatch,
@@ -22,8 +20,21 @@ export const notificationPreferenceSchema = z.object({
   providerIncidentInApp: z.boolean().optional(),
 });
 
-export type NotificationPreferencesForm = z.infer<typeof notificationPreferenceSchema>;
-
 export const notificationSettingsFormSchema = notificationPreferenceSchema.omit({
   checkInApp: true,
 });
+
+/**
+ * Personal preference patch. alertSlack and alertWebhook stay accepted for older REST and MCP
+ * clients, but they name project channels: the write ignores them and returns a warning.
+ */
+export const notificationPreferencePatchSchema = notificationPreferenceSchema
+  .partial()
+  .extend({
+    alertSlack: z.boolean().optional(),
+    alertWebhook: z.boolean().optional(),
+    projectId: idSchema,
+  })
+  .strict();
+
+export type NotificationPreferencesForm = z.infer<typeof notificationPreferencePatchSchema>;

@@ -7,7 +7,7 @@ export const skill: TaskSkill = {
     "Diagnose a hosted or self-hosted instance from read-only liveness, readiness and health evidence. Use when investigating availability or a known run. Do not use for repairs, provider probes, restarts or starting rank checks.",
   compatibility: "Requires a bisibility origin and a bearer API key with read scope.",
   kind: "task-skill",
-  version: "0.1.1",
+  version: "0.1.2",
   body: `# Self-host health check
 
 Run a read-only diagnosis of a hosted or self-hosted instance. Identify what is
@@ -64,7 +64,7 @@ Resolve \`$PROJECT_ID\` from project discovery, then read
 \`GET /projects/{project_id}/providers\`. Inspect \`connection_status\`, \`enabled\`
 and relevant \`capabilities\`, not just whether a catalog provider appears.
 This saved configuration is not a live provider test. For repairs, hand off to
-**provider-setup** rather than invoking its POST test from this read-only workflow.
+the \`provider-setup\` skill rather than invoking its POST test from this read-only workflow.
 
 ## 5. Follow a known run only when investigating execution
 

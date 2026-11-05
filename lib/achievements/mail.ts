@@ -2,6 +2,7 @@ import "server-only";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { parseActiveLocale } from "@/i18n/config";
 import { prisma } from "@/lib/db/prisma";
+import { isDemoViewer } from "@/lib/demo/config";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { oneClickUnsubscribeUrl } from "@/lib/email/one-click-link";
@@ -58,6 +59,7 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
           user: {
             select: {
               email: true,
+              publicId: true,
               emailVerified: true,
               uiLocale: true,
               deactivatedAt: true,
@@ -69,6 +71,7 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
       if (
         !state?.enabled ||
         !state.emailEnabled ||
+        isDemoViewer(state.user.publicId) ||
         !state.user.emailVerified ||
         state.user.deactivatedAt ||
         state.user.marketingEmailUnsubscribedAt

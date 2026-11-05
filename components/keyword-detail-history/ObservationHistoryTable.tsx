@@ -10,13 +10,16 @@ import { HistoryScope, sameHistoryScope } from "./HistoryScope";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
 import { observationKernelMovement } from "./history-chart-model";
 import type { ObservationHistoryPage } from "./history-contract";
+import { determinateHistoryAbsence } from "./no-match-presentation";
 
 export function ObservationHistoryTable({
   page,
   onOpen,
   timeZone,
+  noMatchDepths = {},
 }: Readonly<{
   page: ObservationHistoryPage;
+  noMatchDepths?: Readonly<Record<string, number>>;
   onOpen: (checkId: string) => void;
   timeZone: string;
 }>) {
@@ -42,6 +45,7 @@ export function ObservationHistoryTable({
         ]}
         rows={page.records.map((observation) => {
           const pair = observationKernelMovement(page, observation);
+          const absent = determinateHistoryAbsence(observation, noMatchDepths[observation.id]);
           const url = historyExternalUrl(observation.rankingUrl);
           return {
             id: observation.id,
@@ -56,9 +60,17 @@ export function ObservationHistoryTable({
                 value={observation.recordedAt}
                 timeZone={timeZone}
               />,
-              <HistoryPosition key="historyposition-0" observation={observation} />,
+              <HistoryPosition
+                key="historyposition-0"
+                observation={observation}
+                recordedDepth={noMatchDepths[observation.id]}
+              />,
               <Fragment key="details-0">
-                <span>{t(`freshness.${observation.freshness}`)}</span>
+                <span>
+                  {absent
+                    ? t("checkedDepth", { depth: observation.requestedDepth ?? 0 })
+                    : t(`freshness.${observation.freshness}`)}
+                </span>
                 <span className="block">
                   {t("methodology", {
                     version: observation.normalizationVersion ?? t("unknown"),
@@ -78,11 +90,13 @@ export function ObservationHistoryTable({
                 ) : null}
               </Fragment>,
               <Fragment key="details-2">
-                {pair?.movement !== null && pair?.movement !== undefined
-                  ? t("movement", { value: format.number(pair.movement) })
-                  : pair?.event
-                    ? t(`events.${pair.event}`)
-                    : t("noPair")}
+                {absent && (!pair?.event || pair.event === "unknown")
+                  ? t("noRankToCompare")
+                  : pair?.movement !== null && pair?.movement !== undefined
+                    ? t("movement", { value: format.number(pair.movement) })
+                    : pair?.event
+                      ? t(`events.${pair.event}`)
+                      : t("noPair")}
                 {pair?.baseline ? (
                   <span className="mt-1 block text-fg-muted">
                     {t("baselineCheck", { id: pair.baseline.id })}
@@ -104,7 +118,11 @@ export function ObservationHistoryTable({
                     {observation.rankingUrl}
                   </a>
                 ) : (
-                  <span>{t("rankingUrl", { value: observation.rankingUrl ?? t("unknown") })}</span>
+                  <span>
+                    {t("rankingUrl", {
+                      value: observation.rankingUrl ?? (absent ? t("noRankingUrl") : t("unknown")),
+                    })}
+                  </span>
                 )}
               </Fragment>,
               <Button

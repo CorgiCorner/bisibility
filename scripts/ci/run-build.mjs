@@ -21,14 +21,22 @@ export function buildEnvironment(current = {}) {
 
 export function runBuild({ spawn = spawnSync, env = process.env, platform = process.platform } = {}) {
   const command = platform === "win32" ? "npm.cmd" : "npm";
-  // The webpack worker exits before native type checking. Turbopack retains
-  // its worker through that phase, overlapping both heaps on 8 GB runners.
-  const result = spawn(command, ["run", "build", "--", "--webpack"], {
-    env: buildEnvironment(env),
-    stdio: "inherit",
-  });
-  if (result.error) throw result.error;
-  return result.status ?? 1;
+  const prepared = buildEnvironment(env);
+  delete prepared.NEXT_TYPES_CHECKED_BEFORE_BUILD;
+  // Generate Prisma and Next's route types before checking with one native checker.
+  // This keeps the full check out of Next's compiled-app heap on 8 GB runners.
+  const steps = [
+    [command, ["run", "prebuild"], prepared],
+    [process.execPath, ["node_modules/next/dist/bin/next", "typegen"], prepared],
+    [process.execPath, ["node_modules/typescript/lib/tsc.js", "--noEmit", "--checkers", "1"], prepared],
+    [command, ["run", "build", "--", "--webpack"], { ...prepared, NEXT_TYPES_CHECKED_BEFORE_BUILD: "1" }],
+  ];
+  for (const [executable, args, childEnv] of steps) {
+    const result = spawn(executable, args, { env: childEnv, stdio: "inherit" });
+    if (result.error) throw result.error;
+    if (result.status !== 0) return result.status ?? 1;
+  }
+  return 0;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

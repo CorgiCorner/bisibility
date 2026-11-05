@@ -23,6 +23,7 @@ export type AlertDeliveryContext = {
   emailRecipientsConfigured?: boolean;
   payload: AlertExternalDeliveryPayload;
   projectInternalId: string;
+  ruleInternalId?: string;
   recipients: AlertEmailRecipient[];
   slackConnectionId: string | null;
   triggeredAlertId: string;
@@ -185,6 +186,7 @@ export async function loadAlertDeliveryContextActivity(
     payload,
     push: alert.rule.channels.includes("push") ? alertPushMessage(alert.rule, payload) : null,
     projectInternalId: project.id,
+    ruleInternalId: alert.rule.id,
     recipients,
     slackConnectionId: project.slackConnection?.enabled ? project.slackConnection.id : null,
     triggeredAlertId: alert.id,
@@ -203,6 +205,7 @@ export async function reserveAlertDeliveryBudgetActivity(input: OwnedAlertInput)
               publicId: true,
               slackConnection: { select: { enabled: true, id: true } },
               webhookEndpoints: {
+                where: { enabled: true },
                 select: { hmacSecret: true, id: true, url: true },
               },
             },

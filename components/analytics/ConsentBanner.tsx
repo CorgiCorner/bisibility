@@ -100,7 +100,7 @@ export function ConsentBanner({
           data-state={presentation.phase}
           data-consent-variant={variant}
           style={{ zIndex: 1299 }}
-          className={`${styles.banner} fixed bottom-3 left-3 w-[calc(100%-1.5rem)] max-w-[430px] p-3 sm:bottom-4 sm:left-4`}
+          className={`${styles.banner} fixed inset-x-3 bottom-3 p-3 sm:inset-x-4 sm:bottom-4 lg:right-auto lg:w-[430px]`}
         >
           <p className="m-0 text-[12px] leading-4 text-fg-muted">
             {initialConsent.replayNeedsDecision

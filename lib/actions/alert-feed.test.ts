@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { muteTriggeredAlert, setAlertKeywordTargetUrl } from "./alert-feed";
+import { getAlertCtaTargets, muteTriggeredAlert, setAlertKeywordTargetUrl } from "./alert-feed";
 
 const mocks = vi.hoisted(() => ({
   bulkSetTargetUrl: vi.fn(),
@@ -71,6 +71,45 @@ describe("alert feed actions", () => {
       projectId: "prj_a00000000000000000000000",
     });
     expect(result).toEqual({ muted: true, snoozedUntil: new Date("2026-01-02T06:00:00.000Z") });
+  });
+
+  it.each([
+    ["javascript:alert(1)", null],
+    ["data:text/html,hello", null],
+    ["ftp://example.com/serp", null],
+    ["not a url", null],
+    [null, "javascript:alert(1)"],
+  ])(
+    "returns a web SERP URL instead of unsafe payload %s or ranking %s",
+    async (url, rankingUrl) => {
+      mocks.prisma.triggeredAlert.findFirst.mockResolvedValueOnce({
+        keyword: { publicId: "kw_a00000000000000000000000", targetUrl: null, text: "rank tracker" },
+        payload: url === null ? {} : { url },
+        rankCheck: { rankingUrl },
+      });
+
+      const targets = await getAlertCtaTargets({
+        alertId: "al_a00000000000000000000000",
+        projectId: "prj_a00000000000000000000000",
+      });
+
+      expect(targets.serpUrl).toBe("https://www.google.com/search?q=rank%20tracker");
+    },
+  );
+
+  it("keeps a web SERP URL from the alert payload", async () => {
+    mocks.prisma.triggeredAlert.findFirst.mockResolvedValueOnce({
+      keyword: { publicId: "kw_a00000000000000000000000", targetUrl: null, text: "rank tracker" },
+      payload: { serpUrl: "javascript:alert(1)", url: "https://example.com/serp" },
+      rankCheck: { rankingUrl: "https://example.org/page" },
+    });
+
+    const targets = await getAlertCtaTargets({
+      alertId: "al_a00000000000000000000000",
+      projectId: "prj_a00000000000000000000000",
+    });
+
+    expect(targets.serpUrl).toBe("https://example.com/serp");
   });
 
   it("forwards one explicit target URL from an alert", async () => {
