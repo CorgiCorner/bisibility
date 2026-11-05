@@ -17,7 +17,7 @@ export type AccountAdapter = {
     available: boolean;
     cost: "non_billable" | "unverified" | "unsupported";
     verifies: readonly ("authentication" | "access" | "capacity")[];
-    automaticRecheck: readonly ProviderErrorCode[];
+    automaticRecheck: readonly (ProviderErrorCode | "legacy_unverified")[];
   };
   capacity: {
     unit: "usd" | "searches" | null;
@@ -53,7 +53,7 @@ export function object(value: unknown): Record<string, unknown> {
 }
 
 export function capacity(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 export async function probe(

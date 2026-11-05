@@ -2,13 +2,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmailBudgetExceededError, EmailSendError, sendEmail } from "./send";
 import { EmailNotSubmittedError, EmailProviderUnavailableError } from "./types";
 
-const { notifyOpsMock, recordResendSendMock, reserveBudgetMock, sendMock } = vi.hoisted(() => ({
+const {
+  notifyOpsMock,
+  recordResendSendMock,
+  reserveBudgetMock,
+  sendMock,
+  isSuppressedMock,
+  recordReceiptMock,
+} = vi.hoisted(() => ({
+  isSuppressedMock: vi.fn(),
+  recordReceiptMock: vi.fn(),
   notifyOpsMock: vi.fn(),
   recordResendSendMock: vi.fn(),
   reserveBudgetMock: vi.fn(),
   sendMock: vi.fn(),
 }));
 
+vi.mock("./provider-feedback-store", () => ({
+  assertMailNotSuppressed: async (recipient: string) => {
+    if (await isSuppressedMock(recipient))
+      throw new (await import("./types")).EmailSuppressedError();
+  },
+  recordMailReceipt: recordReceiptMock,
+}));
 vi.mock("@/lib/ops/notify", () => ({ notifyOps: notifyOpsMock }));
 vi.mock("./instance-mail-store", () => ({
   refreshInstanceMailRuntime: vi.fn(async () => undefined),
@@ -55,10 +71,14 @@ describe("sendEmail orchestration", () => {
       notificationDue: false,
     });
     notifyOpsMock.mockResolvedValue(undefined);
+    isSuppressedMock.mockResolvedValue(false);
+    recordReceiptMock.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
     notifyOpsMock.mockReset();
+    isSuppressedMock.mockReset();
+    recordReceiptMock.mockReset();
     recordResendSendMock.mockReset();
     reserveBudgetMock.mockReset();
     sendMock.mockReset();
@@ -68,7 +88,7 @@ describe("sendEmail orchestration", () => {
   });
 
   it("serializes one-click headers through SES and excludes transactional mail", async () => {
-    sendMock.mockResolvedValue({});
+    sendMock.mockResolvedValue({ MessageId: "ses-message" });
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "ses");
     vi.stubEnv("SES_REGION", "eu-central-1");
@@ -83,6 +103,65 @@ describe("sendEmail orchestration", () => {
     ]);
     await sendEmail({ ...input, category: "transactional" });
     expect(sendMock.mock.calls[1]?.[0]?.input.Content.Simple.Headers).toBeUndefined();
+  });
+
+  it("claims the provider send after the pre-send check and before transport", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    const order: string[] = [];
+    sendMock.mockImplementation(async () => {
+      order.push("provider");
+      return { MessageId: "ses-message" };
+    });
+    await sendEmail({
+      ...input,
+      beforeProviderSend: async () => {
+        order.push("before");
+      },
+      claimProviderSend: async () => {
+        order.push("claim");
+      },
+    });
+    expect(order).toEqual(["before", "claim", "provider"]);
+  });
+
+  it("does not claim a provider send when the pre-send check refuses", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    const claimProviderSend = vi.fn();
+    await expect(
+      sendEmail({
+        ...input,
+        beforeProviderSend: async () => {
+          throw new Error("refused");
+        },
+        claimProviderSend,
+      }),
+    ).rejects.toThrow("refused");
+    expect(claimProviderSend).not.toHaveBeenCalled();
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("checks the prepared message before transport and stops on refusal", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    const refusal = new Error("refused");
+    await expect(
+      sendEmail({
+        ...input,
+        beforeProviderSend: async () => {
+          throw refusal;
+        },
+      }),
+    ).rejects.toBe(refusal);
+    expect(reserveBudgetMock).toHaveBeenCalledOnce();
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
   it("rejects an insecure unsubscribe URL", async () => {
@@ -136,6 +215,20 @@ describe("sendEmail orchestration", () => {
     });
   });
 
+  it("does not reserve the daily budget again when the caller already reserved it", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "resend");
+    vi.stubEnv("RESEND_API_KEY", "email-key");
+    vi.stubEnv("EMAIL_FROM", "bisibility <reports@example.com>");
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendEmail({ ...input, dailyBudgetReserved: true });
+
+    expect(reserveBudgetMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it("keeps an explicit sender untouched", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
     clearEmailEnv();
@@ -166,9 +259,62 @@ describe("sendEmail orchestration", () => {
     });
   });
 
+  it("stops suppressed bulk mail before transport and stores accepted message IDs", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    sendMock.mockResolvedValue({ MessageId: "ses-id-1" });
+    isSuppressedMock.mockResolvedValueOnce(true);
+    await expect(sendEmail(input)).rejects.toThrow("suppressed");
+    expect(sendMock).not.toHaveBeenCalled();
+    await sendEmail(input);
+    expect(recordReceiptMock).toHaveBeenCalledWith({
+      provider: "ses",
+      messageId: "ses-id-1",
+      recipient: input.to,
+    });
+  });
+
+  it("checks suppression again at handoff when it changes after reservation", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    isSuppressedMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await expect(sendEmail(input)).rejects.toThrow("suppressed");
+    expect(reserveBudgetMock).toHaveBeenCalledOnce();
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("marks an accepted message unknown when its receipt cannot be stored", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    sendMock.mockResolvedValue({ MessageId: "ses-id-2" });
+    recordReceiptMock.mockRejectedValueOnce(new Error("database unavailable"));
+    await expect(sendEmail(input)).rejects.toMatchObject({ ambiguous: true });
+    expect(sendMock).toHaveBeenCalledOnce();
+    sendMock.mockResolvedValueOnce({});
+    await expect(sendEmail(input)).rejects.toMatchObject({ ambiguous: true });
+  });
+
+  it("does not apply bulk suppression to transactional mail", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("EMAIL_FROM", "reports@example.com");
+    isSuppressedMock.mockResolvedValue(true);
+    sendMock.mockResolvedValue({ MessageId: "ses-id-3" });
+    await sendEmail({ ...input, category: "transactional" });
+    expect(isSuppressedMock).not.toHaveBeenCalled();
+    expect(sendMock).toHaveBeenCalledOnce();
+  });
+
   it("routes to Amazon SES when EMAIL_PROVIDER selects it", async () => {
     const fetchMock = vi.fn();
-    sendMock.mockResolvedValue({});
+    sendMock.mockResolvedValue({ MessageId: "ses-message" });
     clearEmailEnv();
     vi.stubEnv("EMAIL_PROVIDER", "ses");
     vi.stubEnv("SES_REGION", "eu-central-1");

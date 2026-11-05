@@ -12,7 +12,11 @@ import type { QueuedRefusalProof } from "./queued-refusal-contract";
 import type { claimQueuedSubmission } from "./queued-submit-claim";
 import { queuedSubmissionDiagnostic } from "./queued-submit-diagnostics";
 import { markAmbiguous } from "./queued-submit-transitions";
-import type { QueuedTaskUsageJournal } from "./queued-usage-journal";
+import {
+  type QueuedTaskUsageJournal,
+  QueuedUsageSettlementError,
+  resumeSubmittedQueuedUsage,
+} from "./queued-usage-journal";
 
 type Connection = Pick<ProviderConnection, "id" | "credentialSource" | "credentialsEncrypted">;
 export function queuedMinimumCapacity(journal: QueuedTaskUsageJournal | undefined) {
@@ -38,6 +42,26 @@ export async function recordQueuedCodes(
       new DataForSeoError("Provider account evidence", false, 200, null, { statusCode }),
       queuedMinimumCapacity(journal),
     );
+}
+
+/** Account evidence must not run ahead of the accepted native-id write. */
+export async function recordAcceptedQueuedCodes(
+  connection: Connection,
+  projectId: string,
+  batchId: string,
+  codes: readonly number[],
+  journal?: QueuedTaskUsageJournal,
+) {
+  if (codes.length === 0) return;
+  try {
+    await recordQueuedCodes(connection, projectId, codes, journal);
+  } catch (error) {
+    console.warn("[queued-rank-check] account code recording failed", {
+      batchId,
+      connectionId: connection.id,
+      errorName: error instanceof Error ? error.name : "Error",
+    });
+  }
 }
 
 async function hasFencedRankCheck(rankCheckIds: readonly string[]) {
@@ -158,6 +182,24 @@ export async function resumeUnclaimedBatch(
   batchId: string,
   batch: Awaited<ReturnType<typeof claimQueuedSubmission>>["batch"],
 ) {
+  const connection = batch.connection;
+  if (batch.state === "submitted" && connection && connection.credentialSource !== "hosted") {
+    try {
+      const settlement = await resumeSubmittedQueuedUsage({
+        client: prisma,
+        connectionId: connection.id,
+        projectId: batch.projectId,
+        tasks: batch.tasks,
+      });
+      return settlement.deferred.length
+        ? { deferredUsage: settlement.deferred, state: batch.state }
+        : { state: batch.state };
+    } catch (error) {
+      if (!(error instanceof QueuedUsageSettlementError) || error.deferred.length === 0)
+        throw error;
+      return { deferredUsage: error.deferred, state: batch.state };
+    }
+  }
   if (batch.state !== "submitting") return { state: batch.state };
   const connectionId = batch.connection?.id ?? null;
   const refusal = await resumeQueuedRefusal(

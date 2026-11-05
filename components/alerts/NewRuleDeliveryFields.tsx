@@ -6,10 +6,7 @@ import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 
-type NewRuleDeliveryFieldsProps = Pick<
-  UseFormReturn<NewRuleForm>,
-  "register" | "setValue" | "watch"
-> & {
+type NewRuleDeliveryFieldsProps = Pick<UseFormReturn<NewRuleForm>, "setValue" | "watch"> & {
   deleteWebhookEndpointAction?: (input: unknown) => Promise<unknown>;
   projectId: string;
   targets: AlertTargetOptions;
@@ -20,7 +17,6 @@ type NewRuleDeliveryFieldsProps = Pick<
 export function NewRuleDeliveryFields({
   deleteWebhookEndpointAction,
   projectId,
-  register,
   setValue,
   targets,
   testWebhookEndpointAction,
@@ -34,7 +30,7 @@ export function NewRuleDeliveryFields({
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
         {t("delivery")}
       </div>
-      <DeliveryChannelsField register={register} setValue={setValue} watch={watch} />
+      <DeliveryChannelsField setValue={setValue} watch={watch} />
       {watch("channels").includes("email") ? (
         <RecipientFields
           recipientIds={watch("recipientIds") ?? []}

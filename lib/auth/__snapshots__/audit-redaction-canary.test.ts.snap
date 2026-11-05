@@ -1794,9 +1794,9 @@ exports[`audit redaction canaries > enumerates every application audit payload p
   },
   {
     "action": ""notification_preferences.update"",
-    "after": "{ channels: { alertSlack: data.alertSlack, alertWebhook: data.alertWebhook }, preference, }",
-    "before": "{ channels: beforeChannels, preference: before }",
-    "input": "{ action: "notification_preferences.update", actorId: actor.id, after: { channels: { alertSlack: data.alertSlack, alertWebhook: data.alertWebhook }, preference, }, before: { channels: beforeChannels, preference: before }, projectId: project.id, targetId: requiredPublicAuditId(project.publicId, "prj", "Project"), targetType: "project", }",
+    "after": "{ preference: saved }",
+    "before": "{ preference: before }",
+    "input": "{ action: "notification_preferences.update", actorId: actor.id, after: { preference: saved }, before: { preference: before }, projectId: project.id, targetId: requiredPublicAuditId(project.publicId, "prj", "Project"), targetType: "project", }",
     "occurrence": 1,
     "path": "lib/notifications/preferences-update.ts",
     "statusReason": null,

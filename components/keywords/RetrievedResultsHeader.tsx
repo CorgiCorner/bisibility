@@ -45,11 +45,11 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
           <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
         </div>
         <div
-          className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end"
+          className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end"
           data-testid="retrieved-picker-slots"
         >
           {comparing ? (
-            <div className="flex min-w-0 items-center gap-2 [&>button]:min-w-0">
+            <div className="flex w-full min-w-0 items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 sm:w-auto sm:[&>button]:min-h-0">
               <span className="text-[11px] text-fg-muted">{t("from")}</span>
               <RetrievedResultsPicker
                 ariaLabel={t("earlierCheck")}
@@ -63,7 +63,7 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
               />
             </div>
           ) : null}
-          <div className="flex min-w-0 items-center gap-2 [&>button]:min-w-0">
+          <div className="flex w-full min-w-0 items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 sm:w-auto sm:[&>button]:min-h-0">
             {comparing ? <span className="text-[11px] text-fg-muted">{t("to")}</span> : null}
             <RetrievedResultsPicker
               ariaLabel={t(comparing ? "laterCheck" : "storedChecks")}
@@ -83,7 +83,7 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
             aria-label={comparing ? t("stopComparing") : undefined}
             aria-description={!props.compareEnabled ? t("needTwo") : undefined}
             title={!props.compareEnabled ? t("needTwo") : undefined}
-            className="min-w-0"
+            className="min-h-11 min-w-0 sm:min-h-0"
             disabled={!comparing && !props.compareEnabled}
             onClick={() => props.onMode(comparing ? "one" : "compare")}
             size="xs"

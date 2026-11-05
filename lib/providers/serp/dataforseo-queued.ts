@@ -264,6 +264,11 @@ async function getEnvelope(
         response.status === 429 || response.status >= 500,
         response.status,
         dataForSeoResponseCostCents(data),
+        {
+          // The envelope code is how an HTTP 200 answer reports an account or lookup refusal.
+          statusCode: typeof data.status_code === "number" ? data.status_code : undefined,
+          statusMessage: safeDataForSeoStatusMessage(data.status_message, credentials),
+        },
       );
     }
     return data;

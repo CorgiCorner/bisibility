@@ -7,7 +7,7 @@ export const skill: TaskSkill = {
     "Reconcile a supplied keyword list with tracked identities and apply requested metadata changes. Use when importing or updating a project keyword set. Do not use for keyword research, clustering or unapproved fresh rank checks.",
   compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
-  version: "0.1.1",
+  version: "0.1.2",
   body: `# Keyword import
 
 Reconcile an agreed list with tracked keywords, add missing identities and apply
@@ -89,7 +89,7 @@ counts and blocked reason. Read completed measurements through
 \`GET /keywords/{id}/rank-checks?status=completed\` when available. A queued run is
 not a completed ranking result. An inline 201 may return the measurement directly.
 
-Never expose bearer or provider credentials. Use **provider-setup** if connection
+Never expose bearer or provider credentials. Use the \`provider-setup\` skill if connection
 repair is needed, and report missing evidence rather than inventing ranks.`,
   references: [
     {

@@ -54,6 +54,15 @@ const notificationPreferenceProperties = {
   invite_email: { type: "boolean" },
   invite_in_app: { type: "boolean" },
 };
+
+function ignoredProjectChannelField(channel: string, commands: string) {
+  return {
+    deprecated: true,
+    description: `Project ${channel} delivery, not a personal preference. Ignored on writes; managers use ${commands}. Sending this field returns a Deprecation header and a warnings entry naming it.`,
+    type: "boolean",
+  } as const;
+}
+
 const notificationPreferenceRequired = [
   "alert_email",
   "alert_in_app",
@@ -108,6 +117,8 @@ export const resourceSchemas = {
   NotificationPreferencesPatch: {
     properties: {
       ...notificationPreferenceProperties,
+      alert_slack: ignoredProjectChannelField("Slack", "the Slack channel commands"),
+      alert_webhook: ignoredProjectChannelField("webhook", "the webhook endpoint commands"),
       check_notification_setting: {
         ...notificationPreferenceProperties.check_notification_setting,
         ...closedEnum("CheckNotificationSettingInput"),
@@ -120,7 +131,7 @@ export const resourceSchemas = {
     properties: {
       warnings: {
         description:
-          "Present when a deprecated check_in_app write was ignored. Also returned through MCP.",
+          "Present when a deprecated check_in_app, alert_slack or alert_webhook write was ignored. Also returned through MCP.",
         type: "array",
         items: {
           type: "object",

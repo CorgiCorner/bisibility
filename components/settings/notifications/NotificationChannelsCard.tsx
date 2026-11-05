@@ -11,9 +11,7 @@ import { updateNotificationPreferences } from "@/lib/actions/notification-prefs"
 import { useZodForm } from "@/lib/forms/use-zod-form";
 import {
   CHECK_NOTIFICATION_POSITION_MOVE,
-  CHECK_NOTIFICATION_SETTING_DEFAULT,
   CHECK_NOTIFICATION_TOP_N,
-  PROVIDER_INCIDENT_IN_APP_DEFAULT,
 } from "@/lib/notifications/preference-defaults";
 import { notificationSettingsFormSchema } from "@/lib/notifications/preference-schema";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
@@ -21,16 +19,19 @@ import { classifyActionError } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { type Control, Controller } from "react-hook-form";
-import type { z } from "zod";
 import {
   CheckModeDescription,
   CheckModeSelect,
   CheckNotificationThresholds,
 } from "./CheckNotificationControls";
+import {
+  formDefaults,
+  type NotificationPreferencesForm,
+  notificationPreferenceStamp,
+} from "./notification-form-defaults";
 
-type NotificationPreferencesForm = z.infer<typeof notificationSettingsFormSchema>;
 type PreferenceField = Exclude<
   keyof NotificationPreferencesForm,
   | "projectId"
@@ -54,10 +55,10 @@ type NotificationRow = {
 
 const rows: readonly NotificationRow[] = [
   { email: "alertEmail", inApp: "alertInApp", labelKey: "alertFired" },
-  { email: "checkEmail", labelKey: "checkComplete" },
+  { labelKey: "checkComplete" },
   { inApp: "providerIncidentInApp", labelKey: "providerIncident" },
-  { email: "importEmail", inApp: "importInApp", labelKey: "importFinished" },
-  { email: "inviteEmail", inApp: "inviteInApp", labelKey: "invite" },
+  { inApp: "importInApp", labelKey: "importFinished" },
+  { inApp: "inviteInApp", labelKey: "invite" },
   { email: "reportEmail", labelKey: "weeklyReport" },
 ] satisfies readonly NotificationRow[];
 
@@ -65,28 +66,6 @@ const channels = [
   { key: "inApp", label: "In-app" },
   { key: "email", label: "Email" },
 ] as const;
-
-function formDefaults(preferences: NotificationPreferencesView): NotificationPreferencesForm {
-  return {
-    alertEmail: preferences.alertEmail,
-    alertInApp: preferences.alertInApp,
-    alertSlack: preferences.alertSlack,
-    alertWebhook: preferences.alertWebhook,
-    checkEmail: preferences.checkEmail,
-    checkNotificationSetting:
-      preferences.checkNotificationSetting ?? CHECK_NOTIFICATION_SETTING_DEFAULT,
-    checkNotificationTopN: preferences.checkNotificationTopN ?? CHECK_NOTIFICATION_TOP_N.default,
-    checkNotificationPositionMove:
-      preferences.checkNotificationPositionMove ?? CHECK_NOTIFICATION_POSITION_MOVE.default,
-    providerIncidentInApp: preferences.providerIncidentInApp ?? PROVIDER_INCIDENT_IN_APP_DEFAULT,
-    importEmail: preferences.importEmail,
-    importInApp: preferences.importInApp,
-    inviteEmail: preferences.inviteEmail,
-    inviteInApp: preferences.inviteInApp,
-    projectId: preferences.projectId,
-    reportEmail: preferences.reportEmail,
-  };
-}
 
 function UnavailableMark({ label }: Readonly<{ label: string }>) {
   const t = useTranslations("projectSettingsNotifications.channels");
@@ -145,29 +124,50 @@ export function NotificationChannelsCard({
   canEdit,
   preferences,
 }: Readonly<NotificationChannelsCardProps>) {
+  const defaults = formDefaults(preferences);
   const form = useZodForm<NotificationPreferencesForm>(notificationSettingsFormSchema, {
-    defaultValues: formDefaults(preferences),
+    defaultValues: defaults,
     mode: "onChange",
+    values: defaults,
   });
+  const savedValues = useRef(defaults);
+  const preferenceStamp = notificationPreferenceStamp(defaults);
+  const [appliedStamp, setAppliedStamp] = useState(preferenceStamp);
+  // A lost response still refreshes these props. Adopt that saved state for the next edit.
+  if (preferenceStamp !== appliedStamp) {
+    savedValues.current = defaults;
+    setAppliedStamp(preferenceStamp);
+  }
   const router = useRouter();
   const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("projectSettingsNotifications.channels");
   const { readOnly } = useProjectWriteMode();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const controlsDisabled = !canEdit || readOnly;
+  const controlsDisabled = !canEdit || readOnly || form.formState.isSubmitting;
 
-  async function savePreferences(previousValues: NotificationPreferencesForm) {
+  async function savePreferences() {
     if (controlsDisabled) return;
 
     setErrorMessage(null);
     try {
       await form.handleSubmit(async (values) => {
-        const updated = await updateNotificationPreferences(values);
-        form.reset(notificationSettingsFormSchema.parse({ ...values, ...updated }));
+        const patch = Object.fromEntries(
+          Object.entries(values).filter(
+            ([key, value]) =>
+              key === "projectId" ||
+              value !== savedValues.current[key as keyof NotificationPreferencesForm],
+          ),
+        );
+        const updated = await updateNotificationPreferences(patch);
+        const current = notificationSettingsFormSchema.parse({ ...values, ...updated });
+        savedValues.current = current;
+        form.reset(current);
+        if ("saveFailed" in updated && updated.saveFailed) setErrorMessage(t("saveError"));
         router.refresh();
       })();
     } catch (error: unknown) {
-      form.reset(previousValues);
+      form.reset(savedValues.current);
+      router.refresh();
       const classified = classifyActionError(error);
       setErrorMessage(
         classified.kind === "staleDeployment"
@@ -182,7 +182,6 @@ export function NotificationChannelsCard({
   function changePreference(change: () => void) {
     if (controlsDisabled) return;
 
-    const previousValues = form.getValues();
     change();
     if (form.getValues("checkNotificationSetting") === "none") {
       for (const name of ["checkNotificationTopN", "checkNotificationPositionMove"] as const) {
@@ -198,7 +197,7 @@ export function NotificationChannelsCard({
         }
       }
     }
-    void savePreferences(previousValues);
+    void savePreferences();
   }
 
   return (
@@ -212,8 +211,6 @@ export function NotificationChannelsCard({
         <form id="notification-preferences-form" onSubmit={(event) => event.preventDefault()}>
           <fieldset className="contents" disabled={controlsDisabled}>
             <input type="hidden" {...form.register("projectId")} />
-            <input type="hidden" {...form.register("alertSlack")} />
-            <input type="hidden" {...form.register("alertWebhook")} />
             <SettingsField width="full">
               <FieldLabel
                 className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
@@ -276,15 +273,15 @@ export function NotificationChannelsCard({
               <CheckNotificationThresholds
                 form={form}
                 disabled={controlsDisabled}
-                onSave={() => void savePreferences(form.getValues())}
+                onSave={() => void savePreferences()}
               />
             </SettingsField>
-            {errorMessage ? (
-              <p aria-live="polite" className={cn("m-0 mt-3 text-[11.5px] text-red-text")}>
-                {errorMessage}
-              </p>
-            ) : null}
           </fieldset>
+          {errorMessage ? (
+            <p aria-live="polite" className={cn("m-0 mt-3 text-[11.5px] text-red-text")}>
+              {errorMessage}
+            </p>
+          ) : null}
         </form>
       </SettingsCard>
     </div>

@@ -33,3 +33,21 @@ describe("attempt history deferral labels", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+it("localizes incomplete organic coverage in check details", () => {
+  const page = historyPages(0).attempts;
+  render(
+    <AttemptHistoryTable
+      page={{
+        ...page,
+        records: [attempt(0, { status: "failed", errorCode: "organic_depth_not_covered" })],
+        totalCount: 1,
+      }}
+      timeZone="UTC"
+    />,
+  );
+  expect(screen.getByText(/did not cover the requested depth/)).toBeVisible();
+  expect(screen.getByText(/no position or absence could be established/)).toBeVisible();
+  expect(screen.queryByText("organic_depth_not_covered")).not.toBeInTheDocument();
+  expect(screen.queryByText(/temporarily unavailable|try again|retry|not charged/i)).toBeNull();
+});

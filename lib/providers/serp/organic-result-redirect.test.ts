@@ -128,7 +128,7 @@ describe("unresolved organic destination", () => {
     ).toBe("no_match");
   });
 
-  it("preserves ordinary conflicting-domain behavior", () => {
+  it("is indeterminate when a conflicting row inside the depth leaves no match", () => {
     expect(
       decideOrganicResult({
         candidates: [
@@ -139,7 +139,9 @@ describe("unresolved organic destination", () => {
         domain: "example.com",
       }),
     ).toMatchObject({
-      outcome: "no_match",
+      outcome: "indeterminate",
+      position: null,
+      rankingUrl: null,
       anomalies: [{ code: "organic_result_unclassifiable", index: 1 }],
     });
   });

@@ -25,6 +25,13 @@ const mocks = vi.hoisted(() => ({
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
     providerCostEntry: { findFirst: vi.fn().mockResolvedValue(null), createMany: vi.fn() },
+    alertEvaluationIntent: {
+      create: vi.fn(async () => ({})),
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      upsert: vi.fn(async () => ({})),
+    },
     rankCheck: { create: vi.fn(), findUniqueOrThrow: vi.fn(), updateMany: vi.fn() },
     rankCheckRun: { update: vi.fn() },
     rankCheckRunItem: { findUnique: vi.fn(), updateMany: vi.fn() },
@@ -115,6 +122,11 @@ describe("rank-check persistence update path", () => {
     let transactionResolved = false;
     const tx = {
       $queryRaw: vi.fn(),
+      alertEvaluationIntent: {
+        create: vi.fn(async () => ({})),
+        findUnique: vi.fn(async () => null),
+        upsert: vi.fn(async () => ({})),
+      },
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn(() => Promise.resolve({})) },
       projectDefaults: { update: vi.fn() },
@@ -230,6 +242,11 @@ describe("rank-check persistence update path", () => {
   it("persists observations inside the rank-check transaction", async () => {
     const tx = {
       $queryRaw: vi.fn(async () => []),
+      alertEvaluationIntent: {
+        create: vi.fn(async () => ({})),
+        findUnique: vi.fn(async () => null),
+        upsert: vi.fn(async () => ({})),
+      },
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn() },
       observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
@@ -279,6 +296,11 @@ describe("rank-check persistence update path", () => {
   it("persists observations for an already running rank check", async () => {
     const tx = {
       $queryRaw: vi.fn(async () => []),
+      alertEvaluationIntent: {
+        create: vi.fn(async () => ({})),
+        findUnique: vi.fn(async () => null),
+        upsert: vi.fn(async () => ({})),
+      },
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn() },
       observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },

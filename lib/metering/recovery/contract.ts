@@ -59,6 +59,8 @@ export type RecoveryCase = {
   action: RecoveryAction | null;
   blockedReason:
     | "proof_missing"
+    | "provider_cost_pending"
+    | "provider_cost_unrecoverable"
     | "wallet_coordination_required"
     | "request_not_linked"
     | "authorization_required"

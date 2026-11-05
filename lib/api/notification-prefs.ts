@@ -1,15 +1,14 @@
 import "server-only";
 
-import { canProjectAction } from "@/lib/auth/capabilities";
 import { checkPreferencePatch } from "@/lib/notifications/check-preferences";
 import {
   applyNotificationPreferences,
-  type NotificationPreferencesForm,
+  PreferenceWriteError,
 } from "@/lib/notifications/preferences-update";
 import { readNotificationPreferencesFor } from "@/lib/queries/notification-prefs";
 import { z } from "zod";
-import { type ApiContext, actorProjectRole, forbidden } from "./context";
-import { resourceResponse } from "./responses";
+import { type ApiContext, forbidden } from "./context";
+import { errorResponse, resourceResponse } from "./responses";
 import {
   objectBody,
   parseApiInput,
@@ -24,7 +23,9 @@ export const preferencePatchSchema = z
     alertEmail: z.boolean().optional(),
     alertInApp: z.boolean().optional(),
     alertPush: z.boolean().optional(),
+    /** Deprecated: project channel, ignored on personal writes with a warning. */
     alertSlack: z.boolean().optional(),
+    /** Deprecated: project channel, ignored on personal writes with a warning. */
     alertWebhook: z.boolean().optional(),
     checkEmail: z.boolean().optional(),
     providerIncidentInApp: z.boolean().optional(),
@@ -58,45 +59,37 @@ export async function updateProjectNotificationPreferences(ctx: ApiContext, proj
     return forbidden(ctx, "This operation needs a project-scoped credential.");
   }
 
-  const [body, current] = await Promise.all([
-    readJsonBody(ctx),
-    runDomain(() => readNotificationPreferencesFor(actor, projectId)),
-  ]);
+  const body = await readJsonBody(ctx);
   const patch = parseApiInput(preferencePatchSchema, objectBody(body));
-  const input: NotificationPreferencesForm = {
-    alertEmail: patch.alertEmail ?? current.alertEmail,
-    alertInApp: patch.alertInApp ?? current.alertInApp,
-    alertPush: patch.alertPush ?? current.alertPush,
-    alertSlack: patch.alertSlack ?? current.alertSlack,
-    alertWebhook: patch.alertWebhook ?? current.alertWebhook,
-    checkEmail: patch.checkEmail ?? current.checkEmail,
-    providerIncidentInApp: patch.providerIncidentInApp,
-    checkInApp: patch.checkInApp,
-    checkNotificationSetting: patch.checkNotificationSetting,
-    checkNotificationTopN: patch.checkNotificationTopN,
-    checkNotificationPositionMove: patch.checkNotificationPositionMove,
-    importEmail: patch.importEmail ?? current.importEmail,
-    importInApp: patch.importInApp ?? current.importInApp,
-    inviteEmail: patch.inviteEmail ?? current.inviteEmail,
-    inviteInApp: patch.inviteInApp ?? current.inviteInApp,
-    projectId,
-    // Not part of the REST patch surface; the row keeps its current value.
-    reportEmail: current.reportEmail,
-  };
-  // Same escalation the app action applies: switching Slack or webhook delivery
-  // touches a shared project channel, not a personal preference.
-  const externalChanged =
-    input.alertSlack !== current.alertSlack || input.alertWebhook !== current.alertWebhook;
-  if (
-    externalChanged &&
-    !canProjectAction(actorProjectRole(ctx), "manage", "notification_delivery_channel")
-  ) {
-    return forbidden(ctx, "Your project role does not allow changing delivery channels.");
+  let updated: Awaited<ReturnType<typeof applyNotificationPreferences>>;
+  try {
+    updated = await applyNotificationPreferences(actor, { ...patch, projectId });
+  } catch (error) {
+    if (!(error instanceof PreferenceWriteError)) {
+      return runDomain(async () => {
+        throw error;
+      });
+    }
+    const current = await runDomain(() => readNotificationPreferencesFor(actor, projectId));
+    return errorResponse("internal_server_error", "Preference save could not be confirmed.", 500, {
+      headers: ctx.headers,
+      instance: ctx.instance,
+      problemDetails: { current_preferences: snakeizeKeys(current) },
+    });
   }
-  // The service takes the API actor directly; the app action wraps the same service around
-  // the browser session, so both surfaces answer to one implementation.
-  const preferences = await runDomain(() => applyNotificationPreferences(actor, input));
-  if (patch.checkInApp !== undefined) ctx.headers.set("Deprecation", "@1792800000");
+  const preferences = await runDomain(() => readNotificationPreferencesFor(actor, projectId));
+  if (
+    patch.checkInApp !== undefined ||
+    patch.alertSlack !== undefined ||
+    patch.alertWebhook !== undefined
+  ) {
+    ctx.headers.set("Deprecation", "@1792800000");
+  }
 
-  return resourceResponse(snakeizeKeys(preferences), { headers: ctx.headers });
+  // The PATCH answer keeps its documented shape: account and availability fields stay on GET.
+  const { email, emailVerification, slackAvailable, webhookAvailable, ...saved } = preferences;
+  return resourceResponse(
+    snakeizeKeys({ ...saved, ...(updated.warnings ? { warnings: updated.warnings } : {}) }),
+    { headers: ctx.headers },
+  );
 }

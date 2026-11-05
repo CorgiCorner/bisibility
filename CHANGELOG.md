@@ -1,5 +1,75 @@
 # Changelog
 
+## [0.46.0] - 2026-11-05
+
+### Added
+
+- Added the optional `DSH_PLUGIN_MIN_VERSION` setting: the MCP endpoint answers HTTP 426 to Bisibility plugins for DeepSeek Harness below that version.
+
+### Changed
+
+- Skills name other skills in prose that works in every install path and declare their pack and required skills; per-skill install commands include those skills.
+
+- Builds no longer copy the whole source tree into the standalone server output, so the Docker image is smaller and production builds finish faster.
+
+- Notification preference writes ignore deprecated `alert_slack` and `alert_webhook`.
+
+- Rank checks with no stored receipt show "Cost not recorded", and own-key cost stays on item reload from the ledger.
+
+- More Google redirect shapes fail closed; only absolute https google.com /goto links are converted.
+
+- Blocked scheduled runs keep and show their block reason.
+
+- Unresolved or unclassifiable search results show no position, without a retry promise.
+
+- A "verify your connection" notice appears, and legacy connections are checked automatically.
+
+- Reduced database reads for page-indexing reports while preserving URL scope, grouping, freshness, and budget estimates.
+
+- Clarify partial delivery and team-wide alert acknowledgement, with recipient outcome counts and safer rule editing.
+
+- Keep deleted-project notifications as withdrawn history and hide legacy rows whose project ownership cannot be verified.
+
+- Improved rank-run results, exact costs, retry links and snapshot downloads; kept unproven absence and omitted snapshot positions clear.
+
+### Fixed
+
+- Fixed OAuth sign-in for accounts with two-factor authentication, which ended on the dashboard instead of the consent page.
+
+- Fixed rank checks failing when search results contain Google redirect links; redirects are now resolved, and unresolved ones fail with a dedicated error.
+
+- Fixed queued rank checks failing from a shortened redirect timeout or an oversized result that did not need storage, and report unsafe results with a stable error.
+
+- Alert digest email is prepared once and retried without a second send.
+
+- Alert rule deletion asks for confirmation, a failed toggle rolls back, and result links open only absolute http(s) URLs.
+
+- Alert mail checks permission at send time and records a skipped outcome when delivery is refused.
+
+- Demo notification mail goes to everyone except the shared viewer, and unsubscribe works in the editable demo.
+
+- One-click unsubscribe accepts form-urlencoded and multipart form encodings.
+
+- Queued usage confirmation no longer strands a project when settlement of an accepted batch fails.
+
+- Own-key rank checks no longer stay blocked when an accepted batch has no recorded cost: the cost is read back from the provider.
+
+- SerpApi positions beyond the first page are numbered continuously, so a short first page no longer shifts later results by one.
+
+- Return JSON-RPC errors for caught MCP failures and bound live search-performance reads while retaining shared rate limits.
+
+- Search Console requests reuse a cached access token per connection, so repeated reports start faster.
+
+- Fixed historical rank repair to require original scope and complete source evidence, while keeping failed redirect conversions retryable.
+
+- Fixed false rank misses from short, repeated, or gapped organic pages and clarified incomplete search coverage.
+
+- Persist alert bell notifications atomically with delivery finalization so retries cannot lose or duplicate them.
+
+- Digest delivery keeps ownership across rolling workers, preserves in-app alerts when external outcomes are unknown, and retries rejected rate-limited pushes safely.
+
+- MCP requests with expired or invalid tokens now receive a 401 sign-in challenge instead of a server error.
+
 ## [0.45.0] - 2026-11-01
 
 ### Added

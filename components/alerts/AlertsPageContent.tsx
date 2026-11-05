@@ -10,7 +10,10 @@ import {
 import { AlertsLiveToolbar } from "@/components/alerts/AlertsLiveToolbar";
 import { AlertTemplateButtons } from "@/components/alerts/AlertTemplateButtons";
 import { alertFeedFacetLabels } from "@/components/alerts/alert-feed-facet-labels";
-import { presentAlertFeedFacetOptions } from "@/components/alerts/alert-feed-presentation";
+import {
+  filterAlerts,
+  presentAlertFeedFacetOptions,
+} from "@/components/alerts/alert-feed-presentation";
 import { NewRuleAction } from "@/components/alerts/NewRuleAction";
 import { FacetBar } from "@/components/feeds/FacetBar";
 import { AlertBanner } from "@/components/ui/AlertBanner";
@@ -19,31 +22,21 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { markProjectAlertsRead } from "@/lib/actions/alert-feed";
-import type { TriggeredAlertFeedView } from "@/lib/alerts/alert-data";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { ListMagnifyingGlassIcon as ListMagnifyingGlass } from "@phosphor-icons/react/dist/csr/ListMagnifyingGlass";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
+import { AcknowledgeAllButton } from "./AcknowledgeAllButton";
+import { useAlertSnoozes } from "./use-alert-snoozes";
 
 type AlertFilter = "all" | "unread" | "urgent";
 
 import type { AlertsPageContentProps } from "./AlertsPageContent.types";
 
 export type { AlertsPageContentProps } from "./AlertsPageContent.types";
-
-function filterAlerts(alerts: TriggeredAlertFeedView[], readIds: Set<string>, filter: AlertFilter) {
-  if (filter === "unread") {
-    return alerts.filter((alert) => isAlertUnread(alert, readIds));
-  }
-  if (filter === "urgent") {
-    return alerts.filter((alert) => alert.severity === "urgent");
-  }
-  return alerts;
-}
 
 export function AlertsPageContent({
   actions,
@@ -64,6 +57,9 @@ export function AlertsPageContent({
   projectRef,
   rules,
   snoozedInWindowCount,
+  snoozedAlertIds = [],
+  unacknowledgedCount,
+  projectName,
   targets,
   templates,
 }: Readonly<AlertsPageContentProps>) {
@@ -71,15 +67,16 @@ export function AlertsPageContent({
   const router = useRouter();
   const [filter, setFilter] = useState<AlertFilter>("all");
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
+  const snoozes = useAlertSnoozes(projectId, snoozedInWindowCount, snoozedAlertIds);
+  const format = useFormatter();
   const [feedError, setFeedError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
   const activeRuleCount = rules.filter((rule) => rule.status === "active").length;
-  const liveAlerts = alerts.filter((alert) => !dismissedIds.has(alert.id));
+  const liveAlerts = alerts.filter((alert) => !snoozes.ids.has(alert.id));
   const feedQuiet = facets.length === 0 && activeRuleCount > 0 && firedInWindowCount === 0;
   const feedCaughtUp = facets.length === 0 && firedInWindowCount > 0 && liveAlerts.length === 0;
   const feedFilteredEmpty = facets.length > 0 && liveAlerts.length === 0;
-  const snoozedCount = snoozedInWindowCount + dismissedIds.size;
+  const snoozedCount = snoozes.count;
   const filteredAlerts = filterAlerts(liveAlerts, readIds, filter);
   const shownAlerts = filteredAlerts.slice(0, visibleCount);
   const shownCount = shownAlerts.length;
@@ -110,10 +107,11 @@ export function AlertsPageContent({
   }
 
   function snoozeAlert(id: string) {
-    const previousDismissedIds = dismissedIds;
     setFeedError(null);
-    setDismissedIds((current) => new Set(current).add(id));
-    return () => setDismissedIds(previousDismissedIds);
+    return snoozes.snooze(
+      id,
+      alerts.find((alert) => alert.id === id)?.keyword ?? t("unknownKeyword"),
+    );
   }
 
   function loadMore() {
@@ -139,6 +137,17 @@ export function AlertsPageContent({
           targets={targets}
         />
       </div>
+      {snoozes.snoozes.map((item) => (
+        <p className="m-0 text-xs text-fg-muted" key={item.id} role="status">
+          {item.keyword}:{" "}
+          {t("snoozedUntil", {
+            time: format.dateTime(new Date(item.until), {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }),
+          })}
+        </p>
+      ))}
       {!hasTrackedKeywords ? (
         <AlertBanner
           action={{
@@ -206,21 +215,19 @@ export function AlertsPageContent({
                   }))}
                   value={filter}
                 />
-                <Button
-                  disabled={unreadCount === 0}
-                  onClick={() => void markAllRead()}
-                  size="sm"
-                  startIcon={<Check weight="regular" aria-hidden size={13} />}
-                  type="button"
-                  variant="secondary"
-                >
-                  {t("markAllRead")}
-                </Button>
+                <AcknowledgeAllButton
+                  canUpdate={canUpdate}
+                  count={unacknowledgedCount ?? unreadCount}
+                  onConfirm={markAllRead}
+                  projectName={projectName ?? resolvedProjectDomain ?? projectId}
+                />
               </div>
             </div>
             {shownAlerts.length > 0 ? (
               shownAlerts.map((alert) => (
                 <AlertFeedRow
+                  canUpdate={canUpdate}
+                  onSnoozed={snoozes.confirm}
                   alert={alert}
                   key={alert.id}
                   onError={setFeedError}

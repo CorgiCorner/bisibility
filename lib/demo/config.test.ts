@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { assertDemoAccountMutable, readDemoConfig, readOnlyDemoConfig } from "./config";
+import {
+  assertDemoAccountMutable,
+  demoModeDeclared,
+  readDemoConfig,
+  readOnlyDemoConfig,
+} from "./config";
 
 const demo = {
   READ_ONLY_DEMO: "1",
@@ -71,5 +76,14 @@ describe("read-only demo configuration", () => {
     vi.unstubAllEnvs();
     for (const [key, value] of Object.entries(editableDemo)) vi.stubEnv(key, value);
     expect(() => assertDemoAccountMutable()).toThrow("Account settings are locked in this demo.");
+  });
+});
+
+describe("demo mode declaration", () => {
+  it("is true for any selected demo mode, even without an identity", () => {
+    expect(demoModeDeclared({})).toBe(false);
+    expect(demoModeDeclared({ READ_ONLY_DEMO: "0" })).toBe(false);
+    expect(demoModeDeclared({ DEMO_MODE: "editable" })).toBe(true);
+    expect(demoModeDeclared({ READ_ONLY_DEMO: "1" })).toBe(true);
   });
 });

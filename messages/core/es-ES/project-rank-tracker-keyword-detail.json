@@ -327,7 +327,7 @@
         "yourResult": "Tu resultado",
         "notFound": "no encontrado",
         "jumpToResult": "Ir a tu resultado",
-        "aiUnknown": "Este proveedor no informa de las vistas creadas con IA, así que esta comprobación no puede saber si apareció alguna.",
+        "aiUnknown": "No se registró la presencia de un resumen de IA en esta comprobación.",
         "aiPresent": "Tu posición cuenta solo los resultados orgánicos. En esta comprobación había una vista creada con IA por encima de ellos.",
         "selfHostedRetention": "El detalle completo se conserva mientras conserves la base de datos.",
         "hostedRetention": "En los espacios de trabajo alojados, el detalle completo se conserva {days, number} días.",
@@ -456,7 +456,16 @@
         "compareAction": "Comparar",
         "stopComparing": "Dejar de comparar",
         "savedResults": "{count, number} resultados guardados · Top {depth, number} solicitado",
-        "partialCompetitors": "Captura parcial. Los competidores que faltan pueden estar en el Top {depth, number}."
+        "partialCompetitors": "Captura parcial. Los competidores que faltan pueden estar en el Top {depth, number}.",
+        "downloadCsv": "Descargar CSV",
+        "downloadJson": "Descargar JSON",
+        "normalizedDownloadNote": "Datos normalizados guardados. Las comprobaciones completadas no conservan la respuesta completa del proveedor.",
+        "missingRank": "El proveedor no devolvió la posición #{position, number}",
+        "missingPositions": "{count, plural, one {El proveedor no devolvió # de {depth, number} posiciones: {ranks}} other {El proveedor no devolvió # de {depth, number} posiciones: {ranks}}}",
+        "aiContentNotLoaded": "Resumen de IA presente, contenido sin cargar",
+        "resultIndeterminate": "Posición indeterminada: profundidad solicitada sin cubrir",
+        "missingStoredRank": "La posición #{position, number} no tiene un resultado guardado",
+        "missingStoppedRank": "La posición #{position, number} no se consultó tras encontrar tu dominio"
       },
       "comparison": {
         "entered": "Ha entrado",
@@ -707,7 +716,12 @@
         "scopeDevices": {
           "desktop": "Ordenador",
           "mobile": "Móvil"
-        }
+        },
+        "organicDepthNotCovered": "Los resultados orgánicos devueltos no cubrieron la profundidad solicitada, por lo que no se pudo establecer una posición ni confirmar su ausencia.",
+        "notInTop": "Fuera de los primeros {depth, number}",
+        "checkedDepth": "Primeras {depth, number} posiciones comprobadas",
+        "noRankToCompare": "No hay resultado posicionado para comparar",
+        "noRankingUrl": "Sin URL posicionada - fuera de los resultados solicitados"
       },
       "quality": {
         "currentUnknown": "Posición actual desconocida",

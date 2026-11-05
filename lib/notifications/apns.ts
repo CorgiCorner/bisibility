@@ -84,7 +84,7 @@ export type PushMessage = {
 export type PushResult =
   | { kind: "sent" }
   | { kind: "invalid_token"; reason: string }
-  | { kind: "retryable"; reason: string }
+  | { kind: "retryable"; reason: string; status?: number }
   | { kind: "rejected"; reason: string };
 
 export interface PushSender {
@@ -158,7 +158,8 @@ export function createApnsSender(
       if (response.status === 410 || INVALID_TOKEN_REASONS.has(reason)) {
         return { kind: "invalid_token", reason };
       }
-      if (response.status === 429 || response.status >= 500) return { kind: "retryable", reason };
+      if (response.status === 429 || response.status >= 500)
+        return { kind: "retryable", reason, status: response.status };
       return { kind: "rejected", reason };
     },
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useOnboardingEntryAnalytics } from "@/components/analytics/use-hero-experiment";
+import { useOnboardingEntryAnalytics } from "@/components/analytics/use-onboarding-entry-analytics";
 
 export function OnboardingEntryAnalytics() {
   const entryRef = useOnboardingEntryAnalytics();

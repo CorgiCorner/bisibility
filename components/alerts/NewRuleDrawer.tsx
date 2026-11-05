@@ -9,10 +9,14 @@ import {
   TemplatePicker,
 } from "@/components/alerts/NewRuleDrawerControls";
 import { NewRuleDrawerFooter } from "@/components/alerts/NewRuleDrawerFooter";
-import { CurrentRulePreview, NewRuleMarketFields } from "@/components/alerts/NewRuleMarketFields";
+import {
+  CurrentRulePreview,
+  NewRuleMarketFields,
+  RuleSaveStatus,
+} from "@/components/alerts/NewRuleMarketFields";
 import { localizedNewRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
+import { readRuleSaveOutcome } from "@/components/alerts/new-rule-save-outcome";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Sheet } from "@/components/ui/Sheet";
 import type {
@@ -26,14 +30,15 @@ import {
   type RuleTemplateId,
   ruleTemplatesForDomain,
 } from "@/lib/alerts/new-rule-data";
+import { makePublicId } from "@/lib/db/public-id";
 import { useZodForm } from "@/lib/forms/use-zod-form";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
-import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { RuleDrawerCloseConfirm } from "./RuleDrawerCloseConfirm";
+import { RuleNameField } from "./RuleNameField";
 
 type NewRuleDrawerProps = {
   actions: Pick<
@@ -53,8 +58,6 @@ type NewRuleDrawerProps = {
   projectId: string;
   targets: AlertTargetOptions;
 };
-const labelClass =
-  "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const selectTriggerClass = "mb-3 normal-case tracking-normal";
 export function NewRuleDrawer({
   actions,
@@ -69,8 +72,10 @@ export function NewRuleDrawer({
 }: Readonly<NewRuleDrawerProps>) {
   const t = useTranslations("projectAlerts.drawer");
   const router = useRouter();
+  const [confirmClose, setConfirmClose] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
+  const [persistedRule, setPersistedRule] = useState<NewRuleForm | null>(null);
   const availableMarketIds = targets.markets.map((market) => market.id);
   const form = useZodForm<NewRuleForm>(newRuleSchema, {
     defaultValues: localizedNewRuleFormDefaults(
@@ -82,7 +87,7 @@ export function NewRuleDrawer({
     ),
   });
   const {
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
     handleSubmit,
     register,
     reset,
@@ -95,10 +100,14 @@ export function NewRuleDrawer({
   const isEdit = Boolean(initialRule || watch("ruleId"));
   const { readOnly } = useProjectWriteMode();
   const formRef = useRef<HTMLFormElement>(null);
+  const requestId = useRef<string | null>(null);
 
   function handleClose() {
+    setConfirmClose(false);
     setActionError(null);
     setActionWarning(null);
+    setPersistedRule(null);
+    requestId.current = null;
     reset(
       localizedNewRuleFormDefaults(
         projectId,
@@ -134,27 +143,31 @@ export function NewRuleDrawer({
     setActionError(null);
     setActionWarning(null);
     try {
+      if (!values.ruleId && !requestId.current) requestId.current = makePublicId("alr");
       const result = await (values.ruleId
         ? actions.updateAlertRuleAction(values)
-        : actions.createAlertRuleAction(values));
-      const saved = result && typeof result === "object" ? (result as Record<string, unknown>) : {};
-      if (saved.ok === false && typeof saved.error === "string") {
-        setActionError(saved.error);
+        : actions.createAlertRuleAction({
+            ...values,
+            requestId: requestId.current,
+          }));
+      const outcome = readRuleSaveOutcome(result, projectId, t("alreadyCreated"));
+      if (outcome.kind === "error") {
+        setActionError(outcome.message);
         return;
       }
-      const warning = typeof saved.warning === "string" ? saved.warning : null;
-      if (warning) {
-        if (typeof saved.id === "string") {
-          setValue("ruleId", saved.id);
-        }
-        setActionWarning(warning);
+      if (outcome.kind === "stay") {
+        if (outcome.ruleId) setValue("ruleId", outcome.ruleId);
+        setPersistedRule(outcome.persisted);
+        setActionWarning(outcome.warning);
         router.refresh();
         return;
       }
       handleClose();
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, t("saveError")));
+      setPersistedRule(null);
+      setActionError(values.ruleId ? actionErrorMessage(error, t("saveError")) : t("saveError"));
+      router.refresh();
     }
   }
 
@@ -173,7 +186,10 @@ export function NewRuleDrawer({
           readOnly={readOnly}
         />
       }
-      onClose={handleClose}
+      onClose={() => {
+        if (isDirty || isSubmitting) setConfirmClose(true);
+        else handleClose();
+      }}
       open={open}
       title={
         <span className="block">
@@ -198,19 +214,7 @@ export function NewRuleDrawer({
         <input type="hidden" {...register("severity")} />
         <input type="hidden" {...register("template")} />
         <TemplatePicker onSelect={selectTemplate} selectedId={selectedId} />
-        <label className={labelClass} htmlFor="alert-rule-name">
-          {t("ruleName")}
-          <Input
-            aria-label={t("ruleName")}
-            aria-describedby="alert-rule-name-error"
-            aria-invalid={Boolean(errors.name)}
-            id="alert-rule-name"
-            {...register("name")}
-          />
-          <span className="h-8 overflow-y-auto text-red-text" id="alert-rule-name-error">
-            {errors.name?.message}
-          </span>
-        </label>
+        <RuleNameField error={errors.name} register={register} />
         <AlertSeveritySelect
           onChange={(value) =>
             setValue("severity", value, { shouldDirty: true, shouldValidate: true })
@@ -263,7 +267,6 @@ export function NewRuleDrawer({
             canManageEndpoints ? actions.deleteWebhookEndpointAction : undefined
           }
           projectId={projectId}
-          register={register}
           setValue={setValue}
           targets={targets}
           testWebhookEndpointAction={
@@ -274,25 +277,22 @@ export function NewRuleDrawer({
           }
           watch={watch}
         />
-        <div className="h-14 overflow-y-auto" data-testid="alert-rule-action-error">
-          {actionError ? (
-            <p
-              className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text"
-              role="alert"
-            >
-              <X aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
-              {actionError}
-            </p>
-          ) : null}
-        </div>
-        {actionWarning ? (
-          <p className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-yellow-text">
-            <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
-            {actionWarning}
-          </p>
-        ) : null}
+        <RuleSaveStatus
+          actionError={actionError}
+          actionWarning={actionWarning}
+          persistedRule={persistedRule}
+          projectDomain={projectDomain}
+          savedHeading={t("savedRule")}
+          targets={targets}
+        />
         <CurrentRulePreview projectDomain={projectDomain} targets={targets} values={watch()} />
       </form>
+      <RuleDrawerCloseConfirm
+        open={confirmClose}
+        pending={isSubmitting}
+        onCancel={() => setConfirmClose(false)}
+        onDiscard={handleClose}
+      />
     </Sheet>
   );
 }

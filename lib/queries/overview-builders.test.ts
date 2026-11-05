@@ -451,6 +451,41 @@ describe("overview builders", () => {
     });
   });
 
+  it("does not label completed history as a failed first check when the latest attempt failed", () => {
+    for (const history of [
+      check(4, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+      check(8, {
+        checkedAt: new Date("2026-06-21T10:00:00.000Z"),
+        requestedDepth: 10,
+      }),
+    ]) {
+      const kpis = buildKpis(
+        [snapshotFor(keyword("completed-history", [check(null, { status: "failed" }), history]))],
+        1,
+        0,
+      );
+      expect(kpis.some((item) => item.delta.kind === "firstCheckFailed")).toBe(false);
+    }
+    const shallow = buildKpis(
+      [
+        snapshotFor(
+          keyword("shallow-history", [
+            check(null, { status: "failed" }),
+            check(8, {
+              checkedAt: new Date("2026-06-21T10:00:00.000Z"),
+              requestedDepth: 10,
+            }),
+          ]),
+        ),
+      ],
+      1,
+      0,
+    );
+    expect(shallow.find((item) => item.id === "visibility")?.delta).toEqual({
+      kind: "awaitingTop20",
+    });
+  });
+
   it("keeps failed first-check KPIs actionable without a display fallback", () => {
     const kpis = buildKpis(
       [snapshotFor(keyword("failed", [check(null, { status: "failed" })]))],

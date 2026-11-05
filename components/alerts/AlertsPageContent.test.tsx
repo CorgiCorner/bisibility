@@ -2,7 +2,7 @@ import { renderWithAlertMessages as render } from "@/i18n/test-support/render-wi
 import type { AlertActionHandlers, TriggeredAlertFeedView } from "@/lib/alerts/alert-data";
 import { canProjectAction, canReadProjectAudit } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertsPageContent } from "./AlertsPageContent";
@@ -12,6 +12,12 @@ const mocks = vi.hoisted(() => ({
   getAlertCtaTargets: vi.fn(),
   markProjectAlertsRead: vi.fn(),
   muteTriggeredAlert: vi.fn(),
+  showToast: vi.fn(),
+}));
+
+vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/toast-context")>()),
+  useToast: () => ({ showToast: mocks.showToast }),
 }));
 
 vi.mock("next/link", () => ({
@@ -120,10 +126,95 @@ function renderAlerts({
 }
 
 describe("AlertsPageContent optimistic rollback", () => {
+  it("requires confirmation with the whole-team project scope before acknowledging", async () => {
+    renderAlerts();
+    fireEvent.click(screen.getByRole("button", { name: "Acknowledge all" }));
+    expect(mocks.markProjectAlertsRead).not.toHaveBeenCalled();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("whole team in project");
+    expect(dialog).toHaveTextContent("Alerts to acknowledge: 1.");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Acknowledge all" }));
+    await waitFor(() => expect(mocks.markProjectAlertsRead).toHaveBeenCalledOnce());
+  });
+
+  it("keeps mutating feed controls disabled for viewers", () => {
+    renderAlerts({ canUpdate: false });
+    expect(screen.getByRole("button", { name: "Acknowledge all" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Snooze for 24 h" })).toBeDisabled();
+    expect(mocks.markProjectAlertsRead).not.toHaveBeenCalled();
+    expect(mocks.muteTriggeredAlert).not.toHaveBeenCalled();
+  });
+
+  it("shows all rule channels rather than just the first", () => {
+    renderAlerts({ rules: [makeAlertRule({ channels: ["email", "push", "slack", "webhook"] })] });
+    const rule = screen.getByRole("heading", { name: "Ranking drop" }).closest("article");
+    if (!rule) throw new Error("Missing rule");
+    for (const channel of ["Email", "Mobile push", "Slack", "Webhook"]) {
+      expect(within(rule).getByText(channel)).toBeInTheDocument();
+    }
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.markProjectAlertsRead.mockResolvedValue({ updated: 1 });
     mocks.muteTriggeredAlert.mockResolvedValue({ muted: true });
+  });
+
+  it("confirms rule deletion, blocks repeats, and reports rejection", async () => {
+    let reject!: (error: Error) => void;
+    vi.mocked(actions.deleteAlertRuleAction).mockReturnValueOnce(
+      new Promise((_, fail) => {
+        reject = fail;
+      }),
+    );
+    const rule = makeAlertRule();
+    renderAlerts({ rules: [rule] });
+    fireEvent.click(screen.getByRole("button", { name: `Delete ${rule.name}` }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText(rule.name)).toBeInTheDocument();
+    expect(within(dialog).getByText(/alert history/i)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(actions.deleteAlertRuleAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: `Delete ${rule.name}` }));
+    const confirm = within(screen.getByRole("dialog")).getByRole("button", { name: "Delete rule" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    expect(actions.deleteAlertRuleAction).toHaveBeenCalledOnce();
+    await act(async () => reject(new Error("failed")));
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Could not confirm whether this rule was deleted. Refresh to check its current state.",
+    );
+    expect(
+      Array.from(document.querySelectorAll("article h3"), (heading) => heading.textContent),
+    ).toContain(rule.name);
+  });
+
+  it("announces a confirmed rule deletion and moves focus to the rules heading", async () => {
+    vi.mocked(actions.deleteAlertRuleAction).mockResolvedValueOnce({ deleted: 1 });
+    const rule = makeAlertRule();
+    renderAlerts({ rules: [rule] });
+    const trigger = screen.getByRole("button", { name: `Delete ${rule.name}` });
+    trigger.focus();
+    fireEvent.click(trigger);
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Delete rule" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(mocks.showToast).toHaveBeenCalledWith("Alert rule deleted", { severity: "success" });
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Alert rules" })),
+    );
+  });
+
+  it("returns focus to the delete button when deletion is cancelled", async () => {
+    const rule = makeAlertRule();
+    renderAlerts({ rules: [rule] });
+    const trigger = screen.getByRole("button", { name: `Delete ${rule.name}` });
+    trigger.focus();
+    fireEvent.click(trigger);
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+    expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
   it("does not show the live evaluation caption", () => {
@@ -138,11 +229,14 @@ describe("AlertsPageContent optimistic rollback", () => {
     mocks.markProjectAlertsRead.mockRejectedValueOnce(new Error("failed"));
     renderAlerts();
 
-    const markAllRead = screen.getByRole("button", { name: /mark all read/i });
+    const markAllRead = screen.getByRole("button", { name: /acknowledge all/i });
     fireEvent.click(markAllRead);
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Acknowledge all" }),
+    );
 
     await waitFor(() =>
-      expect(screen.getByText("Could not mark alerts read. Try again.")).toBeInTheDocument(),
+      expect(screen.getByText("Could not acknowledge alerts. Try again.")).toBeInTheDocument(),
     );
     expect(markAllRead).not.toBeDisabled();
   });
@@ -203,6 +297,362 @@ describe("AlertsPageContent optimistic rollback", () => {
     expect(screen.getByText("Warsaw, Poland")).toBeInTheDocument();
     expect(screen.getByText("London, United Kingdom")).toBeInTheDocument();
     expect(screen.getByText("Desktop")).toBeInTheDocument();
+  });
+
+  it("shows partial acceptance as X/Y and team acknowledgement attribution", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          unread: false,
+          acknowledgedAt: new Date().toISOString(),
+          acknowledgedByName: "Team member",
+          deliveryState: "digested",
+          deliveryAttempts: [
+            {
+              ...alerts[0].deliveryAttempts[0],
+              status: "partial",
+              error: null,
+              counts: { acceptedCount: 1, failedCount: 1, unknownCount: 1 },
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Partial acceptance")).toBeInTheDocument();
+    expect(screen.getByText("1/3 accepted (1 failed, 1 unknown)")).toBeInTheDocument();
+    expect(screen.getByText(/Acknowledged by Team member,/)).toBeInTheDocument();
+  });
+
+  it("shows a digest summary on a peer alert with no representative attempt", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "digested",
+          deliverySummary: [
+            {
+              channel: "email",
+              counts: { acceptedCount: 1, failedCount: 1, unknownCount: 0 },
+              status: "partial",
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Partial acceptance")).toBeInTheDocument();
+    expect(screen.getByText("1/2 accepted (1 failed, 0 unknown)")).toBeInTheDocument();
+  });
+
+  it("shows unknown digest acceptance without inventing a device count", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "dead_letter",
+          deliverySummary: [{ channel: "push", status: "unknown" }],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Acceptance unknown")).toBeInTheDocument();
+    expect(screen.queryByText(/0\/0 accepted/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["failed", "Delivery: Partial acceptance"],
+    ["unknown", "Delivery: Acceptance unknown"],
+    ["sent", "Delivery: Delivered"],
+  ] as const)("classifies an older %s recipient outside the display log", (status, heading) => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: Array.from({ length: 3 }, () => ({
+            ...alerts[0].deliveryAttempts[0],
+            error: null,
+            status: "sent",
+          })),
+          deliveryOutcomes: [
+            { channel: "email", status },
+            ...Array.from({ length: 3 }, () => ({ channel: "email" as const, status: "sent" })),
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText(heading)).toHaveClass(
+      status === "sent" ? "text-green-text" : "text-yellow-text",
+    );
+    if (status !== "sent")
+      expect(screen.queryByText("Delivery: Delivered")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["failed", "Failed", "Partial acceptance"],
+    ["skipped", "Skipped", "Partial acceptance"],
+    ["unknown", "Status: unknown", "Acceptance unknown"],
+  ])("shows a status-only %s push summary on a digest peer", (status, label, overall) => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "digested",
+          deliverySummary: [
+            {
+              channel: "email",
+              counts: { acceptedCount: 2, failedCount: 0, unknownCount: 0 },
+              status: "sent",
+            },
+            { channel: "push", status },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText(`Delivery: ${overall}`)).toHaveClass("text-yellow-text");
+    expect(screen.getByText(`Mobile push: ${label}`)).toBeInTheDocument();
+    expect(screen.getByText("2/2 accepted (0 failed, 0 unknown)")).toBeInTheDocument();
+    expect(screen.queryByText("Delivery: Delivered in digest")).not.toBeInTheDocument();
+    expect(screen.queryByText(/0\/0 accepted/)).not.toBeInTheDocument();
+  });
+
+  it("shows measured push failure alongside accepted digest email as incomplete", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "digested",
+          deliverySummary: [
+            {
+              channel: "email",
+              counts: { acceptedCount: 2, failedCount: 0, unknownCount: 0 },
+              status: "sent",
+            },
+            {
+              channel: "push",
+              counts: { acceptedCount: 0, failedCount: 3, unknownCount: 0 },
+              status: "failed",
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Partial acceptance")).toHaveClass("text-yellow-text");
+    expect(screen.getByText("0/3 accepted (3 failed, 0 unknown)")).toBeInTheDocument();
+  });
+
+  it("keeps a fully accepted digest successful with a status-only accepted channel", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "digested",
+          deliverySummary: [{ channel: "email", status: "sent" }],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Delivered in digest")).toHaveClass("text-green-text");
+    expect(screen.getByText("Email: Sent")).toBeInTheDocument();
+  });
+
+  it.each([
+    { status: "failed", counts: { acceptedCount: 0, failedCount: 3, unknownCount: 0 } },
+    { status: "failed" },
+    { status: "skipped" },
+  ])("shows immediate email success plus push $status as incomplete ($counts)", (outcome) => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: [
+            { ...alerts[0].deliveryAttempts[0], error: null, status: "sent" },
+            { ...alerts[0].deliveryAttempts[0], channel: "push", ...outcome },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Partial acceptance")).toHaveClass("text-yellow-text");
+    expect(screen.queryByText("Delivery: Delivered")).not.toBeInTheDocument();
+    if (outcome.counts) {
+      expect(screen.getByText("0/3 accepted (3 failed, 0 unknown)")).toBeInTheDocument();
+    }
+  });
+
+  it("shows immediate unknown email plus accepted push as unknown", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: [
+            { ...alerts[0].deliveryAttempts[0], error: null, status: "unknown" },
+            {
+              ...alerts[0].deliveryAttempts[0],
+              channel: "push",
+              counts: { acceptedCount: 3, failedCount: 0, unknownCount: 0 },
+              error: null,
+              status: "sent",
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Acceptance unknown")).toHaveClass("text-yellow-text");
+    expect(screen.queryByText("Delivery: Delivered")).not.toBeInTheDocument();
+    expect(screen.getByText("3/3 accepted (0 failed, 0 unknown)")).toBeInTheDocument();
+  });
+
+  it.each(["failed", "partial", "unknown"])(
+    "keeps immediate delivery successful after a recovered %s push retry",
+    (status) => {
+      renderAlerts({
+        initialAlerts: [
+          {
+            ...alerts[0],
+            deliveryState: "delivered",
+            deliveryAttempts: [
+              {
+                ...alerts[0].deliveryAttempts[0],
+                attemptedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+                channel: "push",
+                counts: { acceptedCount: 0, failedCount: 1, unknownCount: 1 },
+                status,
+              },
+              { ...alerts[0].deliveryAttempts[0], error: null, status: "sent" },
+              {
+                ...alerts[0].deliveryAttempts[0],
+                channel: "push",
+                counts: { acceptedCount: 3, failedCount: 0, unknownCount: 0 },
+                error: null,
+                status: "sent",
+              },
+            ],
+          },
+        ],
+      });
+      expect(screen.getByText("Delivery: Delivered")).toHaveClass("text-green-text");
+      expect(screen.queryByText("Delivery: Partial acceptance")).not.toBeInTheDocument();
+      expect(screen.queryByText("Delivery: Acceptance unknown")).not.toBeInTheDocument();
+      expect(screen.getByText("3/3 accepted (0 failed, 0 unknown)")).toBeInTheDocument();
+    },
+  );
+
+  it("keeps fully accepted immediate email and push successful", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: [
+            { ...alerts[0].deliveryAttempts[0], error: null, status: "sent" },
+            {
+              ...alerts[0].deliveryAttempts[0],
+              channel: "push",
+              counts: { acceptedCount: 3, failedCount: 0, unknownCount: 0 },
+              error: null,
+              status: "sent",
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Delivered")).toHaveClass("text-green-text");
+    expect(screen.getByText("3/3 accepted (0 failed, 0 unknown)")).toBeInTheDocument();
+  });
+
+  it("keeps a different failed webhook endpoint incomplete after another endpoint succeeds", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: [
+            {
+              ...alerts[0].deliveryAttempts[0],
+              channel: "webhook",
+              error: null,
+              status: "sent",
+              webhookEndpoint: { id: "we_abcdefghijklmnopqrstuvwx", label: "Primary alerts" },
+            },
+            {
+              ...alerts[0].deliveryAttempts[0],
+              attemptedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+              channel: "webhook",
+              webhookEndpoint: { id: "we_zyxwvutsrqponmlkjihgfedc", label: "Secondary alerts" },
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Partial acceptance")).toHaveClass("text-yellow-text");
+    expect(screen.queryByText("Delivery: Delivered")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["slack", "failed", "Delivery: Partial acceptance"],
+    ["webhook", "failed", "Delivery: Partial acceptance"],
+    ["webhook", "unknown", "Delivery: Acceptance unknown"],
+    ["webhook", "sent", "Delivery: Delivered in digest"],
+  ] as const)("classifies a digest peer with a final %s %s outcome", (channel, status, heading) => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [],
+          deliveryState: "digested",
+          deliverySummary: [
+            { channel: "webhook", status: "sent" },
+            { channel, status },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText(heading)).toHaveClass(
+      status === "sent" ? "text-green-text" : "text-yellow-text",
+    );
+    if (status !== "sent")
+      expect(screen.queryByText("Delivery: Delivered in digest")).not.toBeInTheDocument();
+  });
+
+  it("uses a current successful digest summary over historical unknown attempts", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryAttempts: [{ ...alerts[0].deliveryAttempts[0], status: "unknown" }],
+          deliveryState: "digested",
+          deliverySummary: [{ channel: "email", status: "sent" }],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Delivered in digest")).toHaveClass("text-green-text");
+    expect(screen.queryByText("Delivery: Acceptance unknown")).not.toBeInTheDocument();
+  });
+
+  it("does not treat another email recipient's success as recovery from unknown acceptance", () => {
+    renderAlerts({
+      initialAlerts: [
+        {
+          ...alerts[0],
+          deliveryState: "delivered",
+          deliveryAttempts: [
+            { ...alerts[0].deliveryAttempts[0], error: null, status: "sent" },
+            {
+              ...alerts[0].deliveryAttempts[0],
+              attemptedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+              status: "unknown",
+            },
+          ],
+        },
+      ],
+    });
+    expect(screen.getByText("Delivery: Acceptance unknown")).toHaveClass("text-yellow-text");
+    expect(screen.queryByText("Delivery: Delivered")).not.toBeInTheDocument();
   });
 
   it("renders the terminal delivery state and its affected channel", () => {

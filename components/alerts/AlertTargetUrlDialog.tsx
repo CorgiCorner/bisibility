@@ -9,7 +9,7 @@ import { targetUrlValueSchema } from "@/lib/schemas/keyword";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { z } from "zod";
 
 const formSchema = z.object({ targetUrl: targetUrlValueSchema });
@@ -32,6 +32,7 @@ export function AlertTargetUrlDialog({
 }: Readonly<AlertTargetUrlDialogProps>) {
   const t = useTranslations("projectAlerts.target");
   const router = useRouter();
+  const submittingRef = useRef(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const {
     formState: { errors, isSubmitting },
@@ -52,6 +53,15 @@ export function AlertTargetUrlDialog({
     }
   }
 
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    void handleSubmit(save)(event).finally(() => {
+      submittingRef.current = false;
+    });
+  }
+
   return (
     <AppDrawer
       description={t("description", { keyword })}
@@ -59,7 +69,7 @@ export function AlertTargetUrlDialog({
       open
       title={t("title")}
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit((values) => void save(values))}>
+      <form className="flex flex-col gap-4" onSubmit={submit}>
         <TargetUrlField
           error={errors.targetUrl?.message}
           help={t("fieldHelp")}
@@ -71,7 +81,9 @@ export function AlertTargetUrlDialog({
           {isSubmitting ? t("saving") : t("save")}
         </Button>
         {actionError ? (
-          <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>
+          <span className="font-sans tabular-nums text-[11px] text-red-text" role="alert">
+            {actionError}
+          </span>
         ) : null}
       </form>
     </AppDrawer>

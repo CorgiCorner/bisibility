@@ -1,7 +1,8 @@
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { beforeEach, expect, it, vi } from "vitest";
-import { runUnsentTasksetTransaction } from "./taskset-transaction";
+import { TASKSET_TRANSACTION_OPTIONS } from "./taskset-timeouts";
+import { runAcceptedTasksetWrite, runUnsentTasksetTransaction } from "./taskset-transaction";
 
 const pause = vi.hoisted(() => vi.fn(async (_delay: number) => undefined));
 vi.mock("node:timers/promises", () => ({ setTimeout: pause }));
@@ -75,4 +76,29 @@ it("does not replay a callback whose commit acknowledgement was lost", async () 
   await expect(f.run()).rejects.toBe(failure);
   expect(f.transaction).toHaveBeenCalledOnce();
   expect(pause).not.toHaveBeenCalled();
+});
+
+it("records an accepted response under the taskset limit and replays only a confirmed rollback", async () => {
+  const transaction = vi.fn(async () => "recorded");
+  const db = {
+    $transaction: vi.fn(async (callback: typeof transaction, _options?: unknown) => callback()),
+  };
+  transaction.mockRejectedValueOnce({
+    code: "P2028",
+    meta: { operation: "query", timeout: 30_000, timeTaken: 30_010 },
+  });
+  await expect(runAcceptedTasksetWrite(db as unknown as PrismaClient, transaction)).resolves.toBe(
+    "recorded",
+  );
+  expect(db.$transaction).toHaveBeenCalledTimes(2);
+  expect(db.$transaction).toHaveBeenLastCalledWith(
+    expect.any(Function),
+    TASKSET_TRANSACTION_OPTIONS,
+  );
+  const lost = { code: "ECONNRESET" };
+  transaction.mockRejectedValueOnce(lost);
+  await expect(runAcceptedTasksetWrite(db as unknown as PrismaClient, transaction)).rejects.toBe(
+    lost,
+  );
+  expect(db.$transaction).toHaveBeenCalledTimes(3);
 });

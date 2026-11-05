@@ -52,9 +52,21 @@ export function setAnalyticsConsentScope(userId?: string, authenticated = Boolea
 }
 
 let appliedConsent: ConsentState | undefined;
+const consentListeners = new Set<() => void>();
 
 export function readAppliedAnalyticsConsent(): ConsentState | undefined {
   return appliedConsent;
+}
+
+export function subscribeAnalyticsConsent(listener: () => void): () => void {
+  consentListeners.add(listener);
+  return () => {
+    consentListeners.delete(listener);
+  };
+}
+
+export function notifyAnalyticsConsent(): void {
+  for (const listener of consentListeners) listener();
 }
 
 let providerRuntime: AnalyticsProviderRuntime | undefined;
@@ -94,6 +106,7 @@ export function installAnalyticsProviderRuntime(runtime: AnalyticsProviderRuntim
 export function applyAnalyticsConsent(state: ConsentState): void {
   appliedConsent = { ...state };
   providerRuntime?.applyConsent(state);
+  notifyAnalyticsConsent();
 }
 
 // A same-account refresh blocks capture without treating unknown permission as withdrawal.

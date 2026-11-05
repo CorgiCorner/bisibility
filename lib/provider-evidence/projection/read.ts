@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION } from "@/lib/rank-check/queued-source-schema";
 import { type EvidenceProjection, projectCheckEvidence } from "./model";
 
 /** Constant query count for any page; caller supplies an already authorized project. */
@@ -40,6 +41,7 @@ export async function readCheckEvidence(
       recoveryRestoredAt: true,
       recoveryProvenance: true,
       partialEvidence: {
+        where: { schemaVersion: { not: QUEUED_SOURCE_EVIDENCE_SCHEMA_VERSION } },
         select: { kind: true, returnedDepth: true },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       },

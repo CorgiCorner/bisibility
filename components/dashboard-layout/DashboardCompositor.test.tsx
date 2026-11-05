@@ -64,6 +64,18 @@ describe("dashboard compositor", () => {
     );
     expect(document.querySelectorAll("[data-dashboard-shell]")).toHaveLength(5);
     expect(document.querySelectorAll("[data-dashboard-widget]")).toHaveLength(0);
+    for (const id of ["health", "budget"]) {
+      expect(document.querySelector(`[data-dashboard-shell="${id}"]`)).toHaveClass(
+        "w-full",
+        "min-w-0",
+        "basis-full",
+      );
+    }
+    for (const id of ["scope", "mode", "coverage"]) {
+      const shell = document.querySelector(`[data-dashboard-shell="${id}"]`);
+      expect(shell).not.toHaveClass("w-full");
+      expect(shell).not.toHaveClass("basis-full");
+    }
     expect(screen.getByText("Budget status unknown")).toBeInTheDocument();
     expect(screen.getByText("Observed 1 of 2; fresh unknown")).toBeInTheDocument();
   });

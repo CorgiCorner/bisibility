@@ -95,8 +95,8 @@ export function featureChips(features: readonly string[]): FeatureChip[] {
 export const AI_OVERVIEW_REPORTING_PROVIDERS: readonly string[] = ["dataforseo"];
 
 export function aiOverviewState(provider: string, features: readonly string[]): boolean | null {
-  if (!AI_OVERVIEW_REPORTING_PROVIDERS.includes(provider)) return null;
-  return features.some((f) => f.toLowerCase() === "ai overview");
+  if (features.some((f) => f.toLowerCase().replaceAll("_", " ") === "ai overview")) return true;
+  return AI_OVERVIEW_REPORTING_PROVIDERS.includes(provider) ? false : null;
 }
 
 export function retrievedPositionsOf(rows: readonly RetrievedRow[]): number {

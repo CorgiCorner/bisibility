@@ -538,6 +538,10 @@
   },
   "redirects": [
     {
+      "source": "/api-reference/alerts/mark-all-firing-project-alerts-as-read",
+      "destination": "/api-reference/alerts/acknowledge-firing-alerts-for-the-project-team"
+    },
+    {
       "source": "/api/resources",
       "destination": "/api/overview"
     },

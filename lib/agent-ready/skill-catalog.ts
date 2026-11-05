@@ -1,3 +1,5 @@
+import type { SkillPackId } from "./skill-packs";
+
 export type SkillCategory =
   | "start-here"
   | "audit"
@@ -19,6 +21,10 @@ export type SkillCatalogEntry = Readonly<{
   category: SkillCategory;
   status: SkillStatus;
   channels: Readonly<{ plugin: boolean; archive: boolean }>;
+  /** Pack shipped all-or-nothing with this skill, or null when it ships alone. */
+  pack: SkillPackId | null;
+  /** Every other skill this skill's text references; each must be installed alongside it. */
+  requires: readonly string[];
 }>;
 
 export function skillGroup(skill: SkillCatalogEntry): SkillGroup {
@@ -41,6 +47,8 @@ const catalogEntries = [
     category: "start-here",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "seo-coach",
@@ -48,6 +56,28 @@ const catalogEntries = [
     category: "start-here",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: "router",
+    requires: [
+      "ai-prompt-research",
+      "ai-visibility-audit",
+      "alert-triage",
+      "backlink-profile-analysis",
+      "bisibility",
+      "competitive-landscape",
+      "competitor-analysis",
+      "domain-onboarding",
+      "keyword-clustering",
+      "keyword-import",
+      "keyword-opportunity-research",
+      "local-seo",
+      "project-setup",
+      "provider-setup",
+      "rank-tracking-report",
+      "self-host-health",
+      "seo-audit",
+      "team-api-governance",
+      "weekly-report",
+    ],
   },
   {
     slug: "domain-onboarding",
@@ -55,6 +85,8 @@ const catalogEntries = [
     category: "start-here",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: "project-onboarding",
+    requires: ["keyword-import", "provider-setup"],
   },
   {
     slug: "bisibility",
@@ -62,6 +94,22 @@ const catalogEntries = [
     category: "start-here",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: "router",
+    requires: [
+      "ai-prompt-research",
+      "ai-visibility-audit",
+      "alert-triage",
+      "competitive-landscape",
+      "competitor-analysis",
+      "domain-onboarding",
+      "keyword-import",
+      "keyword-opportunity-research",
+      "local-seo",
+      "provider-setup",
+      "self-host-health",
+      "team-api-governance",
+      "weekly-report",
+    ],
   },
   {
     slug: "seo-audit",
@@ -69,6 +117,8 @@ const catalogEntries = [
     category: "audit",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: ["ai-visibility-audit"],
   },
   {
     slug: "ai-visibility-audit",
@@ -76,6 +126,8 @@ const catalogEntries = [
     category: "audit",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: null,
+    requires: [],
   },
   {
     slug: "keyword-opportunity-research",
@@ -83,6 +135,8 @@ const catalogEntries = [
     category: "research",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "keyword-import",
@@ -90,6 +144,8 @@ const catalogEntries = [
     category: "setup-admin",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: "project-onboarding",
+    requires: ["provider-setup"],
   },
   {
     slug: "rank-tracking-report",
@@ -97,6 +153,8 @@ const catalogEntries = [
     category: "monitoring",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "weekly-report",
@@ -104,6 +162,8 @@ const catalogEntries = [
     category: "monitoring",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: null,
+    requires: [],
   },
   {
     slug: "alert-triage",
@@ -111,6 +171,8 @@ const catalogEntries = [
     category: "monitoring",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: null,
+    requires: [],
   },
   {
     slug: "backlink-profile-analysis",
@@ -118,6 +180,8 @@ const catalogEntries = [
     category: "links",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "provider-setup",
@@ -125,6 +189,8 @@ const catalogEntries = [
     category: "setup-admin",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: null,
+    requires: [],
   },
   {
     slug: "team-api-governance",
@@ -132,6 +198,8 @@ const catalogEntries = [
     category: "setup-admin",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: null,
+    requires: [],
   },
   {
     slug: "self-host-health",
@@ -139,6 +207,8 @@ const catalogEntries = [
     category: "setup-admin",
     status: "available",
     channels: { plugin: true, archive: true },
+    pack: "instance-diagnosis",
+    requires: ["provider-setup"],
   },
   {
     slug: "keyword-clustering",
@@ -146,6 +216,8 @@ const catalogEntries = [
     category: "research",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "competitor-analysis",
@@ -153,6 +225,8 @@ const catalogEntries = [
     category: "research",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "competitive-landscape",
@@ -160,6 +234,8 @@ const catalogEntries = [
     category: "research",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "ai-prompt-research",
@@ -167,6 +243,8 @@ const catalogEntries = [
     category: "ai-visibility",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
   {
     slug: "local-seo",
@@ -174,6 +252,8 @@ const catalogEntries = [
     category: "local",
     status: "available",
     channels: { plugin: true, archive: false },
+    pack: null,
+    requires: [],
   },
 ] as const satisfies readonly SkillCatalogEntry[];
 

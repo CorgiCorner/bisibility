@@ -26,6 +26,7 @@ import { CompetitorSnapshotCard } from "./CompetitorSnapshotCard";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
 import { RetrievedResultsOneCheck } from "./RetrievedResultsOneCheck";
+import { SnapshotDownloads } from "./SnapshotDownloads";
 import { SnapshotExtensionControl } from "./SnapshotExtensionControl";
 import { SnapshotExtensionResults } from "./SnapshotExtensionResults";
 
@@ -34,7 +35,7 @@ type CardProps = {
   projectRef?: string;
   extendSnapshotAction?: ExtendSnapshotAction;
   previewSnapshotExtensionAction?: PreviewSnapshotExtensionAction;
-  keyword?: Pick<KeywordRow, "location" | "device" | "engine">;
+  keyword?: Pick<KeywordRow, "location" | "device" | "engine"> & { keyword?: string };
   competitors?: readonly TrackedCompetitor[];
   ownDomain?: string;
   entries: readonly StoredResultsIndexEntry[];
@@ -106,7 +107,7 @@ function LegacyRetrievedResultsCard({
     void show(mode === "compare" ? [id, compareFrom] : [id]);
   }
   return (
-    <div className="grid min-w-0 gap-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4">
       <CompetitorSnapshotCard
         competitors={competitors}
         ownDomain={ownDomain}
@@ -119,7 +120,7 @@ function LegacyRetrievedResultsCard({
         formatDateTime={format.dateTime}
         error={error}
       />
-      <Card className="overflow-visible p-0" data-testid="retrieved-results-card" size="lg">
+      <Card className="min-w-0 overflow-visible p-0" data-testid="retrieved-results-card" size="lg">
         <RetrievedResultsHeader
           keyword={keyword}
           compareEnabled={compareEnabled}
@@ -140,6 +141,9 @@ function LegacyRetrievedResultsCard({
           onSelectTo={selectCheck}
           selected={selected}
         />
+        {mode === "one" && current?.tier === "full" ? (
+          <SnapshotDownloads keyword={keyword} results={current} />
+        ) : null}
         <section
           aria-label={t("snapshot")}
           className="h-[480px] overflow-y-auto overscroll-contain focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid sm:h-[520px]"
@@ -157,24 +161,26 @@ function LegacyRetrievedResultsCard({
             </div>
           ) : null}
           {mode === "one" && current?.tier === "full" && current.extension && projectRef ? (
-            <SnapshotExtensionControl
-              key={current.checkId}
-              checkId={current.checkId}
-              projectRef={projectRef}
-              action={extendSnapshotAction}
-              previewAction={previewSnapshotExtensionAction}
-              extension={current.extension}
-              formatDateTime={format.dateTime}
-              onReload={async () => {
-                const fetched = await loadResults([current.checkId]);
-                setLoaded((cache) => ({
-                  ...cache,
-                  ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
-                }));
-                const refreshed = fetched.find((entry) => entry.checkId === current.checkId);
-                return refreshed?.tier === "full" ? refreshed.extension : undefined;
-              }}
-            />
+            <div className="px-4 py-4 sm:px-5" data-testid="snapshot-extension-section">
+              <SnapshotExtensionControl
+                key={current.checkId}
+                checkId={current.checkId}
+                projectRef={projectRef}
+                action={extendSnapshotAction}
+                previewAction={previewSnapshotExtensionAction}
+                extension={current.extension}
+                formatDateTime={format.dateTime}
+                onReload={async () => {
+                  const fetched = await loadResults([current.checkId]);
+                  setLoaded((cache) => ({
+                    ...cache,
+                    ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
+                  }));
+                  const refreshed = fetched.find((entry) => entry.checkId === current.checkId);
+                  return refreshed?.tier === "full" ? refreshed.extension : undefined;
+                }}
+              />
+            </div>
           ) : null}
           {mode === "compare" && earlier && current ? (
             <RetrievedResultsCompare

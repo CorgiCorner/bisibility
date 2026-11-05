@@ -1,26 +1,31 @@
 import "server-only";
 
+import { awaitWithSignal } from "@/lib/async/abort";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import {
   consumeProviderLimit,
   ProviderRateLimitedError,
   writeCooldown,
 } from "@/lib/providers/rate-limit";
+import type { ProviderCredentials } from "@/lib/providers/types";
 import { googleResponseError } from "./google-failure";
 import {
   type GoogleApiErrorPayload,
   googleRateLimitScope,
   googleRetryAfterMs,
 } from "./google-quota";
+import {
+  cachedGoogleToken,
+  type GoogleTokenGrant,
+  invalidateGoogleAccessToken,
+  waitForGoogleToken,
+} from "./google-token-cache";
 
-// Shared runtime client for the Google analytics adapters (GSC + GA4). The OAuth
-// connect flow stores a refresh token; adapters mint short-lived access tokens on
-// demand here so no access token is ever persisted.
+// Shared GSC/GA4 client. Access tokens stay in memory; only refresh tokens are persisted.
 
 export type GoogleProviderId = "gsc" | "ga4";
 
-// Single chokepoint context: every GSC/GA4 data call passes provider + account
-// key so this module enforces one shared per-account budget.
+// GSC/GA4 data calls pass provider and account to enforce a shared account budget.
 export type GoogleFetchContext = {
   providerId: GoogleProviderId;
   accountKey: string;
@@ -34,8 +39,7 @@ const GA4_ACCOUNT_SUMMARIES_URL =
   "https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200";
 
 const GOOGLE_BASE_SCOPES = ["openid", "email"] as const;
-// Read-only webmasters: the app only reads properties, search analytics, sitemap
-// status, and URL inspection results - there is no sitemap-submit feature.
+// GSC scopes permit reads only, including sitemaps and URL inspections.
 const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 const GA4_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 
@@ -74,6 +78,7 @@ export function googleRedirectUri(origin: string): string {
 
 type GoogleTokenPayload = {
   access_token?: unknown;
+  expires_in?: unknown;
   refresh_token?: unknown;
   scope?: unknown;
   error?: unknown;
@@ -85,13 +90,20 @@ async function postToken(
   signal?: AbortSignal,
 ): Promise<GoogleTokenPayload | null> {
   signal?.throwIfAborted();
-  const response = await fetch(GOOGLE_TOKEN_URL, {
-    body,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    method: "POST",
-    ...(signal ? { signal } : {}),
-  });
-  const payload = (await response.json().catch(() => null)) as GoogleTokenPayload | null;
+  const response = await awaitWithSignal(
+    () =>
+      fetch(GOOGLE_TOKEN_URL, {
+        body,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        method: "POST",
+        ...(signal ? { signal } : {}),
+      }),
+    signal,
+  );
+  const payload = (await awaitWithSignal(
+    () => response.json().catch(() => null),
+    signal,
+  )) as GoogleTokenPayload | null;
   signal?.throwIfAborted();
   if (!response.ok) {
     throw googleResponseError(response.status, payload);
@@ -135,37 +147,56 @@ export async function refreshGoogleAccessToken(
   refreshToken: string | undefined,
   persistRefreshToken?: (refreshToken: string) => Promise<void>,
   signal?: AbortSignal,
+  cacheIdentity?: ProviderCredentials["tokenCacheIdentity"],
 ): Promise<string> {
+  signal?.throwIfAborted();
   if (!refreshToken) {
     throw new ProviderAuthError(
       "google",
       "Google connection is missing a refresh token. Reconnect the account.",
     );
   }
-  const payload = await postToken(
-    new URLSearchParams({
-      client_id: googleClientId(),
-      client_secret: googleClientSecret(),
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    }),
-    signal,
-  );
-  const accessToken = stringValue(payload?.access_token);
-  if (!accessToken) {
-    throw new Error("Google token refresh did not return an access token.");
-  }
-  const rotatedRefreshToken = stringValue(payload?.refresh_token);
-  if (rotatedRefreshToken && rotatedRefreshToken !== refreshToken) {
-    try {
-      await persistRefreshToken?.(rotatedRefreshToken);
-    } catch {
-      console.error("[google] rotated refresh token persistence failed", {
-        errorClass: "credential_persistence",
-      });
+  const clientId = googleClientId();
+  const clientSecret = googleClientSecret();
+  const exchange = async (exchangeSignal?: AbortSignal): Promise<GoogleTokenGrant> => {
+    const startedAt = Date.now();
+    const payload = await postToken(
+      new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+      exchangeSignal,
+    );
+    const accessToken = stringValue(payload?.access_token);
+    if (!accessToken) throw new Error("Google token refresh did not return an access token.");
+    const lifetime = payload?.expires_in;
+    return {
+      accessToken,
+      expiresAt:
+        typeof lifetime === "number" && Number.isSafeInteger(lifetime) && lifetime > 60
+          ? startedAt + (Math.min(lifetime, 3600) - 60) * 1000
+          : undefined,
+      rotatedRefreshToken: stringValue(payload?.refresh_token),
+    };
+  };
+  const pending = cacheIdentity
+    ? cachedGoogleToken({ identity: cacheIdentity, refreshToken, clientId, clientSecret }, exchange)
+    : exchange(signal);
+  const persisted = pending.then(async (grant) => {
+    if (grant.rotatedRefreshToken && grant.rotatedRefreshToken !== refreshToken) {
+      try {
+        await persistRefreshToken?.(grant.rotatedRefreshToken);
+      } catch {
+        console.error("[google] rotated refresh token persistence failed", {
+          errorClass: "credential_persistence",
+        });
+      }
     }
-  }
-  return accessToken;
+    return grant.accessToken;
+  });
+  return waitForGoogleToken(persisted, signal);
 }
 
 export async function googleApiFetch<T>(
@@ -174,10 +205,15 @@ export async function googleApiFetch<T>(
   init: RequestInit = {},
   context?: GoogleFetchContext,
 ): Promise<T> {
+  init.signal?.throwIfAborted();
   if (context) {
-    const gate = await consumeProviderLimit(context.providerId, undefined, {
-      accountKey: context.accountKey,
-    });
+    const gate = await awaitWithSignal(
+      () =>
+        consumeProviderLimit(context.providerId, undefined, {
+          accountKey: context.accountKey,
+        }),
+      init.signal,
+    );
     if (!gate.success) {
       throw new ProviderRateLimitedError(context.providerId, {
         accountKey: context.accountKey,
@@ -187,20 +223,23 @@ export async function googleApiFetch<T>(
   }
 
   init.signal?.throwIfAborted();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
-  });
-  const payload = (await response.json().catch(() => null)) as (T & GoogleApiErrorPayload) | null;
+  const response = await awaitWithSignal(
+    () =>
+      fetch(url, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...init.headers,
+        },
+      }),
+    init.signal,
+  );
+  const payload = (await awaitWithSignal(() => response.json().catch(() => null), init.signal)) as
+    | (T & GoogleApiErrorPayload)
+    | null;
   init.signal?.throwIfAborted();
   if (!response.ok) {
-    if (response.status === 401) {
-      throw googleResponseError(response.status, payload, context?.providerId);
-    }
     if (response.status === 429 && context) {
       const resetAt = writeCooldown(context.accountKey);
       throw new ProviderRateLimitedError(context.providerId, {
@@ -211,7 +250,11 @@ export async function googleApiFetch<T>(
         source: "provider",
       });
     }
-    throw googleResponseError(response.status, payload, context?.providerId);
+    const error = googleResponseError(response.status, payload, context?.providerId);
+    if (response.status === 401 || error instanceof ProviderAuthError) {
+      invalidateGoogleAccessToken(accessToken);
+    }
+    throw error;
   }
   return (payload ?? {}) as T;
 }

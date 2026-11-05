@@ -1,5 +1,4 @@
 import "server-only";
-
 import { createHmac } from "node:crypto";
 import type { LookupAddress } from "node:dns";
 import type { LookupFunction } from "node:net";
@@ -17,6 +16,7 @@ import { decryptSecret } from "@/lib/providers/crypto";
 import { resolveCanonicalOrigin } from "@/lib/seo/origin";
 import { Agent, type Dispatcher } from "undici";
 import type { TriggeredAlertDeliveryPayload } from "./alert-delivery-payload";
+import type { DeliveryCounts } from "./delivery-counts";
 import { DeliveryHttpError } from "./delivery-http-error";
 import { buildAlertFiredWebhookBody, buildWebhookTestBody } from "./webhook-envelope";
 import {
@@ -134,14 +134,13 @@ function pinnedAgent(vetted: WebhookResolvedAddress[]) {
   return new Agent({ connect: { lookup } });
 }
 
-export async function sendAlertEmail(to: string, payload: TriggeredAlertDeliveryPayload) {
-  const [user, project] = await Promise.all([
-    prisma.user.findUnique({ where: { email: to }, select: { id: true } }),
-    prisma.project.findUnique({ where: { publicId: payload.projectId }, select: { id: true } }),
-  ]);
-  if (!user || !project) throw new Error("Alert recipient is no longer available.");
+export async function sendAlertEmail(
+  recipient: { email: string; userId: string; projectId: string },
+  payload: TriggeredAlertDeliveryPayload,
+  beforeProviderSend?: (message: { to: string }) => Promise<void>,
+) {
   const url = notificationUnsubscribeUrl(
-    { userId: user.id, projectId: project.id, stream: "alert" },
+    { userId: recipient.userId, projectId: recipient.projectId, stream: "alert" },
     resolveCanonicalOrigin(),
   );
   const content = notificationUnsubscribeFooter(
@@ -153,10 +152,11 @@ export async function sendAlertEmail(to: string, payload: TriggeredAlertDelivery
   );
   await sendEmail({
     category: "bulk",
+    beforeProviderSend,
     from: alertsEmailFrom(),
     ...content,
     subject: `[bisibility] ${payload.headline}`,
-    to,
+    to: recipient.email,
     listUnsubscribeUrl: url,
   });
 }
@@ -249,9 +249,10 @@ export async function stampWebhookDelivery(endpointId: string) {
 export async function recordDeliveryAttempt(
   alertId: string,
   channel: AlertDeliveryChannel,
-  status: "failed" | "sent" | "skipped",
+  status: "failed" | "partial" | "sent" | "skipped" | "unknown",
   error: string | null,
   webhookEndpointId?: string,
+  counts?: DeliveryCounts,
 ) {
   const data = {
     attemptedAt: new Date(),
@@ -259,6 +260,7 @@ export async function recordDeliveryAttempt(
     error: error ? error.slice(0, MAX_DELIVERY_ERROR_LENGTH) : null,
     status,
     triggeredAlertId: alertId,
+    ...counts,
     ...(webhookEndpointId ? { webhookEndpointId } : {}),
   } satisfies Prisma.DeliveryAttemptUncheckedCreateInput;
 
@@ -266,12 +268,17 @@ export async function recordDeliveryAttempt(
     await prisma.deliveryAttempt.create({ data });
   } catch (deliveryAttemptError) {
     if (
-      !webhookEndpointId ||
       !(deliveryAttemptError instanceof Prisma.PrismaClientKnownRequestError) ||
       deliveryAttemptError.code !== "P2003"
     ) {
       throw deliveryAttemptError;
     }
+    const alert = await prisma.triggeredAlert.findUnique({
+      where: { id: alertId },
+      select: { id: true },
+    });
+    if (!alert) return;
+    if (!webhookEndpointId) throw deliveryAttemptError;
     const { webhookEndpointId: _deletedEndpointId, ...fallbackData } = data;
     await prisma.deliveryAttempt.create({ data: fallbackData });
   }

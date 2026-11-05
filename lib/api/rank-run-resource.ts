@@ -47,6 +47,10 @@ export function publicRankCheckRun(run: ReadRun, projectId: string) {
       run.blockedReason && /^[a-z0-9_.:-]{1,128}$/i.test(run.blockedReason)
         ? run.blockedReason
         : null,
+    expiry_blocked_reason:
+      run.expiryBlockedReason && /^[a-z0-9_.:-]{1,128}$/i.test(run.expiryBlockedReason)
+        ? run.expiryBlockedReason
+        : null,
     parent_run_id: run.parentRunId ? requireApiPublicId(run.parentRunId, "rcr") : null,
     cost_cents: run.costCents,
     usage: run.usage

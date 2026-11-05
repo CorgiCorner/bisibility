@@ -1,5 +1,6 @@
 import { domainMatches, normalizeDomain } from "@/lib/domains/normalize";
 import type { SerpDepth } from "@/lib/serp/constants";
+import { isGoogleRedirectUrl } from "./google-redirect";
 
 export const organicResultAnomalyCodes = [
   "organic_rank_missing",
@@ -38,7 +39,11 @@ type OrganicResultDecisionBase = {
 export type OrganicResultDecision =
   | (OrganicResultDecisionBase & { outcome: "match"; position: number; rankingUrl: string })
   | (OrganicResultDecisionBase & { outcome: "no_match" })
-  | (OrganicResultDecisionBase & { outcome: "indeterminate" });
+  | (OrganicResultDecisionBase & {
+      outcome: "indeterminate";
+      /** An unresolved redirect, conflicting domain, or host-less row blocks a false answer. */
+      unestablishedDestination: boolean;
+    });
 
 const MAX_ANOMALIES = 20;
 
@@ -54,20 +59,6 @@ export function organicResultNormalization(
 
 function candidateDomain(value: unknown) {
   return typeof value === "string" ? normalizeDomain(value) : null;
-}
-
-function unresolvedRedirect(value: unknown) {
-  if (typeof value !== "string") return false;
-  try {
-    const url = new URL(value);
-    return (
-      (url.protocol === "https:" || url.protocol === "http:") &&
-      normalizeDomain(url.hostname) === "google.com" &&
-      (url.pathname === "/goto" || url.pathname === "/goto/")
-    );
-  } catch {
-    return false;
-  }
 }
 
 function organicRank(value: unknown) {
@@ -107,19 +98,24 @@ export function decideOrganicResult(input: {
   const matches: NormalizedOrganicResult[] = [];
   let matchingRankUncertain = false;
   let usableCandidates = 0;
-  let unresolvedRank = Number.POSITIVE_INFINITY;
+  let unestablishedRank = Number.POSITIVE_INFINITY;
+
+  const noteUnestablished = (rank: unknown) => {
+    const ranked = organicRank(rank);
+    // A missing rank can occupy any position, including ahead of the best match.
+    unestablishedRank = Math.min(unestablishedRank, ranked.state === "valid" ? ranked.rank : 0);
+  };
 
   input.candidates.forEach((candidate, index) => {
-    if (unresolvedRedirect(candidate.url)) {
+    if (isGoogleRedirectUrl(candidate.url)) {
       addAnomaly(anomalies, "organic_result_unclassifiable", index);
-      const ranked = organicRank(candidate.rank);
-      // A redirect host cannot prove which destination occupies this position.
-      unresolvedRank = Math.min(unresolvedRank, ranked.state === "valid" ? ranked.rank : 0);
+      noteUnestablished(candidate.rank);
       return;
     }
     const classified = domainState(candidate, input.domain);
     if (classified.state !== "known") {
       addAnomaly(anomalies, "organic_result_unclassifiable", index);
+      noteUnestablished(candidate.rank);
       return;
     }
 
@@ -155,11 +151,12 @@ export function decideOrganicResult(input: {
   });
 
   const best = matches.sort((left, right) => left.rank - right.rank)[0];
-  const unresolvedCouldChangeResult =
-    unresolvedRank <= Math.min(input.depth, best?.rank ?? input.depth);
+  const unestablishedCouldChange =
+    unestablishedRank <= Math.min(input.depth, best?.rank ?? input.depth);
+  const sawUnestablished = unestablishedRank !== Number.POSITIVE_INFINITY;
   if (
     matchingRankUncertain ||
-    unresolvedCouldChangeResult ||
+    unestablishedCouldChange ||
     (input.candidates.length > 0 && usableCandidates === 0)
   ) {
     return {
@@ -168,6 +165,8 @@ export function decideOrganicResult(input: {
       outcome: "indeterminate",
       position: null,
       rankingUrl: null,
+      unestablishedDestination:
+        sawUnestablished && (unestablishedCouldChange || usableCandidates === 0),
     };
   }
 

@@ -2,7 +2,7 @@ import { renderWithInstallMessages as render } from "@/i18n/test-support/render-
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { InstallPageContent } from "./InstallPageContent";
-import { SKILLS } from "./install-catalog";
+import { SKILLS, skillsInstallCommand } from "./install-catalog";
 
 vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label }: { label?: string }) => <button aria-label={label} type="button" />,
@@ -149,7 +149,7 @@ describe("InstallPageContent", () => {
       expect(
         within(row).getByRole("button", { name: `Copy ${name} install command` }),
       ).toBeVisible();
-      const expected = `npx skills add CorgiCorner/bisibility --skill ${name}`;
+      const expected = skillsInstallCommand(name);
       const command = within(row).getByText(
         (_, element) =>
           element?.classList.contains("font-mono") === true && element.textContent === expected,
@@ -157,21 +157,25 @@ describe("InstallPageContent", () => {
       // Wraps at spaces instead of truncating, and keeps the flag on one line.
       expect(command).toHaveClass("[overflow-wrap:break-word]");
       expect(command).not.toHaveClass("truncate", "break-all");
-      expect(within(command).getByText(`--skill ${name}`)).toHaveClass(
-        "inline-block",
-        "max-w-full",
-      );
+      if (expected.includes("--skill")) {
+        expect(within(command).getByText(`--skill ${name}`)).toHaveClass(
+          "inline-block",
+          "max-w-full",
+        );
+      }
     }
     expect(screen.queryByText("project-onboarding")).not.toBeInTheDocument();
     expect(screen.queryByText("sitemap-change-watch")).not.toBeInTheDocument();
     expect(screen.queryByText("link-prospecting")).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        (_, element) =>
-          element?.classList.contains("font-mono") === true &&
-          element.textContent === "npx skills add CorgiCorner/bisibility",
-      ),
-    ).toHaveClass("font-mono");
+    // The package command, plus router rows whose install set is every skill.
+    const fullInstalls = screen.getAllByText(
+      (_, element) =>
+        element?.classList.contains("font-mono") === true &&
+        element.textContent === "npx skills add CorgiCorner/bisibility",
+    );
+    expect(fullInstalls).toHaveLength(
+      1 + SKILLS.filter(({ name }) => skillsInstallCommand(name) === skillsInstallCommand()).length,
+    );
     expect(
       screen.getByRole("button", { name: "Copy domain-onboarding install command" }),
     ).toBeVisible();

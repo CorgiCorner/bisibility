@@ -6,6 +6,7 @@ export async function closeProjectIncidentsSilently(
   tx: Prisma.TransactionClient,
   projectId: string,
   now?: Date,
+  options: { retainNotifications?: boolean } = {},
 ) {
   await tx.$queryRaw`SELECT id FROM projects WHERE id=${projectId} FOR UPDATE`;
   const project = await tx.project.findUnique({
@@ -32,6 +33,15 @@ export async function closeProjectIncidentsSilently(
     where: { projectId, state: "open" },
     data: { state: "resolved", resolvedAt: cutoff, openSlot: null },
   });
-  // Delete all incident notifications, including resolved rows that would otherwise lose their scope.
-  await tx.notification.deleteMany({ where: { projectId, type: "provider_incident" } });
+  if (options.retainNotifications) {
+    await tx.notification.updateMany({
+      where: { projectId, withdrawnAt: null },
+      data: { withdrawnAt: cutoff, version: { increment: 1 } },
+    });
+    await tx.$queryRaw`SELECT set_config('bisibility.retained_notification_projects',
+      (COALESCE(NULLIF(current_setting('bisibility.retained_notification_projects', true), ''), '{}')::jsonb
+        || jsonb_build_object(${projectId}::text, true))::text, true)`;
+  } else {
+    await tx.notification.deleteMany({ where: { projectId, type: "provider_incident" } });
+  }
 }

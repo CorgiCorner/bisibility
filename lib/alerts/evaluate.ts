@@ -15,9 +15,8 @@ import { alertPayload } from "./presentation";
 import type { AlertConditionTypeInput } from "./schema";
 import { activeAlertSnoozeWhere } from "./snooze";
 import {
-  hasOpenTriggeredAlert,
   isStatefulAlertCondition,
-  resolveClearedTriggeredAlerts,
+  settleStatefulIncident,
   statefulStateKnown,
 } from "./transitions";
 import { type AlertDeliveryMode, persistAndDeliverTriggeredAlert } from "./trigger-delivery";
@@ -157,7 +156,11 @@ export async function evaluateKeywordAlerts(
   keywordId: string,
   before: AlertRankSnapshot,
   after: AlertRankSnapshot,
-  options: { comparisonAllowed?: boolean; deliveryMode?: AlertDeliveryMode } = {},
+  options: {
+    comparisonAllowed?: boolean;
+    deliveryMode?: AlertDeliveryMode;
+    skipStatefulTransitions?: boolean;
+  } = {},
 ) {
   const comparisonAllowed = options.comparisonAllowed ?? true;
   const deliveryMode = options.deliveryMode ?? "immediate";
@@ -232,6 +235,9 @@ export async function evaluateKeywordAlerts(
   const triggered = [];
 
   for (const rule of targetRules) {
+    if (options.skipStatefulTransitions && isStatefulAlertCondition(rule.conditionType)) {
+      continue;
+    }
     if (
       !comparisonAllowed &&
       rule.conditionType !== "ctr_drop" &&
@@ -252,41 +258,44 @@ export async function evaluateKeywordAlerts(
       continue;
     }
     const matched = matchesAlertCondition(rule, beforeSnapshot, hydratedAfterSnapshot);
-    if (!matched) {
-      if (
-        isStatefulAlertCondition(rule.conditionType) &&
-        statefulStateKnown(rule.conditionType, hydratedAfterSnapshot)
-      ) {
-        await resolveClearedTriggeredAlerts(keyword.id, rule.id);
-      }
+    const persistMatched = (client?: Parameters<typeof persistAndDeliverTriggeredAlert>[1]) => {
+      const payload = alertPayload(rule, keyword, beforeSnapshot, hydratedAfterSnapshot);
+      const downtrend =
+        rule.conditionType === "downtrend"
+          ? downtrendSummary(hydratedAfterSnapshot.recentChecks)
+          : null;
+      return persistAndDeliverTriggeredAlert(
+        {
+          afterPosition: hydratedAfterSnapshot.position,
+          beforePosition: downtrend?.oldest ?? beforeSnapshot.position,
+          deliveryMode,
+          keyword,
+          payload,
+          rankCheckId: hydratedAfterSnapshot.rankCheckId ?? null,
+          rule,
+        },
+        client,
+      );
+    };
+    if (isStatefulAlertCondition(rule.conditionType)) {
+      const stateKnown = statefulStateKnown(rule.conditionType, hydratedAfterSnapshot);
+      if (!matched && !stateKnown) continue;
+      const alert = await settleStatefulIncident({
+        checkedAt: hydratedAfterSnapshot.checkedAt,
+        create: persistMatched,
+        keywordId: keyword.id,
+        matched,
+        ruleId: rule.id,
+        stateKnown,
+      });
+      if (alert) triggered.push(alert);
       continue;
     }
+    if (!matched) continue;
     // biome-ignore format: compact snooze guard keeps this module under the line cap.
     if (await prisma.triggeredAlert.findFirst({ select: { id: true }, where: { keywordId: keyword.id, ruleId: rule.id, ...activeAlertSnoozeWhere() } })) { continue; }
-    if (
-      isStatefulAlertCondition(rule.conditionType) &&
-      (await hasOpenTriggeredAlert(keyword.id, rule.id))
-    ) {
-      continue;
-    }
-
-    const payload = alertPayload(rule, keyword, beforeSnapshot, hydratedAfterSnapshot);
-    const downtrend =
-      rule.conditionType === "downtrend"
-        ? downtrendSummary(hydratedAfterSnapshot.recentChecks)
-        : null;
-    const storedBeforePosition = downtrend?.oldest ?? beforeSnapshot.position;
-    const alert = await persistAndDeliverTriggeredAlert({
-      afterPosition: hydratedAfterSnapshot.position,
-      beforePosition: storedBeforePosition,
-      deliveryMode,
-      keyword,
-      payload,
-      rankCheckId: hydratedAfterSnapshot.rankCheckId ?? null,
-      rule,
-    });
+    const alert = await persistMatched();
     if (!alert) continue;
-
     triggered.push(alert);
   }
 

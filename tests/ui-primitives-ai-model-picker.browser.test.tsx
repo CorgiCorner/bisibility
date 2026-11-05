@@ -74,7 +74,7 @@ it.each(cases)(
     );
     const unavailable = screen.getByRole("menuitem", { name: "Reasoning example" });
     expect(unavailable).toHaveAttribute("aria-disabled", "true");
-    expect(unavailable.textContent).toContain("Select actual provider cost");
+    expect(unavailable.textContent).toContain(ai.projectAiResearch.modelNeedsActualPayment);
     const menu = screen.getByRole("menu");
     const popup = menu.getBoundingClientRect();
     expect(Math.abs(popup.width - trigger.getBoundingClientRect().width)).toBeLessThan(1);

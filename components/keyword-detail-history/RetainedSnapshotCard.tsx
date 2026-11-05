@@ -10,11 +10,17 @@ import { HistoryResultKind } from "./HistoryResultKind";
 import { HistoryScope, sameHistoryScope } from "./HistoryScope";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
 import type { RetainedHistorySnapshot } from "./history-contract";
+import { determinateHistoryAbsence } from "./no-match-presentation";
 
 export function RetainedSnapshotCard({
   snapshot,
   timeZone,
-}: Readonly<{ snapshot: RetainedHistorySnapshot; timeZone: string }>) {
+  noMatchDepths = {},
+}: Readonly<{
+  snapshot: RetainedHistorySnapshot;
+  timeZone: string;
+  noMatchDepths?: Readonly<Record<string, number>>;
+}>) {
   const t = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
   const format = useFormatter();
   const observation = snapshot.observation;
@@ -32,7 +38,11 @@ export function RetainedSnapshotCard({
         <p className="m-0 mt-1 text-xs text-fg-muted">{t(`retention.${snapshot.detailState}`)}</p>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs">
           <span className="font-sans tabular-nums font-semibold">
-            <HistoryPosition key="historyposition-0" observation={observation} />
+            <HistoryPosition
+              key="historyposition-0"
+              observation={observation}
+              recordedDepth={noMatchDepths[observation.id]}
+            />
           </span>
           <span>
             {t("observedLabel")}{" "}
@@ -47,7 +57,13 @@ export function RetainedSnapshotCard({
           {t("expectedUrl", { value: observation.expectedUrlAtCheck ?? t("unknown") })}
         </p>
         <p className="m-0 mt-1 break-all text-xs text-fg-muted">
-          {t("rankingUrl", { value: observation.rankingUrl ?? t("unknown") })}
+          {t("rankingUrl", {
+            value:
+              observation.rankingUrl ??
+              (determinateHistoryAbsence(observation, noMatchDepths[observation.id])
+                ? t("noRankingUrl")
+                : t("unknown")),
+          })}
         </p>
         <p className="m-0 mt-1 text-xs text-fg-muted">
           {t("depthMetadata", {

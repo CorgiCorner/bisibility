@@ -60,3 +60,21 @@ it("names the disabled queued route instead of a generic wait", () => {
   expect(copy.description).toBe("Scheduled DataForSEO checks are turned off on this installation.");
   expect(copy.action).toBeNull();
 });
+
+it.each([
+  ["operation_unavailable", "Blocked: plan required"],
+  ["provider_account_blocked", "Blocked: verify provider"],
+])("labels %s", (reason, label) => {
+  expect(localizedBlockedRunCopy({ reason, deploymentMode: "cloud" }, t, "en").compact).toBe(label);
+});
+
+it("keeps other safe blocker codes visible without displaying arbitrary text", () => {
+  expect(
+    localizedBlockedRunCopy({ reason: "pricing_unavailable", deploymentMode: "cloud" }, t, "en")
+      .compact,
+  ).toBe("Blocked: pricing_unavailable");
+  expect(
+    localizedBlockedRunCopy({ reason: "private arbitrary text", deploymentMode: "cloud" }, t, "en")
+      .compact,
+  ).not.toContain("private arbitrary text");
+});

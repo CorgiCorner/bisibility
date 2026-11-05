@@ -2,13 +2,14 @@ import "server-only";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import { ownAdmission } from "@/lib/provider-usage/admission-extension";
-import { beginProviderTaskset } from "@/lib/provider-usage/batch-request-journal";
+import { beginProviderTaskset, queuedEvidenceId } from "@/lib/provider-usage/batch-request-journal";
 import { discardByokEvidence } from "@/lib/provider-usage/byok-evidence";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { DataForSeoQueuedSubmissionResult } from "@/lib/providers/serp/dataforseo-queued";
 import type { ProviderUsageObserver } from "@/lib/providers/usage";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
+import { activitySettlementBudget, type SettlementBudget } from "./queued-usage-budget";
 
 export type QueuedTaskUsageInput = {
   maxCostCents?: string;
@@ -22,12 +23,37 @@ export type QueuedTaskUsageJournal = {
   readonly pricedRequests?: readonly PricedRequest[];
   /** Withdraw every still-unknown row for tasks known not to have been sent. */
   discard(): Promise<void>;
-  /** Record the receipts the provider response explicitly accounts for; leave the rest unknown. */
-  settle(outcome: DataForSeoQueuedSubmissionResult): Promise<void>;
+  /**
+   * Record the receipts the provider response explicitly accounts for.
+   * Receipts that do not fit the remaining activity budget stay unknown and are returned.
+   */
+  settle(
+    outcome: DataForSeoQueuedSubmissionResult,
+    budget?: SettlementBudget,
+  ): Promise<QueuedUsageSettlement>;
   transportStarted(): Promise<void>;
 };
 
 type JournalEntry = { id: string; observer: ProviderUsageObserver };
+
+export type QueuedUsageSettlement = { deferred: readonly string[] };
+
+export class QueuedUsageSettlementError extends Error {
+  readonly deferred: readonly string[];
+
+  constructor(cause: unknown, deferred: readonly string[]) {
+    super("Queued usage settlement failed.", { cause });
+    this.name = "QueuedUsageSettlementError";
+    this.deferred = deferred;
+  }
+}
+
+type SettleTask = {
+  correlationId: string;
+  costCents: number | null;
+  failed: boolean;
+  providerRequestId?: string;
+};
 
 async function discardPending(client: PrismaClient, entries: Map<string, JournalEntry>) {
   const ids = [...entries.values()].map((entry) => entry.id);
@@ -39,31 +65,54 @@ async function discardPending(client: PrismaClient, entries: Map<string, Journal
   entries.clear();
 }
 
-async function settleKnown(
-  entries: Map<string, JournalEntry>,
-  outcome: DataForSeoQueuedSubmissionResult,
-) {
-  for (const task of outcome.accepted) {
-    const entry = entries.get(task.correlationId);
-    if (!entry || task.costCents === null) continue;
-    await entry.observer.settle(entry.id, {
-      cached: false,
+function outcomeReceipts(outcome: DataForSeoQueuedSubmissionResult): SettleTask[] {
+  return [
+    ...outcome.accepted.map((task) => ({
+      correlationId: task.correlationId,
       costCents: task.costCents,
       failed: false,
       providerRequestId: task.providerTaskId,
-      quantity: 1,
-    });
-  }
-  for (const task of outcome.failed) {
-    const entry = entries.get(task.correlationId);
-    if (!entry || task.costCents === null) continue;
-    await entry.observer.settle(entry.id, {
-      cached: false,
+    })),
+    ...outcome.failed.map((task) => ({
+      correlationId: task.correlationId,
       costCents: task.costCents,
       failed: true,
-      quantity: 1,
-    });
+      providerRequestId: undefined,
+    })),
+  ];
+}
+
+/**
+ * Each receipt settles in its own transaction. One failure must not leave the other attempted
+ * tasks unknown, so every receipt that fits the activity budget is attempted before the first
+ * failure is reported. The rest stay unknown for a later activity; this never posts a task.
+ */
+async function settleKnown(
+  entries: Map<string, JournalEntry>,
+  outcome: DataForSeoQueuedSubmissionResult,
+  budget: SettlementBudget = activitySettlementBudget(),
+): Promise<QueuedUsageSettlement> {
+  const deferred: string[] = [];
+  const failures: unknown[] = [];
+  for (const { correlationId, costCents, failed, providerRequestId } of outcomeReceipts(outcome)) {
+    const entry = entries.get(correlationId);
+    if (!entry || costCents === null) continue;
+    if (!budget.allowsAnother()) {
+      deferred.push(correlationId);
+      continue;
+    }
+    await entry.observer
+      .settle(entry.id, {
+        cached: false,
+        costCents,
+        failed,
+        ...(providerRequestId ? { providerRequestId } : {}),
+        quantity: 1,
+      })
+      .catch((error: unknown) => failures.push(error));
   }
+  if (failures.length > 0) throw new QueuedUsageSettlementError(failures[0], deferred);
+  return { deferred };
 }
 
 /**
@@ -125,7 +174,98 @@ export async function beginQueuedTaskUsageJournal(input: {
         }
       : {}),
     discard: () => discardPending(input.client, entries),
-    settle: (outcome) => settleKnown(entries, outcome),
+    settle: (outcome, budget) => settleKnown(entries, outcome, budget),
     transportStarted: () => ownAdmission.fence(input.client, taskset.grants, input.beforeFence),
   };
+}
+
+type ResumeTask = {
+  id: string;
+  costCents: number | { toString(): string } | null;
+  providerTaskId: string | null;
+  state: string;
+};
+
+/** Settle unknown receipts already stored for a submitted batch. Does not admit or post. */
+export async function resumeSubmittedQueuedUsage(input: {
+  client: PrismaClient;
+  connectionId: string;
+  projectId: string;
+  tasks: readonly ResumeTask[];
+}): Promise<QueuedUsageSettlement> {
+  const pending: Array<SettleTask & { id: string }> = [];
+  for (const task of input.tasks) {
+    if (task.costCents == null) continue;
+    const costCents = Number(task.costCents);
+    if (!Number.isFinite(costCents)) continue;
+    if (task.state !== "provider_failed" && !task.providerTaskId) continue;
+    const id = queuedEvidenceId(input.connectionId, task.id);
+    const row = await input.client.meteringUsageEvidence.findUnique({
+      select: { discarded: true, measurementStatus: true },
+      where: { id },
+    });
+    if (!row || row.discarded || row.measurementStatus !== "unknown") continue;
+    pending.push({
+      correlationId: task.id,
+      costCents,
+      failed: task.state === "provider_failed",
+      id,
+      providerRequestId:
+        task.state === "provider_failed" ? undefined : (task.providerTaskId ?? undefined),
+    });
+  }
+  if (pending.length === 0) return { deferred: [] };
+  const first = pending[0];
+  if (!first) return { deferred: [] };
+  const journal = createProviderRequestJournal(input.client, {
+    attribution: {
+      context: {
+        correlationId: first.correlationId,
+        feature: "rank_check",
+        projectId: input.projectId,
+        source: "worker",
+        trigger: "scheduled",
+      },
+      tag: "queued-usage-resume",
+    },
+    connectionId: input.connectionId,
+    projectId: input.projectId,
+    provider: "dataforseo",
+    queued: true,
+    unit: "cents",
+  });
+  return settleKnown(
+    new Map(
+      pending.map((receipt) => [
+        receipt.correlationId,
+        { id: receipt.id, observer: journal.observer },
+      ]),
+    ),
+    {
+      accepted: pending.flatMap((receipt) =>
+        receipt.failed || !receipt.providerRequestId
+          ? []
+          : [
+              {
+                correlationId: receipt.correlationId,
+                costCents: receipt.costCents,
+                providerTaskId: receipt.providerRequestId,
+                tag: "",
+              },
+            ],
+      ),
+      failed: pending.flatMap((receipt) =>
+        receipt.failed
+          ? [
+              {
+                correlationId: receipt.correlationId,
+                costCents: receipt.costCents,
+                message: "Queued provider task failed before usage settlement.",
+              },
+            ]
+          : [],
+      ),
+      unknown: [],
+    },
+  );
 }

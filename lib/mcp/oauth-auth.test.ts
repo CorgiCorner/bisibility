@@ -1,4 +1,5 @@
 import { APIError } from "better-auth/api";
+import { APIError as VerifierAPIError } from "better-call";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticateMcpOAuthRequest } from "./oauth-auth";
 
@@ -207,6 +208,24 @@ describe("MCP OAuth authentication", () => {
     });
     expect(mocks.userFindUnique).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403] as const)("recognizes verifier base errors with status %s", async (status) => {
+    mocks.verifyAccessToken.mockRejectedValue(new VerifierAPIError(status));
+    const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    new VerifierAPIError(500),
+    Object.assign(new Error("private detail"), { name: "APIError", statusCode: 401 }),
+    { statusCode: 403 },
+  ])("does not treat infrastructure or shaped errors as invalid credentials", async (error) => {
+    mocks.verifyAccessToken.mockRejectedValue(error);
+    const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 503 }) });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
   });
 
   it("fails closed with a safe response for unknown verifier failures", async () => {

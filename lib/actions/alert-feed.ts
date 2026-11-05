@@ -29,14 +29,21 @@ function requiredPublicId(value: string, prefix: "al" | "prj", resource: string)
   return value;
 }
 
+// The client opens this URL in a new window, so only absolute http(s) URLs are returned.
+function webUrl(value: unknown) {
+  if (typeof value !== "string" || value.length === 0 || !URL.canParse(value)) return null;
+  const url = new URL(value);
+  return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+}
+
 function serpUrlFromPayload(payload: Prisma.JsonValue | null | undefined) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return null;
   }
   const record = payload as Record<string, unknown>;
   for (const key of ["serpUrl", "serp_url", "url"]) {
-    const value = record[key];
-    if (typeof value === "string" && value.length > 0) {
+    const value = webUrl(record[key]);
+    if (value) {
       return value;
     }
   }
@@ -47,7 +54,7 @@ function googleSerpUrl(keyword: string) {
   return `https://www.google.com/search?q=${encodeURIComponent(keyword)}`;
 }
 
-// Mark every firing alert in the project as read (acknowledged), no schema change.
+// Legacy action name: acknowledges every firing alert for the project team.
 export async function markProjectAlertsRead(input: unknown) {
   const { projectId } = parseActionInput(projectScopeSchema, input);
   const actor = await getActionActor();
@@ -96,7 +103,7 @@ export async function getAlertCtaTargets(input: unknown) {
     keywordText: alert.keyword.text,
     serpUrl:
       serpUrlFromPayload(alert.payload) ??
-      alert.rankCheck?.rankingUrl ??
+      webUrl(alert.rankCheck?.rankingUrl) ??
       googleSerpUrl(alert.keyword.text),
     targetUrl: alert.keyword.targetUrl,
   };

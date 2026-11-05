@@ -42,6 +42,13 @@ const mocks = vi.hoisted(() => ({
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
     providerCostEntry: { create: vi.fn(), createMany: vi.fn() },
+    alertEvaluationIntent: {
+      create: vi.fn(async () => ({})),
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      upsert: vi.fn(async () => ({})),
+    },
     rankCheck: { create: vi.fn() },
     signal: { create: vi.fn() },
   },

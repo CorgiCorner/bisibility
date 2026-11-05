@@ -1251,6 +1251,8 @@ export type CoreMessages = {
         readonly authorization_required: "A new paid attempt needs project spending authority and normal admission.";
         readonly project_unavailable: "The original project or work is no longer available.";
         readonly proof_missing: "No sufficient retained provider proof. Keep the cost unknown and obtain native evidence.";
+        readonly provider_cost_pending: "Cost recovery is retrying. The provider has not yet returned a usable cost for this accepted task.";
+        readonly provider_cost_unrecoverable: "The provider cost of this accepted task could not be recovered. Review the reason, then keep the cost unknown or close it out as unknown.";
         readonly request_not_linked: "No original request is linked.";
         readonly result_context_changed: "The retained result cannot be restored to the current task context.";
         readonly result_expired: "The retained result has expired.";
@@ -2436,6 +2438,7 @@ export type CoreMessages = {
     };
     readonly drawer: {
       readonly allMarkets: "All markets";
+      readonly alreadyCreated: "This rule was already created. Your edits are still here.";
       readonly alwaysOn: "always on";
       readonly changePct: "Change %";
       readonly chooseTarget: "Choose target";
@@ -2458,12 +2461,16 @@ export type CoreMessages = {
       readonly ctrDrop: "CTR drop %";
       readonly defaultProjectDomain: "your project domain";
       readonly delivery: "Delivery";
+      readonly discard: "Discard changes";
+      readonly discardDetail: "Your unsaved rule changes will be lost.";
+      readonly discardTitle: "Discard unsaved changes?";
       readonly dropPositions: "Drop positions";
       readonly editTitle: "Edit alert rule";
       readonly email: "Email";
       readonly evaluation: "Evaluation: {mode}";
       readonly inAppFeed: "In-app feed";
       readonly intro: "Rules are evaluated after each completed rank check.";
+      readonly keepEditing: "Keep editing";
       readonly marketCount: "{count, number} {count, plural, one {market} other {markets}}";
       readonly markets: "Markets";
       readonly marketsAria: "Markets";
@@ -2475,11 +2482,14 @@ export type CoreMessages = {
       readonly push: "Mobile push";
       readonly recipients: "Recipients";
       readonly recipientsAria: "Alert email recipients";
+      readonly recipientsSummary: "Recipients: {recipients}";
       readonly reviewFields: "Review the highlighted fields.";
       readonly ruleName: "Rule name";
-      readonly saveError: "Alert rule could not be saved.";
+      readonly saveAndEnable: "Save and enable";
+      readonly savedRule: "Saved rule";
+      readonly saveError: "Save status is unknown. Check the rule list or retry.";
       readonly savePaused: "Save paused";
-      readonly saveRule: "Save rule";
+      readonly savePending: "Saving is still in progress. Wait for the result before closing.";
       readonly scope: "Scope";
       readonly scopeAll: "All keywords";
       readonly scopeKeyword: "Keyword";
@@ -2516,6 +2526,9 @@ export type CoreMessages = {
       readonly setupTitle: "No alerts yet";
     };
     readonly feed: {
+      readonly acceptanceUnknown: "Acceptance unknown";
+      readonly acknowledgeConfirm: "Acknowledge all firing alerts for the whole team in project {project}? Alerts to acknowledge: {count, number}.";
+      readonly acknowledgedBy: "Acknowledged by {name}, {time}";
       readonly actionCompetitor: "Compare the competing result against your ranking page.";
       readonly actionCtrDrop: "Review the search snippet and query intent in Google Search Console.";
       readonly actionDefault: "Review the page that moved and check the latest SERP.";
@@ -2528,12 +2541,15 @@ export type CoreMessages = {
       readonly all: "All";
       readonly attempt: "{channel} {status}{endpoint, select, none {} other { ({endpoint})}}{error, select, none {} other {: {error}}} / {when}";
       readonly attemptStatusFailed: "Failed";
+      readonly attemptStatusPartial: "Partial";
       readonly attemptStatusPending: "Pending";
       readonly attemptStatusSent: "Sent";
       readonly attemptStatusSkipped: "Skipped";
       readonly attemptStatusUnknown: "Status: {status}";
       readonly audit: "View audit log";
+      readonly cancel: "Cancel";
       readonly ctaCompareSerp: "Compare SERP";
+      readonly ctaError: "Could not open alert details. Try again.";
       readonly ctaOpenKeyword: "Open keyword";
       readonly ctaSetTargetUrl: "Set target URL";
       readonly ctaSetWinnerUrl: "Set winner URL";
@@ -2541,6 +2557,7 @@ export type CoreMessages = {
       readonly daysAgo: "{count, number}d ago";
       readonly deletedEndpoint: "Deleted endpoint";
       readonly delivery: "Delivery: {state}";
+      readonly deliveryCounts: "{accepted, number}/{total, number} accepted ({failed, number} failed, {unknown, number} unknown)";
       readonly deviceDesktop: "Desktop";
       readonly deviceMobile: "Mobile";
       readonly empty: "No alerts match this filter.";
@@ -2570,29 +2587,33 @@ export type CoreMessages = {
       readonly last48Hours: "last 48h";
       readonly loaded: "{count, number} loaded";
       readonly loadMore: "Load 20 more";
-      readonly markAllRead: "Mark all read";
-      readonly markReadError: "Could not mark alerts read. Try again.";
+      readonly markAllRead: "Acknowledge all";
+      readonly markReadError: "Could not acknowledge alerts. Try again.";
       readonly metadataEngineGoogle: "Google";
       readonly metadataModuleRank: "Rank tracking";
       readonly metadataSourceRank: "Rank tracking";
       readonly minutesAgo: "{count, number}m ago";
       readonly noRank: "No rank";
+      readonly partialDelivery: "Partial acceptance";
       readonly rankingUrl: "Ranking URL: {url}";
       readonly rankPosition: "#{position, number}";
+      readonly readOnly: "You have read-only access to this project.";
       readonly severityInfo: "Info";
       readonly severityUrgent: "Urgent";
       readonly severityWarning: "Warning";
       readonly showing: "Showing {shown, number} of {total, number} {total, plural, one {loaded alert} other {loaded alerts}}";
-      readonly snooze: "Snooze";
+      readonly snooze: "Snooze for 24 h";
+      readonly snoozedUntil: "Snoozed until {time}";
       readonly snoozeError: "Could not snooze alert. Try again.";
       readonly targetUrl: "Target URL: {url}";
+      readonly teamMember: "team member";
       readonly template: "Create from template";
       readonly trackingBlockedDetail: "Existing alert configuration and history are preserved, but rules cannot evaluate until a keyword is tracked.";
       readonly trackingBlockedTitle: "No keywords are currently tracked.";
       readonly triggered: "Triggered alerts";
       readonly unknownKeyword: "Unknown keyword";
-      readonly unread: "Unread";
-      readonly unreadAlerts: "Unread alerts";
+      readonly unread: "Unacknowledged";
+      readonly unreadAlerts: "Unacknowledged alerts";
       readonly urgent: "Urgent";
     };
     readonly rules: {
@@ -2608,6 +2629,7 @@ export type CoreMessages = {
       readonly conditionThreshold: "Rank crosses below #{position, number}";
       readonly conditionUrlMismatch: "Ranking URL differs from target URL";
       readonly delete: "Delete {name}";
+      readonly deleteUnconfirmed: "Could not confirm whether this rule was deleted. Refresh to check its current state.";
       readonly depthConflict: "won't fire below top {depth, number}";
       readonly description: "Rules are evaluated after rank checks. Each rule allows {limit, number} delivery batches per UTC day, and one batch can fan out across every selected destination.";
       readonly edit: "Edit {name}";
@@ -3434,15 +3456,21 @@ export type CoreMessages = {
       readonly budgetDetail: "Spent {spent, number, ::currency/USD} of {cap, number, ::currency/USD} this month. <budgetLink>Raise the budget</budgetLink>";
       readonly budgetReached: "Budget reached";
       readonly budgetTitle: "Rank checks paused - monthly budget reached.";
+      readonly connectionSettings: "Connection settings";
       readonly failedChecks: "{count, plural, one {# rank check failed} other {# rank checks failed}} in the last 24 hours.";
       readonly kpisAriaLabel: "Overview KPIs";
+      readonly organicDepthNotCoveredDetail: "{keyword}: The returned organic results did not cover the requested depth, so no position or absence could be established.";
+      readonly organicResultUnclassifiableDetail: "{keyword}: The provider returned a search result we could not classify, so this check has no position.";
       readonly providerAccountRestrictedDetail: "{keyword}: The provider has restricted access to this account. Review the account in the provider dashboard or contact their support, then try again.";
       readonly providerAuthDetail: "{keyword}: The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
       readonly providerBillingDetail: "{keyword}: The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.";
       readonly providerCapacityUnavailableDetail: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
       readonly providerRateLimitedDetail: "{keyword}: The rank check could not run because the provider is temporarily rate limited. Try again in a few minutes.";
       readonly providerTransientDetail: "{keyword}: The rank check could not run because the provider is temporarily unavailable. Try again in a few minutes.";
+      readonly providerUnresolvedRedirectsDetail: "The provider returned links we could not resolve, so this check has no position.";
       readonly rankCheckFailedDetail: "{keyword}: The rank check could not run because of a provider error. Try again, or view check details for more information.";
+      readonly verifyConnectionDetail: "Checks that need this connection are deferred until it is verified. A free account check runs automatically, or you can review the connection now.";
+      readonly verifyConnectionTitle: "Verify your {provider} connection";
       readonly viewAllKeywords: "View all keywords";
       readonly viewCheckRuns: "View check runs";
     };
@@ -5492,6 +5520,7 @@ export type CoreMessages = {
         readonly chartLoaded: "{loaded} of {total} observations loaded; {gaps} gaps; {boundaries} methodology boundaries";
         readonly chartMeaning: "Dates use the chosen time basis. Lines join qualified observations only within the same captured methodology; missing data has no synthetic rank.";
         readonly chartPartial: "Only loaded points are shown. Read all pages before connecting the complete window.";
+        readonly checkedDepth: "Checked top {depth, number}";
         readonly columns: {
           readonly absoluteRank: "Absolute rank";
           readonly capturedScope: "Captured scope";
@@ -5570,13 +5599,17 @@ export type CoreMessages = {
         readonly noPair: "No comparable pair";
         readonly noPositionsDescription: "No confirmed positions are available for this period.";
         readonly noQualifiedPoints: "No positions to display";
+        readonly noRankingUrl: "No ranking URL - not in the requested results";
+        readonly noRankToCompare: "No ranked result to compare";
         readonly noRecordsDescription: "Run a check or choose another date range.";
         readonly noRetainedItems: "No normalized result items were retained; the recorded position and history are preserved.";
+        readonly notInTop: "Not in top {depth, number}";
         readonly observations: "Observations";
         readonly observationsTable: "Recorded observations";
         readonly observedLabel: "Observed";
         readonly openObservation: "Open saved observation {id}";
         readonly openSnapshot: "Open saved check";
+        readonly organicDepthNotCovered: "The returned organic results did not cover the requested depth, so no position or absence could be established.";
         readonly otherResultKind: "Other result type (code: {value})";
         readonly ownership: {
           readonly competitor: "Ownership: competitor identity";
@@ -5630,8 +5663,9 @@ export type CoreMessages = {
       };
       readonly results: {
         readonly aboveYou: "{count, number} above you";
+        readonly aiContentNotLoaded: "AI overview present, content not loaded";
         readonly aiPresent: "Your position counts organic results only. An AI overview sat above them at this check.";
-        readonly aiUnknown: "This provider does not report AI overviews, so this check cannot say whether one appeared.";
+        readonly aiUnknown: "AI overview presence was not recorded for this check.";
         readonly belowYou: "{count, number} below you";
         readonly compactComparison: "A compact record cannot be compared against a full one. Comparison stays available between checks that both hold full detail.";
         readonly compactDescription: "Compact record. One row per domain with its best position survived; titles, URLs, page features and unretrieved positions did not.";
@@ -5653,6 +5687,8 @@ export type CoreMessages = {
         readonly countryLevelTooltip: "The provider could not retrieve city-level results for this check, so the position may not be comparable with city history.";
         readonly daysAgo: "{days, number} days ago";
         readonly description: "What Google returned around your result, kept from the moment each check ran.";
+        readonly downloadCsv: "Download CSV";
+        readonly downloadJson: "Download JSON";
         readonly earlierCheck: "Earlier check";
         readonly earlierThanFrom: "earlier than From";
         readonly extension: {
@@ -5766,7 +5802,12 @@ export type CoreMessages = {
         readonly laterThanTo: "later than To";
         readonly loadFailed: "Stored results could not be loaded. Try again.";
         readonly loading: "Loading stored results...";
+        readonly missingPositions: "{count, plural, one {# of {depth, number} positions was not returned: {ranks}} other {# of {depth, number} positions were not returned: {ranks}}}";
+        readonly missingRank: "#{position, number} not returned by the provider";
+        readonly missingStoppedRank: "#{position, number} not fetched after finding your domain";
+        readonly missingStoredRank: "#{position, number} has no stored result";
         readonly needTwo: "At least two stored checks are needed to compare.";
+        readonly normalizedDownloadNote: "Stored normalized data. Completed checks do not retain the provider's full response.";
         readonly noStoredDescription: "This check ran on {date}, before results were stored. Its position, and the history built from it, are unaffected.";
         readonly noStoredTitle: "No stored results for this check";
         readonly notFound: "not found";
@@ -5783,6 +5824,7 @@ export type CoreMessages = {
         readonly purged: "purged by retention";
         readonly recentChecks: "Recent checks";
         readonly resultAria: "Position {position, number}, {target}";
+        readonly resultIndeterminate: "Rank indeterminate: requested depth not covered";
         readonly retained: "top {count, number} kept";
         readonly retentionTip: "Hosted workspaces keep full detail for a fixed window. Self hosted instances keep it for as long as you keep the database.";
         readonly retrieved: "{retrieved, number}{requested, select, empty {} other { of {requested}}} retrieved";
@@ -7378,13 +7420,16 @@ export type CoreMessages = {
         readonly marketInactiveDescription: "This keyword's market is paused, so the check was stopped before it cost anything.";
         readonly noProvider: "No working provider";
         readonly noProviderDescription: "Review the selected data source in Providers to start this run.";
+        readonly planRequired: "Blocked: plan required";
         readonly providerUnavailable: "Provider unavailable";
         readonly providerUnavailableDescription: "The provider isn't reachable right now. The run starts on its own once it reconnects.";
+        readonly reason: "Blocked: {reason}";
         readonly reviewUsage: "Review budget and usage";
         readonly reviewUsageDescription: "This run is blocked. Review usage and any unresolved accounting before trying again. A monthly reset may not resolve the issue.";
         readonly targetPaused: "Paused target - resumes when you unpause it";
         readonly usageUnconfirmed: "Usage needs confirmation";
         readonly usageUnconfirmedDescription: "Earlier usage has not been confirmed. Review usage before trying again.";
+        readonly verifyProvider: "Blocked: verify provider";
         readonly waiting: "Waiting to start";
         readonly waitingDescription: "Review what is preventing this run from starting.";
         readonly workerCloudDescription: "The background worker isn't reachable right now. The run starts on its own once it reconnects.";
@@ -7403,12 +7448,14 @@ export type CoreMessages = {
       };
       readonly cancelling: "Cancelling";
       readonly cancelRun: "Cancel run";
+      readonly connectionVerified: "Connection verified. These checks remain deferred. The next scheduled run can use this connection.";
       readonly copyParentRunId: "Copy parent run ID";
       readonly copyRunId: "Copy run ID {id}";
       readonly cost: "Cost";
       readonly counters: {
         readonly cancelledNote: "stopped before sending";
-        readonly completedNote: "positions written";
+        readonly checkedRanked: "{checked, number} checked, {ranked, number} ranked";
+        readonly completedNote: "checks completed";
         readonly deferredNote: "retry on the next run";
         readonly failedNote: "no position written";
         readonly notTerminal: "waiting or running";
@@ -7516,6 +7563,7 @@ export type CoreMessages = {
         readonly estimate: "estimate";
         readonly estimated: "Estimated cost";
         readonly estimateWithCost: "estimate {cost}";
+        readonly executedBy: "Executed provider";
         readonly finished: "Finished {time}";
         readonly firstCheck: "First check in";
         readonly noRateYet: "no rate yet";
@@ -7603,10 +7651,13 @@ export type CoreMessages = {
         readonly shortMinutes: "{count, number}m";
       };
       readonly remaining: "Remaining";
+      readonly retriedIn: "Retried in {id}";
       readonly retry: "Retry";
       readonly retryDeferred: "Retry {count, number} deferred {count, plural, one {target} other {targets}}";
       readonly retryFailed: "Retry {count, number} failed {count, plural, one {target} other {targets}}";
+      readonly retryLinks: "Related runs";
       readonly retryNow: "Retry now";
+      readonly retryOf: "Retry of {id}";
       readonly retryReview: {
         readonly cancel: "Cancel";
         readonly confirm: "Retry these checks";
@@ -7682,7 +7733,12 @@ export type CoreMessages = {
       };
       readonly target: "{count, plural, one {# target} other {# targets}}";
       readonly targetPresentation: {
+        readonly costNotRecorded: "Cost not recorded";
+        readonly coverageUnknown: "Coverage unknown";
+        readonly fallback: "{failed} failed ({detail}), completed with {completed}";
         readonly note: "Note";
+        readonly notInTop: "Not in top {depth, number}";
+        readonly organicDepthNotCovered: "The returned organic results did not cover the requested depth, so no position or absence could be established.";
         readonly providerAuth: "Provider credentials need to be reconnected.";
         readonly providerBilling: "The provider account needs funds before this check can run.";
         readonly providerCapacityUnavailable: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
@@ -7694,6 +7750,7 @@ export type CoreMessages = {
         readonly sendUnconfirmed: "Result not confirmed; not retried to avoid duplicate usage.";
         readonly skippedBeforeStart: "Skipped before start";
         readonly stoppedAfterStart: "Stopped after starting";
+        readonly waiting: "Waiting";
       };
       readonly targets: "{count, plural, one {# target} other {# targets}}";
       readonly targetsInRun: "Targets in this run";
@@ -7701,6 +7758,7 @@ export type CoreMessages = {
       readonly unknownDate: "an unknown date";
       readonly updateFailed: "The run could not be updated. Try again.";
       readonly usageNotRecorded: "Not recorded";
+      readonly verifyConnection: "Verify your {provider} connection";
       readonly you: "You";
     };
     readonly schedules: {
@@ -7990,6 +8048,7 @@ export type CoreMessages = {
       readonly actual: "actual";
       readonly actualCost: "Cost {cost}";
       readonly aiTrackingRun: "Prompt Tracker measurement";
+      readonly blockReason: "Blocked: {reason}";
       readonly connectProvider: "Connect a supporting provider";
       readonly cost: "Cost";
       readonly costUnknown: "Cost not confirmed";
@@ -8003,6 +8062,7 @@ export type CoreMessages = {
       readonly notStarted: "Not started";
       readonly operation: "Task";
       readonly plannedUpdateFailed: "The planned run could not be updated. Try again.";
+      readonly planRequired: "Blocked: plan required";
       readonly progress: "Progress";
       readonly progressValue: "{completed, number} / {total, number}";
       readonly projectRuns: "Project runs";
@@ -8030,6 +8090,7 @@ export type CoreMessages = {
       readonly unit: "Unit";
       readonly updatingPlannedRun: "Updating planned run";
       readonly usageUnconfirmed: "Usage needs confirmation";
+      readonly verifyProvider: "Blocked: verify provider";
       readonly workerUnavailable: "Worker unavailable";
     };
     readonly timeline: {
@@ -9498,10 +9559,10 @@ export type CoreMessages = {
       readonly inApp: "In-app";
       readonly invite: "Invite";
       readonly providerIncident: "Provider incidents";
-      readonly saveError: "Preferences could not be saved.";
+      readonly saveError: "Save status could not be confirmed. Showing the saved preferences.";
       readonly title: "Channels";
       readonly unavailable: "{label} is not available";
-      readonly unavailableHelp: "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week.";
+      readonly unavailableHelp: "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week. Invitation emails are transactional and sent to the invitee; these preferences do not control them.";
       readonly weeklyReport: "Weekly report";
     };
     readonly checks: {
@@ -10713,6 +10774,10 @@ export type CoreMessages = {
         readonly deleteAccountDangerLabel: "Delete account";
         readonly deleteAccountTitle: "Delete account";
         readonly deleteAccountToastMessage: "Account deleted";
+        readonly deleteAlertRuleBody: "Deleting this rule also deletes its alert history. This cannot be undone.";
+        readonly deleteAlertRuleDangerLabel: "Delete rule";
+        readonly deleteAlertRuleTitle: "Delete alert rule";
+        readonly deleteAlertRuleToastMessage: "Alert rule deleted";
         readonly deleteBulkBody: "Remove the selected keywords and their history. This cannot be undone.";
         readonly deleteBulkDangerLabel: "Delete keywords";
         readonly deleteBulkTitle: "Delete selected keywords";

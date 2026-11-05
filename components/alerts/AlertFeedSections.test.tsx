@@ -77,7 +77,7 @@ describe("UnreadSummary", () => {
   it("uses simple color dots for severity legend entries", () => {
     render(<UnreadSummary alerts={alerts} readIds={new Set()} />);
 
-    const summary = screen.getByText("Unread alerts").parentElement;
+    const summary = screen.getByText("Unacknowledged alerts").parentElement;
     expect(summary).not.toBeNull();
     expect(summary?.querySelectorAll("svg")).toHaveLength(0);
 

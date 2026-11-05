@@ -93,6 +93,9 @@ export default async function AlertsPage({ params, searchParams }: Readonly<Aler
           hasTrackedKeywords={active.keywordCount > 0}
           projectDomain={view.project.domain}
           projectId={view.project.id}
+          projectName={view.project.name}
+          unacknowledgedCount={feedStats.unacknowledgedCount}
+          snoozedAlertIds={feedStats.snoozedAlertIds}
           projectRef={access.publicId}
           rules={view.rules}
           snoozedInWindowCount={feedStats.snoozedInWindowCount}

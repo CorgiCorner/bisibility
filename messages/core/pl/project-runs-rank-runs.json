@@ -135,7 +135,10 @@
         "reviewUsage": "Sprawdź budżet i zużycie",
         "reviewUsageDescription": "Wykonanie jest zablokowane. Sprawdź zużycie i nierozliczone operacje przed ponowieniem. Reset miesiąca może nie rozwiązać problemu.",
         "usageUnconfirmed": "Zużycie wymaga potwierdzenia",
-        "usageUnconfirmedDescription": "Wcześniejsze zużycie nie zostało potwierdzone. Sprawdź je przed ponowieniem."
+        "usageUnconfirmedDescription": "Wcześniejsze zużycie nie zostało potwierdzone. Sprawdź je przed ponowieniem.",
+        "planRequired": "Blocked: plan required",
+        "verifyProvider": "Blocked: verify provider",
+        "reason": "Blocked: {reason}"
       },
       "cancelDialog": {
         "body": "Anulowanie dotyczy tylko tego przebiegu. Nie zmienia harmonogramu ani nie usuwa ukończonych wyników.",
@@ -148,12 +151,13 @@
       },
       "counters": {
         "cancelledNote": "zatrzymano przed wysłaniem",
-        "completedNote": "zapisano pozycje",
+        "completedNote": "ukończone sprawdzenia",
         "deferredNote": "ponowienie w kolejnym przebiegu",
         "failedNote": "nie zapisano pozycji",
         "notTerminal": "oczekujące lub w trakcie",
         "skippedBeforeStart": "{count, plural, one {# pominięty przed startem} few {# pominięte przed startem} many {# pominiętych przed startem} other {# pominiętego przed startem}}",
-        "skippedOrBlocked": "Pominięte lub zablokowane: {count}"
+        "skippedOrBlocked": "Pominięte lub zablokowane: {count}",
+        "checkedRanked": "Sprawdzono {checked, number}, sklasyfikowano {ranked, number}"
       },
       "deferral": {
         "budget_exhausted": {
@@ -267,7 +271,8 @@
         "startsIn": "Start",
         "startsWithinMinutes": "start w ciągu {count, number} min od zaplanowanej godziny",
         "waitingToStart": "Oczekiwanie na start",
-        "waitingForWorker": "Oczekiwanie na workera"
+        "waitingForWorker": "Oczekiwanie na workera",
+        "executedBy": "Dostawca wykonujący sprawdzenia"
       },
       "filters": {
         "all": "Wszystkie",
@@ -331,7 +336,13 @@
         "sendUnconfirmed": "Wynik niepotwierdzony; bez ponowienia, aby uniknąć podwójnego zużycia.",
         "stoppedAfterStart": "Zatrzymano po rozpoczęciu",
         "providerCapacityUnavailable": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy.",
-        "scheduleChanged": "Harmonogram się zmienił. Anulowano przed rozpoczęciem."
+        "costNotRecorded": "Koszt nie został zapisany",
+        "scheduleChanged": "Harmonogram się zmienił. Anulowano przed rozpoczęciem.",
+        "organicDepthNotCovered": "Zwrócone wyniki organiczne nie objęły wymaganej głębokości, więc nie udało się ustalić pozycji ani potwierdzić jej braku.",
+        "waiting": "Oczekiwanie",
+        "notInTop": "Poza pierwszą {depth, number}",
+        "fallback": "{failed}: błąd ({detail}), ukończono przez {completed}",
+        "coverageUnknown": "Pokrycie nieznane"
       },
       "operations": "Operacje",
       "usageNotRecorded": "Brak danych",
@@ -347,6 +358,8 @@
         "desktop": "Komputer",
         "mobile": "Telefon"
       },
+      "verifyConnection": "Zweryfikuj połączenie z {provider}",
+      "connectionVerified": "Połączenie zweryfikowane. Te sprawdzenia pozostają odroczone. Następne zaplanowane zadanie może użyć tego połączenia.",
       "sealedAccountPaused": "Zatwierdzony dostawca jest wstrzymany. Rozpocznij nowe zadanie, aby przed kolejną płatną próbą zobaczyć nowy podgląd kosztów.",
       "startNewRun": "Rozpocznij nowe zadanie",
       "accountBlock": {
@@ -355,7 +368,10 @@
         "provider_account_restricted": "{provider}: nie wysłano z powodu ograniczenia dostępu.",
         "not_verified": "{provider}: nie wysłano, ponieważ konto nie zostało zweryfikowane.",
         "accounting_review": "{provider}: nie wysłano w oczekiwaniu na rozliczenie."
-      }
+      },
+      "retryLinks": "Powiązane uruchomienia",
+      "retryOf": "Ponowienie uruchomienia {id}",
+      "retriedIn": "Ponowiono w {id}"
     }
   }
 }

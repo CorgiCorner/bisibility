@@ -84,7 +84,7 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
                 <span className="mt-1 block text-xl font-semibold leading-none tabular-nums text-fg">
                   {new Intl.NumberFormat(locale).format(counter.count)}
                 </span>
-                <span className="mt-[5px] block truncate text-[10px] leading-[1.5] text-fg-muted">
+                <span className="mt-[5px] block text-[10px] leading-[1.5] text-fg-muted">
                   {counter.note}
                 </span>
                 {counter.kind === "deferred" && run.sharedDeferralCode ? (

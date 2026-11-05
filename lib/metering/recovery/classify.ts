@@ -1,5 +1,6 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { RECOVERY_ERROR_CODES, type RecoveryErrorCode } from "@/lib/provider-usage/recovery-error";
+import { queuedCostOperatorState } from "@/lib/rank-check/queued-cost-evidence";
 import type { RecoveryCase } from "./contract";
 import type { RecoveryRecord } from "./records";
 import { type RecoveryTokenScope, recoveryHash, sealRecoveryCase } from "./tokens";
@@ -19,6 +20,7 @@ export function recoveryBasis(row: RecoveryRecord) {
     row.nativeId,
     row.receipt,
     row.proof,
+    queuedCostOperatorState(row.costEvidence),
     row.rankStatus,
     row.rankUpdatedAt?.toISOString(),
     row.resultExpiresAt?.toISOString(),
@@ -79,7 +81,14 @@ export function classifyRecoveryRecord(
     action = "recover_proof";
   else if (!row.accountingUnknown && row.rankCheckId && row.rankStatus !== "completed")
     blockedReason = "authorization_required";
-  else blockedReason = "proof_missing";
+  else {
+    const costState = queuedCostOperatorState(row.costEvidence);
+    blockedReason = costState
+      ? costState.state === "pending"
+        ? "provider_cost_pending"
+        : "provider_cost_unrecoverable"
+      : "proof_missing";
+  }
   if (row.resultBlockedCode && !action) blockedReason = "result_context_changed";
   if (!row.projectExists && (row.kind === "run" || row.kind === "result")) {
     action = null;

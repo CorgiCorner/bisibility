@@ -1,15 +1,16 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { runAcceptedTasksetWrite } from "@/lib/provider-usage/taskset-transaction";
 import type { QueuedDeploymentExecution } from "@/lib/providers/execution-extension-types";
-import { type DataForSeoQueuedSubmissionResult } from "@/lib/providers/serp/dataforseo-queued";
+import type { DataForSeoQueuedSubmissionResult } from "@/lib/providers/serp/dataforseo-queued";
 
 export async function persistQueuedSubmissionResult(
   batchId: string,
   result: DataForSeoQueuedSubmissionResult,
   execution: QueuedDeploymentExecution | null,
 ) {
-  await prisma.$transaction(async (tx) => {
+  await runAcceptedTasksetWrite(prisma, async (tx) => {
     for (const task of result.accepted) {
       const duplicate =
         execution &&

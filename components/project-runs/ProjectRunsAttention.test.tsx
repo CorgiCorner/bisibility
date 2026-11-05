@@ -10,6 +10,7 @@ import {
   timelineFixtureRuns,
   timelineProjectRef,
 } from "./project-runs-timeline.fixtures";
+import { RunStatusSummary } from "./RunStatusSummary";
 import { RunTimelineSection } from "./RunTimelineSection";
 
 const viewport = vi.hoisted(() => ({ desktop: true }));
@@ -173,4 +174,24 @@ it("restores selection from route changes and refreshes", () => {
     expect(screen.getByRole("radio", { name: "History" })).toHaveAttribute("aria-checked", "true");
     expect(screen.queryByRole("button", { name: "Needs attention" })).not.toBeInTheDocument();
   }
+});
+
+it.each([
+  ["operation_unavailable", "Blocked: plan required"],
+  ["provider_account_blocked", "Blocked: verify provider"],
+  ["pricing_unavailable", "Blocked: pricing_unavailable"],
+  ["invalid reason", "Review what is blocking this run"],
+])("shows an expired schedule cause %s", (reason, label) => {
+  const run = {
+    ...timelineFixtureRuns[0],
+    details: {
+      ...timelineFixtureRuns[0].details,
+      status: "completed" as const,
+      outcome: "deferred" as const,
+      blockedReason: reason,
+      expiryBlockedReason: reason,
+    },
+  };
+  render(<RunStatusSummary run={run} progress={false} />);
+  expect(screen.getByText(label)).toBeVisible();
 });

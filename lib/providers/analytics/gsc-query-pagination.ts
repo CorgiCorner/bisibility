@@ -94,6 +94,7 @@ export async function fetchGscQueryStats<Row>(
   input: AnalyticsQueryStatsInput,
   fetchPage: (input: QueryPageInput) => Promise<Row[]>,
 ): Promise<Row[]> {
+  input.signal?.throwIfAborted();
   const dimensions = gscQueryDimensions(input);
   if (input.limit !== undefined || (input.query && !input.pagePath)) {
     return fetchPage({
@@ -107,6 +108,7 @@ export async function fetchGscQueryStats<Row>(
 
   const rows: Row[] = [];
   while (rows.length < GSC_QUERY_STATS_ROW_CAP) {
+    input.signal?.throwIfAborted();
     const page = await fetchPage({
       ...input,
       credentials,

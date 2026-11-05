@@ -62,6 +62,14 @@ const polishNotificationMessages = {
 };
 
 describe("NotificationPreferences", () => {
+  it("does not offer unsupported check/import email or transactional-invite email switches", () => {
+    render(<NotificationPreferences canEdit preferences={preferences} />);
+    for (const name of ["Check notifications Email", "Import finished Email", "Invite Email"]) {
+      expect(screen.queryByRole("switch", { name })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole("switch", { name: "Alert fired Email" })).toBeEnabled();
+    expect(screen.getByRole("switch", { name: "Weekly report Email" })).toBeEnabled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.updateNotificationPreferences.mockImplementation(async (values) => values);
@@ -137,33 +145,58 @@ describe("NotificationPreferences", () => {
     expect(screen.queryByText("Soon")).not.toBeInTheDocument();
   });
 
-  it("preserves non-rendered delivery channel values when writing another preference", async () => {
-    mocks.updateNotificationPreferences.mockResolvedValue({ ...preferences, checkEmail: true });
+  it("sends only the changed personal field", async () => {
     render(<NotificationPreferences canEdit preferences={preferences} />);
-
-    fireEvent.click(screen.getByLabelText("Check notifications Email"));
-
-    await waitFor(() => expect(mocks.updateNotificationPreferences).toHaveBeenCalled());
-    expect(mocks.updateNotificationPreferences).toHaveBeenCalledWith(
-      expect.objectContaining({
-        alertSlack: true,
-        alertWebhook: true,
-        checkEmail: true,
+    fireEvent.click(screen.getByLabelText("Alert fired Email"));
+    await waitFor(() =>
+      expect(mocks.updateNotificationPreferences).toHaveBeenCalledWith({
+        projectId: "prj_1",
+        alertEmail: false,
       }),
     );
   });
 
-  it("restores the previous value and reports an immediate-write failure", async () => {
-    mocks.updateNotificationPreferences.mockRejectedValue(new Error("write failed"));
+  it("shows the returned persisted value after a failed save", async () => {
+    mocks.updateNotificationPreferences.mockResolvedValue({ ...preferences, saveFailed: true });
     render(<NotificationPreferences canEdit preferences={preferences} />);
+    fireEvent.click(screen.getByLabelText("Alert fired Email"));
+    expect(
+      await screen.findByText("Save status could not be confirmed. Showing the saved preferences."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Alert fired Email")).toBeChecked();
+  });
 
-    const checkEmail = screen.getByLabelText("Check notifications Email");
-    expect(checkEmail).not.toBeChecked();
-    fireEvent.click(checkEmail);
+  it("prevents another change while a save is pending", async () => {
+    let resolveSave: (value: typeof preferences) => void = () => {};
+    mocks.updateNotificationPreferences.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSave = resolve;
+      }),
+    );
+    render(<NotificationPreferences canEdit preferences={preferences} />);
+    fireEvent.click(screen.getByLabelText("Alert fired Email"));
+    await waitFor(() => expect(screen.getByLabelText("Alert fired Email")).toBeDisabled());
+    resolveSave({ ...preferences, alertEmail: false });
+    await waitFor(() => expect(screen.getByLabelText("Alert fired Email")).toBeEnabled());
+  });
 
-    await waitFor(() => expect(mocks.updateNotificationPreferences).toHaveBeenCalled());
-    expect(await screen.findByText("Preferences could not be saved.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Check notifications Email")).not.toBeChecked();
+  it("shows the refetched preferences after an unknown save", async () => {
+    mocks.updateNotificationPreferences.mockRejectedValue(new Error("response lost"));
+    const { rerender } = render(<NotificationPreferences canEdit preferences={preferences} />);
+    fireEvent.click(screen.getByLabelText("Alert fired Email"));
+    expect(
+      await screen.findByText("Save status could not be confirmed. Showing the saved preferences."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Alert fired Email")).toBeEnabled();
+    expect(screen.getByLabelText("Alert fired Email")).toBeChecked();
+    expect(routerMock.refresh).toHaveBeenCalled();
+
+    rerender(
+      <NotificationPreferences canEdit preferences={{ ...preferences, alertEmail: false }} />,
+    );
+
+    await waitFor(() => expect(screen.getByLabelText("Alert fired Email")).not.toBeChecked());
+    expect(screen.getByLabelText("Alert fired Email")).toBeEnabled();
   });
 
   it("uses the injected locale for event labels, unavailable cells, and the delivery sentence", () => {

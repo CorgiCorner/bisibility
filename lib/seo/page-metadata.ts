@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 // Rendered by app/opengraph-image.tsx. Bump the query when the artwork changes, because
 // social crawlers cache images by URL.
 export const defaultSocialImage = {
-  alt: "bisibility. Open-source SEO platform. Rank tracking and AI visibility for your sites.",
+  alt: "bisibility. Find your next SEO topic. Track it after you publish. Research competitors and keywords, save ideas and track them after you publish. Self-host, BYOK or Cloud credits.",
   height: 630,
   type: "image/png",
-  url: "/opengraph-image?v=2",
+  url: "/opengraph-image?v=4",
   width: 1200,
 } as const;
 

@@ -28,6 +28,7 @@ export type RankCheckPersistTarget = {
   providerUsage?: ProviderRequestAttribution;
   existingRankCheckId?: string;
   queuedTaskId?: string;
+  predecessorRankCheckId?: string | null;
   previousRaw?: Prisma.JsonValue | null;
   previousRankingUrl?: string | null;
   expectedUrlAtCheck?: string | null;
@@ -41,6 +42,7 @@ export type RankCheckFailureTarget = {
   attempts?: RankCheckAttempt[];
   connectionId?: string;
   error: string;
+  raw?: Prisma.InputJsonObject;
   expectedUrlAtCheck?: string | null;
   existingRankCheckId?: string;
   keywordId: string;

@@ -8,7 +8,7 @@ export const skill: TaskSkill = {
   compatibility:
     "Requires a resolved bisibility origin and a write-scoped personal access token for project creation; a project API key cannot create projects.",
   kind: "task-skill",
-  version: "0.1.1",
+  version: "0.1.2",
   body: `# Domain onboarding
 
 Create a domain project, confirm its tracking defaults, connect the intended
@@ -29,7 +29,7 @@ explicitly approved step; creating a project is not proof that rankings exist.
 ## 1. Find or create the project
 
 \`GET /projects\` lists projects visible to the personal token. If the requested
-project already exists, use **keyword-import** or **provider-setup** instead.
+project already exists, use the \`keyword-import\` or \`provider-setup\` skill instead.
 Otherwise create the confirmed project:
 
 \`\`\`bash
@@ -63,7 +63,7 @@ does not retarget existing keyword identities or rewrite their history.
 ## 3. Verify the intended provider
 
 Read \`GET /projects/{project_id}/providers\`. Reuse the enabled, connected provider
-that supports rank checks. If credentials need connecting, follow **provider-setup**.
+that supports rank checks. If credentials need connecting, follow the \`provider-setup\` skill.
 Connect verifies credentials before saving; a second test is unnecessary after a
 successful connect. Never display provider credentials.
 

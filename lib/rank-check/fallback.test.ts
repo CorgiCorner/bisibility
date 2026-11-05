@@ -111,6 +111,13 @@ const mocks = vi.hoisted(() => ({
       findMany: vi.fn(),
       groupBy: vi.fn(),
     },
+    alertEvaluationIntent: {
+      create: vi.fn(async () => ({})),
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      upsert: vi.fn(async () => ({})),
+    },
     rankCheck: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -1966,4 +1973,32 @@ describe("mixed funding refusals", () => {
       errorFromUnknown(chain, new Headers(), new URL("https://example.com/api/v1/checks")).status,
     ).toBe(502);
   });
+});
+
+it("preserves incomplete coverage after an earlier blocked provider without a third purchase", async () => {
+  const { OrganicCoverageError } = await import("@/lib/providers/serp/organic-coverage-error");
+  const cause = new OrganicCoverageError("19/20");
+  const expected = new RankCheckRunnerError("provider_failed", cause.message, {
+    cause,
+    chargedCents: 0,
+  });
+  const third = vi.fn();
+  await expect(
+    runCheckWithFallback({
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      connections: [
+        { provider: "primary" },
+        { provider: "secondary", credentials: { apiKey: "fixture" } },
+        { provider: "third" },
+      ],
+      resolveProvider: (id) => {
+        if (id === "primary")
+          throw new ProviderRecoveryAdmissionError("account_blocked", { kind: "account" });
+        if (id === "secondary") throw expected;
+        return third();
+      },
+    }),
+  ).rejects.toBe(expected);
+  expect(third).not.toHaveBeenCalled();
 });

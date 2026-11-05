@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   defer: vi.fn(),
   progress: vi.fn(),
   ambiguous: vi.fn(),
+  resume: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
@@ -25,8 +26,18 @@ vi.mock("./queued-lifecycle", () => ({
 vi.mock("@/lib/integrations/provider-recovery/refusal-journal", () => ({
   recordRankRefusals: mocks.record,
 }));
+vi.mock("./queued-usage-journal", async () => {
+  const actual =
+    await vi.importActual<typeof import("./queued-usage-journal")>("./queued-usage-journal");
+  return { ...actual, resumeSubmittedQueuedUsage: mocks.resume };
+});
 
-import { persistQueuedRefusal, resumeQueuedRefusal } from "./queued-account-observation";
+import {
+  persistQueuedRefusal,
+  resumeQueuedRefusal,
+  resumeUnclaimedBatch,
+} from "./queued-account-observation";
+import { QueuedUsageSettlementError } from "./queued-usage-journal";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -138,3 +149,17 @@ it.each(["ambiguous", "completed", "deferred", "failed", "ready", "submitted"])(
     expect(mocks.defer).not.toHaveBeenCalled();
   },
 );
+
+it("keeps deferred usage when a resumed settlement throws", async () => {
+  mocks.resume.mockRejectedValue(
+    new QueuedUsageSettlementError(new Error("settle failed"), ["qtask_2"]),
+  );
+  await expect(
+    resumeUnclaimedBatch("batch_1", {
+      connection: { credentialSource: "own", id: "connection_1" },
+      projectId: "project_1",
+      state: "submitted",
+      tasks: [],
+    } as never),
+  ).resolves.toEqual({ deferredUsage: ["qtask_2"], state: "submitted" });
+});

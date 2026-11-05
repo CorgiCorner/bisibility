@@ -197,7 +197,7 @@ describe("RetrievedResultsCard comparison", () => {
     const body = screen.getByTestId("retrieved-results-body");
     const pickers = screen.getByTestId("retrieved-picker-slots");
     expect(body).toHaveClass("h-[480px]", "sm:h-[520px]", "overflow-y-auto");
-    expect(pickers).toHaveClass("flex", "flex-wrap", "sm:justify-end");
+    expect(pickers).toHaveClass("flex", "sm:justify-end");
     const compare = screen.getByRole("button", { name: "Compare" });
     expect(compare).toBeEnabled();
     fireEvent.click(compare);

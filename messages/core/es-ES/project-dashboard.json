@@ -55,7 +55,13 @@
       "kpisAriaLabel": "KPI de la vista general",
       "viewAllKeywords": "Ver todas las palabras clave",
       "viewCheckRuns": "Ver las ejecuciones de comprobación",
-      "providerCapacityUnavailableDetail": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor."
+      "providerCapacityUnavailableDetail": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor.",
+      "connectionSettings": "Ajustes de conexión",
+      "verifyConnectionDetail": "Las comprobaciones que necesitan esta conexión quedan aplazadas hasta que se verifique. Se ejecuta automáticamente una comprobación gratuita de la cuenta, o puedes revisar la conexión ahora.",
+      "verifyConnectionTitle": "Verifica tu conexión con {provider}",
+      "providerUnresolvedRedirectsDetail": "El proveedor ha devuelto enlaces que no hemos podido resolver, así que esta comprobación no tiene posición.",
+      "organicResultUnclassifiableDetail": "{keyword}: el proveedor ha devuelto un resultado de búsqueda que no hemos podido clasificar, así que esta comprobación no tiene posición.",
+      "organicDepthNotCoveredDetail": "{keyword}: Los resultados orgánicos devueltos no cubrieron la profundidad solicitada, por lo que no se pudo establecer una posición ni confirmar su ausencia."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {sube {value, number, ::.0} frente a la comprobación anterior con posición} down {baja {value, number, ::.0} frente a la comprobación anterior con posición} other {0 frente a la comprobación anterior con posición}}",

@@ -2,9 +2,10 @@ import { isBuiltin } from "node:module";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
+import { runtimeAliases, runtimeStubPlugin } from "./.storybook/main";
 import { attachedOpera } from "./tests/config/vitest.attached-opera";
 import { testModuleCache } from "./tests/config/vitest.module-cache";
-import { nodeRenderTests } from "./tests/config/vitest.node-render-tests";
+import { isolatedNodeRenderTests, nodeRenderTests } from "./tests/config/vitest.node-render-tests";
 
 const emptyModule = fileURLToPath(new URL("./tests/config/vitest.empty.ts", import.meta.url));
 const rootDir = fileURLToPath(new URL("./", import.meta.url));
@@ -56,6 +57,11 @@ const browserTestAliases = [
     find: "@/lib/roadmap/actions",
     replacement: fileURLToPath(new URL("./.storybook/roadmap-action-stubs.ts", import.meta.url)),
   },
+  ...Object.entries(runtimeAliases).map(([find, replacement]) => ({ find, replacement })),
+  ...["action-result", "migration-errors", "tag-errors"].map((name) => ({
+    find: `@/lib/actions/${name}`,
+    replacement: fileURLToPath(new URL(`./lib/actions/${name}.ts`, import.meta.url)),
+  })),
   { find: /^@\/lib\/actions\/.+/, replacement: browserStubs },
   // Mirrors the .storybook/main.ts stubs for these server actions outside lib/actions.
   { find: /^@\/.+\/(?:credential-source|credits-bonus)-actions$/, replacement: browserStubs },
@@ -112,6 +118,9 @@ const domUnitTests = [
 export default defineConfig({
   test: {
     clearMocks: false,
+    // Vitest reads the VM recycle limit from the root pool configuration.
+    // Recycle between files before retained contexts exhaust the 4 GiB Node heap.
+    vmMemoryLimit: "1024MB",
     // Vitest disables this in V8 coverage workers to retain precise source positions.
     env: {
       NODE_COMPILE_CACHE: fileURLToPath(
@@ -125,6 +134,12 @@ export default defineConfig({
         "lib/**/*.test.tsx",
         "lib/**/*.stories.tsx",
         "lib/**/*.d.ts",
+        // PostgreSQL-only test helpers are not production code and are not
+        // exercised by the unit coverage lane.
+        "lib/**/*.postgres.test-fixture.ts",
+        "lib/**/postgres.test-fixture.ts",
+        "lib/**/*postgres-fixtures.ts",
+        "lib/**/*postgres-test-fixture.ts",
         "lib/**/types.ts",
         "lib/deployment/runtime-env.generated.ts",
       ],
@@ -148,7 +163,14 @@ export default defineConfig({
             "lib/roadmap/*.integration.test.ts",
             "lib/metering/**/*.integration.test.ts",
             ...domUnitTests,
+            ...isolatedNodeRenderTests,
           ],
+          setupFiles: ["./tests/config/vitest.setup.common.ts"],
+        },
+        {
+          name: "unit-isolated",
+          environment: "node",
+          include: isolatedNodeRenderTests,
           setupFiles: ["./tests/config/vitest.setup.common.ts"],
         },
         {
@@ -180,8 +202,12 @@ export default defineConfig({
           fsModuleCache: true,
           clearMocks: false,
           globals: true,
-          pool: "forks" as const,
-          isolate: true,
+          // jsdom files reuse worker processes through vm contexts; node files keep forks.
+          pool: test.environment === "jsdom" ? ("vmForks" as const) : ("forks" as const),
+          // Node unit files share worker processes; the common setup resets modules, mocks,
+          // environment and global test doubles at each file. Render-sensitive tests keep a
+          // process per file (see isolatedNodeRenderTests).
+          isolate: test.name !== "unit",
           deps: {
             optimizer: {
               [test.environment === "node" ? "ssr" : "client"]: {
@@ -212,6 +238,7 @@ export default defineConfig({
       })),
       {
         extends: false,
+        plugins: [runtimeStubPlugin],
         // Keep the browser preview resolver aligned with Next/tsconfig imports used by stories.
         define: {
           "process.env": "{}",

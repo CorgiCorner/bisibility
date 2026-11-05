@@ -550,6 +550,8 @@
       },
       "blocked": {
         "proof_missing": "No sufficient retained provider proof. Keep the cost unknown and obtain native evidence.",
+        "provider_cost_pending": "Cost recovery is retrying. The provider has not yet returned a usable cost for this accepted task.",
+        "provider_cost_unrecoverable": "The provider cost of this accepted task could not be recovered. Review the reason, then keep the cost unknown or close it out as unknown.",
         "wallet_coordination_required": "No verified original platform proof is available for coordinated settlement.",
         "request_not_linked": "No original request is linked.",
         "authorization_required": "A new paid attempt needs project spending authority and normal admission.",

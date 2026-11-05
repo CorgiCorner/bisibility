@@ -8,11 +8,17 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useFormatter, useTranslations } from "next-intl";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
 import type { ObservationHistoryPage } from "./history-contract";
+import { determinateHistoryAbsence } from "./no-match-presentation";
 
 export function RecordedUrlHistory({
   page,
   timeZone,
-}: Readonly<{ page: ObservationHistoryPage; timeZone: string }>) {
+  noMatchDepths = {},
+}: Readonly<{
+  page: ObservationHistoryPage;
+  timeZone: string;
+  noMatchDepths?: Readonly<Record<string, number>>;
+}>) {
   const t = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
   const format = useFormatter();
   return (
@@ -62,7 +68,10 @@ export function RecordedUrlHistory({
                     {record.rankingUrl}
                   </a>
                 ) : (
-                  (record.rankingUrl ?? t("unknown"))
+                  (record.rankingUrl ??
+                  (determinateHistoryAbsence(record, noMatchDepths[record.id])
+                    ? t("noRankingUrl")
+                    : t("unknown")))
                 ),
               ],
             };

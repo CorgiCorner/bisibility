@@ -27,6 +27,7 @@ import type {
 } from "./queued-rank-check-contract";
 
 const POLLS_PER_RUN = 20;
+const USAGE_SETTLEMENT_RESUMES = 8;
 
 type LifecycleActivities = {
   authorizeQueuedRankCheckBatchActivity(input: {
@@ -46,7 +47,7 @@ type LifecycleActivities = {
 type SubmissionActivities = {
   submitQueuedRankCheckBatchActivity(input: {
     batchId: string;
-  }): Promise<{ state: string; refusal?: QueuedRefusalProof }>;
+  }): Promise<{ state: string; refusal?: QueuedRefusalProof; deferredUsage?: readonly string[] }>;
 };
 
 type InspectionActivities = {
@@ -88,6 +89,25 @@ const { submitQueuedRankCheckBatchActivity } = proxyActivities<SubmissionActivit
   },
   startToCloseTimeout: TASKSET_SUBMISSION_ACTIVITY_TIMEOUT,
 });
+
+async function finishDeferredQueuedUsage(
+  batchId: string,
+  submitted: { state: string; deferredUsage?: readonly string[] },
+) {
+  let current = submitted;
+  let deferred = current.deferredUsage?.length ?? 0;
+  let resumes = 0;
+  while (deferred > 0 && resumes < USAGE_SETTLEMENT_RESUMES) {
+    resumes += 1;
+    current = await submitQueuedRankCheckBatchActivity({ batchId });
+    const next = current.deferredUsage?.length ?? 0;
+    // A fresh activity that cannot shrink the deferred set must not spin. The reconciler
+    // still settles the unknown rows, and this path never posts a task.
+    if (next >= deferred) break;
+    deferred = next;
+  }
+  return current;
+}
 
 const { inspectQueuedRankCheckBatchActivity } = proxyActivities<InspectionActivities>({
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
@@ -171,7 +191,9 @@ export async function queuedRankCheckBatchWorkflow(
       const persisted = await persistQueuedRefusalActivity(submitted.refusal);
       if (persisted.pending === 0) return persisted;
       lastKnownState = persisted.state;
-    } else lastKnownState = submitted.state;
+    } else {
+      lastKnownState = (await finishDeferredQueuedUsage(prepared.batchId, submitted)).state;
+    }
   } else if (!deadlineReached && prepared.state === "prepared") {
     return timeoutQueuedRankCheckBatchActivity({
       batchId: prepared.batchId,

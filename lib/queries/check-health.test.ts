@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   },
   requireReadableProject: vi.fn(),
   budgetStatus: vi.fn(),
+  connectionNotice: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -29,6 +30,7 @@ vi.mock("@/lib/metering/project-budget-read", () => ({
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
+vi.mock("./rank-check-run-deferral", () => ({ projectConnectionNotice: mocks.connectionNotice }));
 
 const now = new Date("2026-07-14T12:00:00.000Z");
 const project = { budgetCapCents: 500, id: "project_1", publicId: "prj_1" };
@@ -59,6 +61,7 @@ describe("check health query", () => {
       },
     ]);
     mocks.prisma.providerConnection.findFirst.mockResolvedValue(null);
+    mocks.connectionNotice.mockResolvedValue(null);
   });
 
   it("treats an explicit zero Store limit as blocked", async () => {
@@ -88,6 +91,7 @@ describe("check health query", () => {
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
     expect(result).toEqual({
       budget: { capCents: 500, exhausted: true, spentCents: 500 },
+      connectionNotice: null,
       currentFailures: { count: 0, latestCheckId: null },
       failed24h: {
         count: 2,
@@ -109,6 +113,7 @@ describe("check health query", () => {
     await getCheckHealth("prj_1", { now });
 
     expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
+    expect(mocks.connectionNotice).toHaveBeenCalledWith("project_1");
     expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.[0].join(" ")).toContain('rc."errorCode"');

@@ -52,6 +52,26 @@ describe("JSON-LD builders", () => {
     );
   });
 
+  it("uses the localized home URL and language while the website id stays on the site root", () => {
+    const graph = createHomeJsonLd(englishHomeJsonLdCopy, origin, "es-ES");
+    const website = findNode(graph, "WebSite");
+    const software = findNode(graph, "SoftwareApplication");
+
+    expect(website).toMatchObject({
+      "@id": `${origin}/#website`,
+      inLanguage: "es-ES",
+      url: `${origin}/es`,
+    });
+    expect(software).toMatchObject({ url: `${origin}/` });
+
+    const english = createHomeJsonLd(englishHomeJsonLdCopy, origin, "en");
+    expect(findNode(english, "WebSite")).toMatchObject({
+      "@id": `${origin}/#website`,
+      inLanguage: "en",
+      url: `${origin}/`,
+    });
+  });
+
   it("includes required organization fields without invented ratings", () => {
     const organization = createOrganizationJsonLd(origin);
     const app = createSoftwareApplicationJsonLd(englishHomeJsonLdCopy, origin);

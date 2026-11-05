@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mergeSnapshotPage, SNAPSHOT_EXTENSION_WINDOW_MS } from "./snapshot-extension";
+import {
+  mergeSnapshotPage,
+  SNAPSHOT_EXTENSION_WINDOW_MS,
+  snapshotPrecedingOrganicCount,
+} from "./snapshot-extension";
 import { readSnapshotContinuation, snapshotExtensionView } from "./snapshot-extension-state";
 
 const capturedAt = "2026-09-28T00:00:00.000Z";
@@ -128,5 +132,86 @@ describe("snapshot extension", () => {
       rows: [{ position: 23 }],
     });
     expect(JSON.stringify(view)).not.toContain("connection-1");
+  });
+});
+
+describe("snapshotPrecedingOrganicCount", () => {
+  it("counts a short first page by its organic results, not the nominal page size", () => {
+    const original = Array.from({ length: 9 }, (_, index) => row(index + 1));
+    expect(snapshotPrecedingOrganicCount(original, [])).toBe(9);
+  });
+  it("continues across stored extension pages including skipped duplicates", () => {
+    const original = Array.from({ length: 9 }, (_, index) => row(index + 1));
+    const pages = [
+      { skippedDuplicates: 1, rows: [row(10), row(11), row(12)] },
+      { skippedDuplicates: 0, rows: [row(16)] },
+    ];
+    // Page 2 returned 4 organic results (3 stored + 1 duplicate): 9 + 4 = 13; page 3 stored rank 16.
+    expect(snapshotPrecedingOrganicCount(original, pages.slice(0, 1))).toBe(13);
+    expect(snapshotPrecedingOrganicCount(original, pages)).toBe(16);
+  });
+  it("is zero with nothing stored and never below the highest stored rank", () => {
+    expect(snapshotPrecedingOrganicCount([], [])).toBe(0);
+    expect(snapshotPrecedingOrganicCount([row(3), row(10)], [])).toBe(10);
+  });
+  it("uses the persisted organic count when a trailing row was dropped from the stored rows", () => {
+    // Ten organic results were returned but the tenth (an unresolved redirect) was not stored.
+    const original = Array.from({ length: 9 }, (_, index) => row(index + 1));
+    expect(snapshotPrecedingOrganicCount(original, [], 10)).toBe(10);
+    // Page 2 returned ten, stored nine (11-19): the next page still continues after rank 20.
+    const pages = [
+      {
+        organicReturned: 10,
+        skippedDuplicates: 0,
+        rows: Array.from({ length: 9 }, (_, index) => row(11 + index)),
+      },
+    ];
+    expect(snapshotPrecedingOrganicCount(original, pages, 10)).toBe(20);
+  });
+  it("falls back to the stored-row derivation for pages saved before the count was persisted", () => {
+    const original = Array.from({ length: 9 }, (_, index) => row(index + 1));
+    const pages = [
+      { skippedDuplicates: 0, rows: [row(10), row(11)] },
+      { organicReturned: 4, skippedDuplicates: 0, rows: [row(12)] },
+    ];
+    expect(snapshotPrecedingOrganicCount(original, pages)).toBe(15);
+  });
+});
+
+describe("snapshot continuation organic count", () => {
+  it("keeps a persisted organic count and rejects an out-of-range one", () => {
+    expect(
+      readSnapshotContinuation({ snapshotContinuation: { ...context, organicReturned: 10 } }),
+    ).toMatchObject({ organicReturned: 10 });
+    expect(
+      readSnapshotContinuation({ snapshotContinuation: { ...context, organicReturned: -1 } }),
+    ).toBeNull();
+    expect(readSnapshotContinuation(raw)?.organicReturned).toBeUndefined();
+  });
+  it("does not expose the persisted per-page organic count in the view", () => {
+    const view = snapshotExtensionView(
+      "serpapi",
+      {
+        snapshotContinuation: context,
+        snapshotExtension: {
+          version: 1,
+          state: "idle",
+          nextStart: 30,
+          ended: false,
+          pages: [
+            {
+              start: 20,
+              fetchedAt: capturedAt,
+              skippedDuplicates: 0,
+              organicReturned: 10,
+              rows: [],
+            },
+          ],
+        },
+      },
+      new Date(Date.parse(capturedAt) + 1000),
+    );
+    expect(view.pages).toHaveLength(1);
+    expect(view.pages[0]).not.toHaveProperty("organicReturned");
   });
 });

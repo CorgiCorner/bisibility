@@ -111,7 +111,7 @@ const prismaRuntimeStubPatterns = [
 ];
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
-const runtimeAliases = {
+export const runtimeAliases = {
   "@/lib/actions/run-tray": fileURLToPath(new URL("./run-tray-action-stubs.ts", import.meta.url)),
   "@/lib/actions/instance-announcements": announcementActionsStub,
   "@/lib/actions/metering-recovery": fileURLToPath(
@@ -197,7 +197,7 @@ function resolveKeywordActionBoundary(source: string): string | null {
   return null;
 }
 
-const runtimeStubPlugin = {
+export const runtimeStubPlugin = {
   name: "storybook-runtime-stubs",
   enforce: "pre",
   resolveId(source, importer) {

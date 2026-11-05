@@ -48,7 +48,11 @@ function delayedResponse(headerMs: number, bodyMs: number, body: unknown) {
           const stream = new ReadableStream({
             start(controller) {
               const timer = setTimeout(() => {
-                controller.enqueue(new TextEncoder().encode(JSON.stringify(body)));
+                controller.enqueue(
+                  new TextEncoder().encode(
+                    JSON.stringify(typeof body === "function" ? body(_url) : body),
+                  ),
+                );
                 controller.close();
               }, bodyMs);
               init.signal?.addEventListener(
@@ -144,11 +148,18 @@ describe("bounded search receipts", () => {
 
   it("finishes ten slow pages within the activity budget without repeat submissions", async () => {
     vi.useFakeTimers();
-    const fetchMock = delayedResponse(66_250, 0, {
+    const fetchMock = delayedResponse(66_250, 0, (url: string) => ({
       ...success,
-      organic_results: [{ position: 1, link: "https://example.org/result" }],
+      search_metadata: {
+        id: `native-${new URL(url).searchParams.get("start") ?? 0}`,
+        status: "Success",
+      },
+      organic_results: Array.from({ length: 10 }, (_, index) => ({
+        position: index + 1,
+        link: `https://example.org/result-${new URL(url).searchParams.get("start") ?? 0}-${index + 1}`,
+      })),
       serpapi_pagination: { next: "next-page" },
-    });
+    }));
     vi.stubGlobal("fetch", fetchMock);
     const result = expect(
       serpApiProvider.fetchRank({ ...input, depth: 100, stopOnMatch: false }),

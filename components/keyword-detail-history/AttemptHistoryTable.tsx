@@ -51,7 +51,11 @@ export function AttemptHistoryTable({
                           : t("unknown")}
                 </span>
                 {attempt.errorCode ? (
-                  <span className="block text-fg-muted">{attempt.errorCode}</span>
+                  <span className="block text-fg-muted">
+                    {attempt.errorCode === "organic_depth_not_covered"
+                      ? t("organicDepthNotCovered")
+                      : attempt.errorCode}
+                  </span>
                 ) : null}
                 {attempt.deferredReason ? (
                   <DeferralReasonLabel reason={attempt.deferredReason} />

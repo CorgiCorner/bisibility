@@ -7,6 +7,10 @@ import {
 import { listNotificationsForScope } from "@/lib/notifications/feed";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { rankRunAccountBlocks } from "@/lib/queries/rank-check-run-account-blocks";
+import {
+  projectConnectionNotice,
+  rankCheckConnectionNotice,
+} from "@/lib/queries/rank-check-run-deferral";
 import { rankRunDeferralReasons } from "@/lib/queries/rank-check-run-reasons";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { recordConnectionAccountFailure } from "./account-failure";
@@ -212,4 +216,123 @@ it("projects connection-specific typed refusals for completed and deferred items
   ]);
   expect(blocks.get("view-deferred")).toEqual(blocks.get("view-completed"));
   expect((await rankRunAccountBlocks("foreign-project", ["view-completed"])).size).toBe(0);
+});
+
+it("finds only the current unresolved legacy incident for the project run", async () => {
+  const attempt = await f.db.providerBlockedAttempt.findFirstOrThrow({
+    where: { rankCheckId: "view-deferred" },
+  });
+  if (!attempt.incidentId) throw new Error("Missing incident");
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { reason: "legacy_unverified", resolvedAt: null },
+  });
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { currentIncidentId: attempt.incidentId },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toEqual({
+    provider: "DataForSEO",
+    state: "unverified",
+  });
+  expect(await projectConnectionNotice("liveowner")).toEqual({ provider: "DataForSEO" });
+  expect(await projectConnectionNotice("other-project")).toBeNull();
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { reason: "provider_transient", evidenceSource: "legacy_probe" },
+  });
+  expect(await projectConnectionNotice("liveowner")).toEqual({ provider: "DataForSEO" });
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { evidenceSource: "provider_response" },
+  });
+  expect(await projectConnectionNotice("liveowner")).toBeNull();
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { evidenceSource: "legacy_probe" },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toEqual({
+    provider: "DataForSEO",
+    state: "unverified",
+  });
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { reason: "legacy_unverified", evidenceSource: "legacy_state" },
+  });
+  expect(await rankCheckConnectionNotice("other-project", runPublicId)).toBeNull();
+  await f.db.providerAccountIncident.update({
+    where: { id: attempt.incidentId },
+    data: { resolvedAt: new Date() },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  expect(await projectConnectionNotice("liveowner")).toBeNull();
+  await f.db.providerAccountIncident.updateMany({
+    where: { connectionId, resolvedAt: null },
+    data: { resolvedAt: new Date() },
+  });
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { accountState: "verified", currentIncidentId: null },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toEqual({
+    provider: "DataForSEO",
+    state: "verified",
+  });
+  await f.db.providerBlockedAttempt.update({
+    where: { id: attempt.id },
+    data: { credentialVersion: "stale-fixture" },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerBlockedAttempt.update({
+    where: { id: attempt.id },
+    data: { credentialVersion: attempt.credentialVersion },
+  });
+  await f.db.providerConnection.update({ where: { id: connectionId }, data: { enabled: false } });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerConnection.update({
+    where: { id: connectionId },
+    data: { enabled: true, status: "needs_reauth" },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerConnection.update({
+    where: { id: connectionId },
+    data: { status: "connected" },
+  });
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { currentIncidentId: attempt.incidentId },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { currentIncidentId: null },
+  });
+  const open = await f.db.providerAccountIncident.create({
+    data: {
+      connectionId,
+      credentialVersion: attempt.credentialVersion,
+      reason: "provider_auth",
+      evidenceSource: "provider_response",
+      scope: { kind: "account" },
+    },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerAccountIncident.update({
+    where: { id: open.id },
+    data: { resolvedAt: new Date() },
+  });
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { accountState: "unknown" },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
+  await f.db.providerConnectionRecovery.update({
+    where: { connectionId },
+    data: { accountState: "verified" },
+  });
+  await f.db.providerConnection.update({
+    where: { id: connectionId },
+    data: { credentialsEncrypted: "rotated-fixture" },
+  });
+  expect(await rankCheckConnectionNotice("liveowner", runPublicId)).toBeNull();
 });

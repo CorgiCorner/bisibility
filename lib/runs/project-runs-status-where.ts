@@ -19,7 +19,9 @@ const NO_ROWS = { id: { in: [] as string[] } };
 
 const RANK_KEY_WHERE: Record<RankRunStatusKey, Prisma.RankCheckRunWhereInput> = {
   planned: { status: "planned" },
-  blocked: { status: "blocked" },
+  blocked: {
+    OR: [{ status: "blocked" }, { status: "completed", expiryBlockedReason: { not: null } }],
+  },
   queued: { status: "queued" },
   running: { status: "running" },
   cancelling: { status: "cancelling" },
@@ -28,6 +30,7 @@ const RANK_KEY_WHERE: Record<RankRunStatusKey, Prisma.RankCheckRunWhereInput> = 
   deferred: {
     outcome: "deferred",
     status: "completed",
+    expiryBlockedReason: null,
     OR: [{ blockedReason: null }, { blockedReason: { not: "no_active_keywords" } }],
   },
   skipped: {
@@ -67,7 +70,13 @@ export function rankStatusWhere(status: ProjectRunsStatus): Prisma.RankCheckRunW
   if (status === "all") return {};
   if (status === "active") return { status: { in: [...RANK_ACTIVE_STATUSES] } };
   if (status === "attention") {
-    return { OR: [{ status: "blocked" }, { outcome: "failed", status: "completed" }] };
+    return {
+      OR: [
+        { status: "blocked" },
+        { outcome: "failed", status: "completed" },
+        { status: "completed", expiryBlockedReason: { not: null } },
+      ],
+    };
   }
   if (status === "finished") return { status: { in: [...RANK_FINISHED_STATUSES] } };
   return isRankRunStatusKey(status) ? RANK_KEY_WHERE[status] : NO_ROWS;

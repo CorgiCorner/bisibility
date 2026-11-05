@@ -144,6 +144,60 @@ describe("NewRuleDrawer", () => {
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
+  it("reuses the request identity after an unknown create result", async () => {
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValue({ id: "rule_1" });
+    renderDrawer({ createAlertRuleAction: create, updateAlertRuleAction: vi.fn() });
+    fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
+    expect(
+      await screen.findByText("Save status is unknown. Check the rule list or retry."),
+    ).toBeInTheDocument();
+    expect(routerMock.refresh).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(create.mock.calls[0][0].requestId).toMatch(/^alr_[a-z][a-z0-9]{23}$/);
+    expect(create.mock.calls[1][0].requestId).toBe(create.mock.calls[0][0].requestId);
+  });
+
+  it("keeps edits and shows the persisted rule when a create is replayed", async () => {
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValue({
+        id: "alr_a00000000000000000000000",
+        ok: true,
+        persisted: {
+          conditionType: "exits_top_n",
+          name: "Slipped out of top 10",
+          targetType: "all",
+          topN: 10,
+        },
+        replayed: true,
+      });
+    const onClose = renderDrawer({ createAlertRuleAction: create, updateAlertRuleAction: vi.fn() });
+    fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
+    expect(
+      await screen.findByText("Save status is unknown. Check the rule list or retry."),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Top N"), { target: { value: "3" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
+
+    expect(
+      await screen.findByText("This rule was already created. Your edits are still here."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Top N")).toHaveValue(3);
+    expect(screen.getByText("Saved rule").closest("section")).toHaveTextContent(
+      "positions 1-10 to 11+",
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(create.mock.calls[1][0]).toMatchObject({
+      requestId: create.mock.calls[0][0].requestId,
+      topN: 3,
+    });
+  });
+
   it("allows overriding the template severity before creating a rule", async () => {
     const createAlertRuleAction = vi.fn().mockResolvedValue({ id: "rule_1" });
     renderDrawer({ createAlertRuleAction, updateAlertRuleAction: vi.fn() });
@@ -240,6 +294,8 @@ describe("NewRuleDrawer", () => {
     );
 
     expect(screen.getByRole("combobox", { name: "Severity" })).toHaveValue("warning");
+    expect(screen.getByRole("button", { name: "Save and enable" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save paused" })).toBeInTheDocument();
   });
 
   it("uses the full drawer width when scope has no target selector", () => {

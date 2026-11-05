@@ -116,7 +116,7 @@ describe("organic result decision", () => {
     });
   });
 
-  it("skips an unclassifiable item when another organic result is usable", () => {
+  it("is indeterminate when an unclassifiable row ranks ahead of a usable match", () => {
     const decision = decideOrganicResult({
       candidates: [
         { rank: 1 },
@@ -132,6 +132,28 @@ describe("organic result decision", () => {
 
     expect(decision).toMatchObject({
       anomalies: [{ code: "organic_result_unclassifiable", index: 0 }],
+      outcome: "indeterminate",
+      position: null,
+      rankingUrl: null,
+    });
+  });
+
+  it("keeps a match when an unclassifiable row ranks after it", () => {
+    expect(
+      decideOrganicResult({
+        candidates: [
+          {
+            domain: "example.com",
+            rank: 4,
+            url: "https://example.com/usable",
+          },
+          { rank: 8 },
+        ],
+        depth: 100,
+        domain: "example.com",
+      }),
+    ).toMatchObject({
+      anomalies: [{ code: "organic_result_unclassifiable", index: 1 }],
       outcome: "match",
       position: 4,
       rankingUrl: "https://example.com/usable",

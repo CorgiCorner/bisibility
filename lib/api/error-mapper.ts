@@ -5,6 +5,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { reportRequestFailure } from "@/lib/observability/request-failure";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
@@ -202,9 +203,11 @@ export function errorFromUnknown(
     else if (error.code === "keyword_not_found") status = 404;
     const detail =
       error.code === "provider_failed" ? "Rank check provider request failed." : error.message;
+    if (status >= 500) reportRequestFailure(error, "api_dispatch", status);
     return errorResponse("provider_unavailable", detail, status, { headers, instance });
   }
 
+  reportRequestFailure(error, "api_dispatch");
   return errorResponse("internal_server_error", "Unexpected API error.", 500, {
     headers,
     instance,

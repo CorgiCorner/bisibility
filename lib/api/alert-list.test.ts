@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { loadAlertDeliveryOutcomes } from "./alert-delivery-outcomes";
 import {
   getAlertFeedStats,
   listTriggeredAlertFeedViews,
@@ -9,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   cacheEntries: new Map<unknown, Map<string, unknown>>(),
   prisma: {
     $queryRaw: vi.fn(),
+    deliveryAttempt: { findMany: vi.fn() },
     keyword: { findMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
     triggeredAlert: { findMany: vi.fn() },
@@ -45,11 +47,68 @@ describe("alert feed window", () => {
     ]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.triggeredAlert.findMany.mockResolvedValue([]);
+    mocks.prisma.deliveryAttempt.findMany.mockResolvedValue([]);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
+  });
+
+  it("loads unbounded evidence for only the selected alerts, retaining every email recipient", async () => {
+    mocks.prisma.deliveryAttempt.findMany.mockResolvedValue(
+      ["sent", "sent", "sent", "failed"].map((status, index) => ({
+        id: `attempt_${index}`,
+        triggeredAlertId: "alert_1",
+        channel: "email",
+        status,
+        acceptedCount: null,
+        failedCount: null,
+        unknownCount: null,
+        webhookEndpointId: null,
+      })),
+    );
+    const evidence = await loadAlertDeliveryOutcomes(["alert_1"]);
+    expect(evidence.get("alert_1")).toEqual([
+      { channel: "email", status: "sent" },
+      { channel: "email", status: "sent" },
+      { channel: "email", status: "sent" },
+      { channel: "email", status: "failed" },
+    ]);
+    const query = mocks.prisma.deliveryAttempt.findMany.mock.calls[0][0];
+    expect(query.where).toEqual({ triggeredAlertId: { in: ["alert_1"] } });
+    expect(query).not.toHaveProperty("take");
+    expect(query.orderBy).toEqual([{ attemptedAt: "desc" }, { id: "desc" }]);
+  });
+
+  it("reduces recovered retries by endpoint and conservatively retains missing identities", async () => {
+    mocks.prisma.deliveryAttempt.findMany.mockResolvedValue(
+      [
+        { id: "new", status: "sent", webhookEndpointId: "endpoint_1" },
+        { id: "other", status: "unknown", webhookEndpointId: "endpoint_2" },
+        { id: "old", status: "failed", webhookEndpointId: "endpoint_1" },
+        { id: "deleted-new", status: "sent", webhookEndpointId: null },
+        { id: "deleted-old", status: "unknown", webhookEndpointId: null },
+      ].map((row) => ({
+        ...row,
+        triggeredAlertId: "alert_1",
+        channel: "webhook",
+        acceptedCount: null,
+        failedCount: null,
+        unknownCount: null,
+      })),
+    );
+    expect((await loadAlertDeliveryOutcomes(["alert_1"])).get("alert_1")).toEqual([
+      { channel: "webhook", status: "sent" },
+      { channel: "webhook", status: "unknown" },
+      { channel: "webhook", status: "sent" },
+      { channel: "webhook", status: "unknown" },
+    ]);
+  });
+
+  it("does not query unscoped delivery evidence for an empty feed", async () => {
+    expect(await loadAlertDeliveryOutcomes([])).toEqual(new Map());
+    expect(mocks.prisma.deliveryAttempt.findMany).not.toHaveBeenCalled();
   });
 
   it("includes an alert from 47 hours ago and excludes one from 49 hours ago", async () => {
@@ -338,11 +397,15 @@ describe("alert feed window", () => {
     await expect(getAlertFeedStats("project_1")).resolves.toEqual({
       firedInWindowCount: 4,
       snoozedInWindowCount: 2,
+      snoozedAlertIds: [],
+      unacknowledgedCount: 0,
       totalCount: 9,
     });
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.slice(1)).toEqual([
       new Date("2026-07-13T12:00:00.000Z"),
+      new Date("2026-07-13T12:00:00.000Z"),
+      new Date("2026-07-15T12:00:00.000Z"),
       new Date("2026-07-13T12:00:00.000Z"),
       new Date("2026-07-15T12:00:00.000Z"),
       "project_1",

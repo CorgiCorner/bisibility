@@ -133,10 +133,14 @@ export function RunPage({
         if (!response.ok) throw new Error("Run refresh failed.");
         const refreshed = runFromResponse(await response.json());
         if (!refreshed) throw new Error("Run refresh payload was invalid.");
-        setRun({ ...refreshed, sharedDeferralCode: run.sharedDeferralCode });
+        setRun({
+          ...refreshed,
+          sharedDeferralCode: run.sharedDeferralCode,
+          connectionNotice: run.connectionNotice,
+        });
       })
       .catch(() => setError(t("runsRefreshFailed")));
-  }, [hasRealtimeRun, projectRef, run.id, run.sharedDeferralCode, t]);
+  }, [hasRealtimeRun, projectRef, run.id, run.sharedDeferralCode, run.connectionNotice, t]);
 
   async function mutate(mutation: RunMutation) {
     held.immediate();
@@ -152,7 +156,12 @@ export function RunPage({
       const payload: unknown = await response.json();
       if (!response.ok) throw new Error("The run could not be updated.");
       const nextRun = runFromResponse(payload);
-      if (nextRun) setRun({ ...nextRun, sharedDeferralCode: run.sharedDeferralCode });
+      if (nextRun)
+        setRun({
+          ...nextRun,
+          sharedDeferralCode: run.sharedDeferralCode,
+          connectionNotice: run.connectionNotice,
+        });
       const retryId = nextRunId(payload);
       if (retryId) window.location.assign(appPath(scopedProject, "rank-tracker", "runs", retryId));
       setDialogOpen(false);
@@ -165,7 +174,7 @@ export function RunPage({
   }
 
   return (
-    <div className="grid min-w-0 gap-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4">
       <RunPageHeader
         canMutate={canMutate}
         onCancel={() => setDialogOpen(true)}
@@ -175,7 +184,7 @@ export function RunPage({
         now={now}
       />
       <RunPageBlockedBanner projectRef={scopedProject} run={currentRun} />
-      {sealed && run.hasAccountDeferred ? (
+      {sealed && run.hasAccountDeferred && run.connectionNotice?.state !== "verified" ? (
         <section className="rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3 text-[12px] text-fg-muted">
           <p className="m-0">{t("sealedAccountPaused")}</p>
           <a className="mt-2 inline-block underline" href={appPath(scopedProject, "rank-tracker")}>
@@ -189,7 +198,7 @@ export function RunPage({
         summary={summary}
       />
       {held.pending ? <NewResultsBanner onShow={held.show} focusRef={listFocus} /> : null}
-      <div ref={listFocus} tabIndex={-1} aria-labelledby="run-targets-title">
+      <div className="min-w-0" ref={listFocus} tabIndex={-1} aria-labelledby="run-targets-title">
         <RunPageTargets
           busy={busy}
           canMutate={canMutate}

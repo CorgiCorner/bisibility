@@ -29,7 +29,7 @@ const mocks = vi.hoisted(() => ({
       update: vi.fn(),
     },
     providerIncident: { updateMany: vi.fn() },
-    notification: { deleteMany: vi.fn() },
+    notification: { deleteMany: vi.fn(), updateMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
     providerConnection: { findMany: vi.fn() },
     rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
@@ -461,10 +461,11 @@ describe("project write API routes", () => {
       where: { id: "project_1" },
       data: { providerIncidentsRetiredThrough: retirementAt },
     });
-    expect(mocks.prisma.notification.deleteMany).toHaveBeenCalledWith({
-      where: { projectId: "project_1", type: "provider_incident" },
+    expect(mocks.prisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { projectId: "project_1", withdrawnAt: null },
+      data: { withdrawnAt: retirementAt, version: { increment: 1 } },
     });
-    expect(mocks.prisma.notification.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.prisma.notification.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.prisma.project.delete.mock.invocationCallOrder[0],
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(

@@ -1,0 +1,79 @@
+{
+  "request": [
+    {
+      "goto_urls": [
+        "https://google.com/goto?url=SYNTHGOTO032&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO033&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO035&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO037&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO038&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO039&gsessionid=SYNTHSESSIONd52fdd",
+        "https://google.com/goto?url=SYNTHGOTO041&gsessionid=SYNTHSESSIONd52fdd"
+      ]
+    }
+  ],
+  "elapsed_s": 1.08,
+  "response": {
+    "version": "0.1.20261022",
+    "status_code": 20000,
+    "status_message": "Ok.",
+    "time": "0.9728 sec.",
+    "cost": 0,
+    "tasks_count": 1,
+    "tasks_error": 0,
+    "tasks": [
+      {
+        "id": "11021649-0000-0000-0000-000000000009",
+        "status_code": 20000,
+        "status_message": "Ok.",
+        "time": "0.9647 sec.",
+        "cost": 0,
+        "result_count": 7,
+        "path": ["v3", "appendix", "goto_url_converter"],
+        "data": {
+          "api": "appendix",
+          "function": "goto_url_converter",
+          "goto_urls": [
+            "https://google.com/goto?url=SYNTHGOTO032&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO033&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO035&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO037&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO038&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO039&gsessionid=SYNTHSESSIONd52fdd",
+            "https://google.com/goto?url=SYNTHGOTO041&gsessionid=SYNTHSESSIONd52fdd"
+          ]
+        },
+        "result": [
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO032&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site7.example.com/page-7"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO033&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site32.example.com/page-53"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO035&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site33.example.com/page-54"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO037&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site6.example.com/page-35"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO038&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site8.example.com/page-8"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO039&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site23.example.com/page-33"
+          },
+          {
+            "goto": "https://google.com/goto?url=SYNTHGOTO041&gsessionid=SYNTHSESSIONd52fdd",
+            "url": "https://site34.example.com/page-55"
+          }
+        ]
+      }
+    ]
+  }
+}

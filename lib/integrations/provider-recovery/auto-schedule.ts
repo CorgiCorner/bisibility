@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { accountHealthAdapter } from "@/lib/providers/account-health/registry";
-import { autoCheckEligible, nextAccountCheck } from "./cadence";
+import { AUTO_CHECK_INCIDENT_REASONS, autoCheckEligible, nextAccountCheck } from "./cadence";
 import { PROBE_LEASE_MS } from "./probe";
 
 export async function initializeAccountSchedules(providers: string[], now: Date) {
@@ -24,7 +24,9 @@ export async function initializeAccountSchedules(providers: string[], now: Date)
         is: {
           resolvedAt: null,
           startedAt: { gt: new Date(now.getTime() - 30 * 86400_000) },
-          reason: { in: ["provider_billing", "provider_account_restricted", "provider_transient"] },
+          reason: {
+            in: [...AUTO_CHECK_INCIDENT_REASONS],
+          },
         },
       },
     },
@@ -126,7 +128,7 @@ export async function retireAccountSchedules(providers: string[], now: Date) {
           currentIncident: {
             is: {
               reason: {
-                notIn: ["provider_billing", "provider_account_restricted", "provider_transient"],
+                notIn: [...AUTO_CHECK_INCIDENT_REASONS],
               },
             },
           },

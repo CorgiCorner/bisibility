@@ -12,6 +12,7 @@ import { markStaleImportJobs } from "../migration/stale-jobs";
 import { syncPresenceForAllProjects } from "../presence/sync";
 import type { QueuedDeadlineMaintenanceCursor } from "../rank-check/queued-deadline-maintenance";
 import { purgeExpiredQueuedRankCheckBatches } from "../rank-check/queued-retention";
+import { sweepExpiredQueuedSourceEvidence } from "../rank-check/queued-source-retention";
 import {
   cleanupRankCheckRawPurgeProgress,
   purgeRankCheckRawPayloads,
@@ -143,10 +144,18 @@ export type PurgeExpiredSessionsActivityResult = {
 
 export type PurgeQueuedRankCheckBatchesActivityResult = Awaited<
   ReturnType<typeof purgeExpiredQueuedRankCheckBatches>
->;
+> & { sourceEvidenceDeleted: number };
 
+/** One bounded page of expired batches and one of expired retained queued sources. */
 export async function purgeQueuedRankCheckBatchesActivity(): Promise<PurgeQueuedRankCheckBatchesActivityResult> {
-  return purgeExpiredQueuedRankCheckBatches(new Date());
+  const now = new Date();
+  const batches = await purgeExpiredQueuedRankCheckBatches(now);
+  const sources = await sweepExpiredQueuedSourceEvidence(now);
+  return {
+    ...batches,
+    hasMore: batches.hasMore || sources.hasMore,
+    sourceEvidenceDeleted: sources.deleted,
+  };
 }
 
 /**

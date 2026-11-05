@@ -17,6 +17,7 @@ import { gscActiveSnapshotRunState } from "./project-runs-gsc-snapshot";
 
 export const rankRunSelect = {
   blockedReason: true,
+  expiryBlockedReason: true,
   completedCount: true,
   costCents: true,
   createdAt: true,
@@ -72,7 +73,8 @@ function rankAttention(
   row: RankRunRow,
   status: z.infer<typeof runStatusSchema>,
 ): ProjectRunAttention | null {
-  if (status === "blocked") return { kind: "blocked", message: row.blockedReason };
+  if (status === "blocked" || (status === "completed" && row.expiryBlockedReason))
+    return { kind: "blocked", message: row.expiryBlockedReason ?? row.blockedReason };
   if (status === "completed" && row.outcome === "failed") return { kind: "failed", message: null };
   return null;
 }
@@ -97,7 +99,8 @@ export function rankProjectRun(
       outcome,
       status,
       trigger,
-      blockedReason: row.blockedReason,
+      blockedReason: row.expiryBlockedReason ?? row.blockedReason,
+      expiryBlockedReason: row.expiryBlockedReason,
     },
     href: projectRunRankCheckPath(asProjectRef(project.publicId), row.publicId),
     id: row.publicId as ProjectRunRankCheck["id"],

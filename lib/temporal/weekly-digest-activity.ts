@@ -1,6 +1,6 @@
 import { Context } from "@temporalio/activity";
 import { prisma } from "../db/prisma";
-import { readDemoConfig } from "../demo/config";
+import { readOnlyDemoConfig } from "../demo/config";
 import { recoverySwitches } from "../provider-evidence/recovery/switches";
 import { sendWeeklyDigestForProject } from "../reports/weekly-digest-send";
 
@@ -14,8 +14,8 @@ export type SendWeeklyReportDigestActivityResult = {
 export async function sendWeeklyReportDigestForAllProjects(
   now: Date,
 ): Promise<SendWeeklyReportDigestActivityResult> {
-  if (readDemoConfig().kind !== "disabled")
-    return { projects: 0, sent: 0, skipped: 0, ambiguous: 0 };
+  // Editable demo sends digests normally; recipient selection excludes the shared Viewer.
+  if (readOnlyDemoConfig()) return { projects: 0, sent: 0, skipped: 0, ambiguous: 0 };
   const incidentDigest = recoverySwitches().incidentDigest;
   const projects = await prisma.project.findMany({ select: { id: true } });
   let sent = 0,

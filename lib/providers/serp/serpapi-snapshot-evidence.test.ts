@@ -41,7 +41,7 @@ it("the extra page uses original semantics and keeps its own observed time/scope
     location,
     credentials: { apiKey: "synthetic" },
   } as SerpRankInput;
-  const result = await fetchSerpApiSnapshotPage(input, context, 20);
+  const result = await fetchSerpApiSnapshotPage(input, context, 20, 20);
   const url = new URL(mocks.request.mock.calls[0][0]);
   expect(url.searchParams.get("q")).toBe(context.keyword);
   expect(url.searchParams.get("start")).toBe("20");
@@ -60,7 +60,7 @@ it("the extra page uses original semantics and keeps its own observed time/scope
 });
 it("fake mode refuses continuation before any real transport rather than silently using synthetic credentials against a provider", async () => {
   vi.stubEnv("BISIBILITY_FAKE_PROVIDER", "1");
-  await expect(fetchSerpApiSnapshotPage({} as SerpRankInput, {} as never, 20)).rejects.toThrow(
+  await expect(fetchSerpApiSnapshotPage({} as SerpRankInput, {} as never, 20, 20)).rejects.toThrow(
     "explicit synthetic adapter",
   );
   expect(mocks.request).not.toHaveBeenCalled();

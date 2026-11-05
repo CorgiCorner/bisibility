@@ -3,6 +3,7 @@ import {
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import { appRootPath } from "@/lib/routing/app-path";
+import { stubLocation } from "@/tests/location-test-support";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactElement } from "react";
@@ -55,6 +56,32 @@ describe("TwoFactorChallengeForm", () => {
     expect(routerMock.refresh).toHaveBeenCalled();
     expect(await screen.findByRole("button", { name: "Signing in..." })).toBeDisabled();
     expect(screen.getByLabelText("Authenticator code")).toBeDisabled();
+  });
+
+  it("follows the consent URL when the second factor resumes an OAuth request", async () => {
+    const assign = vi.fn();
+    const restoreLocation = stubLocation({ assign, url: "https://rank.example.com" });
+    try {
+      mocks.verifyTotp.mockResolvedValue({
+        data: { redirect: true, url: "/oauth/consent?client_id=client_1&sig=signature" },
+        error: null,
+      });
+      render(<TwoFactorChallengeForm />);
+
+      fireEvent.change(screen.getByLabelText("Authenticator code"), {
+        target: { value: "123456" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith(
+          "https://rank.example.com/oauth/consent?client_id=client_1&sig=signature",
+        ),
+      );
+      expect(routerMock.replace).not.toHaveBeenCalled();
+    } finally {
+      restoreLocation();
+    }
   });
 
   it("submits the current challenge with the Enter key after hydration", async () => {

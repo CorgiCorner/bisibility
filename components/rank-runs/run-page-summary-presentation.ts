@@ -2,7 +2,8 @@ import {
   itemStatusChipPresentation,
   runStatusChipPresentation,
 } from "@/components/ui/status-chip-mapping";
-import { formatPaymentAmount } from "@/lib/action-payment/format";
+import { formatMeasuredPaymentAmount, formatPaymentAmount } from "@/lib/action-payment/format";
+import { formatProviderCost } from "@/lib/checks/provider-cost-format";
 import { type DateDisplayContext, formatDisplayDateTimeCurrentYear } from "@/lib/dates/format";
 import type { useTranslations } from "next-intl";
 import type { RunPageSummaryLabels } from "./RunPageModel";
@@ -59,7 +60,12 @@ export function createRunPageSummaryLabels({
       const presentation = itemStatusChipPresentation(kind);
       const note =
         kind === "completed"
-          ? t("counters.completedNote")
+          ? currentRun.rankedCount === undefined
+            ? t("counters.completedNote")
+            : t("counters.checkedRanked", {
+                checked: currentRun.counts.completed,
+                ranked: currentRun.rankedCount,
+              })
           : kind === "failed"
             ? t("counters.failedNote")
             : kind === "deferred"
@@ -111,10 +117,14 @@ export function createRunPageSummaryLabels({
         return {
           label: t("facts.cost"),
           value: payment
-            ? formatPaymentAmount(payment.charge, locale)
-            : fact.note === "nothing_billed"
-              ? t("facts.nothingBilled")
-              : t("unavailable"),
+            ? payment.option.fundingSource === "byok"
+              ? formatMeasuredPaymentAmount(payment.charge, locale)
+              : formatPaymentAmount(payment.charge, locale)
+            : fact.costCents !== null && fact.phase !== "estimated"
+              ? formatProviderCost(fact.costCents, locale)
+              : fact.note === "nothing_billed"
+                ? t("facts.nothingBilled")
+                : t("unavailable"),
           note: payment
             ? [
                 payment.option.fundingSource === "byok"
@@ -203,7 +213,11 @@ export function createRunPageSummaryLabels({
     progress: (processed, total) => t("summary.processed", { processed, total }),
     runPresentation: (run, skipped) => {
       if (skipped) return { label: statusT("skipped"), messageKey: "skipped", tone: "neutral" };
-      const presentation = runStatusChipPresentation(run.status, run.outcome, run.blockedReason);
+      const presentation = runStatusChipPresentation(
+        run.expiryBlockedReason ? "blocked" : run.status,
+        run.outcome,
+        run.blockedReason,
+      );
       return { ...presentation, label: statusT(presentation.messageKey) };
     },
     selected: (count) => t("summary.selected", { count }),

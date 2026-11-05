@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { filterAlertEmailRecipients, resolveAlertRuleRecipients } from "./recipients";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    user: { findUnique: vi.fn() },
     membership: { findMany: vi.fn() },
     project: { findUnique: vi.fn() },
     notificationPreference: { findMany: vi.fn() },
@@ -12,12 +13,28 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 describe("alert recipients", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.notificationPreference.findMany.mockResolvedValue([]);
     mocks.prisma.membership.findMany.mockResolvedValue([
       { userId: "user_1" },
       { userId: "user_2" },
+    ]);
+  });
+
+  it("excludes the configured viewer while keeping the owner", async () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_bcdefghijklmnopqrstuvwxy");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    mocks.prisma.user.findUnique.mockResolvedValue({ id: "user_2" });
+    const recipients = [
+      { email: "owner@example.com", userId: "user_1" },
+      { email: "viewer@example.org", userId: "user_2" },
+    ];
+    await expect(filterAlertEmailRecipients("project_1", recipients)).resolves.toEqual([
+      recipients[0],
     ]);
   });
 

@@ -137,6 +137,8 @@ export function projectRunStatusKey(run: ProjectRun | GscRunWithTitle): RunStatu
   if (run.kind === "ai")
     return aiRunState(run.details.state, run.timestamps.finishedAt, run.details.reason).key;
   return run.kind === "rank"
-    ? rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason)
+    ? run.details.expiryBlockedReason
+      ? "blocked"
+      : rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason)
     : gscRunStatusKey(run);
 }

@@ -66,6 +66,12 @@ export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
       WHERE "status" = 'queued'
         AND "claimedAt" IS NULL
         AND "orchestrationWorkflowId" IS NOT NULL
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM "alert_evaluation_intents"
+      WHERE "state" = 'pending'
+        AND ("leaseUntil" IS NULL OR "leaseUntil" <= NOW())
     ) AS "pending"
 `;
 

@@ -36,5 +36,10 @@ test("the application image build uses the canonical bounded compiler configurat
   )?.groups?.body;
 
   assert.ok(builderStage, "Dockerfile must retain a distinct application builder stage");
+  assert.doesNotMatch(builderStage, /NEXT_TYPES_CHECKED_BEFORE_BUILD/);
   assert.match(builderStage, /&& npm run ci:build(?:\s|$)/);
+  const compose = readFileSync(new URL("../../compose.build.yaml", import.meta.url), "utf8");
+  assert.doesNotMatch(compose, /NEXT_TYPES_CHECKED_BEFORE_BUILD/);
+  const publication = readFileSync(new URL("../../.github/workflows/container-image.yml", import.meta.url), "utf8");
+  assert.doesNotMatch(publication, /NEXT_TYPES_CHECKED_BEFORE_BUILD/);
 });

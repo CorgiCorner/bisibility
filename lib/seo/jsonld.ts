@@ -1,3 +1,4 @@
+import { type AppLocale, DEFAULT_LOCALE, localeUrlSegment } from "@/i18n/config";
 import { GITHUB_URL, LINKEDIN_URL } from "@/lib/site/site";
 import type { Metadata } from "next";
 import { createNoindexMetadata } from "./noindex";
@@ -15,9 +16,9 @@ export const linkedinUrl = LINKEDIN_URL;
 export const siteName = "bisibility";
 
 const rootDescription =
-  "An open-source SEO platform you can self-host or run in the cloud. Track rankings, research keywords and backlinks, and connect your own data providers.";
+  "Research competitors and keywords, keep ideas in Saved and track chosen keywords after you publish. Use bisibility Cloud or self-host the open-source app.";
 const socialDescription =
-  "Self-host bisibility or use the cloud: rank tracking, SERP history, keyword research, backlinks and Search Console data, on your own data providers.";
+  "Research competitors and keywords, keep ideas in Saved and track chosen keywords after you publish. Use bisibility Cloud or self-host the open-source app.";
 
 export const rootMetadata: Metadata = {
   ...buildPageMetadata({
@@ -59,12 +60,12 @@ export const rootMetadata: Metadata = {
 };
 
 export const homeMetadata: Metadata = buildPageMetadata({
-  title: "Open-source SEO platform you can self-host",
+  title: "SEO research and rank tracking",
   description:
-    "An open-source SEO platform you can self-host or run in the cloud. Track rankings, research keywords and backlinks, and connect your own data providers.",
+    "Research competitors and keywords, keep ideas in Saved and track chosen keywords after you publish. Use bisibility Cloud or self-host the open-source app.",
   path: "/",
   socialDescription:
-    "Self-host bisibility or use the cloud: rank tracking, SERP history, keyword research, backlinks and Search Console data, on your own data providers.",
+    "Research competitors and keywords, keep ideas in Saved and track chosen keywords after you publish. Use bisibility Cloud or self-host the open-source app.",
 });
 
 export const roadmapMetadata: Metadata = buildPageMetadata({
@@ -143,16 +144,20 @@ export function createOrganizationJsonLd(origin = resolveSiteUrl()): JsonLdObjec
   };
 }
 
-export function createWebSiteJsonLd(origin = resolveSiteUrl()): JsonLdObject {
-  const url = absoluteSiteUrl("/", origin);
+export function createWebSiteJsonLd(
+  origin = resolveSiteUrl(),
+  locale: AppLocale = DEFAULT_LOCALE,
+): JsonLdObject {
+  const root = absoluteSiteUrl("/", origin);
+  const path = locale === DEFAULT_LOCALE ? "/" : `/${localeUrlSegment(locale)}`;
 
   return {
-    "@id": `${url}#website`,
+    "@id": `${root}#website`,
     "@type": "WebSite",
-    inLanguage: "en",
+    inLanguage: locale,
     name: siteName,
-    publisher: { "@id": `${url}#organization` },
-    url,
+    publisher: { "@id": `${root}#organization` },
+    url: absoluteSiteUrl(path, origin),
   };
 }
 
@@ -170,7 +175,7 @@ export const englishHomeJsonLdCopy: HomeJsonLdCopy = {
     "Self-hostable REST API",
   ],
   softwareDescription:
-    "Open-source, self-hostable SEO platform: Google rank tracking with SERP history, keyword research, backlinks, Search Console data, an MCP server and a REST API.",
+    "Open-source SEO software for competitor research, keyword research, saved ideas and rank tracking.",
 };
 
 export function createSoftwareApplicationJsonLd(
@@ -217,13 +222,20 @@ export function createFaqPageJsonLd(faqs: readonly FaqEntry[]): JsonLdObject | n
   };
 }
 
-export function createHomeJsonLd(copy: HomeJsonLdCopy, origin = resolveSiteUrl()): JsonLdGraph {
+export function createHomeJsonLd(
+  copy: HomeJsonLdCopy,
+  origin = resolveSiteUrl(),
+  locale: AppLocale = DEFAULT_LOCALE,
+  faqs: readonly FaqEntry[] = [],
+): JsonLdGraph {
+  const faq = createFaqPageJsonLd(faqs);
   return {
     "@context": "https://schema.org",
     "@graph": [
       createOrganizationJsonLd(origin),
-      createWebSiteJsonLd(origin),
+      createWebSiteJsonLd(origin, locale),
       createSoftwareApplicationJsonLd(copy, origin),
+      ...(faq ? [faq] : []),
     ],
   };
 }

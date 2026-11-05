@@ -55,7 +55,13 @@
       "kpisAriaLabel": "Overview KPIs",
       "viewAllKeywords": "View all keywords",
       "viewCheckRuns": "View check runs",
-      "providerCapacityUnavailableDetail": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys."
+      "providerCapacityUnavailableDetail": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.",
+      "connectionSettings": "Connection settings",
+      "verifyConnectionDetail": "Checks that need this connection are deferred until it is verified. A free account check runs automatically, or you can review the connection now.",
+      "verifyConnectionTitle": "Verify your {provider} connection",
+      "providerUnresolvedRedirectsDetail": "The provider returned links we could not resolve, so this check has no position.",
+      "organicResultUnclassifiableDetail": "{keyword}: The provider returned a search result we could not classify, so this check has no position.",
+      "organicDepthNotCoveredDetail": "{keyword}: The returned organic results did not cover the requested depth, so no position or absence could be established."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {up {value, number, ::.0} vs previous ranked check} down {down {value, number, ::.0} vs previous ranked check} other {0 vs previous ranked check}}",

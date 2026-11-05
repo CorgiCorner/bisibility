@@ -5,6 +5,7 @@ import {
   accountHealthProviders,
 } from "@/lib/providers/account-health/registry";
 import { initializeAccountSchedules, retireAccountSchedules } from "./auto-schedule";
+import { AUTO_CHECK_INCIDENT_REASONS } from "./cadence";
 import { checkRecoveryAccount } from "./check-account";
 
 export async function checkDueProviderAccounts() {
@@ -27,7 +28,9 @@ export async function checkDueProviderAccounts() {
       currentIncident: {
         is: {
           resolvedAt: null,
-          reason: { in: ["provider_billing", "provider_account_restricted", "provider_transient"] },
+          reason: {
+            in: [...AUTO_CHECK_INCIDENT_REASONS],
+          },
         },
       },
     },

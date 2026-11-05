@@ -55,7 +55,13 @@
       "kpisAriaLabel": "Kluczowe wskaźniki przeglądu",
       "viewAllKeywords": "Zobacz wszystkie słowa kluczowe",
       "viewCheckRuns": "Zobacz przebiegi sprawdzeń",
-      "providerCapacityUnavailableDetail": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy."
+      "providerCapacityUnavailableDetail": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy.",
+      "connectionSettings": "Ustawienia połączenia",
+      "verifyConnectionDetail": "Sprawdzenia wymagające tego połączenia są odroczone do czasu jego weryfikacji. Bezpłatne sprawdzenie konta uruchamia się automatycznie, możesz też od razu przejrzeć połączenie.",
+      "verifyConnectionTitle": "Zweryfikuj połączenie z {provider}",
+      "providerUnresolvedRedirectsDetail": "Dostawca zwrócił linki, których nie udało się rozpoznać, więc to sprawdzenie nie ma pozycji.",
+      "organicResultUnclassifiableDetail": "{keyword}: Dostawca zwrócił wynik wyszukiwania, którego nie udało się sklasyfikować, więc to sprawdzenie nie ma pozycji.",
+      "organicDepthNotCoveredDetail": "{keyword}: Zwrócone wyniki organiczne nie objęły wymaganej głębokości, więc nie udało się ustalić pozycji ani potwierdzić jej braku."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {w górę o {value, number, ::.0} wobec poprzedniego sprawdzenia} down {w dół o {value, number, ::.0} wobec poprzedniego sprawdzenia} other {bez zmian wobec poprzedniego sprawdzenia}}",

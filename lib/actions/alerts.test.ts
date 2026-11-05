@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => {
     update: "member",
   } as const;
   const prisma = {
+    $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     alertRule: {
@@ -145,6 +146,7 @@ describe("alert actions", () => {
     mockActor("admin");
     mockProject();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.prisma.$executeRaw.mockResolvedValue(0);
     mocks.prisma.$queryRaw.mockResolvedValue([{ id: "project_1" }]);
     mocks.prisma.webhookEndpoint.count.mockResolvedValue(0);
     mocks.prisma.alertRule.count.mockResolvedValue(0);
@@ -199,7 +201,12 @@ describe("alert actions", () => {
       include: {
         markets: { include: { projectMarket: { select: { publicId: true } } } },
         recipients: { select: { userId: true } },
-        targets: true,
+        targets: {
+          include: {
+            keyword: { select: { publicId: true } },
+            tag: { select: { publicId: true } },
+          },
+        },
       },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -207,6 +214,7 @@ describe("alert actions", () => {
         action: "alert_rule.create",
         targetId: rulePublicId,
       }),
+      mocks.prisma,
     );
   });
 
@@ -270,6 +278,7 @@ describe("alert actions", () => {
       expect.objectContaining({
         after: expect.objectContaining({ marketIds: [marketPublicId] }),
       }),
+      mocks.prisma,
     );
   });
 
@@ -313,7 +322,12 @@ describe("alert actions", () => {
       include: {
         markets: { include: { projectMarket: { select: { publicId: true } } } },
         recipients: { select: { userId: true } },
-        targets: true,
+        targets: {
+          include: {
+            keyword: { select: { publicId: true } },
+            tag: { select: { publicId: true } },
+          },
+        },
       },
     });
   });
@@ -346,6 +360,107 @@ describe("alert actions", () => {
     if (!result.ok) throw new Error(result.error);
     expect(result.warning).toContain("tracked only to top 10");
     expect(result).toMatchObject({ id: rulePublicId });
+    expect(result).not.toHaveProperty("replayed");
+  });
+
+  it("returns the persisted rule when a create request is replayed", async () => {
+    mocks.prisma.alertRule.findFirst.mockResolvedValue({
+      channels: [],
+      conditionType: "exits_top_n",
+      enabled: true,
+      id: "rule_1",
+      markets: [],
+      name: "Slipped out of top 10",
+      publicId: rulePublicId,
+      severity: "urgent",
+      targetType: "all",
+      topN: 10,
+    });
+
+    const result = await createAlertRule({
+      channels: [],
+      conditionType: "exits_top_n",
+      name: "Edited name",
+      projectId: projectPublicId,
+      requestId: rulePublicId,
+      targetIds: [],
+      targetType: "all",
+      topN: 3,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error);
+    expect(result).toMatchObject({
+      id: rulePublicId,
+      persisted: { name: "Slipped out of top 10", topN: 10 },
+      replayed: true,
+    });
+    expect(result.persisted).not.toMatchObject({ name: "Edited name", topN: 3 });
+    expect(mocks.prisma.alertRule.create).not.toHaveBeenCalled();
+  });
+
+  it("returns saved keyword and tag public ids when a create request is replayed", async () => {
+    mocks.prisma.alertRule.findFirst.mockResolvedValue({
+      channels: [],
+      conditionType: "position_drop",
+      enabled: true,
+      id: "rule_1",
+      markets: [],
+      name: "Example drop",
+      publicId: rulePublicId,
+      severity: "warning",
+      targetType: "keyword",
+      targets: [{ keyword: { publicId: keywordPublicId }, tag: null }],
+    });
+
+    const keywordResult = await createAlertRule({
+      channels: [],
+      conditionType: "position_drop",
+      dropPositions: 5,
+      name: "Edited name",
+      projectId: projectPublicId,
+      requestId: rulePublicId,
+      targetIds: [],
+      targetType: "all",
+    });
+
+    expect(keywordResult.ok).toBe(true);
+    if (!keywordResult.ok) throw new Error(keywordResult.error);
+    expect(keywordResult.persisted).toMatchObject({
+      targetIds: [keywordPublicId],
+      targetType: "keyword",
+    });
+
+    mocks.prisma.alertRule.findFirst.mockResolvedValue({
+      channels: [],
+      conditionType: "position_drop",
+      enabled: true,
+      id: "rule_1",
+      markets: [],
+      name: "Example drop",
+      publicId: rulePublicId,
+      severity: "warning",
+      targetType: "tag",
+      targets: [{ keyword: null, tag: { publicId: tagPublicId } }],
+    });
+
+    const tagResult = await createAlertRule({
+      channels: [],
+      conditionType: "position_drop",
+      dropPositions: 5,
+      name: "Edited name",
+      projectId: projectPublicId,
+      requestId: rulePublicId,
+      targetIds: [],
+      targetType: "all",
+    });
+
+    expect(tagResult.ok).toBe(true);
+    if (!tagResult.ok) throw new Error(tagResult.error);
+    expect(tagResult.persisted).toMatchObject({
+      targetIds: [tagPublicId],
+      targetType: "tag",
+    });
   });
 
   it("replaces targets when updating a rule", async () => {

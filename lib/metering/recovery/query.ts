@@ -1,3 +1,4 @@
+import { queuedOwnTagProofSql } from "@/lib/provider-usage/queued-proof";
 import { recoveryIncidentBody } from "@/lib/provider-usage/recovery-notification-policy";
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -136,7 +137,12 @@ export async function readRecoveryRecords(
         OR EXISTS(SELECT 1 FROM queued_rank_check_tasks t JOIN queued_rank_check_batches b ON b.id=t."batchId"
           WHERE t.id=o.input->>'correlationId' AND b."connectionId"=candidate.connection_id
             AND b."projectId"=candidate.project_id AND b.provider=candidate.provider
-            AND t."providerTaskId" IS NOT NULL AND t."costCents" IS NOT NULL AND t."providerTag" LIKE '%;cs=own;%')) AS proof,
+            AND t."providerTaskId" IS NOT NULL AND t."costCents" IS NOT NULL AND ${queuedOwnTagProofSql})) AS proof,
+      (SELECT t."costEvidence" FROM queued_rank_check_tasks t JOIN queued_rank_check_batches b ON b.id=t."batchId"
+        WHERE t.id=o.input->>'correlationId' AND b."connectionId"=candidate.connection_id
+          AND b."projectId"=candidate.project_id AND b.provider=candidate.provider
+          AND t."providerTaskId" IS NOT NULL AND t."costCents" IS NULL AND ${queuedOwnTagProofSql}
+        LIMIT 1) AS "costEvidence",
       re."expiresAt" AS "resultExpiresAt",re."blockedCode" AS "resultBlockedCode",error.body AS error,COALESCE(error.current,false) AS "activeError",
       EXISTS(SELECT 1 FROM rank_check_run_recovery_grants grant_row
         JOIN rank_check_runs grant_run ON grant_run.id=grant_row."runId"

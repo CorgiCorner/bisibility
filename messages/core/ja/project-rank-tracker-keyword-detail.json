@@ -327,7 +327,7 @@
         "yourResult": "自サイトの結果",
         "notFound": "該当なし",
         "jumpToResult": "自サイトの結果へ移動",
-        "aiUnknown": "このプロバイダーは AI による概要を報告しないため、このチェックでは表示の有無を判断できません。",
+        "aiUnknown": "このチェックでは AI 概要の有無が記録されていません。",
         "aiPresent": "順位はオーガニック結果のみを対象としています。このチェックでは、その上に AI による概要が表示されていました。",
         "selfHostedRetention": "完全な詳細は、データベースを保持している限り保存されます。",
         "hostedRetention": "ホスト型ワークスペースでは、完全な詳細は{days, number}日間保存されます。",
@@ -456,7 +456,16 @@
         "compareAction": "比較",
         "stopComparing": "比較を終了",
         "savedResults": "保存した結果: {count, number} 件 · リクエスト: 上位 {depth, number} 位",
-        "partialCompetitors": "一部の結果のみ保存されています。表示されていない競合が上位 {depth, number} 位に入っている可能性があります。"
+        "partialCompetitors": "一部の結果のみ保存されています。表示されていない競合が上位 {depth, number} 位に入っている可能性があります。",
+        "downloadCsv": "CSV をダウンロード",
+        "downloadJson": "JSON をダウンロード",
+        "normalizedDownloadNote": "保存済みの正規化データです。完了したチェックにはプロバイダーの完全な応答は保存されません。",
+        "missingRank": "#{position, number} はプロバイダーから返されませんでした",
+        "missingPositions": "{count, plural, one {{depth, number} 件中 # 件の順位が返されませんでした: {ranks}} other {{depth, number} 件中 # 件の順位が返されませんでした: {ranks}}}",
+        "aiContentNotLoaded": "AI 概要あり、内容は未読み込み",
+        "resultIndeterminate": "順位未確定: 要求した深さを確認できません",
+        "missingStoredRank": "#{position, number} の保存済み結果はありません",
+        "missingStoppedRank": "ドメインが見つかったため #{position, number} は取得されませんでした"
       },
       "comparison": {
         "entered": "新規参入",
@@ -707,7 +716,12 @@
         "scopeDevices": {
           "desktop": "デスクトップ",
           "mobile": "モバイル"
-        }
+        },
+        "organicDepthNotCovered": "返された自然検索結果は指定された深さをカバーしていないため、順位も圏外であることも確認できませんでした。",
+        "notInTop": "上位 {depth, number} 件に該当なし",
+        "checkedDepth": "上位 {depth, number} 件を確認済み",
+        "noRankToCompare": "比較する順位付き結果がありません",
+        "noRankingUrl": "該当順位なし - 要求した結果内に URL がありません"
       },
       "quality": {
         "currentUnknown": "現在の順位は不明",

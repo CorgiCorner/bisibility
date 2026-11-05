@@ -1,4 +1,5 @@
 import { pageParameters } from "./openapi-parameters";
+import { problemResponse } from "./openapi-problem";
 import { publicIdSchema } from "./openapi-public-id";
 import { sdkName } from "./openapi-sdk-schema";
 
@@ -120,12 +121,14 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         "getNotificationPreferences",
         ref("NotificationPreferences"),
       ),
-      patch: bearer(
-        "Update notification preferences",
-        "updateNotificationPreferences",
-        ref("NotificationPreferencesUpdated"),
-        ref("NotificationPreferencesPatch"),
-        [{ $ref: "#/components/parameters/IdempotencyKey" }],
+      patch: preferenceMutation(
+        bearer(
+          "Update notification preferences",
+          "updateNotificationPreferences",
+          ref("NotificationPreferencesUpdated"),
+          ref("NotificationPreferencesPatch"),
+          [{ $ref: "#/components/parameters/IdempotencyKey" }],
+        ),
       ),
     },
     "/projects/{project_id}/provider-budgets": {
@@ -209,5 +212,18 @@ function resourceMutation(operation: object, created = false) {
     ...operation,
     requestBody: { ...raw.requestBody, required: true },
     responses: { [created ? "201" : "200"]: success, ...errors },
+  };
+}
+
+function preferenceMutation(operation: object) {
+  const raw = operation as { responses: Record<string, object> };
+  return {
+    ...operation,
+    responses: {
+      ...raw.responses,
+      "500": problemResponse(
+        "Save status could not be confirmed. When available, details.current_preferences contains the persisted state.",
+      ),
+    },
   };
 }

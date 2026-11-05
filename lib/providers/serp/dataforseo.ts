@@ -42,9 +42,12 @@ import {
   dataForSeoRankTask,
   STOP_ON_MATCH_TYPE,
 } from "./dataforseo-rank-request";
+import { dataForSeoRedirectTransport } from "./dataforseo-redirect-transport";
 import { createDataForSeoResearchMethods } from "./dataforseo-research";
 import { dataForSeoObservationRun } from "./observation-extract-dataforseo";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
+import { isRedirectRow, resolveRedirectRows, unresolvedRows } from "./redirect-resolution";
+import { UnresolvedRedirectError } from "./unresolved-redirect-error";
 import { dataForSeoSentScope } from "./web-local-proof";
 
 const USER_DATA_URL = "https://api.dataforseo.com/v3/appendix/user_data";
@@ -53,6 +56,8 @@ const RANKED_KEYWORDS_URL =
 const LABS_STATUS_URL = "https://api.dataforseo.com/v3/dataforseo_labs/status";
 // The synchronous SERP endpoint is slower than other calls; give it more headroom.
 const SERP_REQUEST_TIMEOUT_MS = 30_000;
+// A browser request never waits longer than this for redirect conversion.
+const LIVE_REDIRECT_TIMEOUT_MS = 10_000;
 
 export { DataForSeoUnsupportedLocationError } from "./dataforseo-errors";
 
@@ -142,8 +147,30 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
     : Array.isArray(task.result)
       ? task.result.flatMap((result) => result.items ?? [])
       : [null];
-  // biome-ignore format: keep the provider module under its enforced line cap.
-  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, payload.depth));
+  const sourceDecision = dataForSeoOrganicDecision(items, input.domain, payload.depth);
+  // Convert only when a redirect row is what keeps the decision open.
+  const resolution =
+    sourceDecision.outcome === "indeterminate" && items.some(isRedirectRow)
+      ? await resolveRedirectRows(
+          items,
+          dataForSeoRedirectTransport(
+            credentials,
+            LIVE_REDIRECT_TIMEOUT_MS,
+            AbortSignal.timeout(LIVE_REDIRECT_TIMEOUT_MS),
+          ),
+        )
+      : unresolvedRows(items);
+  const candidateDecision =
+    resolution.candidates === items
+      ? sourceDecision
+      : dataForSeoOrganicDecision(resolution.candidates, input.domain, payload.depth);
+  if (
+    candidateDecision.outcome === "indeterminate" &&
+    resolution.resolutions.some((row) => row.status === "unresolved")
+  ) {
+    throw new UnresolvedRedirectError(dataForSeoResponseCostCents(data));
+  }
+  const decision = requireDeterminateOrganicResult("DataForSEO", candidateDecision);
   const checkedAt = new Date();
 
   return {
@@ -152,7 +179,12 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
     costCents: dataForSeoResponseCostCents(data),
     position: decision.position,
     rankingUrl: decision.rankingUrl,
-    raw: dataForSeoRawPayload(items, decision),
+    raw: {
+      ...dataForSeoRawPayload(resolution.candidates, decision),
+      ...(resolution.resolutions.some((row) => row.status !== "not_redirect")
+        ? { redirect_resolutions: resolution.resolutions }
+        : {}),
+    },
     observation: dataForSeoObservationRun({
       providerResults: task.result,
       sentScope,
@@ -169,7 +201,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       },
       effectiveScope: null,
       executedAt: checkedAt,
-      items,
+      items: resolution.candidates,
       requestPolicy: {
         depth: payload.depth,
         findTargetsIn: stopOnMatch ? STOP_ON_MATCH_TYPE : null,

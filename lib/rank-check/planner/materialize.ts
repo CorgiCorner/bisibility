@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { captureDefinitionItemIntents } from "@/lib/measurement-definitions/worker-intent";
+import { notifyScheduleBlocked } from "@/lib/notifications/events";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import {
   activeMarketLocationIds,
@@ -43,6 +44,7 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
         },
       },
       projectId: true,
+      blockedReason: true,
       selectionSpec: true,
       launchedAt: true,
       startedAt: true,
@@ -92,12 +94,16 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
     const expired = await prisma.rankCheckRun.updateMany({
       data: {
         blockedReason: "occurrence_expired",
+        expiryBlockedReason: run.blockedReason,
         finishedAt: now,
         outcome: "deferred",
         status: "completed",
       },
-      where: { id: runId, status: "blocked" },
+      where: { id: runId, status: "blocked", blockedReason: run.blockedReason },
     });
+    if (expired.count > 0 && run.blockedReason) {
+      await notifyScheduleBlocked(run.projectId, run.blockedReason, now);
+    }
     return expired.count > 0 ? ("expired" as const) : ("not_ready" as const);
   }
   const members = scheduledRunMembers(schedule.keywords);

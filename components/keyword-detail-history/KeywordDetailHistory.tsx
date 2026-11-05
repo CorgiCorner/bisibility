@@ -17,7 +17,12 @@ import { RecordedUrlHistory } from "./RecordedUrlHistory";
 import { RetainedSnapshotCard } from "./RetainedSnapshotCard";
 import { useKeywordDetailHistory } from "./use-keyword-detail-history";
 
-type Props = { history: KeywordHistoryPort; keyword: string; timeZone: string };
+type Props = {
+  history: KeywordHistoryPort;
+  keyword: string;
+  timeZone: string;
+  noMatchDepths?: Readonly<Record<string, number>>;
+};
 
 export function KeywordDetailHistory(props: Readonly<Props>) {
   const initial = props.history.initial.observations;
@@ -29,7 +34,7 @@ export function KeywordDetailHistory(props: Readonly<Props>) {
   );
 }
 
-function HistoryWorkspace({ history, keyword, timeZone }: Readonly<Props>) {
+function HistoryWorkspace({ history, keyword, timeZone, noMatchDepths }: Readonly<Props>) {
   const t = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
   const format = useFormatter();
   const {
@@ -136,6 +141,7 @@ function HistoryWorkspace({ history, keyword, timeZone }: Readonly<Props>) {
             {stream === "observations" ? (
               <ObservationHistoryTable
                 page={pages.observations}
+                noMatchDepths={noMatchDepths}
                 onOpen={(id) => void openSnapshot(id)}
                 timeZone={timeZone}
               />
@@ -174,10 +180,18 @@ function HistoryWorkspace({ history, keyword, timeZone }: Readonly<Props>) {
         ) : null}
       </Card>
       {!forbidden && validHistoryPages(pages) ? (
-        <RecordedUrlHistory page={pages.observations} timeZone={timeZone} />
+        <RecordedUrlHistory
+          page={pages.observations}
+          timeZone={timeZone}
+          noMatchDepths={noMatchDepths}
+        />
       ) : null}
       {!forbidden && snapshot ? (
-        <RetainedSnapshotCard snapshot={snapshot} timeZone={timeZone} />
+        <RetainedSnapshotCard
+          snapshot={snapshot}
+          timeZone={timeZone}
+          noMatchDepths={noMatchDepths}
+        />
       ) : null}
     </div>
   );

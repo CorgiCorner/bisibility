@@ -46,6 +46,7 @@ const at = new Date("2026-09-06T12:00:00.000Z");
 function rankRow(status: string, outcome: string | null): RankRunRow {
   return {
     blockedReason: null,
+    expiryBlockedReason: null,
     completedCount: 0,
     costCents: 0,
     createdAt: at,
@@ -84,6 +85,13 @@ function gscRow(state: string, pausedReason: string | null): GscImportRow {
 }
 
 const rankRows = [
+  {
+    ...rankRow("completed", "deferred"),
+    blockedReason: "occurrence_expired",
+    expiryBlockedReason: "operation_unavailable",
+    launchedAt: null,
+    startedAt: null,
+  },
   ...RUN_STATUSES.flatMap((status) =>
     [null, ...RUN_OUTCOMES].map((outcome) => rankRow(status, outcome)),
   ),

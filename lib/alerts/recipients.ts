@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { readDemoConfig } from "@/lib/demo/config";
 
 export type AlertEmailRecipient = { email: string; userId: string };
 
@@ -21,6 +22,14 @@ export async function filterAlertEmailRecipients(
   recipients: AlertEmailRecipient[],
 ) {
   if (recipients.length === 0) return [];
+  const config = readDemoConfig();
+  const viewer =
+    config.kind === "disabled"
+      ? null
+      : await prisma.user.findUnique({
+          where: { publicId: config.viewerPublicId },
+          select: { id: true },
+        });
   const userIds = recipients.map(({ userId }) => userId);
   const [members, project, preferences] = await Promise.all([
     prisma.membership.findMany({
@@ -41,5 +50,7 @@ export async function filterAlertEmailRecipients(
   const disabled = new Set(
     preferences.filter(({ alertEmail }) => !alertEmail).map(({ userId }) => userId),
   );
-  return recipients.filter(({ userId }) => current.has(userId) && !disabled.has(userId));
+  return recipients.filter(
+    ({ userId }) => current.has(userId) && !disabled.has(userId) && userId !== viewer?.id,
+  );
 }

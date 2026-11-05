@@ -65,9 +65,17 @@ describe("retained SERP stop provenance", () => {
         retrievedPositions: 9,
         stoppedAtResult: expected,
       });
-      expect(mocks.find.mock.calls[0][0].select.observationRun).toEqual({
-        select: { completeness: true, projectId: true },
+      expect(mocks.find.mock.calls[0][0].select.observationRun).toMatchObject({
+        select: {
+          completeness: true,
+          projectId: true,
+          configuredScope: true,
+          effectiveScope: true,
+        },
       });
+      expect(
+        mocks.find.mock.calls[0][0].select.observationRun.select.items.select,
+      ).not.toHaveProperty("rawFragment");
     },
   );
 
@@ -79,6 +87,7 @@ describe("retained SERP stop provenance", () => {
           ...base,
           checkId: `check${index}`,
           observationCompleteness: completeness,
+          recordedNoMatchDepth: 20,
         })),
       );
       const rows =
@@ -97,7 +106,6 @@ describe("retained SERP stop provenance", () => {
       expect(sql).toContain('LEFT JOIN "observation_runs"');
       expect(sql).toContain('ob."rankCheckId" = rc."id"');
       expect(sql).toContain('ob."projectId" = k."projectId"');
-      expect(sql).not.toContain("'normalization'->>'outcome'");
     },
   );
 

@@ -4,6 +4,8 @@ import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { ProviderCallError, providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { OrganicCoverageError } from "@/lib/providers/serp/organic-coverage-error";
+import { UnresolvedRedirectError } from "@/lib/providers/serp/unresolved-redirect-error";
 import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import type { FallbackAttempt } from "./provider-chain-error";
 import { RankCheckRunnerError, type RankCheckRunnerErrorCode } from "./runner-error";
@@ -24,6 +26,11 @@ export function fallbackAttempt(
   admission?: DeploymentAdmissionExhaustedError;
   funding?: BudgetExhaustedError;
 } | null {
+  if (
+    error instanceof RankCheckRunnerError &&
+    (error.cause instanceof UnresolvedRedirectError || error.cause instanceof OrganicCoverageError)
+  )
+    return null;
   if (error instanceof ProviderRecoveryAdmissionError) {
     return {
       attempt: {

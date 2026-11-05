@@ -1,3 +1,4 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createAlertRuleRecord,
@@ -7,7 +8,8 @@ import {
 
 const mocks = vi.hoisted(() => {
   const tx = {
-    alertRule: { update: vi.fn() },
+    $executeRaw: vi.fn(),
+    alertRule: { update: vi.fn(), count: vi.fn(), create: vi.fn(), delete: vi.fn() },
     alertRuleMarket: { deleteMany: vi.fn() },
     alertRuleRecipient: { deleteMany: vi.fn() },
     alertRuleTarget: { deleteMany: vi.fn() },
@@ -35,7 +37,9 @@ const context = { actorId: null, projectId: "project_1" };
 const ruleInclude = {
   markets: { include: { projectMarket: { select: { publicId: true } } } },
   recipients: { select: { userId: true } },
-  targets: true,
+  targets: {
+    include: { keyword: { select: { publicId: true } }, tag: { select: { publicId: true } } },
+  },
 };
 
 function form(overrides: Record<string, unknown> = {}) {
@@ -73,6 +77,9 @@ describe("alert service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.tx));
+    mocks.tx.alertRule.create = mocks.prisma.alertRule.create;
+    mocks.tx.alertRule.count = mocks.prisma.alertRule.count;
+    mocks.tx.alertRule.delete = mocks.prisma.alertRule.delete;
     mocks.prisma.alertRule.create.mockResolvedValue(rule());
     mocks.prisma.alertRule.count.mockResolvedValue(0);
     mocks.prisma.alertRule.delete.mockResolvedValue(rule());
@@ -90,6 +97,22 @@ describe("alert service", () => {
     mocks.writeAudit.mockResolvedValue({});
   });
 
+  it("uses a transaction for create and delete audit", async () => {
+    await createAlertRuleRecord(form(), context);
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "alert_rule.create" }),
+      mocks.tx,
+    );
+    vi.clearAllMocks();
+    await deleteAlertRuleRecord({ ruleId: "rule_1" }, context);
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "alert_rule.delete" }),
+      mocks.tx,
+    );
+  });
+
   it("creates API-owned rules with a null creator and audit actor", async () => {
     await createAlertRuleRecord(form(), context);
 
@@ -99,6 +122,7 @@ describe("alert service", () => {
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: null }),
+      mocks.tx,
     );
   });
 
@@ -171,6 +195,7 @@ describe("alert service", () => {
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "alert_rule.create", actorId: "user_1" }),
+      mocks.tx,
     );
   });
 
@@ -194,6 +219,56 @@ describe("alert service", () => {
     expect(mocks.prisma.alertRule.count).toHaveBeenCalledWith({
       where: { projectId: "project_1" },
     });
+    expect(mocks.prisma.alertRule.create).not.toHaveBeenCalled();
+  });
+
+  it("returns the persisted rule when the same actor retries a request id", async () => {
+    const persisted = rule({
+      publicId: "alr_a00000000000000000000000",
+      thresholdPosition: 10,
+    });
+    mocks.prisma.alertRule.findFirst.mockResolvedValue(persisted);
+
+    const result = await createAlertRuleRecord(
+      form({ requestId: "alr_a00000000000000000000000", thresholdPosition: 4 }),
+      { actorId: "user_1", projectId: "project_1" },
+    );
+
+    expect(result).toMatchObject({ replayed: true, thresholdPosition: 10 });
+    expect(mocks.prisma.alertRule.create).not.toHaveBeenCalled();
+  });
+
+  it("does not mark a new request id as a replay", async () => {
+    mocks.prisma.alertRule.findFirst.mockResolvedValue(null);
+
+    const result = await createAlertRuleRecord(
+      form({ requestId: "alr_a00000000000000000000000" }),
+      { actorId: "user_1", projectId: "project_1" },
+    );
+
+    expect(result).not.toMatchObject({ replayed: true });
+    expect(mocks.prisma.alertRule.create).toHaveBeenCalledOnce();
+  });
+
+  it("marks a unique-conflict retry as the persisted rule", async () => {
+    const persisted = rule({
+      publicId: "alr_a00000000000000000000000",
+      thresholdPosition: 10,
+    });
+    mocks.prisma.alertRule.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(persisted);
+    mocks.prisma.$transaction.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        clientVersion: "7.8.0",
+        code: "P2002",
+      }),
+    );
+
+    const result = await createAlertRuleRecord(
+      form({ requestId: "alr_a00000000000000000000000", thresholdPosition: 4 }),
+      { actorId: "user_1", projectId: "project_1" },
+    );
+
+    expect(result).toMatchObject({ replayed: true, thresholdPosition: 10 });
     expect(mocks.prisma.alertRule.create).not.toHaveBeenCalled();
   });
 
@@ -341,6 +416,7 @@ describe("alert service", () => {
         actorId: null,
         before: expect.objectContaining({ id: "alr_a00000000000000000000000" }),
       }),
+      mocks.tx,
     );
   });
 

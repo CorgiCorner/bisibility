@@ -9,6 +9,7 @@ export const analyticsClients = [
   "cli",
   "mcp",
   "extension",
+  "dsh_plugin",
   "unknown",
 ] as const;
 
@@ -38,6 +39,7 @@ const identifiers: Record<string, ClientAttribution["client"]> = {
   "bisibility-cli": "cli",
   "bisibility-mcp": "mcp",
   "bisibility-extension": "extension",
+  "bisibility-dsh-plugin": "dsh_plugin",
 };
 
 export function parseClientAttribution(

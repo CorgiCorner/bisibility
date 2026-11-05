@@ -48,7 +48,7 @@ const runRef = "rcr_aaaaaaaaaaaaaaaaaaaaaaaa";
 const project = {
   id: "project-db",
   publicId: projectRef,
-  domain: "example.test",
+  domain: "example.com",
   name: "Example",
   ownerId: "owner",
   writeMode: "active",
@@ -79,6 +79,7 @@ function run(status: string, outcome: string | null) {
     finishedAt:
       status === "cancelled" || status === "completed" ? "2026-10-12T10:00:00.000Z" : null,
     blockedReason: status === "blocked" ? "budget_exhausted" : null,
+    expiryBlockedReason: null,
     parentRunId: null,
     costCents: null,
     usage: { actual: null, estimated: null, unit: "operations", internalOnly: "omit" },
@@ -90,7 +91,7 @@ function run(status: string, outcome: string | null) {
 }
 function request(path: string, method = "GET") {
   return handleApiRequest(
-    new Request(`https://example.test/api/v1/${path}`, {
+    new Request(`https://example.com/api/v1/${path}`, {
       method,
       headers: { authorization: "Bearer bsb_pat_live_fixture" },
     }),
@@ -183,4 +184,27 @@ it("includes distinct typed deferral reasons in public run reads", async () => {
     deferral_reasons: ["provider_account_blocked", "usage_unconfirmed"],
   });
   expect(mocks.reasons).toHaveBeenCalledWith(project.id, [runRef]);
+});
+
+it("exposes the original expiry blocker in run reads", async () => {
+  mocks.readRun.mockResolvedValue({
+    ...run("completed", "deferred"),
+    blockedReason: "occurrence_expired",
+    expiryBlockedReason: "operation_unavailable",
+  });
+  const response = await request(`projects/${projectRef}/rank-check-runs/${runRef}`);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({
+    blocked_reason: "occurrence_expired",
+    expiry_blocked_reason: "operation_unavailable",
+  });
+});
+
+it("does not expose malformed expiry causes", async () => {
+  mocks.readRun.mockResolvedValue({
+    ...run("completed", "deferred"),
+    expiryBlockedReason: "invalid reason with spaces",
+  });
+  const response = await request(`projects/${projectRef}/rank-check-runs/${runRef}`);
+  expect(await response.json()).toMatchObject({ expiry_blocked_reason: null });
 });

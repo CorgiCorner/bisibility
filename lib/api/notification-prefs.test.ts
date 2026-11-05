@@ -1,11 +1,15 @@
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiContext } from "./context";
+import { ApiForbiddenError } from "./errors";
 import {
   getProjectNotificationPreferences,
   updateProjectNotificationPreferences,
 } from "./notification-prefs";
+import { resourceSchemas } from "./openapi-resource-components";
 
 const mocks = vi.hoisted(() => ({
+  PreferenceWriteError: class PreferenceWriteError extends Error {},
   cookieBound: vi.fn(),
   read: vi.fn(),
   update: vi.fn(),
@@ -17,6 +21,7 @@ vi.mock("@/lib/queries/notification-prefs", () => ({
 }));
 vi.mock("@/lib/notifications/preferences-update", () => ({
   applyNotificationPreferences: mocks.update,
+  PreferenceWriteError: mocks.PreferenceWriteError,
 }));
 
 const currentPreferences = {
@@ -34,7 +39,7 @@ const currentPreferences = {
 };
 
 function context(role: "admin" | "member", body: unknown, method: "GET" | "PATCH" = "PATCH") {
-  const url = new URL("https://example.test/api/v1/projects/prj_1/notification-preferences");
+  const url = new URL("https://example.com/api/v1/projects/prj_1/notification-preferences");
   return {
     actor: { id: "user_1", memberships: [{ projectId: "project_1", role }] },
     actorId: "user_1",
@@ -61,10 +66,15 @@ describe("notification preference REST updates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.read.mockResolvedValue({ ...currentPreferences });
-    mocks.update.mockImplementation(async (_actor: unknown, input: Record<string, unknown>) => ({
-      ...currentPreferences,
-      ...input,
-    }));
+    mocks.update.mockImplementation(async (_actor: unknown, input: Record<string, unknown>) => {
+      mocks.read.mockResolvedValue({ ...currentPreferences, ...input });
+      return {
+        warnings:
+          input.checkInApp === undefined
+            ? undefined
+            : [{ code: "deprecated_field", field: "check_in_app", message: "Ignored" }],
+      };
+    });
   });
 
   it("lets a member change a personal channel that is not Slack or webhook", async () => {
@@ -75,49 +85,101 @@ describe("notification preference REST updates", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({ alert_email: false });
-    expect(mocks.update).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "user_1" }),
-      expect.objectContaining({ alertEmail: false, alertSlack: false, projectId: "prj_1" }),
-    );
-  });
-
-  it("refuses a member flipping Slack delivery", async () => {
-    const response = await updateProjectNotificationPreferences(
-      context("member", { alert_slack: true }),
-      "prj_1",
-    );
-
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      status: 403,
-      title: "Forbidden",
-      type: "https://bisibility.com/problems/forbidden",
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ id: "user_1" }), {
+      alertEmail: false,
+      projectId: "prj_1",
     });
-    expect(mocks.update).not.toHaveBeenCalled();
   });
 
-  it("refuses a member flipping webhook delivery", async () => {
+  it("documents project channel patch fields as deprecated, not removed", () => {
+    expect(resourceSchemas.NotificationPreferencesPatch.properties).toMatchObject({
+      alert_slack: { deprecated: true, type: "boolean" },
+      alert_webhook: { deprecated: true, type: "boolean" },
+    });
+    expect(resourceSchemas.NotificationPreferences.properties).toHaveProperty("alert_slack");
+    expect(resourceSchemas.NotificationPreferencesUpdated.properties).toHaveProperty(
+      "alert_webhook",
+    );
+  });
+
+  it.each([
+    ["alert_slack", "alertSlack"],
+    ["alert_webhook", "alertWebhook"],
+  ])(
+    "accepts legacy field %s from a member and forwards it for the service to ignore",
+    async (field, key) => {
+      mocks.update.mockResolvedValueOnce({
+        warnings: [{ code: "deprecated_field", field, message: "Ignored" }],
+      });
+      const response = await updateProjectNotificationPreferences(
+        context("member", { [field]: true }),
+        "prj_1",
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Deprecation")).toBe("@1792800000");
+      await expect(response.json()).resolves.toMatchObject({
+        [field]: false,
+        warnings: [{ code: "deprecated_field", field }],
+      });
+      expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ id: "user_1" }), {
+        [key]: true,
+        projectId: "prj_1",
+      });
+    },
+  );
+
+  it("answers PATCH with the saved preferences only, not the account fields GET adds", async () => {
+    mocks.update.mockImplementation(async (_actor: unknown, input: Record<string, unknown>) => {
+      mocks.read.mockResolvedValue({
+        ...currentPreferences,
+        ...input,
+        email: "member@example.com",
+        emailVerification: "verified",
+        slackAvailable: true,
+        webhookAvailable: false,
+      });
+      return {};
+    });
     const response = await updateProjectNotificationPreferences(
-      context("member", { alert_webhook: true }),
+      context("member", { invite_email: false }),
       "prj_1",
     );
 
-    expect(response.status).toBe(403);
-    expect(mocks.update).not.toHaveBeenCalled();
+    const body = await response.json();
+    expect(body).toMatchObject({ alert_slack: false, invite_email: false });
+    for (const field of ["email", "email_verification", "slack_available", "webhook_available"]) {
+      expect(body).not.toHaveProperty(field);
+    }
   });
 
-  it("lets an admin flip Slack delivery", async () => {
+  it("preserves authorization failures instead of returning a write error", async () => {
+    mocks.update.mockRejectedValue(new AuthorizationError("forbidden"));
+    await expect(
+      updateProjectNotificationPreferences(context("member", { alert_email: false }), "prj_1"),
+    ).rejects.toBeInstanceOf(ApiForbiddenError);
+    expect(mocks.read).not.toHaveBeenCalled();
+  });
+
+  it("returns current preferences when a write result is unconfirmed", async () => {
+    mocks.update.mockRejectedValue(new mocks.PreferenceWriteError("write failed"));
     const response = await updateProjectNotificationPreferences(
-      context("admin", { alert_slack: true }),
+      context("member", { alert_email: false }),
       "prj_1",
     );
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      details: { current_preferences: { alert_email: true } },
+    });
+  });
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ alert_slack: true });
-    expect(mocks.update).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "user_1" }),
-      expect.objectContaining({ alertSlack: true }),
+  it("preserves the legacy warning on a partial write", async () => {
+    const response = await updateProjectNotificationPreferences(
+      context("member", { check_in_app: false }),
+      "prj_1",
     );
+    expect(response.headers.get("Deprecation")).toBe("@1792800000");
+    await expect(response.json()).resolves.toMatchObject({ warnings: [{ field: "check_in_app" }] });
   });
 
   it("uses actor-explicit reads for bearer requests without reaching the cookie-bound query", async () => {

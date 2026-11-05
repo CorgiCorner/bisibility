@@ -30,6 +30,8 @@ export type RecoveryRecord = {
   createdAt: Date;
   receipt: Prisma.JsonValue | null;
   proof: boolean;
+  /** Recovery evidence of the accepted queued task, when its provider cost was not recorded. */
+  costEvidence?: Prisma.JsonValue | null;
   spendingGateEligible?: { project: boolean; connection: boolean };
   spendingBlocked?: { project: boolean; connection: boolean };
   resultExpiresAt: Date | null;

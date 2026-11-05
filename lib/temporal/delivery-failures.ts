@@ -1,6 +1,7 @@
 import { ApplicationFailure } from "@temporalio/common";
 import { DeliveryHttpError } from "../alerts/delivery-http-error";
 import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "../alerts/webhook-target";
+import { RESEND_CONCURRENT_REQUEST } from "../email/idempotency";
 import { EmailBudgetExceededError, EmailSendError } from "../email/types";
 
 type DeliveryOutcome = { delivered: boolean; skipped?: boolean };
@@ -14,7 +15,8 @@ export function statusFromMessage(value: string) {
   return match ? Number(match[1]) : null;
 }
 
-export function permanentHttpStatus(status: number | null) {
+export function permanentHttpStatus(status: number | null, providerCode?: string | null) {
+  if (status === 409 && providerCode === RESEND_CONCURRENT_REQUEST) return false;
   return status !== null && status >= 400 && status < 500 && status !== 408 && status !== 429;
 }
 
@@ -50,11 +52,17 @@ export function classifyDeliveryFailure(
   if (error instanceof ApplicationFailure && error.nonRetryable) return error;
   const transportStatus = transportError?.status;
   const status = transportStatus === undefined ? statusFromMessage(message) : transportStatus;
+  const providerCode =
+    transportError instanceof EmailSendError ? transportError.providerCode : null;
   const permanentMessage =
     channel === "slack"
       ? message.startsWith("Slack alert send failed:")
       : channel === "webhook" && message.includes(PRIVATE_NETWORK_WEBHOOK_ERROR);
-  if (error instanceof ApplicationFailure || permanentMessage || permanentHttpStatus(status)) {
+  if (
+    error instanceof ApplicationFailure ||
+    permanentMessage ||
+    permanentHttpStatus(status, providerCode)
+  ) {
     return nonRetryableFailure(
       message,
       error instanceof ApplicationFailure ? (error.type ?? undefined) : undefined,

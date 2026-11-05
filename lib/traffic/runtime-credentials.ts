@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
@@ -78,6 +79,16 @@ export function trafficRuntimeCredentials(connection: {
   const runtime = resolveProviderCredentials(connection.provider, connection.credentialsEncrypted);
   const credentials: ProviderCredentials = {
     ...runtime,
+    ...(["gsc", "ga4"].includes(connection.provider)
+      ? {
+          tokenCacheIdentity: {
+            connectionId: connection.id,
+            credentialVersion: createHash("sha256")
+              .update(connection.credentialsEncrypted ?? "")
+              .digest("hex"),
+          },
+        }
+      : {}),
     onRefreshToken: async (refreshToken: string) => {
       const expectedRefreshToken = credentials.apiKey;
       credentials.apiKey = refreshToken;

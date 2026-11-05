@@ -127,7 +127,10 @@ function parseCatalog(value: unknown): SharedLocationCatalog {
 }
 
 async function loadCatalog() {
-  const compressed = await fs.readFile(catalogPathForTests ?? defaultCatalogPath);
+  // Only the shipped catalog belongs in build tracing; the test override path is dynamic.
+  const compressed = await (catalogPathForTests
+    ? fs.readFile(/* turbopackIgnore: true */ catalogPathForTests)
+    : fs.readFile(defaultCatalogPath));
   const text = (await unzip(compressed)).toString("utf8");
   return parseCatalog(JSON.parse(text));
 }

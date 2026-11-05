@@ -16,7 +16,7 @@ Changed: 1 result under review, 2 recovered results, 3 partial results, 4 provid
 }
 `;
 
-exports[`keeps the switch-off mail byte-identical to the frozen base renderer 1`] = `
+exports[`renders checked keywords separately from the comparable evidence line 1`] = `
 {
   "html": "<p><strong>Weekly rank report for Example &lt;&amp;&quot;</strong></p><p>example.test - 2026-10-05 to 2026-10-12</p><p>Average delta: +2. Checked keywords: 3. Failed checks: 1.</p><p>Expected keywords: 4. Comparable: 3. Unknown: 1. Fresh coverage: 75%.</p><p><strong>Top movers</strong></p><ul style="margin:0 0 16px 20px;padding:0;"><li>safe &lt;&amp;&quot;: #5 -&gt; #3 (+2)</li></ul>",
   "subject": "Weekly rank report - Example <&"",

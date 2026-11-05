@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
+import { skillCatalog } from "./skill-catalog";
+import { skillPackMetadata } from "./skill-packs";
 import type { TaskSkill } from "./skills/types";
 
 type ArchiveFile = { path: string; content: string };
@@ -46,6 +48,12 @@ export function buildTar(files: ArchiveFile[]): Buffer {
   return Buffer.concat(chunks);
 }
 
+// Archive installs read their dependencies here; omitted keys mean no pack and no requirements.
+function packMetadata(slug: string): string[] {
+  const entry = skillCatalog.find((candidate) => candidate.slug === slug);
+  return entry ? skillPackMetadata(entry) : [];
+}
+
 function taskSkillFrontmatter(skill: TaskSkill): string {
   return [
     "---",
@@ -57,6 +65,7 @@ function taskSkillFrontmatter(skill: TaskSkill): string {
     "  publisher: bisibility",
     `  bisibility.kind: ${skill.kind}`,
     `  version: ${JSON.stringify(skill.version)}`,
+    ...packMetadata(skill.slug),
     "---",
   ].join("\n");
 }

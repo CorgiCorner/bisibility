@@ -35,7 +35,10 @@ function OverviewSections({
 }>) {
   const { dataSource, distribution, highlights, kpis, trend } = overview;
   const hasBanner =
-    checkHealth && (checkHealth.failed24h.count > 0 || checkHealth.budget.exhausted);
+    checkHealth &&
+    (checkHealth.failed24h.count > 0 ||
+      checkHealth.budget.exhausted ||
+      Boolean(checkHealth.connectionNotice));
 
   return (
     <>

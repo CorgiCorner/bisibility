@@ -147,14 +147,14 @@ export async function closeoutPostgresFixture({
     for (const migration of migrations) {
       if (migration === "20261011020000_accounting_history_snapshot") {
         await client.query(
-          `INSERT INTO users(id,"publicId",name,email,"emailVerified","isInstanceAdmin","updatedAt") VALUES('closeout-owner',$1,'Fixture operator','closeout@example.test',true,true,now())`,
+          `INSERT INTO users(id,"publicId",name,email,"emailVerified","isInstanceAdmin","updatedAt") VALUES('closeout-owner',$1,'Fixture operator','closeout@example.com',true,true,now())`,
           [operator],
         );
         for (const name of cohorts) {
           const publicId = makePublicId("prj");
           projects.set(name, publicId);
           await client.query(
-            `INSERT INTO projects(id,"publicId",name,domain,"ownerId","updatedAt","budgetCapCents") VALUES($1,$2,$1,'example.test','closeout-owner',now(),100)`,
+            `INSERT INTO projects(id,"publicId",name,domain,"ownerId","updatedAt","budgetCapCents") VALUES($1,$2,$1,'example.com','closeout-owner',now(),100)`,
             [name, publicId],
           );
           for (const suffix of name === "bulk"
@@ -172,7 +172,7 @@ export async function closeoutPostgresFixture({
           const publicId = makePublicId("prj");
           projects.set(name, publicId);
           await client.query(
-            `INSERT INTO projects(id,"publicId",name,domain,"ownerId","updatedAt","budgetCapCents") VALUES($1,$2,$1,'example.test','closeout-owner',now(),100)`,
+            `INSERT INTO projects(id,"publicId",name,domain,"ownerId","updatedAt","budgetCapCents") VALUES($1,$2,$1,'example.com','closeout-owner',now(),100)`,
             [name, publicId],
           );
           for (const [id, provider] of cohort.connections)

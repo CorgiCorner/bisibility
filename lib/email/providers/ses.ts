@@ -50,13 +50,26 @@ export function sesClientFor(
   return client;
 }
 
+function ambiguousTransport(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const code = "code" in error ? (error as { code?: unknown }).code : undefined;
+  return (
+    error.name === "AbortError" ||
+    error.name === "TimeoutError" ||
+    code === "ECONNRESET" ||
+    code === "ETIMEDOUT"
+  );
+}
+
 function toEmailSendError(error: unknown) {
   const name = error instanceof Error ? error.name : "";
   const metadataStatus = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata
     ?.httpStatusCode;
   const status = name === "TooManyRequestsException" ? 429 : (metadataStatus ?? 500);
   const detail = name && name !== "Error" ? ` (${name})` : "";
-  return new EmailSendError(`SES send failed with status ${status}${detail}.`, status, null);
+  return new EmailSendError(`SES send failed with status ${status}${detail}.`, status, null, {
+    ambiguous: ambiguousTransport(error),
+  });
 }
 
 async function send({ from, to, subject, html, headers, replyTo, text }: EmailMessage) {
@@ -85,7 +98,8 @@ async function send({ from, to, subject, html, headers, replyTo, text }: EmailMe
   });
 
   try {
-    await sesClientFor(region, storedSesCredentials()).send(command);
+    const response = await sesClientFor(region, storedSesCredentials()).send(command);
+    return { messageId: response?.MessageId ?? null };
   } catch (error) {
     throw toEmailSendError(error);
   }

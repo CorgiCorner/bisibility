@@ -38,6 +38,17 @@ describe("weekly digest uses current authority and shared comparison", () => {
     const old = target(); old.checks = [old.checks[0], check("ancient", new Date("2026-09-01T00:00:00Z"), 80)];
     expect(evaluate([old]).movers).toEqual([]);
   });
+  it("counts a completed check as checked when it is not comparable", () => {
+    const shallow = target();
+    const completed = check("shallow", new Date("2026-10-12T11:00:00Z"), 3);
+    completed.requestedDepth = 10;
+    shallow.checks = [completed];
+    shallow.baselineWindow = null;
+    const result = evaluate([shallow]);
+    expect(result.report.metric.counts.comparable).toBe(0);
+    expect(result.report.metric.counts.measured).toBe(0);
+    expect(result.checkedKeywords).toBe(1);
+  });
   it("includes never checked targets in the denominator and does not create rank101", () => {
     const result = evaluate([target(), { id: "never", checks: [], expectedScope: null, volume: null, freshForMs: null, baselineWindow: null }]);
     expect(result.report.metric.counts).toMatchObject({ expected: 2, neverChecked: 1, comparable: 1 });

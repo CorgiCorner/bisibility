@@ -82,7 +82,7 @@ describe("installable SEO audit skill contract", () => {
     );
     const skill = readFileSync(`${root}SKILL.md`, "utf8");
     expect(skill).toContain("coverage gap");
-    expect(skill).toContain("/ai-visibility-audit");
+    expect(skill).toContain("the `ai-visibility-audit` skill");
     expect(skill).toContain("Do not run paid provider tools");
   });
 

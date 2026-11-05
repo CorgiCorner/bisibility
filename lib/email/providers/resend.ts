@@ -6,12 +6,20 @@ import { parseRetryAfterSeconds } from "@/lib/http/retry-after";
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const RESEND_TIMEOUT_MS = 10_000;
 
+async function readProviderCode(response: Response) {
+  const body: unknown = await response.json().catch(() => null);
+  if (!body || typeof body !== "object" || !("name" in body)) return null;
+  const name = (body as { name?: unknown }).name;
+  return typeof name === "string" && name.length > 0 && name.length <= 80 ? name : null;
+}
+
 async function send({
   from,
   to,
   subject,
   html,
   headers,
+  idempotencyKey,
   replyTo,
   text,
   sendCounterReserved = false,
@@ -35,6 +43,7 @@ async function send({
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     method: "POST",
     signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
@@ -45,6 +54,7 @@ async function send({
       `Resend send failed with status ${response.status}.`,
       response.status,
       parseRetryAfterSeconds(response.headers.get("Retry-After")),
+      { providerCode: await readProviderCode(response) },
     );
   }
 }

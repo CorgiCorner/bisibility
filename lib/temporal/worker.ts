@@ -1,6 +1,5 @@
 import { hostname } from "node:os";
-import { fileURLToPath } from "node:url";
-import { NativeConnection, Worker } from "@temporalio/worker";
+import { NativeConnection } from "@temporalio/worker";
 import { assertMigrationsReady } from "../data-migrations/readiness";
 import {
   appliedMigrationSummary,
@@ -20,9 +19,11 @@ import { startRankCheckSchedulers } from "../rank-check/scheduler-startup";
 import { assertTemporalSchedulerEnabled, schedulerDriver } from "../scheduler/driver";
 import * as activities from "./activities";
 import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
+import { createAlertDeliveryWorkers } from "./alert-delivery-workers";
 import { deleteRetiredJobProcessorSchedule, RECONCILER_SCHEDULE_ID } from "./bootstrap";
 import { temporalConnectionOptions, temporalSdkConnectionOptions } from "./connection-options";
 import { temporalDeploymentConfig } from "./deployment-config";
+import { fencedDigestTaskQueue } from "./digest-fencing";
 import { ensureDomainRatingSchedule } from "./domain-rating-bootstrap";
 import {
   ensureAlertDigestFlushSchedule,
@@ -52,13 +53,16 @@ import { deleteRetiredTrafficIntentSweepSchedule } from "./traffic-bootstrap";
 import { ensureTrafficRuntimeSchedules } from "./traffic-runtime";
 import { probeTemporalTransport } from "./transport-probe";
 import { runWelcomeIntentRuntime } from "./welcome-intent-runtime";
-import { maxConcurrentActivities } from "./worker-config";
 import {
   decideWorkerSchemaGuard,
   workerSchemaDriftDedupeKey,
   workerSchemaGuardMode,
 } from "./worker-schema-guard";
-import { logWorkerStartupIdentity, workerStartupIdentity } from "./worker-startup-identity";
+import {
+  logWorkerStartupIdentity,
+  warnMissingDemoConfig,
+  workerStartupIdentity,
+} from "./worker-startup-identity";
 import { reportWorkerStartup, safeOpsHeartbeatBootstrap } from "./worker-startup-report";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
@@ -76,6 +80,7 @@ const startupIdentity = workerStartupIdentity(deploymentConfig);
 const namespace = startupIdentity.namespace;
 const taskQueue = startupIdentity.taskQueue;
 const deliveryTaskQueue = startupIdentity.alertDeliveryTaskQueue;
+const taskQueues = [taskQueue, deliveryTaskQueue, fencedDigestTaskQueue(deliveryTaskQueue)];
 const smokeMode = process.env.TEMPORAL_WORKER_SMOKE === "1";
 const release = process.env.APP_VERSION?.trim() || "unknown";
 const schedulerMode = rankCheckSchedulerMode();
@@ -100,7 +105,7 @@ async function enforceWorkerSchemaGuard() {
     mode,
     namespace,
     release,
-    taskQueues: [taskQueue, deliveryTaskQueue],
+    taskQueues,
   };
   if (decision.logLevel === "error") console.error("[temporal] worker schema guard", details);
   else if (decision.logLevel === "warning") console.warn("[temporal] worker schema guard", details);
@@ -142,11 +147,12 @@ async function run() {
     namespace,
     rank_check_scheduler_mode: schedulerMode,
     scheduler_driver: schedulerDriverValue,
-    task_queues: [taskQueue, deliveryTaskQueue],
+    task_queues: taskQueues,
     tls: connectionOptions.tls ?? false,
     tls_source: connectionOptions.tlsSource,
   });
   logWorkerStartupIdentity(deploymentConfig);
+  warnMissingDemoConfig(namespace);
   await runWorkerStartupStage("app-database-migrations", async () => {
     await assertMigrationsReady();
     await enforceWorkerSchemaGuard();
@@ -167,24 +173,13 @@ async function run() {
       ensureRankCheckSearchAttributes(connection, { address, namespace }),
     );
     console.error("[temporal] rank-check search attributes", searchAttributes);
-    const worker = await Worker.create({
+    const { worker, deliveryWorker, fencedDigestWorker } = await createAlertDeliveryWorkers({
       activities,
       connection,
       identity: workerIdentity,
-      maxConcurrentActivityTaskExecutions: maxConcurrentActivities(),
-      namespace,
-      taskQueue,
-      // Temporal bundles this file into the deterministic workflow sandbox.
-      workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
-    });
-    const deliveryWorker = await Worker.create({
-      activities,
-      connection,
-      identity: workerIdentity,
-      maxConcurrentActivityTaskExecutions: maxConcurrentActivities(),
       namespace,
       taskQueue: deliveryTaskQueue,
-      workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
+      mainTaskQueue: taskQueue,
     });
 
     // Rank-check scheduler convergence is a startup gate. Retire the
@@ -256,7 +251,7 @@ async function run() {
       schedulerDriver: schedulerDriverValue,
       schedulerMode,
       schedules,
-      taskQueues: [taskQueue, deliveryTaskQueue],
+      taskQueues,
     });
 
     console.error("[temporal] worker ready", {
@@ -265,11 +260,12 @@ async function run() {
       namespace,
       rank_check_scheduler_mode: schedulerMode,
       scheduler_driver: schedulerDriverValue,
-      task_queues: [taskQueue, deliveryTaskQueue],
+      task_queues: taskQueues,
     });
     await runWelcomeIntentRuntime({
       connectionOptions,
       deliveryWorker,
+      additionalWorkers: [fencedDigestWorker],
       worker,
     });
   } finally {

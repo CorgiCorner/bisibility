@@ -124,6 +124,7 @@ describe("notification actions", () => {
       data: { readAt: expect.any(Date) },
       where: {
         OR: [{ projectId: null }, { projectId: "project_1" }],
+        legacyProjectQuarantinedAt: null,
         readAt: null,
         userId: "user_1",
         withdrawnAt: null,

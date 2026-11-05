@@ -70,7 +70,7 @@ describe("rank-check run queries", () => {
       selectionSpec: { kind: "all", nativeEstimate, providerAtLaunch: "serpapi", v: 1 },
     };
     mocks.raw.mockResolvedValueOnce([{ publicId: row.publicId }]);
-    mocks.runFindMany.mockResolvedValueOnce([row]);
+    mocks.runFindMany.mockResolvedValueOnce([]).mockResolvedValueOnce([row]);
     mocks.runFindFirst.mockResolvedValueOnce(row);
 
     const detail = await getRankCheckRun("project_1", row.publicId);

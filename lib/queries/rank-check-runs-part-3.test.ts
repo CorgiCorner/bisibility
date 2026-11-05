@@ -45,15 +45,21 @@ describe("rank-check run queries", () => {
       select: { id: true, projectId: true, publicId: true, selectionSpec: true, status: true },
       where: { projectId: "project_1", publicId: runIds[0], deletedAt: null },
     });
+    expect(page.data[0]).not.toHaveProperty("providerReportedCostCents");
+    expect(page).not.toHaveProperty("ownKeyReportedCostCents");
     expect(mocks.itemFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         select: expect.objectContaining({
           rankCheck: {
             select: {
+              attempts: true,
               deferredReason: true,
               errorCode: true,
               id: true,
-              observationRun: { select: { completeness: true } },
+              normalizationVersion: true,
+              observationRun: {
+                select: { completeness: true, projectId: true, requestPolicy: true },
+              },
               position: true,
               provider: true,
               publicId: true,
@@ -65,6 +71,9 @@ describe("rank-check run queries", () => {
         where: { runId: "run_1" },
       }),
     );
+    const rankCheckSelect = mocks.itemFindMany.mock.calls[0]?.[0].select.rankCheck.select;
+    expect(rankCheckSelect).not.toHaveProperty("costCents");
+    expect(rankCheckSelect).not.toHaveProperty("queuedTask");
     expect(mocks.itemFindMany.mock.calls[0]?.[0]).not.toHaveProperty("select.actualCostCents");
   });
 
@@ -154,6 +163,8 @@ describe("rank-check run queries", () => {
     );
 
     expect(page.data[0]).toMatchObject({ actualCostCents: 0.925 });
+    expect(page.data[0]).not.toHaveProperty("providerReportedCostCents");
+    expect(page).not.toHaveProperty("ownKeyReportedCostCents");
     expect(page.data[0]?.rankCheck).toMatchObject({ billingUnits: 3, costCents: 0.925 });
     expect(page.data[1]).toMatchObject({ actualCostCents: null });
     expect(page.data[1]?.rankCheck).toMatchObject({ billingUnits: null, costCents: null });
@@ -236,4 +247,77 @@ describe("rank-check run queries", () => {
     expect(detail.costCents).toBeNull();
     expect(detail.usage?.actual).toBeNull();
   });
+});
+
+describe("run target organic coverage proof", () => {
+  beforeEach(setupRankRunQueryMocks);
+  it.each([
+    { observationRun: null, normalizationVersion: "v2", expected: null },
+    {
+      observationRun: { completeness: "complete", projectId: "project_1", requestPolicy: {} },
+      normalizationVersion: "v2",
+      expected: null,
+    },
+    ...[20, 50, 19.5, "20", -1].map((depth) => ({
+      observationRun: {
+        completeness: "complete",
+        projectId: "project_1",
+        requestPolicy: { evidence: { version: 1, completeThrough: { organic_result: depth } } },
+      },
+      normalizationVersion: "v2",
+      expected:
+        typeof depth === "number" && Number.isSafeInteger(depth) && depth >= 0 ? depth : null,
+    })),
+    {
+      observationRun: {
+        completeness: "complete",
+        projectId: "other_project",
+        requestPolicy: { evidence: { version: 1, completeThrough: { organic_result: 20 } } },
+      },
+      normalizationVersion: "v2",
+      expected: null,
+    },
+    {
+      observationRun: {
+        completeness: "complete",
+        projectId: "project_1",
+        requestPolicy: { evidence: { version: 1, completeThrough: { organic_result: 20 } } },
+      },
+      normalizationVersion: null,
+      expected: null,
+    },
+  ])(
+    "only exposes retained coverage proof: %j",
+    async ({ observationRun, normalizationVersion, expected }) => {
+      mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+      mocks.itemFindMany.mockResolvedValue([
+        {
+          ...item("item_1", new Date()),
+          status: "completed",
+          rankCheck: {
+            id: "rc_stored",
+            publicId: "check_1",
+            position: null,
+            errorCode: null,
+            provider: "serpapi",
+            rankingUrl: null,
+            requestedDepth: 20,
+            normalizationVersion,
+            observationRun,
+            raw: {
+              organic_results: Array.from({ length: 20 }, (_, i) => ({ rank: i + 1 })).filter(
+                (row) => row.rank !== 10,
+              ),
+            },
+          },
+        },
+      ]);
+      const page = await listRankCheckRunItems(
+        "project_1",
+        runIds[0] as string,
+        new URL("https://example.com/items"),
+      );
+      expect(page.data[0]?.rankCheck).toMatchObject({ organicCoverageDepth: expected });
+    },
+  );
 });

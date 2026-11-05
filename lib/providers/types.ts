@@ -68,6 +68,7 @@ export type ProviderCredentials = {
   password?: string;
   apiKey?: string;
   endpoint?: string;
+  tokenCacheIdentity?: { connectionId: string; credentialVersion: string };
   onRefreshToken?: (refreshToken: string) => Promise<void>;
 };
 

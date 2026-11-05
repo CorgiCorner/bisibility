@@ -327,7 +327,7 @@
         "yourResult": "Twój wynik",
         "notFound": "nie znaleziono",
         "jumpToResult": "Przejdź do swojego wyniku",
-        "aiUnknown": "Ten dostawca nie raportuje przeglądów AI, więc na podstawie tego sprawdzenia nie wiadomo, czy taki się pojawił.",
+        "aiUnknown": "Obecność przeglądu AI nie została zapisana dla tego sprawdzenia.",
         "aiPresent": "Twoja pozycja liczy tylko wyniki organiczne. W tym sprawdzeniu nad nimi znajdował się przegląd AI.",
         "selfHostedRetention": "Pełne szczegóły są przechowywane tak długo, jak długo masz bazę danych.",
         "hostedRetention": "W hostowanych przestrzeniach roboczych pełne szczegóły są przechowywane przez {days, number} dni.",
@@ -456,7 +456,16 @@
         "compareAction": "Porównaj",
         "stopComparing": "Zakończ porównanie",
         "savedResults": "Zapisane wyniki: {count, number} · zakres Top {depth, number}",
-        "partialCompetitors": "Niepełny snapshot. Brakujący konkurenci nadal mogą być w Top {depth, number}."
+        "partialCompetitors": "Niepełny snapshot. Brakujący konkurenci nadal mogą być w Top {depth, number}.",
+        "downloadCsv": "Pobierz CSV",
+        "downloadJson": "Pobierz JSON",
+        "normalizedDownloadNote": "Zapisane znormalizowane dane. Ukończone sprawdzenia nie zachowują pełnej odpowiedzi dostawcy.",
+        "missingRank": "Dostawca nie zwrócił pozycji #{position, number}",
+        "missingPositions": "{count, plural, one {Dostawca nie zwrócił # z {depth, number} pozycji: {ranks}} other {Dostawca nie zwrócił # z {depth, number} pozycji: {ranks}}}",
+        "aiContentNotLoaded": "Przegląd AI jest obecny, treść nie została załadowana",
+        "resultIndeterminate": "Pozycja nieokreślona: nie pokryto żądanej głębokości",
+        "missingStoredRank": "Brak zapisanego wyniku dla pozycji #{position, number}",
+        "missingStoppedRank": "Pozycja #{position, number} nie została pobrana po znalezieniu Twojej domeny"
       },
       "comparison": {
         "entered": "Wejście",
@@ -707,7 +716,12 @@
         "scopeDevices": {
           "desktop": "Komputer",
           "mobile": "Telefon"
-        }
+        },
+        "organicDepthNotCovered": "Zwrócone wyniki organiczne nie objęły wymaganej głębokości, więc nie udało się ustalić pozycji ani potwierdzić jej braku.",
+        "notInTop": "Poza pierwszą {depth, number}",
+        "checkedDepth": "Sprawdzono pierwsze {depth, number} pozycji",
+        "noRankToCompare": "Brak wyniku z pozycją do porównania",
+        "noRankingUrl": "Brak adresu wyniku - poza pobranymi wynikami"
       },
       "quality": {
         "currentUnknown": "Bieżąca pozycja nieznana",

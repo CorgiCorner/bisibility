@@ -5,9 +5,15 @@ import {
 } from "@/lib/measurement-definitions/fixtures";
 import { hostDefinitionAdapters } from "@/lib/measurement-definitions/host-adapters";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
+import converterFixture from "@/lib/providers/serp/fixtures/goto/converter_full_page.json";
+import redirectFixture from "@/lib/providers/serp/fixtures/goto/task_get_goto_heavy.json";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { inspectQueuedRankCheckBatch } from "./queued-inspect";
 import { persistReadyQueuedRankCheckTasks } from "./queued-results";
+import type {
+  QueuedResolutionProgress,
+  QueuedSourceEvidenceReason,
+} from "./queued-source-evidence";
 import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
 
 function retainedSourceFixture(projectId: string, keywordId: string) {
@@ -104,6 +110,7 @@ const mocks = vi.hoisted(() => {
       state,
     };
   }
+  const missingBindings = new Set<string>();
   const tasks: Task[] = [
     makeTask("success", "persisting", null),
     makeTask("failure", "provider_failed", "one task was rejected"),
@@ -122,7 +129,7 @@ const mocks = vi.hoisted(() => {
           : ((query as { values?: unknown[] }).values ?? []);
         if (sql.includes("FROM measurement_execution_bindings")) {
           const task = tasks.find((candidate) => candidate.rankCheckId === values[2]);
-          if (!task) return [];
+          if (!task || missingBindings.has(task.id)) return [];
           const source = retainedSourceFixture(task.keyword.projectId, task.keywordId);
           const head = definitionHeadFixture(source);
           return [
@@ -308,6 +315,12 @@ const mocks = vi.hoisted(() => {
     consumeProviderLimit: vi.fn(),
     defer: vi.fn(),
     fetchResult: vi.fn(),
+    readFailures: new Map<string, QueuedSourceEvidenceReason>(),
+    retainFailures: new Map<string, QueuedSourceEvidenceReason>(),
+    missingBindings,
+    finalizeEvidence: vi.fn(async (_tx: unknown, _taskId: string, _state: string) => undefined),
+    sources: new Map<string, { data: unknown; sourceHash: string }>(),
+    progress: new Map<string, QueuedResolutionProgress>(),
     finalize: vi.fn(),
     makeTask,
     persistFailed: vi.fn(),
@@ -318,6 +331,38 @@ const mocks = vi.hoisted(() => {
     writeCooldown: vi.fn(),
   };
 });
+
+vi.mock("./queued-source-evidence", async (original) => {
+  const actual = await original<typeof import("./queued-source-evidence")>();
+  return {
+    ...actual,
+    readQueuedSource: async (identity: { taskId: string }) => {
+      const failure = mocks.readFailures.get(identity.taskId);
+      // An unclassified store error must be wrapped as the transient reason.
+      if (failure === "store_unavailable") throw new Error("Synthetic connection reset.");
+      if (failure) throw new actual.QueuedSourceEvidenceError(failure);
+      return mocks.sources.get(identity.taskId) ?? null;
+    },
+    retainQueuedSource: async (identity: { taskId: string }, data: unknown) => {
+      const failure = mocks.retainFailures.get(identity.taskId);
+      if (failure) throw new actual.QueuedSourceEvidenceError(failure);
+      mocks.sources.set(identity.taskId, { data, sourceHash: "source-hash" });
+      return "source-hash";
+    },
+    readQueuedResolution: async (identity: { taskId: string }) =>
+      mocks.progress.get(identity.taskId) ?? null,
+    retainQueuedResolution: async (
+      identity: { taskId: string },
+      _hash: string,
+      progress: QueuedResolutionProgress,
+    ) => {
+      mocks.progress.set(identity.taskId, progress);
+    },
+  };
+});
+vi.mock("./queued-source-retention", () => ({
+  finalizeQueuedSourceEvidence: mocks.finalizeEvidence,
+}));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/credentials", () => ({
@@ -331,7 +376,13 @@ vi.mock("@/lib/providers/serp/dataforseo-queued", () => ({
   legacyDataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
   readyDataForSeoQueuedTasks: mocks.ready,
   dataForSeoQueuedTaskTag: (id: string) => `bisibility:rank:${id}`,
-  fetchDataForSeoQueuedResult: mocks.fetchResult,
+  fetchDataForSeoQueuedResult: async (...args: [unknown, string, unknown]) => {
+    const data = await mocks.fetchResult(...args);
+    return {
+      ...data,
+      tasks: data.tasks?.map((task: { id?: string }) => ({ ...task, id: task.id ?? args[1] })),
+    };
+  },
 }));
 vi.mock("@/lib/providers/execution-extension", async (original) => ({
   ...(await original<typeof import("@/lib/providers/execution-extension")>()),
@@ -357,6 +408,11 @@ vi.mock("./runner", async (importOriginal) => {
 describe("queued result persistence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.readFailures.clear();
+    mocks.retainFailures.clear();
+    mocks.missingBindings.clear();
+    mocks.sources.clear();
+    mocks.progress.clear();
     mocks.tasks.splice(
       0,
       mocks.tasks.length,
@@ -443,6 +499,477 @@ describe("queued result persistence", () => {
     });
   });
 
+  it.each(["foreign task", "multiple tasks"])(
+    "rejects a mismatched source: %s",
+    async (scenario) => {
+      mocks.tasks.splice(1);
+      const native = {
+        id: scenario === "foreign task" ? "foreign" : mocks.tasks[0].providerTaskId,
+        status_code: 20000,
+        cost: 0,
+        result: [],
+      };
+      mocks.fetchResult.mockResolvedValue({
+        status_code: 20000,
+        tasks: scenario === "multiple tasks" ? [native, native] : [native],
+      });
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.sources.size).toBe(0);
+      expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ error: "Queued result identity does not match." }),
+      );
+    },
+  );
+
+  function useRedirectSource(items?: unknown[]) {
+    mocks.tasks.splice(1);
+    const fixture = structuredClone(redirectFixture.tasks[0]);
+    if (items) fixture.result[0].items = items as (typeof fixture.result)[0]["items"];
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [{ ...fixture, id: mocks.tasks[0].providerTaskId }],
+    });
+  }
+
+  function stubConverter(...responses: Array<() => Promise<Response>>) {
+    const fetchMock = vi.fn(
+      (_url: string, _init: RequestInit): Promise<Response> =>
+        Promise.reject(new Error("Unexpected request")),
+    );
+    for (const response of responses) fetchMock.mockImplementationOnce(response);
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  const converterOk = () =>
+    Promise.resolve(new Response(JSON.stringify(converterFixture.response), { status: 200 }));
+  const converterDown = () => Promise.resolve(new Response("{}", { status: 503 }));
+
+  it("defers only the task whose evidence store is unavailable and continues the batch", async () => {
+    mocks.readFailures.set("success", "store_unavailable");
+    await expect(persistReadyQueuedRankCheckTasks("batch_1")).resolves.toMatchObject({
+      completed: 1,
+    });
+    expect(mocks.tasks[0].state).toBe("ready");
+    expect(mocks.fetchResult).not.toHaveBeenCalled();
+    expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+    expect(mocks.persistFailed).toHaveBeenCalledOnce();
+    expect(mocks.persistFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ existingRankCheckId: "rank_check_failure" }),
+    );
+    expect(mocks.finalize).toHaveBeenCalledOnce();
+  });
+
+  it.each(["identity_mismatch", "unreadable", "conflict", "oversize"] as const)(
+    "fails only the affected task on a permanent %s source error",
+    async (reason) => {
+      mocks.readFailures.set("success", reason);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      await expect(persistReadyQueuedRankCheckTasks("batch_1")).resolves.toBeDefined();
+      expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledTimes(2);
+      // The stored error is public API text: neutral wording with a stable code.
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: "The provider result could not be processed safely.",
+          errorCode: "provider_result_unusable",
+          existingRankCheckId: "rank_check_success",
+        }),
+      );
+      expect(JSON.stringify(mocks.persistFailed.mock.calls)).not.toContain(reason);
+      expect(warn).toHaveBeenCalledWith("[queued-rank-check] retained source unusable", {
+        reason,
+        taskId: "success",
+      });
+      warn.mockRestore();
+      expect(mocks.tasks.map((task) => task.state)).toEqual(["failed", "failed"]);
+      expect(mocks.finalize).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("retains a source whose text shows the account login but fails closed on a secret", async () => {
+    mocks.tasks.splice(1);
+    mocks.resolveCredentials.mockReturnValue({
+      login: "support@example.com",
+      password: "synthetic-secret-value",
+    });
+    const item = (title: string) => ({
+      domain: "example.com",
+      rank_group: 1,
+      title,
+      type: "organic",
+      url: "https://example.com/page",
+    });
+    mocks.fetchResult.mockResolvedValueOnce({
+      status_code: 20000,
+      tasks: [
+        { cost: 0.012, status_code: 20000, result: [{ items: [item("support@example.com")] }] },
+      ],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.sources.size).toBe(1);
+    expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+
+    for (const secret of [
+      "synthetic-secret-value",
+      Buffer.from("support@example.com:synthetic-secret-value").toString("base64"),
+    ]) {
+      vi.clearAllMocks();
+      mocks.sources.clear();
+      mocks.tasks.splice(0, 1, mocks.makeTask("success", "persisting", null));
+      mocks.fetchResult.mockResolvedValueOnce({
+        status_code: 20000,
+        tasks: [{ cost: 0.012, status_code: 20000, result: [{ items: [item(secret)] }] }],
+      });
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.sources.size).toBe(0);
+      expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: "The provider result could not be processed safely.",
+          errorCode: "provider_result_unusable",
+        }),
+      );
+    }
+  });
+
+  it("decides an oversized source in memory when no conversion needs it", async () => {
+    mocks.tasks.splice(1);
+    mocks.retainFailures.set("success", "oversize");
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.sources.size).toBe(0);
+    expect(mocks.persistFailed).not.toHaveBeenCalled();
+    expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+    expect(mocks.persistRankCheck.mock.calls[0]?.[1].rankCheck).toMatchObject({ position: 3 });
+  });
+
+  it("fails an oversized source that a conversion would need, without a converter call", async () => {
+    useRedirectSource();
+    mocks.retainFailures.set("success", "oversize");
+    const fetchMock = stubConverter();
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorCode: "provider_result_unusable" }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each(["own", "hosted"])(
+    "settles usage before failing a result that cannot be retained (%s)",
+    async (kind) => {
+      mocks.tasks.splice(1);
+      const task = mocks.tasks[0];
+      if (kind === "hosted") {
+        task.batch.connection.credentialSource = "hosted";
+        Object.assign(task, { providerTag: "tag;cs=hosted;" });
+      }
+      const recovery = {
+        credentials: { login: "fixture-login", password: "fixture-password" },
+        assertRetrieval: vi.fn(),
+        knownCost: vi.fn(async () => 0.12),
+        settleTask: vi.fn(async () => 0.12),
+      };
+      mocks.recoverHosted.mockResolvedValue(kind === "hosted" ? recovery : null);
+      mocks.admission.mockResolvedValue(kind === "own");
+      mocks.fetchResult.mockResolvedValue({
+        status_code: 20000,
+        tasks: [
+          {
+            id: task.providerTaskId,
+            cost: 0.0012,
+            status_code: 20000,
+            result: [
+              {
+                items: [
+                  {
+                    domain: "example.com",
+                    rank_group: 1,
+                    title: "Synthetic password fixture-password",
+                    type: "organic",
+                    url: "https://example.com/page",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.sources.size).toBe(0);
+      if (kind === "own")
+        expect(mocks.recoverOwn).toHaveBeenCalledExactlyOnceWith(
+          expect.anything(),
+          "connection_1",
+          "success",
+          expect.objectContaining({ failed: false }),
+        );
+      else
+        expect(recovery.settleTask).toHaveBeenCalledExactlyOnceWith(
+          "success",
+          expect.objectContaining({ failed: false }),
+        );
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorCode: "provider_result_unusable" }),
+      );
+      expect(task.state).toBe("failed");
+    },
+  );
+
+  it("retrieves a failed provider task even when its definition binding is missing", async () => {
+    mocks.tasks.splice(1);
+    mocks.missingBindings.add("success");
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [{ cost: 0.0024, status_code: 40501, status_message: "Invalid field.", result: null }],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.fetchResult).toHaveBeenCalledOnce();
+    expect(mocks.persistFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Invalid field.",
+        existingRankCheckId: "rank_check_success",
+      }),
+    );
+    expect(mocks.tasks[0].state).toBe("failed");
+  });
+
+  it("decides without conversion when the match precedes every redirect row", async () => {
+    // Drop the leading redirect row: the target now ranks ahead of every remaining one.
+    const items = structuredClone(redirectFixture.tasks[0].result[0].items).filter(
+      (item) => item.url !== "https://google.com/goto?url=SYNTHGOTO001",
+    );
+    const target = items.find((item) => item.url === "https://site1.example.com/page-1");
+    if (!target) throw new Error("Fixture row is missing.");
+    Object.assign(target, { domain: "example.com", url: "https://example.com/page-1" });
+    useRedirectSource(items);
+    const fetchMock = stubConverter();
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+      expect(mocks.persistRankCheck.mock.calls[0]?.[1].rankCheck).toMatchObject({ position: 2 });
+      expect(mocks.finalizeEvidence).toHaveBeenCalledWith(mocks.prisma, "success", "completed");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each(["server error", "timeout"])(
+    "retries conversion from retained source after %s",
+    async (failure) => {
+      useRedirectSource();
+      const fetchMock = stubConverter(
+        failure === "timeout"
+          ? () => Promise.reject(new DOMException("Timeout", "TimeoutError"))
+          : converterDown,
+        converterOk,
+      );
+      try {
+        for (let pass = 0; pass < 4; pass += 1) await persistReadyQueuedRankCheckTasks("batch_1");
+        expect(mocks.fetchResult).toHaveBeenCalledOnce();
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(
+          fetchMock.mock.calls.every(([url]) =>
+            String(url).endsWith("/appendix/goto_url_converter"),
+          ),
+        ).toBe(true);
+        expect(mocks.progress.get("success")).toMatchObject({ attempts: 2, sequence: 2 });
+        expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+        expect(
+          mocks.persistRankCheck.mock.calls[0]?.[1].rankCheck.raw.redirect_resolutions,
+        ).toEqual(expect.arrayContaining([expect.objectContaining({ status: "resolved" })]));
+        expect(mocks.finalizeEvidence).toHaveBeenCalledWith(mocks.prisma, "success", "completed");
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+
+  it("retains partial mappings and retries only unresolved URLs", async () => {
+    useRedirectSource();
+    const firstMapping = converterFixture.response.tasks[0].result[0];
+    const partialResponse = {
+      status_code: 20000,
+      tasks: [{ status_code: 20000, result: [firstMapping] }],
+    };
+    const fetchMock = stubConverter(
+      () => Promise.resolve(new Response(JSON.stringify(partialResponse), { status: 200 })),
+      converterOk,
+    );
+    try {
+      for (let pass = 0; pass < 4; pass += 1) await persistReadyQueuedRankCheckTasks("batch_1");
+      const secondBody = JSON.parse(String(fetchMock.mock.calls[1][1].body));
+      expect(secondBody[0].goto_urls).not.toContain(firstMapping.goto);
+      expect(secondBody[0].goto_urls).toHaveLength(14);
+      expect(mocks.fetchResult).toHaveBeenCalledOnce();
+      expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("keeps mappings from a cancelled conversion without spending an attempt", async () => {
+    mocks.tasks.splice(1);
+    const items = Array.from({ length: 101 }, (_, index) => ({
+      type: "organic",
+      rank_group: index + 1,
+      domain: "google.com",
+      url: `https://google.com/goto?url=synthetic-${index}`,
+    }));
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [
+        {
+          id: mocks.tasks[0].providerTaskId,
+          status_code: 20000,
+          cost: 0.0012,
+          result: [{ items }],
+        },
+      ],
+    });
+    const controller = new AbortController();
+    const cancellation = new Error("Cancelled fixture");
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const urls = JSON.parse(String(init.body))[0].goto_urls as string[];
+      if (urls.length === 1) {
+        controller.abort(cancellation);
+        throw cancellation;
+      }
+      return new Response(
+        JSON.stringify({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: urls.map((goto) => ({ goto, url: "https://example.org/page" })),
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      await expect(
+        persistReadyQueuedRankCheckTasks("batch_1", { signal: controller.signal }),
+      ).rejects.toBe(cancellation);
+      const progress = mocks.progress.get(mocks.tasks[0].id);
+      expect(Object.keys(progress?.mappings ?? {})).toHaveLength(100);
+      expect(progress).toMatchObject({ attempts: 0, sequence: 1 });
+      expect(mocks.tasks[0].state).toBe("ready");
+      expect(mocks.persistFailed).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not count repeated cancellations as converter failures", async () => {
+    useRedirectSource();
+    const cancellation = new Error("Activity cancelled");
+    let controller = new AbortController();
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit): Promise<Response> => {
+      controller.abort(cancellation);
+      throw cancellation;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      for (let pass = 0; pass < 4; pass += 1) {
+        controller = new AbortController();
+        await expect(
+          persistReadyQueuedRankCheckTasks("batch_1", { signal: controller.signal }),
+        ).rejects.toBe(cancellation);
+      }
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      expect(mocks.progress.has("success")).toBe(false);
+      fetchMock.mockImplementation(converterOk);
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.persistFailed).not.toHaveBeenCalled();
+      expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("returns pending instead of starting a conversion the activity cannot finish", async () => {
+    useRedirectSource();
+    const fetchMock = stubConverter(converterOk);
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      for (const remaining of [30_000, 70_000])
+        await persistReadyQueuedRankCheckTasks("batch_1", {
+          activityDeadlineAt: new Date(Date.now() + remaining),
+        });
+      // 70 s would leave 45 s: a cut-down timeout could spend an attempt, so do not start.
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mocks.tasks[0].state).toBe("ready");
+      expect(mocks.progress.has("success")).toBe(false);
+      expect(mocks.persistFailed).not.toHaveBeenCalled();
+      await persistReadyQueuedRankCheckTasks("batch_1", {
+        activityDeadlineAt: new Date(Date.now() + 120_000),
+      });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("persists the unresolved redirect code after three failed conversions", async () => {
+    useRedirectSource();
+    const fetchMock = vi.fn(converterDown);
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      for (let attempt = 0; attempt < 5; attempt += 1)
+        await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.fetchResult).toHaveBeenCalledOnce();
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(mocks.persistRankCheck).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorCode: "provider_unresolved_redirects",
+          raw: {
+            redirect_resolutions: expect.arrayContaining([
+              expect.objectContaining({
+                originalUrl: "https://google.com/goto?url=SYNTHGOTO001",
+                status: "unresolved",
+              }),
+            ]),
+          },
+        }),
+      );
+      expect(mocks.finalizeEvidence).toHaveBeenCalledWith(mocks.prisma, "success", "failed");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("fails without conversion when only an unconvertible redirect keeps the result open", async () => {
+    const items = structuredClone(redirectFixture.tasks[0].result[0].items).map((item) =>
+      typeof item.url === "string" && item.url.startsWith("https://google.com/goto")
+        ? { ...item, url: item.url.replace("https://", "http://") }
+        : item,
+    );
+    useRedirectSource(items);
+    const fetchMock = stubConverter();
+    try {
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mocks.persistFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorCode: "provider_unresolved_redirects" }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each(["found", "absent", "indeterminate", "empty"])(
     "handles partial results when the domain is %s",
     async (scenario) => {
@@ -526,7 +1053,7 @@ describe("queued result persistence", () => {
       if (kind === "hosted") task.batch.connection.credentialSource = "hosted";
       mocks.tasks.splice(0, mocks.tasks.length, task);
       const recovery = {
-        credentials: { login: "test", password: "test" },
+        credentials: { login: "fixture-login", password: "fixture-password" },
         reconcile: vi.fn(),
         bindReadyTask: vi.fn(),
         assertRetrieval: vi.fn(),

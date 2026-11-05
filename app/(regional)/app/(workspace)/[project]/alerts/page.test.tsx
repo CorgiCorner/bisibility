@@ -1,3 +1,4 @@
+import { makeAlertRule } from "@/components/alerts/AlertsPageContent.fixtures";
 import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { screen } from "@testing-library/react";
@@ -56,7 +57,7 @@ describe("AlertsPage", () => {
         publicId: "prj_abcdefghijklmnopqrstuvwx",
       },
       rules: [],
-      targets: { keywords: [], markets: [], tags: [] },
+      targets: { keywords: [], markets: [], members: [], tags: [] },
     });
     mocks.isProviderConnected.mockResolvedValue(false);
   });
@@ -105,31 +106,8 @@ describe("AlertsPage", () => {
         name: "Example",
         publicId: "prj_abcdefghijklmnopqrstuvwx",
       },
-      rules: [
-        {
-          changePct: null,
-          channel: "In-app",
-          channels: [],
-          condition: "rank crosses below #10",
-          conditionType: "threshold",
-          competitorDomain: null,
-          dropPositions: null,
-          enabled: true,
-          fires: "0 this week",
-          id: "rule_1",
-          name: "Ranking drop",
-          period: "Each check",
-          scope: "All keywords",
-          serpFeature: null,
-          severity: "urgent",
-          status: "active",
-          targetIds: [],
-          targetType: "all",
-          thresholdPosition: 10,
-          topN: null,
-        },
-      ],
-      targets: { keywords: [], markets: [], tags: [] },
+      rules: [makeAlertRule()],
+      targets: { keywords: [], markets: [], members: [], tags: [] },
     });
 
     render(
@@ -162,7 +140,7 @@ describe("AlertsPage", () => {
         publicId: "prj_abcdefghijklmnopqrstuvwx",
       },
       rules: [],
-      targets: { keywords: [], markets: [], tags: [] },
+      targets: { keywords: [], markets: [], members: [], tags: [] },
     });
 
     render(

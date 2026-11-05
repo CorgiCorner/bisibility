@@ -327,7 +327,7 @@
         "yourResult": "Your result",
         "notFound": "not found",
         "jumpToResult": "Jump to your result",
-        "aiUnknown": "This provider does not report AI overviews, so this check cannot say whether one appeared.",
+        "aiUnknown": "AI overview presence was not recorded for this check.",
         "aiPresent": "Your position counts organic results only. An AI overview sat above them at this check.",
         "selfHostedRetention": "Full detail is kept for as long as you keep the database.",
         "hostedRetention": "Full detail is kept for {days, number} days on hosted workspaces.",
@@ -456,7 +456,16 @@
         "compareAction": "Compare",
         "stopComparing": "Stop comparing",
         "savedResults": "{count, number} results saved · requested Top {depth, number}",
-        "partialCompetitors": "Partial snapshot. Missing competitors may still rank in the Top {depth, number}."
+        "partialCompetitors": "Partial snapshot. Missing competitors may still rank in the Top {depth, number}.",
+        "downloadCsv": "Download CSV",
+        "downloadJson": "Download JSON",
+        "normalizedDownloadNote": "Stored normalized data. Completed checks do not retain the provider's full response.",
+        "missingRank": "#{position, number} not returned by the provider",
+        "missingPositions": "{count, plural, one {# of {depth, number} positions was not returned: {ranks}} other {# of {depth, number} positions were not returned: {ranks}}}",
+        "aiContentNotLoaded": "AI overview present, content not loaded",
+        "resultIndeterminate": "Rank indeterminate: requested depth not covered",
+        "missingStoredRank": "#{position, number} has no stored result",
+        "missingStoppedRank": "#{position, number} not fetched after finding your domain"
       },
       "comparison": {
         "entered": "Entered",
@@ -707,7 +716,12 @@
         "scopeDevices": {
           "desktop": "Desktop",
           "mobile": "Mobile"
-        }
+        },
+        "organicDepthNotCovered": "The returned organic results did not cover the requested depth, so no position or absence could be established.",
+        "notInTop": "Not in top {depth, number}",
+        "checkedDepth": "Checked top {depth, number}",
+        "noRankToCompare": "No ranked result to compare",
+        "noRankingUrl": "No ranking URL - not in the requested results"
       },
       "quality": {
         "currentUnknown": "Current rank unknown",

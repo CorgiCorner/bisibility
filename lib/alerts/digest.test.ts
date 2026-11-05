@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   reserveDeliveryBudgetOnce: vi.fn(),
   sendEmail: vi.fn(),
   prisma: {
+    alertDigestSend: { deleteMany: vi.fn() },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
     alertRuleDailyStat: { findUnique: vi.fn() },
     deliveryAttempt: { create: vi.fn() },
     membership: { findMany: vi.fn() },
@@ -90,6 +93,12 @@ function pendingAlerts(
 describe("alert digest flush", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((callback) =>
+      callback({
+        ...mocks.prisma,
+        triggeredAlert: { ...mocks.prisma.triggeredAlert, findMany: async () => [] },
+      }),
+    );
     vi.unstubAllGlobals();
     vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     mocks.reserveDeliveryBudgetOnce.mockResolvedValue({ granted: true, reused: false });
@@ -107,6 +116,19 @@ describe("alert digest flush", () => {
     mocks.sendEmail.mockResolvedValue(undefined);
     mocks.notifyTriggeredAlertDelivered.mockResolvedValue(undefined);
     mocks.enqueueAlertDigestJob.mockResolvedValue(undefined);
+  });
+
+  it("reuses the budget reservation a released digest alert already holds", async () => {
+    const alerts = pendingAlerts(3);
+    Object.assign(alerts[1] as object, {
+      deliveryBudgetReservedAt: new Date("2026-07-21T10:30:00.000Z"),
+    });
+    mocks.prisma.triggeredAlert.findMany.mockResolvedValue(alerts);
+    await flushAlertDigests(new Date("2026-07-21T11:00:00.000Z"));
+    expect(mocks.reserveDeliveryBudgetOnce).toHaveBeenCalledOnce();
+    expect(mocks.reserveDeliveryBudgetOnce).toHaveBeenCalledWith(
+      expect.objectContaining({ alertId: "alert_2" }),
+    );
   });
 
   it("coalesces pending alerts into one email per rule", async () => {
@@ -139,6 +161,7 @@ describe("alert digest flush", () => {
         deliveryClaimedAt: expect.any(Date),
         deliveryClaimToken: expect.any(String),
         deliveryState: "digesting",
+        digestSubmissionStarted: false,
       },
       where: {
         deliveryState: "digest_pending",
@@ -290,6 +313,7 @@ describe("alert digest flush", () => {
       where: {
         deliveryClaimToken: expect.any(String),
         deliveryState: "digesting",
+        digestSubmissionStarted: false,
         id: { in: ["alert_1", "alert_2", "alert_3"] },
       },
     });

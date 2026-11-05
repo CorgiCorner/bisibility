@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
     user: { findUnique: vi.fn() },
     project: { findUnique: vi.fn() },
     deliveryAttempt: { create: vi.fn() },
+    triggeredAlert: { findUnique: vi.fn() },
     slackConnection: { findUnique: vi.fn() },
     webhookEndpoint: { updateMany: vi.fn() },
   },
@@ -38,6 +39,10 @@ vi.mock("undici", () => ({
   },
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/email/provider-feedback-store", () => ({
+  assertMailNotSuppressed: vi.fn(async () => undefined),
+  recordMailReceipt: vi.fn(async () => undefined),
+}));
 vi.mock("@/lib/email/budget", () => ({
   reserveEmailDailyBudget: mocks.reserveEmailDailyBudget,
 }));
@@ -79,6 +84,7 @@ describe("alert delivery transports", () => {
     mocks.prisma.user.findUnique.mockResolvedValue({ id: "user_1" });
     mocks.prisma.project.findUnique.mockResolvedValue({ id: "project_1" });
     mocks.prisma.deliveryAttempt.create.mockResolvedValue({});
+    mocks.prisma.triggeredAlert.findUnique.mockResolvedValue({ id: "alert_1" });
     mocks.prisma.webhookEndpoint.updateMany.mockResolvedValue({ count: 1 });
   });
 
@@ -365,11 +371,14 @@ describe("alert delivery transports", () => {
     vi.stubEnv("EMAIL_FROM", "bisibility <alerts@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
-    await sendAlertEmail("owner@example.com", {
-      ...payload(),
-      action: "Use <b>click</b> to review.",
-      headline: "Dropped for <script>alert(1)</script>",
-    });
+    await sendAlertEmail(
+      { email: "owner@example.com", userId: "user_1", projectId: "project_1" },
+      {
+        ...payload(),
+        action: "Use <b>click</b> to review.",
+        headline: "Dropped for <script>alert(1)</script>",
+      },
+    );
 
     const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
     expect(body.html).toContain("&lt;script&gt;");
@@ -393,13 +402,19 @@ describe("alert delivery transports", () => {
     vi.stubEnv("EMAIL_ALERTS_FROM", "bisibility alerts <alerts@example.com>");
     vi.stubGlobal("fetch", fetchMock);
 
-    await sendAlertEmail("owner@example.com", payload());
+    await sendAlertEmail(
+      { email: "owner@example.com", userId: "user_1", projectId: "project_1" },
+      payload(),
+    );
     expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).from).toBe(
       "bisibility alerts <alerts@example.com>",
     );
 
     vi.stubEnv("EMAIL_ALERTS_FROM", "");
-    await sendAlertEmail("owner@example.com", payload());
+    await sendAlertEmail(
+      { email: "owner@example.com", userId: "user_1", projectId: "project_1" },
+      payload(),
+    );
     expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)).from).toBe(
       "bisibility <reports@example.com>",
     );

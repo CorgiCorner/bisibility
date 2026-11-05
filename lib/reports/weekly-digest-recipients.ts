@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import { isDemoViewer } from "@/lib/demo/config";
 import {
   notificationPreferenceSelect,
   resolveNotificationPreferences,
@@ -7,6 +8,7 @@ import {
 
 export const digestUserSelect = {
   id: true,
+  publicId: true,
   email: true,
   emailVerified: true,
   notificationPreferences: { select: notificationPreferenceSelect },
@@ -14,6 +16,7 @@ export const digestUserSelect = {
 
 type Candidate = {
   id: string;
+  publicId: string;
   emailVerified: boolean;
   notificationPreferences: Array<{ reportEmail: boolean }>;
 };
@@ -26,6 +29,7 @@ export function digestCandidates(project: {
       [project.owner, ...project.members.map(({ user }) => user)]
         .filter(
           (user) =>
+            !isDemoViewer(user.publicId) &&
             user.emailVerified &&
             (user.notificationPreferences[0]?.reportEmail ??
               resolveNotificationPreferences(null).reportEmail),
@@ -56,6 +60,7 @@ export async function digestRecipient(userId: string, projectId: string) {
   });
   if (
     !user?.emailVerified ||
+    isDemoViewer(user.publicId) ||
     !resolveNotificationPreferences(user.notificationPreferences[0] ?? null).reportEmail
   )
     return null;

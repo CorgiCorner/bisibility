@@ -1,0 +1,531 @@
+{
+  "mixed": {
+    "property": "https://example.com/docs/",
+    "checked": 9,
+    "total": 12,
+    "complete": false,
+    "remaining": 3,
+    "oldestResultAt": "2026-10-31T12:00:00.000Z",
+    "newestResultAt": "2026-11-01T12:00:00.000Z",
+    "budgetMode": "fixed",
+    "todayCount": 2,
+    "last429Kind": null,
+    "nextResetAt": "2026-11-02T08:00:00.000Z",
+    "discoveryComplete": true,
+    "discoveredAt": "2026-11-01T12:00:00.000Z",
+    "estimatedDaysRemaining": 3,
+    "groups": [
+      {
+        "group": "indexed",
+        "checked": 6,
+        "total": 6,
+        "complete": true,
+        "remaining": 0,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "A indexed",
+            "total": 1,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Indexed",
+            "total": 2,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Z indexed",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_indexed",
+        "checked": 2,
+        "total": 2,
+        "complete": true,
+        "remaining": 0,
+        "oldestResultAt": "2026-11-01T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "Discovered",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "inspection_failed",
+        "checked": 1,
+        "total": 2,
+        "complete": false,
+        "remaining": 1,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-10-31T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_checked",
+        "checked": 0,
+        "total": 2,
+        "complete": false,
+        "remaining": 2,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": null
+          }
+        ]
+      }
+    ]
+  },
+  "empty": {
+    "property": "https://example.com/docs/",
+    "checked": 0,
+    "total": 0,
+    "complete": false,
+    "remaining": 0,
+    "oldestResultAt": null,
+    "newestResultAt": null,
+    "budgetMode": "fixed",
+    "todayCount": 2,
+    "last429Kind": null,
+    "nextResetAt": "2026-11-02T08:00:00.000Z",
+    "discoveryComplete": false,
+    "discoveredAt": null,
+    "estimatedDaysRemaining": 0,
+    "groups": [
+      {
+        "group": "indexed",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      },
+      {
+        "group": "not_indexed",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      },
+      {
+        "group": "inspection_failed",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      },
+      {
+        "group": "not_checked",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      }
+    ]
+  },
+  "keywords": {
+    "property": "https://example.com/docs/",
+    "checked": 1,
+    "total": 2,
+    "complete": false,
+    "remaining": 1,
+    "oldestResultAt": "2026-10-31T12:00:00.000Z",
+    "newestResultAt": "2026-10-31T12:00:00.000Z",
+    "budgetMode": "fixed",
+    "todayCount": 2,
+    "last429Kind": null,
+    "nextResetAt": "2026-11-02T08:00:00.000Z",
+    "discoveryComplete": false,
+    "discoveredAt": null,
+    "estimatedDaysRemaining": 1,
+    "groups": [
+      {
+        "group": "indexed",
+        "checked": 1,
+        "total": 1,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-10-31T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "Indexed",
+            "total": 1,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_indexed",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      },
+      {
+        "group": "inspection_failed",
+        "checked": 0,
+        "total": 0,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": []
+      },
+      {
+        "group": "not_checked",
+        "checked": 0,
+        "total": 1,
+        "complete": false,
+        "remaining": 1,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 1,
+            "oldestResultAt": null
+          }
+        ]
+      }
+    ]
+  },
+  "incomplete": {
+    "property": "https://example.com/docs/",
+    "checked": 9,
+    "total": 12,
+    "complete": false,
+    "remaining": 3,
+    "oldestResultAt": "2026-10-31T12:00:00.000Z",
+    "newestResultAt": "2026-11-01T12:00:00.000Z",
+    "budgetMode": "fixed",
+    "todayCount": 2,
+    "last429Kind": "daily",
+    "nextResetAt": "2026-11-02T08:00:00.000Z",
+    "discoveryComplete": false,
+    "discoveredAt": "2026-11-01T12:00:00.000Z",
+    "estimatedDaysRemaining": 3,
+    "groups": [
+      {
+        "group": "indexed",
+        "checked": 6,
+        "total": 6,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": "daily",
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "A indexed",
+            "total": 1,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Indexed",
+            "total": 2,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Z indexed",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_indexed",
+        "checked": 2,
+        "total": 2,
+        "complete": false,
+        "remaining": 0,
+        "oldestResultAt": "2026-11-01T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": "daily",
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "Discovered",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "inspection_failed",
+        "checked": 1,
+        "total": 2,
+        "complete": false,
+        "remaining": 1,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-10-31T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": "daily",
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_checked",
+        "checked": 0,
+        "total": 2,
+        "complete": false,
+        "remaining": 2,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": "daily",
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": null
+          }
+        ]
+      }
+    ]
+  },
+  "domain": {
+    "property": "sc-domain:example.com",
+    "checked": 11,
+    "total": 14,
+    "complete": false,
+    "remaining": 3,
+    "oldestResultAt": "2026-10-31T12:00:00.000Z",
+    "newestResultAt": "2026-11-01T12:00:00.000Z",
+    "budgetMode": "fixed",
+    "todayCount": 2,
+    "last429Kind": null,
+    "nextResetAt": "2026-11-02T08:00:00.000Z",
+    "discoveryComplete": true,
+    "discoveredAt": "2026-11-01T12:00:00.000Z",
+    "estimatedDaysRemaining": 3,
+    "groups": [
+      {
+        "group": "indexed",
+        "checked": 8,
+        "total": 8,
+        "complete": true,
+        "remaining": 0,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "A indexed",
+            "total": 1,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Indexed",
+            "total": 4,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Z indexed",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_indexed",
+        "checked": 2,
+        "total": 2,
+        "complete": true,
+        "remaining": 0,
+        "oldestResultAt": "2026-11-01T12:00:00.000Z",
+        "newestResultAt": "2026-11-01T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": "Discovered",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          },
+          {
+            "coverageState": "Unspecified",
+            "total": 1,
+            "oldestResultAt": "2026-11-01T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "inspection_failed",
+        "checked": 1,
+        "total": 2,
+        "complete": false,
+        "remaining": 1,
+        "oldestResultAt": "2026-10-31T12:00:00.000Z",
+        "newestResultAt": "2026-10-31T12:00:00.000Z",
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": "2026-10-31T12:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "group": "not_checked",
+        "checked": 0,
+        "total": 2,
+        "complete": false,
+        "remaining": 2,
+        "oldestResultAt": null,
+        "newestResultAt": null,
+        "budgetMode": "fixed",
+        "todayCount": 2,
+        "last429Kind": null,
+        "nextResetAt": "2026-11-02T08:00:00.000Z",
+        "reasons": [
+          {
+            "coverageState": null,
+            "total": 2,
+            "oldestResultAt": null
+          }
+        ]
+      }
+    ]
+  }
+}

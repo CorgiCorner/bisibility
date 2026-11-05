@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
-    keyword: { findUnique: vi.fn() },
+    keyword: { findMany: vi.fn(async () => []), findUnique: vi.fn() },
     keywordSchedule: { update: vi.fn() },
     observationItem: { createMany: vi.fn() },
     observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
@@ -25,6 +25,13 @@ const mocks = vi.hoisted(() => ({
     },
     providerConnectionRate: { findMany: vi.fn() },
     providerCostEntry: { aggregate: vi.fn(), create: vi.fn(), groupBy: vi.fn() },
+    alertEvaluationIntent: {
+      create: vi.fn(async () => ({})),
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      upsert: vi.fn(async () => ({})),
+    },
     rankCheck: {
       aggregate: vi.fn(),
       create: vi.fn(),

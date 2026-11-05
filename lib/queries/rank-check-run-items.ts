@@ -7,11 +7,13 @@ import {
   parseLimit,
   splitPage,
 } from "@/lib/api/pagination";
+import { completedCheckAttempts, parseCheckAttempts } from "@/lib/checks/attempts";
 import { prisma } from "@/lib/db/prisma";
 import { readCheckEvidence } from "@/lib/provider-evidence/projection/read";
 import { deferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
 import { rankItemPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
+import { recordedMeasurement } from "@/lib/rank-measurements/recorded-check";
 import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import { rankRunAccountBlocks } from "./rank-check-run-account-blocks";
 import {
@@ -53,10 +55,12 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
       notBefore: true,
       rankCheck: {
         select: {
+          attempts: true,
           deferredReason: true,
           errorCode: true,
           id: true,
-          observationRun: { select: { completeness: true } },
+          normalizationVersion: true,
+          observationRun: { select: { completeness: true, projectId: true, requestPolicy: true } },
           position: true,
           provider: true,
           publicId: true,
@@ -98,7 +102,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   return {
     data: await Promise.all(
       page.map(async ({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => {
-        const storedRankCheck = row.rankCheck;
+        const storedRankCheck = row.status === "queued" && !row.startedAt ? null : row.rankCheck;
         const ledger = storedRankCheck ? ledgerActuals.get(storedRankCheck.id) : undefined;
         const payment = await rankItemPaymentReceipt(run, {
           checkId: storedRankCheck?.id ?? null,
@@ -120,12 +124,22 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
             ? {
                 ...(payment ? { payment } : {}),
                 evidenceProjection: evidence.get(storedRankCheck.publicId) ?? null,
+                attempts:
+                  row.status === "completed"
+                    ? completedCheckAttempts(storedRankCheck.attempts, storedRankCheck.provider)
+                    : parseCheckAttempts(storedRankCheck.attempts),
                 billingUnits: ledgerActualUnits(ledger, null, storedRankCheck.provider),
                 costCents: ledgerActualCostCents(ledger, null),
                 errorCode: storedRankCheck.errorCode,
                 observationCompleteness: normalizedObservationCompleteness(
                   storedRankCheck.observationRun?.completeness,
                 ),
+                organicCoverageDepth:
+                  storedRankCheck.normalizationVersion === "v2" &&
+                  storedRankCheck.observationRun?.projectId === projectId
+                    ? recordedMeasurement(storedRankCheck, keyword.publicId, projectId)
+                        .completeThrough
+                    : null,
                 position: storedRankCheck.position,
                 provider: storedRankCheck.provider,
                 publicId: storedRankCheck.publicId,

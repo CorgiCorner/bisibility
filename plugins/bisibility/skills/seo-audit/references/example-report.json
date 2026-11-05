@@ -78,7 +78,7 @@
       "note": "Bounded crawl sample. Not a ranking observation and not Search Console history."
     },
     "visibility": {
-      "observed": "Coverage gap: no saved ai_visibility reports. Use /ai-visibility-audit separately for AI visibility research.",
+      "observed": "Coverage gap: no saved ai_visibility reports. Use the `ai-visibility-audit` skill separately for AI visibility research.",
       "synthetic": "Coverage gap: no saved prompt_explorer reports. Synthetic answers are not observed visibility."
     },
     "costs": {
@@ -136,7 +136,7 @@
   },
   "provenance": {
     "skill": "seo-audit",
-    "skill_version": "0.5.0",
+    "skill_version": "0.5.1",
     "agent": "fixture-author (not a live agent run)",
     "audited_at": "2026-10-05T19:00:02.000Z",
     "instance": "https://bisibility.example",

@@ -1,6 +1,13 @@
 import type { AccountAdapter } from "@/lib/providers/account-health/adapter";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 
+export const AUTO_CHECK_INCIDENT_REASONS = [
+  "provider_billing",
+  "provider_account_restricted",
+  "provider_transient",
+  "legacy_unverified",
+] as const;
+
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
@@ -10,7 +17,7 @@ export function autoCheckEligible(adapter: AccountAdapter | undefined, reason: s
       adapter.check &&
       adapter.probe.cost === "non_billable" &&
       reason !== "provider_auth" &&
-      adapter.probe.automaticRecheck.includes(reason as ProviderErrorCode),
+      adapter.probe.automaticRecheck.includes(reason as ProviderErrorCode | "legacy_unverified"),
   );
 }
 

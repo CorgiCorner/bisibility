@@ -3,6 +3,9 @@ import type { DeferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import type { ItemStatus, RankCheckOperation } from "@/lib/rank-check/runs/contract";
 
 export type RunPageData = RankCheckOperation & {
+  rankedCount?: number;
+  executedProviders?: string[];
+  childRuns?: { publicId: string; parentRelation: string | null }[];
   checkSchedulePublicId: string | null;
   launchedAt: string | null;
   parentRelation: string | null;
@@ -10,6 +13,7 @@ export type RunPageData = RankCheckOperation & {
   requestedBy: { name: string | null } | null;
   selectionSpec: unknown;
   hasAccountDeferred?: boolean;
+  connectionNotice?: { provider: string; state: "unverified" | "verified" } | null;
   sharedDeferralCode?: DeferralReasonCode | null;
   skippedBy: { name: string } | null;
 };
@@ -35,6 +39,9 @@ export type RunPageItem = {
     evidenceProjection?:
       | import("@/lib/provider-evidence/projection/model").EvidenceProjection
       | null;
+    attempts?: import("@/lib/checks/contract").CheckAttempt[];
+    observationCompleteness?: string | null;
+    organicCoverageDepth?: number | null;
     billingUnits?: number | null;
     provider?: string;
     requestedDepth?: number | null;

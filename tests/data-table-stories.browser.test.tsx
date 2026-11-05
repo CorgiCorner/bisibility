@@ -73,7 +73,7 @@ function expectResponsiveRowSurfaces(table: HTMLElement) {
 
 function expectSharedSortableHeaderTypography(canvasElement: HTMLElement) {
   const sortable = canvasElement.querySelector<HTMLElement>(
-    '[role="columnheader"] button[aria-sort]',
+    '[role="columnheader"][aria-sort] button',
   );
   const columnHeader = sortable?.closest<HTMLElement>('[role="columnheader"]');
   expect(sortable).not.toBeNull();
@@ -110,7 +110,7 @@ function expectSharedSortableHeaderTypography(canvasElement: HTMLElement) {
 function expectNormalWidthShortHeadersFit(table: HTMLElement) {
   for (const columnId of ["position", "volume", "clicks"]) {
     const label = table.querySelector<HTMLElement>(
-      `[role="columnheader"][data-column-id="${columnId}"] button[aria-sort] > span`,
+      `[role="columnheader"][data-column-id="${columnId}"][aria-sort] button > span`,
     );
     expect(label).not.toBeNull();
     expect((label as HTMLElement).clientWidth).toBeGreaterThanOrEqual(
@@ -126,14 +126,14 @@ function expectPositionHeaderFits(
   const header = table.querySelector<HTMLElement>(
     '[role="columnheader"][data-column-id="position"]',
   );
-  const button = header?.querySelector<HTMLButtonElement>("button[aria-sort]");
+  const button = header?.querySelector<HTMLButtonElement>("button");
   const label = button?.querySelector<HTMLElement>(":scope > span");
   expect(header).not.toBeNull();
   expect(button).not.toBeNull();
   expect(label).not.toBeNull();
   expect(table.style.getPropertyValue("--dt-col-position")).toBe("96px");
   expect(header?.getBoundingClientRect().width).toBeCloseTo(96, 0);
-  expect(button).toHaveAttribute("aria-sort", ariaSort);
+  expect(header).toHaveAttribute("aria-sort", ariaSort);
   expect((label as HTMLElement).clientWidth).toBeGreaterThanOrEqual(
     (label as HTMLElement).scrollWidth,
   );

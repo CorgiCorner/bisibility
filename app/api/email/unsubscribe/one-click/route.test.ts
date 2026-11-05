@@ -91,3 +91,56 @@ describe("one-click unsubscribe", () => {
     },
   );
 });
+
+describe("one-click form contract", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.marketing.mockResolvedValue(true);
+    mocks.achievement.mockResolvedValue(true);
+    mocks.notification.mockResolvedValue(true);
+  });
+  it.each(["marketing", "achievement", "notification"] as const)(
+    "accepts multipart for %s",
+    async (stream) => {
+      const form = new FormData();
+      form.append("List-Unsubscribe", "One-Click");
+      expect((await POST(new Request(url(stream), { method: "POST", body: form }))).status).toBe(
+        200,
+      );
+      expect(mocks[stream]).toHaveBeenCalledWith("opaque");
+    },
+  );
+  it.each(["urlencoded", "multipart"] as const)("rejects invalid %s forms", async (encoding) => {
+    for (const [values, expected] of [
+      [["One-Click", "One-Click"], 400],
+      [["wrong"], 400],
+      [["One-Click", "x".repeat(5000)], 413],
+    ] as const) {
+      const form = new FormData();
+      for (const value of values) form.append("List-Unsubscribe", value);
+      const req =
+        encoding === "multipart"
+          ? new Request(url(), { method: "POST", body: form })
+          : new Request(url(), {
+              method: "POST",
+              headers: { "content-type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams([...form.entries()] as [string, string][]).toString(),
+            });
+      expect((await POST(req)).status).toBe(expected);
+    }
+    expect(mocks.marketing).not.toHaveBeenCalled();
+  });
+});
+
+it("rejects malformed multipart and file-valued fields before dispatch", async () => {
+  const malformed = new Request(url(), {
+    method: "POST",
+    headers: { "content-type": "multipart/form-data" },
+    body: "List-Unsubscribe=One-Click",
+  });
+  expect((await POST(malformed)).status).toBe(400);
+  const form = new FormData();
+  form.append("List-Unsubscribe", new Blob(["One-Click"]), "value.txt");
+  expect((await POST(new Request(url(), { method: "POST", body: form }))).status).toBe(400);
+  expect(mocks.marketing).not.toHaveBeenCalled();
+});

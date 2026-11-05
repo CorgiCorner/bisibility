@@ -78,6 +78,71 @@ describe("RunPage deferral summary", () => {
     ).toBeVisible();
     expect(row.querySelector('[data-column-id="cost"]')).not.toHaveTextContent("not sent");
   });
+  it("offers connection settings for an unverified deferred provider", () => {
+    const item = {
+      ...runPageFixture.items[0],
+      status: "deferred" as const,
+      deferralCode: "provider_account_blocked" as const,
+      accountBlocks: [
+        { connectionId: "conn_example", provider: "DataForSEO", reason: "not_verified" as const },
+      ],
+    };
+    render(
+      <RunPage
+        {...runPageFixture}
+        run={{
+          ...runPageFixture.run,
+          connectionNotice: { provider: "DataForSEO", state: "unverified" },
+        }}
+        items={[item]}
+        canMutate={false}
+        projectRef="prj_example"
+      />,
+    );
+    expect(screen.getByText("Verify your DataForSEO connection")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Connection settings" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/providers",
+    );
+  });
+  it("shows the connection notice alongside another blocked-run reason", () => {
+    render(
+      <RunPage
+        {...runPageFixture}
+        run={{
+          ...runPageFixture.run,
+          blockedReason: "budget_exhausted",
+          connectionNotice: { provider: "DataForSEO", state: "unverified" },
+          status: "blocked",
+        }}
+        canMutate={false}
+        projectRef="prj_example"
+      />,
+    );
+    expect(screen.getByText("Verify your DataForSEO connection")).toBeVisible();
+    expect(screen.getByRole("region", { name: "Blocked run guidance" })).toBeVisible();
+  });
+  it("explains that verified connections apply to the next scheduled run", () => {
+    render(
+      <RunPage
+        {...runPageFixture}
+        run={{
+          ...runPageFixture.run,
+          connectionNotice: { provider: "DataForSEO", state: "verified" },
+          hasAccountDeferred: true,
+          selectionSpec: { rankPaymentConsent: {} },
+        }}
+        canMutate={false}
+        projectRef="prj_example"
+      />,
+    );
+    expect(
+      screen.getByText(
+        "Connection verified. These checks remain deferred. The next scheduled run can use this connection.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText(/The approved provider is paused/)).not.toBeInTheDocument();
+  });
   it("does not show a position for a deferred check even if the projection contains one", () => {
     const item = { ...runPageFixture.items[0], status: "deferred" as const };
     expect(item.rankCheck?.position).toBe(7);

@@ -77,6 +77,7 @@ export type ProjectRunRankCheckDetails = Readonly<{
   status: RunStatus;
   trigger: RunTrigger;
   blockedReason?: string | null;
+  expiryBlockedReason?: string | null;
 }>;
 
 export const PROJECT_RUN_GSC_IMPORT_KNOWN_STATES = [

@@ -21,6 +21,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 vi.mock("@/lib/queries/rank-check-run-deferral", () => ({
   sharedRankCheckRunDeferralCode: mocks.sharedDeferral,
   hasAccountDeferredRankCheck: vi.fn(async () => false),
+  rankCheckConnectionNotice: vi.fn(async () => null),
 }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
   getRankCheckRun: mocks.getRankCheckRun,
@@ -63,5 +64,25 @@ describe("RankCheckRunPage", () => {
       projectRef,
       run: { id: runId },
     });
+  });
+
+  it("passes item rows through without a reported-cost field", async () => {
+    const data = [
+      { id: "item_own", actualCostCents: 0.4 },
+      { id: "item_hosted", actualCostCents: 0.4 },
+    ];
+    mocks.listRankCheckRunItems.mockResolvedValue({
+      data,
+      nextCursor: null,
+      ownKeyReportedCostCents: { item_own: 0.4 },
+    });
+    const rendered = await RankCheckRunPage({
+      params: Promise.resolve({ id: runId, project: projectRef }),
+    });
+    const runPageProps = (
+      rendered.props.children as { props: { children: { props: Record<string, unknown> } } }
+    ).props.children.props;
+
+    expect(runPageProps.items).toEqual(data);
   });
 });

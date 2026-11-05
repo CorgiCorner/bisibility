@@ -1,4 +1,6 @@
 import {
+  QUEUED_REDIRECT_ACTIVITY_RESERVE_MS,
+  QUEUED_REDIRECT_TIMEOUT_MS,
   QUEUED_RESULT_ATTEMPT_BUDGET_MS,
   QUEUED_RESULT_DB_MAX_WAIT_MS,
   QUEUED_RESULT_DB_TRANSACTION_TIMEOUT_MS,
@@ -17,9 +19,21 @@ export const queuedResultReleaseTransactionOptions = {
 };
 
 export type QueuedResultAttemptOptions = {
+  /** When the owning activity attempt reaches its start-to-close timeout. */
+  activityDeadlineAt?: Date;
   deadlineAt?: Date;
   signal?: AbortSignal;
 };
+
+/**
+ * The full conversion timeout when it still fits the activity attempt, otherwise null. A timeout
+ * is never shortened: a converter timeout counts as an attempt, so our own budget must not cause it.
+ */
+export function queuedRedirectConversionTimeoutMs(activityDeadlineAt?: Date, now = Date.now()) {
+  if (!activityDeadlineAt) return QUEUED_REDIRECT_TIMEOUT_MS;
+  const available = activityDeadlineAt.getTime() - now - QUEUED_REDIRECT_ACTIVITY_RESERVE_MS;
+  return available >= QUEUED_REDIRECT_TIMEOUT_MS ? QUEUED_REDIRECT_TIMEOUT_MS : null;
+}
 
 export class QueuedResultDeadlineReachedError extends Error {
   constructor() {

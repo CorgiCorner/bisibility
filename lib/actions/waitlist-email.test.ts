@@ -23,6 +23,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/email/provider-feedback-store", () => ({
+  assertMailNotSuppressed: vi.fn(async () => undefined),
+  recordMailReceipt: vi.fn(async () => undefined),
+}));
 vi.mock("@/lib/landing/waitlist-protection", () => ({
   WAITLIST_RATE_LIMITED: "Too many requests. Please try again later.",
   WAITLIST_VERIFICATION_FAILED: "Verification failed. Please try again.",
@@ -108,7 +112,7 @@ describe("joinWaitlist email delivery", () => {
     process.env.RESEND_API_KEY = "";
     process.env.EMAIL_PROVIDER = "ses";
     process.env.SES_REGION = "eu-central-1";
-    mocks.sesSend.mockResolvedValue({});
+    mocks.sesSend.mockResolvedValue({ MessageId: "ses-fixture-id" });
     mocks.prisma.waitlist.upsert.mockResolvedValue(
       storedWaitlist({ email: "person@example.com", source: "landing_capture" }),
     );

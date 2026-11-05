@@ -4,6 +4,9 @@ import { createNotification } from "./create";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    project: { findFirst: vi.fn() },
     notification: { create: vi.fn() },
     notificationPreference: { findUnique: vi.fn() },
   },
@@ -16,8 +19,26 @@ vi.mock("./realtime", () => ({
 }));
 
 describe("notification creation", () => {
+  it.each([
+    [NotificationType.alert_fired, "alertInApp"],
+    [NotificationType.import_done, "importInApp"],
+    [NotificationType.invite, "inviteInApp"],
+  ])("respects ON/OFF through persistence and realtime for %s", async (type, preference) => {
+    for (const enabled of [false, true]) {
+      mocks.prisma.notification.create.mockClear();
+      mocks.publishNotificationCreated.mockClear();
+      mocks.prisma.notificationPreference.findUnique.mockResolvedValue({ [preference]: enabled });
+      await createNotification("user_1", "project_1", type, "Fixture event");
+      expect(mocks.prisma.notification.create).toHaveBeenCalledTimes(enabled ? 1 : 0);
+      expect(mocks.publishNotificationCreated).toHaveBeenCalledTimes(enabled ? 1 : 0);
+    }
+  });
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation(
+      (callback: (db: typeof mocks.prisma) => Promise<unknown>) => callback(mocks.prisma),
+    );
+    mocks.prisma.project.findFirst.mockResolvedValue({ id: "project_1" });
     mocks.prisma.notificationPreference.findUnique.mockResolvedValue(null);
     mocks.prisma.notification.create.mockImplementation(({ data }) =>
       Promise.resolve({
@@ -27,6 +48,29 @@ describe("notification creation", () => {
         readAt: null,
       }),
     );
+  });
+
+  it("respects provider-incident ON/OFF through persistence and realtime", async () => {
+    vi.stubEnv("PROVIDER_RECOVERY", "on");
+    try {
+      for (const enabled of [false, true]) {
+        mocks.prisma.notification.create.mockClear();
+        mocks.publishNotificationCreated.mockClear();
+        mocks.prisma.notificationPreference.findUnique.mockResolvedValue({
+          providerIncidentInApp: enabled,
+        });
+        await createNotification(
+          "user_1",
+          "project_1",
+          NotificationType.provider_incident,
+          "Fixture event",
+        );
+        expect(mocks.prisma.notification.create).toHaveBeenCalledTimes(enabled ? 1 : 0);
+        expect(mocks.publishNotificationCreated).toHaveBeenCalledTimes(enabled ? 1 : 0);
+      }
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("check_complete is opt-in when no preference row exists", async () => {
@@ -122,4 +166,21 @@ describe("notification creation", () => {
     ).resolves.toBeNull();
     expect(mocks.publishNotificationCreated).not.toHaveBeenCalled();
   });
+
+  it.each([
+    "alert_fired",
+    "check_complete",
+    "check_failed",
+    "import_done",
+    "import_failed",
+  ] as const)(
+    "rejects %s without project scope while allowing account system notices",
+    async (type) => {
+      await expect(createNotification("user_1", null, type, "Project notice")).resolves.toBeNull();
+      expect(mocks.prisma.notification.create).not.toHaveBeenCalled();
+      await expect(
+        createNotification("user_1", null, "system", "Account notice"),
+      ).resolves.toMatchObject({ id: "notification_1" });
+    },
+  );
 });

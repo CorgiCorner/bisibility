@@ -1,15 +1,23 @@
 import "server-only";
 
+import {
+  reportRequestFailure,
+  setRequestFailureMetadata,
+  withRequestFailureScope,
+} from "@/lib/observability/request-failure";
 import packageJson from "@/package.json";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { getMcpToolDefinitions } from "./definitions";
+import { mcpRequestMetadata } from "./request-id";
 import type { McpApiAuthorization } from "./rest-call";
 import { errorToolResult, jsonToolResult, restFailureToolError } from "./result";
 import { dispatchMcpTool } from "./tools";
 
 type CreateMcpServerOptions = {
   authorization: McpApiAuthorization;
+  /** The caller's `X-Bisibility-Client`, forwarded so tool calls keep its attribution. */
+  clientHeader?: string;
   name?: string;
   version?: string;
 };
@@ -33,21 +41,31 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
     tools: getMcpToolDefinitions(),
   }));
 
-  server.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    try {
-      const result = await dispatchMcpTool(
-        request.params.name,
-        request.params.arguments ?? {},
-        options.authorization,
-      );
-      if (!result.ok) {
-        return errorToolResult(restFailureToolError(result.payload, result.status));
+  server.server.setRequestHandler(CallToolRequestSchema, async (request) =>
+    withRequestFailureScope("tool_dispatch", async () => {
+      setRequestFailureMetadata({
+        ...mcpRequestMetadata({ method: "tools/call", params: { name: request.params.name } }),
+        httpStatus: 200,
+      });
+      try {
+        const result = await dispatchMcpTool(
+          request.params.name,
+          request.params.arguments ?? {},
+          options.authorization,
+          options.clientHeader,
+        );
+        if (!result.ok) {
+          if ((result.status ?? 0) >= 500)
+            reportRequestFailure(new Error("API response failed."), "tool_dispatch", result.status);
+          return errorToolResult(restFailureToolError(result.payload, result.status));
+        }
+        return jsonToolResult(result.payload);
+      } catch (error) {
+        reportRequestFailure(error, "tool_dispatch");
+        return errorToolResult(error);
       }
-      return jsonToolResult(result.payload);
-    } catch (error) {
-      return errorToolResult(error);
-    }
-  });
+    }),
+  );
 
   return server;
 }

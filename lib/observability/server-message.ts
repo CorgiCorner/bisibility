@@ -3,6 +3,7 @@ import { errorReportingRuntime, sentryRuntimeIdentity } from "@/lib/observabilit
 
 type ServerMessageContext = {
   level: "warning" | "error";
+  fingerprint?: string[];
   extra: Record<string, string | number | undefined>;
 };
 

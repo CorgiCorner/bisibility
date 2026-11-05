@@ -24,6 +24,27 @@ const config: AlertHealthConfig = {
 };
 
 describe("alert health", () => {
+  it("separates partial batch attempts from measured recipient completeness", async () => {
+    mocks.prisma.deliveryAttempt.groupBy.mockResolvedValue([
+      {
+        _count: 1,
+        _sum: { acceptedCount: 1, failedCount: 1, unknownCount: 1 },
+        channel: "push",
+        failedCount: 1,
+        status: "partial",
+        unknownCount: 1,
+      },
+    ]);
+    await expect(collectAlertDeliveryHealth(new Date(), config)).resolves.toMatchObject({
+      total: 1,
+      partial: 1,
+      failed: 1,
+      unknown: 1,
+      failureRate: 1,
+      perChannel: { push: { total: 1, failed: 1, unknown: 1, sent: 0, skipped: 0 } },
+      recipientCounts: { acceptedCount: 1, failedCount: 1, unknownCount: 1 },
+    });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.alertRule.findMany.mockResolvedValue([
@@ -62,6 +83,38 @@ describe("alert health", () => {
       failureRate: 0,
       perChannel: { email: { failed: 0, sent: 0, skipped: 12, total: 0 } },
       total: 0,
+    });
+  });
+
+  it("does not alarm when every attempt in the window is unknown", async () => {
+    mocks.prisma.deliveryAttempt.groupBy.mockResolvedValue([
+      { _count: 12, channel: "email", status: "unknown" },
+    ]);
+    await expect(
+      collectAlertDeliveryHealth(new Date("2026-07-21T12:00:00Z"), config),
+    ).resolves.toMatchObject({
+      alarm: false,
+      failed: 0,
+      failureRate: 0,
+      total: 12,
+      unknown: 12,
+    });
+  });
+
+  it("shows unknown attempts without counting them as failures or skipped", async () => {
+    mocks.prisma.deliveryAttempt.groupBy.mockResolvedValue([
+      { _count: 2, channel: "email", status: "unknown" },
+      { _count: 1, channel: "email", status: "failed" },
+      { _count: 1, channel: "email", status: "sent" },
+    ]);
+    await expect(
+      collectAlertDeliveryHealth(new Date("2026-07-21T12:00:00Z"), config),
+    ).resolves.toMatchObject({
+      failed: 1,
+      failureRate: 1 / 4,
+      perChannel: { email: { failed: 1, sent: 1, skipped: 0, total: 4, unknown: 2 } },
+      total: 4,
+      unknown: 2,
     });
   });
 

@@ -1,15 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { alertsEmailFrom } from "@/lib/email/from";
-import {
-  notificationUnsubscribeFooter,
-  notificationUnsubscribeUrl,
-} from "@/lib/email/notification-unsubscribe";
-import { sendEmail } from "@/lib/email/send";
-import { Prisma } from "@/lib/generated/prisma/client";
-import { notifyTriggeredAlertDelivered } from "@/lib/notifications/events";
-import { resolveCanonicalOrigin } from "@/lib/seo/origin";
+import { notificationTransaction } from "@/lib/notifications/transaction";
 import {
   classifyDeliveryFailure,
   deliveryFailureMessage,
@@ -21,52 +13,30 @@ import {
   sendSlackMessage,
   stampWebhookDelivery,
 } from "./delivery";
+import type { DeliveryCounts } from "./delivery-counts";
+import { legacyDigestAdmission } from "./digest-legacy-admission";
+import { reconcileDigestEntries, releaseStaleDigest } from "./digest-reconcile";
 import { renderAlertDigest } from "./digest-render";
+import { terminalizeDigest } from "./digest-terminalization";
 import type { AlertDigestJob } from "./digest-types";
-import type { AlertEmailRecipient } from "./recipients";
-import { deliverableAlertWhere } from "./transitions";
+import { ALERT_DIGEST_JOB_MAX_ALERTS } from "./limits";
+import { ALERT_NOT_DELIVERABLE, allAlertsDeliverable, digestRefusal } from "./send-gate";
 
 export type AlertDigestDeliveryOutcome = {
   channel: AlertDeliveryChannel;
+  counts?: DeliveryCounts;
   delivered: boolean;
   reason?: string;
+  retried?: boolean;
   skipped?: boolean;
+  unknown?: boolean;
   webhookEndpointId?: string;
 };
 
 export async function prepareAlertDigestDeliveryActivity(
   job: AlertDigestJob,
 ): Promise<AlertDigestJob | null> {
-  const now = new Date();
-  const rows = await prisma.triggeredAlert.findMany({
-    select: { id: true },
-    where: {
-      deliveryClaimToken: job.deliveryClaimToken,
-      deliveryState: "digesting",
-      id: { in: job.alertIds },
-      ...deliverableAlertWhere(now),
-    },
-  });
-  const deliverableIds = new Set(rows.map(({ id }) => id));
-  const skippedIds = job.alertIds.filter((id) => !deliverableIds.has(id));
-  if (skippedIds.length > 0) {
-    await prisma.triggeredAlert.updateMany({
-      data: {
-        deliveryClaimedAt: null,
-        deliveryClaimToken: null,
-        deliveryState: "skipped",
-      },
-      where: {
-        deliveryClaimToken: job.deliveryClaimToken,
-        deliveryState: "digesting",
-        id: { in: skippedIds },
-      },
-    });
-  }
-  const deliverableEntries = job.alertIds.flatMap((triggeredAlertId, index) => {
-    const alert = job.alerts[index];
-    return alert && deliverableIds.has(triggeredAlertId) ? [{ alert, triggeredAlertId }] : [];
-  });
+  const deliverableEntries = await reconcileDigestEntries(job);
   const alerts = deliverableEntries.map(({ alert }) => alert);
   const firstAlert = alerts[0];
   if (!firstAlert) return null;
@@ -91,37 +61,26 @@ export async function prepareAlertDigestDeliveryActivity(
   };
 }
 
-export async function deliverAlertDigestEmailActivity(input: {
-  job: AlertDigestJob;
-  recipient: AlertEmailRecipient;
-}) {
-  try {
-    const url = notificationUnsubscribeUrl(
-      { userId: input.recipient.userId, projectId: input.job.projectId, stream: "alert" },
-      resolveCanonicalOrigin(),
-    );
-    await sendEmail({
-      ...input.job.email,
-      ...notificationUnsubscribeFooter(input.job.email, url),
-      listUnsubscribeUrl: url,
-      category: "bulk",
-      from: alertsEmailFrom(),
-      to: input.recipient.email,
-    });
-    return true;
-  } catch (error) {
-    const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
-    throw classifyDeliveryFailure(error, "email", errorMessage);
-  }
-}
+export { deliverAlertDigestEmailActivity } from "./digest-email";
 
 export async function deliverAlertDigestSlackActivity(job: AlertDigestJob) {
-  if (!job.slackConnection?.enabled) {
-    return false;
+  const admission = await legacyDigestAdmission(job);
+  if (admission) return admission;
+  if (!job.slackConnection?.enabled) return digestRefusal("Slack delivery is not configured.");
+  if (
+    !(await allAlertsDeliverable({
+      alertIds: job.alertIds,
+      projectId: job.projectId,
+      ruleId: job.ruleId,
+    }))
+  ) {
+    return digestRefusal(ALERT_NOT_DELIVERABLE);
   }
   try {
     const delivered = await sendSlackMessage(job.slackConnection, job.slackText);
-    return delivered;
+    return delivered
+      ? { delivered: true, skipped: false }
+      : digestRefusal("Slack delivery is not configured.");
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
     throw classifyDeliveryFailure(error, "slack", errorMessage);
@@ -132,134 +91,57 @@ export async function deliverAlertDigestWebhookActivity(input: {
   endpointId: string;
   job: AlertDigestJob;
 }) {
+  const admission = await legacyDigestAdmission(input.job);
+  if (admission) return admission;
+  if (
+    !(await allAlertsDeliverable({
+      alertIds: input.job.alertIds,
+      projectId: input.job.projectId,
+      ruleId: input.job.ruleId,
+    }))
+  ) {
+    return digestRefusal(ALERT_NOT_DELIVERABLE);
+  }
   const endpoint = await prisma.webhookEndpoint.findUnique({
     select: { enabled: true, hmacSecret: true, id: true, url: true },
     where: { id: input.endpointId },
   });
-  if (!endpoint?.enabled) {
-    return false;
-  }
+  if (!endpoint?.enabled) return digestRefusal("Webhook delivery is not configured.");
   try {
     await postSignedBody(endpoint, input.job.webhookBody);
     await stampWebhookDelivery(endpoint.id);
-    return true;
+    return { delivered: true, skipped: false };
   } catch (error) {
     const errorMessage = deliveryFailureMessage(error, "Alert digest delivery failed.");
     throw classifyDeliveryFailure(error, "webhook", errorMessage);
   }
 }
 
-function deliveryAttemptData(
-  channel: AlertDeliveryChannel,
-  outcomes: AlertDigestDeliveryOutcome[],
-  triggeredAlertId: string,
-  existingWebhookEndpointIds: Set<string>,
-) {
-  const channelOutcomes = outcomes.filter((outcome) => outcome.channel === channel);
-  const outcomeData = (outcome: AlertDigestDeliveryOutcome) => ({
-    channel,
-    error: outcome.reason ?? null,
-    status: deliveryAttemptStatus(outcome),
-    triggeredAlertId,
-    ...(outcome.webhookEndpointId && existingWebhookEndpointIds.has(outcome.webhookEndpointId)
-      ? { webhookEndpointId: outcome.webhookEndpointId }
-      : {}),
-  });
-  if (channel === "webhook" && channelOutcomes.length > 0) {
-    return channelOutcomes.map(outcomeData);
-  }
-
-  const sent = channelOutcomes.some((outcome) => outcome.delivered);
-  const failed = channelOutcomes.some((outcome) => !outcome.skipped);
-  return [
-    {
-      channel,
-      error: channelOutcomes.find((outcome) => outcome.reason)?.reason ?? null,
-      status: sent ? "sent" : failed ? "failed" : "skipped",
-      triggeredAlertId,
-    },
-  ];
-}
-
-function deliveryAttemptStatus(outcome: AlertDigestDeliveryOutcome) {
-  if (outcome.delivered) return "sent";
-  return outcome.skipped ? "skipped" : "failed";
-}
-
-async function lockExistingWebhookEndpointIds(
-  tx: Pick<Prisma.TransactionClient, "$queryRaw">,
-  outcomes: AlertDigestDeliveryOutcome[],
-) {
-  const endpointIds = [
-    ...new Set(
-      outcomes.flatMap((outcome) => (outcome.webhookEndpointId ? [outcome.webhookEndpointId] : [])),
-    ),
-  ];
-  if (endpointIds.length === 0) return new Set<string>();
-
-  const rows = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-    SELECT "id"
-    FROM "webhook_endpoints"
-    WHERE "id" IN (${Prisma.join(endpointIds)})
-    FOR KEY SHARE
-  `);
-  return new Set(rows.map((row) => row.id));
-}
-
 export async function finalizeAlertDigestDeliveryActivity(input: {
   job: AlertDigestJob;
   outcomes: AlertDigestDeliveryOutcome[];
 }) {
-  const deliveryState = deliveryStateForOutcomes(input.outcomes, "digested");
-  const delivered = deliveryState === "digested";
-  const primaryAlertId = input.job.alertIds[0];
-  if (!primaryAlertId) return { deliveryState: "skipped" as const };
-
-  const finalized = await prisma.$transaction(async (tx) => {
-    const updated = await tx.triggeredAlert.updateMany({
-      data: {
-        deliveredAt: delivered ? new Date() : null,
-        deliveryClaimedAt: null,
-        deliveryClaimToken: null,
-        deliveryState,
-      },
-      where: {
-        deliveryClaimToken: input.job.deliveryClaimToken,
-        deliveryState: "digesting",
-        id: { in: input.job.alertIds },
-      },
-    });
-    if (updated.count === 0) return false;
-    const existingWebhookEndpointIds = await lockExistingWebhookEndpointIds(tx, input.outcomes);
-
-    for (const channel of input.job.channels) {
-      for (const data of deliveryAttemptData(
-        channel,
-        input.outcomes,
-        primaryAlertId,
-        existingWebhookEndpointIds,
-      )) {
-        await tx.deliveryAttempt.create({ data });
-      }
-    }
-    return true;
-  });
-  // In-app notifications do not depend on an external digest channel succeeding.
-  if (finalized) {
-    await Promise.all(
-      input.job.alerts.flatMap((payload, index) => {
-        const triggeredAlertId = input.job.alertIds[index];
-        return triggeredAlertId
-          ? [
-              notifyTriggeredAlertDelivered({
-                payload,
-                projectInternalId: input.job.projectId,
-                triggeredAlertId,
-              }).catch(() => undefined),
-            ]
-          : [];
-      }),
-    );
+  if (
+    input.job.alertIds.length > ALERT_DIGEST_JOB_MAX_ALERTS ||
+    input.job.alerts.length > ALERT_DIGEST_JOB_MAX_ALERTS
+  ) {
+    throw new Error(`Digest finalization supports at most ${ALERT_DIGEST_JOB_MAX_ALERTS} alerts.`);
   }
+  if (!input.job.deliveryClaimToken) return { deliveryState: "skipped" as const };
+  const deliveryState = deliveryStateForOutcomes(input.outcomes, "digested");
+  // Requeue only when no attempt could have reached a transport: a refusal on a retried
+  // attempt may follow one that the transport accepted.
+  if (
+    deliveryState === "skipped" &&
+    input.outcomes.some((outcome) => outcome.reason === ALERT_NOT_DELIVERABLE) &&
+    !input.outcomes.some((outcome) => outcome.retried)
+  ) {
+    return { deliveryState: await releaseStaleDigest(input.job) };
+  }
+  if (input.job.alertIds.length === 0) return { deliveryState: "skipped" as const };
+
+  await notificationTransaction((tx) => terminalizeDigest(tx, { ...input, deliveryState }), {
+    timeout: 20_000,
+  });
   return { deliveryState };
 }

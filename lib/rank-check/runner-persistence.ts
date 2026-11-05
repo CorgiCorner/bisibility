@@ -2,7 +2,7 @@ import { queueCheckSummary } from "@/lib/notifications/check-summaries/triggers"
 import { notificationTransaction } from "@/lib/notifications/transaction";
 import "server-only";
 
-import { evaluateKeywordAlerts } from "@/lib/alerts/evaluate";
+import { recordAlertEvaluationIntent, settleRankCheckAlerts } from "@/lib/alerts/evaluation-intent";
 import { requiredPublicAuditId } from "@/lib/auth/audit";
 import { deriveCheckAttemptSummary } from "@/lib/checks/attempts";
 import { makePublicId } from "@/lib/db/public-id";
@@ -11,7 +11,7 @@ import { notifyRankCheckCompleted, notifyRankCheckFailed } from "@/lib/notificat
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { persistRankCheckObservation } from "@/lib/observation/persist";
 import { captureRecoveryCandidate } from "@/lib/provider-evidence/recovery/capture";
-import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
+import type { RankCheckFailureCode } from "@/lib/rank-check/failure-presentation";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { emitSignal } from "@/lib/signals/emit";
 import { signalsForRankCheck } from "@/lib/signals/rank-check";
@@ -28,7 +28,7 @@ import { applyRunItemTransition } from "./runs/items";
 
 export type { RankCheckPersistTarget } from "./runner-persistence-types";
 export type RankCheckFailureTarget = BaseRankCheckFailureTarget & {
-  errorCode?: ProviderErrorCode;
+  errorCode?: RankCheckFailureCode;
 };
 type RankCheckResult = RankCheckRunResult;
 export type PersistRankCheckDependencies = {
@@ -145,27 +145,11 @@ export async function persistRankCheck(
     await target.persistenceFinalize?.(tx);
     if (retained) await consumeRankResult(tx, persisted.id);
     queueCheckSummary(tx, persisted.id);
+    await recordAlertEvaluationIntent(tx, persisted.id, target.predecessorRankCheckId ?? null);
     return persisted;
   }, target.transactionOptions);
   await publishOperationChanged({ projectId: target.projectId }).catch(() => undefined);
-  const currentSnapshot = {
-    checkedAt: result.rankCheck.checkedAt,
-    normalizationVersion: result.rankCheck.normalizationVersion,
-    position: result.rankCheck.position,
-    rankCheckId: rankCheck.id,
-    rankingUrl: result.rankCheck.rankingUrl,
-    raw: rankCheck.raw,
-    requestedDepth: result.rankCheck.requestedDepth,
-  };
-  const alerts = await evaluateKeywordAlerts(
-    target.keywordId,
-    { position: result.rankCheck.previousPosition, raw: target.previousRaw },
-    currentSnapshot,
-    {
-      comparisonAllowed: result.comparisonAllowed,
-      deliveryMode: rankCheck.trigger === "scheduled" ? "deferred" : "immediate",
-    },
-  ).catch(() => []);
+  const alerts = await settleRankCheckAlerts(target, result, rankCheck);
   if (rankCheck.trigger !== "scheduled" && alerts.length > 0) {
     // The worker sweep recovers alerts when the best-effort Temporal kick is unavailable.
     await dependencies.enqueueDeliveries(alerts.map((alert) => alert.id)).catch(() => undefined);
@@ -213,7 +197,7 @@ export async function persistFailedRankCheckInTransaction(
     provider: target.provider,
     requestedDepth: target.requestedDepth ?? DEFAULT_SERP_DEPTH,
     rankingUrl: null,
-    raw: Prisma.JsonNull,
+    raw: target.raw ?? Prisma.JsonNull,
     status: "failed",
   };
   await target.persistenceGuard?.(tx);

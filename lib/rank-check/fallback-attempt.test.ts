@@ -1,6 +1,7 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { UnresolvedRedirectError } from "@/lib/providers/serp/unresolved-redirect-error";
 import { ProviderRecoveryAdmissionError } from "@/lib/providers/usage";
 import { describe, expect, it } from "vitest";
 import { fallbackAttempt } from "./fallback-attempt";
@@ -80,3 +81,29 @@ it.each(["account_blocked", "accounting_review"] as const)(
     });
   },
 );
+
+it.each([0, null])("never falls back after an unresolved result with cost %s", (chargedCents) => {
+  const cause = new UnresolvedRedirectError(chargedCents);
+  const error = new RankCheckRunnerError("provider_failed", cause.message, { cause, chargedCents });
+  expect(fallbackAttempt(error, "dataforseo")).toBeNull();
+});
+
+it.each([0, null, 1])(
+  "does not buy fallback for incomplete coverage even with cost %s",
+  async (chargedCents) => {
+    const { OrganicCoverageError } = await import("@/lib/providers/serp/organic-coverage-error");
+    const error = new RankCheckRunnerError("provider_failed", "Incomplete coverage", {
+      cause: new OrganicCoverageError("19/20"),
+      chargedCents,
+    });
+    expect(fallbackAttempt(error, "serpapi")).toBeNull();
+  },
+);
+
+it("does not recognize a nearby message as a typed coverage failure", () => {
+  const error = new RankCheckRunnerError("provider_failed", "organic_depth_not_covered_note", {
+    cause: new Error("organic_depth_not_covered_note"),
+    chargedCents: 0,
+  });
+  expect(fallbackAttempt(error, "serpapi")).not.toBeNull();
+});

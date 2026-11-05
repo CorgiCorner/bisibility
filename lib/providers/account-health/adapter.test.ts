@@ -82,6 +82,47 @@ it("requires the quoted monetary capacity and does not invent a minimum", () => 
   ).toBe("ready");
 });
 
+it.each([-0.25, 0, 1])("preserves the finite provider balance %s", (value) => {
+  const fact = dataForSeoAccountAdapter.classify({
+    status: 200,
+    body: {
+      status_code: 20000,
+      tasks: [{ status_code: 20000, result: [{ money: { balance: value } }] }],
+    },
+    scope,
+  });
+  expect(fact).toEqual({ kind: "capacity", value, unit: "usd", scope });
+  expect(capacityReadiness(fact, 0.001)).toBe(value <= 0 ? "payment_required" : "ready");
+});
+
+it.each([undefined, null, "-0.25", NaN, Infinity, -Infinity])(
+  "does not verify an unavailable provider balance %s",
+  (balance) => {
+    expect(
+      dataForSeoAccountAdapter.classify({
+        status: 200,
+        body: {
+          status_code: 20000,
+          tasks: [{ status_code: 20000, result: [{ money: { balance } }] }],
+        },
+        scope,
+      }),
+    ).toEqual({ kind: "not_verified", scope });
+  },
+);
+
+it("treats a negative search capacity as payment required", () => {
+  const fact = serpApiAccountAdapter.classify({
+    status: 200,
+    body: { total_searches_left: -1, plan_searches_left: 10 },
+    scope,
+  });
+  expect(fact).toEqual({ kind: "capacity", value: -1, unit: "searches", scope });
+  expect(capacityReadiness(fact, serpApiAccountAdapter.capacity.minimum({}))).toBe(
+    "payment_required",
+  );
+});
+
 it("uses search capacity and requires enough searches for the operation", () => {
   const fact = serpApiAccountAdapter.classify({
     status: 200,

@@ -2,6 +2,11 @@
 
 All notable changes to the Bisibility Claude Code plugin are documented here.
 
+## [0.5.1] - 2026-11-03
+
+- Skills name other skills in prose, such as "the `provider-setup` skill", so references resolve whether the plugin or single skills are installed.
+- Skills that depend on other skills declare a pack and required skills in their metadata; per-skill install commands include those skills.
+
 ## [0.5.0] - 2026-10-23
 
 - Added AI prompt research with saved/free evidence reuse, explicit non-guaranteed model-cost consent and separately approved Prompt Tracker writes.

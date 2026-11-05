@@ -1,15 +1,21 @@
+import { createHash } from "node:crypto";
 import { checkNotificationSummariesEnabled } from "./check-summaries/switch";
 import "server-only";
 
-import type { AlertExternalDeliveryPayload } from "@/lib/alerts/alert-delivery-payload";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { NotificationType, type Prisma } from "@/lib/generated/prisma/client";
 import { migrationImportCountSummary } from "@/lib/migration/import-counts";
-import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
+import type { RankCheckFailureCode } from "@/lib/rank-check/failure-presentation";
 import { appPath } from "@/lib/routing/app-path";
+import {
+  type TriggeredAlertNotificationInput,
+  triggeredAlertNotificationInput,
+} from "./alert-delivery";
 import { createNotification } from "./create";
 import type { NotificationPayload } from "./format";
+
+export { notifyTriggeredAlertsDelivered } from "./alert-delivery";
 
 type NotificationObjectPayload = { [key: string]: NotificationPayload };
 
@@ -24,7 +30,7 @@ type ProjectMemberNotificationInput = {
 };
 
 type RankFailureInput = {
-  code: ProviderErrorCode;
+  code: RankCheckFailureCode;
   failedAt: Date;
   keywordId: string;
   keywordPublicId: string;
@@ -33,12 +39,6 @@ type RankFailureInput = {
   projectDomain: string;
   projectId: string;
   rankCheckId: string;
-};
-
-type TriggeredAlertNotificationInput = {
-  payload: AlertExternalDeliveryPayload;
-  projectInternalId: string;
-  triggeredAlertId: string;
 };
 
 type CloudImportDoneInput = {
@@ -74,8 +74,8 @@ function countsBody(counts: Prisma.JsonValue | null | undefined) {
     : summary;
 }
 
-async function projectMemberContext(projectId: string) {
-  const project = await prisma.project.findUnique({
+async function projectMemberContext(projectId: string, db: Prisma.TransactionClient) {
+  const project = await db.project.findUnique({
     select: { members: { select: { userId: true } }, ownerId: true, publicId: true },
     where: { id: projectId },
   });
@@ -94,6 +94,7 @@ async function createProjectNotificationForUser(
   userId: string,
   input: ProjectMemberNotificationInput,
   projectRef: string,
+  transaction?: Prisma.TransactionClient,
 ) {
   const payload = payloadWithKey(
     input.hrefSegments
@@ -101,16 +102,15 @@ async function createProjectNotificationForUser(
       : input.payload,
     input.idempotencyKey,
   );
-  const existing = await prisma.notification.findFirst({
-    select: { id: true },
-    where: { idempotencyKey: input.idempotencyKey, userId },
-  });
-
-  if (existing) {
-    return;
+  if (!transaction) {
+    const existing = await prisma.notification.findFirst({
+      select: { id: true },
+      where: { idempotencyKey: input.idempotencyKey, userId },
+    });
+    if (existing) return;
   }
 
-  await createNotification(
+  const args = [
     userId,
     input.projectId,
     input.type,
@@ -118,22 +118,18 @@ async function createProjectNotificationForUser(
     input.body,
     payload,
     input.idempotencyKey,
-  );
+  ] as const;
+  await (transaction ? createNotification(...args, transaction) : createNotification(...args));
 }
 
-export async function notifyProjectMembers(input: ProjectMemberNotificationInput) {
-  try {
-    const context = await projectMemberContext(input.projectId);
-    if (!context) {
-      return;
-    }
-    await Promise.allSettled(
-      context.userIds.map((userId) =>
-        createProjectNotificationForUser(userId, input, context.projectRef),
-      ),
-    );
-  } catch {
-    return;
+export async function notifyProjectMembers(
+  input: ProjectMemberNotificationInput,
+  transaction?: Prisma.TransactionClient,
+) {
+  const context = await projectMemberContext(input.projectId, transaction ?? prisma);
+  if (!context) return;
+  for (const userId of context.userIds) {
+    await createProjectNotificationForUser(userId, input, context.projectRef, transaction);
   }
 }
 
@@ -212,28 +208,11 @@ export async function notifyRankCheckFailed(input: RankFailureInput) {
 
 // In-app alerts intentionally reach all members via alertInApp. Batch 6 owns email targeting,
 // and Batch 3 owns per-run digesting.
-export async function notifyTriggeredAlertDelivered(input: TriggeredAlertNotificationInput) {
-  const { payload } = input;
-  await notifyProjectMembers({
-    body: payload.action,
-    hrefSegments: ["alerts"],
-    idempotencyKey: `triggered-alert:${input.triggeredAlertId}:delivered`,
-    payload: {
-      afterPosition: payload.afterPosition,
-      alertId: payload.alertId,
-      beforePosition: payload.beforePosition,
-      conditionType: payload.conditionType,
-      firedAt: payload.firedAt,
-      keyword: payload.keyword,
-      keywordId: payload.keywordId,
-      meta: `${payload.keyword} on ${payload.projectDomain}`,
-      ruleId: payload.ruleId,
-      ruleName: payload.ruleName,
-    },
-    projectId: input.projectInternalId,
-    title: payload.headline,
-    type: NotificationType.alert_fired,
-  });
+export async function notifyTriggeredAlertDelivered(
+  input: TriggeredAlertNotificationInput,
+  transaction?: Prisma.TransactionClient,
+) {
+  await notifyProjectMembers(triggeredAlertNotificationInput(input), transaction);
 }
 
 export async function notifyCloudImportDone(input: CloudImportDoneInput) {
@@ -271,5 +250,23 @@ export async function notifyCloudImportFailed(input: CloudImportFailedInput) {
     projectId: input.projectId,
     title: "Instance import failed",
     type: NotificationType.import_failed,
+  });
+}
+
+/**
+ * One notice per recipient, project, blocker and UTC month of the expiry,
+ * independent of keywords or cadence. The month bucket separates episodes: a
+ * blocker that clears and recurs in a later month notifies again.
+ */
+export async function notifyScheduleBlocked(projectId: string, reason: string, expiredAt: Date) {
+  const reasonKey = createHash("sha256").update(reason).digest("hex");
+  const episode = expiredAt.toISOString().slice(0, 7);
+  await notifyProjectMembers({
+    projectId,
+    type: NotificationType.system,
+    title: "Scheduled check blocked",
+    body: "A scheduled check could not run. Review the run history for the cause.",
+    hrefSegments: ["runs"],
+    idempotencyKey: `schedule-block:${projectId}:${episode}:${reasonKey}`,
   });
 }

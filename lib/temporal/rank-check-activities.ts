@@ -37,6 +37,7 @@ import {
   type RankCheckActivitySuccess,
   type RunRankCheckActivityInput,
 } from "./rank-check-activity-contract";
+import { indeterminateRankFailure } from "./rank-check-indeterminate";
 import { authorizeRankCheckExecutionActivity } from "./rank-check-mode-activities";
 
 export * from "./rank-check-activity-contract";
@@ -187,6 +188,8 @@ export async function runRankCheckActivity(
         type: error.code,
       });
     }
+    const unresolved = await indeterminateRankFailure(error, input.rankCheckId);
+    if (unresolved) throw unresolved;
     if (error instanceof RankCheckClosedBeforePersistenceError) {
       throw ApplicationFailure.create({
         message: error.message,

@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import "@/app/globals.css";
 import "@/.storybook/preview-fonts.css";
-import AgentReportLoading from "@/app/(regional)/app/(workspace)/[project]/agent-reports/[reportId]/loading";
+import { AgentReportDetailLoading } from "@/components/agent-reports/AgentReportDetailLoading";
 import { AgentReportHistory } from "@/components/agent-reports/AgentReportHistory";
 import {
   AgentReportsLayout,
@@ -140,7 +140,10 @@ it.each(sizes.flatMap(([width, height]) => themes.map((theme) => ({ width, heigh
             <Card role="alert">Reports could not be loaded</Card>
           </AgentReportsLayout>
           <AgentReportsLoading description="All reports" addReportLabel="Save an analysis" />
-          <AgentReportLoading />
+          <AgentReportDetailLoading
+            backLabel={messages.agentWorkspace.back}
+            membersOnlyLabel={messages.agentWorkspace.membersOnly}
+          />
           <PageContent variant="form">
             <ProjectContextLoading />
           </PageContent>

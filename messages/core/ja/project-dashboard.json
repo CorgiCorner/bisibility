@@ -55,7 +55,13 @@
       "kpisAriaLabel": "概要の主要指標",
       "viewAllKeywords": "すべてのキーワードを表示",
       "viewCheckRuns": "チェック実行を表示",
-      "providerCapacityUnavailableDetail": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。"
+      "providerCapacityUnavailableDetail": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。",
+      "connectionSettings": "接続設定",
+      "verifyConnectionDetail": "この接続が必要なチェックは、接続が確認されるまで延期されます。無料のアカウント確認が自動的に実行されます。今すぐ接続を確認することもできます。",
+      "verifyConnectionTitle": "{provider}との接続を確認してください",
+      "providerUnresolvedRedirectsDetail": "プロバイダーが解決できないリンクを返したため、このチェックには順位がありません。",
+      "organicResultUnclassifiableDetail": "{keyword}: プロバイダーが分類できない検索結果を返したため、このチェックには順位がありません。",
+      "organicDepthNotCoveredDetail": "{keyword}: 返された自然検索結果は指定された深さをカバーしていないため、順位も圏外であることも確認できませんでした。"
     },
     "kpis": {
       "averageComparison": "{direction, select, up {前回の順位チェックより{value, number, ::.0}上昇} down {前回の順位チェックより{value, number, ::.0}下降} other {前回の順位チェックから変化なし}}",

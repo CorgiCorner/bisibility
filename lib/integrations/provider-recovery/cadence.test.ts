@@ -25,6 +25,8 @@ describe("account check cadence", () => {
   });
   it("requires explicit non-billable capability and never polls invalid credentials", () => {
     expect(autoCheckEligible(dataForSeoAccountAdapter, "provider_billing")).toBe(true);
+    expect(autoCheckEligible(dataForSeoAccountAdapter, "legacy_unverified")).toBe(true);
+    expect(autoCheckEligible(serpApiAccountAdapter, "legacy_unverified")).toBe(false);
     expect(autoCheckEligible(dataForSeoAccountAdapter, "provider_auth")).toBe(false);
     expect(autoCheckEligible(serpApiAccountAdapter, "provider_billing")).toBe(false);
     expect(autoCheckEligible(undefined, "provider_billing")).toBe(false);

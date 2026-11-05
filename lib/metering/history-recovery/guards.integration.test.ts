@@ -233,6 +233,23 @@ test("old queued tags do not strand operator recovery; only recoverable native B
     await expect(f.run((tx) => previewHistoricalResolution(tx, f.manifest), true)).rejects.toThrow(
       "native proof",
     );
+    const attributed = "app=bisibility;stage=dev;src=app;trg=scheduled;f=rank_check;p=project";
+    for (const [tag, proved] of [
+      // Current own-key submissions attribute the exact task without a credential segment.
+      [`${attributed};c=task`, true],
+      ["bisibility:rank:task", false],
+      [
+        `app=bisibility;stage=dev;src=app;cs=hosted;trg=scheduled;f=rank_check;p=project;c=task`,
+        false,
+      ],
+      [`${attributed};c=other-task`, false],
+      [`${attributed};c=task`, true],
+    ] as const) {
+      await f.run((tx) => tx.$executeRaw`UPDATE queued_rank_check_tasks SET "providerTag"=${tag}`);
+      const preview = f.run((tx) => previewHistoricalResolution(tx, f.manifest), true);
+      if (proved) await expect(preview).rejects.toThrow("native proof");
+      else await expect(preview).resolves.toHaveProperty("planHash");
+    }
     await f.run(
       (tx) =>
         tx.$executeRaw`UPDATE queued_rank_check_batches SET "connectionId"='other-connection'`,

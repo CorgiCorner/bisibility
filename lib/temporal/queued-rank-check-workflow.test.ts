@@ -156,6 +156,31 @@ describe("queuedRankCheckBatchWorkflow", () => {
     expect(mocks.submit).toHaveBeenCalledOnce();
   });
 
+  it("resumes deferred usage settlement without a second submission activity kind", async () => {
+    mocks.submit
+      .mockResolvedValueOnce({ deferredUsage: ["qtask_2", "qtask_3"], state: "submitted" })
+      .mockResolvedValueOnce({ deferredUsage: ["qtask_3"], state: "submitted" })
+      .mockResolvedValueOnce({ state: "submitted" });
+
+    await expect(queuedRankCheckBatchWorkflow(input)).resolves.toMatchObject({
+      state: "completed",
+    });
+
+    expect(mocks.submit).toHaveBeenCalledTimes(3);
+    expect(mocks.submit.mock.calls.every((call) => call[0]?.batchId === "batch_1")).toBe(true);
+    expect(mocks.inspect).toHaveBeenCalledOnce();
+  });
+
+  it("stops usage resume when a fresh activity does not shrink the deferred set", async () => {
+    mocks.submit.mockResolvedValue({ deferredUsage: ["qtask_2"], state: "submitted" });
+
+    await expect(queuedRankCheckBatchWorkflow(input)).resolves.toMatchObject({
+      state: "completed",
+    });
+
+    expect(mocks.submit).toHaveBeenCalledTimes(2);
+  });
+
   it("uses a Temporal timer between readiness checks", async () => {
     mocks.inspect
       .mockResolvedValueOnce({

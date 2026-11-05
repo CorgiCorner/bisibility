@@ -82,7 +82,13 @@ export function useRunStatusCopy() {
         ? ai(aiRunState(run.details.state, run.timestamps.finishedAt, run.details.reason).key)
         : run.kind === "rank"
           ? rank(
-              rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason),
+              run.details.expiryBlockedReason
+                ? "blocked"
+                : rankRunStatusKey(
+                    run.details.status,
+                    run.details.outcome,
+                    run.details.blockedReason,
+                  ),
             )
           : searchConsole(gscRunStatusKey(run));
     return { forRun, groups, rank, searchConsole };

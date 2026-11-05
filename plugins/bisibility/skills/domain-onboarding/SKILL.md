@@ -1,6 +1,9 @@
 ---
 name: domain-onboarding
 description: Create a domain project with reviewed defaults, an intended provider and first keywords. Use when starting rank tracking for a new website. Do not use for importing keywords into an existing project, repairing a provider alone or launching unapproved paid checks.
+metadata:
+  bisibility.pack: project-onboarding
+  bisibility.requires: "keyword-import provider-setup"
 ---
 
 # Domain onboarding
@@ -23,7 +26,7 @@ explicitly approved step; creating a project is not proof that rankings exist.
 ## 1. Find or create the project
 
 `GET /projects` lists projects visible to the personal token. If the requested
-project already exists, use **keyword-import** or **provider-setup** instead.
+project already exists, use the `keyword-import` or `provider-setup` skill instead.
 Otherwise create the confirmed project:
 
 ```bash
@@ -57,7 +60,7 @@ does not retarget existing keyword identities or rewrite their history.
 ## 3. Verify the intended provider
 
 Read `GET /projects/{project_id}/providers`. Reuse the enabled, connected provider
-that supports rank checks. If credentials need connecting, follow **provider-setup**.
+that supports rank checks. If credentials need connecting, follow the `provider-setup` skill.
 Connect verifies credentials before saving; a second test is unnecessary after a
 successful connect. Never display provider credentials.
 

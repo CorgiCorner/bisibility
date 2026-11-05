@@ -1,6 +1,12 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { canonical, hash } from "@/lib/metering/store/codec";
+import { Prisma as SQL } from "@/lib/metering/store/host-sql";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
+import { queuedOwnTagProofSql } from "@/lib/provider-usage/queued-proof";
+import {
+  parseQueuedCostEvidence,
+  queuedCostOperatorState,
+} from "@/lib/rank-check/queued-cost-evidence";
 import type { UnknownCloseoutManifest } from "./manifest";
 
 export type UnknownCloseoutRow = {
@@ -24,10 +30,29 @@ export type UnknownCloseoutRow = {
   task_id: string | null;
   task_state: string | null;
   persistence_expires_at: Date | null;
+  accepted_unpriced: boolean;
+  cost_evidence: Prisma.JsonValue | null;
+  task_provider_id: string | null;
   receipts: bigint;
   active_recovery: boolean;
   closed_hash: string | null;
 };
+
+/**
+ * A deferred task qualifies as before. A failed task qualifies only when the provider accepted it
+ * (native id, own-key tag, no recorded cost) and automatic cost recovery already gave up; a failed
+ * task that was never accepted keeps its normal retry path and is refused.
+ */
+function taskStateQualifies(row: UnknownCloseoutRow) {
+  if (row.task_state === "deferred") return true;
+  return (
+    row.task_state === "failed" &&
+    row.accepted_unpriced &&
+    queuedCostOperatorState(row.cost_evidence)?.state === "unrecoverable" &&
+    // Evidence read for another native id never proves this task's cost is unrecoverable.
+    parseQueuedCostEvidence(row.cost_evidence)?.providerTaskId === row.task_provider_id
+  );
+}
 
 export async function unknownCloseoutSnapshot(
   tx: Prisma.TransactionClient,
@@ -38,12 +63,14 @@ export async function unknownCloseoutSnapshot(
     SELECT id FROM users WHERE "publicId"=${manifest.operator} AND "isInstanceAdmin"
       AND "emailVerified" AND "deactivatedAt" IS NULL`;
   if (!actor) throw new Error("An active verified instance administrator is required");
-  const rows = await tx.$queryRaw<UnknownCloseoutRow[]>`
+  const rows = await tx.$queryRaw<UnknownCloseoutRow[]>(SQL.sql`
     SELECT o.operation_pk,o.operation_id,o.namespace,o.principal,o.state,o.version,o.input,o.created_at,o.lease_expires_at,
       p.dispatch_lease_id AS attempt_id,p.fenced_at IS NOT NULL AS fenced,p.principal AS original_principal,
       p.context->>'providerCredentialVersion' AS credential_version,
       o.input->'scope'->>'group' AS project,o.input->'scope'->>'connection' AS connection,
       rc.id AS rank_check_id,rc.status AS rank_status,t.id AS task_id,t.state AS task_state,t."persistenceLeaseExpiresAt" AS persistence_expires_at,
+      COALESCE(t."providerTaskId" IS NOT NULL AND t."costCents" IS NULL AND ${queuedOwnTagProofSql},false) AS accepted_unpriced,
+      t."costEvidence" AS cost_evidence,t."providerTaskId" AS task_provider_id,
       (SELECT count(*) FROM metering_receipt r WHERE r.operation_pk=o.operation_pk) AS receipts,
       EXISTS(SELECT 1 FROM provider_recovery_intents i WHERE i."operationPk"=o.operation_pk
         AND i."leaseExpiresAt">${now}) AS active_recovery,d.plan_hash AS closed_hash
@@ -53,7 +80,7 @@ export async function unknownCloseoutSnapshot(
     LEFT JOIN rank_checks rc ON rc.id=COALESCE(t."rankCheckId",p.context->>'rankCheckId')
     LEFT JOIN metering_unknown_closeout d ON d.operation_pk=o.operation_pk
     WHERE o.namespace=${manifest.namespace} AND o.operation_id=ANY(${manifest.operations.map((x) => x.operationId)}::text[])
-    ORDER BY o.operation_id`;
+    ORDER BY o.operation_id`);
   if (rows.length !== manifest.operations.length) throw new Error("Closeout scope changed");
   for (const [index, row] of rows.entries()) {
     if (
@@ -73,7 +100,7 @@ export async function unknownCloseoutSnapshot(
       (row.persistence_expires_at && row.persistence_expires_at > now) ||
       (row.lease_expires_at && row.lease_expires_at > now) ||
       !row.task_id ||
-      row.task_state !== "deferred" ||
+      !taskStateQualifies(row) ||
       !["deferred", "failed"].includes(row.rank_status ?? "") ||
       row.created_at.getTime() > now.getTime() - 15 * 60000
     )

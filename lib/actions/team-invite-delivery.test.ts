@@ -26,6 +26,23 @@ const invite = {
 };
 
 describe("team invite delivery", () => {
+  it("keeps the invite transactional when the inviter's legacy email preference is off", async () => {
+    clearEmailEnv();
+    vi.stubEnv("EMAIL_PROVIDER", "ses");
+    vi.stubEnv("SES_REGION", "eu-central-1");
+    vi.stubEnv("SITE_URL", "https://example.com");
+    const legacyInvite = {
+      ...invite,
+      invitedBy: { ...invite.invitedBy, notificationPreferences: [{ inviteEmail: false }] },
+    };
+    await deliverInvite(legacyInvite, "fixture-token");
+    expect(sendEmailMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        category: "transactional",
+        to: invite.email,
+      }),
+    );
+  });
   afterEach(() => {
     sendEmailMock.mockReset();
     vi.unstubAllEnvs();

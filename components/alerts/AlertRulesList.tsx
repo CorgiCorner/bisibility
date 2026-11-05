@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertRuleDeleteConfirm } from "@/components/alerts/AlertRuleDeleteConfirm";
 import { useRuleEnabledQueue } from "@/components/alerts/alert-rule-enabled-queue";
 import { presentAlertRule } from "@/components/alerts/alert-rule-presentation";
 import { NewRuleDrawer } from "@/components/alerts/NewRuleDrawer";
@@ -29,7 +30,7 @@ import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export type AlertRulesListProps = {
   actions: AlertActionHandlers;
@@ -133,15 +134,18 @@ export function AlertRulesList({
   const t = useTranslations("projectAlerts.rules");
   const feedT = useTranslations("projectAlerts.feed");
   const drawerT = useTranslations("projectAlerts.drawer");
-  const router = useRouter();
+  const [deleteRule, setDeleteRule] = useState<AlertRuleView | null>(null);
   const [editRule, setEditRule] = useState<AlertRuleView | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const { readOnly } = useProjectWriteMode();
 
   return (
     <>
       <Card className="overflow-hidden p-0" size="md">
         <div className="border-border border-b px-4.5 py-3.5">
-          <SectionTitle>{t("title")}</SectionTitle>
+          <SectionTitle className="outline-none" ref={titleRef} tabIndex={-1}>
+            {t("title")}
+          </SectionTitle>
           <p className="m-0 mt-1 font-sans tabular-nums text-[11px] leading-normal text-fg-muted">
             {t("description", { limit: MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY })}
           </p>
@@ -149,9 +153,15 @@ export function AlertRulesList({
         {rules.map((rule) => {
           const severity = severityMeta[rule.severity];
           const status = ruleStatusMeta[rule.status];
-          const channel = rule.channels[0];
-          const ChannelIcon = channel ? channelIcons[channel] : BellRinging;
           const presentation = presentAlertRule(rule, t);
+          const recipients = rule.recipientIds.length
+            ? rule.recipientIds
+                .map((id) => targets.members.find((member) => member.id === id)?.label ?? id)
+                .join(", ")
+            : drawerT("creatorDefault");
+          const recipientSummary = rule.channels.includes("email")
+            ? drawerT("recipientsSummary", { recipients })
+            : null;
 
           return (
             <article
@@ -194,10 +204,16 @@ export function AlertRulesList({
                     <ClockCountdown weight="regular" aria-hidden size={12} />
                     {presentation.period}
                   </span>
-                  <span className="inline-flex items-center gap-1">
-                    <ChannelIcon aria-hidden size={12} weight="regular" />
-                    {channelLabel(channel, drawerT)}
-                  </span>
+                  {[undefined, ...rule.channels].map((channel) => {
+                    const ChannelIcon = channel ? channelIcons[channel] : BellRinging;
+                    return (
+                      <span className="inline-flex items-center gap-1" key={channel ?? "feed"}>
+                        <ChannelIcon aria-hidden size={12} weight="regular" />
+                        {channelLabel(channel, drawerT)}
+                      </span>
+                    );
+                  })}
+                  {recipientSummary ? <span>{recipientSummary}</span> : null}
                   <span>{presentation.fires}</span>
                 </div>
               </div>
@@ -231,11 +247,7 @@ export function AlertRulesList({
                   <Button
                     aria-label={t("delete", { name: rule.name })}
                     disabled={readOnly}
-                    onClick={() =>
-                      void actions
-                        .deleteAlertRuleAction({ projectId, ruleId: rule.id })
-                        .then(() => router.refresh())
-                    }
+                    onClick={() => setDeleteRule(rule)}
                     size="sm"
                     style={{
                       "--control-color": "var(--red)",
@@ -260,6 +272,13 @@ export function AlertRulesList({
           {t("trendInfo")}
         </p>
       </Card>
+      <AlertRuleDeleteConfirm
+        actions={actions}
+        onClose={() => setDeleteRule(null)}
+        projectId={projectId}
+        returnFocusRef={titleRef}
+        rule={deleteRule}
+      />
       {editRule ? (
         <NewRuleDrawer
           actions={actions}

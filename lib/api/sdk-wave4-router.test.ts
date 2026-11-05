@@ -386,10 +386,19 @@ describe("SDK wave 4 core operations through the real router", () => {
       rows: [],
     });
   });
+  // The PATCH answer re-reads the committed row, so the mock store keeps what the upsert wrote.
+  function persistPreferenceUpserts() {
+    let stored = { ...preference };
+    mocks.prisma.notificationPreference.findUnique.mockImplementation(async () => stored);
+    mocks.prisma.notificationPreference.upsert.mockImplementation(async ({ update }) => {
+      // Like Prisma, an undefined field in `update` leaves the stored value unchanged.
+      const written = Object.entries(update).filter(([, value]) => value !== undefined);
+      stored = { ...stored, ...Object.fromEntries(written) };
+      return stored;
+    });
+  }
   it("reads full preferences and applies a partial patch with the real preference service", async () => {
-    mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
-      Promise.resolve({ ...preference, ...update }),
-    );
+    persistPreferenceUpserts();
     const read = await call("GET", `projects/${projectId}/notification-preferences`);
     expect(read.status).toBe(200);
     expect(await read.json()).toMatchObject({ email_verification: "verified", report_email: true });
@@ -540,9 +549,7 @@ describe("SDK wave 4 core operations through the real router", () => {
     },
   );
   it("CN-13 applies new fields with or without the deprecated field", async () => {
-    mocks.prisma.notificationPreference.upsert.mockImplementation(({ update }) =>
-      Promise.resolve({ ...preference, ...update }),
-    );
+    persistPreferenceUpserts();
     for (const legacy of [undefined, false, true]) {
       const response = await call("PATCH", `projects/${projectId}/notification-preferences`, {
         check_in_app: legacy,

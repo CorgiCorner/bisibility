@@ -10,6 +10,7 @@ import { saveBudget } from "@/lib/metering/store/budgets";
 import { createSql } from "@/lib/metering/store/host-sql";
 import { command } from "@/lib/metering/store/test-data";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
+import { buildProviderTag } from "@/lib/provider-usage/tag";
 import { unknownCloseoutPolicy } from "./manifest";
 import { applyUnknownCloseout, previewUnknownCloseout } from "./service";
 
@@ -59,8 +60,14 @@ export async function unknownFixture() {
     }),
   );
   let sequence = 0;
-  async function native() {
+  type NativeOptions = {
+    /** An accepted task keeps its native id and own-key tag; cost stays null like production. */
+    accepted?: { providerTaskId?: string; taskState?: string; costCents?: string | null };
+    version?: string;
+  };
+  async function native(options: NativeOptions = {}) {
     sequence++;
+    const taskVersion = options.version ?? version;
     const id = randomUUID();
     const check = await f.db.rankCheck.create({
       data: {
@@ -68,7 +75,7 @@ export async function unknownFixture() {
         keywordId: keyword.id,
         checkedAt: new Date(now.getTime() - 3600000 - sequence),
         provider: "dataforseo",
-        status: "deferred",
+        status: options.accepted ? "failed" : "deferred",
       },
     });
     const batch = await f.db.queuedRankCheckBatch.create({
@@ -89,7 +96,24 @@ export async function unknownFixture() {
         batchId: batch.id,
         keywordId: keyword.id,
         rankCheckId: check.id,
-        state: "deferred",
+        state: options.accepted?.taskState ?? "deferred",
+        ...(options.accepted
+          ? {
+              providerTaskId: options.accepted.providerTaskId ?? `native-${id}`,
+              providerTag: buildProviderTag({
+                context: {
+                  projectId: "liveowner",
+                  correlationId: `task-${id}`,
+                  source: "worker",
+                  trigger: "scheduled",
+                  feature: "rank_check",
+                },
+                instanceSlug: "fixture",
+                stage: "dev",
+              }),
+              costCents: options.accepted.costCents ?? null,
+            }
+          : {}),
       },
     });
     const request = input(id, connection).reservation;
@@ -97,7 +121,7 @@ export async function unknownFixture() {
       namespace,
       principal: "closeout-owner",
       group: "liveowner",
-      providerCredentialVersion: version,
+      providerCredentialVersion: taskVersion,
     });
     Object.assign(request, {
       costOwner: "closeout-owner",
@@ -123,7 +147,7 @@ export async function unknownFixture() {
           dispatch_lease_id: dispatch.lease.leaseId,
           fenced_at: new Date(now.getTime() - 3600000),
           fenced_at_iso: new Date(now.getTime() - 3600000).toISOString(),
-          context: { rankCheckId: check.id, providerCredentialVersion: version },
+          context: { rankCheckId: check.id, providerCredentialVersion: taskVersion },
         },
       });
     });

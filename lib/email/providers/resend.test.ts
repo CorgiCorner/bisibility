@@ -171,6 +171,25 @@ describe("resend email provider", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it("sends a stable idempotency key and keeps the provider conflict code", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ name: "invalid_idempotent_request" }), {
+        status: 409,
+      }),
+    );
+    vi.stubEnv("RESEND_API_KEY", "email-key");
+    vi.stubGlobal("fetch", fetchMock);
+    const error = await resendEmailProvider
+      .send({ ...message, idempotencyKey: "a".repeat(64) })
+      .catch((caught) => caught);
+    expect(fetchMock.mock.calls[0]?.[1]?.headers["Idempotency-Key"]).toBe("a".repeat(64));
+    expect(error).toMatchObject({
+      providerCode: "invalid_idempotent_request",
+      status: 409,
+    });
+    expect(error.message).not.toContain("a".repeat(64));
+  });
+
   it("does not retry non-retryable client errors", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 400 }));
     vi.stubEnv("RESEND_API_KEY", "email-key");

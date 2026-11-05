@@ -3,11 +3,14 @@
 import { cn } from "@/lib/ui/cn";
 import { useRef } from "react";
 
-export function tabTriggerClassName(active: boolean) {
+export function tabTriggerClassName(active: boolean, layout: "inline" | "stretch" = "inline") {
   return cn(
-    "-mb-px flex items-center gap-2 whitespace-nowrap border-x-0 border-t-0 border-b-2 bg-transparent px-3.5 py-[9px] text-[13.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid",
+    "-mb-px flex items-center gap-2 border-x-0 border-t-0 border-b-2 bg-transparent px-3.5 py-[9px] text-[13.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid",
+    layout === "stretch"
+      ? "min-h-11 min-w-0 flex-1 justify-center whitespace-normal text-center sm:flex-none sm:whitespace-nowrap"
+      : "whitespace-nowrap",
     active
-      ? "border-accent font-semibold text-fg"
+      ? cn("border-accent text-fg", layout === "inline" && "font-semibold")
       : "border-transparent text-fg-muted hover:text-fg",
   );
 }
@@ -17,6 +20,7 @@ export const tabCountClassName =
 
 type TabsProps<T extends string> = {
   ariaLabel: string;
+  layout?: "inline" | "stretch";
   onChange: (value: T) => void;
   options: readonly { label: string; value: T }[];
   panelId: string;
@@ -25,6 +29,7 @@ type TabsProps<T extends string> = {
 
 export function Tabs<T extends string>({
   ariaLabel,
+  layout = "inline",
   onChange,
   options,
   panelId,
@@ -33,12 +38,16 @@ export function Tabs<T extends string>({
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   return (
-    <div aria-label={ariaLabel} className="flex min-w-0 gap-0.5" role="tablist">
+    <div
+      aria-label={ariaLabel}
+      className={cn("flex min-w-0 gap-0.5", layout === "stretch" && "w-full")}
+      role="tablist"
+    >
       {options.map((option, index) => (
         <button
           aria-controls={panelId}
           aria-selected={value === option.value}
-          className={tabTriggerClassName(value === option.value)}
+          className={tabTriggerClassName(value === option.value, layout)}
           id={`${panelId}-${option.value}-tab`}
           key={option.value}
           onClick={() => onChange(option.value)}

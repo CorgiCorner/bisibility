@@ -397,4 +397,20 @@ describe("OverviewDashboardView", () => {
       "/app/prj_abc123/settings#provider-usage",
     );
   });
+
+  it("asks the project to verify an unverified provider connection", () => {
+    renderDashboard(
+      <OverviewDashboardView
+        checkHealth={{ ...healthyChecks, connectionNotice: { provider: "DataForSEO" } }}
+        isSample={false}
+        overview={{ ...overviewFixture, state: "populated" }}
+      />,
+    );
+
+    expect(screen.getByText("Verify your DataForSEO connection")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Connection settings" })).toHaveAttribute(
+      "href",
+      "/app/prj_abc123/providers",
+    );
+  });
 });

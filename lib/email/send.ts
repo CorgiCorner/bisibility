@@ -1,16 +1,20 @@
 import "server-only";
 
-import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { prisma } from "@/lib/db/prisma";
+import { readDemoConfig, readOnlyDemoConfig } from "@/lib/demo/config";
 import { notifyOps } from "@/lib/ops/notify";
 import { reserveEmailDailyBudget } from "./budget";
 import { requireEmailFrom } from "./from";
 import { refreshInstanceMailRuntime } from "./instance-mail-store";
+import { assertMailNotSuppressed, recordMailReceipt } from "./provider-feedback-store";
 import { resolveEmailProvider } from "./registry";
 import {
   EmailBudgetExceededError,
   type EmailCategory,
   EmailNotSubmittedError,
   EmailProviderUnavailableError,
+  EmailSendError,
+  EmailSuppressedError,
   SUPPORTED_EMAIL_PROVIDERS,
 } from "./types";
 
@@ -20,11 +24,16 @@ export { EmailBudgetExceededError, EmailSendError } from "./types";
 
 export type SendEmailInput = {
   category: EmailCategory;
+  beforeProviderSend?: (message: { to: string }) => Promise<void>;
+  claimProviderSend?: () => Promise<void>;
+  dailyBudgetReserved?: boolean;
   from?: string;
-  requireProvider?: boolean;
+  headers?: Record<string, string>;
   html: string;
+  idempotencyKey?: string;
   listUnsubscribeUrl?: string;
   replyTo?: string;
+  requireProvider?: boolean;
   sendCounterReserved?: boolean;
   subject: string;
   text: string;
@@ -37,10 +46,13 @@ function devLogSubject(subject: string) {
 
 async function prepareEmail({
   category,
+  dailyBudgetReserved = false,
   from,
+  headers: suppliedHeaders,
   to,
   subject,
   html,
+  idempotencyKey,
   listUnsubscribeUrl,
   replyTo,
   text,
@@ -48,7 +60,7 @@ async function prepareEmail({
   requireProvider = false,
 }: SendEmailInput) {
   try {
-    let headers: Record<string, string> | undefined;
+    let headers = suppliedHeaders;
     if (listUnsubscribeUrl !== undefined) {
       const url = new URL(listUnsubscribeUrl);
       if (
@@ -59,12 +71,27 @@ async function prepareEmail({
         /[\s<>]/.test(listUnsubscribeUrl)
       )
         throw new Error("Invalid list unsubscribe URL.");
-      headers = {
+      headers ??= {
         "List-Unsubscribe": `<${listUnsubscribeUrl}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       };
     }
     if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
+    const demo = readDemoConfig();
+    if (demo.kind !== "disabled") {
+      const viewer = await prisma.user.findUnique({
+        where: { publicId: demo.viewerPublicId },
+        select: { email: true },
+      });
+      if (!viewer) {
+        // A missing row must not silence the Owner; the address match below is the Viewer fence.
+        console.error(
+          "[email] configured demo viewer row is missing; viewer mail fence is inactive.",
+        );
+      } else if (viewer.email.toLowerCase() === to.toLowerCase()) {
+        throw new Error("Demo viewer is not eligible for email.");
+      }
+    }
     await refreshInstanceMailRuntime();
     const provider = resolveEmailProvider();
 
@@ -85,6 +112,7 @@ async function prepareEmail({
       from: from ?? requireEmailFrom(),
       html,
       ...(headers ? { headers } : {}),
+      ...(idempotencyKey ? { idempotencyKey } : {}),
       replyTo,
       sendCounterReserved,
       subject,
@@ -94,6 +122,9 @@ async function prepareEmail({
     if (!provider.isConfigured()) {
       return { provider, message };
     }
+
+    if (category === "bulk") await assertMailNotSuppressed(to);
+    if (dailyBudgetReserved) return { provider, message };
 
     const reservation = await reserveEmailDailyBudget(category);
     if (!reservation.granted) {
@@ -116,12 +147,37 @@ async function prepareEmail({
 
     return { provider, message };
   } catch (error) {
-    if (error instanceof EmailBudgetExceededError) throw error;
+    if (error instanceof EmailBudgetExceededError || error instanceof EmailSuppressedError)
+      throw error;
     throw new EmailNotSubmittedError(error);
   }
 }
 
 export async function sendEmail(input: SendEmailInput) {
   const prepared = await prepareEmail(input);
-  if (prepared) await prepared.provider.send(prepared.message);
+  if (!prepared) {
+    await input.claimProviderSend?.();
+    return;
+  }
+  await input.beforeProviderSend?.(prepared.message);
+  if (input.category === "bulk") await assertMailNotSuppressed(prepared.message.to);
+  await input.claimProviderSend?.();
+  const receipt = await prepared.provider.send(prepared.message);
+  if (receipt) {
+    try {
+      if (!receipt.messageId) throw new Error("Provider message ID missing.");
+      await recordMailReceipt({
+        provider: prepared.provider.id,
+        messageId: receipt.messageId,
+        recipient: prepared.message.to,
+      });
+    } catch {
+      throw new EmailSendError(
+        "Provider accepted the message but its receipt could not be stored.",
+        500,
+        null,
+        { ambiguous: true },
+      );
+    }
+  }
 }

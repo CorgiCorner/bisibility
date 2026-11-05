@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { UNKNOWN_EMAIL_RESOLUTION } from "../alerts/prepared-email-delivery";
 import { alertHealthActivity } from "./alert-health-activities";
 
 const mocks = vi.hoisted(() => ({
@@ -82,5 +83,36 @@ describe("alert health activity", () => {
   it("does not notify for healthy metrics", async () => {
     await expect(alertHealthActivity()).resolves.toMatchObject({ status: "completed" });
     expect(mocks.notifyOps).not.toHaveBeenCalled();
+  });
+
+  it("pages when an outcome is unknown without counting it as failed", async () => {
+    mocks.collectDelivery.mockResolvedValue({
+      alarm: false,
+      failed: 0,
+      failureRate: 0,
+      perChannel: { email: { failed: 0, sent: 0, skipped: 0, total: 4, unknown: 4 } },
+      total: 4,
+      unknown: 4,
+      windowHours: 24,
+    });
+    await expect(alertHealthActivity()).resolves.toMatchObject({
+      deliveryAlarm: false,
+      status: "completed",
+      unknown: 4,
+    });
+    expect(mocks.notifyOps).toHaveBeenCalledOnce();
+    expect(mocks.notifyOps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dedupeKey: "alert-health:delivery-unknown",
+        fields: expect.objectContaining({
+          Resolution: UNKNOWN_EMAIL_RESOLUTION,
+          Unknown: 4,
+        }),
+        kind: "alert_delivery_health",
+        severity: "error",
+        title: "Alert delivery outcome unknown",
+      }),
+    );
+    expect(mocks.notifyOps.mock.calls[0]?.[0].fields.Failed).toBeUndefined();
   });
 });

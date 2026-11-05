@@ -13,8 +13,8 @@
       "invite": "Zaproszenie",
       "weeklyReport": "Raport tygodniowy",
       "unavailable": "{label} – niedostępne",
-      "unavailableHelp": "Kreska oznacza, że dany kanał nie istnieje dla tego zdarzenia – raport tygodniowy to e-mail wysyłany tylko raz w tygodniu.",
-      "saveError": "Nie udało się zapisać preferencji.",
+      "unavailableHelp": "Kreska oznacza, że dany kanał nie istnieje dla tego zdarzenia – raport tygodniowy to e-mail wysyłany tylko raz w tygodniu. Wiadomości z zaproszeniami są transakcyjne i trafiają do zapraszanej osoby; te preferencje ich nie kontrolują.",
+      "saveError": "Nie udało się potwierdzić zapisu. Pokazujemy zapisane preferencje.",
       "providerIncident": "Incydenty dostawcy"
     },
     "delivery": {

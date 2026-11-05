@@ -41,20 +41,21 @@ export function SnapshotExtensionResults({
           <div className="px-4 py-2 sm:px-5">
             <PaymentChargeLine original payment={page.payment} />
           </div>
-          {page.rows.length ? (
-            <RetrievedResultsLadder
-              competitors={competitors}
-              results={{
-                ...results,
-                rows: page.rows,
-                requestedDepth: null,
-                retrievedPositions: page.start + 10,
-                stoppedAtResult: false,
-              }}
-            />
-          ) : (
+          <RetrievedResultsLadder
+            startRank={page.start + 1}
+            storedGaps
+            competitors={competitors}
+            results={{
+              ...results,
+              rows: page.rows,
+              requestedDepth: page.start + 10,
+              retrievedPositions: page.start + 10,
+              stoppedAtResult: false,
+            }}
+          />
+          {!page.rows.length ? (
             <p className="m-0 px-4 py-3 text-[12px] text-fg-muted sm:px-5">{t("emptyPage")}</p>
-          )}
+          ) : null}
         </div>
       ))}
     </section>

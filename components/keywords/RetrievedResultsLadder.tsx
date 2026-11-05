@@ -13,6 +13,8 @@ type LadderProps = {
   competitors?: readonly TrackedCompetitor[];
   results: Extract<RetrievedResults, { tier: "full" }>;
   trackedRef?: RefObject<HTMLLIElement | null>;
+  startRank?: number;
+  storedGaps?: boolean;
 };
 
 function rowLabel(
@@ -38,7 +40,7 @@ function LadderRow({
   return (
     <li
       aria-label={rowLabel(row, t)}
-      className={`relative grid min-h-[64px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-2.5 last:border-b-0 sm:gap-3 sm:px-6 ${row.tracked ? "m-3 rounded-control border border-border-control px-3 last:border-b sm:px-4" : ""}`}
+      className={`relative grid list-none min-h-[64px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-2.5 last:border-b-0 sm:gap-3 sm:px-6 ${row.tracked ? "m-3 rounded-control border border-border-control px-3 last:border-b sm:px-4" : ""}`}
       data-tracked={row.tracked ? "true" : undefined}
       ref={row.tracked ? trackedRef : undefined}
     >
@@ -79,6 +81,8 @@ export function RetrievedResultsLadder({
   competitors = [],
   results,
   trackedRef,
+  startRank = 1,
+  storedGaps = false,
 }: Readonly<LadderProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.results");
   const scrollerRef = useRef<HTMLElement | null>(null);
@@ -87,7 +91,18 @@ export function RetrievedResultsLadder({
     retrievedPositions: results.retrievedPositions,
     stoppedAtResult: results.stoppedAtResult,
   });
-  const trackedIndex = results.rows.findIndex((row) => row.tracked);
+  const rowsByRank = new Map(results.rows.map((row) => [row.position, row]));
+  // Pagination offsets can exceed continuous organic ranks after short pages.
+  const firstRank = Math.min(startRank, ...rowsByRank.keys());
+  const endRank = Math.max(
+    results.requestedDepth ?? results.retrievedPositions,
+    ...rowsByRank.keys(),
+  );
+  const positions = Array.from(
+    { length: Math.max(0, endRank - firstRank + 1) },
+    (_, index) => firstRank + index,
+  );
+  const trackedIndex = positions.findIndex((position) => rowsByRank.get(position)?.tracked);
   const openAtTracked = useCallback(
     (node: HTMLElement | null) => {
       scrollerRef.current = node;
@@ -106,16 +121,33 @@ export function RetrievedResultsLadder({
       // biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users need one tab stop for the scroll region instead of every result link
       tabIndex={0}
     >
-      <ol className="m-0 list-none p-0">
-        {results.rows.map((row) => (
-          <LadderRow
-            competitor={matchingCompetitor(row.domain, competitors)}
-            key={`${row.position}-${row.domain}`}
-            row={row}
-            trackedRef={trackedRef}
-          />
-        ))}
-      </ol>
+      <ul className="m-0 list-none p-0">
+        {positions.map((position) => {
+          const row = rowsByRank.get(position);
+          if (row)
+            return (
+              <LadderRow
+                competitor={matchingCompetitor(row.domain, competitors)}
+                key={`${row.position}-${row.domain}`}
+                row={row}
+                trackedRef={trackedRef}
+              />
+            );
+          const message = storedGaps
+            ? "missingStoredRank"
+            : results.stoppedAtResult && position > results.retrievedPositions
+              ? "missingStoppedRank"
+              : "missingRank";
+          return (
+            <li
+              key={`missing-${position}`}
+              className="list-none border-b border-border bg-bg-sunken px-4 py-3 text-xs text-fg-muted last:border-b-0 sm:px-6"
+            >
+              {t(message, { position })}
+            </li>
+          );
+        })}
+      </ul>
       {gap ? (
         <div className="m-3 rounded-control border border-dashed border-border bg-bg-sunken p-3">
           <p className="m-0 font-sans tabular-nums text-[11px] font-medium uppercase text-fg-muted">

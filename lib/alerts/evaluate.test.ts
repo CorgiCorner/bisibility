@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   reserveRuleDailyBudget: vi.fn(),
   sendAlertOverflowNotice: vi.fn(),
   prisma: {
+    $executeRaw: vi.fn(),
+    $transaction: vi.fn(),
     alertRule: { findMany: vi.fn() },
     keyword: { findUnique: vi.fn() },
     rankCheck: { findMany: vi.fn() },
@@ -291,6 +293,8 @@ describe("matchesAlertCondition", () => {
 describe("evaluateKeywordAlerts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$transaction.mockImplementation(async (work) => work(mocks.prisma));
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
     mocks.loadGscCtrMetrics.mockResolvedValue(null);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
@@ -553,6 +557,7 @@ describe("evaluateKeywordAlerts", () => {
     ]);
     mocks.prisma.triggeredAlert.findFirst
       .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
       .mockResolvedValue({ id: "alert_existing" });
     mocks.prisma.triggeredAlert.create.mockRejectedValue(new Error("unique constraint"));
 
@@ -613,6 +618,7 @@ describe("evaluateKeywordAlerts", () => {
     await evaluateKeywordAlerts("keyword_1", snap(4), snap(5));
 
     expect(mocks.prisma.triggeredAlert.updateMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it.each([

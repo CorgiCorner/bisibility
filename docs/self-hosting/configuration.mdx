@@ -154,6 +154,7 @@ hand.
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
 | `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
 | `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
+| `DSH_PLUGIN_MIN_VERSION` | Optional minimum version, as `X.Y.Z`, of the Bisibility plugin for DeepSeek Harness that the MCP endpoint accepts. Unset means no floor. An older plugin receives HTTP `426` with the minimum version and the plugin market link. Plugin `0.1.0` sends no version, so while a floor is set an OAuth client registered as `DeepSeek Harness` without a version counts as `0.1.0`. A value that is not `X.Y.Z` turns the floor off and logs a warning. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
 | `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Advanced outbound request throttling. See [Provider rate limits](#provider-rate-limits). |
@@ -195,6 +196,7 @@ provider limits or financial checks.
 | `GITHUB_API_TOKEN` | Optional server-side token for authenticated GitHub repository metadata requests. The repository link remains visible when this is unset or GitHub is unavailable. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. See [Google OAuth and traffic sync](/self-hosting/google-oauth). |
+| `ANALYTICS_READ_TIMEOUT_MS` | Live search-performance read deadline. Optional integer from `1000` through `120000` milliseconds. Defaults to `25000`; invalid values use the default. |
 | `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert delivery (API-only preview; workspace installation and channel management are not yet exposed in the dashboard). |
 | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `SERPAPI_API_KEY` | Optional environment fallbacks for SERP provider credentials normally connected in the app. See [Integrations](/integrations). |
 | `PROVIDER_AVAILABILITY_TTL_SECONDS` | Cache TTL (seconds) for provider availability and balance checks. Defaults to `900` (15m). |
