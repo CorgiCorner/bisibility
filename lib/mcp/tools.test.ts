@@ -8,6 +8,7 @@ import {
 } from "@/lib/alerts/schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { agentMcpSchemas } from "./agent-schemas";
+import canonicalContract from "./canonical-contract.json";
 import { MCP_TOOL_NAMES } from "./canonical-tools";
 import { getMcpToolDefinitions } from "./definitions";
 import { descriptions } from "./descriptions";
@@ -54,11 +55,13 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 147-tool contract", () => {
+  it("publishes the 148-tool canonical mirror", () => {
     const definitions = getMcpToolDefinitions();
 
+    expect(canonicalContract.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
+    expect(canonicalContract.length).toBe(148);
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(147);
+    expect(definitions).toHaveLength(148);
     expect(definitions.some((tool) => tool.name === "preview_project_defaults")).toBe(true);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);

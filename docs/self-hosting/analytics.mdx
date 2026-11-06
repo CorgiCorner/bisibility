@@ -37,12 +37,6 @@ details, passwords, API keys, and credentials are never event properties.
 | `module_navigation_clicked` | Client | A product module is selected. | `module`, `source` |
 | `product_action_clicked` | Client | An add, import or export action is selected. | `module`, `action`, `source` |
 | `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
-| `affiliate_waitlist_joined` | Client | The affiliate waitlist form is submitted. | `locale` |
-| `ios_beta_joined` | Client | The iOS beta form is submitted. | `locale` |
-| `newsletter_joined` | Client | The home newsletter form is submitted. | `locale`, `placement: "home"` |
-| `onboarding_quiz_answered` | Client | An onboarding quiz question is answered. | `quizVersion`, `questionId`, `answerIds` |
-| `onboarding_quiz_completed` | Client | The onboarding quiz is completed. | `quizVersion` |
-| `onboarding_quiz_skipped` | Client | The onboarding quiz is skipped. | `quizVersion` |
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
 | `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
 | `language_switched` | Client | The marketing language switcher changes the locale. | `from`, `to`, `surface: "marketing_header" \| "marketing_mobile_menu"` |

@@ -68,6 +68,7 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   updatePageIndexingSettings: {
     summary: "Update Page indexing settings",
   },
+  getSearchPerformanceTotals: { summary: "Get search performance totals" },
   listSearchPerformanceQueryStats: { summary: "List search query statistics" },
   listSitemapMonitors: {
     description: "Returns the project sitemap monitor and its latest snapshot.",

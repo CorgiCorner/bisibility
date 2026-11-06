@@ -34750,6 +34750,89 @@
         "required": ["property", "sitemaps"],
         "type": "object"
       },
+      "SearchPerformanceFreshness": {
+        "properties": {
+          "data_state": {
+            "description": "final means finalized import coverage or provider metadata proves the whole period finalized. all includes potentially provisional data.",
+            "enum": ["all", "final"],
+            "type": "string",
+            "x-bisibility-enum": "open",
+            "x-bisibility-name": "SearchPerformanceDataState"
+          },
+          "fetched_at": {
+            "description": "Live response time or conservative oldest persistence time of the covering aggregate requests.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "finalized_through": {
+            "description": "Last date proven finalized within this period, or null when unknown.",
+            "format": "date",
+            "type": ["string", "null"]
+          },
+          "first_incomplete_date": {
+            "description": "Provider-reported first incomplete date in this period, or null when absent/outside it. Null alone does not prove finalization.",
+            "format": "date",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["data_state", "fetched_at", "finalized_through", "first_incomplete_date"],
+        "type": "object"
+      },
+      "SearchPerformancePeriod": {
+        "properties": {
+          "clicks": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ctr": {
+            "description": "Total clicks divided by total impressions; zero for no impressions.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "data_end_date": {
+            "description": "Last returned aggregate day with impressions, or null when no data was returned.",
+            "format": "date",
+            "type": ["string", "null"]
+          },
+          "data_start_date": {
+            "description": "First returned aggregate day with impressions, or null when no data was returned.",
+            "format": "date",
+            "type": ["string", "null"]
+          },
+          "end_date": {
+            "format": "date",
+            "type": "string"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/SearchPerformanceFreshness"
+          },
+          "impressions": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "position": {
+            "description": "Impression-weighted average position; zero for no impressions.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "start_date": {
+            "format": "date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "data_start_date",
+          "data_end_date",
+          "clicks",
+          "impressions",
+          "ctr",
+          "position",
+          "freshness"
+        ],
+        "type": "object"
+      },
       "SearchPerformanceQueryStat": {
         "properties": {
           "clicks": {
@@ -34888,6 +34971,42 @@
           }
         },
         "required": ["connection", "rows", "scope", "result"],
+        "type": "object"
+      },
+      "SearchPerformanceTotalsResponse": {
+        "description": "Web search totals across all queries, pages, countries and devices. Stored aggregate rows require complete successful finalized request provenance. Otherwise one live date-only series (at most 732 days, row limit 1000) supplies both periods, including provisional days. No imports are started and requested dates are never shifted. Empty covered periods return zero metrics with null data dates.",
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/SearchPerformancePeriod"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SearchPerformancePeriod"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Previous equal-length period when compare_previous=true; otherwise null."
+          },
+          "property": {
+            "type": "string"
+          },
+          "search_type": {
+            "enum": ["web"],
+            "type": "string",
+            "x-bisibility-enum": "open",
+            "x-bisibility-name": "SearchPerformanceSearchType"
+          },
+          "source": {
+            "enum": ["stored", "live"],
+            "type": "string",
+            "x-bisibility-enum": "open",
+            "x-bisibility-name": "SearchPerformanceTotalsSource"
+          }
+        },
+        "required": ["property", "search_type", "source", "current", "previous"],
         "type": "object"
       },
       "Signal": {
@@ -48898,6 +49017,193 @@
             "ts": ["syncProjectTraffic"]
           },
           "method": "sync"
+        }
+      }
+    },
+    "/projects/{project_id}/analytics/totals": {
+      "get": {
+        "operationId": "getSearchPerformanceTotals",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string",
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "ApiVersion"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "Public project ID; membership and token scope are enforced.",
+              "example": "prj_a00000000000000000000000",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string",
+              "x-bisibility-public-id": "prj"
+            }
+          },
+          {
+            "description": "Inclusive Pacific calendar date. A window contains at most 366 days.",
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Inclusive Pacific calendar date. A window contains at most 366 days.",
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Include the immediately preceding, equal-length inclusive period.",
+            "in": "query",
+            "name": "compare_previous",
+            "schema": {
+              "default": "false",
+              "enum": ["true", "false"],
+              "type": "string",
+              "x-bisibility-enum": "closed",
+              "x-bisibility-name": "SearchPerformanceComparePrevious"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPerformanceTotalsResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No eligible search-performance source is connected."
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider authorization must be renewed (re-auth needed)."
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "504": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The search-performance provider read deadline was reached."
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          },
+          {
+            "AppOAuth": ["api:read"]
+          }
+        ],
+        "summary": "Get search performance totals",
+        "tags": ["analytics"],
+        "x-bisibility-cost": {
+          "kind": "free"
+        },
+        "x-bisibility-idempotency": "none",
+        "x-bisibility-pagination": {
+          "style": "none"
+        },
+        "x-bisibility-sdk": {
+          "group": "analytics.searchPerformance",
+          "legacy": {
+            "go": [],
+            "python": [],
+            "ts": []
+          },
+          "method": "totals"
         }
       }
     },

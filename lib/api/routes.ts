@@ -199,6 +199,10 @@ const handlers = {
     ),
   listTrafficSnapshots: (ctx) =>
     import("./analytics").then((routes) => routes.listTrafficSnapshots(ctx, ctx.path[1])),
+  getSearchPerformanceTotals: (ctx) =>
+    import("./analytics-totals").then((routes) =>
+      routes.getSearchPerformanceTotals(ctx, ctx.path[1]),
+    ),
   listSearchPerformanceQueryStats: (ctx) =>
     import("./analytics").then((routes) =>
       routes.listSearchPerformanceQueryStats(ctx, ctx.path[1]),

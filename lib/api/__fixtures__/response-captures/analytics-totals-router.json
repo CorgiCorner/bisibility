@@ -1,0 +1,144 @@
+{
+  "captures": [
+    {
+      "body": {
+        "detail": "API key is not scoped to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/totals",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "No eligible search-performance source is connected.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/totals",
+        "status": 404,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Provider authorization must be renewed.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/totals",
+        "status": 422,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/totals",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["A window may contain at most 366 days."],
+          "fieldErrors": {
+            "start_date": ["Expected a real calendar date."]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 400
+    },
+    {
+      "body": {
+        "property": "sc-domain:example.com",
+        "search_type": "web",
+        "source": "live",
+        "current": {
+          "clicks": 6,
+          "ctr": 0.5,
+          "impressions": 12,
+          "position": 3,
+          "start_date": "2024-03-01",
+          "end_date": "2024-03-02",
+          "data_start_date": "2024-03-01",
+          "data_end_date": "2024-03-01",
+          "freshness": {
+            "data_state": "all",
+            "fetched_at": "2026-07-10T23:00:00.000Z",
+            "finalized_through": "2024-03-01",
+            "first_incomplete_date": "2024-03-02"
+          }
+        },
+        "previous": {
+          "clicks": 2,
+          "ctr": 0.2,
+          "impressions": 10,
+          "position": 7,
+          "start_date": "2024-02-28",
+          "end_date": "2024-02-29",
+          "data_start_date": "2024-02-29",
+          "data_end_date": "2024-02-29",
+          "freshness": {
+            "data_state": "final",
+            "fetched_at": "2026-07-10T23:00:00.000Z",
+            "finalized_through": "2024-02-29",
+            "first_incomplete_date": null
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 200
+    },
+    {
+      "body": {
+        "property": "sc-domain:example.com",
+        "search_type": "web",
+        "source": "stored",
+        "current": {
+          "clicks": 0,
+          "impressions": 0,
+          "ctr": 0,
+          "position": 0,
+          "start_date": "2024-03-01",
+          "end_date": "2024-03-02",
+          "data_start_date": null,
+          "data_end_date": null,
+          "freshness": {
+            "data_state": "final",
+            "fetched_at": "2024-03-05T00:00:00.000Z",
+            "finalized_through": "2024-03-02",
+            "first_incomplete_date": null
+          }
+        },
+        "previous": null
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSearchPerformanceTotals",
+      "path": "/projects/{project_id}/analytics/totals",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/analytics-totals-router.test.ts"
+}

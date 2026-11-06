@@ -18,6 +18,40 @@
         "apiVersions": ["v1"],
         "data": [
           {
+            "description": "Get search performance totals",
+            "input_schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["project_id", "start_date", "end_date"],
+              "properties": {
+                "project_id": {
+                  "pattern": "^prj_[a-z][a-z0-9]{23}$",
+                  "type": "string",
+                  "description": "Project with a connected Search Console property."
+                },
+                "start_date": {
+                  "type": "string",
+                  "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+                  "description": "Inclusive Pacific start date; must be a real calendar date."
+                },
+                "end_date": {
+                  "type": "string",
+                  "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+                  "description": "Inclusive Pacific end date, at most 365 days after start_date."
+                },
+                "compare_previous": {
+                  "type": "string",
+                  "enum": ["true", "false"],
+                  "default": "false",
+                  "description": "Include the immediately preceding equal-length inclusive period."
+                }
+              }
+            },
+            "mcp_tool": "get_search_performance_totals",
+            "name": "00000000000000000000000000",
+            "operationId": "00000000000000000000000000"
+          },
+          {
             "description": "List Page indexing sitemaps",
             "input_schema": {
               "additionalProperties": false,
@@ -210,7 +244,7 @@
                 "budget_mode": {
                   "type": "string",
                   "enum": ["off", "fixed", "available_quota"],
-                  "description": "Background budget mode. available_quota is self-host only."
+                  "description": "Background budget mode. All modes are available on Cloud and self-host."
                 },
                 "inspection_daily_limit": {
                   "type": "integer",
@@ -3805,7 +3839,7 @@
             "operationId": "0000000000000000000"
           },
           {
-            "description": "Mark all firing project alerts as read",
+            "description": "Acknowledge firing alerts for the project team",
             "input_schema": {
               "properties": {
                 "idempotency_key": {
@@ -4398,10 +4432,10 @@
       "body": {
         "connection_id": "conn_a00000000000000000000000",
         "cost_per_check_cents": "1",
-        "enabled": true,
+        "enabled": false,
         "id": "serpapi",
         "kind": "serp",
-        "priority": 0,
+        "priority": 13,
         "provider": "serpapi",
         "status": "connected"
       },
@@ -4925,7 +4959,7 @@
             "priority": 0,
             "status": "connected",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -4963,7 +4997,7 @@
             "name": "DataForSEO",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {

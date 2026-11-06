@@ -108,6 +108,7 @@ export const operationPolicy = {
   ),
   listSavedKeywords: policy("GET", "/projects/{project_id}/saved-keywords", "read"),
   listSavedViews: policy("GET", "/projects/{project_id}/saved-views", "read"),
+  getSearchPerformanceTotals: policy("GET", "/projects/{project_id}/analytics/totals", "read"),
   listSearchPerformanceQueryStats: policy(
     "GET",
     "/projects/{project_id}/analytics/query-stats",

@@ -1,5 +1,6 @@
 import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
 import { analyticsSchemas } from "./openapi-analytics-schemas";
+import { performanceTotalsSchemas } from "./openapi-analytics-totals";
 import { publicIdSchema } from "./openapi-public-id";
 import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
 
@@ -14,6 +15,7 @@ const trafficMetrics = {
 export const agentSchemas = {
   ...loopClosureSchemas,
   ...analyticsSchemas,
+  ...performanceTotalsSchemas,
   AnalyticsConnection: {
     properties: {
       id: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },

@@ -1,6 +1,6 @@
 ---
 title: "Analytics"
-description: "Read stored traffic snapshots, query live search performance, and synchronize analytics."
+description: "Read complete search-performance totals, stored traffic snapshots, live query statistics, and synchronize analytics."
 ---
 
 All paths are relative to `/api/v1` and require a bearer key scoped to the
@@ -19,6 +19,32 @@ filter up to 50 page paths. `limit` defaults to 50 and has a maximum of 200.
 The response contains `rows`, `total_count`, and `offset`; each row includes
 the stored provider, path, date, window, sessions, visitor, engagement, event,
 duration, and scroll metrics.
+
+## Get complete search-performance totals
+
+```http
+GET /projects/{project_id}/analytics/totals?start_date=2026-06-01&end_date=2026-06-28&compare_previous=true
+```
+
+`start_date` and `end_date` are required inclusive Pacific calendar dates. A
+window contains at most 366 days. `compare_previous` defaults to `false`; set
+it to `true` to include the immediately preceding equal-length window.
+
+The response contains `current` and optional `previous` totals for web search
+across all queries, pages, countries and devices. CTR is clicks divided by
+impressions; position is impression-weighted. Summing a capped query list can
+undercount totals, including queries withheld by the provider's privacy rules.
+
+`source` is `stored` only when successful finalized aggregate import coverage
+proves the entire requested span. Otherwise both periods use one live date-only
+request. This read never starts an import or shifts the requested dates.
+`data_start_date` and `data_end_date` identify returned days with impressions,
+or are null when none were returned. Each period includes `freshness` with
+`data_state`, `fetched_at`, `finalized_through` and `first_incomplete_date`.
+A null finalized-through date means unknown finalization; absence of an
+incomplete date alone does not prove finality. Stored `fetched_at` is a
+conservative persistence timestamp for the covering aggregate requests.
+A current, connected Search Console property is required for either source.
 
 ## List live search-performance query statistics
 
@@ -47,6 +73,7 @@ project in read-only migration mode cannot start a sync.
 
 - [`GET /projects/{project_id}/overview`](/api-reference/analytics/get-a-numeric-project-overview) (`getProjectOverview`)
 - [`GET /projects/{project_id}/analytics/query-stats`](/api-reference/analytics/list-search-query-statistics) (`listSearchPerformanceQueryStats`)
+- [`GET /projects/{project_id}/analytics/totals`](/api-reference/analytics/get-search-performance-totals) (`getSearchPerformanceTotals`)
 - [`POST /projects/{project_id}/analytics/sync`](/api-reference/analytics/sync-analytics-traffic) (`syncProjectTraffic`)
 - [`GET /projects/{project_id}/analytics/traffic-snapshots`](/api-reference/analytics/list-stored-page-traffic-snapshots) (`listTrafficSnapshots`)
 

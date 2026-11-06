@@ -349,6 +349,7 @@
             "pages": [
               "GET /projects/{project_id}/overview",
               "GET /projects/{project_id}/analytics/query-stats",
+              "GET /projects/{project_id}/analytics/totals",
               "GET /projects/{project_id}/search-index/sitemaps",
               "GET /projects/{project_id}/search-index/sitemaps/{path}",
               "POST /projects/{project_id}/search-index/inspections",

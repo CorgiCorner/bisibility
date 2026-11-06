@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.46.2] - 2026-11-06
+
+### Added
+
+- Added complete search performance totals with previous-period comparisons, actual data dates and per-period freshness.
+
+- Added a Sponsors section to the README acknowledging the Neon Open Source Program.
+
 ## [0.46.1] - 2026-11-06
 
 ### Fixed

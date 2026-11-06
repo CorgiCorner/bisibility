@@ -37,6 +37,23 @@ Use your own provider accounts, or use credits on the hosted service.
 [Get started](#get-started) ·
 [Documentation](https://bisibility.com/docs)
 
+## Sponsors
+
+<table>
+  <tr>
+    <td align="center" width="240">
+      <a href="https://neon.com">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="public/brand/sponsors/neon-on-dark.svg" />
+          <img src="public/brand/sponsors/neon-on-light.svg" width="180" alt="Neon" />
+        </picture>
+      </a>
+    </td>
+  </tr>
+</table>
+
+Sponsored by the [Neon Open Source Program](https://neon.com).
+
 ## Features
 
 - **Rank tracking:** Track positions by market and device, schedule checks,

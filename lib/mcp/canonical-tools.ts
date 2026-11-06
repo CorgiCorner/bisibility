@@ -123,6 +123,7 @@ export const MCP_TOOL_NAMES = [
   "list_page_indexing_urls",
   "get_page_indexing_settings",
   "update_page_indexing_settings",
+  "get_search_performance_totals",
 ] as const;
 
 // Phase C ships list_stored_reports and get_stored_report in the standalone

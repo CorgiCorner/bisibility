@@ -12,6 +12,7 @@ import {
   pageIndexingUrlsQuerySchema,
 } from "@/lib/search-index/report-schema";
 import { searchIndexInspectionSchema } from "@/lib/search-index/schema";
+import { performanceTotalsQuery } from "@/lib/search-insights/performance-totals-model";
 import { siteAuditSchema } from "@/lib/site-audit/schema";
 import { z } from "zod";
 import { snapshotQuery } from "./analytics";
@@ -141,6 +142,7 @@ export const researchOperationInputs = {
   listSearchIndexSitemaps: noInput,
   getSearchIndexSitemap: noInput,
   inspectSearchIndexUrls: { body: zodInput(searchIndexInspectionSchema, { keys: "wire" }) },
+  getSearchPerformanceTotals: { query: zodInput(performanceTotalsQuery, { keys: "wire" }) },
   listSearchPerformanceQueryStats: { query: zodInput(queryStatsQuery) },
   listSiteAudits: noInput,
   listSitemapMonitors: noInput,

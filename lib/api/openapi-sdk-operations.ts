@@ -53,6 +53,11 @@ const legacy = (ts: string, python: string, go: string): Legacy => ({
 });
 
 export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions>> = {
+  getSearchPerformanceTotals: read("analytics.searchPerformance", "totals", {
+    go: [],
+    python: [],
+    ts: [],
+  }),
   getAnalyticsConsent: read("account.analyticsConsent", "get", { go: [], python: [], ts: [] }),
   updateAnalyticsConsent: {
     ...read("account.analyticsConsent", "update", { go: [], python: [], ts: [] }),

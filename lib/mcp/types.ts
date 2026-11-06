@@ -12,5 +12,6 @@ export type McpToolDefinition = {
   };
   inputSchema: JsonObject;
   name: string;
+  outputSchema?: JsonObject;
   title: string;
 };

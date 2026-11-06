@@ -115,7 +115,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(148);
+    expect(before).toHaveLength(149);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -160,7 +160,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 17, read: 64, write: 67 });
+    expect(counts).toEqual({ admin: 17, read: 65, write: 67 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {
@@ -233,5 +233,20 @@ describe("operation capabilities mirror the app authorization table", () => {
 
   it("requires the admin scope to revoke a team invite", () => {
     expect(operationPolicy.revokeTeamInvite.requiredScope).toBe("admin");
+  });
+});
+
+it("keeps complete search-performance totals in the project read policy", () => {
+  expect(
+    operationPolicyForRequest("GET", [
+      "projects",
+      "prj_a00000000000000000000000",
+      "analytics",
+      "totals",
+    ]),
+  ).toMatchObject({
+    operationId: "getSearchPerformanceTotals",
+    requiredScope: "read",
+    projectAccess: "read",
   });
 });

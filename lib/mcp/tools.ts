@@ -70,6 +70,12 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
     ]);
 
   switch (name) {
+    case "getSearchPerformanceTotals":
+      return call(
+        `${path("getSearchPerformanceTotals")}${query(input, ["start_date", "end_date", "compare_previous"])}`,
+        "GET",
+        input,
+      );
     case "getHealth":
       return call("/health", "GET");
     case "getCapabilities":

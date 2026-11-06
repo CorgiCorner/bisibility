@@ -5,6 +5,7 @@ import { promptTrackerToolNames } from "@/lib/mcp/tracking-contract";
 export const mcpToolNameByCapability = {
   ...promptTrackerToolNames,
   ...researchWorkspaceToolNames,
+  getSearchPerformanceTotals: "get_search_performance_totals",
   addCompetitor: "add_competitor",
   addKeywords: "add_keywords",
   connectProvider: "connect_provider",

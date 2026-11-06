@@ -116,6 +116,7 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
     [
       "getProjectOverview",
       "listSearchPerformanceQueryStats",
+      "getSearchPerformanceTotals",
       "listSearchIndexSitemaps",
       "getSearchIndexSitemap",
       "inspectSearchIndexUrls",

@@ -1,5 +1,6 @@
 import { alertRuleToolSchema } from "@/lib/alerts/tool-schema";
 import { pageIndexingToolSchemas } from "@/lib/mcp/page-indexing-contract";
+import { performanceTotalsTool } from "@/lib/mcp/performance-totals-contract";
 import { researchWorkspaceSchemas } from "@/lib/mcp/research-workspace-contract";
 import { searchIndexToolSchemas } from "@/lib/mcp/search-index-contract";
 import { promptTrackerSchemas } from "@/lib/mcp/tracking-contract";
@@ -70,6 +71,11 @@ const scheduleSchema = {
 } as const;
 
 export const toolInputSchemas = {
+  getSearchPerformanceTotals: performanceTotalsTool.inputSchema as {
+    type: "object";
+    properties: Record<string, object>;
+    required: string[];
+  },
   ...searchIndexToolSchemas,
   ...pageIndexingToolSchemas,
   ...promptTrackerSchemas(),

@@ -8909,5 +8909,203 @@
     "execution": {
       "taskSupport": "forbidden"
     }
+  },
+  {
+    "name": "get_search_performance_totals",
+    "title": "Get search performance totals",
+    "description": "Read complete web search totals (clicks, impressions, CTR and impression-weighted position) for inclusive Pacific dates, across all queries, pages, countries and devices. Unlike a capped query list, totals include aggregate search data. compare_previous=true includes the immediately preceding equal-length period. A window contains at most 366 days. Successful finalized aggregate import coverage serves stored data; otherwise one bounded live date-only series supplies both windows. Requested dates are never shifted. Returns actual data dates, source and per-period freshness; absent finalized_through is unknown, not proof of finality. This read never starts an import.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project with a connected Search Console property.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "start_date": {
+          "type": "string",
+          "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+          "description": "Inclusive Pacific start date; must be a real calendar date."
+        },
+        "end_date": {
+          "type": "string",
+          "pattern": "^[1-9]\\d{3}-\\d{2}-\\d{2}$",
+          "description": "Inclusive Pacific end date, at most 365 days after start_date."
+        },
+        "compare_previous": {
+          "default": "false",
+          "description": "Include the immediately preceding equal-length inclusive period.",
+          "type": "string",
+          "enum": ["true", "false"]
+        }
+      },
+      "required": ["project_id", "start_date", "end_date"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "property": {
+          "type": "string"
+        },
+        "search_type": {
+          "type": "string",
+          "enum": ["web"],
+          "x-bisibility-enum": "open",
+          "x-bisibility-name": "SearchPerformanceSearchType"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["stored", "live"],
+          "x-bisibility-enum": "open",
+          "x-bisibility-name": "SearchPerformanceTotalsSource"
+        },
+        "current": {
+          "$ref": "#/$defs/SearchPerformancePeriod"
+        },
+        "previous": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SearchPerformancePeriod"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Previous equal-length period when compare_previous=true; otherwise null."
+        }
+      },
+      "description": "Web search totals across all queries, pages, countries and devices. Stored aggregate rows require complete successful finalized request provenance. Otherwise one live date-only series (at most 732 days, row limit 1000) supplies both periods, including provisional days. No imports are started and requested dates are never shifted. Empty covered periods return zero metrics with null data dates.",
+      "required": ["property", "search_type", "source", "current", "previous"],
+      "$defs": {
+        "SearchPerformanceFreshness": {
+          "type": "object",
+          "required": ["data_state", "fetched_at", "finalized_through", "first_incomplete_date"],
+          "properties": {
+            "data_state": {
+              "type": "string",
+              "enum": ["all", "final"],
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "SearchPerformanceDataState",
+              "description": "final means finalized import coverage or provider metadata proves the whole period finalized. all includes potentially provisional data."
+            },
+            "fetched_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Live response time or conservative oldest persistence time of the covering aggregate requests."
+            },
+            "finalized_through": {
+              "type": ["string", "null"],
+              "format": "date",
+              "description": "Last date proven finalized within this period, or null when unknown."
+            },
+            "first_incomplete_date": {
+              "type": ["string", "null"],
+              "format": "date",
+              "description": "Provider-reported first incomplete date in this period, or null when absent/outside it. Null alone does not prove finalization."
+            }
+          }
+        },
+        "SearchPerformancePeriod": {
+          "type": "object",
+          "required": [
+            "start_date",
+            "end_date",
+            "data_start_date",
+            "data_end_date",
+            "clicks",
+            "impressions",
+            "ctr",
+            "position",
+            "freshness"
+          ],
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "end_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "data_start_date": {
+              "type": ["string", "null"],
+              "format": "date",
+              "description": "First returned aggregate day with impressions, or null when no data was returned."
+            },
+            "data_end_date": {
+              "type": ["string", "null"],
+              "format": "date",
+              "description": "Last returned aggregate day with impressions, or null when no data was returned."
+            },
+            "clicks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "impressions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ctr": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Total clicks divided by total impressions; zero for no impressions."
+            },
+            "position": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Impression-weighted average position; zero for no impressions."
+            },
+            "freshness": {
+              "$ref": "#/$defs/SearchPerformanceFreshness"
+            }
+          }
+        },
+        "SearchPerformanceTotalsResponse": {
+          "type": "object",
+          "description": "Web search totals across all queries, pages, countries and devices. Stored aggregate rows require complete successful finalized request provenance. Otherwise one live date-only series (at most 732 days, row limit 1000) supplies both periods, including provisional days. No imports are started and requested dates are never shifted. Empty covered periods return zero metrics with null data dates.",
+          "required": ["property", "search_type", "source", "current", "previous"],
+          "properties": {
+            "property": {
+              "type": "string"
+            },
+            "search_type": {
+              "type": "string",
+              "enum": ["web"],
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "SearchPerformanceSearchType"
+            },
+            "source": {
+              "type": "string",
+              "enum": ["stored", "live"],
+              "x-bisibility-enum": "open",
+              "x-bisibility-name": "SearchPerformanceTotalsSource"
+            },
+            "current": {
+              "$ref": "#/$defs/SearchPerformancePeriod"
+            },
+            "previous": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SearchPerformancePeriod"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Previous equal-length period when compare_previous=true; otherwise null."
+            }
+          }
+        }
+      }
+    }
   }
 ]

@@ -1,3 +1,4 @@
+import { performanceTotalsParameters } from "./openapi-analytics-totals";
 import type { schemas } from "./openapi-components";
 import { problemResponse } from "./openapi-problem";
 import { closedEnum } from "./openapi-sdk-schema";
@@ -43,6 +44,17 @@ export function analyticsPaths(input: {
   ref: (name: keyof typeof schemas) => object;
 }) {
   return {
+    "/projects/{project_id}/analytics/totals": {
+      get: withUnprocessable(
+        input.bearer(
+          "Get complete search-performance totals",
+          "getSearchPerformanceTotals",
+          input.ref("SearchPerformanceTotalsResponse"),
+          undefined,
+          performanceTotalsParameters,
+        ),
+      ),
+    },
     "/projects/{project_id}/analytics/query-stats": {
       get: withUnprocessable(
         input.bearer(
