@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.1] - 2026-11-06
+
+### Fixed
+
+- Fixed release distribution metadata to match the shipped environment template.
+
 ## [0.46.0] - 2026-11-05
 
 ### Added
