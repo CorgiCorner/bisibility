@@ -1,6 +1,6 @@
 "use server";
-
 import { updateCompetitorDetailsSchema } from "@/lib/actions/competitor-set-input";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -55,6 +55,7 @@ export async function updateCompetitorDetails(input: unknown) {
       );
       return auditValue(after);
     });
+    recordAppAction(actor);
     revalidateCompetitorViews();
     return result;
   } catch (error) {

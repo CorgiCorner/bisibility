@@ -66,6 +66,7 @@ describe("Plausible head extension", () => {
 describe("app extension registry", () => {
   it("preserves the exact private and public registry shape", () => {
     const expectedKeys = [
+      "guardAccountSurface",
       "getSupportWidgetPayload",
       "renderHead",
       "renderSupportWidget",
@@ -78,7 +79,11 @@ describe("app extension registry", () => {
     )?.groups?.body;
 
     expect(Object.keys(appExtensions)).toEqual(expectedKeys);
-    expect(publicRegistryBody?.match(/\b[a-z]\w*/g)).toEqual(expectedKeys);
+    expect(
+      [...(publicRegistryBody?.matchAll(/^\s{2}([a-z]\w*)\s*[:,]/gm) ?? [])].map(
+        (match) => match[1],
+      ),
+    ).toEqual(expectedKeys);
   });
 
   it("delegates the private quiz slot to its adapter", async () => {

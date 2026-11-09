@@ -34,6 +34,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   const anonymous = await anonymousRateLimit(req);
   if ("response" in anonymous) return anonymous.response;
 
+  let committed = false;
   try {
     const { sessionId: rawSessionId } = await context.params;
     const sessionId = importSessionIdSchema.safeParse(rawSessionId);
@@ -48,8 +49,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const auth = await authorizeMigrationRequest(req, anonymous.headers);
     if ("response" in auth) return auth.response;
 
-    const result = await finalizeImportSession(auth.token, sessionId.data, new URL(req.url));
-    return resourceResponse(
+    const result = await finalizeImportSession(auth.token, sessionId.data, new URL(req.url), () => {
+      committed = true;
+    });
+    const response = resourceResponse(
       {
         counts: result.counts,
         job_id: jobView(result.job).id,
@@ -57,7 +60,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
       },
       { headers: auth.headers },
     );
+    response.headers.set("X-Mutation-Committed", String(committed));
+    return response;
   } catch (error) {
-    return mapImportSessionError(req, error, anonymous.headers);
+    const response = mapImportSessionError(req, error, anonymous.headers);
+    response.headers.set("X-Mutation-Committed", String(committed));
+    return response;
   }
 }

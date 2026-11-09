@@ -309,8 +309,8 @@
       "counts": "{left, number} / {right, number}",
       "competitor": "Konkurent",
       "description": "Ostatnie zakończone sprawdzenie dla każdego celu w wybranym okresie, rynkach, urządzeniach i tagach.",
-      "footer": "Brakujące domeny nie są traktowane jak spadki. Średnia pozycja liczy tylko znalezione wyniki.{limited, select, true { Widocznych jest 2 000 ostatnio dodanych celów.} other {}}",
-      "footerWithNoSavedSerps": "Brak zapisanych wyników SERP dla tych konkurentów w wybranym okresie. Brakujące domeny nie są traktowane jak spadki. Średnia pozycja liczy tylko znalezione wyniki.{limited, select, true { Widocznych jest 2 000 ostatnio dodanych celów.} other {}}",
+      "footer": "Brak konkurenta w wynikach nie oznacza spadku pozycji. Średnia obejmuje tylko znalezione wyniki. {limited, select, true { Widocznych jest 2 000 ostatnio dodanych celów.} other {}}",
+      "footerWithNoSavedSerps": "Brak konkurenta w wynikach nie oznacza spadku pozycji. Średnia obejmuje tylko znalezione wyniki. {limited, select, true { Widocznych jest 2 000 ostatnio dodanych celów.} other {}}",
       "found": "Znalezione",
       "foundDescription": "Cele, w których pojawia się ta domena, spośród zapisanych wyników SERP na jej wybranych rynkach. Każdy rynek i każde urządzenie to osobny cel.",
       "manage": "Zarządzaj konkurentami",
@@ -330,8 +330,16 @@
       "mobile": "Telefon"
     },
     "reportWidgets": {
+      "historyDescription": "Jak zmienia się widoczność w wynikach wyszukiwania.",
+      "qualityDescription": "Ile danych o słowach kluczowych jest dostępnych w czasie.",
+      "historyView": "Sposób wyświetlania historii",
+      "chartView": "Wykres",
+      "tableView": "Dane",
+      "emptyTitle": "Brak danych o pozycjach",
+      "emptyDescription": "Ta sekcja uzupełni się po sprawdzeniu słów kluczowych.",
+      "contributionDescription": "Zobacz, które słowa kluczowe najbardziej wpływają na widoczność.",
       "visibilityHistory": "Historia Visibility",
-      "qualityHistory": "Historia jakości danych",
+      "qualityHistory": "Dostępność danych",
       "contributors": "Wkłady fraz",
       "historyScope": "Zachowane obserwacje dla targetów wybranych na {asOf}, z wagami zamrożonymi w tym momencie.",
       "historyFreshness": "Historyczna polityka świeżości jest nieznana. Pokrycie obserwacji opisuje dowody; luki pozostają lukami.",
@@ -405,7 +413,17 @@
       "setupTitle": "Skonfiguruj śledzenie lokalne",
       "setupDescription": "Przypisz placówkę do fraz lub rynku, aby zobaczyć tutaj wyniki lokalne.",
       "chooseDescription": "Wybierz placówkę i zakres, aby zobaczyć jej wyniki lokalne.",
-      "manageLocations": "Skonfiguruj placówkę"
+      "manageLocations": "Skonfiguruj placówkę",
+      "businessTop3": "Placówka w top 3",
+      "averagePosition": "Średnia pozycja",
+      "searchesWithPack": "Wyszukiwania z wynikami lokalnymi",
+      "dataAvailable": "Dostępne dane",
+      "checkedKeywords": "Sprawdzone słowa: {measured, number} z {total, number}",
+      "details": "Szczegóły",
+      "detailsTitle": "O wynikach lokalnych",
+      "detailsIntro": "Te liczby opisują wybraną placówkę w lokalnych wynikach Google.",
+      "scopeHelp": "Uwzględniamy organiczne wyniki lokalne, bez reklam, Map Google i Local Finder.",
+      "comparisonHelp": "Zmiany pojawią się, gdy będzie dostępny porównywalny wcześniejszy zestaw sprawdzeń."
     }
   }
 }

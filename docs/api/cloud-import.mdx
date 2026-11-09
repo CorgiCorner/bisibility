@@ -171,16 +171,14 @@ History fields:
 | `previousPosition` | Required integer previous position or `null`. |
 | `provider` | Required provider identifier captured by the source check. |
 | `rankingUrl` | Required absolute URL, path, or `null`. |
-| `requestedDepth` | Required requested SERP depth (`10`, `20`, `50`, `100`, or `null`). `null` rows are imported and shown in ranking history. Visibility requires a known requested depth of at least 20. Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total. |
+| `requestedDepth` | Required requested SERP depth (`10`, `20`, `50`, `100`, or `null`). `null` rows are imported and shown in ranking history. A confirmed position within the requested depth can update Visibility. Proving absence requires coverage through position 20. Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total. |
 
 Only successfully completed source checks are exported as ranking history.
 Failed, running, and deferred attempts are not ranking observations and are not
 included. Imported rows preserve their provider, depth, and normalization
 version. Visibility measures volume-weighted ranking strength in Google's Top
 20. 100 means every measured keyword ranks #1. Rankings below #20 do not add
-Visibility. Shallow or failed checks are not treated as lost rankings. Top 10
-checks do not update Visibility. Affected keywords still count toward its
-coverage total.
+Visibility. Shallow or failed checks are not treated as lost rankings. Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown.
 
 <Warning>
   Export `requestedDepth` whenever the source instance has it. A `null` value

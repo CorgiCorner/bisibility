@@ -7,6 +7,7 @@ import {
   type KeywordDetailActions,
   splitTagInput,
 } from "@/components/keywords/action-utils";
+import { KeywordCheckScope } from "@/components/keywords/KeywordCheckScope";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { presentSafeActionError } from "@/components/keywords/safe-action-error";
@@ -195,10 +196,7 @@ export function KeywordInlineEdit({
         {...register("targetUrl")}
       />
       {lockIdentity ? (
-        <p className="m-0 text-[12px] text-fg-muted">
-          {keyword.location.displayName} / {keyword.location.languageLabel ?? keyword.location.hl} ·{" "}
-          {t(deviceValue(keyword.device) === "desktop" ? "deviceDesktop" : "deviceMobile")}
-        </p>
+        <KeywordCheckScope keyword={keyword} />
       ) : (
         <>
           <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">

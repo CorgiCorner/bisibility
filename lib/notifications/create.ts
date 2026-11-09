@@ -1,5 +1,6 @@
 import "server-only";
-
+import { hasNotificationResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { NotificationType, Prisma } from "@/lib/generated/prisma/client";
@@ -8,7 +9,7 @@ import { guardedNotificationType, notificationDeliveryAllowed } from "./delivery
 import type { NotificationPayload } from "./format";
 import { publishNotificationCreated } from "./realtime";
 import { notificationStoredCopy } from "./stored-copy";
-import { queueNotificationEvent } from "./transaction";
+import { queueNotificationAfterCommit, queueNotificationEvent } from "./transaction";
 
 const notificationPayloadSchema: z.ZodType<NotificationPayload> = z.lazy(() =>
   z.union([
@@ -113,6 +114,15 @@ export async function createNotification(
     return null;
   }
 
+  const recordReceipt = async () => {
+    recordResultReceipt({
+      userId,
+      surface: "alert",
+      nonEmpty: hasNotificationResult(type, payload),
+    });
+  };
+  if (transaction) queueNotificationAfterCommit(transaction, recordReceipt);
+  else await recordReceipt();
   const event = {
     createdAt: notification.createdAt.toISOString(),
     id: notification.id,

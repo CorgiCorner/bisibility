@@ -1,3 +1,4 @@
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
@@ -29,7 +30,8 @@ import type {
   DomainPaymentEstimate,
   LoadDomainHistoryOptions,
 } from "./types";
-export async function loadDomainOverviewHistory(
+
+async function loadDomainOverviewHistoryImpl(
   context: DomainOverviewServiceContext,
   options: LoadDomainHistoryOptions,
 ): Promise<DomainHistoryOutcome | DomainPaymentEstimate> {
@@ -136,4 +138,19 @@ export async function loadDomainOverviewHistory(
       ...(payment?.hasAttempted ? domainPaymentReceipt(payment) : {}),
     };
   }
+}
+
+export function loadDomainOverviewHistory(
+  ...args: Parameters<typeof loadDomainOverviewHistoryImpl>
+) {
+  const context = args[0];
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "domain_overview",
+    },
+    () => loadDomainOverviewHistoryImpl(...args),
+  );
 }

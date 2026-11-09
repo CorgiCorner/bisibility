@@ -149,7 +149,7 @@ export const EditorExisting: Story = {
     const link = canvas.getByRole("link", { name: "Daily 06:00" });
     await userEvent.tab();
     await expect(link).toHaveFocus();
-    await expect(link).toHaveAttribute("href", "/app/prj_story/runs/schedules/sch_daily");
+    await expect(link).toHaveAttribute("href", "/app/prj_story/schedules/sch_daily");
 
     let clicks = 0;
     const preventNavigation = (event: MouseEvent) => {

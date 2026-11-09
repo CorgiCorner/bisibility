@@ -70,3 +70,44 @@ describe("isolated provider comparison native scope", () => {
     ).toThrow(/position/);
   });
 });
+
+it.each([10, 20, 50, 100] as const)(
+  "bounds native pages and retained rows to selected depth %s",
+  (depth) => {
+    const snapshot = { ...comparisonFixture(), depth };
+    const input = comparisonRankInput(snapshot, "tag");
+    expect(input.depth).toBe(depth);
+    const native = serpApiRankRequest(input);
+    for (let start = 10; start < depth; start += 10) {
+      const url = new URL(native.url);
+      url.searchParams.set("start", String(start));
+      expect(
+        comparisonRequestKey("serpapi", snapshot, { ...native, url: url.href }, "tag"),
+      ).toMatch(/^[a-f0-9]{64}$/);
+    }
+    const url = new URL(native.url);
+    url.searchParams.set("start", String(depth));
+    expect(() =>
+      comparisonRequestKey("serpapi", snapshot, { ...native, url: url.href }, "tag"),
+    ).toThrow(/quoted scope/);
+    const rows = Array.from({ length: 100 }, (_, i) => ({
+      rank: i + 1,
+      url: `https://example.com/${i}`,
+      title: "Result",
+      domain: "example.com",
+    }));
+    const result = comparisonResult(
+      {
+        position: depth,
+        rankingUrl: "https://example.com",
+        costCents: 1,
+        checkedAt: new Date(),
+        raw: { organic_results: rows },
+      },
+      snapshot,
+      new Date(),
+    );
+    expect(result.results).toHaveLength(depth);
+    expect(result.position).toBe(depth);
+  },
+);

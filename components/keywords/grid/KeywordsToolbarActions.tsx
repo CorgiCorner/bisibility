@@ -76,7 +76,7 @@ export function KeywordsToolbarActions({
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+    <div className="flex min-w-0 flex-wrap items-center justify-start gap-1.5 2xl:justify-end">
       <span className="inline-flex">
         <DataTableColumnsMenu
           footerContent={columnOrderControl}
@@ -202,6 +202,7 @@ export function KeywordsToolbarActions({
       ) : null}
       <span className="inline-flex shrink-0 items-center gap-1.5">
         <KeywordsToolbarButton
+          compactBelowXl
           label={filterT("refreshTable")}
           loading={refreshing}
           onClick={onRefresh}

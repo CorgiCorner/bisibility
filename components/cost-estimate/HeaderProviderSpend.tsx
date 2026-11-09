@@ -36,7 +36,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
                 ? t(compact.partial ? "headerAtLeastUnderOne" : "headerUnderOne")
                 : t(compact.partial ? "headerAtLeastUsed" : "headerUsed", { percent });
   const editHref = summary?.canEditBudget
-    ? `${appPath(projectRef, "providers")}?tab=usage&budget=edit`
+    ? `${appPath(projectRef, "usage")}?budget=edit`
     : undefined;
   const details = (
     <HeaderBudgetDetails
@@ -45,7 +45,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
       editHref={editHref}
     />
   );
-  const href = `${appPath(projectRef, "providers")}?tab=usage`;
+  const href = `${appPath(projectRef, "usage")}`;
   const labels = { unknown: t("headerUsageUnknown"), unavailable: t("headerUnavailable") };
   const renderLink = (
     props: Parameters<
@@ -93,7 +93,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
       ) : (
         <UsageCapPill
           state="ready"
-          href={summary.canEditBudget ? `${href}&budget=edit` : undefined}
+          href={summary.canEditBudget ? `${href}?budget=edit` : undefined}
           label={summary.canEditBudget ? t("headerNoCap") : p.budget.noLimit}
           ariaLabel={summary.canEditBudget ? t("headerNoCapAria") : p.budget.noLimit}
           labels={labels}

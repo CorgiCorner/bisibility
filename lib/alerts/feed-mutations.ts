@@ -36,7 +36,7 @@ function requiredPublicId(value: string | null, prefix: "al" | "prj", resource: 
   return value;
 }
 
-export async function markProjectAlertsRead(context: MutationContext) {
+export async function markProjectAlertsRead(context: MutationContext, onCommitted?: () => void) {
   const project = await writableProject(context.actor, context.projectId);
   const user = await prisma.user.findUnique({
     select: { name: true },
@@ -52,6 +52,7 @@ export async function markProjectAlertsRead(context: MutationContext) {
     where: { rule: { projectId: project.id }, status: "firing" },
   });
 
+  if (result.count > 0) onCommitted?.();
   await writeAudit({
     action: "triggered_alert.mark_all_read",
     actorId: auditActorId(context),
@@ -64,7 +65,10 @@ export async function markProjectAlertsRead(context: MutationContext) {
   return { updated: result.count };
 }
 
-export async function muteTriggeredAlert(context: MutationContext & { alertId: string }) {
+export async function muteTriggeredAlert(
+  context: MutationContext & { alertId: string },
+  onCommitted?: () => void,
+) {
   const project = await writableProject(context.actor, context.projectId);
   if (!isPublicIdOfType(context.alertId, "al")) {
     throw new Error("Triggered alert not found.");
@@ -81,6 +85,7 @@ export async function muteTriggeredAlert(context: MutationContext & { alertId: s
     select: { id: true, publicId: true, snoozedUntil: true, status: true },
     where: { id: before.id },
   });
+  onCommitted?.();
   await writeAudit({
     action: "triggered_alert.snooze",
     actorId: auditActorId(context),

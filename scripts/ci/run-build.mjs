@@ -29,7 +29,7 @@ export function runBuild({ spawn = spawnSync, env = process.env, platform = proc
     [command, ["run", "prebuild"], prepared],
     [process.execPath, ["node_modules/next/dist/bin/next", "typegen"], prepared],
     [process.execPath, ["node_modules/typescript/lib/tsc.js", "--noEmit", "--checkers", "1"], prepared],
-    [command, ["run", "build", "--", "--webpack"], { ...prepared, NEXT_TYPES_CHECKED_BEFORE_BUILD: "1" }],
+    [command, ["run", "build", "--", "--turbopack"], { ...prepared, NEXT_TYPES_CHECKED_BEFORE_BUILD: "1" }],
   ];
   for (const [executable, args, childEnv] of steps) {
     const result = spawn(executable, args, { env: childEnv, stdio: "inherit" });

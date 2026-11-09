@@ -10,7 +10,6 @@ import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
-import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import {
   cancelGooglePropertySelection,
   completeGooglePropertySelection,
@@ -35,6 +34,7 @@ import {
 import { loadSearchInsightsRows } from "@/lib/actions/search-insights-rows";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addKeywordsMatrix } from "@/lib/capacity/client-actions";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { searchConsoleTab } from "@/lib/search-index/ui-model";
 import {

@@ -93,6 +93,11 @@ describe("runCheck", () => {
   it("fetches rank and stores the provider raw SERP payload", async () => {
     const now = new Date("2026-01-01T06:00:00.000Z");
     const raw = {
+      provider_response: {
+        search_metadata: { id: "native-check" },
+        extra: { kept: true },
+        api_key: "secret",
+      },
       organic_results: [
         { domain: "rankzly.io", rank: 1, title: "Rankzly", url: "https://rankzly.io/page" },
         {
@@ -163,7 +168,11 @@ describe("runCheck", () => {
       { domain: "example.com", position: 3 },
       { domain: "other.dev", position: 5 },
     ]);
-    expect(result.rankCheck.raw).toEqual(raw);
+    expect(result.rankCheck.raw).toEqual({
+      ...raw,
+      provider_response: { ...raw.provider_response, api_key: "[redacted]" },
+    });
+    expect(raw.provider_response.api_key).toBe("secret");
     expect(result.scheduleUpdate.nextCheckAt).toEqual(
       computeNextCheckAt({ frequency: "daily", jitterMinutes: 0 }, now, "keyword_1"),
     );

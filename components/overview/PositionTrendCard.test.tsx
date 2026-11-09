@@ -123,7 +123,7 @@ describe("PositionTrendCard", () => {
       screen
         .getByRole("heading", { name: "Position trend" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[96px]");
+    ).not.toHaveClass("min-h-[96px]");
     expect(
       screen.queryByRole("button", {
         name: "Daily average position of ranked keywords. Lower is better - #1 is the top.",
@@ -159,7 +159,7 @@ describe("PositionTrendCard", () => {
       screen
         .getByRole("heading", { name: "Position trend" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[96px]");
+    ).not.toHaveClass("min-h-[96px]");
 
     rerender(
       withMessages(

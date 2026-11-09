@@ -47,6 +47,7 @@ export type TooltipProps = {
   interactive?: boolean;
   semantics?: TooltipSemantics;
   wrapperClassName?: string;
+  openOnClick?: boolean;
 };
 
 const TOUCH_OPEN_DELAY = 700;
@@ -85,6 +86,7 @@ function TooltipContent({
   wrapperClassName,
   disabled = false,
   tone = "inverse",
+  openOnClick = false,
 }: Readonly<TooltipProps>) {
   const { beginClose, beginOpen } = useTooltipContext();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -149,6 +151,14 @@ function TooltipContent({
   }, [beginClose, clearTouchOpenTimer]);
 
   useTooltipTouchCleanup(clearTouchOpenTimer, clearTouchLeaveTimer);
+  const dismissTouch = () => {
+    clearTouchOpenTimer();
+    clearTouchLeaveTimer();
+    touchActiveRef.current = false;
+    touchOpenedRef.current = false;
+    setOpen(false);
+    beginClose();
+  };
 
   if (!isValidElement(children)) return children;
 
@@ -203,8 +213,18 @@ function TooltipContent({
   return (
     <span
       className={cn("relative inline-flex max-w-full", wrapperClassName)}
-      onClickCapture={() => {
+      onClickCapture={(event) => {
         clickInProgressRef.current = true;
+        if (openOnClick && !disabled) {
+          // This help action owns opening; prevent the primitive's trigger-click dismissal.
+          event.preventDefault();
+          clearTouchOpenTimer();
+          clearTouchLeaveTimer();
+          touchActiveRef.current = false;
+          touchOpenedRef.current = false;
+          setOpen(true);
+          if (!open) setWarmCycle(beginOpen());
+        }
         queueMicrotask(() => {
           clickInProgressRef.current = false;
         });
@@ -235,6 +255,8 @@ function TooltipContent({
         <Primitive.TooltipTrigger asChild>{childElement}</Primitive.TooltipTrigger>
         <Primitive.TooltipPortal>
           <Primitive.TooltipContent
+            onEscapeKeyDown={openOnClick ? dismissTouch : undefined}
+            onPointerDownOutside={openOnClick ? dismissTouch : undefined}
             side={side}
             align={alignment ?? "center"}
             sideOffset={6}

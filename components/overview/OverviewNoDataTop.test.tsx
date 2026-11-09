@@ -204,7 +204,7 @@ describe("NoDataKpiRow", () => {
     expect(screen.getByText("Rank checks are paused pending a usage review.")).toBeVisible();
     expect(screen.getByRole("link", { name: "Open Usage" })).toHaveAttribute(
       "href",
-      "/app/prj_example/providers?tab=usage",
+      "/app/prj_example/usage",
     );
   });
   const states: Array<{
@@ -270,7 +270,7 @@ describe("NoDataKpiRow", () => {
     expect(screen.queryByText("awaiting first check")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Explain: Organic visibility" }));
     expect(screen.getByRole("dialog")).toHaveTextContent(
-      "A versioned index of organic results in the first 20 positions.",
+      "Confirmed positions from Top 10 checks also count",
     );
     expect(screen.getByRole("dialog").querySelector("dl")).toBeNull();
   });

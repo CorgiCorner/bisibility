@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { providerUiService } from "@/lib/provider-ui/service";
 import type {
@@ -49,7 +50,11 @@ export async function executeProviderUiAction(
   command: unknown,
 ): Promise<ProviderActionResult> {
   try {
-    return await providerUiService.execute(await scope(projectId, "manage"), command);
+    const authorized = await scope(projectId, "manage");
+    const result = await providerUiService.execute(authorized, command, () =>
+      recordAppAction(authorized.actor),
+    );
+    return result;
   } catch (error) {
     return commandFailure(error, command);
   }

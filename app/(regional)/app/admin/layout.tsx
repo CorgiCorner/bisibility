@@ -1,4 +1,3 @@
-import { AdminShell } from "@/components/admin/AdminShell";
 import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
 import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/DateFormatProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
@@ -7,7 +6,6 @@ import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { adminDangerousActionAllowed } from "@/lib/auth/admin-dangerous-action";
 import { requireInstanceAdmin } from "@/lib/auth/instance-admin";
 import { getResolvedDateFormat } from "@/lib/dates/request";
-import { adminNavigationExtension } from "@/lib/instance-admin/navigation-extension";
 import type { ReactNode } from "react";
 
 export default async function InstanceAdminLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -28,7 +26,7 @@ export default async function InstanceAdminLayout({ children }: Readonly<{ child
       <DateFormatProvider value={dateFormat.resolved}>
         <DateDisplayProvider>
           <DangerousActionAccessProvider allowed={dangerousActionsAllowed}>
-            <AdminShell extraTabs={adminNavigationExtension(runtime.locale)}>{children}</AdminShell>
+            {children}
           </DangerousActionAccessProvider>
         </DateDisplayProvider>
       </DateFormatProvider>

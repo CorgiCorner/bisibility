@@ -2,6 +2,7 @@ import type { CoreFragmentLoaders } from "./contract";
 
 /** One static import per en catalog fragment, so each namespace stays a separate chunk. */
 export const coreFragments: CoreFragmentLoaders = {
+  "resource-capacity": () => import("@/messages/core/en/resource-capacity.json"),
   "project-ai-research": () => import("@/messages/core/en/project-ai-research.json"),
   "project-ai-tracking": () => import("@/messages/core/en/project-ai-tracking.json"),
   "project-site-audit": () => import("@/messages/core/en/project-site-audit.json"),

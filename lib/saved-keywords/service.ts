@@ -63,7 +63,11 @@ export async function listSavedKeywordRows(projectId: string): Promise<SavedKeyw
   }));
 }
 
-export async function saveSavedKeywordRows(rows: SaveRow[], scope: SavedKeywordMutationScope) {
+export async function saveSavedKeywordRows(
+  rows: SaveRow[],
+  scope: SavedKeywordMutationScope,
+  onCommitted?: () => void,
+) {
   const candidates = rows.map((row) => {
     const market = savedKeywordMarket(row.location);
     return {
@@ -115,6 +119,7 @@ export async function saveSavedKeywordRows(rows: SaveRow[], scope: SavedKeywordM
     },
     { isolationLevel: "Serializable" },
   );
+  if (result.count > 0) onCommitted?.();
   const createdIds = new Set(createdRows.map((row) => row.publicId));
   const results = candidates.map((row) => ({
     keyword: row.text,

@@ -1,14 +1,15 @@
 "use client";
 
+import { DashboardEmptyBody } from "@/components/dashboard-layout/DashboardEmptyBody";
 import { MarketChip } from "@/components/markets/MarketChip";
 import { Card } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown";
 import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { OverviewChartHeader } from "./OverviewChartHeader";
 import type { HighlightList, HighlightNote, HighlightRow, RelativeTime } from "./types";
 
 export type HighlightListsProps = {
@@ -137,20 +138,21 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
   const t = useTranslations("projectDashboard.highlights");
   if (lists.length === 0) return null;
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
+    <div className="grid h-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
       {lists.map((list) => {
         const copy = listCopy(t, list.kind);
         return (
-          <Card className="flex min-w-0 flex-col overflow-hidden p-0" key={list.kind} size="md">
-            <div className="flex-none px-4.5 pb-3 pt-[15px]">
-              <div className="flex items-center text-sm font-semibold text-fg">{copy.title}</div>
-              <span className="mt-[3px] block min-h-[2lh]">{copy.subtitle}</span>
+          <Card
+            className="flex h-full min-h-[24.625rem] min-w-0 flex-col overflow-hidden p-0"
+            key={list.kind}
+            size="md"
+          >
+            <div className="flex-none px-5 py-4.5">
+              <OverviewChartHeader definition={copy.subtitle} title={copy.title} />
             </div>
             <div className="flex flex-1 flex-col">
               {list.rows.length === 0 ? (
-                <div className="grid flex-1 place-items-center border-t border-border p-3">
-                  <EmptyState compact {...copy.empty} />
-                </div>
+                <DashboardEmptyBody {...copy.empty} />
               ) : (
                 list.rows.map((row) => (
                   <Link

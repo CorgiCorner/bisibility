@@ -29,6 +29,7 @@ export type { AlertHealthActivityResult } from "./alert-health-activities";
 export { alertHealthActivity } from "./alert-health-activities";
 export { checkNotificationSummariesActivity } from "./check-summary-maintenance-activity";
 export { collectDomainRatingBatchActivity } from "./domain-rating-activity";
+export { domainVerificationActivity } from "./domain-verification-activity";
 export { executeLocalMonitorIntentActivity } from "./local-monitor-activities";
 export {
   cleanupRankCheckRawPurgeProgressActivity,
@@ -111,6 +112,7 @@ export {
 } from "./search-insights-activities";
 export type { SearchInsightsQueueReconciliationActivityResult } from "./search-insights-reconciliation-activity";
 export { reconcileQueuedSearchInsightsImportsActivity } from "./search-insights-reconciliation-activity";
+export { crawlSiteAuditBatchActivity, failSiteAuditActivity } from "./site-audit-activities";
 export type {
   FirstTrafficSyncWorkflowInput,
   SyncTrafficActivityResult,

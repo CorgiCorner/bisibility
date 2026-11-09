@@ -80,12 +80,15 @@ describe("instance mail settings actions", () => {
   it("saves without a per-action code when 2FA is enabled", async () => {
     await expect(saveInstanceMailSettings(form)).resolves.toEqual({ status: "saved" });
 
-    expect(mocks.saveInstanceMailConfig).toHaveBeenCalledWith({
-      actorId: "user_1",
-      credentials: { resendApiKey: "re_test_key" },
-      provider: "resend",
-      sender: "Mail <ops@example.com>",
-    });
+    expect(mocks.saveInstanceMailConfig).toHaveBeenCalledWith(
+      {
+        actorId: "user_1",
+        credentials: { resendApiKey: "re_test_key" },
+        provider: "resend",
+        sender: "Mail <ops@example.com>",
+      },
+      expect.any(Function),
+    );
   });
 
   it("retains the action rate limit", async () => {
@@ -115,4 +118,23 @@ describe("instance mail settings actions", () => {
     });
     expect(mocks.clearInstanceMailConfig).toHaveBeenCalledWith("user_1");
   });
+  describe.each([saveInstanceMailSettings, clearInstanceMailSettings])(
+    "mail action contract",
+    (run) => {
+      it.each(["unauthenticated", "non-admin", "two-factor missing", "cloud"])(
+        "denies %s without any configuration change",
+        async (state) => {
+          if (state === "cloud") mocks.deploymentMode.mockReturnValue("cloud");
+          else if (state === "two-factor missing")
+            mocks.findUser.mockResolvedValue({ twoFactorEnabled: false });
+          else mocks.getInstanceAdminSession.mockResolvedValue(null);
+          expect(await run(form)).toMatchObject({
+            status: state === "two-factor missing" ? "two_factor_required" : "forbidden",
+          });
+          expect(mocks.saveInstanceMailConfig).not.toHaveBeenCalled();
+          expect(mocks.clearInstanceMailConfig).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
 });

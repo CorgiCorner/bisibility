@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   markProjectAlertsRead as markProjectAlertsReadCore,
   muteTriggeredAlert as muteTriggeredAlertCore,
@@ -58,23 +58,31 @@ function googleSerpUrl(keyword: string) {
 export async function markProjectAlertsRead(input: unknown) {
   const { projectId } = parseActionInput(projectScopeSchema, input);
   const actor = await getActionActor();
-  const result = await markProjectAlertsReadCore({
-    actor,
-    projectId: requiredPublicId(projectId, "prj", "Project"),
-  });
+  const result = await markProjectAlertsReadCore(
+    {
+      actor,
+      projectId: requiredPublicId(projectId, "prj", "Project"),
+    },
+    () => recordAppAction(actor),
+  );
   revalidateAlertViews();
+
   return result;
 }
 
 export async function muteTriggeredAlert(input: unknown) {
   const { alertId, projectId } = parseActionInput(alertScopeSchema, input);
   const actor = await getActionActor();
-  const result = await muteTriggeredAlertCore({
-    alertId: requiredPublicId(alertId, "al", "Triggered alert"),
-    actor,
-    projectId: requiredPublicId(projectId, "prj", "Project"),
-  });
+  const result = await muteTriggeredAlertCore(
+    {
+      alertId: requiredPublicId(alertId, "al", "Triggered alert"),
+      actor,
+      projectId: requiredPublicId(projectId, "prj", "Project"),
+    },
+    () => recordAppAction(actor),
+  );
   revalidateAlertViews();
+
   return result;
 }
 

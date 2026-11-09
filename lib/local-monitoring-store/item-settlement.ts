@@ -1,5 +1,6 @@
 import "server-only";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { queueLocalRunUsage } from "@/lib/analytics/local-run-usage";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import {
   applySubmissionEvent,
   submissionSettlementReceipt,
@@ -47,15 +48,21 @@ export async function settleLocalItemInTransaction(
   return next;
 }
 /** Sealed paid continuation may retain response proof after launcher revocation/hold. */
-export function settleLocalItem(
+export async function settleLocalItem(
   db: LocalDatabase,
   projectId: string,
   runId: string,
   key: string,
   receipt: ProviderUsageReceipt,
 ) {
-  return db.$transaction(async (tx) => {
+  const result = await db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM projects WHERE id=${projectId} FOR UPDATE`;
     return settleLocalItemInTransaction(tx, projectId, runId, key, receipt);
   });
+  try {
+    queueLocalRunUsage(projectId, runId, receipt);
+  } catch {
+    // Analytics cannot change settlement.
+  }
+  return result;
 }

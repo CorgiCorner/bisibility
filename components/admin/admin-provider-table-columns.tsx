@@ -1,7 +1,7 @@
 "use client";
 
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import type { useFormatter, useTranslations } from "next-intl";
 
 type ProviderUsageRow = InstanceAdminDashboard["stats"]["providerUsage"][number] & { id: string };

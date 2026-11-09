@@ -1,8 +1,9 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import { recordQueuedAccountFailure } from "./queued-account-failure";
 import type { QueuedSubmissionResult } from "./queued-refusal-contract";
 import { completeOwnedQueuedSubmission } from "./queued-submission-completion";
-import { admissionDeferral } from "./queued-submit-deferral";
+import { deferQueuedAdmission, isQueuedAdmissionDeferral } from "./queued-submit-deferral";
 import { queuedSubmissionDiagnostic } from "./queued-submit-diagnostics";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
@@ -16,10 +17,7 @@ import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforceme
 import { runUnsentTasksetTransaction } from "@/lib/provider-usage/taskset-transaction";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { startQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
-import {
-  DeploymentAdmissionExhaustedError,
-  OwnProviderKeyRequiredError,
-} from "@/lib/providers/execution-extension-errors";
+import { OwnProviderKeyRequiredError } from "@/lib/providers/execution-extension-errors";
 import type { QueuedDeploymentExecution } from "@/lib/providers/execution-extension-types";
 import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
@@ -86,8 +84,7 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       return { state: progress.state };
     }
     if (isOperationAccessDeniedError(error)) {
-      const progress = await deferQueuedRankCheckBatch(batchId, error.message);
-      return { state: progress.state };
+      return deferQueuedAdmission(batchId, error);
     }
     throw error;
   }
@@ -123,9 +120,8 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
     if (connection.credentialSource === "hosted" && !execution)
       throw new Error("Queued hosted execution is unavailable.");
   } catch (error) {
-    if (error instanceof DeploymentAdmissionExhaustedError) {
-      const progress = await deferQueuedRankCheckBatch(batchId, admissionDeferral(error));
-      return { state: progress.state };
+    if (isQueuedAdmissionDeferral(error)) {
+      return deferQueuedAdmission(batchId, error);
     }
     throw error;
   }
@@ -150,6 +146,11 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
   const credentials =
     execution?.credentials ??
     resolveProviderCredentials("dataforseo", connection.credentialsEncrypted);
+  credentials.captureResponse = connectionResponseRecorder(
+    connection.id,
+    "dataforseo",
+    "rank_check",
+  );
   const rate = await consumeProviderLimit("dataforseo", credentials, {
     projectId: claimed.batch.projectId,
   });
@@ -282,9 +283,8 @@ async function submitBatch(batchId: string, ownClaim: () => void) {
       );
       return { state: progress.state };
     }
-    if (error instanceof DeploymentAdmissionExhaustedError) {
-      const progress = await deferQueuedRankCheckBatch(batchId, admissionDeferral(error));
-      return { state: progress.state };
+    if (isQueuedAdmissionDeferral(error)) {
+      return deferQueuedAdmission(batchId, error);
     }
     if (
       submissionPhase() === "rejected" &&

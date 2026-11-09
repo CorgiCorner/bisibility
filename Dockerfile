@@ -3,7 +3,7 @@ FROM node:22.23.4-alpine AS deps
 # makes production module identities collide for app/layout.tsx and app/app/layout.tsx.
 WORKDIR /workspace
 COPY package.json package-lock.json ./
-COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
+COPY scripts/deploy ./scripts/deploy
 COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
 COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
 # Pin npm to the version that generated package-lock.json so `npm ci` resolves the

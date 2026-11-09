@@ -168,7 +168,11 @@ describe("rank-check persistence update path", () => {
         hasSchedule: true,
       }),
       persistenceResult(
-        { billingUnits: 4, rankingUrl: "https://example.com/rank-tracker" },
+        {
+          billingUnits: 4,
+          rankingUrl: "https://example.com/rank-tracker",
+          raw: { provider_response: { results: [1, 2, 3] } },
+        },
         {
           providerCostCents: 0.04,
           scheduleUpdate: {
@@ -190,6 +194,7 @@ describe("rank-check persistence update path", () => {
         estimatedCostCents: null,
         finishedAt: expect.any(Date),
         requestedDepth: 20,
+        raw: { provider_response: { results: [1, 2, 3] } },
         status: "completed",
         viaFallback: false,
       }),

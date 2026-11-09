@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateBudgetViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { setProviderConnectionAllocation } from "@/lib/provider-allocations/service";
@@ -68,6 +68,15 @@ export async function updateProviderConnectionAllocationAction(
     connectionPublicId: data.connectionId,
     projectPublicId: project.publicId,
   });
+  if (
+    [
+      data.allocation,
+      data.programmaticAllocation,
+      data.creditsAllocation,
+      data.creditsProgrammaticAllocation,
+    ].some((value) => value !== undefined)
+  )
+    recordAppAction(actor);
   revalidateBudgetViews();
 
   // Managing a cap does not grant access to the payer's spend or native account balance.

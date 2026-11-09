@@ -3,6 +3,7 @@ import "server-only";
 import { getOAuthClientScopePolicy, getOAuthConsentClient } from "@/lib/queries/oauth-consent";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
+import { assertAuthRequestCapability } from "./account-capability-extension";
 import {
   grantedOAuthConsentScopes,
   oauthConsentScopes,
@@ -58,6 +59,7 @@ export function oauthConsentGuard(): BetterAuthPlugin {
           handler: createAuthMiddleware(async (context) => {
             if (context.body?.accept !== true || typeof context.body.oauth_query !== "string")
               return;
+            await assertAuthRequestCapability(context);
             const query = new URLSearchParams(context.body.oauth_query);
             const clientId = query.get("client_id");
             if (!clientId) return;

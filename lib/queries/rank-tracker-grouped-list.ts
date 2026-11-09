@@ -1,3 +1,4 @@
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import "server-only";
 
 import type {
@@ -33,6 +34,18 @@ export async function getRankTrackerGroupedList(
   );
   const pageCount = Math.ceil(groups.length / selected.query.pageSize);
   const page = pageCount === 0 ? 1 : Math.min(selected.query.page, pageCount);
+  if (context.transport === "session")
+    recordResultReceipt({
+      userId: context.actor.id,
+      surface: "app",
+      nonEmpty: groups
+        .slice((page - 1) * selected.query.pageSize, page * selected.query.pageSize)
+        .some((group) =>
+          group.subRows?.some(
+            (row) => row.checkState === "ranked" || row.checkState === "not_ranked",
+          ),
+        ),
+    });
   return {
     evaluation: selected.evaluation,
     viewDevices: keywordViewDevices(selected.rows),

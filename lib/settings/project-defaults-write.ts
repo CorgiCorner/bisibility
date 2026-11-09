@@ -1,14 +1,20 @@
-type ProjectDefaultsWriteInput<TDefaults extends object> = {
-  defaults: TDefaults;
+import type { Prisma } from "@/lib/generated/prisma/client";
+
+type ProjectDefaultsWriteInput = {
+  defaults: Omit<Prisma.ProjectDefaultsUncheckedCreateInput, "projectId">;
   projectId: string;
   serpStopOnMatch?: boolean;
 };
 
-export function projectDefaultsUpsertArgs<TDefaults extends object>({
+export function projectDefaultsUpsertArgs({
   defaults,
   projectId,
   serpStopOnMatch,
-}: ProjectDefaultsWriteInput<TDefaults>) {
+}: ProjectDefaultsWriteInput): {
+  create: Prisma.ProjectDefaultsUncheckedCreateInput;
+  update: Prisma.ProjectDefaultsUncheckedUpdateInput;
+  where: { projectId: string };
+} {
   const stopOnMatchUpdate = serpStopOnMatch === undefined ? {} : { serpStopOnMatch };
 
   return {

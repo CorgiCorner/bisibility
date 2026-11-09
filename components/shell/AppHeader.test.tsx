@@ -51,8 +51,11 @@ describe("AppHeader", () => {
     );
     const activity = screen.getByRole("link", { name: "Activity streak" });
     const account = screen.getByRole("button", { name: "Account menu" });
-    expect(activity.nextElementSibling).toBe(account);
-    expect(screen.getByRole("button", { name: "Notifications" }).nextElementSibling).toBe(activity);
+    expect(activity.parentElement).toHaveClass("hidden", "xl:inline-flex");
+    expect(activity.parentElement?.nextElementSibling).toBe(account);
+    expect(screen.getByRole("button", { name: "Notifications" }).nextElementSibling).toBe(
+      activity.parentElement,
+    );
   });
   it("threads setup progress into mobile navigation", () => {
     render(
@@ -101,7 +104,7 @@ describe("AppHeader", () => {
       />,
     );
 
-    expect(screen.getByTestId("provider-spend").parentElement).toHaveClass("gap-2.5");
+    expect(screen.getByTestId("provider-spend").parentElement).toHaveClass("gap-1.5", "sm:gap-2.5");
     expect(screen.getByTestId("provider-spend").parentElement).not.toHaveClass("gap-6");
   });
 

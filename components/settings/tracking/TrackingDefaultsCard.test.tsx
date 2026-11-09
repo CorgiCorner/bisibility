@@ -151,12 +151,12 @@ describe("TrackingDefaultsCard", () => {
     );
 
     expect(screen.getByRole("button", { name: "Default SERP depth" })).toHaveAccessibleDescription(
-      "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+      "Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown.",
     );
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     await userEvent.setup().hover(screen.getByRole("button", { name: "Default SERP depth" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Top 10 checks do not update Visibility",
+      "Top 10 checks update Visibility when your position is found",
     );
   });
 

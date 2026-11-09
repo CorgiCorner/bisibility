@@ -162,6 +162,7 @@ describe("domain overview actions", () => {
     expect(mocks.save).toHaveBeenCalledWith(
       [expect.objectContaining({ keyword: "rank tracker", location: "US" })],
       { actorId: "user_1", projectId: "project_1", projectPublicId: "prj_1" },
+      expect.any(Function),
     );
     expect(mocks.revalidate).toHaveBeenCalledTimes(2);
   });

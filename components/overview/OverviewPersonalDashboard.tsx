@@ -4,20 +4,20 @@ import { LocalReportCard } from "@/components/dashboard-local/LocalReportCard";
 import { LocalSubjectControl } from "@/components/dashboard-local/LocalSubjectControl";
 import { localReportSummary } from "@/components/dashboard-local/report-summary";
 import { DomainRatingSection } from "@/components/domain-rating/DomainRatingSection";
-import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { ViewAllKeywordsButton } from "@/components/overview/OverviewNoDataBottom";
 import type { OverviewCompetitorComparison } from "@/lib/competitors/overview-comparison";
 import type { DashboardAccess, DashboardLayout, ProjectionId } from "@/lib/dashboard-layout/types";
 import type { LocalDashboardContext, LocalReport } from "@/lib/dashboard-local/model";
 import type { DashboardSurfacePreference } from "@/lib/project-surface-preferences/dashboard-model";
 import type { CheckHealth } from "@/lib/queries/check-health";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { ByMarketRollup } from "./ByMarketRollup";
 import { DataSourcePanel } from "./DataSourcePanel";
 import { HighlightLists } from "./HighlightLists";
 import { OverviewCompetitorsCard } from "./OverviewCompetitorsCard";
 import { OverviewContributorsCard } from "./OverviewContributorsCard";
+import { OverviewCoverageSummary } from "./OverviewCoverageSummary";
 import { OverviewHealthBanners } from "./OverviewHealthBanners";
 import { OverviewKpiGrid } from "./OverviewKpiGrid";
 import { OverviewReportHistoryCard } from "./OverviewReportHistoryCard";
@@ -56,10 +56,7 @@ export async function OverviewPersonalDashboard({
   loadedProjections: readonly ProjectionId[];
   localReport?: LocalReport | null;
 }) {
-  const [t, format] = await Promise.all([
-    getTranslations("shared.dashboardLayout"),
-    getFormatter(),
-  ]);
+  const t = await getTranslations("shared.dashboardLayout");
   const projectRef = overview.publicId;
   const report = overview.qualityReport;
   const ready = (content: ReactNode) => ({ state: "ready" as const, content });
@@ -215,35 +212,7 @@ export async function OverviewPersonalDashboard({
           budget: checkHealth?.budget.exhausted ? (
             <p className="text-sm text-fg-muted">{t("budgetBlocked")}</p>
           ) : null,
-          coverage: (
-            <div className="flex items-start gap-2 text-xs leading-5 text-fg-muted">
-              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <p>
-                  {t("coverageSummary", {
-                    measured: format.number(report.counts.measured),
-                    expected: format.number(report.counts.expected),
-                    comparable: format.number(report.counts.comparable),
-                  })}
-                </p>
-                <p>
-                  {t(report.dataCoverage === null ? "freshnessUnknown" : "freshCoverage", {
-                    count: format.number(report.counts.freshDeterminate ?? 0),
-                  })}
-                </p>
-                <time dateTime={report.asOf}>
-                  {format.dateTime(new Date(report.asOf), {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </time>
-              </div>
-              <LocalizedMeasurementHelp
-                metricId="data_quality"
-                definitionVersion="help-v1"
-                report={{ counts: report.counts }}
-              />
-            </div>
-          ),
+          coverage: <OverviewCoverageSummary report={report} emptyProject={overview.isEmpty} />,
         }}
       />
       <ViewAllKeywordsButton projectRef={projectRef} />

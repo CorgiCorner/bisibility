@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  type ShellUser,
-  shellUserEmail,
-  shellUserName,
-  shellUserRoleLine,
-} from "@/components/shell/types";
+import { type ShellUser, shellUserEmail, shellUserName } from "@/components/shell/types";
 import { UserMenu } from "@/components/shell/UserMenu";
 import { Avatar } from "@/components/ui/Avatar";
 import { headerUtilityControlClassName } from "@/components/ui/header-icon-button-styles";
@@ -97,7 +92,6 @@ export function SidebarUserButton({
         name={name}
         onClose={close}
         onNavigate={onNavigate}
-        roleLine={shellUserRoleLine(user)}
         showHostedLinks={showHostedLinks}
       />
     </>

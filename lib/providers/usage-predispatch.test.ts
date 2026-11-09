@@ -1,5 +1,8 @@
-import { expect, it, vi } from "vitest";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
+import { afterEach, expect, it, vi } from "vitest";
 import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
+import { requestEnvelope } from "./serp/dataforseo-client";
+import { requestJson } from "./serp/serpapi-request";
 import {
   ProviderRecoveryAdmissionError,
   ProviderUsagePersistenceError,
@@ -7,6 +10,97 @@ import {
 } from "./usage";
 
 const measurement = { cached: false, costCents: 2, quantity: 1, failed: false };
+
+it("does not claim a safe weekly refusal when cancellation is unavailable", async () => {
+  const request = vi.fn();
+  await expect(
+    readObservedResponse({
+      observer: {
+        begin: async () => "attempt",
+        beforeDispatch: async () => {
+          throw new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+        },
+        settle: vi.fn(),
+      },
+      request,
+      measure: () => measurement,
+    }),
+  ).rejects.toMatchObject({
+    name: "ProviderUsagePersistenceError",
+    phase: "admission",
+    attemptId: "attempt",
+  });
+  expect(request).not.toHaveBeenCalled();
+});
+
+it("does not treat an already invoked transport's weekly error as an unsent refusal", async () => {
+  const request = vi.fn().mockRejectedValue(new WeeklyRequestCapError("2026-11-12T00:00:00Z"));
+  const settle = vi.fn();
+  await expect(
+    readObservedResponse({
+      observer: { begin: async () => "attempt", settle },
+      request,
+      measure: () => measurement,
+    }),
+  ).rejects.toMatchObject({
+    name: "ProviderUsagePersistenceError",
+    phase: "request",
+    attemptId: "attempt",
+  });
+  expect(request).toHaveBeenCalledOnce();
+  expect(settle).toHaveBeenCalledExactlyOnceWith("attempt", {
+    cached: false,
+    costCents: null,
+    quantity: null,
+    failed: true,
+  });
+});
+
+it.each(["admission", "fence"])(
+  "preserves weekly capacity at %s without dispatch",
+  async (phase) => {
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    const request = vi.fn();
+    const cancel = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      readObservedResponse({
+        observer: {
+          begin:
+            phase === "admission"
+              ? vi.fn().mockRejectedValue(denial)
+              : vi.fn().mockResolvedValue("attempt"),
+          beforeDispatch: vi.fn().mockRejectedValue(denial),
+          cancel,
+          settle: vi.fn(),
+        },
+        request,
+        measure: () => measurement,
+      }),
+    ).rejects.toBe(denial);
+    expect(request).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalledTimes(phase === "fence" ? 1 : 0);
+  },
+);
+
+it("retains accounting uncertainty if a weekly fence cancellation fails", async () => {
+  const request = vi.fn();
+  const failure = new Error("cancellation unavailable");
+  await expect(
+    readObservedResponse({
+      observer: {
+        begin: vi.fn().mockResolvedValue("attempt"),
+        beforeDispatch: vi
+          .fn()
+          .mockRejectedValue(new WeeklyRequestCapError("2026-11-12T00:00:00Z")),
+        cancel: vi.fn().mockRejectedValue(failure),
+        settle: vi.fn(),
+      },
+      request,
+      measure: () => measurement,
+    }),
+  ).rejects.toMatchObject({ cause: failure, phase: "admission", attemptId: "attempt" });
+  expect(request).not.toHaveBeenCalled();
+});
 
 it("records the sent response before reporting unknown measurement", async () => {
   const observeResponse = vi.fn();
@@ -151,4 +245,57 @@ it("keeps the dispatched attempt after an accounting failure without another pro
   expect(begin).toHaveBeenCalledTimes(1);
   expect(request).toHaveBeenCalledTimes(1);
   expect(settle).toHaveBeenCalledTimes(1);
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+it.each(["serpapi", "dataforseo"])(
+  "preserves weekly denial in the %s native client",
+  async (provider) => {
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    const fetchMock = vi.fn();
+    const cancel = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const credentials = {
+      apiKey: "test-key",
+      login: "test-login",
+      password: "test-password",
+      usageObserver: {
+        begin: async () => "attempt",
+        beforeDispatch: async () => {
+          throw denial;
+        },
+        cancel,
+        settle: vi.fn(),
+      },
+    };
+    const result =
+      provider === "serpapi"
+        ? requestJson("https://serpapi.com/search.json", credentials)
+        : requestEnvelope(
+            "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+            { method: "POST", body: "[]" },
+            credentials,
+          );
+    await expect(result).rejects.toBe(denial);
+    expect(cancel).toHaveBeenCalledExactlyOnceWith("attempt");
+    expect(fetchMock).not.toHaveBeenCalled();
+  },
+);
+
+it("keeps a non-JSON error body for diagnostics without changing its usage receipt", async () => {
+  const observeResponse = vi.fn();
+  const settle = vi.fn();
+  await readObservedResponse({
+    observer: { begin: async () => "raw", settle, observeResponse },
+    request: async () => new Response("provider unavailable", { status: 503 }),
+    measure: () => ({ cached: false, costCents: 0, quantity: 0, failed: true }),
+  });
+  expect(observeResponse).toHaveBeenCalledWith(503, "provider unavailable", "raw");
+  expect(settle).toHaveBeenCalledWith("raw", {
+    cached: false,
+    costCents: 0,
+    quantity: 0,
+    failed: true,
+  });
 });

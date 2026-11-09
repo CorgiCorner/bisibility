@@ -1,14 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { EmptyState as EmptyPanel } from "@/components/ui/EmptyState";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import { featureChips } from "@/lib/checks/retrieved-results-model";
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
+import { RetrievedAiOverview } from "./RetrievedAiOverview";
 import { RetrievedResultsLadder } from "./RetrievedResultsLadder";
 
 type Props = {
@@ -74,9 +77,20 @@ function CompactState({
   results,
 }: Readonly<{ results: Extract<RetrievedResults, { tier: "compact" }> }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.results");
+  if (!results.domains.length)
+    return (
+      <EmptyPanel
+        compact
+        icon={<MagnifyingGlassIcon size={20} aria-hidden />}
+        title={t("fullResultsMissing")}
+        description={t("fullResultsMissingHelp")}
+      />
+    );
   return (
     <div className="p-4 sm:p-5">
-      <p className="m-0 text-[12.5px] leading-5 text-fg-muted">{t("compactDescription")}</p>
+      <div className="flex items-center gap-1 text-[12.5px] text-fg-muted">
+        <span>{t("compactSummary")}</span>
+      </div>
       <ul className="m-0 mt-3 list-none p-0">
         {results.domains.map((entry) => (
           <li
@@ -90,7 +104,6 @@ function CompactState({
           </li>
         ))}
       </ul>
-      <p className="m-0 mt-3 text-[12px] text-fg-muted">{t("compactComparison")}</p>
     </div>
   );
 }
@@ -100,7 +113,8 @@ function RetainedUrl({ url }: Readonly<{ url: string | null }>) {
   return url ? (
     <p
       data-testid="retrieved-retained-url"
-      className="m-0 break-all border-b border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5"
+      className="m-0 truncate border-b border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5"
+      title={url}
     >
       {t("yourResult")}: {url}
     </p>
@@ -145,7 +159,14 @@ export function RetrievedResultsOneCheck({
     missing.some((rank) => results.trackedPosition !== null && rank < results.trackedPosition);
   return (
     <div>
-      <FeatureRow features={results.features} />
+      <FeatureRow
+        features={results.features.filter(
+          (feature) =>
+            !["ai overview", "local pack", "local results", "places results"].includes(
+              feature.toLowerCase().replaceAll("_", " "),
+            ),
+        )}
+      />
       <div
         className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-3 sm:px-5"
         data-testid="retrieved-summary"
@@ -168,7 +189,10 @@ export function RetrievedResultsOneCheck({
           </span>
         ) : null}
         {url ? (
-          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
+          <span
+            className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted"
+            title={url}
+          >
             {url}
           </span>
         ) : (
@@ -186,30 +210,18 @@ export function RetrievedResultsOneCheck({
             {t("jumpToResult")}
           </Button>
         ) : null}
+        {missing.length > 0 ? (
+          <InfoTooltip
+            text={`${t("missingPositions", { count: missing.length, depth: coverageDepth, ranks: missing.map((rank) => `#${rank}`).join(", ") })}${strongWarning ? ` ${t("partialCompetitors", { depth: coverageDepth })}` : ""}`}
+          />
+        ) : null}
       </div>
-      {coverageDepth > 0 && savedPositions.size < coverageDepth ? (
-        <p
-          className="m-0 border-b border-border px-4 py-2 text-[12px] text-yellow-text sm:px-5"
-          role="status"
-        >
-          {t("missingPositions", {
-            count: missing.length,
-            depth: coverageDepth,
-            ranks: missing.map((rank) => `#${rank}`).join(", "),
-          })}
-          {strongWarning ? ` ${t("partialCompetitors", { depth: coverageDepth })}` : ""}
-        </p>
-      ) : null}
       {results.aiOverview === null ? (
         <p className="m-0 border-b border-border px-5 py-2 text-[12px] text-fg-muted">
           {t("aiUnknown")}
         </p>
       ) : null}
-      {results.aiOverview ? (
-        <p className="m-0 border-b border-border px-5 py-2 text-[12px] text-fg-muted">
-          {results.aiOverviewContentLoaded === false ? t("aiContentNotLoaded") : t("aiPresent")}
-        </p>
-      ) : null}
+      <RetrievedAiOverview results={results} />
       <RetrievedResultsLadder competitors={competitors} results={results} trackedRef={trackedRef} />
       <p className="m-0 flex items-center gap-1.5 border-t border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5">
         {results.fullDetailUntil === null

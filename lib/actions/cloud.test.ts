@@ -490,5 +490,9 @@ describe("cloud migration actions", () => {
     );
 
     expect(mocks.createProject).toHaveBeenCalledTimes(1);
+    expect(mocks.createProject).toHaveBeenCalledWith({
+      name: "New project",
+      defaults: { frequency: "daily", timezone: "Europe/Madrid" },
+    });
   });
 });

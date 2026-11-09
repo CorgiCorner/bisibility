@@ -17,11 +17,14 @@ function logTemporalError(error: unknown) {
   console.error("[rank-check-runs] Temporal cancellation failed.", error);
 }
 
-export async function cancelRankCheckRunCommand(input: {
-  actorId: string;
-  projectId: string;
-  publicId: string;
-}) {
+export async function cancelRankCheckRunCommand(
+  input: {
+    actorId: string;
+    projectId: string;
+    publicId: string;
+  },
+  onCommitted?: () => void,
+) {
   const claimed = await notificationTransaction(async (tx) => {
     const run = await tx.rankCheckRun.findFirst({
       select: {
@@ -42,7 +45,8 @@ export async function cancelRankCheckRunCommand(input: {
       where: { projectId: input.projectId, publicId: input.publicId },
     });
     if (!run) throw new ApiNotFoundError("Rank-check run not found.");
-    if (run.status === "cancelled" || run.status === "cancelling") return run;
+    if (run.status === "cancelled" || run.status === "cancelling")
+      return { ...run, changed: false };
     if (!(await cancelRankCheckRun(tx, run.id))) {
       throw new ApiConflictError("Only queued or running runs can be cancelled.");
     }
@@ -57,8 +61,10 @@ export async function cancelRankCheckRunCommand(input: {
       },
       tx,
     );
-    return run;
+    return { ...run, changed: true };
   }, transactionOptions);
+  let changed = claimed.changed;
+  if (changed) onCommitted?.();
   await publishOperationChanged({ projectId: input.projectId }).catch(() => undefined);
 
   let client: Awaited<ReturnType<typeof getSchedulerTemporalClient>> | null = null;
@@ -89,13 +95,16 @@ export async function cancelRankCheckRunCommand(input: {
       logTemporalError(error);
     } finally {
       if (item.rankCheckId) {
-        await notificationTransaction(
+        const closed = await notificationTransaction(
           (tx) => closeRankCheckAsCancelled(tx, item.rankCheckId as string),
           transactionOptions,
         );
+        if (closed && !changed) onCommitted?.();
+        changed ||= closed;
       }
     }
   }
+  return { changed };
 }
 
 export async function skipRankCheckRunCommand(input: {

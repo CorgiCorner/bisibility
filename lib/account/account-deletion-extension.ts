@@ -6,3 +6,5 @@ export async function onAccountDeletion(
   _userId: string,
   _now: Date,
 ): Promise<void> {}
+
+export async function assertAccountDeletionAllowed(_userId: string): Promise<void> {}

@@ -149,6 +149,8 @@
         "pricingFeedbackSubmitted": "料金に関する意見を送信しました",
         "projectCheckRequested": "プロジェクトのチェックをリクエストしました",
         "projectCreated": "プロジェクトを作成しました",
+        "domainVerificationGranted": "ドメイン認証を付与しました",
+        "domainVerificationRevoked": "ドメイン認証を取り消しました",
         "projectDefaultViewUpdated": "プロジェクトの既定ビューを更新しました",
         "projectDefaultsUpdated": "プロジェクトの既定値を更新",
         "projectDeleted": "プロジェクトを削除",
@@ -236,7 +238,9 @@
         "webhookCreated": "Webhook を作成",
         "webhookDeleted": "Webhookを削除しました",
         "webhookUpdated": "Webhookを更新しました",
-        "weeklyDigestSent": "週次レポートを送信しました"
+        "weeklyDigestSent": "週次レポートを送信しました",
+        "siteAuditCancelled": "サイト監査をキャンセルしました",
+        "siteAuditResumed": "サイト監査を再開しました"
       },
       "timestampUnavailable": "日時不明",
       "systemEvent": {

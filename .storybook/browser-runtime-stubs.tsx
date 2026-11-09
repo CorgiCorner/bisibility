@@ -9,7 +9,6 @@ export {
   previewKeywordDeletion,
   refreshKeywordViewsAfterImport,
 } from "@/.storybook/keyword-action-stubs";
-export { loadMeteringAdminPageAction } from "@/.storybook/metering-admin-action-stubs";
 export { createOnboardingProject } from "@/.storybook/onboarding-action-stubs";
 
 // Keep instanceof checks in isolated UI stories compatible with the action boundary.

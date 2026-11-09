@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { consume } from "@/lib/api/ratelimit";
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -27,6 +27,7 @@ export async function inspectPageIndexingUrls(input: unknown): Promise<Inspectio
   const project = await requireProjectScope(actor, "update", projectId, { type: "project" });
   try {
     const result = await inspectSearchIndexUrls(project.id, { urls }, actor.id);
+    if (result.results.some((row) => !row.error)) recordAppAction(actor);
     revalidatePath(searchConsolePath(project.publicId));
     return result.results.map(({ url, error }) => ({
       url,

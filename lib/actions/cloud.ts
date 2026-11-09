@@ -1,6 +1,8 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { cloudImportPackageSchema } from "@/lib/api/instance-import/schemas";
+import { capacityActionServer, withCapacityFailure } from "@/lib/capacity/action";
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { whereCompletedChecks } from "@/lib/checks/status";
 import { appliedMigrationSummary } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
@@ -123,7 +125,9 @@ export async function getCloudMigrationCompatibility(input: unknown) { const dat
 export async function createCloudMigrationHandoff(input: unknown) { const data = parseActionInput(targetInputSchema, input); const actor = await getActionActor(); const project = await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const origin = target.value; const apiImportUrl = absoluteSiteUrl("/api/v1/cloud/import", origin); const cloudImportUrl = absoluteSiteUrl("/app", origin); return { apiImportUrl, apiRequest: `POST ${apiImportUrl}\nAuthorization: Bearer mig_...\nContent-Type: application/json`, cloudImportUrl, cloudOnboardingUrl: cloudImportUrl, cloudOrigin: origin, cloudWorkspaceUrl: cloudImportUrl, sourceProjectId: requirePublicId(project.publicId, "prj") }; }
 
 // biome-ignore format: compact action keeps this module under the file line cap.
-export async function transferCloudImportPackage(input: unknown) { const data = parseActionInput(transferPackageSchema, input); const actor = await getActionActor(); await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const parsed = parsePackageJson(data.content); cloudImportPackageSchema.parse(parsed); const origin = target.value; /* Single-shot POST is not idempotent, so retries stay disabled. */ const response = await migrationFetch(absoluteSiteUrl("/api/v1/cloud/import", origin), { body: JSON.stringify(parsed), cache: "no-store", headers: { Authorization: `Bearer ${data.token}`, "Content-Type": "application/json" }, method: "POST", timeoutMs: 30_000 }); const body = (await response.json().catch(() => null)) as unknown; if (!response.ok) { const detail = responseDetail(body); const failure = destinationRejectionFailure(response.status, detail); if (failure) { return actionFailureResult(failure); } throw new Error(detail ?? "Instance import failed."); } const completion = migrationCompletionResponseSchema.parse(body); return { ok: true, value: { counts: completion.counts, jobId: completion.job_id, state: completion.state } } as const; }
+export async function transferCloudImportPackage(input: unknown) { const data = parseActionInput(transferPackageSchema, input); const actor = await getActionActor(); await requireMigrationProject(actor, data.projectId); const target = resolveMigrationTargetActionResult(data.targetOrigin); if (!target.ok) return target; const parsed = parsePackageJson(data.content); cloudImportPackageSchema.parse(parsed); const origin = target.value; /* Single-shot POST is not idempotent, so retries stay disabled. */ const response = await migrationFetch(absoluteSiteUrl("/api/v1/cloud/import", origin), { body: JSON.stringify(parsed), cache: "no-store", headers: { Authorization: `Bearer ${data.token}`, "Content-Type": "application/json" }, method: "POST", timeoutMs: 30_000 }); const body = (await response.json().catch(() => null)) as unknown; if (!response.ok) { const detail = responseDetail(body); const failure = destinationRejectionFailure(response.status, detail); if (failure) { return actionFailureResult(failure); } throw new Error(detail ?? "Instance import failed."); } const completion = migrationCompletionResponseSchema.parse(body); recordAppAction(actor);
+return { ok: true, value: { counts: completion.counts, jobId: completion.job_id, state: completion.state } } as const;
+}
 
 function preflightNetworkReason(error: unknown) {
   return error instanceof Error && error.name === "TimeoutError"
@@ -158,10 +162,22 @@ async function createCloudImportWorkspaceDestination(timezone?: string) {
   // No domain: the workspace is addressed by public ID, and the tracked domain is
   // whatever the user later enters in settings.
   const normalizedTimezone = normalizeProjectTimezone(timezone);
-  const project = await createProject({
-    name: "New project",
-    defaults: { frequency: "daily", timezone: normalizedTimezone },
-  });
+  const create = capacityActionServer(createProject);
+  let project: Awaited<ReturnType<typeof create>>;
+  try {
+    project = await create({
+      name: "New project",
+      defaults: { frequency: "daily", timezone: normalizedTimezone },
+    });
+  } catch (error) {
+    if (!(error instanceof CapacityLimitError) || error.dimension !== "scheduleFrequencies")
+      throw error;
+    // Cadence admission happens before the project write. Keep the legacy default elsewhere.
+    project = await create({
+      name: "New project",
+      defaults: { frequency: "manual", timezone: normalizedTimezone },
+    });
+  }
   if (isCloud) {
     return `/cloud/import?ctx=onboard&project=${encodeURIComponent(project.publicId)}`;
   }
@@ -169,7 +185,9 @@ async function createCloudImportWorkspaceDestination(timezone?: string) {
 }
 
 export async function createCloudImportWorkspace(timezone?: string) {
-  return createCloudImportWorkspaceDestination(timezone);
+  return withCapacityFailure(async () => {
+    return createCloudImportWorkspaceDestination(timezone);
+  });
 }
 
 // biome-ignore format: compact action keeps this action module under the file line cap.
@@ -184,25 +202,30 @@ async function mintAction(input: unknown, action: "migration_token.mint" | "migr
     projectId: project.id,
     scope: data.scope,
   });
-  revalidateCloudViews();
+  recordAppAction(actor);
+revalidateCloudViews();
   return token;
 }
 
 // biome-ignore format: compact exports keep this action module under the file line cap.
 export async function mintMigrationToken(input: unknown) {
-  return mintAction(input, "migration_token.mint");
+return mintAction(input, "migration_token.mint");
+
 }
 // biome-ignore format: compact exports keep this action module under the file line cap.
 export async function mintMigrationTokenResult(input: unknown) {
-  return handledActionResult(() => mintMigrationToken(input));
+return handledActionResult(() => mintMigrationToken(input));
+
 }
 // biome-ignore format: compact exports keep this action module under the file line cap.
 export async function regenerateMigrationToken(input: unknown) {
-  return mintAction(input, "migration_token.regenerate");
+return mintAction(input, "migration_token.regenerate");
+
 }
 // biome-ignore format: compact exports keep this action module under the file line cap.
 export async function regenerateMigrationTokenResult(input: unknown) {
-  return handledActionResult(() => regenerateMigrationToken(input));
+return handledActionResult(() => regenerateMigrationToken(input));
+
 }
 
 export async function revokeMigrationToken(input: unknown) {
@@ -216,6 +239,7 @@ export async function revokeMigrationToken(input: unknown) {
     projectId: project.id,
     tokenId: data.tokenId,
   });
+  recordAppAction(actor);
   revalidateCloudViews();
   return token;
 }
@@ -238,6 +262,7 @@ export async function advanceCloudImportJob(input: unknown) {
     projectId: project.id,
     state: data.state,
   });
+  recordAppAction(actor);
   await notifyTerminalJob(job, project.id);
   revalidateCloudViews();
   return view;

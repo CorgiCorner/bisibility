@@ -9,7 +9,7 @@ describe("CloudTopBar", () => {
         copy={{
           beta: "Cloud",
           fallbackWorkspace: "Project",
-          setupProgress: ({ current, total }) => `Setup / ${current} of ${total}`,
+          setupProgress: ({ current, total }) => `Step ${current} of ${total}`,
         }}
         ctx={ctx}
       />,

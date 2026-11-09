@@ -58,6 +58,14 @@
   },
   {
     "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation cancelSiteAuditRun"
+  },
+  {
+    "problems": [
       "enum-without-kind /requestBody/application/json/oneOf/0/properties/cost_policy",
       "enum-without-kind /requestBody/application/json/properties/cost_policy",
       "enum-without-kind /requestBody/application/json/properties/engines/items",
@@ -561,6 +569,14 @@
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk"
     ],
+    "subject": "operation getSiteAuditRun"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
     "subject": "operation getStoredResearchReport"
   },
   {
@@ -811,6 +827,14 @@
     "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation listSiteAuditPages"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
       "schema SitemapMonitor",
       "schema SitemapMonitorList"
@@ -929,6 +953,14 @@
       "missing x-bisibility-sdk"
     ],
     "subject": "operation resendTeamInvite"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation resumeSiteAuditRun"
   },
   {
     "problems": [

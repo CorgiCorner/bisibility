@@ -1,3 +1,4 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 
 import { assertWebhookUrlAllowed } from "@/lib/alerts/webhook-guard";
@@ -143,6 +144,7 @@ async function runQuery(creds: ProviderCredentials, query: PlausibleQuery) {
     method: "POST",
   });
 
+  await captureHttpResponse(response, creds.captureResponse, queryUrl(baseUrl));
   if (response.status === 429) {
     const resetAt = writeCooldown(accountKey);
     throw new ProviderRateLimitedError("plausible", { accountKey, resetAt });

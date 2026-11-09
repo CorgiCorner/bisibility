@@ -13,7 +13,9 @@ const mocks = vi.hoisted(() => ({
   credentials: vi.fn(),
   gate: vi.fn(),
   fetch: vi.fn(),
+  event: vi.fn(),
 }));
+vi.mock("@/lib/analytics/request-usage-delivery", () => ({ queueRequestUsageEvent: mocks.event }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks }));
 vi.mock("./credentials", () => ({ resolveDomainRatingCredentials: mocks.credentials }));
 vi.mock("@/lib/providers/rate-limit", () => ({ consumeProviderLimit: mocks.gate }));
@@ -27,6 +29,7 @@ import { DomainRatingError } from "./provider";
 
 const project = {
   id: "p1",
+  ownerId: "owner1",
   domain: "example.com",
   isSample: false,
   writeMode: "active",
@@ -57,6 +60,13 @@ describe("daily rating collection", () => {
     expect(mocks.domainRatingCheck.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ rating: 0 }) }),
     );
+    expect(mocks.event).toHaveBeenCalledTimes(1);
+    expect(mocks.event).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "owner1",
+        properties: { provider: "ahrefs", feature: "domain_rating", trigger: "scheduled" },
+      }),
+    );
   });
   it.each([
     { domainRatingEnabled: false },
@@ -67,6 +77,7 @@ describe("daily rating collection", () => {
     mocks.project.findUnique.mockResolvedValue({ ...project, ...patch });
     expect(await collectDomainRating("p1", now)).toBe("disabled");
     expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.event).not.toHaveBeenCalled();
   });
   it("does not replay a completed or ambiguous daily claim", async () => {
     mocks.domainRatingCheck.findUnique.mockResolvedValue({ rating: null });
@@ -97,6 +108,7 @@ describe("daily rating collection", () => {
   it("stores a safe failure without a fabricated zero", async () => {
     mocks.fetch.mockRejectedValue(new DomainRatingError("authentication"));
     expect(await collectDomainRating("p1", now)).toBe("failed");
+    expect(mocks.event).not.toHaveBeenCalled();
     expect(mocks.domainRatingCheck.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ error: "authentication" }) }),
     );

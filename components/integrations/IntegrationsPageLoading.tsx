@@ -29,8 +29,8 @@ function ProviderFrame() {
   );
 }
 export function IntegrationsPageLoading({
-  connectionsLabel,
-  usageLabel,
+  connectionsLabel: _connectionsLabel,
+  usageLabel: _usageLabel,
   active: activeOverride,
 }: Readonly<{
   connectionsLabel: string;
@@ -43,28 +43,6 @@ export function IntegrationsPageLoading({
     (["usage", "byok"].includes(search.get("tab") ?? "") ? "usage" : "connections");
   return (
     <PageContent aria-busy="true" className="flex flex-col gap-5">
-      <div
-        aria-hidden
-        className="flex min-w-0 gap-0.5 overflow-x-auto border-b border-border"
-        data-integrations-loading-tabs=""
-      >
-        {(
-          [
-            { id: "connections", label: connectionsLabel },
-            ...(usageLabel ? [{ id: "usage", label: usageLabel }] : []),
-          ] as const
-        ).map((tab) => (
-          <span
-            key={tab.id}
-            className={cn(
-              "-mb-px border-b-2 px-4 py-2.5 text-[13px] font-semibold",
-              tab.id === active ? "border-accent text-fg" : "border-transparent text-fg-muted",
-            )}
-          >
-            {tab.label}
-          </span>
-        ))}
-      </div>
       <div
         aria-hidden
         className="flex min-w-0 flex-col gap-5"

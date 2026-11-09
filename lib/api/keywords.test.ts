@@ -75,7 +75,8 @@ describe("keyword API list filters", () => {
       async (callback: (tx: Record<string, unknown>) => unknown) =>
         callback({
           $queryRaw: vi.fn(),
-          keyword: { deleteMany: mocks.delete, findMany: mocks.findMany },
+          keyword: { deleteMany: mocks.delete, findMany: mocks.findMany, update: mocks.update },
+          keywordTag: { deleteMany: mocks.deleteMany },
           rankCheckRun: { update: mocks.rankCheckRunUpdate },
           rankCheckRunItem: {
             findMany: mocks.rankCheckRunItemFindMany,

@@ -3,6 +3,7 @@ import { ActionPaymentError } from "@/lib/action-payment/token";
 import { bindAiPaymentSchedule, readAiPaymentConsent } from "@/lib/ai-research/payment";
 import { payloadHash } from "@/lib/ai-tracking/identity";
 import { scheduleInputSchema } from "@/lib/ai-tracking/schema";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { CronExpressionParser } from "cron-parser";
 import { jsonInput, lockTrackingProject, prisma, requireFound } from "./shared";
@@ -18,10 +19,14 @@ function validateSchedule(cron: string, timezone: string) {
   new Intl.DateTimeFormat("en", { timeZone: timezone });
   CronExpressionParser.parse(cron, { tz: timezone });
 }
-export function createSchedule(projectId: string, input: ScheduleInput) {
+export function createSchedule(
+  projectId: string,
+  input: ScheduleInput,
+): Promise<import("@/lib/generated/prisma/client").AiTrackingSchedule & { replayed?: boolean }> {
   const data = scheduleInputSchema.parse(input);
   validateSchedule(data.cron, data.timezone);
   return prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     if (
       data.configuration.paymentConsent &&
@@ -51,8 +56,22 @@ export function createSchedule(projectId: string, input: ScheduleInput) {
           payloadHash([data.name, data.cron, data.timezone, data.enabled ?? false, configuration])
       )
         throw new ActionPaymentError("payment_already_executed");
-      return prior;
+      return { ...prior, replayed: true };
     }
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: [],
+      cadence: {
+        dimension: "promptSchedules",
+        after: {
+          frequency: "custom_cron",
+          cronExpression: data.cron,
+          timezone: data.timezone,
+          enabled: data.enabled ?? false,
+        },
+      },
+    });
+    await capacity.check();
     return tx.aiTrackingSchedule.create({
       data: {
         ...data,
@@ -73,6 +92,7 @@ export function updateSchedule(
 ) {
   const data = scheduleInputSchema.partial().parse(input);
   return prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     const schedule = requireFound(
       await tx.aiTrackingSchedule.findFirst({
@@ -81,6 +101,26 @@ export function updateSchedule(
       "Schedule",
     );
     validateSchedule(data.cron ?? schedule.cron, data.timezone ?? schedule.timezone);
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: [],
+      cadence: {
+        dimension: "promptSchedules",
+        before: {
+          frequency: "custom_cron",
+          cronExpression: schedule.cron,
+          timezone: schedule.timezone,
+          enabled: schedule.enabled,
+        },
+        after: {
+          frequency: "custom_cron",
+          cronExpression: data.cron ?? schedule.cron,
+          timezone: data.timezone ?? schedule.timezone,
+          enabled: data.enabled ?? schedule.enabled,
+        },
+      },
+    });
+    await capacity.check();
     return tx.aiTrackingSchedule.update({
       where: { id: scheduleId },
       data: {
@@ -113,6 +153,7 @@ export function updateSchedule(
 }
 export function archiveSchedule(projectId: string, scheduleId: string) {
   return prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     const schedule = requireFound(
       await tx.aiTrackingSchedule.findFirst({ where: { projectId, id: scheduleId } }),

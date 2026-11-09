@@ -30,20 +30,16 @@ export async function previewRecurringFor(input: unknown, context: LocalStoreCon
 }
 export async function approveRecurringFor(input: unknown, context: LocalStoreContext) {
   try {
-    return {
-      kind: "saved" as const,
-      receipt: (await approveRecurringMonitor(input, context)).receipt,
-    };
+    const result = await approveRecurringMonitor(input, context);
+    return { kind: "saved" as const, ...result };
   } catch (error) {
     return failure(error);
   }
 }
 export async function pauseRecurringFor(input: unknown, context: LocalStoreContext) {
   try {
-    return {
-      kind: "saved" as const,
-      receipt: (await pauseRecurringMonitor(input, context)).receipt,
-    };
+    const result = await pauseRecurringMonitor(input, context);
+    return { kind: "saved" as const, ...result };
   } catch (error) {
     return failure(error);
   }

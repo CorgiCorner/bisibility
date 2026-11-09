@@ -1,3 +1,4 @@
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -53,6 +54,21 @@ import { withAppRoute } from "./app-route";
 const request = new Request("https://example.com/api/rank-check-runs");
 
 describe("withAppRoute", () => {
+  it("returns typed capacity details from the app HTTP boundary", async () => {
+    const details = {
+      dimension: "scheduledKeywords",
+      used: 100,
+      limit: 100,
+      requested: 1,
+      scope: "account" as const,
+    };
+    const response = await withAppRoute(async () => {
+      throw new CapacityLimitError(details);
+    })(new Request("https://example.com/api/check-schedules"));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "plan_limit_reached", details });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
@@ -98,7 +114,12 @@ describe("withAppRoute", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(handler).toHaveBeenCalledWith(request, { id: "user_1" }, undefined);
+    expect(handler).toHaveBeenCalledWith(
+      request,
+      { id: "user_1" },
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("preserves app project budget surface and the authoritative reset", async () => {

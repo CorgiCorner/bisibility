@@ -16,11 +16,11 @@ describe("installed history workspace per-check URLs", () => {
     expect(urls.querySelectorAll('[data-testid$="-body"] > [role="row"]')).toHaveLength(250);
     const record = first.observations.records[0];
     if (!record) throw new Error("Missing observation fixture");
-    expect(within(urls).getByText(record.id).closest('[role="row"]')).toHaveTextContent(
+    expect(urls.querySelector('[data-testid$="-body"] > [role="row"]')).toHaveTextContent(
       record.expectedUrlAtCheck ?? "",
     );
     expect(
-      within(urls).getByText(record.id).closest('[role="row"]')?.querySelectorAll("time")[0],
+      urls.querySelector('[data-testid$="-body"] > [role="row"]')?.querySelectorAll("time")[0],
     ).toHaveAttribute("dateTime", record.observedAt);
     fireEvent.click(screen.getByRole("button", { name: "Load more history" }));
     await waitFor(
@@ -32,7 +32,7 @@ describe("installed history workspace per-check URLs", () => {
     );
     expect(
       screen
-        .getByRole("table", { name: "Recorded observations" })
+        .getByRole("table", { name: "Ranking history" })
         .querySelectorAll('[data-testid$="-body"] > [role="row"]'),
     ).toHaveLength(320);
     expect(port.readPage).toHaveBeenCalledExactlyOnceWith(

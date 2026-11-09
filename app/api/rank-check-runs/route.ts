@@ -1,5 +1,6 @@
 import { requireProjectScope } from "@/lib/actions/_shared";
 import { launchRankCheckRunActionSchema } from "@/lib/actions/rank-check-run-launch-result";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { withAppRoute } from "@/lib/api/app-route";
 import { dataResponse, listResponse } from "@/lib/api/responses";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -31,17 +32,21 @@ export const POST = withAppRoute(async (request, actor) => {
     idempotencyKey: body.idempotencyKey ?? request.headers.get("Idempotency-Key") ?? undefined,
   });
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
-  const launched = await launchRankCheckRun({
-    actorId: actor.id,
-    depth: data.depth,
-    idempotencyKey: data.idempotencyKey,
-    origin: APP_REQUEST_ORIGIN,
-    previewToken: data.previewToken,
-    project,
-    providerId: data.providerId,
-    spec: data.spec,
-    trigger: "api",
-  });
+  const launched = await launchRankCheckRun(
+    {
+      actorId: actor.id,
+      depth: data.depth,
+      idempotencyKey: data.idempotencyKey,
+      origin: APP_REQUEST_ORIGIN,
+      previewToken: data.previewToken,
+      project,
+      providerId: data.providerId,
+      spec: data.spec,
+      trigger: "api",
+    },
+    { onCommitted: () => recordAppAction(actor) },
+  );
   if (isLaunchRankCheckRunNothingToRun(launched)) return dataResponse(launched);
-  return dataResponse(await getRankCheckRun(project.id, launched.publicId));
+  const response = dataResponse(await getRankCheckRun(project.id, launched.publicId));
+  return response;
 });

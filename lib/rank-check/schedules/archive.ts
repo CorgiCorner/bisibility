@@ -1,3 +1,5 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { prepareKeywordScheduleChange } from "@/lib/capacity/schedule-change";
 import "server-only";
 
 import { ApiInputError, ApiNotFoundError } from "@/lib/api/errors";
@@ -29,9 +31,10 @@ export async function archiveSchedule(
 ) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const before = await findSchedule(tx, projectId, input.scheduleId);
-      if (before.archivedAt) return { publicId: before.publicId };
+      if (before.archivedAt) return { changed: false, publicId: before.publicId };
       if (input.destinationScheduleId === input.scheduleId)
         throw new ApiInputError("Choose another schedule or manual checks.");
       const destination = input.destinationScheduleId
@@ -47,6 +50,9 @@ export async function archiveSchedule(
         where: { projectId, checkScheduleId: before.id },
       });
       const keywordIds = members.map((keyword) => keyword.id);
+      const capacity = destination
+        ? await prepareKeywordScheduleChange(tx, projectId, keywordIds, destination)
+        : null;
       const after = await tx.checkSchedule.update({
         data: { archivedAt: new Date(), enabled: false, isDefault: false },
         select: checkScheduleSelect,
@@ -60,6 +66,7 @@ export async function archiveSchedule(
         if (destination) await mirrorScheduleToKeywords(tx, projectId, destination, keywordIds);
         else await mirrorManualToKeywords(tx, projectId, keywordIds);
       }
+      await capacity?.check();
       if (before.isDefault) {
         await tx.projectDefaults.upsert({
           where: { projectId },
@@ -86,7 +93,7 @@ export async function archiveSchedule(
         },
         tx,
       );
-      return { publicId: before.publicId };
+      return { changed: true, publicId: before.publicId };
     },
     { maxWait: 10_000, timeout: 60_000 },
   );
@@ -95,9 +102,10 @@ export async function archiveSchedule(
 export async function restoreSchedule(actorId: string, projectId: string, scheduleId: string) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const before = await findSchedule(tx, projectId, scheduleId);
-      if (!before.archivedAt) return { publicId: before.publicId };
+      if (!before.archivedAt) return { changed: false, publicId: before.publicId };
       const after = await tx.checkSchedule.update({
         data: { archivedAt: null, enabled: false, isDefault: false },
         select: checkScheduleSelect,
@@ -115,7 +123,7 @@ export async function restoreSchedule(actorId: string, projectId: string, schedu
         },
         tx,
       );
-      return { publicId: before.publicId };
+      return { changed: true, publicId: before.publicId };
     },
     { maxWait: 10_000, timeout: 60_000 },
   );

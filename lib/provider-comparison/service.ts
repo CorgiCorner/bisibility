@@ -57,20 +57,24 @@ export async function previewProviderComparison(input: {
     { timeout: 20_000 },
   );
 }
-export async function launchProviderComparison(input: {
-  projectId: string;
-  keywordId: string;
-  actorId: string;
-  previewId: string;
-  previewHash: string;
-  requestKey: string;
-}): Promise<ComparisonRun> {
+export async function launchProviderComparison(
+  input: {
+    projectId: string;
+    keywordId: string;
+    actorId: string;
+    previewId: string;
+    previewHash: string;
+    requestKey: string;
+  },
+  onCommitted?: () => void,
+): Promise<ComparisonRun> {
   requestUuid.parse(input.previewId);
   requestUuid.parse(input.requestKey);
+  let committed = false;
   const row = await prisma.$transaction(
     async (tx) => {
       await assertComparisonAccess(tx, input.projectId, input.actorId, true);
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${JSON.stringify(["provider-comparison", input.projectId, input.requestKey])},0))`;
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${JSON.stringify(["provider-comparison", input.projectId, input.requestKey])},0))::text`;
       const existing = await tx.providerComparisonRun.findUnique({
         where: {
           projectId_requestKey: { projectId: input.projectId, requestKey: input.requestKey },
@@ -108,7 +112,7 @@ export async function launchProviderComparison(input: {
       });
       if (comparisonHash(current) !== preview.sourceHash)
         throw new ComparisonPreviewRejectedError();
-      return tx.providerComparisonRun.create({
+      const created = await tx.providerComparisonRun.create({
         data: {
           id: randomUUID(),
           projectId: input.projectId,
@@ -121,7 +125,6 @@ export async function launchProviderComparison(input: {
           sides: {
             create: snapshot.connections.map((side) => ({
               id: randomUUID(),
-              projectId: input.projectId,
               provider: side.provider,
               connectionId: side.id,
             })),
@@ -129,9 +132,12 @@ export async function launchProviderComparison(input: {
         },
         include: { sides: true },
       });
+      committed = true;
+      return created;
     },
     { timeout: 20_000 },
   );
+  if (committed) onCommitted?.();
   // The durable row is the outbox. A failed/uncertain wake never buys another comparison.
   await startProviderComparisonWorkflow(input.projectId, row.id).catch(() => undefined);
   void publishWorkerIntent("provider_comparison");

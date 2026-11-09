@@ -64,7 +64,7 @@ describe("connected app revocation", () => {
   it("optionally revokes proven PATs through the existing service in the transaction", async () => {
     await expect(
       revokeUserConnectedApp("viewer", "app", { revokeCreatedTokens: true }),
-    ).resolves.toEqual({ revoked: true, revokedCreatedTokenCount: 1 });
+    ).resolves.toEqual({ changed: true, revoked: true, revokedCreatedTokenCount: 1 });
     expect(mocks.tokens).toHaveBeenCalledWith("viewer", "app", tx);
     expect(mocks.revoke).toHaveBeenCalledWith("viewer", "pat_linked", tx);
   });

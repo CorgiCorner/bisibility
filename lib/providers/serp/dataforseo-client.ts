@@ -2,6 +2,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -187,6 +188,7 @@ export async function requestEnvelope(
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     try {
       const observed = await readObservedResponse<DataForSeoResponse>({
+        captureResponse: creds.captureResponse,
         observer: init.method === "POST" ? creds.usageObserver : undefined,
         requireMeasuredUsage: init.method === "POST",
         request: () => fetchWithTimeout(url, init, timeoutMs),
@@ -223,6 +225,7 @@ export async function requestEnvelope(
     } catch (error) {
       if (
         error instanceof ProviderCostLimitError ||
+        error instanceof WeeklyRequestCapError ||
         error instanceof DeploymentAdmissionExhaustedError ||
         error instanceof BudgetExhaustedError ||
         error instanceof ProviderAllocationExhaustedError

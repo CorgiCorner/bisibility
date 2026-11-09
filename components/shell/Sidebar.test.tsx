@@ -151,6 +151,7 @@ describe("Sidebar", () => {
         [
           "dashboard",
           "rank-tracker",
+          "serp-playground",
           "keyword-research",
           "domain-overview",
           "backlinks",
@@ -165,7 +166,9 @@ describe("Sidebar", () => {
           "markets",
           "alerts",
           "runs",
+          "schedules",
           "providers",
+          "usage",
           "install",
           "settings",
         ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
@@ -598,7 +601,7 @@ describe("Sidebar", () => {
       const modules = expanded.getByText("SEO");
       expect(expanded.queryByText("Activity")).toBeNull();
       expect(expanded.getByText("SEO")).toBeInTheDocument();
-      expect(expanded.getByText("AI Search")).toBeInTheDocument();
+      expect(expanded.getByText("AI visibility")).toBeInTheDocument();
       expect(expanded.getByText("Data & reports")).toBeInTheDocument();
       expect(expanded.getByText("Project")).toBeInTheDocument();
       expect(modules.closest("a")).toBeNull();
@@ -646,6 +649,7 @@ describe("Sidebar", () => {
         [
           "Dashboard",
           "Rank Tracker",
+          "SERP Playground",
           "Keyword Research",
           "Domain Overview",
           "Backlinks",
@@ -659,7 +663,9 @@ describe("Sidebar", () => {
           "Markets",
           "Alerts",
           "Runs",
+          "Schedules",
           "Providers",
+          "Usage",
           "Install",
           "Settings",
         ],

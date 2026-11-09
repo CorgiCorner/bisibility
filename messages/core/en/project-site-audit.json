@@ -3,7 +3,7 @@
     "heading": "Site audit",
     "description": "Check HTTP, metadata, headings, indexability, links and image alt text for {domain}.",
     "pageLimit": "Page limit",
-    "pageLimitError": "Choose 1 to 15 pages.",
+    "pageLimitError": "Choose 1 to {limit, number} pages.",
     "run": "Run audit",
     "running": "Crawling site",
     "cost": "Up to 15 seconds · No provider credits · Results reused according to project cache settings",
@@ -85,6 +85,24 @@
       "unknown": "The page could not be fetched. Its HTTP status and SEO measurements are unknown."
     },
     "savedPages": "Saved pages",
-    "savedDetails": "Saved report details"
+    "savedDetails": "Saved report details",
+    "workerCost": "Runs in the background · No provider credits",
+    "runProgress": "{state} · {pages, number} of {budget, number} pages",
+    "verifyDomain": "Verify this domain to crawl more pages.",
+    "cancelRun": "Cancel audit",
+    "resumeRun": "Resume audit",
+    "previousPages": "Previous pages",
+    "nextPages": "Next pages",
+    "runStates": {
+      "queued": "Queued",
+      "running": "Running",
+      "paused": "Paused",
+      "complete": "Complete",
+      "stopped": "Stopped",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "unknown": "Unknown"
+    },
+    "availableLimit": "Currently available: up to {limit, number} pages per audit."
   }
 }

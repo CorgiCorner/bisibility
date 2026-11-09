@@ -53,6 +53,17 @@ const legacy = (ts: string, python: string, go: string): Legacy => ({
 });
 
 export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions>> = {
+  getDomainVerification: read("projects.domainVerification", "get", { go: [], python: [], ts: [] }),
+  issueDomainVerification: read("projects.domainVerification", "start", {
+    go: [],
+    python: [],
+    ts: [],
+  }),
+  checkDomainVerification: read("projects.domainVerification", "check", {
+    go: [],
+    python: [],
+    ts: [],
+  }),
   getSearchPerformanceTotals: read("analytics.searchPerformance", "totals", {
     go: [],
     python: [],

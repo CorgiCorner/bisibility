@@ -1,11 +1,14 @@
 "use server";
-
 import {
   type InviteMailerNotConfiguredError,
   isInviteMailerNotConfiguredError,
 } from "@/lib/actions/team-invite-delivery";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { requireSession } from "@/lib/auth/session";
+import { withCapacityFailure } from "@/lib/capacity/action";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { lockResourceOwners } from "@/lib/capacity/resource-lock";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId, parsePublicId } from "@/lib/db/public-id";
 import {
@@ -70,10 +73,14 @@ export async function inviteMember(input: unknown) {
   const data = parseActionInput(inviteMemberSchema, input);
   const actor = await getActionActor();
   try {
-    const result = await inviteTeamMember(data, {
-      actor,
-      auditActorId: actor.id,
-    });
+    const result = await inviteTeamMember(
+      data,
+      {
+        actor,
+        auditActorId: actor.id,
+      },
+      () => recordAppAction(actor),
+    );
     revalidateSettingsViews();
     return { ...result, status: "success" as const };
   } catch (error) {
@@ -123,6 +130,7 @@ export async function acceptInvite(input: unknown) {
     if (used.count !== 1) throw new Error("Invite is invalid or expired.");
     return member;
   });
+  recordAppAction(session);
   await auditAndRevalidate({
     action: "team.invite.accept",
     after: { email: invite.email, inviteId: invite.publicId, role: membership.role },
@@ -133,6 +141,7 @@ export async function acceptInvite(input: unknown) {
       requiredPublicId(membership.publicId, "mbr", "Membership"),
     ),
   });
+
   return {
     id: requiredPublicId(membership.publicId, "mbr", "Membership"),
     projectId: invite.project.publicId,
@@ -145,7 +154,9 @@ export async function revokeInvite(input: unknown) {
   const data = parseActionInput(inviteIdSchema, input);
   const actor = await getActionActor();
   const result = await revokeTeamInvite(data, { actor, auditActorId: actor.id });
+  recordAppAction(actor);
   revalidateSettingsViews();
+
   return result;
 }
 
@@ -153,7 +164,9 @@ export async function resendInvite(input: unknown) {
   const data = parseActionInput(inviteIdSchema, input);
   const actor = await getActionActor();
   try {
-    const result = await resendTeamInvite(data, { actor, auditActorId: actor.id });
+    const result = await resendTeamInvite(data, { actor, auditActorId: actor.id }, () =>
+      recordAppAction(actor),
+    );
     revalidateSettingsViews();
     return { ...result, status: "success" as const };
   } catch (error) {
@@ -166,7 +179,9 @@ export async function changeMemberRole(input: unknown) {
   const data = parseActionInput(changeMemberRoleSchema, input);
   const actor = await getActionActor();
   const result = await changeTeamMemberRole(data, { actor, auditActorId: actor.id });
+  recordAppAction(actor);
   revalidateSettingsViews();
+
   return result;
 }
 
@@ -174,47 +189,77 @@ export async function removeMember(input: unknown) {
   const data = parseActionInput(memberIdSchema, input);
   const actor = await getActionActor();
   const result = await removeTeamMember(data, { actor, auditActorId: actor.id });
+  recordAppAction(actor);
   revalidateSettingsViews();
+
   return result;
 }
 
 export async function transferOwnership(input: unknown) {
-  const data = parseActionInput(memberIdSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "manage", data.projectId, {
-    requiredRole: "owner",
-    type: "ownership",
-  });
-  const target = await findMember(project.id, data.memberId);
-  if (!target || target.userId === actor.id || target.role === "owner")
-    throw new Error("Choose another project member to become owner.");
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(memberIdSchema, input);
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "manage", data.projectId, {
+      requiredRole: "owner",
+      type: "ownership",
+    });
+    const target = await findMember(project.id, data.memberId);
+    if (!target || target.userId === actor.id || target.role === "owner")
+      throw new Error("Choose another project member to become owner.");
 
-  const result = await prisma.$transaction(async (tx) => {
-    await tx.membership.updateMany({
-      data: { role: "admin" },
-      where: { projectId: project.id, role: "owner" },
+    const result = await prisma.$transaction(async (tx) => {
+      await lockResourceOwners(tx, [actor.id, target.userId]);
+      const currentProject = await tx.project.findUnique({
+        where: { id: project.id },
+        select: { ownerId: true },
+      });
+      if (currentProject?.ownerId !== actor.id)
+        throw new Error("Project ownership changed. Try again.");
+      const currentTarget = await tx.membership.findFirst({
+        where: { id: target.id, projectId: project.id, userId: target.userId },
+        select: memberSelect,
+      });
+      if (!currentTarget || currentTarget.role === "owner")
+        throw new Error("Choose another project member to become owner.");
+      const capacity = await prepareResourceCapacity(tx, {
+        ownerId: currentTarget.userId,
+        dimensions: ["projects", "scheduledKeywords", "trackedPrompts", "alertRulesAndWebhooks"],
+      });
+      await tx.membership.updateMany({
+        data: { role: "admin" },
+        where: { projectId: project.id, role: "owner" },
+      });
+      const owner = await tx.membership.update({
+        data: { role: "owner" },
+        select: { ...memberSelect, user: { select: { publicId: true } } },
+        where: { id: target.id },
+      });
+      await tx.project.update({ data: { ownerId: owner.userId }, where: { id: project.id } });
+      await capacity.check();
+      await writeAudit(
+        {
+          action: "team.ownership.transfer",
+          after: {
+            ownerId: requiredPublicId(owner.user.publicId, "usr", "User"),
+            role: owner.role,
+          },
+          before: { targetRole: currentTarget.role },
+          ...auditTarget(
+            actor.id,
+            project.id,
+            "membership",
+            requiredPublicId(owner.publicId, "mbr", "Membership"),
+          ),
+        },
+        tx,
+      );
+      return owner;
     });
-    const owner = await tx.membership.update({
-      data: { role: "owner" },
-      select: { ...memberSelect, user: { select: { publicId: true } } },
-      where: { id: target.id },
-    });
-    await tx.project.update({ data: { ownerId: owner.userId }, where: { id: project.id } });
-    return owner;
+    recordAppAction(actor);
+    revalidateSettingsViews();
+    return {
+      id: requiredPublicId(result.publicId, "mbr", "Membership"),
+      ownerId: requiredPublicId(result.user.publicId, "usr", "User"),
+    };
   });
-  await auditAndRevalidate({
-    action: "team.ownership.transfer",
-    after: { ownerId: result.user.publicId, role: result.role },
-    before: { targetRole: target.role },
-    ...auditTarget(
-      actor.id,
-      project.id,
-      "membership",
-      requiredPublicId(result.publicId, "mbr", "Membership"),
-    ),
-  });
-  return {
-    id: requiredPublicId(result.publicId, "mbr", "Membership"),
-    ownerId: requiredPublicId(result.user.publicId, "usr", "User"),
-  };
 }

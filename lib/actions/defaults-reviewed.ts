@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { previewDefaultsHost, saveDefaultsHost } from "@/lib/measurement-settings/host/defaults";
@@ -70,6 +71,7 @@ async function saveFor(input: unknown, review: unknown, action: DefaultsHostCont
     return { kind: "not_saved" as const, code, nextCheckAt: null };
   }
   // A post-commit read failure remains ambiguous to the caller; it must retain the exact receipt key.
+  recordAppAction(actor);
   revalidateSettingsViews();
   const next = await getOnboardingNextCheckAt(result.value.projectId);
   return { ...result.value, nextCheckAt: next?.toISOString() ?? null, kind: "saved" as const };

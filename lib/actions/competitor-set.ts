@@ -1,5 +1,4 @@
 "use server";
-
 import {
   addManualCompetitorSchema,
   confirmSuggestedCompetitorSchema,
@@ -8,10 +7,14 @@ import {
   skipCompetitorSetupSchema,
   updateCompetitorAliasesSchema,
 } from "@/lib/actions/competitor-set-input";
-import { type AuditClient, requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { recordAppAction } from "@/lib/activity/app-mutation";
+import { writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { lockProjectForSetup, recordSetupOutcome } from "@/lib/competitors/setup-outcome";
 import { getCompetitorSuggestions } from "@/lib/competitors/suggestions";
 import { prisma } from "@/lib/db/prisma";
-import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
+import { makePublicId } from "@/lib/db/public-id";
 import { Prisma, ProjectMarketStatus } from "@/lib/generated/prisma/client";
 import {
   getActionActor,
@@ -19,102 +22,18 @@ import {
   requireProjectScope,
   revalidateCompetitorViews,
 } from "./_shared";
-
-const competitorSelect = {
-  aliases: true,
-  domain: true,
-  evidence: true,
-  id: true,
-  label: true,
-  publicId: true,
-  scopePolicy: true,
-  source: true,
-} as const;
-
-type CompetitorRecord = {
-  aliases: string[];
-  domain: string;
-  evidence: unknown;
-  id: string;
-  label: string | null;
-  publicId: string | null;
-  scopePolicy: "all_markets" | "selected_markets";
-  source: "manual" | "suggested";
-};
-
-function requiredCompetitorId(value: string | null) {
-  if (!value || !isPublicIdOfType(value, "cmp")) {
-    throw new Error("Competitor public ID is not available.");
-  }
-  return value;
-}
-
-function publicCompetitor(competitor: CompetitorRecord) {
-  return {
-    aliases: competitor.aliases,
-    domain: competitor.domain,
-    evidence: competitor.evidence,
-    id: requiredCompetitorId(competitor.publicId),
-    label: competitor.label,
-    scopePolicy: competitor.scopePolicy,
-    source: competitor.source,
-  };
-}
-
-function competitorAuditTarget(competitor: ReturnType<typeof publicCompetitor>) {
-  return requiredPublicAuditId(competitor.id, "cmp", "Competitor");
-}
+import {
+  type CompetitorRecord,
+  competitorAuditTarget,
+  competitorSelect,
+  findScopedCompetitor,
+  publicCompetitor,
+} from "./competitor-set-record";
 
 async function competitorProjectScope(action: "create" | "update", projectId: string) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, action, projectId, { type: "competitor" });
   return { actor, project };
-}
-
-async function findScopedCompetitor(
-  client: Pick<typeof prisma, "competitor">,
-  projectId: string,
-  competitorId: string,
-) {
-  if (!isPublicIdOfType(competitorId, "cmp")) throw new Error("Competitor not found.");
-  const competitor = await client.competitor.findFirst({
-    select: competitorSelect,
-    where: { projectId, publicId: competitorId },
-  });
-  if (!competitor) throw new Error("Competitor not found.");
-  return competitor as CompetitorRecord;
-}
-
-async function recordSetupOutcome(
-  client: Pick<typeof prisma, "project"> & AuditClient,
-  project: { id: string; publicId: string },
-  actorId: string,
-  outcome: "confirmed" | "skipped",
-) {
-  await client.project.updateMany({
-    data: { competitorSetupDecidedAt: new Date(), competitorSetupOutcome: outcome },
-    where: {
-      id: project.id,
-      OR: [{ competitorSetupOutcome: null }, { NOT: { competitorSetupOutcome: outcome } }],
-    },
-  });
-  await writeAudit(
-    {
-      action: outcome === "confirmed" ? "competitor.setup.confirm" : "competitor.setup.skip",
-      actorId,
-      after: { outcome },
-      projectId: project.id,
-      targetId: project.publicId,
-      targetType: "project",
-    },
-    client,
-  );
-}
-
-async function lockProjectForSetup(client: Pick<typeof prisma, "$queryRaw">, projectId: string) {
-  await client.$queryRaw(
-    Prisma.sql`SELECT "id" FROM "projects" WHERE "id" = ${projectId} FOR UPDATE`,
-  );
 }
 
 function afterMutation<T>(result: T) {
@@ -123,73 +42,89 @@ function afterMutation<T>(result: T) {
 }
 
 export async function confirmSuggestedCompetitor(input: unknown) {
-  const data = parseActionInput(confirmSuggestedCompetitorSchema, input);
-  const { actor, project } = await competitorProjectScope("create", data.projectId);
-  const result = await prisma.$transaction(async (tx) => {
-    const candidate = (await getCompetitorSuggestions(project.id, tx)).find(
-      (suggestion) => suggestion.domain === data.domain,
-    );
-    if (!candidate) throw new Error("This competitor is not currently suggested.");
-    const competitor = await tx.competitor.create({
-      data: {
-        domain: candidate.domain,
-        evidence: candidate,
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(confirmSuggestedCompetitorSchema, input);
+    const { actor, project } = await competitorProjectScope("create", data.projectId);
+    const result = await prisma.$transaction(async (tx) => {
+      const capacity = await prepareResourceCapacity(tx, {
         projectId: project.id,
-        publicId: makePublicId("cmp"),
-        source: "suggested",
-      },
-      select: competitorSelect,
+        dimensions: ["competitorsPerProject"],
+      });
+      const candidate = (await getCompetitorSuggestions(project.id, tx)).find(
+        (suggestion) => suggestion.domain === data.domain,
+      );
+      if (!candidate) throw new Error("This competitor is not currently suggested.");
+      const competitor = await tx.competitor.create({
+        data: {
+          domain: candidate.domain,
+          evidence: candidate,
+          projectId: project.id,
+          publicId: makePublicId("cmp"),
+          source: "suggested",
+        },
+        select: competitorSelect,
+      });
+      const after = publicCompetitor(competitor as CompetitorRecord);
+      await writeAudit(
+        {
+          action: "competitor.suggestion.confirm",
+          actorId: actor.id,
+          after,
+          projectId: project.id,
+          targetId: competitorAuditTarget(after),
+          targetType: "competitor",
+        },
+        tx,
+      );
+      await capacity.check();
+      await recordSetupOutcome(tx, project, actor.id, "confirmed");
+      return after;
     });
-    const after = publicCompetitor(competitor as CompetitorRecord);
-    await writeAudit(
-      {
-        action: "competitor.suggestion.confirm",
-        actorId: actor.id,
-        after,
-        projectId: project.id,
-        targetId: competitorAuditTarget(after),
-        targetType: "competitor",
-      },
-      tx,
-    );
-    await recordSetupOutcome(tx, project, actor.id, "confirmed");
-    return after;
+    recordAppAction(actor);
+    return afterMutation(result);
   });
-  return afterMutation(result);
 }
 
 export async function addManualCompetitor(input: unknown) {
-  const data = parseActionInput(addManualCompetitorSchema, input);
-  const { actor, project } = await competitorProjectScope("create", data.projectId);
-  const result = await prisma.$transaction(async (tx) => {
-    const competitor = await tx.competitor.create({
-      data: {
-        aliases: data.aliases,
-        domain: data.domain,
-        evidence: Prisma.DbNull,
-        label: data.label ?? null,
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(addManualCompetitorSchema, input);
+    const { actor, project } = await competitorProjectScope("create", data.projectId);
+    const result = await prisma.$transaction(async (tx) => {
+      const capacity = await prepareResourceCapacity(tx, {
         projectId: project.id,
-        publicId: makePublicId("cmp"),
-        source: "manual",
-      },
-      select: competitorSelect,
+        dimensions: ["competitorsPerProject"],
+      });
+      const competitor = await tx.competitor.create({
+        data: {
+          aliases: data.aliases,
+          domain: data.domain,
+          evidence: Prisma.DbNull,
+          label: data.label ?? null,
+          projectId: project.id,
+          publicId: makePublicId("cmp"),
+          source: "manual",
+        },
+        select: competitorSelect,
+      });
+      const after = publicCompetitor(competitor as CompetitorRecord);
+      await writeAudit(
+        {
+          action: "competitor.manual.add",
+          actorId: actor.id,
+          after,
+          projectId: project.id,
+          targetId: competitorAuditTarget(after),
+          targetType: "competitor",
+        },
+        tx,
+      );
+      await capacity.check();
+      await recordSetupOutcome(tx, project, actor.id, "confirmed");
+      return after;
     });
-    const after = publicCompetitor(competitor as CompetitorRecord);
-    await writeAudit(
-      {
-        action: "competitor.manual.add",
-        actorId: actor.id,
-        after,
-        projectId: project.id,
-        targetId: competitorAuditTarget(after),
-        targetType: "competitor",
-      },
-      tx,
-    );
-    await recordSetupOutcome(tx, project, actor.id, "confirmed");
-    return after;
+    recordAppAction(actor);
+    return afterMutation(result);
   });
-  return afterMutation(result);
 }
 
 export async function updateCompetitorAliases(input: unknown) {
@@ -217,17 +152,19 @@ export async function updateCompetitorAliases(input: unknown) {
     );
     return after;
   });
-  return afterMutation(result);
+  recordAppAction(actor);
+  const actionResult = await afterMutation(result);
+
+  return actionResult;
 }
 
 export async function dismissCompetitorSuggestion(input: unknown) {
   const data = parseActionInput(dismissCompetitorSuggestionSchema, input);
   const { actor, project } = await competitorProjectScope("update", data.projectId);
-  await prisma.$transaction(async (tx) => {
-    await tx.competitorSuggestionDismissal.upsert({
-      create: { domain: data.domain, projectId: project.id },
-      update: {},
-      where: { projectId_domain: { domain: data.domain, projectId: project.id } },
+  const changed = await prisma.$transaction(async (tx) => {
+    const inserted = await tx.competitorSuggestionDismissal.createMany({
+      data: [{ domain: data.domain, projectId: project.id }],
+      skipDuplicates: true,
     });
     await writeAudit(
       {
@@ -240,8 +177,12 @@ export async function dismissCompetitorSuggestion(input: unknown) {
       },
       tx,
     );
+    return inserted.count;
   });
-  return afterMutation({ dismissed: true });
+  if (changed > 0) recordAppAction(actor);
+  const actionResult = await afterMutation({ dismissed: true });
+
+  return actionResult;
 }
 
 export async function skipCompetitorSetup(input: unknown) {
@@ -252,10 +193,13 @@ export async function skipCompetitorSetup(input: unknown) {
     const hasEffectiveCompetitors =
       (await tx.competitor.count({ where: { projectId: project.id } })) > 0;
     const nextOutcome = hasEffectiveCompetitors ? "confirmed" : "skipped";
-    await recordSetupOutcome(tx, project, actor.id, nextOutcome);
-    return nextOutcome;
+    const changed = await recordSetupOutcome(tx, project, actor.id, nextOutcome);
+    return { changed, nextOutcome };
   });
-  return afterMutation({ outcome });
+  if (outcome.changed > 0) recordAppAction(actor);
+  const actionResult = await afterMutation({ outcome: outcome.nextOutcome });
+
+  return actionResult;
 }
 
 export async function replaceCompetitorMarkets(input: unknown) {
@@ -306,5 +250,8 @@ export async function replaceCompetitorMarkets(input: unknown) {
     );
     return after;
   });
-  return afterMutation(result);
+  recordAppAction(actor);
+  const actionResult = await afterMutation(result);
+
+  return actionResult;
 }

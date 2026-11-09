@@ -145,7 +145,11 @@ vi.mock("@/lib/queries/project-limit", () => ({
   readActorReachedProjectLimit: mocks.reachedProjectLimit,
 }));
 vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { supportAvailable: mocks.supportAvailable },
+  appExtensions: {
+    guardAccountSurface: vi.fn().mockResolvedValue(undefined),
+    renderAccountDeletionSlot: async (children: unknown) => children,
+    supportAvailable: mocks.supportAvailable,
+  },
 }));
 vi.mock("@/lib/queries/experimental-modules", () => ({
   getExperimentalModules: mocks.experimentalModules,

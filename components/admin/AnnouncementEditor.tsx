@@ -2,6 +2,7 @@
 
 import { InstanceAnnouncementBanner } from "@/components/shell/InstanceAnnouncementBanner";
 import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
@@ -79,9 +80,11 @@ export function AnnouncementEditor({
           };
           return (
             <div key={field} className="flex flex-col gap-1.5">
-              <label htmlFor={fieldId} className="text-sm font-medium text-fg">
-                {t(field)}
-              </label>
+              <FieldLabel
+                htmlFor={fieldId}
+                className="text-sm font-medium text-fg"
+                label={t(field)}
+              />
               {field === "message" ? (
                 <Textarea {...props} invalid={Boolean(errors[field])} maxLength={2000} />
               ) : (
@@ -92,7 +95,7 @@ export function AnnouncementEditor({
                 />
               )}
               {errors[field] ? (
-                <p id={errorId} className="text-xs text-red-text">
+                <p id={errorId} className="text-xs text-red-text" role="alert">
                   {errors[field]?.message}
                 </p>
               ) : null}

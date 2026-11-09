@@ -115,7 +115,7 @@ describe("SchedulesList", () => {
     expect(screen.getByText("Add keywords to start")).toBeVisible();
     expect(screen.getByRole("link", { name: "Daily 06:00" })).toHaveAttribute(
       "href",
-      "/app/prj_story/runs/schedules/sch_daily",
+      "/app/prj_story/schedules/sch_daily",
     );
   });
 
@@ -204,7 +204,7 @@ describe("SchedulesList", () => {
 
     fireEvent.click(screen.getByRole("row", { name: /Daily 06:00/ }));
 
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/runs/schedules/sch_daily");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/schedules/sch_daily");
   });
 
   it("opens the editor when a row is activated with the keyboard", async () => {
@@ -218,7 +218,7 @@ describe("SchedulesList", () => {
 
     await user.keyboard("{Enter}");
 
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/runs/schedules/sch_daily");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/schedules/sch_daily");
   });
 
   it("opens the schedule link with Tab and Enter without triggering the row callback", async () => {
@@ -233,7 +233,7 @@ describe("SchedulesList", () => {
     await user.tab();
     const link = screen.getByRole("link", { name: "Daily 06:00" });
     expect(link).toHaveFocus();
-    expect(link).toHaveAttribute("href", "/app/prj_story/runs/schedules/sch_daily");
+    expect(link).toHaveAttribute("href", "/app/prj_story/schedules/sch_daily");
 
     const click = vi.fn((event: MouseEvent) => event.preventDefault());
     link.addEventListener("click", click);

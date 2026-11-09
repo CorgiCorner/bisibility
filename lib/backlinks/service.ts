@@ -1,3 +1,4 @@
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { paymentFailure } from "@/lib/action-payment/session";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
@@ -44,7 +45,7 @@ function normalizedInput(options: AnalyzeBacklinksOptions) {
   };
 }
 
-export async function analyzeBacklinks(
+async function analyzeBacklinksImpl(
   context: BacklinksServiceContext,
   options: AnalyzeBacklinksOptions,
 ): Promise<BacklinksOutcome> {
@@ -284,4 +285,17 @@ export async function analyzeBacklinks(
     if (failure) return failure;
     throw error;
   }
+}
+
+export function analyzeBacklinks(...args: Parameters<typeof analyzeBacklinksImpl>) {
+  const context = args[0];
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "backlinks",
+    },
+    () => analyzeBacklinksImpl(...args),
+  );
 }

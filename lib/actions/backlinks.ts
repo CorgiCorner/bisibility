@@ -1,6 +1,7 @@
 "use server";
 import { withAchievementUse } from "@/lib/achievements/record-use";
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { analyzeBacklinks, loadMoreBacklinkRows } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -61,7 +62,7 @@ export async function analyzeBacklinksAction(input: unknown) {
     type: "project",
   });
 
-  return withAchievementUse(actor.id, "analyzeBacklinks", data.estimateOnly, () =>
+  const outcome = await withAchievementUse(actor.id, "analyzeBacklinks", data.estimateOnly, () =>
     withTargetValidation(() =>
       analyzeBacklinks(
         { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
@@ -82,6 +83,8 @@ export async function analyzeBacklinksAction(input: unknown) {
       ),
     ),
   );
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  return outcome;
 }
 
 export async function loadMoreBacklinkRowsAction(input: unknown) {
@@ -91,7 +94,7 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
     type: "project",
   });
 
-  return withTargetValidation(() =>
+  const outcome = await withTargetValidation(() =>
     loadMoreBacklinkRows(
       { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
       {
@@ -108,4 +111,6 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
       },
     ),
   );
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  return outcome;
 }

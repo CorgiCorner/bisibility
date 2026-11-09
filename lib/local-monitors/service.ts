@@ -34,7 +34,7 @@ export async function saveMonitorFor(
   input: unknown,
   context: LocalStoreContext,
   db?: LocalDatabase,
-): Promise<MonitorSaveResult> {
+): Promise<MonitorSaveResult & { replayed?: boolean }> {
   try {
     const command = commandSchema.parse(input);
     const { operation, ...data } = command;
@@ -44,7 +44,7 @@ export async function saveMonitorFor(
         : operation === "revise"
           ? await reviseLocalMonitor(data, context, { db })
           : await archiveLocalMonitor(data, context, { db });
-    return { kind: "saved", receipt: result.receipt };
+    return { kind: "saved", replayed: result.replayed, receipt: result.receipt };
   } catch (error) {
     if (
       error instanceof LocalMonitorConflictError ||

@@ -7,10 +7,12 @@ const mocks = vi.hoisted(() => ({
   findUnique: vi.fn(),
   getAuthSession: vi.fn(),
   headers: vi.fn(),
+  activity: vi.fn(),
   demoActor: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/activity/record-extension", () => ({ recordUserActivity: mocks.activity }));
 vi.mock("@/lib/auth/auth", () => ({ auth: { api: { getSession: mocks.getAuthSession } } }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -22,8 +24,15 @@ vi.mock("@/lib/demo/identity", () => ({ loadConfiguredDemoActor: mocks.demoActor
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("next/server", () => ({ connection: mocks.connection }));
 
+import { ACTIVITY_METHOD_HEADER } from "@/lib/activity/request";
 import { RETURN_TO_REQUEST_HEADER } from "./return-to";
-import { enforceActiveSession, getSession, getSessionReference, requireSession } from "./session";
+import {
+  enforceActiveSession,
+  getSession,
+  getSessionReference,
+  requireRole,
+  requireSession,
+} from "./session";
 import { isTransientSessionDatabaseError } from "./session-retry";
 
 const session = {
@@ -40,6 +49,46 @@ describe("enforceActiveSession", () => {
     redirect.mockImplementation((destination: string) => {
       throw new Error(`redirect:${destination}`);
     });
+  });
+
+  it("records an authenticated app GET as seen without an action", async () => {
+    const signedIn = { ...session, user: { ...session.user, email: "user@example.invalid" } };
+    mocks.getAuthSession.mockResolvedValueOnce(signedIn);
+    mocks.findUnique.mockResolvedValueOnce({ deactivatedAt: null });
+    mocks.headers.mockResolvedValue(
+      new Headers({
+        [RETURN_TO_REQUEST_HEADER]: "/app/projects",
+        [ACTIVITY_METHOD_HEADER]: "GET",
+      }),
+    );
+    await expect(getSession()).resolves.toBe(signedIn);
+    expect(mocks.activity).toHaveBeenCalledOnce();
+    expect(mocks.activity).toHaveBeenCalledWith({
+      userId: "user_1",
+      email: "user@example.invalid",
+      channel: "app",
+      interactive: true,
+      kind: "seen",
+    });
+  });
+
+  it("does not infer acted activity from a mutation before role authorization", async () => {
+    const signedIn = { ...session, user: { ...session.user, email: "user@example.invalid" } };
+    mocks.getAuthSession.mockResolvedValueOnce(signedIn);
+    mocks.findUnique
+      .mockResolvedValueOnce({ deactivatedAt: null })
+      .mockResolvedValueOnce({ role: "viewer" });
+    mocks.headers.mockResolvedValue(
+      new Headers({
+        [RETURN_TO_REQUEST_HEADER]: "/app/projects",
+        [ACTIVITY_METHOD_HEADER]: "POST",
+        "next-action": "fixture-action",
+      }),
+    );
+    await expect(requireRole("admin")).rejects.toThrow("Requires admin role.");
+    expect(mocks.activity).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ kind: "seen" }),
+    );
   });
 
   it("passes through an active account session", async () => {

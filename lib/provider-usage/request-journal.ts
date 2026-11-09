@@ -1,16 +1,12 @@
+import { captureResponseObserver } from "@/lib/provider-responses/observer";
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { ActionPaymentError } from "@/lib/action-payment/token";
+import { recordPaidUsage } from "@/lib/analytics/request-usage-context";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
-import {
-  BudgetExhaustedError,
-  ProviderAllocationExhaustedError,
-} from "@/lib/metering/admission-errors";
 import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
-import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
-  ProviderRecoveryAdmissionError,
+  isProviderAdmissionRefusal,
   type ProviderUsageObserver,
   ProviderUsagePersistenceError,
   type ProviderUsageReceipt,
@@ -191,14 +187,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
         cause.code === "P2002"
       )
         throw new ActionPaymentError("payment_already_executed");
-      if (
-        cause instanceof ProviderCostLimitError ||
-        cause instanceof ProviderRecoveryAdmissionError ||
-        cause instanceof DeploymentAdmissionExhaustedError ||
-        cause instanceof BudgetExhaustedError ||
-        cause instanceof ProviderAllocationExhaustedError
-      )
-        throw cause;
+      if (isProviderAdmissionRefusal(cause)) throw cause;
       throw new ProviderUsagePersistenceError({
         cause,
         phase: "admission",
@@ -265,6 +254,14 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
     // Unit receipts use the settled budget valuation, not their zero monetary cost.
     lastRequestCostCents = duplicate ? 0 : valued;
     if (!duplicate) {
+      if (!receipt.cached)
+        recordPaidUsage({
+          provider: input.provider,
+          payment: "byok",
+          costCents: valued,
+          quantity: receipt.quantity,
+          failed: receipt.failed,
+        });
       measurements.set(id, receipt);
       const receipts = [...measurements.values()];
       quantity = receipts.some((item) => item.quantity === null)
@@ -277,7 +274,17 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
   }
 
   return {
-    observer,
+    observer: captureResponseObserver(
+      observer,
+      {
+        projectId: input.projectId,
+        connectionId: input.connectionId,
+        provider: input.provider,
+        feature: input.attribution.context.feature,
+        operationId: input.attribution.context.correlationId,
+      },
+      db,
+    ),
     get attemptIds() {
       return [...grants.keys()];
     },

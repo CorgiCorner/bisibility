@@ -77,6 +77,7 @@ const mocks = vi.hoisted(() => ({
   notifyRankCheckCompleted: vi.fn(() => Promise.resolve()),
   requireReadableProject: vi.fn(),
   prisma: {
+    providerResponseCapture: { create: vi.fn(async () => ({})) },
     meteringUsageEvidence: undefined as unknown as ReturnType<
       typeof byokTestEvidence
     >["meteringUsageEvidence"],

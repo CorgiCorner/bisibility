@@ -94,7 +94,7 @@ export function KeywordsFilterBar({
             ) : null}
           </div>
         ) : null}
-        <div className="order-1 grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto] lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">
+        <div className="order-1 grid min-w-0 grid-cols-1 items-center gap-2 lg:order-2 2xl:grid-cols-[minmax(220px,1fr)_auto]">
           <ToolbarSearch
             variant="outlined"
             className="min-w-0"

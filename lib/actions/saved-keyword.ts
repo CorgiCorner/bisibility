@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { appPath } from "@/lib/routing/app-path";
 import { removeSavedKeywordRows, saveSavedKeywordRows } from "@/lib/saved-keywords/service";
 import { removeSavedKeywordsSchema, saveKeywordsSchema } from "@/lib/schemas/saved-keyword";
@@ -17,12 +17,17 @@ export async function saveKeywords(input: unknown) {
   const project = await requireProjectScope(actor, "create", data.projectId, {
     type: "keyword",
   });
-  const { results: _results, ...outcome } = await saveSavedKeywordRows(data.rows, {
-    actorId: actor.id,
-    projectId: project.id,
-    projectPublicId: project.publicId,
-  });
+  const { results: _results, ...outcome } = await saveSavedKeywordRows(
+    data.rows,
+    {
+      actorId: actor.id,
+      projectId: project.id,
+      projectPublicId: project.publicId,
+    },
+    () => recordAppAction(actor),
+  );
   revalidateSavedKeywords(project.publicId);
+
   return outcome;
 }
 
@@ -40,6 +45,8 @@ export async function removeSavedKeywords(input: unknown) {
       projectPublicId: project.publicId,
     },
   );
+  if (removedCount > 0) recordAppAction(actor);
   revalidateSavedKeywords(project.publicId);
+
   return { removedCount };
 }

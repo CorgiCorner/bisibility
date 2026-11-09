@@ -7,23 +7,17 @@ import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/projec
 import { accountRouteExtensionPolicy } from "./account-route-extension";
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
+import { recordApiAction, recordApiSeen } from "./activity";
 import { apiAdmissionErrorDetails } from "./admission-error-details";
 import { requestAnalyticsIdentity } from "./analytics-context";
 import { unsupportedApiVersionResponse } from "./api-versions";
-import {
-  type ApiAuth,
-  ApiAuthError,
-  type AuthenticatedApiKey,
-  authenticateBearer,
-  LEGACY_BEARER_PREFIXES,
-  PERSONAL_TOKEN_PREFIX,
-  PROJECT_API_KEY_PREFIX,
-} from "./auth";
+import { type ApiAuth, ApiAuthError, type AuthenticatedApiKey, authenticateBearer } from "./auth";
 import type { ApiContext } from "./context";
 import { handleDiscovery } from "./discovery-router";
 import { errorFromUnknown } from "./error-mapper";
 import { scopeToEnforce } from "./estimate-only-scope";
 import { withIdempotency } from "./idempotency";
+import { isOauthExchangeRequest } from "./oauth-exchange-request";
 import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
 import { checkRateLimit, rateLimitExceeded } from "./ratelimit";
@@ -31,6 +25,7 @@ import { appRequiredScope, recentAppAuthenticationResponse } from "./recent-auth
 import { apiRequestOrigin } from "./request-origin";
 import { hasScope } from "./request-scope";
 import { errorResponse, methodNotAllowed, routeNotFound } from "./responses";
+import { recordApiResultReceipt } from "./result-receipt";
 import { dispatchRoute } from "./routes";
 
 type RouteContext = {
@@ -57,13 +52,14 @@ async function limitAnonymous(req: Request): Promise<AnonymousLimitResult> {
   return limit.success ? { headers: limit.headers } : { response: rateLimitExceeded(limit) };
 }
 
-async function requireAuth(req: Request): Promise<AuthResult> {
+async function requireAuth(req: Request, mcp: boolean): Promise<AuthResult> {
   try {
     const auth = await authenticateBearer(req);
+    recordApiSeen(auth, mcp);
     const identity =
       auth.kind === "personal_token"
-        ? ({ id: auth.token.id, kind: "personal-token" } as const)
-        : ({ id: auth.apiKey.id, kind: "api-key" } as const);
+        ? ({ id: auth.token.id, kind: "personal-token", ownerId: auth.user.id } as const)
+        : ({ id: auth.apiKey.id, kind: "api-key", ownerId: auth.project.ownerId } as const);
     const limit = await checkRateLimit(req, identity);
     return limit.success
       ? { auth, headers: limit.headers }
@@ -84,22 +80,6 @@ async function requireAuth(req: Request): Promise<AuthResult> {
       }),
     };
   }
-}
-
-// An OAuth-authenticated POST /me/tokens is the PKCE login exchange for a
-// long-lived personal access token.
-function isOauthExchangeRequest(method: string, path: string[], req: Request) {
-  if (method !== "POST" || path[0] !== "me" || path[1] !== "tokens" || path.length !== 2) {
-    return false;
-  }
-  const header = req.headers.get("authorization")?.trim() ?? "";
-  const token = header.replace(/^bearer\s+/i, "").trim();
-  return (
-    token.length > 0 &&
-    !token.startsWith(PERSONAL_TOKEN_PREFIX) &&
-    !token.startsWith(PROJECT_API_KEY_PREFIX) &&
-    !LEGACY_BEARER_PREFIXES.some((prefix) => token.startsWith(prefix))
-  );
 }
 
 function projectReadOnlyResponse(headers: Headers, url: URL) {
@@ -124,6 +104,7 @@ async function dispatchApiRequest(
   req: Request,
   contextOrPath?: RouteContext | string[],
   preauthenticated?: PreauthenticatedApiRequest,
+  mcp = false,
 ) {
   const path = Array.isArray(contextOrPath) ? contextOrPath : await pathFromContext(contextOrPath);
   const method = req.method.toUpperCase();
@@ -153,12 +134,13 @@ async function dispatchApiRequest(
 
   const authResult = preauthenticated
     ? { auth: preauthenticated.auth, headers: preauthenticated.headers ?? new Headers() }
-    : await requireAuth(req);
+    : await requireAuth(req, mcp);
   if ("response" in authResult) {
     return authResult.response;
   }
 
   const { auth } = authResult;
+  const activity = recordApiSeen(auth, mcp);
   if (auth.kind === "project_key" && isPersonalTokenOnlyRoute(path)) {
     return errorResponse("not_found", "This route requires a personal access token.", 404, {
       headers: authResult.headers,
@@ -170,11 +152,8 @@ async function dispatchApiRequest(
   }
   const reauth = recentAppAuthenticationResponse(auth, method, path, authResult.headers, url);
   if (reauth) return reauth;
-  const requiredScope = appRequiredScope(
-    auth,
-    declaredOperation.operationId,
-    await scopeToEnforce(declaredOperation, req, url),
-  );
+  const operationScope = await scopeToEnforce(declaredOperation, req, url);
+  const requiredScope = appRequiredScope(auth, declaredOperation.operationId, operationScope);
   if (method === "GET" && path[0] === "locations" && path[1] === "search" && path.length === 2) {
     const scopes = auth.kind === "personal_token" ? auth.token.scopes : auth.apiKey.scopes;
     if (!hasScope(scopes, requiredScope)) {
@@ -204,6 +183,7 @@ async function dispatchApiRequest(
           auth,
           headers: authResult.headers,
           method,
+          onSuccess: () => recordApiAction(activity, method, declaredOperation, operationScope),
           path,
           req,
           url,
@@ -276,6 +256,11 @@ async function dispatchApiRequest(
       const response = await withPracticeRequest(ctx, declaredOperation.operationId, () =>
         dispatchRoute(ctx, declaredOperation.operationId),
       );
+      if (response?.ok) {
+        recordApiAction(activity, method, declaredOperation, operationScope);
+        const recipientId = actorId ?? projectAuth.project.ownerId ?? null;
+        recordApiResultReceipt(response, recipientId, mcp);
+      }
       return response ?? routeNotFound({ headers: ctx.headers, instance: ctx.instance });
     } catch (error) {
       const details = await apiAdmissionErrorDetails(error, ctx);
@@ -297,8 +282,12 @@ async function dispatchApiRequest(
       );
 }
 
-export function handleApiRequest(req: Request, contextOrPath?: RouteContext | string[]) {
-  return dispatchApiRequest(req, contextOrPath);
+export function handleApiRequest(
+  req: Request,
+  contextOrPath?: RouteContext | string[],
+  mcp = false,
+) {
+  return dispatchApiRequest(req, contextOrPath, undefined, mcp);
 }
 
 export function handleMcpPreauthenticatedApiRequest(
@@ -306,5 +295,5 @@ export function handleMcpPreauthenticatedApiRequest(
   path: string[],
   preauthenticated: PreauthenticatedApiRequest,
 ) {
-  return dispatchApiRequest(req, path, preauthenticated);
+  return dispatchApiRequest(req, path, preauthenticated, true);
 }

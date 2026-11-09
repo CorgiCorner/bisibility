@@ -14,6 +14,7 @@ import {
 } from "./prompt-research-fixtures";
 
 const lookup = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/capacity/client-actions", () => ({ trackPromptResearchAction: vi.fn() }));
 vi.mock("@/lib/actions/prompt-research", () => ({ lookupPromptResearchAction: lookup }));
 const noSource = { ok: false as const, reason: "no_source" as const, message: "No source" };
 function view({

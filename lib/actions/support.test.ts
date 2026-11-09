@@ -6,7 +6,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { getSupportWidgetPayload: mocks.getSupportWidgetPayload },
+  appExtensions: {
+    guardAccountSurface: vi.fn().mockResolvedValue(undefined),
+    renderAccountDeletionSlot: async (children: unknown) => children,
+    getSupportWidgetPayload: mocks.getSupportWidgetPayload,
+  },
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 

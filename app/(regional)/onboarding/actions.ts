@@ -1,4 +1,11 @@
 "use server";
+import {
+  type CapacityFailure,
+  capacityActionServer,
+  withCapacityFailure,
+} from "@/lib/capacity/action";
+
+const createProject = capacityActionServer(createProjectCapacityAction);
 
 import {
   getActionActor,
@@ -6,7 +13,7 @@ import {
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
-import { createProject } from "@/lib/actions/project";
+import { createProject as createProjectCapacityAction } from "@/lib/actions/project";
 import { reconcileProjectMarkets } from "@/lib/actions/project-markets";
 import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { ProjectLimitExceededError } from "@/lib/api/resource-limits";
@@ -49,27 +56,29 @@ export async function deriveOnboardingWebsite(input: OnboardingWebsiteInput) {
 
 export async function createOnboardingProject(
   input: unknown,
-): Promise<CreateOnboardingProjectResult> {
-  const data = parseActionInput(createOnboardingProjectSchema, input);
-  const actor = await getActionActor();
-  const timezone = normalizeProjectTimezone(data.timezone);
-  const identity = websiteProjectIdentity(data.website);
-  let project: Awaited<ReturnType<typeof createProject>>;
-  try {
-    project = await createProject({
-      ...identity,
-      defaults: { frequency: DEFAULT_ONBOARDING_FREQUENCY, timezone },
+): Promise<CreateOnboardingProjectResult | CapacityFailure> {
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(createOnboardingProjectSchema, input);
+    const actor = await getActionActor();
+    const timezone = normalizeProjectTimezone(data.timezone);
+    const identity = websiteProjectIdentity(data.website);
+    let project: Awaited<ReturnType<typeof createProject>>;
+    try {
+      project = await createProject({
+        ...identity,
+        defaults: { frequency: DEFAULT_ONBOARDING_FREQUENCY, timezone },
+      });
+    } catch (error) {
+      if (!(error instanceof ProjectLimitExceededError)) throw error;
+      return { ok: false, error: { code: "PROJECT_LIMIT_REACHED", limit: error.limit } };
+    }
+    await trackServerEvent("onboarding_project_created", {
+      consent: await readConsentFromCookies(),
+      userId: actor.id,
+      properties: { frequency: DEFAULT_ONBOARDING_FREQUENCY },
     });
-  } catch (error) {
-    if (!(error instanceof ProjectLimitExceededError)) throw error;
-    return { ok: false, error: { code: "PROJECT_LIMIT_REACHED", limit: error.limit } };
-  }
-  await trackServerEvent("onboarding_project_created", {
-    consent: await readConsentFromCookies(),
-    userId: actor.id,
-    properties: { frequency: DEFAULT_ONBOARDING_FREQUENCY },
+    return { ok: true, project: { ...project, timezone } };
   });
-  return { ok: true, project: { ...project, timezone } };
 }
 
 /** Stores the location-language pairs selected in onboarding's MarketPicker. */

@@ -13,7 +13,7 @@ import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import {
-  VISIBILITY_DEFINITION_VERSION_V1,
+  VISIBILITY_DEFINITION_VERSION_V2,
   VISIBILITY_METRIC_ID_V1,
 } from "@/lib/visibility/definition";
 import { useFormatter, useTranslations } from "next-intl";
@@ -212,7 +212,7 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
                 <span className="-my-2.5 inline-flex">
                   <LocalizedMeasurementHelp
                     metricId={VISIBILITY_METRIC_ID_V1}
-                    definitionVersion={VISIBILITY_DEFINITION_VERSION_V1}
+                    definitionVersion={VISIBILITY_DEFINITION_VERSION_V2}
                   />
                 </span>
               ) : kpi.id === "averagePosition" ? (

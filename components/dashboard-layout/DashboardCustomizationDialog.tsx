@@ -32,7 +32,7 @@ export function DashboardCustomizationDialog({
       dismissDisabled={locked}
       onClose={onClose}
       onExited={editor.onClosedFocusReturn}
-      contentClassName="space-y-4"
+      contentClassName="space-y-3 py-3 sm:space-y-4 sm:py-4.5"
     >
       {dirtyNotice}
       {recovery}

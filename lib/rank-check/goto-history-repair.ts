@@ -241,13 +241,18 @@ async function repairOne(
       stored ??
       (taskId ? await fetchDataForSeoQueuedResult(credentials, taskId).catch(() => null) : null);
     if (!body) return null;
-    return decideGotoHistoryBody({
+    const result = await decideGotoHistoryBody({
       body,
       depth,
       domain,
       expectedTaskId: taskId,
       transport: dataForSeoRedirectTransport(credentials, 15_000),
     });
+    return {
+      ...result,
+      providerResponse:
+        typeof body === "object" && body !== null && "tasks" in body ? body : undefined,
+    };
   });
   if (!decided) return "source_lookup_failed";
   if (decided.reason && decided.reason !== "indeterminate") return decided.reason;
@@ -275,7 +280,11 @@ async function repairOne(
       const restored = await retainHistoricalGotoResult(
         tx,
         current.check,
-        { decision: decided.decision, resolution: decided.resolution },
+        {
+          decision: decided.decision,
+          resolution: decided.resolution,
+          providerResponse: decided.providerResponse,
+        },
         now,
       );
       return restored ? "restored" : "restore_rejected";

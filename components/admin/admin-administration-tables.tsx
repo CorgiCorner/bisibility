@@ -3,7 +3,7 @@
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
-import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
+import type { InstanceAdminAdministration } from "@/lib/instance-admin/administration-types";
 import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 

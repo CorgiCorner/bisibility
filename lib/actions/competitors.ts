@@ -1,5 +1,6 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import {
   addManagedCompetitorFor,
   removeManagedCompetitorFor,
@@ -13,19 +14,36 @@ import {
 import { getActionActor, parseActionInput } from "./_shared";
 
 export async function addManagedCompetitor(input: unknown) {
-  const data = parseActionInput(addManagedCompetitorSchema, input);
-  const actor = await getActionActor();
-  return addManagedCompetitorFor(data, { actor, auditActorId: actor.id });
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(addManagedCompetitorSchema, input);
+    const actor = await getActionActor();
+    const actionResult = await addManagedCompetitorFor(
+      data,
+      { actor, auditActorId: actor.id },
+      () => recordAppAction(actor),
+    );
+    return actionResult;
+  });
 }
 
 export async function renameManagedCompetitor(input: unknown) {
   const data = parseActionInput(renameManagedCompetitorSchema, input);
   const actor = await getActionActor();
-  return renameManagedCompetitorFor(data, { actor, auditActorId: actor.id });
+  const actionResult = await renameManagedCompetitorFor(
+    data,
+    { actor, auditActorId: actor.id },
+    () => recordAppAction(actor),
+  );
+  return actionResult;
 }
 
 export async function removeManagedCompetitor(input: unknown) {
   const data = parseActionInput(removeManagedCompetitorSchema, input);
   const actor = await getActionActor();
-  return removeManagedCompetitorFor(data, { actor, auditActorId: actor.id });
+  const actionResult = await removeManagedCompetitorFor(
+    data,
+    { actor, auditActorId: actor.id },
+    () => recordAppAction(actor),
+  );
+  return actionResult;
 }

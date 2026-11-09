@@ -56,7 +56,7 @@ function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
       {buckets.map((bucket) => {
         const x = xScale(bucket.label);
         const y = yScale(bucket.count);
-        return x === undefined || y === undefined ? null : (
+        return bucket.count === 0 || x === undefined || y === undefined ? null : (
           <text
             key={bucket.label}
             x={x}
@@ -183,7 +183,8 @@ export function PositionDistributionCard({
                   axisLine={false}
                   tickLine={false}
                   tick={axisTextStyle}
-                  height={28}
+                  height={36}
+                  tickMargin={10}
                   interval={0}
                 />
                 <YAxis domain={[0, max]} hide />

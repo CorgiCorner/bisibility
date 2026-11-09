@@ -49,7 +49,7 @@ hand.
 
 | Variable | Purpose |
 | - | - |
-| `ADMIN_REQUIRE_TWO_FACTOR` | Dangerous instance-admin actions require enabled two-factor authentication by default. Self-host operators can set `false` to opt out; this weakens protection for credentials, account access and data changes. Cloud always enforces the gate. No per-action authenticator code is requested. |
+| `ADMIN_REQUIRE_TWO_FACTOR` | Dangerous instance-admin actions require enabled two-factor authentication by default. Self-host operators can set `false` to opt out; this weakens protection for credentials, account access and data changes. No per-action authenticator code is requested. |
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
 | `READ_ONLY_DEMO` | Set to `1` only on a separate, sanitized demo installation. Enables one-click access to one existing viewer account, locks account changes, and disables email delivery. Never combine with fixed-OTP flags. |
@@ -82,9 +82,9 @@ hand.
 | - | - |
 | `EMAIL_PROVIDER` | Transactional email provider: `resend`, `ses`, or `smtp`. Required for any email delivery. Setup guide: [Email delivery](/self-hosting/email). |
 | `EMAIL_FROM` | Verified sender for account sign-in and notification email. |
+| `EMAIL_FOUNDER_FROM` | Optional sender and reply-to address for welcome and email-change notices. Falls back to `EMAIL_FROM`. |
+| `EMAIL_FOUNDER_NAME` | Optional founder name in welcome-email copy and signatures. When unset, the signature uses the team name. |
 | `EMAIL_ALERTS_FROM` | Optional dedicated sender for ranking alerts. Falls back to `EMAIL_FROM`. |
-| `EMAIL_FOUNDER_FROM` | Optional sender identity for the Cloud-mode welcome email sequence. Falls back to `EMAIL_FROM`. |
-| `EMAIL_FOUNDER_NAME` | Optional founder name used in Cloud-mode welcome email copy and signatures. When unset, neutral team wording is used. |
 | `EMAIL_DAILY_BUDGET_TRANSACTIONAL` | Per-recipient UTC-day budget for sign-in codes, team invites, and waitlist notifications. Defaults to `1000`. |
 | `EMAIL_DAILY_BUDGET_BULK` | Independent per-recipient UTC-day budget for alert email and weekly reports. Defaults to `1000`. |
 | `RESEND_API_KEY` | Resend API key; required when `EMAIL_PROVIDER=resend`. |
@@ -152,8 +152,8 @@ hand.
 | `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
 | `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
-| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
-| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. |
 | `DSH_PLUGIN_MIN_VERSION` | Optional minimum version, as `X.Y.Z`, of the Bisibility plugin for DeepSeek Harness that the MCP endpoint accepts. Unset means no floor. An older plugin receives HTTP `426` with the minimum version and the plugin market link. Plugin `0.1.0` sends no version, so while a floor is set an OAuth client registered as `DeepSeek Harness` without a version counts as `0.1.0`. A value that is not `X.Y.Z` turns the floor off and logs a warning. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
@@ -191,7 +191,6 @@ provider limits or financial checks.
 | `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests on request-rendered login and app pages, including project and competitor tiles. Recreate the app container after changing it; published self-host images require no rebuild. Custom prerendered pages retain their build-time setting until rebuilt. |
 | `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and marketing brand logos only. Project and competitor tiles do not use it. |
 | `NEXT_PUBLIC_PLAUSIBLE_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional privacy-first site analytics. Set both values to load the tracker; the Stats API token is server-side only. |
-| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Optional consent-gated product analytics and setup replays. Set the key and the EU Cloud host to enable it; leave the key unset to disable the provider and consent banner. See [Product analytics](/self-hosting/analytics). |
 | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
 | `GITHUB_API_TOKEN` | Optional server-side token for authenticated GitHub repository metadata requests. The repository link remains visible when this is unset or GitHub is unavailable. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
@@ -299,7 +298,7 @@ values for the operator record. App reads refresh within about 60 seconds.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `ACHIEVEMENTS_ENABLED` | Off in self-hosting | Set `true` to offer personal activity streaks and seven-day badges. Cloud enables them by default. |
+| `ACHIEVEMENTS_ENABLED` | Off in self-hosting | Set `true` to offer personal activity streaks and seven-day badges. |
 | `ACHIEVEMENTS_EMAIL_ENABLED` | Off in self-hosting | Set `true` to allow milestone emails through the configured mail transport. Set `SITE_URL` to this installation's public application origin. |
 
 Account > Activity shows separate visit and practice streaks. A signed-in visible

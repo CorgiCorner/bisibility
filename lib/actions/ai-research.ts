@@ -1,5 +1,6 @@
 "use server";
 import { recordQualifiedUse } from "@/lib/achievements/record-use";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { listAgentReports } from "@/lib/agent-reports/service";
 import { getAiResearchCatalog, getPromptEngineOptions } from "@/lib/ai-research/catalog-service";
 import { aiHistoryPayments } from "@/lib/ai-research/history-payment";
@@ -28,12 +29,15 @@ export async function analyzeAiResearchAction(
       { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
       { ...data, require_payment: !data.estimate_only },
     );
+    if (result?.ok && !result.estimate && !result.cached && !data.estimate_only)
+      recordAppAction(actor);
     recordQualifiedUse({
       actorId: actor.id,
       operation: "runAiResearch",
       estimate: data.estimate_only,
       success: result != null && result.ok !== false,
     });
+
     return result;
   } catch (error) {
     const budget = budgetFailureResult(error);

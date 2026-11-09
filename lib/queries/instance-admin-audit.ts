@@ -72,7 +72,9 @@ function decodeAuditCursor(cursor: string | null | undefined) {
 export async function getInstanceAdminAuditPage({
   cursor,
   filter: rawFilter,
+  operationsOnly = false,
 }: {
+  operationsOnly?: boolean;
   cursor?: string | null;
   filter?: string | null;
 } = {}): Promise<InstanceAdminAuditPage> {
@@ -84,7 +86,17 @@ export async function getInstanceAdminAuditPage({
   const filter = normalizeFilter(rawFilter);
   const actionPrefix = ACTION_PREFIX_BY_FILTER[filter];
   const decodedCursor = decodeAuditCursor(cursor);
-  const actionWhere = { action: { startsWith: actionPrefix } };
+  const actionWhere =
+    operationsOnly && (filter === "all" || filter === "ops")
+      ? {
+          OR: [
+            ...(filter === "all" ? ["instance_admin.account_", "instance_admin.first_run_"] : []),
+            "instance_admin.ops_",
+            "instance_admin.mail_settings.",
+            "instance_admin.metering_recovery_",
+          ].map((prefix) => ({ action: { startsWith: prefix } })),
+        }
+      : { action: { startsWith: actionPrefix } };
   const where = decodedCursor
     ? {
         AND: [

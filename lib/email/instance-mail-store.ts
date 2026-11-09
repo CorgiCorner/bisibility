@@ -161,12 +161,15 @@ function auditMailChange(
   );
 }
 
-export async function saveInstanceMailConfig(input: {
-  actorId: string;
-  credentials: InstanceMailCredentialInput | null;
-  provider: EmailProviderId;
-  sender: string;
-}) {
+export async function saveInstanceMailConfig(
+  input: {
+    actorId: string;
+    credentials: InstanceMailCredentialInput | null;
+    provider: EmailProviderId;
+    sender: string;
+  },
+  onCommitted?: () => void,
+) {
   const existing = await prisma.instanceMailConfig.findUnique({
     where: { id: INSTANCE_MAIL_CONFIG_ID },
   });
@@ -202,7 +205,9 @@ export async function saveInstanceMailConfig(input: {
       senderChanged,
     });
   });
+  if (input.credentials !== null || senderChanged) onCommitted?.();
   await refreshInstanceMailRuntime();
+  return input.credentials !== null || senderChanged;
 }
 
 export async function clearInstanceMailConfig(actorId: string) {
@@ -210,7 +215,7 @@ export async function clearInstanceMailConfig(actorId: string) {
     select: { provider: true },
     where: { id: INSTANCE_MAIL_CONFIG_ID },
   });
-  if (!existing) return;
+  if (!existing) return false;
   await prisma.$transaction(async (transaction) => {
     await transaction.instanceMailConfig.delete({ where: { id: INSTANCE_MAIL_CONFIG_ID } });
     await writeAudit(
@@ -226,4 +231,5 @@ export async function clearInstanceMailConfig(actorId: string) {
     );
   });
   setInstanceMailRuntime(null);
+  return true;
 }

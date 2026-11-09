@@ -1,5 +1,4 @@
 "use server";
-
 import { updateDefaultRankCheckSettings } from "./settings";
 
 // Backwards-compatible alias. A direct re-export is illegal in a "use server" file

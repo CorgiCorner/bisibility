@@ -1,3 +1,4 @@
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
 import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
@@ -8,6 +9,7 @@ import {
   readObservedResponse,
 } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
+import { beginProviderTaskset } from "./batch-request-journal";
 import { createProviderRequestJournal } from "./request-journal";
 
 type LedgerRow = Record<string, unknown> & { id: string };
@@ -59,6 +61,42 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("createProviderRequestJournal", () => {
+  it("preserves a weekly queued taskset reservation denial after rolling back evidence", async () => {
+    const ledger = createFakeLedger();
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    testOwnAdmission.reserve.mockRejectedValueOnce(denial);
+    await expect(
+      beginProviderTaskset(ledger.db, [
+        {
+          attribution: attribution(),
+          connectionId: "connection_1",
+          projectId: "project_1",
+          provider: "serpapi",
+          unit: "units",
+          keywordId: "keyword_1",
+        },
+      ]),
+    ).rejects.toBe(denial);
+    expect(ledger.rows).toHaveLength(0);
+  });
+
+  it.each(["reservation", "fence"])("preserves weekly denial at the own-key %s", async (phase) => {
+    const ledger = createFakeLedger();
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    testOwnAdmission[phase === "reservation" ? "reserve" : "fence"].mockRejectedValueOnce(denial);
+    const request = vi.fn();
+    await expect(
+      readObservedResponse({
+        observer: journal(ledger).observer,
+        request,
+        measure: () => successReceipt,
+      }),
+    ).rejects.toBe(denial);
+    expect(request).not.toHaveBeenCalled();
+    expect(ledger.rows).toHaveLength(phase === "reservation" ? 0 : 1);
+    if (phase === "fence") expect(ledger.rows[0]).toMatchObject({ discarded: true });
+  });
+
   it.each(["account_blocked", "accounting_review"] as const)(
     "preserves a %s admission refusal before transport",
     async (reason) => {

@@ -13,9 +13,15 @@ import jaShared from "@/messages/core/ja/shared.json";
 import pl from "@/messages/core/pl/project-dashboard.json";
 import plShared from "@/messages/core/pl/shared.json";
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OverviewContributorsCard } from "./OverviewContributorsCard";
 import { ProjectDashboardMessages } from "./ProjectDashboardMessages";
+
+beforeEach(() => {
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(322);
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+});
+afterEach(() => vi.restoreAllMocks());
 
 function fixture() {
   const keywords: Keyword[] = ["positive", "definition", "absence", "stale"].map((id) => ({
@@ -91,9 +97,7 @@ describe("contributor exclusion explanations", () => {
         expect(row.getByText(labels.excluded)).toBeVisible();
         expect(row.getAllByText(labels.unknown)).toHaveLength(2);
       }
-      expect(
-        screen.getByText(labels.sum.replace("{value}", "100").replace("{delta}", labels.unknown)),
-      ).toBeVisible();
+      expect(screen.getByText(labels.contributionDescription)).toBeVisible();
       expect(JSON.stringify({ report, rows })).toBe(original);
     },
   );

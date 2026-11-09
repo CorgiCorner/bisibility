@@ -1,3 +1,5 @@
+import type { TrackingEnvelope } from "./envelope";
+
 /** The provider transport was never invoked, so zero spend is proved. */
 export class TrackingDispatchDeniedError extends Error {
   constructor(
@@ -18,4 +20,16 @@ export function assertTrackingDeadline(deadline: string, now = Date.now()) {
   const end = Date.parse(deadline);
   if (!Number.isFinite(end) || end <= now) throw new TrackingDeadlineError();
   return end - now;
+}
+
+/** Preserve received evidence when its separate archive write fails. */
+export class TrackingResponseCaptureError extends Error {
+  #envelope: TrackingEnvelope;
+  constructor(envelope: TrackingEnvelope, cause: unknown) {
+    super("Tracking response could not be archived.", { cause });
+    this.#envelope = envelope;
+  }
+  get envelope() {
+    return this.#envelope;
+  }
 }

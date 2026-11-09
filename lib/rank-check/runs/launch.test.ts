@@ -132,7 +132,9 @@ describe("launchRankCheckRun", () => {
     mocks.verifyToken.mockImplementation(() => {
       throw new PreviewTokenError("expired");
     });
-    await expect(launchRankCheckRun(input)).resolves.toEqual(existing);
+    const onCommitted = vi.fn();
+    await expect(launchRankCheckRun(input, { onCommitted })).resolves.toEqual(existing);
+    expect(onCommitted).not.toHaveBeenCalled();
     expect(mocks.resolveSelection).not.toHaveBeenCalled();
     expect(mocks.verifyToken).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
@@ -305,7 +307,9 @@ describe("launchRankCheckRun", () => {
   });
 
   it("creates the run, items, and audit in one bounded transaction", async () => {
-    const launched = await launchRankCheckRun(input);
+    const onCommitted = vi.fn();
+    const launched = await launchRankCheckRun(input, { onCommitted });
+    expect(onCommitted).toHaveBeenCalledOnce();
 
     expect(launched).toMatchObject({
       estimatedCostCents: 50,
@@ -446,7 +450,9 @@ describe("launchRankCheckRun", () => {
         : Promise.reject({ code: "P2002" }),
     );
 
-    await expect(launchRankCheckRun(input)).resolves.toEqual(existing);
+    const onCommitted = vi.fn();
+    await expect(launchRankCheckRun(input, { onCommitted })).resolves.toEqual(existing);
+    expect(onCommitted).not.toHaveBeenCalled();
     expect(mocks.publishWorkerIntent).not.toHaveBeenCalled();
   });
 

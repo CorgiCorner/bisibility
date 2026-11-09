@@ -5,6 +5,7 @@ import {
   deleteAccountRecords,
   LastInstanceAdminDeletionError,
 } from "@/lib/account/account-deletion";
+import { AccountDeletionRestrictedError } from "@/lib/account/account-deletion-restriction";
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
 import { prisma } from "@/lib/db/prisma";
 import { ownProviderKeysRequired } from "@/lib/providers/own-key-policy-extension";
@@ -116,7 +117,10 @@ export async function deleteMe(ctx: PersonalApiContext) {
         problemDetails: { code: error.code },
       });
     }
-    if (error instanceof LastInstanceAdminDeletionError) {
+    if (
+      error instanceof AccountDeletionRestrictedError ||
+      error instanceof LastInstanceAdminDeletionError
+    ) {
       return errorResponse("conflict", error.message, 409, {
         headers: ctx.headers,
         instance: ctx.instance,

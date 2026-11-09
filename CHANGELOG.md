@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.47.0] - 2026-11-09
+
+### Added
+
+- Added SERP Playground with provider comparisons, saved checks, original responses, local results and AI summaries.
+
+- Added instance administration, domain verification, background site audits and typed capacity and subscription errors.
+
+### Changed
+
+- Simplified dashboard customization, keyword details, charts and empty states; separated Runs, Schedules, Providers and Usage.
+
+- Clarified data-source and import settings, search costs and resource limits; fallback providers stay off until enabled.
+
+### Fixed
+
+- Preserved paid task recovery and private response data; fixed admin links, incomplete SERPs and self-hosted plan badges.
+
 ## [0.46.2] - 2026-11-06
 
 ### Added

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { queueAnalyticsDataSynced } from "@/lib/analytics/analytics-data-synced";
 import { prisma } from "@/lib/db/prisma";
 import { notifyProviderNeedsReauth } from "@/lib/notifications/provider-events";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
@@ -34,7 +35,10 @@ import {
 } from "./sync-observability";
 import { loadTrafficConnections, type TrafficConnectionLoadOptions } from "./traffic-connections";
 
-type TrafficSyncOptions = TrafficConnectionLoadOptions;
+type TrafficSyncOptions = TrafficConnectionLoadOptions & {
+  actorId?: string | null;
+  analyticsTrigger?: "manual" | "scheduled" | "api" | "unknown";
+};
 export type TrafficConnectionSkip = {
   provider: string;
   reason: "needs_reauth" | "no_capability" | "rate_limited";
@@ -174,6 +178,20 @@ export async function syncTrafficForProject(
             data: { lastUsedAt: now },
             where: { id: connection.id },
           });
+          if (
+            connection.provider === "gsc" ||
+            connection.provider === "ga4" ||
+            connection.provider === "plausible"
+          ) {
+            queueAnalyticsDataSynced({
+              connectionId: connection.id,
+              projectId,
+              actorId: options.actorId,
+              provider: connection.provider,
+              trigger: options.analyticsTrigger ?? (scheduledFor ? "scheduled" : "unknown"),
+              rowsStored: metrics.rowsUpserted,
+            });
+          }
         }
       } catch (error) {
         errorClass = classifyProviderFailure(error);
@@ -273,6 +291,7 @@ export async function syncTrafficForAllProjects(
         projectId: project.id,
         summary: await syncTrafficForProject(project.id, now, scheduledFor, {
           dailyFirstSyncCutoff,
+          analyticsTrigger: "scheduled",
         }),
       });
     } catch (error) {

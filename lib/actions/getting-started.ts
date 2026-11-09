@@ -1,6 +1,6 @@
 "use server";
-
 import { getActionActor, requireProjectScope } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import type { AcknowledgeGettingStartedResult } from "@/lib/getting-started/acknowledge-result";
 import {
@@ -32,13 +32,21 @@ export async function acknowledgeGettingStarted(
   if (!isSetupComplete(progress.steps)) {
     return { ok: false, reason: "incomplete" };
   }
+  let changed: boolean;
   try {
-    await markSetupAcknowledged(actor.id, projectRef);
+    changed = await markSetupAcknowledged(actor.id, projectRef);
   } catch (error) {
     console.error("[getting-started] Failed to persist setup acknowledgement.", error);
     return { ok: false, reason: "write_failed" };
   }
-  const store = await cookies();
-  store.delete(SETUP_ACKNOWLEDGEMENT_COOKIE);
-  return { ok: true };
+  let committed = changed;
+  try {
+    const store = await cookies();
+    const removedCookie = !!store.get(SETUP_ACKNOWLEDGEMENT_COOKIE);
+    store.delete(SETUP_ACKNOWLEDGEMENT_COOKIE);
+    committed ||= removedCookie;
+    return { ok: true };
+  } finally {
+    if (committed) recordAppAction(actor);
+  }
 }

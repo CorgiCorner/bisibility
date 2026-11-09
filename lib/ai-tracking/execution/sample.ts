@@ -1,11 +1,35 @@
 import type { CostReceipt, SamplePlan } from "@/lib/ai-tracking/contract";
-import { assertTrackingDeadline } from "@/lib/ai-tracking/providers/dispatch-error";
+import {
+  assertTrackingDeadline,
+  TrackingResponseCaptureError,
+} from "@/lib/ai-tracking/providers/dispatch-error";
 import { type TrackingEnvelope, taskOutcome } from "@/lib/ai-tracking/providers/envelope";
 import { normalizeTrackingResponse } from "@/lib/ai-tracking/providers/normalize";
 import { trackingCostReceipt } from "@/lib/ai-tracking/reconciliation/cost";
 import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { TrackingDispatchDeniedError, type TrackingExecutionPorts } from "./ports";
+
+async function preserveReceivedResponse(
+  ports: TrackingExecutionPorts,
+  plan: SamplePlan,
+  error: TrackingResponseCaptureError,
+  expected: "submission_started" | "collecting",
+  ledgerId: string | null,
+  previous?: CostReceipt | null,
+  knownTaskId?: string,
+) {
+  const receipt = trackingCostReceipt({
+    plan,
+    envelope: error.envelope,
+    ledgerId,
+    previous,
+    retrieval: expected === "collecting",
+  });
+  const taskId = error.envelope.tasks?.[0]?.id ?? knownTaskId;
+  if (!(await ports.transition(plan, expected, "submission_unknown", taskId, receipt))) return;
+  await ports.settle(plan, receipt, taskOutcome(error.envelope) === "failed", taskId);
+}
 
 async function finish(
   ports: TrackingExecutionPorts,
@@ -54,6 +78,16 @@ export async function executeTrackingSample(
     try {
       envelope = await ports.collect(plan, sample.providerTaskId);
     } catch (error) {
+      if (error instanceof TrackingResponseCaptureError)
+        await preserveReceivedResponse(
+          ports,
+          plan,
+          error,
+          "collecting",
+          receiptOperationId(sample.receipt),
+          sample.receipt,
+          sample.providerTaskId,
+        );
       await ports.deferPoll?.(plan);
       throw error;
     }
@@ -145,6 +179,10 @@ export async function executeTrackingSample(
   try {
     envelope = await prepared.submit();
   } catch (error) {
+    if (error instanceof TrackingResponseCaptureError) {
+      await preserveReceivedResponse(ports, plan, error, "submission_started", ledgerId);
+      throw error;
+    }
     if (error instanceof TrackingDispatchDeniedError) {
       await prepared.observer.settle(ledgerId, {
         cached: false,

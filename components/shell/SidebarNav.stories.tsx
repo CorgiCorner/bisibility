@@ -56,7 +56,7 @@ export const Collapsed: Story = {
     await expect(canvas.getByText("DATA")).toBeVisible();
     await expect(canvas.getByText("PROJECT")).toBeVisible();
     await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("AI Search")).not.toBeInTheDocument();
+    await expect(canvas.queryByText("AI visibility")).not.toBeInTheDocument();
     await expect(canvas.queryByText("Project")).not.toBeInTheDocument();
 
     // A row drops its visible label and its badge, and the aria-label is the only thing left

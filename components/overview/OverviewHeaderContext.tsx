@@ -5,6 +5,7 @@ import {
   contextSwitcherTriggerClassName,
 } from "@/components/shell/ContextSwitcherTrigger";
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
+import { compactLocationLabel } from "@/lib/i18n/location-label";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { OverviewView } from "./types";
@@ -53,15 +54,18 @@ export function OverviewHeaderContext({
         ariaLabel={t("markets")}
         minSelected={0}
         onChange={changeMarkets}
-        options={options}
+        options={options.map((option) => ({
+          ...option,
+          label: compactLocationLabel(option.label),
+        }))}
         placeholder={t("allMarkets")}
         summary={(markets) => {
           if (markets.length === 0) return t("allMarkets");
-          if (markets.length === 1) return `${markets[0]?.label} / ${markets[0]?.secondary}`;
+          if (markets.length === 1) return `${markets[0]?.label} · ${markets[0]?.secondary}`;
           return t("marketCount", { count: markets.length });
         }}
         trailingIcon={<ContextSwitcherCaret />}
-        triggerClassName={`${contextSwitcherTriggerClassName} max-w-[116px] sm:max-w-[280px]`}
+        triggerClassName={`${contextSwitcherTriggerClassName} max-w-[116px] sm:max-w-[220px]`}
         values={searchParams.getAll("market")}
       />
       <MenuSelect

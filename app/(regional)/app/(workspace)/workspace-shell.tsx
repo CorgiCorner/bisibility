@@ -122,7 +122,8 @@ export async function WorkspaceShell({
   const accountNotice = isDemo
     ? null
     : await renderAccountNoticeExtension({ locale: runtime.locale, projectRef });
-  const planStatus = isDemo ? null : await renderPlanStatusExtension({ userId: session.user.id });
+  const planStatus =
+    isDemo || !isCloud ? null : await renderPlanStatusExtension({ userId: session.user.id });
 
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);

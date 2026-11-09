@@ -468,6 +468,10 @@ describe("analytics REST endpoints", () => {
     });
     expect(JSON.stringify(body)).not.toContain("project_1");
     expect(JSON.stringify(body)).not.toContain("connection_1");
-    expect(mocks.syncNow).toHaveBeenCalledWith({ actorId: "user_1", projectId: "project_1" });
+    expect(mocks.syncNow).toHaveBeenCalledWith({
+      actorId: "user_1",
+      projectId: "project_1",
+      analyticsTrigger: "api",
+    });
   });
 });

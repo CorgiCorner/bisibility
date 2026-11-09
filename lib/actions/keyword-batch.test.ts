@@ -3,6 +3,7 @@ import { createKeywordBatchSet } from "./keyword-batch";
 
 const mocks = vi.hoisted(() => ({
   assertKeywordCapacity: vi.fn(),
+  prepareCapacity: vi.fn(),
   setKeywordCadence: vi.fn(),
   lockKeywordCapacity: vi.fn(),
   makePublicId: vi.fn(),
@@ -10,6 +11,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/capacity/capacity-extension", () => ({
+  prepareResourceCapacity: mocks.prepareCapacity,
+}));
 vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
   setKeywordCadence: mocks.setKeywordCadence,
 }));
@@ -50,39 +54,51 @@ function row(index: number) {
 describe("set-based keyword batch creation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prepareCapacity.mockResolvedValue({ enabled: false, check: vi.fn() });
     mocks.lockKeywordCapacity.mockResolvedValue(null);
     mocks.makePublicId.mockReturnValueOnce("kw_candidate_1").mockReturnValueOnce("kw_candidate_2");
     mocks.seedKeywordDispatchStates.mockResolvedValue(2);
   });
 
-  it("seeds only newly inserted IDs once inside the caller transaction", async () => {
-    const inserted = [stored(1), stored(2)];
-    const client = {
-      $executeRaw: vi.fn(),
-      $queryRaw: vi.fn(),
-      keyword: {
-        createMany: vi.fn(),
-        findMany: vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(inserted),
-      },
-      keywordSchedule: { createMany: vi.fn() },
-      keywordTag: { createMany: vi.fn() },
-      projectMarket: {
-        findMany: vi.fn().mockResolvedValue([]),
-        upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_1" }),
-      },
-      tag: { createMany: vi.fn(), findMany: vi.fn() },
-    };
+  it.each([false, true])(
+    "seeds inserted IDs and preserves operator limits only outside catalog mode (%s)",
+    async (enabled) => {
+      mocks.prepareCapacity.mockResolvedValue({ enabled, check: vi.fn() });
+      mocks.lockKeywordCapacity.mockResolvedValue(1);
+      const inserted = [stored(1), stored(2)];
+      const client = {
+        $executeRaw: vi.fn(),
+        $queryRaw: vi.fn(),
+        keyword: {
+          createMany: vi.fn(),
+          findMany: vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce(inserted),
+        },
+        keywordSchedule: { createMany: vi.fn() },
+        keywordTag: { createMany: vi.fn() },
+        projectMarket: {
+          findMany: vi.fn().mockResolvedValue([]),
+          upsert: vi.fn().mockResolvedValue({ publicId: "pmkt_1" }),
+        },
+        tag: { createMany: vi.fn(), findMany: vi.fn() },
+      };
 
-    const result = await createKeywordBatchSet(client as never, "project_1", [row(1), row(2)]);
+      const result = await createKeywordBatchSet(client as never, "project_1", [row(1), row(2)]);
 
-    expect(result.created).toEqual(inserted);
-    expect(mocks.seedKeywordDispatchStates).toHaveBeenCalledOnce();
-    expect(mocks.seedKeywordDispatchStates).toHaveBeenCalledWith(
-      ["keyword_1", "keyword_2"],
-      {},
-      client,
-    );
-  });
+      expect(result.created).toEqual(inserted);
+      expect(mocks.assertKeywordCapacity).toHaveBeenCalledWith(
+        client,
+        "project_1",
+        2,
+        enabled ? 0 : 1,
+      );
+      expect(mocks.seedKeywordDispatchStates).toHaveBeenCalledOnce();
+      expect(mocks.seedKeywordDispatchStates).toHaveBeenCalledWith(
+        ["keyword_1", "keyword_2"],
+        {},
+        client,
+      );
+    },
+  );
 
   it("skips an existing language pair while creating the same keyword in another pair", async () => {
     const existing = { ...stored(1), locationId: "location_es" };

@@ -1,3 +1,4 @@
+import { pruneProviderResponses } from "@/lib/provider-responses/store";
 // This type-only marker is erased for the plain-Node worker but still prevents
 // client bundling.
 import "server-only";
@@ -87,6 +88,7 @@ export async function purgeRankCheckRawPayloadsActivity(
 ): Promise<PurgeRankCheckRawPayloadsActivityExecutionResult> {
   const context = Context.current();
   const progressId = rawPurgeProgressId();
+  await pruneProviderResponses();
   const summary = await purgeRankCheckRawPayloads({
     cutoff: input?.cutoff ? new Date(input.cutoff) : undefined,
     maxBatches: RANK_CHECK_RAW_PURGE_MAX_BATCHES_PER_ACTIVITY,

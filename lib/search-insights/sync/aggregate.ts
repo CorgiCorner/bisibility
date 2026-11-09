@@ -1,5 +1,6 @@
 import "server-only";
 
+import { noteAnalyticsRowsStored } from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import type { GscSearchAnalyticsSession } from "@/lib/providers/analytics/gsc-search-analytics";
 import {
@@ -206,6 +207,7 @@ export async function fetchAggregateRange(input: {
       where: { id: requestAttemptId },
     });
   }
+  noteAnalyticsRowsStored(days.length);
   const firstDataDate = days
     .filter((day) => day.impressions > 0)
     .map((day) => day.date)

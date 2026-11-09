@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { DateDisplayContext } from "@/lib/dates/format";
 import { formatDisplayDateTimeWithSeconds } from "@/lib/dates/format";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { cn } from "@/lib/ui/cn";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -123,7 +123,7 @@ export function Panel({
   title,
 }: Readonly<{ children: ReactNode; description: string; id: string; title: string }>) {
   return (
-    <section aria-labelledby={id} className="min-w-0">
+    <section data-testid={id} aria-labelledby={id} className="min-w-0">
       <Card className="min-w-0" size="lg">
         <SectionTitle id={id}>{title}</SectionTitle>
         <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-fg-muted">{description}</p>

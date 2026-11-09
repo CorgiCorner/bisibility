@@ -13,6 +13,7 @@ vi.mock("@/lib/providers/execution-extension", () => ({
   quoteDeploymentRankReservations: mocks.hostQuote,
 }));
 
+import { quotePlaygroundComparison } from "./playground-quote";
 import { quoteComparison } from "./quote";
 
 function source(fundingSource: "own" | "hosted" = "own") {
@@ -85,7 +86,7 @@ it("one connected provider never silently selects a fallback or starts quoting t
   one.connections = one.connections.filter((item) => item.provider === "dataforseo");
   mocks.source.mockResolvedValue(one);
   await expect(quoteComparison("project", "keyword", new Date())).rejects.toThrow(
-    /Both comparison providers/,
+    /Selected providers/,
   );
 });
 
@@ -98,4 +99,68 @@ it("operational timestamps do not revoke a preview, while semantic configuration
   expect(afterUsage).toEqual(before);
   Object.assign(initial.connections[0], { providerUiRevision: 5n });
   expect(await quoteComparison("project", "keyword", new Date())).not.toEqual(before);
+});
+
+it("quotes only selected playground providers without reading a tracked keyword", async () => {
+  const sourceData = source("hosted");
+  const project = { findUnique: vi.fn().mockResolvedValue({ domain: "example.com" }) };
+  const location = {
+    findUnique: vi
+      .fn()
+      .mockResolvedValue({ id: "location", displayName: "Poland", ...sourceData.location }),
+  };
+  const connection = { findMany: vi.fn().mockResolvedValue(sourceData.connections) };
+  const db = {
+    project,
+    location,
+    providerConnection: connection,
+    keyword: { findFirst: vi.fn().mockResolvedValue(null) },
+  };
+  mocks.hostQuote.mockResolvedValue({ prices: { "serp-playground": "6" } });
+  const result = await quotePlaygroundComparison(
+    "project",
+    { query: "Coffee", locationId: "location", device: "mobile", providers: ["serpapi"] },
+    new Date(),
+    db as never,
+  );
+  expect(result).toMatchObject({ version: 2, keywordId: null, text: "Coffee", device: "mobile" });
+  expect(result.connections.map((side) => side.provider)).toEqual(["serpapi"]);
+  expect(mocks.source).not.toHaveBeenCalled();
+  expect(mocks.hostQuote).toHaveBeenCalledTimes(1);
+  expect(result.connections[0].customerEstimateCents).toBe(6);
+});
+
+it("prices the selected depth and permits explicitly chosen connected fallback without enabling it", async () => {
+  const s = source("hosted");
+  s.connections.forEach((c) => {
+    c.enabled = false;
+  });
+  const db = {
+    project: { findUnique: async () => ({ domain: "example.com" }) },
+    location: {
+      findUnique: async () => ({ id: "location", displayName: "Poland", ...s.location }),
+    },
+    providerConnection: { findMany: async () => s.connections },
+    keyword: { findFirst: async () => null },
+  };
+  mocks.hostQuote.mockResolvedValue({ prices: { "serp-playground": "8" } });
+  const result = await quotePlaygroundComparison(
+    "project",
+    {
+      query: "Coffee",
+      locationId: "location",
+      device: "desktop",
+      providers: ["serpapi"],
+      depth: 100,
+    },
+    new Date(),
+    db as never,
+  );
+  expect(result.depth).toBe(100);
+  expect(result.connections[0].quote.nativeQuantity).toBe(10);
+  expect(mocks.hostQuote).toHaveBeenCalledWith(
+    db,
+    expect.objectContaining({ items: [expect.objectContaining({ estimatedQuantity: "10" })] }),
+  );
+  expect(s.connections.every((c) => !c.enabled)).toBe(true);
 });

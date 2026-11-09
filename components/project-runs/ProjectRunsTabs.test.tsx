@@ -11,7 +11,7 @@ describe("ProjectRunsTabs", () => {
     expect(links.map((link) => link.textContent)).toEqual(["Runs", "Schedules"]);
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/runs",
-      "/app/prj_1/runs/schedules",
+      "/app/prj_1/schedules",
     ]);
     expect(links.filter((link) => link.getAttribute("aria-current") === "page")).toHaveLength(1);
     expect(
@@ -39,7 +39,7 @@ describe("ProjectRunsTabs", () => {
     );
     expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute(
       "href",
-      "/app/prj_1/runs/schedules",
+      "/app/prj_1/schedules",
     );
   });
 });

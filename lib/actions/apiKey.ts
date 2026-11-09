@@ -1,9 +1,11 @@
 "use server";
-
 import { randomBytes } from "node:crypto";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { inheritedApiKeyExpiry, resolveApiKeyExpiry } from "@/lib/api/api-key-policy";
 import { scopesForTier, tierFromScopes } from "@/lib/api/key-scope";
+import { projectCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { writeAudit } from "@/lib/auth/audit";
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId, parsePublicId } from "@/lib/db/public-id";
 import { hashApiKey } from "@/lib/providers/crypto";
@@ -50,6 +52,8 @@ export async function issueApiKey(input: unknown) {
   const data = parseActionInput(issueApiKeySchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "manage", data.projectId, { type: "api_key" });
+  if (!(await projectCapabilityAvailable(project.id, actor.id)))
+    throw new AuthorizationError("forbidden");
   const raw = newRawApiKey();
   const expiresAt = resolveApiKeyExpiry(data.expiresInDays);
   const apiKey = await prisma.apiKey.create({
@@ -64,6 +68,7 @@ export async function issueApiKey(input: unknown) {
     },
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "api_key.issue",
     actorId: actor.id,
@@ -110,6 +115,7 @@ export async function revokeApiKey(input: unknown) {
     where: { id: before.id },
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "api_key.revoke",
     actorId: actor.id,
@@ -128,6 +134,8 @@ export async function regenerateApiKey(input: unknown) {
   const data = parseActionInput(regenerateApiKeySchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "manage", data.projectId, { type: "api_key" });
+  if (!(await projectCapabilityAvailable(project.id, actor.id)))
+    throw new AuthorizationError("forbidden");
   if (parsePublicId(data.apiKeyId)?.prefix !== "key") throw new Error("API key not found.");
   const before = await prisma.apiKey.findFirst({
     where: { projectId: project.id, publicId: data.apiKeyId, revokedAt: null },
@@ -158,6 +166,7 @@ export async function regenerateApiKey(input: unknown) {
     }),
   ]);
 
+  recordAppAction(actor);
   await writeAudit({
     action: "api_key.regenerate",
     actorId: actor.id,

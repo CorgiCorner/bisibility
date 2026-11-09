@@ -7,7 +7,11 @@ import { achievementsEnabled } from "./config";
 import { shareSchema } from "./schema";
 
 const hash = (token: string) => createHash("sha256").update(token).digest("hex");
-export async function setAchievementSharing(userId: string, input: unknown) {
+export async function setAchievementSharing(
+  userId: string,
+  input: unknown,
+  onCommitted?: () => void,
+) {
   const data = shareSchema.parse(input);
   if (!achievementsEnabled() || readDemoConfig().kind !== "disabled")
     return { kind: "disabled" as const };
@@ -16,6 +20,7 @@ export async function setAchievementSharing(userId: string, input: unknown) {
     where: { userId, kind: data.kind, definitionVersion: 1 },
     data: { shareTokenHash: token ? hash(token) : null },
   });
+  if (changed.count > 0) onCommitted?.();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { publicId: true },

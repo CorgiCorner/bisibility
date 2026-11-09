@@ -1,3 +1,4 @@
+import { withContextRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { paymentAdmissionFailure } from "@/lib/action-payment/admission-failure";
 import type { ActionPaymentQuote, ActionPaymentReceipt } from "@/lib/action-payment/contract";
@@ -99,7 +100,7 @@ function success(
   };
 }
 
-export async function fetchRankedKeywords(
+async function fetchRankedKeywordsImpl(
   input: {
     actorId?: string | null;
     connectionId?: string;
@@ -298,3 +299,8 @@ export async function fetchRankedKeywords(
     throw error;
   });
 }
+
+export const fetchRankedKeywords = withContextRequestUsage(
+  "ranked_keywords",
+  fetchRankedKeywordsImpl,
+);

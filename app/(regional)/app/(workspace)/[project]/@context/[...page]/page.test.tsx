@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   overviewMarkets: vi.fn(),
   personalContext: vi.fn(),
 }));
+vi.mock("@/lib/capacity/client-actions", () => ({ addKeywordsMatrix: vi.fn() }));
 vi.mock("@/lib/queries/_auth", () => ({
   resolveProjectAccess: mocks.access,
   requireReadableProject: mocks.readable,

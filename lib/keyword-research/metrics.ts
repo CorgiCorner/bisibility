@@ -1,3 +1,4 @@
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { paymentAdmissionFailure } from "@/lib/action-payment/admission-failure";
 import {
@@ -48,7 +49,7 @@ const emptyMetrics: KeywordMetrics = {
   searchVolume: null,
 };
 
-export async function fetchKeywordMetrics(
+async function fetchKeywordMetricsImpl(
   input: ActionPaymentInput & {
     actorId?: string | null;
     connectionId?: string;
@@ -274,4 +275,17 @@ export async function fetchKeywordMetrics(
     if (failure) return failure;
     throw error;
   });
+}
+
+export function fetchKeywordMetrics(...args: Parameters<typeof fetchKeywordMetricsImpl>) {
+  const input = args[0];
+  return withRequestUsage(
+    {
+      projectId: input.projectId,
+      actorId: input.actorId,
+      source: input.origin.source,
+      feature: "keyword_metrics",
+    },
+    () => fetchKeywordMetricsImpl(...args),
+  );
 }

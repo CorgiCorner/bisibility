@@ -28,6 +28,9 @@ it("saves and clears mail settings without asking for an authenticator code", as
   fireEvent.click(screen.getByRole("button", { name: "Save mail settings" }));
   await waitFor(() => expect(actions.save).toHaveBeenCalledOnce());
   expect(actions.save.mock.calls[0][0]).not.toHaveProperty("code");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Clear saved settings" })).toBeEnabled(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Clear saved settings" }));
   await waitFor(() => expect(actions.clear).toHaveBeenCalledOnce());
   expect(actions.clear.mock.calls[0]).toEqual([]);

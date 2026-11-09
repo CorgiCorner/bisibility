@@ -13,7 +13,7 @@ import { auditRobotsPolicy } from "./robots";
 import type { SiteAuditPage, SiteAuditResult } from "./schema";
 import { auditTarget } from "./target";
 
-function failedPage(url: string, message: string): SiteAuditPage {
+export function failedPage(url: string, message: string): SiteAuditPage {
   return {
     url,
     finalUrl: url,

@@ -1,6 +1,8 @@
 export const VISIBILITY_HORIZON = 20;
 export const VISIBILITY_METRIC_ID_V1 = "visibility_top20";
 export const VISIBILITY_DEFINITION_VERSION_V1 = "visibility-top20-v1";
+// V2 changes qualification only: the score curve and Top 20 horizon stay frozen.
+export const VISIBILITY_DEFINITION_VERSION_V2 = "visibility-top20-v2";
 
 // Frozen on 2026-09-01. The original source is unrecorded and predates commit 082311834.
 // Only ratios to entry zero affect the score, so rescaling the whole curve is a no-op.
@@ -15,12 +17,12 @@ export const VISIBILITY_DESCRIPTION =
   "Visibility measures volume-weighted ranking strength in Google's Top 20. 100 means every measured keyword ranks #1. Rankings below #20 do not add Visibility. Shallow or failed checks are not treated as lost rankings.";
 
 export const VISIBILITY_SHALLOW_CHECK_COPY =
-  "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.";
+  "Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown.";
 
 export const VISIBILITY_UNKNOWN_DEPTH_COPY =
   "Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total.";
 
-export const VISIBILITY_REQUIRED_DEPTH_COPY = `Visibility requires a known requested depth of at least ${VISIBILITY_HORIZON}.`;
+export const VISIBILITY_REQUIRED_DEPTH_COPY = `A confirmed position within the requested depth can update Visibility. Proving absence requires coverage through position 20.`;
 
 export function visibilityUnknownDepthImportCopy(count: number) {
   const noun = count === 1 ? "row has" : "rows have";

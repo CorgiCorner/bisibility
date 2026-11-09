@@ -18,6 +18,7 @@ import { launchDuePlannedRuns, launchPlannedRun } from "./launch-due";
 import { materializePlannedRun } from "./materialize";
 
 const mocks = vi.hoisted(() => ({
+  operationAccess: vi.fn(),
   activeLocationIds: ["location_active"],
   archived: new Set<string>(),
   assertBudget: vi.fn(),
@@ -47,6 +48,9 @@ const mocks = vi.hoisted(() => ({
   updateMany: vi.fn(),
 }));
 
+vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccess: mocks.operationAccess,
+}));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/notifications/events", () => ({ notifyScheduleBlocked: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
@@ -717,5 +721,24 @@ describe("planned run launching", () => {
       }),
     );
     expect(mocks.status.get("run_1")).toBe("completed");
+  });
+  it("records a skipped weekly-cap occurrence without provider work", async () => {
+    const { WeeklyRequestCapError } = await import("@/lib/operations/weekly-request-error");
+    mocks.status.set("run_1", "planned");
+    mocks.members.set("run_1", [{ id: "keyword_1" }]);
+    mocks.operationAccess.mockRejectedValueOnce(new WeeklyRequestCapError("2026-09-03T00:00:00Z"));
+    const now = new Date("2026-09-02T08:00:00Z");
+    await materializePlannedRun("run_1", now);
+    expect(mocks.txUpdateMany).toHaveBeenCalledWith({
+      where: { id: "run_1", status: "planned" },
+      data: {
+        blockedReason: "weekly_request_cap_reached",
+        status: "completed",
+        outcome: "deferred",
+        finishedAt: now,
+      },
+    });
+    expect(mocks.createMany).not.toHaveBeenCalled();
+    expect(mocks.loadChain).not.toHaveBeenCalled();
   });
 });

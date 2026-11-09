@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   entries: [] as Array<Record<string, unknown>>,
   ledger: [] as Array<{ costCents: number; failed: boolean }>,
   prisma: {
+    providerResponseCapture: { create: vi.fn(async () => ({})) },
     meteringUsageEvidence: undefined as unknown as ReturnType<
       typeof byokTestEvidence
     >["meteringUsageEvidence"],

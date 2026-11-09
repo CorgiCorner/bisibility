@@ -20,7 +20,14 @@ export function getTrackingRun(projectId: string, runId: string) {
     },
   });
 }
-export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) {
+type PlannedTrackingRun = Prisma.AiTrackingRunGetPayload<{ include: { samples: true } }> & {
+  replayed?: boolean;
+};
+
+export function planTrackingRun(
+  projectId: string,
+  input: PlanTrackingRunInput,
+): Promise<PlannedTrackingRun> {
   const parsed = planTrackingRunSchema.parse(input);
   const data = {
     ...parsed,
@@ -46,7 +53,7 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
     if (prior) {
       if (prior.payloadHash !== hash)
         throw new Error("Idempotency key is bound to a different tracking payload.");
-      return prior;
+      return { ...prior, replayed: true };
     }
     requireFound(
       await tx.providerConnection.findFirst({
@@ -74,7 +81,7 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
       if (occurrence) {
         if (occurrence.payloadHash !== hash)
           throw new Error("Schedule occurrence is bound to a different tracking payload.");
-        return occurrence;
+        return { ...occurrence, replayed: true };
       }
     }
     if (data.retryOfRunId) {
@@ -219,7 +226,10 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
     });
   });
 }
-export function cancelTrackingRun(projectId: string, runId: string) {
+export function cancelTrackingRun(
+  projectId: string,
+  runId: string,
+): Promise<Prisma.AiTrackingRunGetPayload<{}> & { replayed?: boolean }> {
   return prisma.$transaction(async (tx) => {
     await lockTrackingProject(tx, projectId);
     const run = requireFound(
@@ -228,7 +238,7 @@ export function cancelTrackingRun(projectId: string, runId: string) {
       }),
       "Run",
     );
-    if (!["planned", "running"].includes(run.state)) return run;
+    if (!["planned", "running"].includes(run.state)) return { ...run, replayed: true };
     await tx.aiTrackingSample.updateMany({
       where: { projectId, runId: run.id, dispatch: { in: ["planned", "claimed"] } },
       data: { dispatch: "terminal", measurement: "unavailable", finishedAt: new Date() },

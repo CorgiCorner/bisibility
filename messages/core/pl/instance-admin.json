@@ -1,18 +1,56 @@
 {
   "instanceAdmin": {
     "shell": {
+      "status": "Status",
+      "accounts": "Konta",
+      "viewNavigation": "Widoki: {tab}",
+      "summary": "Podsumowanie",
+      "ledger": "Rejestr",
+      "budgets": "Budżety",
+      "meteringView": "Pomiar użycia",
+      "aiEngine": "Silnik AI",
+      "announcements": "Komunikaty",
+      "refreshData": "Odśwież dane",
+      "refreshing": "Odświeżanie",
+      "refreshed": "Odświeżono {time}",
+      "previewDescription": "Administracja instancją i informacje operacyjne",
       "context": "Administrator instancji",
       "backToApp": "Wróć do aplikacji",
       "title": "Administracja instancją",
-      "description": "Diagnostyka operacyjna całej instancji. Dane klientów są reprezentowane wyłącznie przez identyfikatory."
+      "description": "Diagnostyka operacyjna całej instancji. Dane klientów są reprezentowane wyłącznie przez identyfikatory.",
+      "settings": "Ustawienia",
+      "sendingToday": "Wysyłanie dzisiaj",
+      "worker": "Proces roboczy",
+      "checks": "Sprawdzenia",
+      "dataSources": "Źródła danych",
+      "tasks": "Zadania",
+      "notifications": "Powiadomienia",
+      "journey": "Ścieżka",
+      "retention": "Retencja",
+      "survey": "Ankieta",
+      "signups": "Rejestracje",
+      "subscriptions": "Subskrypcje",
+      "trials": "Okresy próbne",
+      "credits": "Kredyty",
+      "billing": "Rozliczenia",
+      "hostedProviders": "Dostawcy zarządzani",
+      "providerCredits": "Kredyty dostawców",
+      "analyticsExclusions": "Wykluczenia analityki",
+      "accountingHealth": "Stan rozliczeń"
     },
     "navigation": {
+      "overview": "Przegląd",
+      "usageCosts": "Zużycie i koszty",
+      "settings": "Ustawienia",
       "instance": "Instancja",
       "label": "Sekcje administracji instancją",
       "operations": "Operacje",
       "administration": "Administracja",
       "audit": "Dziennik audytu",
-      "metering": "Pomiar użycia"
+      "metering": "Pomiar użycia",
+      "users": "Użytkownicy",
+      "revenue": "Przychody",
+      "email": "Poczta"
     },
     "controls": {
       "refresh": "Odśwież",
@@ -61,9 +99,9 @@
     },
     "shellHealth": {
       "label": "Kondycja operacji",
-      "worker": "Worker: {status}",
-      "workerUnknownHint": "Aplikacja działa, ale osobny proces workera nie opublikował świeżego pulsu. Sam proces strony nie uruchamia workera.",
-      "workerUnknownDocs": "Jak uruchomić workera",
+      "worker": "Proces roboczy: {status}",
+      "workerUnknownHint": "Aplikacja działa, ale osobny proces procesu roboczego nie opublikował świeżego pulsu. Sam proces strony nie uruchamia procesu roboczego.",
+      "workerUnknownDocs": "Jak uruchomić procesu roboczego",
       "checks": "Sprawdzenia: {value, number, ::.0}% nieudanych",
       "checksUnknown": "Sprawdzenia: nieznane",
       "provider": "{provider}: {value, number, ::.0}% nieudanych",
@@ -81,10 +119,12 @@
       "lagP95": "Opóźnienie p95"
     },
     "dashboard": {
+      "timeZone": "Czasy w strefie {timeZone}",
       "rankChecks": {
         "title": "Sprawdzenia pozycji",
         "description": "Łączna liczba wykonań oraz opóźnienie między planem a startem. Odroczone wiersze nigdy nie liczą się jako udane.",
         "unavailable": "Diagnostyka sprawdzeń pozycji jest niedostępna.",
+        "statusLabel": "Sprawdzenia pozycji (24 godz.)",
         "last24Hours": "Ostatnie 24 godziny",
         "last7Days": "Ostatnie 7 dni",
         "failures": "Niepowodzenia (24 godz.)",
@@ -116,7 +156,7 @@
         "skippedOverlap": "Poprzedni przebieg trwał",
         "inspectionErrors": "Błędy inspekcji",
         "nextAction": "Następna akcja",
-        "snapshotUnavailable": "Zrzut niedostępny – worker nie opublikował danych Temporal. Wartości powyżej są nieznane, a nie zerowe.",
+        "snapshotUnavailable": "Zrzut niedostępny – proces roboczy nie opublikował danych Temporal. Wartości powyżej są nieznane, a nie zerowe.",
         "disabled": "Harmonogramy Temporal są wyłączone w tej topologii.",
         "snapshotStale": "Nieaktualny zrzut Temporal",
         "historyTitle": "Historia harmonogramów",
@@ -155,6 +195,7 @@
         "title": "Statystyki instancji",
         "description": "Liczniki instancji i zużycie dostawców we wszystkich projektach i typach operacji. Wybierz okres zużycia poniżej.",
         "unavailable": "Statystyki instancji są niedostępne.",
+        "providerUsageTitle": "Referencyjne zużycie dostawców",
         "users": "Użytkownicy",
         "projects": "Projekty",
         "keywords": "Słowa kluczowe",
@@ -180,10 +221,10 @@
       }
     },
     "worker": {
-      "title": "Worker",
-      "description": "Sygnał życia workera, tożsamość wdrożenia, zgodność schematu bazy danych i konfiguracja dostarczania do usługi Slack.",
-      "unavailable": "Diagnostyka workera jest niedostępna.",
-      "disabled": "Worker harmonogramu jest wyłączony w tej topologii.",
+      "title": "Proces roboczy",
+      "description": "Sygnał życia procesu roboczego, tożsamość wdrożenia, zgodność schematu bazy danych i konfiguracja dostarczania do usługi Slack.",
+      "unavailable": "Diagnostyka procesu roboczego jest niedostępna.",
+      "disabled": "Proces roboczy harmonogramu jest wyłączony w tej topologii.",
       "status": "Status",
       "lastHeartbeat": "Ostatni sygnał życia",
       "release": "Wydanie",
@@ -194,8 +235,8 @@
       "appliedMigration": "Zastosowana migracja",
       "slackOps": "Operacje w usłudze Slack",
       "schemaInSync": "Zsynchronizowany",
-      "schemaWorkerBehind": "Worker w tyle",
-      "schemaWorkerAhead": "Worker wyprzedza"
+      "schemaWorkerBehind": "Proces roboczy w tyle",
+      "schemaWorkerAhead": "Proces roboczy wyprzedza"
     },
     "failureBreakdown": {
       "empty": "Brak nieudanych sprawdzeń pozycji w ostatnich 24 godzinach.",
@@ -213,7 +254,7 @@
     },
     "providerHealth": {
       "empty": "Brak połączonych źródeł analitycznych.",
-      "ok": "ok {count, number}",
+      "ok": "poprawne {count, number}",
       "stale": "nieaktualne {count, number}",
       "failed": "nieudane {count, number}",
       "notRun": "nieuruchomione {count, number}",
@@ -250,7 +291,8 @@
     "administration": {
       "growth": {
         "title": "Wzrost",
-        "description": "Agregaty z 30 dni UTC. Bez analityki behawioralnej i bez treści klientów.",
+        "description": "Ostatnie 30 dni",
+        "utcNote": "Dni w UTC",
         "users": "Użytkownicy",
         "projects": "Projekty",
         "keywords": "Słowa kluczowe",
@@ -305,7 +347,7 @@
           "sesAccessKeyId": "Identyfikator klucza dostępu",
           "sesSecretAccessKey": "Tajny klucz dostępu",
           "sesKeysHint": "Opcjonalne. Zostaw oba pola puste, aby użyć domyślnego łańcucha poświadczeń serwera.",
-          "smtpHost": "Host",
+          "smtpHost": "Serwer",
           "smtpPort": "Port",
           "smtpUsername": "Nazwa użytkownika",
           "smtpPassword": "Hasło",
@@ -360,7 +402,7 @@
         "temporarilyUnavailable": "Akcje na koncie są chwilowo niedostępne.",
         "accountNotFound": "Nie znaleziono konta.",
         "failed": "Nie udało się wykonać akcji na koncie.",
-        "limitsCompleted": "Zresetowano limity zapytań; miesięczne wydatki to okno kroczące i nie można ich zresetować",
+        "limitsCompleted": "Limity żądań zostały zresetowane.",
         "limitsFailed": "Nie udało się zresetować limitów zapytań."
       }
     },
@@ -390,6 +432,7 @@
       "actor": "Wykonawca",
       "action": "Akcja",
       "target": "Cel",
+      "targetType": "Typ obiektu",
       "result": "Wynik",
       "resultOk": "OK",
       "resultBlocked": "Zablokowano",
@@ -456,12 +499,12 @@
       "namespace": "Przestrzeń",
       "refresh": "Odśwież",
       "category": "Pokaż",
-      "provider": "Provider",
-      "allProviders": "Wszyscy providerzy",
+      "provider": "Dostawca",
+      "allProviders": "Wszyscy dostawcy",
       "select": "Wybierz",
       "project": "Projekt",
       "connection": "Połączenie",
-      "send": "Zapytanie do providera",
+      "send": "Zapytanie do dostawcy",
       "work": "Wynik",
       "accounting": "Rozliczenie",
       "triage": "Obsługa sprawy",
@@ -484,10 +527,10 @@
       "preview": "Podgląd odzyskiwania",
       "commit": "Rozpocznij odzyskiwanie",
       "previewCount": "Sprawy możliwe do naprawy: {count, number}",
-      "noSpend": "Potwierdzanie z zachowanego dowodu i przywracanie wyniku nie wysyłają zapytań do providera ani nie tworzą dodatkowych płatnych prób. Przywrócenie wyniku nie potwierdza nieznanego kosztu.",
+      "noSpend": "Potwierdzanie z zachowanego dowodu i przywracanie wyniku nie wysyłają zapytań do dostawcy ani nie tworzą dodatkowych płatnych prób. Przywrócenie wyniku nie potwierdza nieznanego kosztu.",
       "excluded": "Pominięte sprawy: {count, number}",
       "expires": "Podgląd wygasa",
-      "recheckNote": "Worker ponownie sprawdzi każdą sprawę i uprawnienia admina. Zmienione sprawy zostaną pominięte.",
+      "recheckNote": "Proces roboczy ponownie sprawdzi każdą sprawę i uprawnienia admina. Zmienione sprawy zostaną pominięte.",
       "previewSelected": "Sprawdź wybrane ({count, number})",
       "batchLimit": "Maksymalnie {count, number} spraw na akcję",
       "safetyNote": "Brak potwierdzenia nie oznacza, że zapytania nie wysłano. Przyjęcie zapytania lub pewny brak wysyłki wymagają dowodu. Historyczne braki w rozliczeniu są pokazane osobno od niedokończonej pracy.",
@@ -496,7 +539,7 @@
       "empty": "Brak spraw dla tych filtrów.",
       "nextPage": "Następna strona",
       "firstPage": "Pierwsza strona",
-      "lastActivityAt": "Ostatni postęp workera",
+      "lastActivityAt": "Ostatni postęp procesu roboczego",
       "lastCompletedAt": "Ostatni pełny skan",
       "lastCleanAt": "Ostatni skan bez zaległości",
       "never": "Brak zapisu",
@@ -533,15 +576,15 @@
         "stopped": "Zatrzymane"
       },
       "fundingSources": {
-        "byok": "Własne konto providera",
+        "byok": "Własne konto dostawcy",
         "platform": "Opłaca platforma",
         "unknown": "Nie wiadomo"
       },
       "dimensions": {
-        "provider_cost": "Koszt providera",
-        "units": "Jednostki providera",
+        "provider_cost": "Koszt dostawcy",
+        "units": "Jednostki dostawcy",
         "requests": "Zapytania",
-        "other": "Zużycie u providera"
+        "other": "Zużycie u dostawcy"
       },
       "actions": {
         "recover_proof": "Potwierdź z zachowanego dowodu",
@@ -549,13 +592,13 @@
         "resume_queued_run": "Wznów pierwotny przebieg w kolejce"
       },
       "blocked": {
-        "proof_missing": "Brak wystarczającego dowodu od providera. Koszt pozostaje nieznany, potrzebny jest dowód.",
-        "provider_cost_pending": "Odzyskiwanie kosztu trwa. Provider nie zwrócił jeszcze użytecznego kosztu dla tego przyjętego zadania.",
-        "provider_cost_unrecoverable": "Nie udało się odzyskać kosztu od providera dla tego przyjętego zadania. Sprawdź powód, a następnie zostaw koszt jako nieznany albo zamknij go jako nieznany.",
+        "proof_missing": "Brak wystarczającego dowodu od dostawcy. Koszt pozostaje nieznany, potrzebny jest dowód.",
+        "provider_cost_pending": "Odzyskiwanie kosztu trwa. Dostawca nie zwrócił jeszcze użytecznego kosztu dla tego przyjętego zadania.",
+        "provider_cost_unrecoverable": "Nie udało się odzyskać kosztu od dostawcy dla tego przyjętego zadania. Sprawdź powód, a następnie zostaw koszt jako nieznany albo zamknij go jako nieznany.",
         "wallet_coordination_required": "Brak zweryfikowanego pierwotnego dowodu do rozliczenia portfela platformy.",
         "request_not_linked": "Brak powiązanego pierwotnego zapytania.",
         "authorization_required": "Nowa płatna próba wymaga uprawnienia projektu do wydatków i zwykłej kontroli limitów.",
-        "already_claimed": "Tę pracę obsługuje inny worker.",
+        "already_claimed": "Tę pracę obsługuje inny proces roboczy.",
         "project_unavailable": "Pierwotny projekt lub zadanie nie są już dostępne.",
         "result_expired": "Zachowany wynik wygasł.",
         "result_context_changed": "Zachowany wynik nie pasuje do aktualnego kontekstu zadania."
@@ -578,8 +621,8 @@
         "none": "Nie wybrano powodu",
         "investigating": "Sprawdzam przyczynę",
         "provider_support": "Kontakt z providerem",
-        "waiting_export": "Czekam na eksport providera",
-        "missing_proof": "Brak dowodu od providera"
+        "waiting_export": "Czekam na eksport dostawcy",
+        "missing_proof": "Brak dowodu od dostawcy"
       },
       "triageStates": {
         "open": "Otwarta",
@@ -591,7 +634,7 @@
       "failureCodes": {
         "original_operation_missing": "Brak pierwotnej operacji rozliczenia",
         "native_identity_conflict": "Sprzeczny identyfikator zapytania",
-        "native_proof_ambiguous": "Niejednoznaczny dowód providera",
+        "native_proof_ambiguous": "Niejednoznaczny dowód dostawcy",
         "transport_fence_missing": "Brak pierwotnego zapisu rozpoczęcia wysyłki",
         "original_authority_missing": "Brak pierwotnego uprawnienia do odzyskania dowodu",
         "wallet_coordination_required": "Wymagana obsługa pierwotnego portfela",
@@ -611,7 +654,7 @@
         "cause": "Według przyczyny",
         "action": "Według akcji"
       },
-      "pageGrouping": "Grupowanie dotyczy tej strony. Filtry i kolejna strona obejmują cały backlog.",
+      "pageGrouping": "Grupowanie dotyczy tej strony. Filtry i kolejna strona obejmują wszystkie zaległe zadania.",
       "noFailure": "Brak błędu odzyskiwania",
       "needsEvidence": "Potrzebny dowód lub uprawnienie do wydatku",
       "blockedScopes": "Niepewne rozliczenia blokują wydatki: {projects, number} projektów, {connections, number} połączeń.",
@@ -668,10 +711,26 @@
           "partial": "Częściowe",
           "unresolved": "Nierozstrzygnięte"
         },
-        "utcTimestamp": "{timestamp} UTC"
+        "utcTimestamp": "{timestamp} UTC",
+        "taskLookupReason": "Nadal wymagane są oryginalne dowody od dostawcy."
       },
       "closedUnknown": "Zamknięte, koszt nieznany",
-      "closedUnknownNote": "Operator zamknął te zgłoszenia. Pierwotny koszt pozostaje nieznany. Historia jest zachowana; te same zgłoszenia nie uruchomią ponownie odzyskiwania ani przypomnień."
+      "closedUnknownNote": "Operator zamknął te zgłoszenia. Pierwotny koszt pozostaje nieznany. Historia jest zachowana; te same zgłoszenia nie uruchomią ponownie odzyskiwania ani przypomnień.",
+      "approvedScope": "{targets, number} celów, {attempts, number} prób na cel.",
+      "taskOnly": {
+        "closedUnknown": "Zamknięte, stan rozliczeń nieznany",
+        "closedUnknownNote": "Te żądania zostały zamknięte przez operatora. Stan rozliczeń pozostaje nieznany. Historia jest zachowana; te same żądania nie wywołają ponownie odzyskiwania ani przypomnień.",
+        "blockedScopes": "Odzyskiwanie ograniczone przez niepewność: projekty: {projects, number}, połączenia: {connections, number}.",
+        "newAttemptNote": "Jeśli nie ma zachowanego wyniku ani jednoznacznego dowodu, że wysyłanie się nie rozpoczęło, poproś członka projektu o utworzenie nowego przebiegu ze standardowym podglądem i sprawdzeniem uprawnień.",
+        "projectBlocked": "Działania w projekcie są ograniczone przez nierozstrzygnięty stan rozliczeń.",
+        "connectionBlocked": "Działania połączenia są ograniczone przez nierozstrzygnięty stan rozliczeń.",
+        "noSpend": "Uzgadnianie dowodów i przywracanie wyników nie wysyła żądań do dostawców. Przywrócenie wyniku nie rozstrzyga nieznanego stanu rozliczeń.",
+        "originalRun": "Wznów {count, number} pierwotnych, nierozpoczętych przebiegów na podstawie zachowanego upoważnienia właściciela. Nadal obowiązują standardowe warunki dopuszczenia żądań do dostawcy. Nie powstanie nowy przebieg ani powtórna próba.",
+        "accountingState": "Stan rozliczeń",
+        "unknown": "Nieznany",
+        "triageNote": "Stan obsługi, przypisanie i oczekiwanie nie rozstrzygają rozliczeń ani nie znoszą ograniczeń działań. Zmiana sprawy lub upływ okresu oczekiwania ponownie otwiera sprawę.",
+        "authorizationRequired": "Nowa próba wymaga upoważnienia członka projektu i standardowego dopuszczenia."
+      }
     },
     "dangerousActions": {
       "notice": "Włącz uwierzytelnianie dwuskładnikowe, aby {action}.",
@@ -721,6 +780,135 @@
       "note": "Koszty pochodzą z ostatniego zapisanego rachunku każdej operacji. Korekta jest liczona raz. Nieznane kwoty nie są wliczane do sum kosztów; rozstrzygające są faktury dostawców.",
       "topNote": "10 grup projekt/dostawca z najwyższym zapisanym kosztem. Udziały odnoszą się do zapisanego kosztu całej instancji. Nieznane kwoty i nieznana tożsamość dostawcy są zachowane.",
       "referenceTitle": "Koszty referencyjne SERP (bieżący miesiąc UTC)"
+    },
+    "accounts": {
+      "title": "Konta",
+      "count": "Konta ({count, number})",
+      "email": "E-mail",
+      "status": "Status",
+      "created": "Utworzono",
+      "lastActive": "Ostatnia aktywność",
+      "projects": "Projekty",
+      "keywords": "Słowa kluczowe",
+      "connections": "Połączenia",
+      "searchLabel": "Szukaj kont",
+      "searchPlaceholder": "Szukaj kont według adresu e-mail lub identyfikatora",
+      "loading": "Ładowanie kont...",
+      "unavailable": "Konta są niedostępne.",
+      "empty": "Nie znaleziono kont.",
+      "notReported": "Brak danych",
+      "find": "Znajdź konto",
+      "notFound": "Nie znaleziono konta.",
+      "details": "Szczegóły konta",
+      "copyId": "Kopiuj identyfikator",
+      "adminRequired": "Wymagany jest dostęp administratora.",
+      "question": "Które konto wymaga uwagi?",
+      "statuses": {
+        "active": "aktywne",
+        "deactivated": "dezaktywowane"
+      }
+    },
+    "pages": {
+      "description": "Stan instancji, operacje i administracja.",
+      "unavailable": "Dane instancji są niedostępne.",
+      "retry": "Spróbuj ponownie",
+      "saved": "Zapisano działania następcze.",
+      "console": "Konsola odzyskiwania",
+      "refreshCases": "Odśwież sprawy",
+      "loadingCases": "Wczytywanie spraw...",
+      "instance": "Instancja",
+      "namespace": "Przestrzeń nazw Temporal",
+      "noAdmin": "Wymagany jest dostęp administratora.",
+      "previewTitle": "Podgląd partii odzyskiwania",
+      "starting": "Uruchamianie odzyskiwania...",
+      "confirm": "Potwierdź odzyskiwanie",
+      "startFailed": "Nie udało się rozpocząć odzyskiwania. Spróbuj ponownie.",
+      "expired": "Podgląd wygasł. Odśwież i ponownie sprawdź sprawy.",
+      "preparing": "Przygotowywanie podglądu...",
+      "details": "Szczegóły sprawy",
+      "triage": "Działania następcze",
+      "triageStatus": "Status działań",
+      "triageReason": "Powód działań",
+      "due": "Termin",
+      "saveTriage": "Zapisz działania",
+      "reasonRequired": "Wybierz powód analizy.",
+      "audit": "Dziennik audytu",
+      "emptyAudit": "Brak aktywności dla tego filtra.",
+      "older": "Starsze wpisy",
+      "copyTarget": "Kopiuj identyfikator celu",
+      "mail": "Ustawienia poczty instancji",
+      "lastExhaustion": "Ostatnie wyczerpanie limitu",
+      "presenceHelp": "Ostatnie odroczone adresy URL z codziennego sprawdzania obecności. Limit resetuje się automatycznie.",
+      "questions": {
+        "status": "Czy instancja działa poprawnie?",
+        "worker": "Czy procesy robocze i harmonogramy działają poprawnie?",
+        "checks": "Czy sprawdzanie pozycji i obecności URL działa poprawnie?",
+        "dataSources": "Czy źródła danych działają poprawnie?",
+        "tasks": "Które zadania wymagają odzyskania?",
+        "notifications": "Czy powiadomienia operacyjne są dostarczane?",
+        "accounts": "Które konto wymaga uwagi?",
+        "sendingToday": "Ile wiadomości może dziś wysłać instancja?",
+        "settings": "Jak skonfigurowana jest poczta instancji?",
+        "audit": "Co zmieniło się w instancji?"
+      },
+      "category": "Kategoria",
+      "startRecovery": "rozpocząć odzyskiwanie",
+      "retryCommand": "Ponów odczyt statusu polecenia",
+      "attempts": "Próby",
+      "failureClass": "Klasa błędu",
+      "blockedReason": "Powód blokady",
+      "historical": "Historyczna niepewność",
+      "closedUnknown": "Zamknięte, rozliczenie nieznane",
+      "categories": {
+        "all": "Wszystkie sprawy",
+        "unfinished": "Niedokończona praca",
+        "accounting": "Braki w rozliczeniu",
+        "failed": "Nieudane odzyskania",
+        "historical": "Historyczna niepewność",
+        "closed_unknown": "Zamknięte, rozliczenie nieznane"
+      },
+      "triageStatuses": {
+        "open": "Otwarta",
+        "acknowledged": "Przyjęta do obsługi",
+        "investigating": "W trakcie analizy",
+        "waiting_evidence": "Czeka na dowód",
+        "escalated": "Eskalowana"
+      },
+      "triageReasons": {
+        "none": "Nie wybrano powodu",
+        "investigating": "Sprawdzam przyczynę",
+        "provider_support": "Kontakt z providerem",
+        "waiting_export": "Czekam na eksport dostawcy",
+        "missing_proof": "Brak dowodu od dostawcy"
+      },
+      "retainedScope": "Zachowany lub usunięty zakres",
+      "auditFilters": {
+        "all": "Wszystko",
+        "account": "Konto",
+        "ops": "Operacje",
+        "setup": "Konfiguracja"
+      },
+      "evidenceColumns": {
+        "classification": "Klasyfikacja dowodów",
+        "acceptance": "Przyjęcie / odzyskiwanie",
+        "incident": "Incydent",
+        "lookup": "Próby wyszukania"
+      },
+      "command": "Polecenie: {state}",
+      "commandStatuses": {
+        "queued": "Odzyskiwanie w kolejce",
+        "running": "Odzyskiwanie trwa",
+        "completed": "Akcja odzyskiwania zakończona",
+        "failed": "Akcja odzyskiwania zatrzymana"
+      },
+      "triageSaved": "Zapisano dalsze działania.",
+      "commandOutcomes": {
+        "queued": "w kolejce",
+        "unchanged": "bez zmian",
+        "recovered": "odzyskane",
+        "failed": "nieudane",
+        "skipped": "pominięte"
+      }
     }
   }
 }

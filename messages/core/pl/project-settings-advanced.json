@@ -149,6 +149,8 @@
         "pricingFeedbackSubmitted": "Przesłano opinię o cenach",
         "projectCheckRequested": "Zlecono sprawdzenie projektu",
         "projectCreated": "Utworzono projekt",
+        "domainVerificationGranted": "Przyznano weryfikację domeny",
+        "domainVerificationRevoked": "Cofnięto weryfikację domeny",
         "projectDefaultViewUpdated": "Zaktualizowano domyślny widok projektu",
         "projectDefaultsUpdated": "Zaktualizowano ustawienia domyślne projektu",
         "projectDeleted": "Usunięto projekt",
@@ -236,7 +238,9 @@
         "webhookCreated": "Utworzono webhook",
         "webhookDeleted": "Usunięto webhook",
         "webhookUpdated": "Zaktualizowano webhook",
-        "weeklyDigestSent": "Wysłano raport tygodniowy"
+        "weeklyDigestSent": "Wysłano raport tygodniowy",
+        "siteAuditCancelled": "Anulowano audyt witryny",
+        "siteAuditResumed": "Wznowiono audyt witryny"
       },
       "timestampUnavailable": "Czas niedostępny",
       "systemEvent": {

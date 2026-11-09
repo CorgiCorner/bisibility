@@ -1,6 +1,7 @@
 import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
 import { registerAiTrackingAuditDeclarations } from "@/lib/auth/audit-field-declarations-ai-tracking";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
+import { registerDomainVerificationAuditDeclarations } from "@/lib/auth/audit-field-declarations-domain-verification";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
 import { registerInstanceAdminAuditDeclarations } from "@/lib/auth/audit-field-declarations-instance-admin";
 import { registerMailAuditDeclarations } from "@/lib/auth/audit-field-declarations-mail";
@@ -281,6 +282,7 @@ registerAccountAuditDeclarations(declare, { projectCounts });
 registerRankCheckRunAuditDeclarations(declare);
 registerAiTrackingAuditDeclarations(declare);
 registerRecoveryAuditDeclarations(declare);
+registerDomainVerificationAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {
   return declarations.get(action) ?? auditPayloadPolicyExtension(action) ?? undefined;

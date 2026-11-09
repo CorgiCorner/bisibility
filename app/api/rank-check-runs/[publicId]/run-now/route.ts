@@ -11,17 +11,23 @@ export const runtime = "nodejs";
 const schema = z.object({ projectId: z.string() }).strict();
 type Context = { params: Promise<{ publicId: string }> };
 
-export const POST = withAppRoute<Context>(async (request, actor, context) => {
-  const data = schema.parse(await request.json());
-  const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
-  const publicId = (await context.params).publicId;
-  const run = await getRankCheckRunCommand(project.id, publicId);
-  await runRankCheckRunNowCommand({
-    actorId: actor.id,
-    orchestrationWorkflowId: run.orchestrationWorkflowId,
-    projectId: project.id,
-    publicId,
-    runId: run.id,
-  });
-  return dataResponse(await getRankCheckRun(project.id, publicId));
-});
+export const POST = withAppRoute<Context>(
+  async (request, actor, context, onCommitted) => {
+    const data = schema.parse(await request.json());
+    const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
+    const publicId = (await context.params).publicId;
+    const run = await getRankCheckRunCommand(project.id, publicId);
+    await runRankCheckRunNowCommand(
+      {
+        actorId: actor.id,
+        orchestrationWorkflowId: run.orchestrationWorkflowId,
+        projectId: project.id,
+        publicId,
+        runId: run.id,
+      },
+      onCommitted,
+    );
+    return dataResponse(await getRankCheckRun(project.id, publicId));
+  },
+  { mutation: true, explicitCommit: true },
+);

@@ -46,6 +46,7 @@ export function rankReportRecords(
         freshForMs: targetReportFreshForMs(target, policy),
         horizon: policy.horizon,
         minimumRequestedDepth: policy.minimumRequestedDepth ?? undefined,
+        allowShallowPositive: policy.allowShallowPositive,
         requestedGeo: qualification === "retained_scope" ? undefined : target.requestedGeo,
       });
       const times = {

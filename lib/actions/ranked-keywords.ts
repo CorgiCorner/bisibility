@@ -1,7 +1,7 @@
 "use server";
-
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import type { ActionPaymentInput } from "@/lib/action-payment/session";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
@@ -57,5 +57,6 @@ export async function fetchRankedKeywordSuggestions(input: unknown) {
         ? { budgetReason: result.budgetReason }
         : {}),
     } as const;
+  if (!data.estimateOnly && !result.cached) recordAppAction(actor);
   return result;
 }

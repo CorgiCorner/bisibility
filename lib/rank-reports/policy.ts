@@ -58,6 +58,9 @@ export function snapshotRankReportPolicy(source: RankReportPolicy): RankReportPo
       id: source.metric.id,
     },
     minimumRequestedDepth: source.minimumRequestedDepth,
+    ...(source.allowShallowPositive !== undefined
+      ? { allowShallowPositive: source.allowShallowPositive }
+      : {}),
     weightProvenance: {
       market: source.weightProvenance.market,
       period: source.weightProvenance.period,

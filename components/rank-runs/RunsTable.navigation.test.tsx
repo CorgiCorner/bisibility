@@ -9,11 +9,7 @@ import { historyRun } from "./runs-fixtures";
 
 function renderRunsTable() {
   return render(
-    <RunsTable
-      emptyActionHref="/app/prj_1/runs/schedules"
-      projectRef="prj_1"
-      rows={[historyRun]}
-    />,
+    <RunsTable emptyActionHref="/app/prj_1/schedules" projectRef="prj_1" rows={[historyRun]} />,
   );
 }
 
@@ -25,7 +21,7 @@ describe("RunsTable navigation", () => {
     try {
       render(
         <RunsTable
-          emptyActionHref="/app/prj_1/runs/schedules"
+          emptyActionHref="/app/prj_1/schedules"
           projectRef="prj_1"
           rows={[
             {

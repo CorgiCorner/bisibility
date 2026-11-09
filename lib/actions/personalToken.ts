@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { issuePersonalToken, revokePersonalToken } from "@/lib/api/pat-service";
 import { requireSession } from "@/lib/auth/session";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -9,11 +9,16 @@ import { parseActionInput, revalidateSettingsPage } from "./_shared";
 export async function issuePersonalTokenAction(input: unknown) {
   const data = parseActionInput(issuePersonalTokenSchema, input);
   const session = await requireSession();
-  const issued = await issuePersonalToken(session.user.id, {
-    expiresInDays: data.expiresInDays,
-    name: data.name,
-    scope: data.scope,
-  });
+  const issued = await issuePersonalToken(
+    session.user.id,
+    {
+      expiresInDays: data.expiresInDays,
+      name: data.name,
+      scope: data.scope,
+    },
+    {},
+    () => recordAppAction(session),
+  );
   revalidateSettingsPage();
 
   return {
@@ -29,7 +34,9 @@ export async function revokePersonalTokenAction(input: unknown) {
   if (parsePublicId(data.tokenId)?.prefix !== "pat") {
     throw new Error("Personal access token not found.");
   }
-  const revoked = await revokePersonalToken(session.user.id, data.tokenId);
+  const revoked = await revokePersonalToken(session.user.id, data.tokenId, undefined, () =>
+    recordAppAction(session),
+  );
   if (!revoked) {
     throw new Error("Personal access token not found.");
   }

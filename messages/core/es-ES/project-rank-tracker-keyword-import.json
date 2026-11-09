@@ -419,7 +419,7 @@
           "chooseDepth": "Elegir la profundidad de comprobación",
           "depthMenu": "Profundidad de comprobación",
           "changeDefault": "Cambiar el valor predeterminado",
-          "shallowVisibility": "Las comprobaciones Top 10 no actualizan la Visibilidad. Las palabras clave afectadas siguen contando en su total de cobertura."
+          "shallowVisibility": "Las comprobaciones Top 10 actualizan la visibilidad si encuentran tu posición. De lo contrario, el resultado sigue siendo desconocido."
         },
         "runConfirmation": {
           "titleConfirm": "Ejecutar {count, plural, one {la comprobación de posiciones} other {las comprobaciones de posiciones}}",

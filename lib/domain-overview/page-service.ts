@@ -1,3 +1,4 @@
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
@@ -152,6 +153,22 @@ async function loadDomainPage<T extends "keywords" | "pages">(
 }
 
 export const loadDomainKeywordsPage = (...args: DomainPageArguments) =>
-  loadDomainPage(...args, "keywords");
+  withRequestUsage(
+    {
+      projectId: args[0].projectId,
+      actorId: args[0].actorId,
+      source: args[0].origin.source,
+      feature: "domain_overview",
+    },
+    () => loadDomainPage(...args, "keywords"),
+  );
 export const loadDomainPagesPage = (...args: DomainPageArguments) =>
-  loadDomainPage(...args, "pages");
+  withRequestUsage(
+    {
+      projectId: args[0].projectId,
+      actorId: args[0].actorId,
+      source: args[0].origin.source,
+      feature: "domain_overview",
+    },
+    () => loadDomainPage(...args, "pages"),
+  );

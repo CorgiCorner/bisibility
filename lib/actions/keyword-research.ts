@@ -1,8 +1,8 @@
 "use server";
-
 import { withAchievementUse } from "@/lib/achievements/record-use";
 import { assessActionPayments } from "@/lib/action-payment/batch";
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -55,7 +55,9 @@ export async function researchKeywordsAction(input: unknown) {
         }),
       ),
     );
+    if (outcome.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
     if (outcome.ok && !data.estimateOnly) revalidatePath(appPath(project.publicId, "rank-tracker"));
+
     return outcome;
   } catch (error) {
     if (error instanceof ProviderCallError && error.code === "provider_account_restricted") {

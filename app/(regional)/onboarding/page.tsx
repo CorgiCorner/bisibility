@@ -15,10 +15,8 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { previewDefaultSettings } from "@/lib/actions/defaults-reviewed";
-import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { completeProjectOnboarding } from "@/lib/actions/project";
-import { createProjectMarket } from "@/lib/actions/project-market-create";
 import {
   completeGooglePropertySelection,
   connectProvider,
@@ -33,10 +31,14 @@ import {
 } from "@/lib/actions/rank-check-preview";
 import { fetchRankedKeywordSuggestions } from "@/lib/actions/ranked-keywords";
 import { installSampleData } from "@/lib/actions/sample-data";
-import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { appExtensions } from "@/lib/app-extensions";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
+import {
+  addKeywordsMatrix,
+  createProjectMarket,
+  updateDefaultRankCheckSettings,
+} from "@/lib/capacity/client-actions";
 import { explicitDeploymentDataRegionLabel } from "@/lib/deployment/deployment";
 import { googleOAuthErrorKey } from "@/lib/integrations/google-oauth-copy";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/metering/project-budget-bootstrap";
@@ -58,7 +60,8 @@ import { listWorkspaces } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
-import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
+import { deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
+import { createOnboardingProject } from "./capacity-actions";
 import { initialFirstCheckCandidates } from "./initial-first-check-candidates";
 import { renderOnboardingDataSourceExtension } from "./onboarding-data-source";
 import { resolveOnboardingLocations } from "./onboarding-location-state";

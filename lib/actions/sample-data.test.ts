@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => {
     user: { findUnique: vi.fn() },
   };
   return {
+    record: vi.fn(),
     AuthorizationError,
     authorize: vi.fn(),
     prisma,
@@ -46,6 +47,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("@/lib/activity/app-mutation", () => ({ recordAppAction: mocks.record }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({
@@ -165,6 +167,7 @@ describe("sample-data actions", () => {
     );
     expect(mocks.tx.project.create).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+    expect(mocks.record).not.toHaveBeenCalled();
   });
 
   it("installs sample data and writes an audit record", async () => {
@@ -176,6 +179,7 @@ describe("sample-data actions", () => {
       expect.objectContaining({ action: "sample_data.install", projectId: "project_sample" }),
       mocks.tx,
     );
+    expect(mocks.record).toHaveBeenCalledOnce();
   });
 
   it("refuses to remove a non-sample project", async () => {

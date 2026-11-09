@@ -40,9 +40,7 @@ describe("schedule archive UI", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Schedule status" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Archived" }));
-    expect(routerMock.push).toHaveBeenCalledWith(
-      `/app/${projectId}/runs/schedules?status=archived`,
-    );
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectId}/schedules?status=archived`);
   });
   it("archives to manual by default and explains the default schedule change", async () => {
     const close = vi.fn();

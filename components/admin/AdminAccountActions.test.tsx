@@ -72,7 +72,7 @@ describe("AdminAccountActions", () => {
     expect(screen.getByRole("button", { name: "Confirm reactivateAccount" })).toBeInTheDocument();
   });
 
-  it("confirms the reset and preserves the rolling-spend message", async () => {
+  it("confirms the reset without reporting usage", async () => {
     mocks.resetLimits.mockResolvedValue({
       clearedBuckets: 2,
       message: "untrusted server English",
@@ -84,10 +84,7 @@ describe("AdminAccountActions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Confirm resetAccountLimits" }));
 
     await waitFor(() => expect(mocks.resetLimits).toHaveBeenCalledWith({ userId: "user_1" }));
-    expect(mocks.showToast).toHaveBeenCalledWith(
-      "Rate limits reset; monthly spend is a rolling window and cannot be reset",
-      { severity: "success" },
-    );
+    expect(mocks.showToast).toHaveBeenCalledWith("Rate limits reset.", { severity: "success" });
   });
 });
 
@@ -96,3 +93,16 @@ function render(ui: Parameters<typeof renderMessages>[0]) {
     <DangerousActionAccessProvider allowed>{ui}</DangerousActionAccessProvider>,
   );
 }
+
+it("keeps both status and limit-reset actions behind one security-enable link", () => {
+  vi.clearAllMocks();
+  renderMessages(
+    <DangerousActionAccessProvider allowed={false}>
+      <AdminAccountActions onStatusChange={() => {}} status="active" userId="user_1" />
+    </DangerousActionAccessProvider>,
+  );
+  expect(screen.queryByRole("button", { name: "Reset rate limits" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Deactivate account" })).not.toBeInTheDocument();
+  expect(screen.getAllByRole("link", { name: "Enable two-factor authentication" })).toHaveLength(1);
+  expect(mocks.resetLimits).not.toHaveBeenCalled();
+});

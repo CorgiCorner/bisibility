@@ -52,9 +52,9 @@
           "tooltip": "Śledź pozycje oraz badaj słowa kluczowe, witryny, linki zwrotne i kondycję strony."
         },
         "ai": {
-          "label": "Wyszukiwanie AI",
+          "label": "Widoczność w AI",
           "tag": "AI",
-          "tooltip": "Śledź i badaj, jak odpowiedzi AI wspominają Twoją markę."
+          "tooltip": "Widoczność marki w odpowiedziach AI."
         },
         "reports": {
           "label": "Dane i raporty",
@@ -79,6 +79,8 @@
         "markets": "Rynki",
         "rankTracker": "Monitor pozycji",
         "runs": "Przebiegi",
+        "schedules": "Harmonogramy",
+        "usage": "Zużycie",
         "searchConsole": "Search Console",
         "settings": "Ustawienia",
         "aiVisibility": "Widoczność marki",
@@ -87,7 +89,8 @@
         "siteAudit": "Audyt strony",
         "projectContext": "Kontekst projektu",
         "agentReports": "Raporty agentów",
-        "aiTracking": "Monitor promptów"
+        "aiTracking": "Monitor promptów",
+        "serpPlayground": "SERP Playground"
       },
       "menu": "Menu"
     },
@@ -319,6 +322,8 @@
         "rankTracker": "Monitor pozycji",
         "run": "Przebieg",
         "runs": "Przebiegi",
+        "schedules": "Harmonogramy",
+        "usage": "Zużycie",
         "searchConsole": "Search Console",
         "security": "Bezpieczeństwo",
         "settings": "Ustawienia",
@@ -329,7 +334,8 @@
         "siteAudit": "Audyt strony",
         "projectContext": "Kontekst projektu",
         "agentReports": "Raporty agentów",
-        "aiTracking": "Monitor promptów"
+        "aiTracking": "Monitor promptów",
+        "serpPlayground": "SERP Playground"
       }
     },
     "footer": {

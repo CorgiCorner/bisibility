@@ -10,7 +10,7 @@ export function comparisonRankInput(snapshot: FrozenComparison, tag?: string): S
     location: snapshot.location,
     device: snapshot.device,
     domain: snapshot.domain,
-    depth: comparisonDepth,
+    depth: snapshot.depth ?? comparisonDepth,
     stopOnMatch: false,
     ...(tag ? { tag } : {}),
   };
@@ -52,11 +52,17 @@ export function comparisonRequestKey(
   if (provider === "serpapi") {
     const actual = new URL(request.url),
       start = actual.searchParams.get("start");
-    if (start !== null && start !== "10")
+    if (
+      start !== null &&
+      (!/^\d+$/.test(start) ||
+        Number(start) % 10 !== 0 ||
+        Number(start) < 10 ||
+        Number(start) >= (snapshot.depth ?? comparisonDepth))
+    )
       throw new Error("Comparison page is outside the quoted scope.");
-    if (start === "10") {
+    if (start !== null) {
       const url = new URL(expected.url);
-      url.searchParams.set("start", "10");
+      url.searchParams.set("start", start);
       expected.url = url.href;
     }
   }

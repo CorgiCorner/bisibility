@@ -4,7 +4,11 @@ import { prisma } from "@/lib/db/prisma";
 import { readDemoConfig } from "@/lib/demo/config";
 import { achievementsEnabled } from "./config";
 import { preferenceSchema } from "./schema";
-export async function updateAchievementPreferences(userId: string, input: unknown) {
+export async function updateAchievementPreferences(
+  userId: string,
+  input: unknown,
+  onCommitted?: () => void,
+) {
   const data = preferenceSchema.parse(input);
   if (!achievementsEnabled() || readDemoConfig().kind !== "disabled")
     return { kind: "disabled" as const };
@@ -34,6 +38,7 @@ export async function updateAchievementPreferences(userId: string, input: unknow
         : {}),
     },
   });
+  if (result.count === 1) onCommitted?.();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { publicId: true },

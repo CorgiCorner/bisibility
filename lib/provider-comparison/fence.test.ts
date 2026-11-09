@@ -138,3 +138,54 @@ it("accepts telemetry-only updates but fences configuration revisions and legacy
     }).beforeReserve.lockBusiness(tx, "attempt"),
   ).rejects.toThrow(/connection changed/);
 });
+
+it("fences an untracked playground against location and project changes without reading keywords", async () => {
+  const playground = { ...snapshot, version: 2 as const, keywordId: null };
+  tx.project = { findUnique: vi.fn(async () => ({ domain: snapshot.domain })) };
+  tx.location = { findUnique: vi.fn(async () => ({ ...snapshot.location })) };
+  const guard = comparisonFences({
+    projectId: "project",
+    runId: "run",
+    sideId: "side",
+    token: "token",
+    actorId: "actor",
+    snapshot: playground,
+    connection,
+    tag: "tag",
+  });
+  await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).resolves.toBeUndefined();
+  expect(tx.keyword.findFirst).not.toHaveBeenCalled();
+  tx.location.findUnique.mockResolvedValue({ ...snapshot.location, hl: "en" });
+  await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).rejects.toThrow(/scope changed/);
+  tx.location.findUnique.mockResolvedValue({ ...snapshot.location });
+  tx.project.findUnique.mockResolvedValue({ domain: "changed.example" });
+  await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).rejects.toThrow(/scope changed/);
+});
+
+it("honors an explicitly selected disabled fallback only in the playground", async () => {
+  const live = await tx.providerConnection.findFirst();
+  live.enabled = false;
+  tx.providerConnection.findFirst.mockResolvedValue(live);
+  const { providerConnectionRevision } = await import("@/lib/providers/connection-revision");
+  const selected = { ...connection, revision: providerConnectionRevision(live) };
+  tx.project = { findUnique: async () => ({ domain: snapshot.domain }) };
+  tx.location = { findUnique: async () => snapshot.location };
+  const base = {
+    projectId: "project",
+    runId: "run",
+    sideId: "side",
+    token: "token",
+    actorId: "actor",
+    connection: selected,
+    tag: "tag",
+  };
+  await expect(
+    comparisonFences({
+      ...base,
+      snapshot: { ...snapshot, version: 2, keywordId: null },
+    }).beforeReserve.lockBusiness(tx, "attempt"),
+  ).resolves.toBeUndefined();
+  await expect(
+    comparisonFences({ ...base, snapshot }).beforeReserve.lockBusiness(tx, "attempt"),
+  ).rejects.toThrow(/connection changed/);
+});

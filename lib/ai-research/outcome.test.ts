@@ -1,5 +1,7 @@
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AiResearchPaidFailure, outcome } from "./outcome";
+import { AiPreDispatchRefusal } from "./validation";
 
 const payment = {
   actionId: "act_1",
@@ -38,4 +40,21 @@ describe("paid AI research failures", () => {
     await outcome(async () => ({ ok: true }) as never);
     expect(log).not.toHaveBeenCalled();
   });
+});
+
+it("preserves a pre-dispatch subscription refusal for the REST mapper", async () => {
+  const error = new OperationAccessDeniedError({ subscriptionRequired: true });
+  await expect(
+    outcome(async () => {
+      throw new AiPreDispatchRefusal(error);
+    }),
+  ).rejects.toBe(error);
+});
+
+it("keeps other pre-dispatch operation refusals generic", async () => {
+  await expect(
+    outcome(async () => {
+      throw new AiPreDispatchRefusal(new OperationAccessDeniedError());
+    }),
+  ).resolves.toMatchObject({ ok: false, reason: "analysis_refused" });
 });

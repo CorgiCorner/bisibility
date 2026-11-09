@@ -1,8 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { IntegrationCategories } from "@/components/integrations/IntegrationCategories";
-import { IntegrationsTabs } from "@/components/integrations/IntegrationsTabs";
-import { IntegrationUsagePanel } from "@/components/integrations/IntegrationUsagePanel";
-import type { BillingConnection } from "@/components/integrations/ProviderBillingCard";
 import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
@@ -26,10 +23,11 @@ import { deploymentMode } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import type { GoogleOAuthSetup, ProviderActionHandlers } from "@/lib/integrations/types";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
-import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getIntegrationsView } from "@/lib/queries/integrations";
+import { appPath } from "@/lib/routing/app-path";
 import { loadSearchSyncPreflightPlan } from "@/lib/settings/search-sync-metrics";
+import { redirect } from "next/navigation";
 
 type IntegrationsProviderActions = ProviderActionHandlers &
   Required<Pick<ProviderActionHandlers, "completeGooglePropertySelection">>;
@@ -69,47 +67,8 @@ export default async function IntegrationsPage({
   const params = await searchParams;
   const usageTab = readParam(params, "tab");
   if (usageTab === "usage" || usageTab === "byok") {
-    const { categories } = await getIntegrationsView(publicId);
-    const connections: BillingConnection[] = categories.flatMap((category) =>
-      category.providers.flatMap((provider) => {
-        if (!provider.connectionId) return [];
-        const catalog = PROVIDER_CATALOG.find((entry) => entry.id === provider.id);
-        return [
-          {
-            connectionId: provider.connectionId,
-            providerId: provider.id,
-            label: provider.name,
-            credentialSource: provider.credentialSource ?? "own",
-            billable: catalog?.kind !== "analytics" && catalog?.allocation.kind === "billable",
-          },
-        ];
-      }),
-    );
-    return (
-      <FeatureMessagesProvider
-        locale={runtime.locale}
-        messages={messages}
-        timeZone={runtime.timeZone}
-      >
-        <PageContent className="flex flex-col gap-5">
-          <IntegrationsTabs active="usage" projectRef={publicId} />
-          <div
-            aria-labelledby="integrations-panel-usage-tab"
-            id="integrations-panel"
-            role="tabpanel"
-          >
-            <IntegrationUsagePanel
-              editBudget={readParam(params, "budget") === "edit"}
-              projectRef={publicId}
-              connections={
-                deploymentMode() === "self-host"
-                  ? connections.filter((row) => row.credentialSource !== "hosted")
-                  : connections
-              }
-            />
-          </div>
-        </PageContent>
-      </FeatureMessagesProvider>
+    return redirect(
+      `${appPath(publicId, "usage")}${readParam(params, "budget") === "edit" ? "?budget=edit" : ""}`,
     );
   }
   const googleStatus = readParam(params, "google");
@@ -150,12 +109,7 @@ export default async function IntegrationsPage({
       timeZone={runtime.timeZone}
     >
       <PageContent className="flex flex-col gap-5">
-        <IntegrationsTabs active="connections" projectRef={publicId} />
-        <div
-          aria-labelledby="integrations-panel-connections-tab"
-          id="integrations-panel"
-          role="tabpanel"
-        >
+        <section aria-label={t("projectIntegrations.tabs.connections")}>
           <IntegrationCategories
             actions={providerActions}
             canManageProviders={canManageProviders}
@@ -170,7 +124,7 @@ export default async function IntegrationsPage({
             searchSyncPlan={searchSyncPlan}
             timeZone={timeZone}
           />
-        </div>
+        </section>
       </PageContent>
     </FeatureMessagesProvider>
   );

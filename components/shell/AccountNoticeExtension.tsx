@@ -7,3 +7,7 @@ export async function renderAccountNoticeExtension(
 ): Promise<{ content: ReactNode } | null> {
   return null;
 }
+
+export async function renderCapacityNoticeExtension(_locale: import("@/i18n/config").AppLocale) {
+  return null;
+}

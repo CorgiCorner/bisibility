@@ -91,7 +91,7 @@ export function getSettingsSection(id: string): SettingsSection | undefined {
 export function settingsSectionHref(projectRef: ProjectRef, section: SettingsSectionId) {
   if (section === "context") return appPath(projectRef, "context");
   return section === "provider-usage"
-    ? `${appPath(projectRef, "providers")}?tab=usage`
+    ? appPath(projectRef, "usage")
     : appPath(projectRef, "settings", section);
 }
 

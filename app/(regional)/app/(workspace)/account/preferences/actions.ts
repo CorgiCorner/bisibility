@@ -1,5 +1,4 @@
 "use server";
-
 import { assertActiveLocale } from "@/i18n/config";
 import { writeLocaleCookie } from "@/i18n/locale-preference.server";
 import {
@@ -7,6 +6,7 @@ import {
   preferencesSchema,
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { persistDateFormatPreference, persistUiLocalePreference } from "@/lib/queries/account";
@@ -24,30 +24,37 @@ export async function updatePreferences(input: unknown): Promise<UserPreferences
   const prefs = preferencesSchema.parse(input);
 
   const dateFormatResult = await persistDateFormatPreference(session.user.id, prefs.dateFormat);
-  if (dateFormatResult.changed) {
-    await writeAudit({
-      action: "user.date_format.update",
-      actorId: session.user.id,
-      after: { dateFormat: prefs.dateFormat },
-      before: { dateFormat: dateFormatResult.previousFormat },
-      targetId: dateFormatResult.publicId,
-      targetType: "user",
-    });
+  let committed = dateFormatResult.changed;
+  try {
+    if (dateFormatResult.changed) {
+      await writeAudit({
+        action: "user.date_format.update",
+        actorId: session.user.id,
+        after: { dateFormat: prefs.dateFormat },
+        before: { dateFormat: dateFormatResult.previousFormat },
+        targetId: dateFormatResult.publicId,
+        targetType: "user",
+      });
+    }
+
+    const store = await cookies();
+    const write = (name: string, value: string) =>
+      store.set(name, value, { maxAge: COOKIE_MAX_AGE, path: "/", sameSite: "lax" });
+
+    write(PREFERENCE_COOKIES.theme, prefs.theme);
+    committed = true;
+    write(PREFERENCE_COOKIES.density, prefs.density);
+    write(PREFERENCE_COOKIES.landing, prefs.landing);
+    store.delete(PREFERENCE_COOKIES.dateFormat);
+    store.delete("pref_timezone");
+    store.delete("pref_language");
+
+    revalidatePath("/app/account/preferences");
+
+    return prefs;
+  } finally {
+    if (committed) recordAppAction(session);
   }
-
-  const store = await cookies();
-  const write = (name: string, value: string) =>
-    store.set(name, value, { maxAge: COOKIE_MAX_AGE, path: "/", sameSite: "lax" });
-
-  write(PREFERENCE_COOKIES.theme, prefs.theme);
-  write(PREFERENCE_COOKIES.density, prefs.density);
-  write(PREFERENCE_COOKIES.landing, prefs.landing);
-  store.delete(PREFERENCE_COOKIES.dateFormat);
-  store.delete("pref_timezone");
-  store.delete("pref_language");
-
-  revalidatePath("/app/account/preferences");
-  return prefs;
 }
 
 export async function updateUiLocale(input: unknown) {
@@ -59,18 +66,25 @@ export async function updateUiLocale(input: unknown) {
   );
   const result = await persistUiLocalePreference(session.user.id, uiLocale);
 
-  if (result.changed) {
-    await writeAudit({
-      action: "user.ui_locale.update",
-      actorId: session.user.id,
-      after: { uiLocale },
-      before: { uiLocale: result.previousLocale },
-      targetId: result.publicId,
-      targetType: "user",
-    });
-  }
+  let committed = result.changed;
+  try {
+    if (result.changed) {
+      await writeAudit({
+        action: "user.ui_locale.update",
+        actorId: session.user.id,
+        after: { uiLocale },
+        before: { uiLocale: result.previousLocale },
+        targetId: result.publicId,
+        targetType: "user",
+      });
+    }
 
-  await writeLocaleCookie(uiLocale);
-  revalidatePath("/app/account/preferences");
-  return uiLocale;
+    await writeLocaleCookie(uiLocale);
+    committed = true;
+    revalidatePath("/app/account/preferences");
+
+    return uiLocale;
+  } finally {
+    if (committed) recordAppAction(session);
+  }
 }

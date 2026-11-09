@@ -32,6 +32,7 @@ function fetchContext(creds: ProviderCredentials, property: string): GoogleFetch
   return {
     accountKey: providerAccountKey("ga4", { apiKey: creds.apiKey, login: property }),
     providerId: "ga4",
+    ...(creds.captureResponse ? { captureResponse: creds.captureResponse } : {}),
   };
 }
 
@@ -175,15 +176,21 @@ export const ga4AnalyticsProvider: Ga4AnalyticsProvider = {
     try {
       const { property, refreshToken } = readCredentials(creds);
       const accessToken = await refreshGoogleAccessToken(refreshToken, creds.onRefreshToken);
-      await googleApiFetch(reportUrl(property), accessToken, {
-        body: reportBody({
-          endDate: "today",
-          limit: 1,
-          metrics: ["activeUsers"],
-          startDate: "yesterday",
-        }),
-        method: "POST",
-      });
+      await googleApiFetch(
+        reportUrl(property),
+        accessToken,
+        {
+          body: reportBody({
+            endDate: "today",
+            limit: 1,
+            metrics: ["activeUsers"],
+            startDate: "yesterday",
+          }),
+          method: "POST",
+        },
+        undefined,
+        creds.captureResponse,
+      );
       return { message: `Connected · ${property}.`, ok: true };
     } catch (error) {
       preserveGoogleRequestFailure(error);

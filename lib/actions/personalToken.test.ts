@@ -56,7 +56,12 @@ describe("personal token actions", () => {
       id: TOKEN_PUBLIC_ID,
       revokedAt: new Date("2026-07-27T12:00:00.000Z"),
     });
-    expect(mocks.revokePersonalToken).toHaveBeenCalledWith("user_1", TOKEN_PUBLIC_ID);
+    expect(mocks.revokePersonalToken).toHaveBeenCalledWith(
+      "user_1",
+      TOKEN_PUBLIC_ID,
+      undefined,
+      expect.any(Function),
+    );
   });
 
   it("rejects a raw database token ID before querying", async () => {

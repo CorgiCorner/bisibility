@@ -1,5 +1,7 @@
 import { AuthorizationError } from "@/lib/auth/authorize";
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ZodError, type z } from "zod";
 import { type ApiContext, forbidden, projectMatches } from "./context";
 import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
@@ -81,6 +83,7 @@ function message(error: unknown) {
 }
 
 export function domainError(error: unknown): never {
+  if (error instanceof CapacityLimitError || isOperationAccessDeniedError(error)) throw error;
   if (error instanceof ZodError) {
     throw error;
   }

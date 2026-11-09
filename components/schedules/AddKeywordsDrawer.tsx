@@ -1,8 +1,8 @@
 "use client";
-
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -49,7 +49,10 @@ async function assignScheduleKeywords(input: AssignScheduleKeywordsForm) {
     headers: { "content-type": "application/json" },
     method: "POST",
   });
-  if (!response.ok) throw new Error("schedule_add_keywords_failed");
+  if (!response.ok) {
+    publishCapacityProblem(await response.json().catch(() => null));
+    throw new Error("schedule_add_keywords_failed");
+  }
 }
 function filterCandidates(
   candidates: readonly ScheduleKeywordCandidate[],

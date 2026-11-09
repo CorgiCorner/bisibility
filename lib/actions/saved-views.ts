@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { deleteSavedViewSchema } from "@/lib/keywords/saved-view-model";
 import { savedViewActionResult } from "@/lib/saved-views/action-result";
 import {
@@ -20,32 +20,60 @@ import { getActionActor, parseActionInput } from "./_shared";
 export async function createSavedView(input: unknown) {
   const data = parseActionInput(createProjectSavedViewSchema, input);
   const actor = await getActionActor();
-  return createSavedViewFor(data, sessionSavedViewContext(actor));
+  const actionResult = await createSavedViewFor(
+    data,
+    sessionSavedViewContext(actor),
+    undefined,
+    () => recordAppAction(actor),
+  );
+
+  return actionResult;
 }
 
 export async function deleteSavedView(input: unknown) {
   const data = parseActionInput(deleteSavedViewSchema, input);
   const actor = await getActionActor();
-  return deleteSavedViewFor(data, sessionSavedViewContext(actor));
+  const actionResult = await deleteSavedViewFor(
+    data,
+    sessionSavedViewContext(actor),
+    undefined,
+    () => recordAppAction(actor),
+  );
+
+  return actionResult;
 }
 
 export async function createSavedViewV2(input: unknown) {
   return savedViewActionResult(async () => {
     const data = parseActionInput(createSavedViewV2Schema, input);
-    return createSavedViewV2For(data, sessionSavedViewContext(await getActionActor()));
+    const actor = await getActionActor();
+    const result = await createSavedViewV2For(data, sessionSavedViewContext(actor), undefined, () =>
+      recordAppAction(actor),
+    );
+    return result;
   });
 }
 
 export async function updateSavedViewV2(input: unknown) {
   return savedViewActionResult(async () => {
     const data = parseActionInput(updateSavedViewV2Schema, input);
-    return updateSavedViewV2For(data, sessionSavedViewContext(await getActionActor()));
+    const actor = await getActionActor();
+    const result = await updateSavedViewV2For(data, sessionSavedViewContext(actor), undefined, () =>
+      recordAppAction(actor),
+    );
+
+    return result;
   });
 }
 
 export async function deleteSavedViewV2(input: unknown) {
   return savedViewActionResult(async () => {
     const data = parseActionInput(deleteSavedViewV2Schema, input);
-    return deleteSavedViewV2For(data, sessionSavedViewContext(await getActionActor()));
+    const actor = await getActionActor();
+    const result = await deleteSavedViewV2For(data, sessionSavedViewContext(actor), undefined, () =>
+      recordAppAction(actor),
+    );
+
+    return result;
   });
 }

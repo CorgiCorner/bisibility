@@ -343,7 +343,7 @@
         "removeTeamMemberDangerLabel": "Remove member",
         "removeTeamMemberTitle": "Remove project member",
         "removeTeamMemberToastMessage": "Project member removed",
-        "resetAccountLimitsBody": "Clear this account's rate-limit buckets. Monthly spend is a rolling window and cannot be reset.",
+        "resetAccountLimitsBody": "Clear this account's rate-limit buckets.",
         "resetAccountLimitsDangerLabel": "Reset rate limits",
         "resetAccountLimitsTitle": "Reset rate limits",
         "resetAccountLimitsToastMessage": "Rate-limit reset requested",
@@ -606,6 +606,7 @@
       "moved": "Moved {title} to position {position}.",
       "shellUnavailable": "Context is unavailable. This does not mean zero.",
       "widgetUnavailable": "This section's stored report is unavailable.",
+      "widgetNoData": "No data to display",
       "widgetLoading": "Loading stored report.",
       "widgetError": "This section could not be read. Other sections remain available.",
       "span": "Width of {title}",
@@ -665,13 +666,13 @@
       },
       "reasons": {
         "missing_project_access": "Project read access is required.",
-        "preset_mismatch": "This section uses a different preset scope.",
+        "preset_mismatch": "Choose the matching dashboard preset to use this section.",
         "missing_competitors_access": "Competitor read access is required.",
         "missing_local_subject": "Select an explicit business identity revision for Local SEO.",
         "foreign_local_subject": "The selected business does not belong to this project.",
         "missing_competitor_scope": "Select an explicit competitor comparison scope.",
         "foreign_competitor_scope": "The competitor scope does not belong to this project.",
-        "missing_capability": "The stored data capability required by this section is unavailable."
+        "missing_capability": "This section is not available for this project yet."
       },
       "shell": {
         "scope": "Shared search scope",
@@ -698,7 +699,10 @@
       "healthClear": "No failed checks in the last 24 hours.",
       "budgetBlocked": "Paid checks are blocked by the current budget.",
       "budgetReadOnly": "Viewing saved reports does not run a paid check.",
-      "coverageSummary": "Resolved {measured} of {expected} targets; {comparable} comparable pairs.",
+      "coverageSummary": "Results available for {measured} of {expected} keywords.",
+      "coverageEmpty": "Add keywords to see your rankings here.",
+      "coverageFilteredEmpty": "No keywords match this view.",
+      "coveragePending": "Your ranking summary will appear when data is available.",
       "freshnessUnknown": "Freshness coverage is unknown.",
       "freshCoverage": "Fresh resolved targets: {count}.",
       "invalidPreset": "This dashboard preset is unavailable. Choose an available preset.",
@@ -1404,6 +1408,11 @@
               "definition": "A versioned index of organic results in the first 20 positions.",
               "interpretation": "Read the index with observed coverage, fresh determinate counts, and comparable targets.",
               "limitation": "This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement."
+            },
+            "visibility-top20-v2": {
+              "definition": "Volume-weighted ranking strength in Google’s Top 20.",
+              "interpretation": "100% means every measured keyword ranks first. Confirmed positions from Top 10 checks also count.",
+              "limitation": "Missing results stay unknown unless coverage proves absence through position 20. Check coverage alongside this score."
             }
           }
         },
@@ -1776,7 +1785,7 @@
     "providerAccess": {
       "connect": "Choose a data source to use these fields.",
       "supported": "Supported providers: {providers}.",
-      "unavailable": "No supported data source is available for this feature.",
+      "unavailable": "Open Providers to check your connections and get started.",
       "action": "Open Providers",
       "reconnect": "Reconnect the selected data source to use these fields.",
       "reconnectAction": "Reconnect provider",
@@ -1785,7 +1794,8 @@
       "emptyDescription": "Choose a supported data source in Providers to run a search.",
       "reconnectDescription": "Reconnect the selected data source in Providers before running another search.",
       "connectAction": "Choose a data source",
-      "askAdmin": "Ask a project admin to choose a data source before checks can start."
+      "askAdmin": "Ask a project admin to choose a data source before checks can start.",
+      "unavailableTitle": "Choose a data source"
     },
     "rankEvidence": {
       "position": "Position {position, number}",

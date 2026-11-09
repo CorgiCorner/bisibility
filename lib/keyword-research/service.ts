@@ -1,3 +1,4 @@
+import { withContextRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { paymentAdmissionFailure } from "@/lib/action-payment/admission-failure";
 import {
@@ -44,7 +45,7 @@ import type {
   KeywordResearchSourceReason,
 } from "./types";
 
-export async function researchKeywords(
+async function researchKeywordsImpl(
   input: ActionPaymentInput & {
     actorId?: string | null;
     connectionId?: string;
@@ -77,9 +78,8 @@ export async function researchKeywords(
       );
       if (!selected) return { ok: false, reason: "no_source" };
       const location = await researchLocation(project, input.locationKey);
-      if (!supportsResearchScope(location.value.gl, location.value.hl)) {
+      if (!supportsResearchScope(location.value.gl, location.value.hl))
         return { ok: false, reason: "unsupported_location" };
-      }
       const rateContext =
         selected.provider.id === "dataforseo"
           ? LIST_PROVIDER_RATE_CONTEXT
@@ -301,3 +301,5 @@ export async function researchKeywords(
     throw error;
   });
 }
+
+export const researchKeywords = withContextRequestUsage("keyword_research", researchKeywordsImpl);

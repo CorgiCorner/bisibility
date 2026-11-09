@@ -44,6 +44,7 @@ function legacyRequiredScope(method: string, path: string[]): ApiScope {
   if (method === "POST" && path[0] === "projects" && path[2] === "keyword-metrics") {
     return "write";
   }
+  if (path[0] === "projects" && path[2] === "domain-verification") return "admin";
   if (path[0] === "api-keys" || (path[0] === "projects" && path[2] === "api-keys")) {
     return "admin";
   }
@@ -115,7 +116,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(149);
+    expect(before).toHaveLength(156);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -160,7 +161,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 17, read: 65, write: 67 });
+    expect(counts).toEqual({ admin: 20, read: 67, write: 69 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

@@ -1,18 +1,56 @@
 {
   "instanceAdmin": {
     "shell": {
+      "status": "Status",
+      "accounts": "Accounts",
+      "viewNavigation": "{tab} views",
+      "summary": "Summary",
+      "ledger": "Ledger",
+      "budgets": "Budgets",
+      "meteringView": "Metering",
+      "aiEngine": "AI engine",
+      "announcements": "Announcements",
+      "refreshData": "Refresh data",
+      "refreshing": "Refreshing",
+      "refreshed": "Refreshed {time}",
+      "previewDescription": "Instance administration and operational insights",
       "context": "Instance admin",
       "backToApp": "Back to app",
       "title": "Instance administration",
-      "description": "Cross-instance operational diagnostics. Tenant data is represented by identifiers only."
+      "description": "Cross-instance operational diagnostics. Tenant data is represented by identifiers only.",
+      "settings": "Settings",
+      "sendingToday": "Sending today",
+      "worker": "Worker",
+      "checks": "Checks",
+      "dataSources": "Data sources",
+      "tasks": "Tasks",
+      "notifications": "Notifications",
+      "journey": "Journey",
+      "retention": "Retention",
+      "survey": "Survey",
+      "signups": "Signups",
+      "subscriptions": "Subscriptions",
+      "trials": "Trials",
+      "credits": "Credits",
+      "billing": "Billing",
+      "hostedProviders": "Hosted providers",
+      "providerCredits": "Provider credits",
+      "analyticsExclusions": "Analytics exclusions",
+      "accountingHealth": "Accounting health"
     },
     "navigation": {
+      "overview": "Overview",
+      "usageCosts": "Usage & costs",
+      "settings": "Settings",
       "instance": "Instance",
       "label": "Instance administration sections",
       "operations": "Operations",
       "administration": "Administration",
       "audit": "Audit",
-      "metering": "Metering"
+      "metering": "Metering",
+      "users": "Users",
+      "revenue": "Revenue",
+      "email": "Email"
     },
     "controls": {
       "refresh": "Refresh",
@@ -81,10 +119,12 @@
       "lagP95": "Lag p95"
     },
     "dashboard": {
+      "timeZone": "Times in {timeZone}",
       "rankChecks": {
         "title": "Rank checks",
         "description": "Execution totals and schedule-to-start lag. Deferred rows never count as successes.",
         "unavailable": "Rank-check diagnostics are unavailable.",
+        "statusLabel": "Rank checks (24h)",
         "last24Hours": "Last 24 hours",
         "last7Days": "Last 7 days",
         "failures": "Failures (24h)",
@@ -155,6 +195,7 @@
         "title": "Instance stats",
         "description": "Instance totals and provider usage across all projects and operation types. Select the usage period below.",
         "unavailable": "Instance statistics are unavailable.",
+        "providerUsageTitle": "Provider usage reference",
         "users": "Users",
         "projects": "Projects",
         "keywords": "Keywords",
@@ -250,7 +291,8 @@
     "administration": {
       "growth": {
         "title": "Growth",
-        "description": "30-day UTC aggregates. No behavioral analytics or tenant content.",
+        "description": "Last 30 days",
+        "utcNote": "Days in UTC",
         "users": "Users",
         "projects": "Projects",
         "keywords": "Keywords",
@@ -360,7 +402,7 @@
         "temporarilyUnavailable": "Account action is temporarily unavailable.",
         "accountNotFound": "Account not found.",
         "failed": "Account action failed.",
-        "limitsCompleted": "Rate limits reset; monthly spend is a rolling window and cannot be reset",
+        "limitsCompleted": "Rate limits reset.",
         "limitsFailed": "Rate limits could not be reset."
       }
     },
@@ -390,6 +432,7 @@
       "actor": "Actor",
       "action": "Action",
       "target": "Target",
+      "targetType": "Target type",
       "result": "Result",
       "resultOk": "OK",
       "resultBlocked": "Blocked",
@@ -668,10 +711,26 @@
           "partial": "Partial",
           "unresolved": "Unresolved"
         },
-        "utcTimestamp": "{timestamp} UTC"
+        "utcTimestamp": "{timestamp} UTC",
+        "taskLookupReason": "Native provider evidence is still required."
       },
       "closedUnknown": "Closed, cost unknown",
-      "closedUnknownNote": "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again."
+      "closedUnknownNote": "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again.",
+      "approvedScope": "{targets, number} targets, {attempts, number} attempt per target.",
+      "taskOnly": {
+        "closedUnknown": "Closed, accounting unknown",
+        "closedUnknownNote": "These requests were closed by an operator. Accounting remains unknown. History is retained; the same requests will not trigger recovery or reminders again.",
+        "blockedScopes": "Recovery restricted by uncertainty: {projects, number} projects, {connections, number} connections.",
+        "newAttemptNote": "If there is no retained result and no positive proof that sending never began, ask a project member to create a new run through the normal preview and authorization checks.",
+        "projectBlocked": "Project actions are restricted by unresolved accounting.",
+        "connectionBlocked": "Connection actions are restricted by unresolved accounting.",
+        "noSpend": "Proof reconciliation and result restoration make no provider requests. Restoring a result does not settle an unknown accounting state.",
+        "originalRun": "Resume {count, number} original, unstarted runs under the owner’s retained authorization. Normal provider admission still applies. No new run or duplicate attempt is created.",
+        "accountingState": "Accounting state",
+        "unknown": "Unknown",
+        "triageNote": "Follow-up status, assignment and waiting do not settle accounting or lift action restrictions. A changed case or expired waiting period reopens the case.",
+        "authorizationRequired": "A new attempt requires project member authorization and normal admission."
+      }
     },
     "dangerousActions": {
       "notice": "Enable two-factor authentication to {action}.",
@@ -721,6 +780,135 @@
       "note": "Costs come from the final recorded receipt for each operation. Corrections count once. Unknown amounts are excluded from cost totals; provider invoices remain authoritative.",
       "topNote": "Top 10 project/provider groups by recorded cost. Shares use the recorded cost of the entire instance. Unknown amounts and unknown provider identities are retained.",
       "referenceTitle": "SERP reference costs (current UTC month)"
+    },
+    "accounts": {
+      "title": "Accounts",
+      "count": "Accounts ({count, number})",
+      "email": "Email",
+      "status": "Status",
+      "created": "Created",
+      "lastActive": "Last active",
+      "projects": "Projects",
+      "keywords": "Keywords",
+      "connections": "Connections",
+      "searchLabel": "Search accounts",
+      "searchPlaceholder": "Search accounts by email or ID",
+      "loading": "Loading accounts...",
+      "unavailable": "Accounts are unavailable.",
+      "empty": "No accounts found.",
+      "notReported": "Not reported",
+      "find": "Find an account",
+      "notFound": "No account found.",
+      "details": "Account details",
+      "copyId": "Copy ID",
+      "adminRequired": "Administrator access is required.",
+      "question": "Which account needs attention?",
+      "statuses": {
+        "active": "active",
+        "deactivated": "deactivated"
+      }
+    },
+    "pages": {
+      "description": "Instance health, operations and administration.",
+      "unavailable": "Instance data is unavailable.",
+      "retry": "Try again",
+      "saved": "Follow-up saved.",
+      "console": "Recovery console",
+      "refreshCases": "Refresh cases",
+      "loadingCases": "Loading recovery cases...",
+      "instance": "Instance",
+      "namespace": "Temporal namespace",
+      "noAdmin": "Administrator access is required.",
+      "previewTitle": "Preview recovery batch",
+      "starting": "Starting recovery...",
+      "confirm": "Confirm recovery",
+      "startFailed": "Recovery could not be started. Try again.",
+      "expired": "Preview expired. Refresh and review the cases again.",
+      "preparing": "Preparing preview...",
+      "details": "Case details",
+      "triage": "Triage",
+      "triageStatus": "Triage status",
+      "triageReason": "Triage reason",
+      "due": "Due time",
+      "saveTriage": "Save triage",
+      "reasonRequired": "Select an investigation reason.",
+      "audit": "Audit activity",
+      "emptyAudit": "No activity in this filter.",
+      "older": "Older entries",
+      "copyTarget": "Copy target ID",
+      "mail": "Instance email settings",
+      "lastExhaustion": "Last capacity exhaustion",
+      "presenceHelp": "Latest deferred URLs from the daily URL-presence workflow. Capacity resets automatically.",
+      "questions": {
+        "status": "Is the instance healthy?",
+        "worker": "Are workers and schedules healthy?",
+        "checks": "Are rank checks and URL presence healthy?",
+        "dataSources": "Are data sources healthy?",
+        "tasks": "Which tasks need recovery?",
+        "notifications": "Are operational notifications delivered?",
+        "accounts": "Which account needs attention?",
+        "sendingToday": "How much email can this instance send today?",
+        "settings": "How is instance email configured?",
+        "audit": "What changed on this instance?"
+      },
+      "category": "Category",
+      "startRecovery": "start recovery",
+      "retryCommand": "Retry command status",
+      "attempts": "Attempts",
+      "failureClass": "Failure class",
+      "blockedReason": "Blocked reason",
+      "historical": "Historical uncertainty",
+      "closedUnknown": "Closed, accounting unknown",
+      "categories": {
+        "all": "all",
+        "unfinished": "unfinished",
+        "accounting": "accounting",
+        "failed": "failed",
+        "historical": "historical",
+        "closed_unknown": "closed unknown"
+      },
+      "triageStatuses": {
+        "open": "open",
+        "acknowledged": "acknowledged",
+        "investigating": "investigating",
+        "waiting_evidence": "waiting evidence",
+        "escalated": "escalated"
+      },
+      "triageReasons": {
+        "none": "none",
+        "investigating": "investigating",
+        "provider_support": "provider support",
+        "waiting_export": "waiting export",
+        "missing_proof": "missing proof"
+      },
+      "retainedScope": "Retained scope",
+      "auditFilters": {
+        "all": "all",
+        "account": "account",
+        "ops": "ops",
+        "setup": "setup"
+      },
+      "evidenceColumns": {
+        "classification": "classification",
+        "acceptance": "acceptance",
+        "incident": "incident",
+        "lookup": "lookup"
+      },
+      "command": "Command: {state}",
+      "commandStatuses": {
+        "queued": "queued",
+        "running": "running",
+        "completed": "completed",
+        "failed": "failed"
+      },
+      "triageSaved": "Follow-up saved.",
+      "commandOutcomes": {
+        "queued": "queued",
+        "unchanged": "unchanged",
+        "recovered": "recovered",
+        "failed": "failed",
+        "skipped": "skipped"
+      }
     }
   }
 }

@@ -6,6 +6,7 @@ import {
 import { alertRuleSchema, triggeredAlertSchema } from "./openapi-alert-response-components";
 import { competitorSchemas } from "./openapi-competitor-components";
 import { costEstimateSchema } from "./openapi-cost-estimate-components";
+import { domainVerificationSchemas } from "./openapi-domain-verification";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankRunSchemas } from "./openapi-rank-run-components";
 import { savedViewInputSchema, savedViewSchema } from "./openapi-saved-views";
@@ -81,6 +82,7 @@ const notificationPreferenceRequired = [
 ];
 
 export const resourceSchemas = {
+  ...domainVerificationSchemas,
   ...rankRunSchemas,
   AlertRule: alertRuleSchema,
   Capability: {

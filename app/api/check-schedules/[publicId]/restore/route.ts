@@ -7,14 +7,19 @@ import { restoreCheckScheduleSchema } from "@/lib/schemas/check-schedule-lifecyc
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 type Context = { params: Promise<{ publicId: string }> };
-export const POST = withAppRoute<Context>(async (request, actor, context) => {
-  const body = await request.json();
-  const data = restoreCheckScheduleSchema.parse({
-    ...body,
-    scheduleId: (await context.params).publicId,
-  });
-  const project = await requireProjectScope(actor, "manage", data.projectId, {
-    type: "check_schedule",
-  });
-  return dataResponse(await restoreSchedule(actor.id, project.id, data.scheduleId));
-});
+export const POST = withAppRoute<Context>(
+  async (request, actor, context, onCommitted) => {
+    const body = await request.json();
+    const data = restoreCheckScheduleSchema.parse({
+      ...body,
+      scheduleId: (await context.params).publicId,
+    });
+    const project = await requireProjectScope(actor, "manage", data.projectId, {
+      type: "check_schedule",
+    });
+    const result = await restoreSchedule(actor.id, project.id, data.scheduleId);
+    if (result.changed) onCommitted();
+    return dataResponse(result);
+  },
+  { mutation: true, explicitCommit: true },
+);

@@ -70,12 +70,16 @@ export function AdminFailureBreakdown({
               </span>
             ) : null}
             <span className="ml-auto whitespace-nowrap text-[10px] tabular-nums text-fg-muted">
-              {t("firstSeen", { time: relativeTime(group.firstSeen, now, t) })}
+              <time dateTime={group.firstSeen}>
+                {t("firstSeen", { time: relativeTime(group.firstSeen, now, t) })}
+              </time>
               <span
                 aria-hidden="true"
                 className="mx-2 inline-block h-2.5 w-px bg-border align-middle"
               />
-              {t("lastSeen", { time: relativeTime(group.lastSeen, now, t) })}
+              <time dateTime={group.lastSeen}>
+                {t("lastSeen", { time: relativeTime(group.lastSeen, now, t) })}
+              </time>
             </span>
           </div>
         );

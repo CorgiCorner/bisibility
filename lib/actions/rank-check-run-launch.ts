@@ -1,7 +1,7 @@
 "use server";
-
 import type { ActionPaymentFailure } from "@/lib/action-payment/contract";
 import { ActionPaymentError } from "@/lib/action-payment/token";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { launchRankCheckRun } from "@/lib/rank-check/runs/launch";
@@ -46,20 +46,24 @@ export async function launchRankCheckRunAction(
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
   try {
-    return await launchRankCheckRun({
-      actorId: actor.id,
-      paymentOptionId: data.paymentOptionId,
-      acceptedPayment: data.acceptedPayment,
-      requirePayment: true,
-      depth: data.depth,
-      idempotencyKey: data.idempotencyKey,
-      origin: APP_REQUEST_ORIGIN,
-      previewToken: data.previewToken,
-      project,
-      providerId: data.providerId,
-      spec: data.spec,
-      trigger: "manual",
-    });
+    const result = await launchRankCheckRun(
+      {
+        actorId: actor.id,
+        paymentOptionId: data.paymentOptionId,
+        acceptedPayment: data.acceptedPayment,
+        requirePayment: true,
+        depth: data.depth,
+        idempotencyKey: data.idempotencyKey,
+        origin: APP_REQUEST_ORIGIN,
+        previewToken: data.previewToken,
+        project,
+        providerId: data.providerId,
+        spec: data.spec,
+        trigger: "manual",
+      },
+      { onCommitted: () => recordAppAction(actor) },
+    );
+    return result;
   } catch (error) {
     const budgetFailure = budgetFailureResult(error);
     if (budgetFailure) return budgetFailure;

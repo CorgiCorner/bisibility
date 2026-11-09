@@ -1,5 +1,6 @@
 "use server";
 import { getActionActor, revalidateBudgetViews } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { UsageDisplayUnavailableError } from "@/lib/project-usage-display/access";
@@ -12,7 +13,9 @@ import { ZodError } from "zod";
 
 export async function updateProjectUsageDisplay(input: unknown): Promise<UsageDisplaySaveResult> {
   try {
-    const value = await saveProjectUsageDisplaySettings(input, await getActionActor());
+    const actor = await getActionActor();
+    const value = await saveProjectUsageDisplaySettings(input, actor);
+    recordAppAction(actor);
     revalidateBudgetViews();
     return { kind: "saved", value };
   } catch (error) {

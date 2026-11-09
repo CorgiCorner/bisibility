@@ -7,6 +7,7 @@ import {
 import { PRODUCT_MODULES } from "@/lib/analytics/product-interaction-contract";
 import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
 import { z } from "zod";
+import { SEO_COST_VOLUME_BUCKETS } from "./seo-cost-calculator";
 
 export const FORBIDDEN_PROPERTY_KEYS = [
   "api_key",
@@ -27,6 +28,7 @@ const provider = z.enum(["dataforseo", "ga4", "gsc", "local-sequence", "plausibl
 const surface = z.enum(["getting_started", "onboarding", "settings"]);
 const setupStep = z.enum(["add_keywords", "connect_source", "create_project", "first_check"]);
 const frequency = z.enum(["custom_cron", "daily", "manual", "monthly", "paused", "weekly"]);
+const requestTrigger = z.enum(["manual", "scheduled", "api", "unknown"]);
 
 export type UiOptionSelectedProps = {
   control: AnalyticsControlId;
@@ -51,6 +53,20 @@ const uiOptionSelectedSchema: z.ZodType<UiOptionSelectedProps> = z
   });
 
 export const analyticsEventSchemas = {
+  seo_cost_calculator_changed: z.strictObject({
+    surface: z.enum(["home", "pricing"]),
+    selection: z.enum(["light", "steady", "busy", "custom"]),
+    frequency: z.enum(["weekly", "daily"]),
+    funding_mode: z.enum(["credits", "byok"]),
+    rank_volume: z.enum(SEO_COST_VOLUME_BUCKETS),
+    research_volume: z.enum(SEO_COST_VOLUME_BUCKETS),
+    domain_volume: z.enum(SEO_COST_VOLUME_BUCKETS),
+    backlink_volume: z.enum(SEO_COST_VOLUME_BUCKETS),
+  }),
+  analytics_data_synced: z.object({
+    provider: z.enum(["gsc", "ga4", "plausible"]),
+    trigger: requestTrigger,
+  }),
   module_navigation_clicked: z.object({
     module: z.enum(PRODUCT_MODULES),
     source: z.enum(["sidebar", "command_palette", "getting_started_nav"]),
@@ -76,6 +92,11 @@ export const analyticsEventSchemas = {
     card: z.enum(["ai", "github", "team"]).optional(),
     cta: z.enum(["accelerate", "go_further", "primary"]),
     step: setupStep,
+  }),
+  free_request_used: z.object({
+    provider: z.literal("ahrefs"),
+    feature: z.literal("domain_rating"),
+    trigger: requestTrigger,
   }),
   keywords_added: z.object({
     keyword_count: z.number().int().nonnegative(),
@@ -142,6 +163,24 @@ export const analyticsEventSchemas = {
     keyword_count: z.number().int().nonnegative(),
   }),
   onboarding_project_created: z.object({ frequency }),
+  paid_request_used: z.object({
+    provider: z.enum(["dataforseo", "serpapi"]),
+    feature: z.enum([
+      "ai_visibility",
+      "ai_tracking",
+      "prompt_explorer",
+      "prompt_research",
+      "backlinks",
+      "domain_overview",
+      "keyword_metrics",
+      "keyword_research",
+      "local_scan",
+      "rank_check",
+      "ranked_keywords",
+    ]),
+    trigger: requestTrigger,
+    payment: z.enum(["byok", "credits"]),
+  }),
   onboarding_step_skipped: z.object({
     reason: z
       .enum(["cost_unclear", "just_exploring", "later", "no_provider_account"])
@@ -177,7 +216,19 @@ export const analyticsEventSchemas = {
   search_insights_track_clicked: z.object({ source: z.enum(["drawer", "row"]) }),
   setup_video_opened: z.object({ step: setupStep }),
   ui_option_selected: uiOptionSelectedSchema,
-  user_signed_up: z.object({ method: z.enum(["apple", "github", "google", "otp"]) }),
+  account_offer_viewed: z
+    .object({
+      channel: z.enum(["organic", "paid"]),
+      interval: z.enum(["monthly", "annual"]).optional(),
+    })
+    .strict(),
+  account_offer_checkout_started: z
+    .object({ channel: z.enum(["organic", "paid"]), interval: z.enum(["monthly", "annual"]) })
+    .strict(),
+  user_signed_up: z.object({
+    method: z.enum(["apple", "github", "google", "otp"]),
+    channel: z.enum(["organic", "paid"]).optional(),
+  }),
 } as const;
 
 export type AnalyticsSchemaEvent = keyof typeof analyticsEventSchemas;

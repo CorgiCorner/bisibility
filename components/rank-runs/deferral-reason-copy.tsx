@@ -72,7 +72,7 @@ function deferralAction(code: DeferralReasonCode, projectRef: ProjectRef) {
   }
   if (code === "budget_exhausted" || code === "budget_missing" || code === "credits_exhausted") {
     return {
-      href: `${appPath(projectRef, "providers")}?tab=usage`,
+      href: `${appPath(projectRef, "usage")}`,
       labelKey: "deferral.reviewBudget" as const,
     };
   }

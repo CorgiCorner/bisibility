@@ -50,23 +50,16 @@ describe("operations route fallback contracts", () => {
         active="usage"
       />,
     );
-    expect(container.querySelector("[data-integrations-loading-tabs]")).toHaveTextContent(
-      "Page-owned connections",
-    );
     expect(container.querySelector('[data-integrations-loading-panel="usage"]')).toBeTruthy();
-    expect(container.querySelector("[data-integrations-loading-tabs]")).toHaveTextContent(
-      "Page-owned connectionsPage-owned usage",
-    );
+    expect(container.querySelector("[data-integrations-loading-tabs]")).toBeNull();
     expect(container.querySelectorAll("button, input, a")).toHaveLength(0);
   });
-  it("maps the old byok loading state to the Usage tab", () => {
+  it("maps the old byok loading state to the standalone Usage panel", () => {
     const { container } = render(
       <IntegrationsPageLoading connectionsLabel="Connections" usageLabel="Usage" active="byok" />,
     );
     expect(container.querySelector('[data-integrations-loading-panel="usage"]')).toBeTruthy();
-    expect(container.querySelector("[data-integrations-loading-tabs]")).toHaveTextContent(
-      "ConnectionsUsage",
-    );
+    expect(container.querySelector("[data-integrations-loading-tabs]")).toBeNull();
   });
   it("keeps schedule navigation inert while reserving the actual object frame", () => {
     const { container } = render(

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordUserActivity } from "@/lib/activity/record-extension";
+import { ACTIVITY_METHOD_HEADER, sessionActivityKind } from "@/lib/activity/request";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import {
   loginErrorReturnTo,
@@ -53,14 +55,37 @@ async function readSessionReference(requireAvailability = false) {
 // A reference alone is not active authorization; callers must revalidate the account.
 export const getSessionReference = perRequestCache(() => readSessionReference());
 
+async function recordSessionActivity<T extends { user: { id: string; email: string } }>(
+  session: T | null,
+) {
+  if (!session) return session;
+  const requestHeaders = await headers();
+  const kind = sessionActivityKind(
+    requestHeaders.get(RETURN_TO_REQUEST_HEADER),
+    requestHeaders.get(ACTIVITY_METHOD_HEADER),
+    requestHeaders.get("next-action"),
+  );
+  if (kind) {
+    const input = {
+      userId: session.user.id,
+      email: session.user.email,
+      channel: "app" as const,
+      interactive: true,
+    };
+    // Session lookup precedes resource authorization and cannot establish an action succeeded.
+    recordUserActivity({ ...input, kind: "seen" });
+  }
+  return session;
+}
+
 const getAvailableSession = perRequestCache(async () =>
-  enforceActiveSession(await readSessionReference(true), true),
+  recordSessionActivity(await enforceActiveSession(await readSessionReference(true), true)),
 );
 
 export const getOptionalAvailableSession = getAvailableSession;
 
 export const getSession = perRequestCache(async () => {
-  return enforceActiveSession(await getSessionReference());
+  return recordSessionActivity(await enforceActiveSession(await getSessionReference()));
 });
 
 // Cookie-cached sessions can outlive an account-state change for up to 60 seconds. Keep this

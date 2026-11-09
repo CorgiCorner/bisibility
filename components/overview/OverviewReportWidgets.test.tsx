@@ -4,7 +4,7 @@ import type { Keyword } from "@/lib/queries/overview-trend";
 import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OverviewContributorsCard } from "./OverviewContributorsCard";
 import { OverviewReportHistoryCard } from "./OverviewReportHistoryCard";
 import { ProjectDashboardMessages } from "./ProjectDashboardMessages";
@@ -36,6 +36,11 @@ function fixture() {
 }
 
 describe("installed dashboard report widgets", () => {
+  beforeEach(() => {
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(322);
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+  });
+  afterEach(() => vi.restoreAllMocks());
   it("keeps historical metric help tied to each stored version instead of assigning the latest definition", () => {
     const { history } = fixture();
     const first = history.days[0]!;
@@ -73,9 +78,9 @@ describe("installed dashboard report widgets", () => {
     );
     expect(
       screen
-        .getByRole("heading", { name: "Data quality history" })
+        .getByRole("heading", { name: "Data availability" })
         .closest("[data-overview-chart-header]"),
-    ).toHaveTextContent(history.days.at(-1)!.id);
+    ).toContainElement(document.querySelector(`time[datetime="${history.days.at(-1)!.id}"]`));
     fireEvent.click(screen.getByRole("button", { name: "Explain: Data quality and coverage" }));
     const dialog = screen.getByRole("dialog");
     const label = within(dialog).getByText("Expected targets");
@@ -95,7 +100,7 @@ describe("installed dashboard report widgets", () => {
     const expected = within(screen.getByRole("dialog")).getByText("Expected targets");
     expect(expected.nextElementSibling).toHaveTextContent(String(report.counts.expected));
     expect(
-      screen.getByText("Total contribution: 100 pp. Comparable change: Unknown pp."),
+      screen.getByText("See which keywords contribute most to your visibility."),
     ).toBeVisible();
   });
 
@@ -107,7 +112,7 @@ describe("installed dashboard report widgets", () => {
       </ProjectDashboardMessages>,
     );
     expect(
-      screen.getByText("Total contribution: 100 pp. Comparable change: Unknown pp."),
+      screen.getByText("See which keywords contribute most to your visibility."),
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "Synthetic keyword 0" })).toHaveAttribute(
       "href",
@@ -120,7 +125,7 @@ describe("installed dashboard report widgets", () => {
       "/app/prj_test/rank-tracker/kw_29",
     );
     expect(
-      screen.getByText("Total contribution: 100 pp. Comparable change: Unknown pp."),
+      screen.getByText("See which keywords contribute most to your visibility."),
     ).toBeVisible();
   });
   it("keeps calendar dates, selected-population explanation and a table alternative to the chart", () => {
@@ -130,12 +135,17 @@ describe("installed dashboard report widgets", () => {
         <OverviewReportHistoryCard history={history} />
       </ProjectDashboardMessages>,
     );
+    fireEvent.click(screen.getByRole("radio", { name: "Data" }));
     expect(screen.getByRole("table", { name: "Visibility history" })).toBeVisible();
     expect(
-      within(screen.getByRole("table", { name: "Visibility history" })).getByText("2026-10-12"),
-    ).toBeVisible();
-    expect(screen.getByText(/Retained observations for the targets selected at/)).toBeVisible();
-    expect(screen.getByText(/Historical freshness policy is unknown/)).toBeVisible();
+      screen
+        .getByRole("table", { name: "Visibility history" })
+        .querySelector('time[datetime="2026-10-12"]'),
+    ).not.toBeNull();
+    expect(screen.getByText("Daily changes in your search visibility.")).toBeVisible();
+    expect(
+      screen.queryByText(/Retained observations for the targets selected at/),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Now")).not.toBeInTheDocument();
   });
   it("explains a missing report time zone without displaying a fabricated calendar", () => {
@@ -150,5 +160,33 @@ describe("installed dashboard report widgets", () => {
     );
     expect(screen.getByRole("status")).toHaveTextContent("Configure the report time zone");
     expect(screen.queryByTestId("history-chart")).not.toBeInTheDocument();
+  });
+  it("shows an empty state instead of a long table of unknown history", () => {
+    const { history } = fixture();
+    const empty = {
+      ...history,
+      days: history.days.map((day) => ({
+        ...day,
+        report: { ...day.report, value: null, counts: { ...day.report.counts, measured: 0 } },
+      })),
+    };
+    render(
+      <ProjectDashboardMessages>
+        <OverviewReportHistoryCard history={empty} quality />
+      </ProjectDashboardMessages>,
+    );
+    expect(screen.getByText("No ranking data yet")).toBeVisible();
+    expect(screen.queryByRole("table")).toBeNull();
+  });
+  it("shows an empty state when keyword contributions have no qualified data", () => {
+    const { report } = fixture();
+    render(
+      <ProjectDashboardMessages>
+        <OverviewContributorsCard rows={[]} report={report} projectRef="prj_test" />
+      </ProjectDashboardMessages>,
+    );
+    expect(screen.getByText("No ranking data yet")).toBeVisible();
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.queryByText(/Unknown pp/)).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { checkRecoveryAccount } from "@/lib/integrations/provider-recovery/check-account";
@@ -45,7 +46,9 @@ export async function checkProviderRecoveryAccount(value: unknown) {
     connectionPublicId: input.connectionId,
     actorId: actor.id,
   });
+  if (result.accountState === "verified") recordAppAction(actor);
   revalidateProviderViews();
+
   return result;
 }
 

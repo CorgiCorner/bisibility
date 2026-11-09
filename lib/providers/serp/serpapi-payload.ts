@@ -1,4 +1,5 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import type { SerpRawPayload } from "@/lib/providers/types";
 import { isGoogleRedirectUrl } from "./google-redirect";
 import {
@@ -97,11 +98,14 @@ function responseFeatures(data: SerpApiResponse) { return ["ai_overview", "answe
 
 export function rawPayload(
   pages: SerpApiResponse[],
-  decision: Exclude<OrganicResultDecision, { outcome: "indeterminate" }>,
+  decision: OrganicResultDecision,
 ): SerpRawPayload {
   const features = [...new Set(pages.flatMap(responseFeatures))];
   return {
-    normalization: organicResultNormalization(decision),
+    provider_response: redactProviderResponse(pages),
+    ...(decision.outcome === "indeterminate"
+      ? {}
+      : { normalization: organicResultNormalization(decision) }),
     organic_results: decision.organicResults,
     ...(features.length ? { serp_features: features } : {}),
   };

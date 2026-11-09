@@ -17,6 +17,7 @@ function fetchContext(credentials: ProviderCredentials, property: string): Googl
   return {
     accountKey: providerAccountKey("ga4", { apiKey: credentials.apiKey, login: property }),
     providerId: "ga4",
+    ...(credentials.captureResponse ? { captureResponse: credentials.captureResponse } : {}),
   };
 }
 

@@ -58,7 +58,10 @@ function onboardingCostCalculatorPath(_locale: AppLocale) {
   return COST_CALCULATOR_PATH;
 }
 
+async function guardAccountSurface(_userId: string): Promise<void> {}
+
 export const appExtensions = {
+  guardAccountSurface,
   getSupportWidgetPayload,
   renderHead,
   renderSupportWidget,

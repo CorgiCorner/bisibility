@@ -31,7 +31,7 @@ export function RetainedSnapshotCard({
       data-testid="retained-history-snapshot"
     >
       <div className="border-b border-border px-5 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <SectionTitle>{t("snapshotTitle", { id: observation.id })}</SectionTitle>
           <LocalizedMeasurementHelp metricId="organic_rank" definitionVersion="help-v1" />
         </div>
@@ -88,7 +88,7 @@ export function RetainedSnapshotCard({
         ) : null}
       </div>
       <section className="border-b border-border px-5 py-4" aria-label={t("featuresTitle")}>
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <h3 className="m-0 text-[13px] font-semibold">{t("featuresTitle")}</h3>
           <LocalizedMeasurementHelp metricId="feature_presence" definitionVersion="help-v1" />
         </div>

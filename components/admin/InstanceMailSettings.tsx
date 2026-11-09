@@ -1,5 +1,6 @@
 "use client";
 
+import { InstanceMailSettingsField as Field } from "@/components/admin/InstanceMailSettingsField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { MenuSelect } from "@/components/ui/MenuSelect";
@@ -18,11 +19,7 @@ import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Controller, type UseFormRegisterReturn, useWatch } from "react-hook-form";
-
-const fieldClassName =
-  "mt-1.5 flex h-10 w-full max-w-md items-center rounded-control border border-border-control bg-transparent px-3 focus-within:border-accent";
-const inputClassName = "w-full bg-transparent text-sm text-fg outline-none";
+import { Controller, useWatch } from "react-hook-form";
 
 const emptySecrets = {
   replaceCredentials: false,
@@ -35,39 +32,6 @@ const emptySecrets = {
   smtpPort: "587",
   smtpUsername: "",
 } as const;
-
-function Field({
-  error,
-  id,
-  label,
-  registration,
-  type = "text",
-}: {
-  error?: string;
-  id: string;
-  label: string;
-  registration: UseFormRegisterReturn;
-  type?: string;
-}) {
-  return (
-    <div>
-      <label className="text-[10px] uppercase tracking-[0.4px] text-fg-muted" htmlFor={id}>
-        {label}
-      </label>
-      <span className={fieldClassName}>
-        <input
-          autoComplete="off"
-          className={inputClassName}
-          id={id}
-          type={type}
-          {...registration}
-          aria-invalid={error ? true : undefined}
-        />
-      </span>
-      {error ? <p className="mt-1 text-xs text-red-text">{error}</p> : null}
-    </div>
-  );
-}
 
 function resultMessage(
   status: InstanceMailSettingsResult["status"],
@@ -85,7 +49,20 @@ function resultMessage(
 
 export function InstanceMailSettings({
   settings,
-}: Readonly<{ settings: InstanceMailSettingsView }>) {
+  onSaveSettings,
+  onClearSettings,
+  busy = false,
+}: Readonly<{
+  settings: InstanceMailSettingsView;
+  busy?: boolean;
+  onSaveSettings?: (
+    values: InstanceMailFormValues,
+  ) => InstanceMailSettingsResult | void | Promise<InstanceMailSettingsResult | void>;
+  onClearSettings?: () =>
+    | InstanceMailSettingsResult
+    | void
+    | Promise<InstanceMailSettingsResult | void>;
+}>) {
   const t = useTranslations("instanceAdmin.administration.mailer.form");
   const router = useRouter();
   const [replacing, setReplacing] = useState(false);
@@ -120,10 +97,11 @@ export function InstanceMailSettings({
   function onSave(values: InstanceMailFormValues) {
     setResult(null);
     startSave(async () => {
-      const next = await saveInstanceMailSettings({
-        ...values,
-        replaceCredentials: credentialsRequired,
-      });
+      const payload = { ...values, replaceCredentials: credentialsRequired };
+      const next = await Promise.resolve()
+        .then(() => (onSaveSettings ? onSaveSettings(payload) : saveInstanceMailSettings(payload)))
+        .catch((): InstanceMailSettingsResult => ({ status: "unavailable" }));
+      if (!next) return;
       setResult(next);
       if (next.status !== "saved") return;
       reset({
@@ -140,7 +118,10 @@ export function InstanceMailSettings({
   function onClear() {
     setResult(null);
     startClear(async () => {
-      const next = await clearInstanceMailSettings();
+      const next = await Promise.resolve()
+        .then(() => (onClearSettings ? onClearSettings() : clearInstanceMailSettings()))
+        .catch((): InstanceMailSettingsResult => ({ status: "unavailable" }));
+      if (!next) return;
       setResult(next);
       if (next.status !== "cleared") return;
       reset({ ...emptySecrets, provider: "resend", sender: "" });
@@ -152,7 +133,12 @@ export function InstanceMailSettings({
   const notice = result ? resultMessage(result.status, t) : null;
 
   return (
-    <Card component="section" size="lg" aria-labelledby="admin-mail-settings-heading">
+    <Card
+      data-testid="oss-mail-settings"
+      component="section"
+      size="lg"
+      aria-labelledby="admin-mail-settings-heading"
+    >
       <SectionTitle id="admin-mail-settings-heading">{t("title")}</SectionTitle>
       <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("description")}</p>
       {settings.envOverridesSaved ? (
@@ -258,11 +244,18 @@ export function InstanceMailSettings({
           </>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          <Button loading={saving} size="sm" type="submit" variant="primary">
+          <Button
+            disabled={busy || clearing}
+            loading={saving}
+            size="sm"
+            type="submit"
+            variant="primary"
+          >
             {saving ? t("saving") : t("save")}
           </Button>
           {settings.credentialsConfigured || settings.sender ? (
             <Button
+              disabled={busy || saving}
               loading={clearing}
               onClick={onClear}
               size="sm"

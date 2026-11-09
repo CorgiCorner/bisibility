@@ -112,6 +112,7 @@ vi.mock("@/lib/queries/retrieved-results", () => ({
 }));
 vi.mock("@/lib/rank-check/raw-retention", () => ({ getRankCheckRawRetentionDays: () => 90 }));
 vi.mock("@/lib/actions/alerts", () => ({ createKeywordAlertRule: vi.fn() }));
+vi.mock("@/lib/capacity/client-actions", () => ({ createKeywordAlertRule: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({
   addKeywords: vi.fn(),
   addKeywordsMatrix: vi.fn(),
@@ -316,7 +317,7 @@ describe("KeywordDetailPage", () => {
       expect.objectContaining({ canSync: true, syncTrafficAction: mocks.syncTraffic }),
     );
     expect(chart).toContainElement(history);
-    expect(screen.getByLabelText("Check scope")).toHaveTextContent("United StatesEnglishMobile");
+    expect(screen.queryByLabelText("Check scope")).not.toBeInTheDocument();
   });
 
   it.each(["ok", "failed", "running"])(

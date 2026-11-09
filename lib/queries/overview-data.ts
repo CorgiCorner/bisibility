@@ -53,59 +53,51 @@ export async function loadOverviewMetricData(
         overviewMarketHistoryStart(now, filters.range).getTime(),
       ),
     );
-    const [
-      projectDefaults,
-      selectedKeywords,
-      projectMarkets,
-      filteredKeywordCount,
-      addedThisMonth,
-      latestCheck,
-    ] = await Promise.all([
-      tx.projectDefaults.findUnique({
-        select: {
-          cronExpression: true,
-          frequency: true,
-          jitterMinutes: true,
-          nextCheckAt: true,
-          timezone: true,
-        },
-        where: { projectId },
-      }),
-      readOverviewMeasurements(where, historyStart, now, tx),
-      options.includeMarkets
-        ? tx.projectMarket.findMany({
-            orderBy: [{ location: { displayName: "asc" } }, { location: { languageLabel: "asc" } }],
-            select: {
-              locationId: true,
-              location: {
-                select: {
-                  countryCode: true,
-                  displayName: true,
-                  languageCode: true,
-                  languageLabel: true,
-                },
+    // These reads share one transaction connection, so they must not overlap.
+    const projectDefaults = await tx.projectDefaults.findUnique({
+      select: {
+        cronExpression: true,
+        frequency: true,
+        jitterMinutes: true,
+        nextCheckAt: true,
+        timezone: true,
+      },
+      where: { projectId },
+    });
+    const selectedKeywords = await readOverviewMeasurements(where, historyStart, now, tx);
+    const projectMarkets = options.includeMarkets
+      ? await tx.projectMarket.findMany({
+          orderBy: [{ location: { displayName: "asc" } }, { location: { languageLabel: "asc" } }],
+          select: {
+            locationId: true,
+            location: {
+              select: {
+                countryCode: true,
+                displayName: true,
+                languageCode: true,
+                languageLabel: true,
               },
             },
-            where: { projectId, status: "active" },
-          })
-        : Promise.resolve([]),
-      tx.keyword.count({ where }),
-      tx.keyword.count({
-        where: {
-          ...where,
-          createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
-        },
-      }),
-      tx.rankCheck.findFirst({
-        orderBy: { checkedAt: "desc" },
-        select: { checkedAt: true, provider: true },
-        where: {
-          keyword: options.keywordIds === undefined ? { projectId } : where,
-          ...(options.keywordIds === undefined ? {} : { createdAt: { lte: now } }),
-          status: "completed",
-        },
-      }),
-    ]);
+          },
+          where: { projectId, status: "active" },
+        })
+      : [];
+    const filteredKeywordCount = await tx.keyword.count({ where });
+    const addedThisMonth = await tx.keyword.count({
+      where: {
+        ...where,
+        createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
+      },
+    });
+    const latestCheck = await tx.rankCheck.findFirst({
+      orderBy: { checkedAt: "desc" },
+      select: { checkedAt: true, provider: true },
+      where: {
+        keyword: options.keywordIds === undefined ? { projectId } : where,
+        ...(options.keywordIds === undefined ? {} : { createdAt: { lte: now } }),
+        status: "completed",
+      },
+    });
 
     // Execution pause stops new work; active-market membership retains its observed targets.
     const eligible = selectedKeywords;

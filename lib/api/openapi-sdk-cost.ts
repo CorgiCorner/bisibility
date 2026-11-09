@@ -1,3 +1,4 @@
+import { withOperationAccessProblems } from "./openapi-operations";
 import { operationSpend } from "./operation-provider-spend";
 
 /**
@@ -96,5 +97,5 @@ export function withSdkCost<T extends Document>(document: T): T {
       ),
     ]),
   );
-  return { ...document, paths };
+  return withOperationAccessProblems({ ...document, paths });
 }

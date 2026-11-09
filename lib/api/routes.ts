@@ -8,6 +8,7 @@ import {
   revokeApiKey,
 } from "./api-keys";
 import type { ApiContext } from "./context";
+import { domainVerification } from "./domain-verification";
 import { bulkKeywords } from "./keyword-bulk";
 import { createKeywords } from "./keyword-create";
 import { deleteKeyword, getKeyword, listKeywords, patchKeyword } from "./keywords";
@@ -26,6 +27,9 @@ type Handler = (ctx: ApiContext) => Response | Promise<Response | null | undefin
 // The router has already matched method/path and applied the operation policy.
 // Keep the existing eager imports eager and every existing lazy import literal.
 const handlers = {
+  getDomainVerification: (ctx) => domainVerification(ctx, "read"),
+  issueDomainVerification: (ctx) => domainVerification(ctx, "issue"),
+  checkDomainVerification: (ctx) => domainVerification(ctx, "check"),
   listProjects,
   createProject,
   getProject: (ctx) => getProject(ctx, ctx.path[1]),

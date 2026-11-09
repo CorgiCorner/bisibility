@@ -77,7 +77,11 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
           : { outcome: "unavailable", message: "Stored provider data is unavailable." };
       }
     },
-    async execute(scope: Scope, raw: unknown): Promise<ProviderActionResult> {
+    async execute(
+      scope: Scope,
+      raw: unknown,
+      onCommitted?: () => void,
+    ): Promise<ProviderActionResult> {
       const parsed = providerUiCommandSchema.safeParse(raw);
       if (!parsed.success)
         return {
@@ -87,14 +91,17 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
           reason: "unsupported_or_invalid_command",
         };
       const command = parsed.data;
+      let committed = false;
       try {
-        return await database.$transaction(async (tx) => {
+        const result = await database.$transaction(async (tx) => {
           const state = await loadProviderUiState(tx, scope.actor, scope.projectPublicId);
           if (!state.binding.canManage)
             return { commandId: command.commandId, outcome: "forbidden" } as const;
           const replay = await retainedCommand(tx, state, command);
           if (replay) return replay;
-          const refusal = await mutateProviderUi(tx, state, command);
+          const refusal = await mutateProviderUi(tx, state, command, () => {
+            committed = true;
+          });
           const latest = refusal
             ? state
             : await loadProviderUiState(tx, scope.actor, scope.projectPublicId);
@@ -107,8 +114,11 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
             outcome: "success",
             revision: connection ? connectionRevision(latest, connection) : latest.revision,
           };
-          return retainCommand(tx, state, command, result);
+          const retained = await retainCommand(tx, state, command, result);
+          return retained;
         });
+        if (committed) onCommitted?.();
+        return result;
       } catch (error) {
         return error instanceof AuthorizationError
           ? { commandId: command.commandId, outcome: "forbidden" }

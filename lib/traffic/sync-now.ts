@@ -4,13 +4,20 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { syncTrafficForProject } from "./sync";
 
-export async function syncProjectTrafficNow(input: { actorId?: string | null; projectId: string }) {
+export async function syncProjectTrafficNow(input: {
+  actorId?: string | null;
+  projectId: string;
+  analyticsTrigger?: "manual" | "api";
+}) {
   const project = await prisma.project.findFirst({
     select: { id: true, publicId: true },
     where: { OR: [{ id: input.projectId }, { publicId: input.projectId }] },
   });
   if (!project) throw new Error("Project not found.");
-  const summary = await syncTrafficForProject(project.id, new Date());
+  const summary = await syncTrafficForProject(project.id, new Date(), null, {
+    actorId: input.actorId,
+    analyticsTrigger: input.analyticsTrigger ?? "manual",
+  });
   await writeAudit({
     action: "traffic.sync_now",
     actorId: input.actorId ?? null,

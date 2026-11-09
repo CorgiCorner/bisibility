@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { dismissRecentRun } from "@/lib/rank-check/runs/recent";
@@ -18,5 +19,6 @@ export async function dismissTrayRun(input: unknown) {
   const project = await requireProjectScope(actor, "read", data.projectId, { type: "project" });
   const result = await dismissRecentRun(project.id, actor.id, data.runId);
   if (result.dismissed) await publishOperationChanged({ projectId: project.id }).catch(() => {});
+  if (result.dismissed) recordAppAction(actor);
   return result;
 }

@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { parsePublicId } from "@/lib/db/public-id";
 import {
   ComparisonPreviewRejectedError,
@@ -34,7 +34,7 @@ async function scope(input: z.infer<typeof scopeSchema>, write: boolean) {
   const project = await requireProjectScope(actor, action, input.projectRef, { type: "keyword" });
   const keyword = await requireKeywordScope(actor, action, input.keywordRef);
   if (keyword.projectId !== project.id) throw new Error("Invalid comparison scope.");
-  return { actorId: actor.id, projectId: project.id, keywordId: keyword.id };
+  return { actor, context: { actorId: actor.id, projectId: project.id, keywordId: keyword.id } };
 }
 
 function publicRun(run: ComparisonRun | null, keywordId: string, keywordRef: string) {
@@ -46,7 +46,7 @@ function publicRun(run: ComparisonRun | null, keywordId: string, keywordRef: str
 export async function loadProviderComparisonAction(input: unknown) {
   try {
     const parsed = scopeSchema.strict().parse(input);
-    const authorized = await scope(parsed, false);
+    const { context: authorized } = await scope(parsed, false);
     const [context, run] = await Promise.all([
       loadComparisonContext(authorized.projectId, authorized.keywordId),
       readLatestProviderComparison(authorized),
@@ -64,7 +64,7 @@ export async function loadProviderComparisonAction(input: unknown) {
 export async function previewProviderComparisonAction(input: unknown) {
   try {
     const parsed = scopeSchema.strict().parse(input);
-    const authorized = await scope(parsed, true);
+    const { context: authorized } = await scope(parsed, true);
     const preview = await previewProviderComparison(authorized);
     return {
       ok: true as const,
@@ -78,13 +78,16 @@ export async function previewProviderComparisonAction(input: unknown) {
 export async function launchProviderComparisonAction(input: unknown) {
   try {
     const parsed = launchSchema.parse(input);
-    const authorized = await scope(parsed, true);
-    const run = await launchProviderComparison({
-      ...authorized,
-      previewId: parsed.previewId,
-      previewHash: parsed.previewHash,
-      requestKey: parsed.requestKey,
-    });
+    const { actor, context: authorized } = await scope(parsed, true);
+    const run = await launchProviderComparison(
+      {
+        ...authorized,
+        previewId: parsed.previewId,
+        previewHash: parsed.previewHash,
+        requestKey: parsed.requestKey,
+      },
+      () => recordAppAction(actor),
+    );
     return { ok: true as const, run: publicRun(run, authorized.keywordId, parsed.keywordRef) };
   } catch (error) {
     return {
@@ -100,7 +103,7 @@ export async function launchProviderComparisonAction(input: unknown) {
 export async function readProviderComparisonAction(input: unknown) {
   try {
     const parsed = readSchema.parse(input);
-    const authorized = await scope(parsed, false);
+    const { context: authorized } = await scope(parsed, false);
     const run = await readProviderComparison({ ...authorized, runId: parsed.runId });
     return { ok: true as const, run: publicRun(run, authorized.keywordId, parsed.keywordRef) };
   } catch {

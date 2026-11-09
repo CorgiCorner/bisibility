@@ -1,53 +1,12 @@
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  dateFormat: vi.fn(),
-  getAuditPage: vi.fn(),
-  requireAdmin: vi.fn(),
-}));
+const render = vi.hoisted(() => vi.fn());
+vi.mock("@/components/admin/pages/OssAdminPage", () => ({ OssAdminPage: render }));
 
-vi.mock("@/components/admin/AdminAuditTable", () => ({
-  AdminAuditTable: ({ filter }: Readonly<{ filter: string }>) => <p>Audit table: {filter}</p>,
-}));
-vi.mock("@/lib/auth/instance-admin", () => ({
-  requireInstanceAdmin: mocks.requireAdmin,
-}));
-vi.mock("@/lib/dates/request", () => ({
-  getResolvedDateFormat: mocks.dateFormat,
-}));
-vi.mock("@/lib/queries/instance-admin-audit", () => ({
-  getInstanceAdminAuditPage: mocks.getAuditPage,
-}));
+import Page from "./page";
 
-import InstanceAdminAuditPage from "./page";
-
-describe("instance admin audit page", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("passes the page gate and forwards URL filters and cursors", async () => {
-    mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
-    mocks.getAuditPage.mockResolvedValue({ entries: [], filter: "ops", nextCursor: null });
-    mocks.dateFormat.mockResolvedValue({ resolved: "month_first" });
-
-    render(
-      await InstanceAdminAuditPage({
-        searchParams: Promise.resolve({ cursor: ["cursor_2"], filter: "ops" }),
-      }),
-    );
-
-    expect(screen.getByText("Audit table: ops")).toBeInTheDocument();
-    expect(mocks.requireAdmin).toHaveBeenCalledOnce();
-    expect(mocks.getAuditPage).toHaveBeenCalledWith({ cursor: "cursor_2", filter: "ops" });
-    expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.getAuditPage.mock.invocationCallOrder[0] ?? 0,
-    );
-  });
-
-  it("does not render when the instance-admin gate rejects", async () => {
-    mocks.requireAdmin.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
-
-    await expect(InstanceAdminAuditPage({})).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mocks.getAuditPage).not.toHaveBeenCalled();
-  });
+it("passes search state to the shared authorized audit page", () => {
+  const searchParams = Promise.resolve({ filter: "ops", cursor: "older" });
+  Page({ searchParams });
+  expect(render).toHaveBeenCalledWith({ view: "Audit", searchParams });
 });

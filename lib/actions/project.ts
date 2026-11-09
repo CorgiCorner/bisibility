@@ -5,10 +5,12 @@ import {
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { getProjectDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.server";
 import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { createProjectRecord } from "@/lib/api/project-service";
 import { authorize } from "@/lib/auth/authorize";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import { createProjectSchema } from "@/lib/schemas/project";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
@@ -20,19 +22,22 @@ const completeProjectOnboardingSchema = z.object({
 });
 
 export async function createProject(input: unknown) {
-  const data = parseActionInput(createProjectSchema, input);
-  const actor = await getActionActor();
-  authorize(actor, "create", { ownerId: actor.id, requiredRole: "member", type: "project" });
-  const project = await createProjectRecord(data, actor.id);
-  revalidateSettingsViews();
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(createProjectSchema, input);
+    const actor = await getActionActor();
+    authorize(actor, "create", { ownerId: actor.id, requiredRole: "member", type: "project" });
+    const project = await createProjectRecord(data, actor.id);
+    recordAppAction(actor);
+    revalidateSettingsViews();
 
-  return {
-    domain: project.domain,
-    id: project.publicId,
-    name: project.name,
-    publicId: project.publicId,
-    trackingScope: project.trackingScope,
-  };
+    return {
+      domain: project.domain,
+      id: project.publicId,
+      name: project.name,
+      publicId: project.publicId,
+      trackingScope: project.trackingScope,
+    };
+  });
 }
 
 export async function completeProjectOnboarding(input: unknown) {
@@ -44,6 +49,7 @@ export async function completeProjectOnboarding(input: unknown) {
     where: { id: project.id, onboardingCompletedAt: null },
   });
 
+  if (result.count === 1) recordAppAction(actor);
   if (result.count === 1) {
     const [providerCount, keywordCount, firstCheckCount] = await Promise.all([
       prisma.providerConnection.count({
@@ -67,15 +73,17 @@ export async function completeProjectOnboarding(input: unknown) {
 }
 
 export async function updateProjectDefaults(input: unknown, review?: unknown) {
-  const result = await saveReviewedProjectDefaults(input, review);
-  if (result.kind !== "saved") return result;
-  const project = await prisma.project.findUniqueOrThrow({
-    where: { publicId: result.projectId },
-    select: { id: true },
+  return withCapacityFailure(async () => {
+    const result = await saveReviewedProjectDefaults(input, review);
+    if (result.kind !== "saved") return result;
+    const project = await prisma.project.findUniqueOrThrow({
+      where: { publicId: result.projectId },
+      select: { id: true },
+    });
+    const warning = await getProjectDepthDecreaseWarning(
+      project.id,
+      serpDepthSchema.parse(result.serpDepth),
+    );
+    return { ...result, warning };
   });
-  const warning = await getProjectDepthDecreaseWarning(
-    project.id,
-    serpDepthSchema.parse(result.serpDepth),
-  );
-  return { ...result, warning };
 }

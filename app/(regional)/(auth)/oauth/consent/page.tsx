@@ -3,6 +3,7 @@ import { BrandLockup } from "@/components/ui/BrandLockup";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
+import { appExtensions } from "@/lib/app-extensions";
 import { OAUTH_AUTHORIZATION_TTL_SECONDS } from "@/lib/auth/oauth-policy";
 import { requireSession } from "@/lib/auth/session";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
@@ -45,6 +46,7 @@ export default async function OAuthConsentPage({ searchParams }: Readonly<Consen
     requireSession(),
     getOAuthConsentClient(clientId, firstParam(params.redirect_uri)),
   ]);
+  await appExtensions.guardAccountSurface(session.user.id);
   const messages = await loadCoreMessages(runtime.locale, ["auth"]);
   const t = createIntlTranslator(runtime.locale, messages, { timeZone: runtime.timeZone });
 

@@ -62,6 +62,7 @@ export type {
 } from "./domain-overview-types";
 
 export type ProviderCredentials = {
+  captureResponse?: (status: number, body: unknown, url?: string) => Promise<void>;
   usageObserver?: ProviderUsageObserver;
   accountEmail?: string;
   login?: string;
@@ -85,6 +86,10 @@ export type ProviderTestResult = {
 };
 
 export type SerpRankInput = {
+  /** Optional top-level copy for inspection; native responses are always retained in raw. */
+  captureProviderResponse?: boolean;
+  /** Inspect returned SERP rows even when the tracked domain rank is not established. */
+  allowIncompleteResults?: boolean;
   attribution?: ProviderRequestAttribution;
   keyword: string;
   completedCheckCount?: number;
@@ -105,6 +110,8 @@ export type SerpOrganicResult = {
 };
 
 export type SerpRawPayload = {
+  /** Native response retained with the check, after access credentials are removed. */
+  provider_response?: unknown;
   snapshotPageEvidence?: SnapshotPageEvidence;
   snapshotContinuation?: SerpSnapshotContinuation;
   normalization?: {
@@ -117,6 +124,7 @@ export type SerpRawPayload = {
 };
 
 export type SerpRankResult = {
+  providerResponse?: unknown;
   billingUnits?: number | null;
   position: number | null;
   rankingUrl: string | null;

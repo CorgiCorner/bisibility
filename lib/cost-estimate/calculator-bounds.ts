@@ -1,0 +1,4 @@
+export const CALCULATOR_KEYWORD_MIN = 1;
+export const CALCULATOR_KEYWORD_MAX = 1000;
+export const CALCULATOR_LOCATION_MIN = 1;
+export const CALCULATOR_LOCATION_MAX = 20;

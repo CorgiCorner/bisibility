@@ -73,6 +73,7 @@ export function gscFetchContext(creds: ProviderCredentials, property: string): G
   return {
     accountKey: providerAccountKey("gsc", { apiKey: creds.apiKey, login: property }),
     providerId: "gsc",
+    ...(creds.captureResponse ? { captureResponse: creds.captureResponse } : {}),
   };
 }
 

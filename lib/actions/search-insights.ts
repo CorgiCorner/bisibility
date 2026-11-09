@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { prisma } from "@/lib/db/prisma";
 import type { GooglePropertyFailure } from "@/lib/integrations/google-property-failure";
 import type { GooglePropertyOption } from "@/lib/integrations/types";
@@ -138,13 +138,17 @@ export async function selectSearchInsightsProperty(input: unknown) {
   const project = await requireProjectScope(actor, "manage", data.projectId, {
     type: "provider_connection",
   });
-  const result = await saveStoredGoogleProperty({
-    actorId: actor.id,
-    projectId: project.id,
-    property: data.property,
-    provider: SOURCE,
-  });
+  const result = await saveStoredGoogleProperty(
+    {
+      actorId: actor.id,
+      projectId: project.id,
+      property: data.property,
+      provider: SOURCE,
+    },
+    () => recordAppAction(actor),
+  );
   if (result.status !== "failed") revalidatePath(MODULE_ROUTE, "page");
+
   return result;
 }
 
@@ -153,7 +157,9 @@ export async function syncSearchInsightsNow(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
   const result = await requestSearchInsightsSync({ actorId: actor.id, projectId: project.id });
+  if (result.status === "queued") recordAppAction(actor);
   if (result.status === "queued") revalidatePath(MODULE_ROUTE, "page");
+
   return result;
 }
 
@@ -189,9 +195,11 @@ async function runSearchImportTransition(
       transition: expected,
     });
     if (!result.changed) return { message: transitionFailure(expected), ok: false };
+    recordAppAction(actor);
     revalidatePath(MODULE_ROUTE, "page");
     revalidatePath(RUNS_ROUTE, "page");
     revalidatePath("/api/operations");
+
     return { ok: true, state: result.state };
   } catch (error) {
     console.error("[search-insights] import control transition failed", {

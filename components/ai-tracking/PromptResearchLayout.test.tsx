@@ -11,6 +11,7 @@ import { PromptResearchClient } from "./PromptResearchClient";
 import { researchPageFixture, researchResultFixture } from "./prompt-research-fixtures";
 
 const mocks = vi.hoisted(() => ({ lookup: vi.fn() }));
+vi.mock("@/lib/capacity/client-actions", () => ({ trackPromptResearchAction: vi.fn() }));
 vi.mock("@/lib/actions/prompt-research", () => ({ lookupPromptResearchAction: mocks.lookup }));
 type Page = PromptResearchPageData;
 function view(

@@ -6,7 +6,10 @@ import type {
 import type { KeywordImportMarketContext } from "@/lib/keywords/import-market-context";
 import type { useTranslations } from "next-intl";
 
-export type ImportResult = Awaited<ReturnType<typeof importKeywordsFromCsv>>;
+export type ImportResult = Exclude<
+  Awaited<ReturnType<typeof importKeywordsFromCsv>>,
+  import("@/lib/capacity/action").CapacityFailure
+>;
 export type ImportReview = Awaited<ReturnType<typeof reviewKeywordImport>>;
 export type ImportFilePreview = Extract<
   Awaited<ReturnType<typeof previewKeywordImportFile>>,

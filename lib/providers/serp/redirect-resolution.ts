@@ -1,3 +1,4 @@
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { isGoogleRedirectUrl } from "./google-redirect";
 
 export type RedirectMapping = { goto?: unknown; url?: unknown };
@@ -117,7 +118,8 @@ export async function resolveRedirectRows<T>(
         const resolved = destination(entry.url);
         if (resolved) mappings.set(entry.goto, resolved);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof ProviderUsagePersistenceError) throw error;
       failed = true;
     }
   }

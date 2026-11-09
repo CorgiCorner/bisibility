@@ -31,28 +31,47 @@ export function comparisonFences(input: {
       side.connectionId !== input.connection.id
     )
       throw new Error("Comparison execution custody changed.");
-    const keyword = await tx.keyword.findFirst({
-      where: { id: input.snapshot.keywordId, projectId: input.projectId, archivedAt: null },
-      include: { locationRef: true, project: { select: { domain: true } } },
-    });
-    if (
-      !keyword ||
-      keyword.text !== input.snapshot.text ||
-      keyword.device !== input.snapshot.device ||
-      keyword.locationId !== input.snapshot.locationId ||
-      keyword.project.domain !== input.snapshot.domain ||
-      ["gl", "hl", "primaryGeoCode", "primaryGeoName", "secondaryGeoName"].some(
-        (key) =>
-          keyword.locationRef[key as keyof typeof keyword.locationRef] !==
-          input.snapshot.location[key as keyof typeof input.snapshot.location],
+    if (input.snapshot.version === 1) {
+      const keyword = await tx.keyword.findFirst({
+        where: { id: input.snapshot.keywordId, projectId: input.projectId, archivedAt: null },
+        include: { locationRef: true, project: { select: { domain: true } } },
+      });
+      if (
+        !keyword ||
+        keyword.text !== input.snapshot.text ||
+        keyword.device !== input.snapshot.device ||
+        keyword.locationId !== input.snapshot.locationId ||
+        keyword.project.domain !== input.snapshot.domain ||
+        ["gl", "hl", "primaryGeoCode", "primaryGeoName", "secondaryGeoName"].some(
+          (key) =>
+            keyword.locationRef[key as keyof typeof keyword.locationRef] !==
+            input.snapshot.location[key as keyof typeof input.snapshot.location],
+        )
       )
-    )
-      throw new Error("Comparison keyword scope changed.");
+        throw new Error("Comparison keyword scope changed.");
+    } else {
+      const project = await tx.project.findUnique({
+        where: { id: input.projectId },
+        select: { domain: true },
+      });
+      const location = await tx.location.findUnique({ where: { id: input.snapshot.locationId } });
+      if (
+        !location ||
+        project?.domain !== input.snapshot.domain ||
+        ["gl", "hl", "primaryGeoCode", "primaryGeoName", "secondaryGeoName"].some(
+          (key) =>
+            location[key as keyof typeof location] !==
+            input.snapshot.location[key as keyof typeof input.snapshot.location],
+        )
+      )
+        throw new Error("Playground search scope changed.");
+    }
     const connection = await tx.providerConnection.findFirst({
       where: { id: input.connection.id, projectId: input.projectId },
     });
     if (
-      !connection?.enabled ||
+      !connection ||
+      (input.snapshot.version !== 2 && !connection.enabled) ||
       connection.status !== "connected" ||
       connection.provider !== input.connection.provider ||
       connection.credentialSource !== input.connection.fundingSource ||

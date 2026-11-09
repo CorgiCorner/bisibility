@@ -1,4 +1,5 @@
 import { addManagedCompetitorSchema } from "@/lib/competitors/types";
+import { verificationInputSchema } from "@/lib/domain-verification/model";
 import { createProjectSavedViewSchema } from "@/lib/saved-views/model";
 import { projectDefaultsPatchSchema } from "@/lib/schemas/project";
 import { testProviderConnectionSchema } from "@/lib/schemas/provider";
@@ -55,6 +56,9 @@ const pageQuery = rawInput("cursor", "limit");
 const zodPage = zodInput(sharedPageQuery, { keys: "wire" });
 
 export const operationInputs = {
+  getDomainVerification: noInput,
+  issueDomainVerification: { body: zodInput(verificationInputSchema, { keys: "wire" }) },
+  checkDomainVerification: noInput,
   ...promptTrackerOperationInputs,
   ...researchOperationInputs,
   addCompetitor: { body: zodInput(addManagedCompetitorSchema, { serverKeys: projectKey }) },

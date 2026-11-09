@@ -51,6 +51,7 @@ describe("SerpApi snapshot continuation", () => {
     vi.stubGlobal("fetch", fetch);
     const result = await fetchSerpApiSnapshotPage(input, context, 20, 20);
     expect(fetch).toHaveBeenCalledTimes(1);
+    expect(result.raw?.provider_response).toEqual([body]);
     const url = new URL(fetch.mock.calls[0][0]);
     expect(url.origin).toBe("https://serpapi.com");
     expect(Object.fromEntries(url.searchParams)).toMatchObject({

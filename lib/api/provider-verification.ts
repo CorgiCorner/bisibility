@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { withFreeRequestUsage } from "@/lib/analytics/request-usage-context";
 import { ahrefsProvider } from "@/lib/domain-rating/provider";
 import { providerCredentialRequirementMessage } from "@/lib/providers/credential-requirements";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
@@ -27,10 +29,12 @@ export async function probeProviderConnection({
   credentials,
   projectId,
   provider,
+  analytics,
 }: {
   credentials: ProviderCredentials;
   projectId: string;
   provider: ProviderCatalogItem;
+  analytics?: { actorId?: string | null; trigger?: "manual" | "api" | "unknown" };
 }): Promise<ProviderProbeResult> {
   const credentialError = providerCredentialRequirementMessage(provider, credentials);
   if (credentialError) {
@@ -42,7 +46,18 @@ export async function probeProviderConnection({
     return { message: "Rate limited, try again shortly.", ok: false, rateLimited: true };
   }
 
-  return providerAdapter(provider).testConnection(credentials);
+  const adapter = providerAdapter(provider);
+  if (provider.id !== "ahrefs") return adapter.testConnection(credentials);
+  return withFreeRequestUsage(
+    {
+      projectId,
+      actorId: analytics?.actorId,
+      operationKey: `provider-probe/${randomUUID()}`,
+      feature: "domain_rating",
+      trigger: analytics?.trigger ?? "unknown",
+    },
+    () => adapter.testConnection(credentials),
+  );
 }
 
 export async function verifyProviderConnectionBeforeSave({
@@ -50,17 +65,19 @@ export async function verifyProviderConnectionBeforeSave({
   hasStoredCredentials,
   projectId,
   provider,
+  analytics,
 }: {
   credentials: ProviderCredentials;
   hasStoredCredentials: boolean;
   projectId: string;
   provider: ProviderCatalogItem;
+  analytics?: { actorId?: string | null; trigger?: "manual" | "api" | "unknown" };
 }) {
   if (hasStoredCredentials && !hasCredentials(credentials)) {
     return;
   }
 
-  const result = await probeProviderConnection({ credentials, projectId, provider });
+  const result = await probeProviderConnection({ credentials, projectId, provider, analytics });
   if (!result.ok) {
     if (result.rateLimited) {
       throw new Error("Provider connection test is rate limited. Try again shortly.");

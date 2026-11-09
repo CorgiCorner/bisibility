@@ -27,6 +27,10 @@ const mocks = vi.hoisted(() => ({
   cleanupRankCheckRawPurgeProgress: vi.fn(),
   markStaleRunningChecks: vi.fn(),
   prisma: {
+    providerResponseCapture: {
+      findMany: vi.fn(async () => []),
+      deleteMany: vi.fn(async () => ({ count: 0 })),
+    },
     project: { findMany: vi.fn() },
   },
   purgeAuditLogs: vi.fn(),

@@ -40,6 +40,7 @@ vi.mock("@/lib/site-audit/service", () => ({
   listSiteAudits: mocks.auditList,
   readSiteAudit: mocks.auditRead,
 }));
+vi.mock("@/lib/site-audit/worker-config", () => ({ siteAuditWorkerEnabled: async () => false }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { providerConnection: { findMany: mocks.connections } },
 }));

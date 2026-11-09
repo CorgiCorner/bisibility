@@ -3,7 +3,7 @@
     "heading": "Auditoría del sitio",
     "description": "Comprueba HTTP, metadatos, encabezados, indexabilidad, enlaces y texto alternativo de imágenes de {domain}.",
     "pageLimit": "Límite de páginas",
-    "pageLimitError": "Elige entre 1 y 15 páginas.",
+    "pageLimitError": "Elige entre 1 y {limit, number} páginas.",
     "run": "Iniciar auditoría",
     "running": "Rastreando sitio",
     "cost": "Hasta 15 segundos · Sin créditos del proveedor · Los resultados se reutilizan según la configuración de caché del proyecto",
@@ -85,6 +85,24 @@
       "unknown": "No se pudo obtener la página. Su estado HTTP y sus mediciones SEO son desconocidos."
     },
     "savedPages": "Páginas guardadas",
-    "savedDetails": "Detalles del informe guardado"
+    "savedDetails": "Detalles del informe guardado",
+    "workerCost": "Se ejecuta en segundo plano · Sin créditos del proveedor",
+    "runProgress": "{state} · {pages, number} de {budget, number} páginas",
+    "verifyDomain": "Verifica este dominio para rastrear más páginas.",
+    "cancelRun": "Cancelar auditoría",
+    "resumeRun": "Reanudar auditoría",
+    "previousPages": "Páginas anteriores",
+    "nextPages": "Páginas siguientes",
+    "runStates": {
+      "queued": "En cola",
+      "running": "En curso",
+      "paused": "En pausa",
+      "complete": "Completada",
+      "stopped": "Detenida",
+      "failed": "Fallida",
+      "cancelled": "Cancelada",
+      "unknown": "Desconocido"
+    },
+    "availableLimit": "Disponible ahora: hasta {limit, number} páginas por auditoría."
   }
 }

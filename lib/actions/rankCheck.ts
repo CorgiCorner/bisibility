@@ -1,5 +1,4 @@
 "use server";
-
 import { manualRunCheckNow } from "@/lib/rank-check/manual-run";
 import type { RunCheckNowResult } from "@/lib/rank-check/manual-run-result";
 

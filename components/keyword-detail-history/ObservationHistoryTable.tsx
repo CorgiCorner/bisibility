@@ -5,6 +5,7 @@ import { ReadOnlyDataTable } from "@/components/ui/data-table/ReadOnlyDataTable"
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useFormatter, useTranslations } from "next-intl";
 import { Fragment } from "react";
+import { HistoryDetails } from "./HistoryDetails";
 import { HistoryPosition } from "./HistoryPosition";
 import { HistoryScope, sameHistoryScope } from "./HistoryScope";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
@@ -35,105 +36,110 @@ export function ObservationHistoryTable({
         }
         headers={[
           t("columns.observed"),
-          t("columns.recorded"),
           t("columns.position"),
-          t("columns.quality"),
-          t("columns.capturedScope"),
           t("columns.kernelMovement"),
-          t("columns.recordedUrls"),
+          t("detailToggle"),
           t("columns.check"),
         ]}
         rows={page.records.map((observation) => {
           const pair = observationKernelMovement(page, observation);
           const absent = determinateHistoryAbsence(observation, noMatchDepths[observation.id]);
           const url = historyExternalUrl(observation.rankingUrl);
+          const cells = [
+            <HistoryTime key="historytime-0" value={observation.observedAt} timeZone={timeZone} />,
+            <HistoryTime key="historytime-1" value={observation.recordedAt} timeZone={timeZone} />,
+            <HistoryPosition
+              key="historyposition-0"
+              observation={observation}
+              recordedDepth={noMatchDepths[observation.id]}
+            />,
+            <Fragment key="details-0">
+              <span>
+                {absent
+                  ? t("checkedDepth", { depth: observation.requestedDepth ?? 0 })
+                  : t(`freshness.${observation.freshness}`)}
+              </span>
+              <span className="block">
+                {t("methodology", {
+                  version: observation.normalizationVersion ?? t("unknown"),
+                })}
+              </span>
+              <span className="block">
+                {t("coverage", { value: t(`coverageState.${observation.completeness}`) })}
+              </span>
+            </Fragment>,
+            <Fragment key="details-1">
+              <HistoryScope key="historyscope-0" scope={observation.configuredScope} />
+              {!sameHistoryScope(observation.configuredScope, observation.effectiveScope) ? (
+                <>
+                  <span className="mt-1 block text-fg-muted">{t("effectiveScope")}</span>
+                  <HistoryScope scope={observation.effectiveScope} />
+                </>
+              ) : null}
+            </Fragment>,
+            <Fragment key="details-2">
+              {absent && (!pair?.event || pair.event === "unknown")
+                ? t("noRankToCompare")
+                : pair?.movement !== null && pair?.movement !== undefined
+                  ? t("movement", { value: format.number(pair.movement) })
+                  : pair?.event
+                    ? t(`events.${pair.event}`)
+                    : t("noPair")}
+              {pair?.baseline ? (
+                <span className="mt-1 block text-fg-muted">
+                  {t("baselineCheck", { id: pair.baseline.id })}
+                </span>
+              ) : null}
+            </Fragment>,
+            <Fragment key="details-3">
+              <span className="block break-all">
+                {t("expectedUrl", { value: observation.expectedUrlAtCheck ?? t("unknown") })}
+              </span>
+              {url ? (
+                <a
+                  key="a-0"
+                  className="mt-1 block break-all text-fg underline underline-offset-4"
+                  href={url}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  {observation.rankingUrl}
+                </a>
+              ) : (
+                <span>
+                  {t("rankingUrl", {
+                    value: observation.rankingUrl ?? (absent ? t("noRankingUrl") : t("unknown")),
+                  })}
+                </span>
+              )}
+            </Fragment>,
+            <Button
+              key="button-0"
+              size="sm"
+              variant="secondary"
+              onClick={() => onOpen(observation.id)}
+              aria-label={t("openObservation", { id: observation.id })}
+            >
+              {t("openSnapshot")}
+            </Button>,
+          ];
           return {
             id: observation.id,
             cells: [
-              <HistoryTime
-                key="historytime-0"
-                value={observation.observedAt}
-                timeZone={timeZone}
-              />,
-              <HistoryTime
-                key="historytime-1"
-                value={observation.recordedAt}
-                timeZone={timeZone}
-              />,
-              <HistoryPosition
-                key="historyposition-0"
-                observation={observation}
-                recordedDepth={noMatchDepths[observation.id]}
-              />,
-              <Fragment key="details-0">
-                <span>
-                  {absent
-                    ? t("checkedDepth", { depth: observation.requestedDepth ?? 0 })
-                    : t(`freshness.${observation.freshness}`)}
-                </span>
-                <span className="block">
-                  {t("methodology", {
-                    version: observation.normalizationVersion ?? t("unknown"),
-                  })}
-                </span>
-                <span className="block">
-                  {t("coverage", { value: t(`coverageState.${observation.completeness}`) })}
-                </span>
-              </Fragment>,
-              <Fragment key="details-1">
-                <HistoryScope key="historyscope-0" scope={observation.configuredScope} />
-                {!sameHistoryScope(observation.configuredScope, observation.effectiveScope) ? (
-                  <>
-                    <span className="mt-1 block text-fg-muted">{t("effectiveScope")}</span>
-                    <HistoryScope scope={observation.effectiveScope} />
-                  </>
-                ) : null}
-              </Fragment>,
-              <Fragment key="details-2">
-                {absent && (!pair?.event || pair.event === "unknown")
-                  ? t("noRankToCompare")
-                  : pair?.movement !== null && pair?.movement !== undefined
-                    ? t("movement", { value: format.number(pair.movement) })
-                    : pair?.event
-                      ? t(`events.${pair.event}`)
-                      : t("noPair")}
-                {pair?.baseline ? (
-                  <span className="mt-1 block text-fg-muted">
-                    {t("baselineCheck", { id: pair.baseline.id })}
-                  </span>
-                ) : null}
-              </Fragment>,
-              <Fragment key="details-3">
-                <span className="block break-all">
-                  {t("expectedUrl", { value: observation.expectedUrlAtCheck ?? t("unknown") })}
-                </span>
-                {url ? (
-                  <a
-                    key="a-0"
-                    className="mt-1 block break-all text-fg underline underline-offset-4"
-                    href={url}
-                    rel="noreferrer noopener"
-                    target="_blank"
-                  >
-                    {observation.rankingUrl}
-                  </a>
-                ) : (
-                  <span>
-                    {t("rankingUrl", {
-                      value: observation.rankingUrl ?? (absent ? t("noRankingUrl") : t("unknown")),
-                    })}
-                  </span>
-                )}
-              </Fragment>,
-              <Button
-                key="button-0"
-                size="sm"
-                variant="secondary"
-                onClick={() => onOpen(observation.id)}
-                aria-label={t("openObservation", { id: observation.id })}
-              >
-                {t("openSnapshot")}
-              </Button>,
+              cells[0],
+              cells[2],
+              cells[5],
+              <HistoryDetails key="details">
+                <div className="mt-2 space-y-2 text-fg-muted">
+                  <div>
+                    {t("columns.recorded")}: {cells[1]}
+                  </div>
+                  <div>{cells[3]}</div>
+                  <div>{cells[4]}</div>
+                  <div>{cells[6]}</div>
+                </div>
+              </HistoryDetails>,
+              cells[7],
             ],
           };
         })}

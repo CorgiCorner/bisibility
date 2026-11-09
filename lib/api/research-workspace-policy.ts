@@ -33,4 +33,20 @@ export const researchWorkspaceOperationPolicy = {
   runSiteAudit: policy("POST", "/projects/{project_id}/site-audits", "write", "write", create),
   listSiteAudits: policy("GET", "/projects/{project_id}/site-audits", "read"),
   getSiteAudit: policy("GET", "/projects/{project_id}/site-audits/{report_id}", "read"),
+  getSiteAuditRun: policy("GET", "/projects/{project_id}/site-audits/{report_id}/run", "read"),
+  listSiteAuditPages: policy("GET", "/projects/{project_id}/site-audits/{report_id}/pages", "read"),
+  cancelSiteAuditRun: policy(
+    "POST",
+    "/projects/{project_id}/site-audits/{report_id}/cancel",
+    "write",
+    "write",
+    create,
+  ),
+  resumeSiteAuditRun: policy(
+    "POST",
+    "/projects/{project_id}/site-audits/{report_id}/resume",
+    "write",
+    "write",
+    create,
+  ),
 } as const satisfies Record<string, OperationPolicy>;

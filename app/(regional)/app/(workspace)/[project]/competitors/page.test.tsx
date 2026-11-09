@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   resolveProjectAccess: vi.fn(),
 }));
 
+vi.mock("@/lib/capacity/client-actions", () => ({ addKeywords: vi.fn() }));
 vi.mock("@/components/competitors/CompetitorsWorkspace", () => ({
   CompetitorsWorkspace: ({ view }: { view: { managedCompetitors: { label: string }[] } }) => (
     <div>

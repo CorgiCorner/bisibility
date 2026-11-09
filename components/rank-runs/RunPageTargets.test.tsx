@@ -254,7 +254,7 @@ describe("RunPageTargets", () => {
       });
       expect(screen.getByRole("link", { name: "Review budget" })).toHaveAttribute(
         "href",
-        "/app/prj_example/providers?tab=usage",
+        "/app/prj_example/usage",
       );
     },
   );

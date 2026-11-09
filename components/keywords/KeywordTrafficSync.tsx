@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  SectionChevron,
+  useSectionDisclosure,
+} from "@/components/keyword-detail-history/section-disclosure";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -62,6 +66,7 @@ export function KeywordTrafficSync({
     });
   }
 
+  const { open, toggle } = useSectionDisclosure("analytics");
   const messages = {
     updated: t("updated"),
     empty: t("empty"),
@@ -79,41 +84,46 @@ export function KeywordTrafficSync({
           <SectionTitle>{t("title")}</SectionTitle>
           <p className="m-0 mt-1 text-[12px] leading-5 text-fg-muted">{t("scope")}</p>
         </div>
-        {canSync && connected && syncAction ? (
-          <Button
-            disabled={readOnly}
-            loading={pending}
-            loadingLabel={t("pending")}
-            onClick={sync}
-            size="sm"
-            startIcon={<ArrowClockwiseIcon aria-hidden size={15} weight="regular" />}
-            title={readOnlyReason ?? t("hint")}
-            variant="secondary"
+        <div className="flex items-center gap-2">
+          {canSync && connected && syncAction ? (
+            <Button
+              disabled={readOnly}
+              loading={pending}
+              loadingLabel={t("pending")}
+              onClick={sync}
+              size="sm"
+              startIcon={<ArrowClockwiseIcon aria-hidden size={15} weight="regular" />}
+              title={readOnlyReason ?? t("hint")}
+              variant="secondary"
+            >
+              {t("action")}
+            </Button>
+          ) : null}
+          <SectionChevron open={open} toggle={toggle} title={t("title")} />
+        </div>
+      </div>
+      <div hidden={!open}>
+        <KeywordAnalyticsSources connectedProviders={connectedProviders} />
+        {connected ? (
+          <p className="mb-0 mt-2 text-[12px] leading-5 text-fg-muted">{t("hint")}</p>
+        ) : null}
+        {result ? (
+          <p
+            className="mb-0 mt-3 text-[13px] leading-5 text-fg"
+            role={needsAttention ? "alert" : "status"}
           >
-            {t("action")}
-          </Button>
+            {messages[result]}
+          </p>
+        ) : null}
+        {needsAttention ? (
+          <Link
+            className="mt-2 inline-flex text-[12px] font-semibold text-accent-text hover:underline"
+            href={appPath(projectRef, "providers")}
+          >
+            {t("integrations")}
+          </Link>
         ) : null}
       </div>
-      <KeywordAnalyticsSources connectedProviders={connectedProviders} />
-      {connected ? (
-        <p className="mb-0 mt-2 text-[12px] leading-5 text-fg-muted">{t("hint")}</p>
-      ) : null}
-      {result ? (
-        <p
-          className="mb-0 mt-3 text-[13px] leading-5 text-fg"
-          role={needsAttention ? "alert" : "status"}
-        >
-          {messages[result]}
-        </p>
-      ) : null}
-      {!connected || needsAttention ? (
-        <Link
-          className="mt-2 inline-flex text-[12px] font-semibold text-accent-text hover:underline"
-          href={appPath(projectRef, "providers")}
-        >
-          {t("integrations")}
-        </Link>
-      ) : null}
     </Card>
   );
 }

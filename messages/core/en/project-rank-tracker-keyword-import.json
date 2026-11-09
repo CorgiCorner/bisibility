@@ -419,7 +419,7 @@
           "chooseDepth": "Choose check depth",
           "depthMenu": "Check depth",
           "changeDefault": "Change default",
-          "shallowVisibility": "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total."
+          "shallowVisibility": "Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown."
         },
         "runConfirmation": {
           "titleConfirm": "Run rank {count, plural, one {check} other {checks}}",

@@ -19,6 +19,7 @@ import {
   settingsScheduleInput,
 } from "@/lib/actions/settings-test-harness";
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -276,8 +277,10 @@ describe("settings default actions", () => {
       updatedAt: new Date("2026-07-02T00:00:00.000Z"),
     });
 
-    const result = await actions.updateRankCheckFrequency(
-      settingsScheduleInput({ country: "United States", device: "desktop" }),
+    const result = unwrapCapacityResult(
+      await actions.updateRankCheckFrequency(
+        settingsScheduleInput({ country: "United States", device: "desktop" }),
+      ),
     );
 
     expect(settingsActionMocks.prisma.projectDefaults.upsert).toHaveBeenCalledTimes(1);

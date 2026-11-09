@@ -1,5 +1,7 @@
+import { storeProviderResponse } from "@/lib/provider-responses/store";
 import "server-only";
 
+import { queueRequestUsageEvent } from "@/lib/analytics/request-usage-delivery";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
@@ -10,15 +12,27 @@ export function collectDomainRating(projectId: string, now = new Date()) {
   return collect(projectId, now, false);
 }
 
-export function collectInitialDomainRating(projectId: string, now = new Date()) {
-  return collect(projectId, now, true);
+export function collectInitialDomainRating(
+  projectId: string,
+  now = new Date(),
+  actorId?: string | null,
+  trigger: "manual" | "api" = "manual",
+) {
+  return collect(projectId, now, true, actorId, trigger);
 }
 
-async function collect(projectId: string, now: Date, initial: boolean) {
+async function collect(
+  projectId: string,
+  now: Date,
+  initial: boolean,
+  actorId?: string | null,
+  trigger: "manual" | "scheduled" | "api" = "scheduled",
+) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: {
       domain: true,
+      ownerId: true,
       isSample: true,
       writeMode: true,
       domainRatingEnabled: true,
@@ -78,7 +92,19 @@ async function collect(projectId: string, now: Date, initial: boolean) {
   }
   let rating: number;
   try {
-    rating = await fetchDomainRating(domain, active.key);
+    rating = await fetchDomainRating(domain, active.key, (status, body, url) =>
+      storeProviderResponse(
+        { projectId, provider: "ahrefs", feature: "domain_rating" },
+        { status, body, url },
+      ),
+    );
+    if (actorId ?? project.ownerId)
+      queueRequestUsageEvent({
+        operationKey: `domain-rating/${projectId}/${day.toISOString()}`,
+        userId: (actorId ?? project.ownerId) as string,
+        timestamp: now,
+        properties: { provider: "ahrefs", feature: "domain_rating", trigger },
+      });
   } catch (error) {
     const code = error instanceof DomainRatingError ? error.code : "unavailable";
     await prisma.domainRatingCheck.update({

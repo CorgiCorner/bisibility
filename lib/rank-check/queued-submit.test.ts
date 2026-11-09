@@ -24,6 +24,7 @@ vi.mock("@/lib/measurement-definitions/worker-queued", async (importOriginal) =>
 });
 
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { deferred } from "@/tests/deferred";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { submitQueuedRankCheckBatch } from "./queued-submit";
@@ -269,6 +270,55 @@ describe("queued paid-call fence", () => {
       unknown: [],
     });
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
+  });
+
+  it.each([
+    "preflight",
+    "admission",
+    "own-reservation",
+    "own-fence",
+    "hosted-reservation",
+    "hosted-fence",
+  ])("defers an unsent weekly refusal at %s with its reset time", async (phase) => {
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    const abort = vi.fn();
+    if (phase === "preflight") mocks.assertOperationAccess.mockRejectedValueOnce(denial);
+    if (phase === "admission") mocks.startHosted.mockRejectedValueOnce(denial);
+    if (phase.startsWith("hosted") || phase === "admission") {
+      mocks.state.credentialSource = "hosted";
+      if (phase !== "admission")
+        mocks.startHosted.mockResolvedValueOnce({
+          credentials: { login: "fixture", password: "fixture" },
+          abort,
+          finish: vi.fn(),
+          record: vi.fn(),
+          begin: phase === "hosted-reservation" ? vi.fn().mockRejectedValueOnce(denial) : vi.fn(),
+          transportStarted:
+            phase === "hosted-fence" ? vi.fn().mockRejectedValueOnce(denial) : vi.fn(),
+        });
+    }
+    if (phase === "own-reservation") mocks.beginJournal.mockRejectedValueOnce(denial);
+    if (phase === "own-fence") mocks.journal.transportStarted.mockRejectedValueOnce(denial);
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith(
+      "batch_1",
+      "weekly_request_cap_reached:2026-11-12T00:00:00Z",
+      { preSend: true },
+    );
+    expect(mocks.submit).not.toHaveBeenCalled();
+    if (phase === "own-fence") expect(mocks.journal.discard).toHaveBeenCalledOnce();
+    if (phase.startsWith("hosted")) expect(abort).toHaveBeenCalledOnce();
+  });
+
+  it("does not defer a weekly refusal if unsent cancellation is uncertain", async () => {
+    const failure = new Error("cancellation unavailable");
+    mocks.journal.transportStarted.mockRejectedValueOnce(
+      new WeeklyRequestCapError("2026-11-12T00:00:00Z"),
+    );
+    mocks.journal.discard.mockRejectedValueOnce(failure);
+    await expect(submitQueuedRankCheckBatch("batch_1")).rejects.toBe(failure);
+    expect(mocks.deferQueuedRankCheckBatch).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it.each([

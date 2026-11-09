@@ -36,7 +36,7 @@
     },
     "tags": {
       "cancel": "Cancel",
-      "description": "Tags group keywords and pages. Saved views can filter by them.",
+      "description": "Use tags to group keywords and filter saved views.",
       "duplicate": "{name} already exists.",
       "remove": "Remove tag",
       "removeError": "Tag could not be removed.",
@@ -52,16 +52,16 @@
       "title": "Data cache",
       "help": "Shared across this project’s modules. Shorter lifetimes also limit existing results; longer lifetimes apply to newly fetched results. Saved reports, measurement history and payment receipts are kept.",
       "lifetime": "Reuse results for",
-      "default": "Instance default",
+      "default": "Default",
       "hours": "{count, plural, one {# hour} other {# hours}}",
       "days": "{count, plural, one {# day} other {# days}}",
       "weeks": "{count, plural, one {# week} other {# weeks}}",
       "save": "Save",
       "saved": "Saved",
       "list": "Cached results",
-      "refresh": "Reload cached results",
+      "refresh": "Refresh",
       "loadError": "Cached results could not be loaded. Try again.",
-      "refreshHelp": "Reloads the list of saved results. No new searches or paid provider requests.",
+      "refreshHelp": "Reloads saved results. No new searches.",
       "retry": "Retry loading",
       "next": "Next page",
       "back": "First page",
@@ -102,6 +102,21 @@
         "prompt_research": "Prompt research",
         "site_audit": "Site audit"
       }
+    },
+    "domainVerification": {
+      "title": "Domain verification",
+      "description": "Verify ownership to unlock features for your domain.",
+      "verifiedDns": "Verified by DNS",
+      "verifiedSearch": "Verified by Search Console",
+      "unverified": "Not verified",
+      "recordHost": "TXT record host",
+      "recordValue": "TXT record value",
+      "copy": "Copy value",
+      "startDns": "Use DNS TXT",
+      "startSearch": "Use Search Console",
+      "check": "Check now",
+      "error": "Could not update domain verification. Try again.",
+      "copied": "Copied."
     }
   }
 }

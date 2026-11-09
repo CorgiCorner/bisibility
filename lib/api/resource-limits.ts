@@ -1,20 +1,27 @@
 import "server-only";
 
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { positiveIntFromEnv } from "@/lib/env/positive-int";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
-export class KeywordLimitExceededError extends Error {
-  constructor(readonly limit: number) {
+export class KeywordLimitExceededError extends CapacityLimitError {
+  constructor(limit: number, used = limit, requested = 1) {
     const noun = limit === 1 ? "keyword" : "keywords";
-    super(`This project is limited to ${limit} ${noun}. Delete keywords before adding more.`);
+    super(
+      { dimension: "keywordsPerProject", limit, used, requested, scope: "project" },
+      `This project is limited to ${limit} ${noun}. Delete keywords before adding more.`,
+    );
     this.name = "KeywordLimitExceededError";
   }
 }
 
-export class ProjectLimitExceededError extends Error {
-  constructor(readonly limit: number) {
+export class ProjectLimitExceededError extends CapacityLimitError {
+  constructor(limit: number, used = limit, requested = 1) {
     const noun = limit === 1 ? "project" : "projects";
-    super(`This account is limited to ${limit} ${noun}. Delete a project before creating another.`);
+    super(
+      { dimension: "projects", limit, used, requested, scope: "account" },
+      `This account is limited to ${limit} ${noun}. Delete a project before creating another.`,
+    );
     this.name = "ProjectLimitExceededError";
   }
 }
@@ -48,7 +55,7 @@ export async function assertKeywordCapacity(
   if (limit <= 0 || netNewCount <= 0) return;
   const currentCount = await client.keyword.count({ where: { projectId } });
   if (currentCount + netNewCount > limit) {
-    throw new KeywordLimitExceededError(limit);
+    throw new KeywordLimitExceededError(limit, currentCount, netNewCount);
   }
 }
 
@@ -77,6 +84,6 @@ export async function assertProjectCapacity(
   await lockCapacity(client, "project", ownerId);
   const currentCount = await client.project.count({ where: { isSample: false, ownerId } });
   if (currentCount >= limit) {
-    throw new ProjectLimitExceededError(limit);
+    throw new ProjectLimitExceededError(limit, currentCount);
   }
 }
