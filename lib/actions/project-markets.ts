@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
@@ -78,6 +78,7 @@ export async function addProjectMarkets(input: unknown): Promise<AddProjectMarke
         { isolationLevel: "Serializable" },
       );
       if (!result.ok) return result;
+      recordAppAction(actor);
       await writeAudit({
         action: "settings.project_market.add",
         actorId: actor.id,
@@ -88,6 +89,7 @@ export async function addProjectMarkets(input: unknown): Promise<AddProjectMarke
         targetType: "project",
       });
       revalidateSettingsViews();
+
       return result;
     } catch (error) {
       if (attempt === 2 || !isSerializableConflict(error)) throw error;
@@ -154,12 +156,19 @@ export async function reconcileProjectMarkets(input: unknown) {
             },
             tx,
           );
-          return { marketIds: reconciled.marketIds, removedMarketIds };
+          return {
+            changed: reconciled.added > 0 || removedMarketIds.length > 0,
+            marketIds: reconciled.marketIds,
+            removedMarketIds,
+          };
         },
         { isolationLevel: "Serializable" },
       );
+      if (result.changed) recordAppAction(actor);
       revalidateSettingsViews();
-      return result;
+
+      const { changed: _changed, ...value } = result;
+      return value;
     } catch (error) {
       if (attempt === 2 || !isSerializableConflict(error)) throw error;
     }

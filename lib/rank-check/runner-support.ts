@@ -4,6 +4,7 @@ import "server-only";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import type { SerpRankResult } from "@/lib/providers/types";
 import type { RankCheckScheduleInput } from "@/lib/rank-check/schedule";
 
@@ -40,10 +41,11 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function rankCheckRaw(rank: SerpRankResult, connectionId?: string) {
-  if (!isRecord(rank.raw)) return null;
-  const json = structuredClone(rank.raw) as unknown;
+  const json: Record<string, unknown> = isRecord(rank.raw) ? structuredClone(rank.raw) : {};
+  const native = rank.raw?.provider_response ?? rank.providerResponse;
+  if (native !== undefined) json.provider_response = redactProviderResponse(native);
   if (isRecord(json) && isRecord(json.snapshotContinuation) && connectionId) {
     json.snapshotContinuation.connectionId = connectionId;
   }
-  return isRecord(json) ? (json as Prisma.InputJsonObject) : null;
+  return Object.keys(json).length ? (json as Prisma.InputJsonObject) : null;
 }

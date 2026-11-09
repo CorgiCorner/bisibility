@@ -1,3 +1,4 @@
+import { withContextRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
@@ -45,7 +46,7 @@ import type {
 
 export { loadDomainKeywordsPage, loadDomainPagesPage } from "./page-service";
 
-export async function analyzeDomainOverview(
+async function analyzeDomainOverviewImpl(
   context: DomainOverviewServiceContext,
   options: AnalyzeDomainOverviewOptions,
 ): Promise<DomainOverviewOutcome> {
@@ -293,3 +294,8 @@ export async function analyzeDomainOverview(
 }
 
 export { loadDomainOverviewHistory } from "./history-service";
+
+export const analyzeDomainOverview = withContextRequestUsage(
+  "domain_overview",
+  analyzeDomainOverviewImpl,
+);

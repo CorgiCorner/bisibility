@@ -1,4 +1,5 @@
 import { assertAiPaymentDefinition } from "@/lib/ai-research/payment";
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import {
   suggestionPaymentDefinition,
   suggestionPaymentQuote,
@@ -36,10 +37,11 @@ export async function previewModelSuggestions(context: AiResearchContext, input:
     ...(payment ? { payment: payment.payment, paymentOptions: payment.paymentOptions } : {}),
   };
 }
-export async function generateModelSuggestions(
+async function generateModelSuggestionsImpl(
   context: AiResearchContext,
   rawInput: unknown,
   idempotencyKey: string,
+  onCommitted?: () => void,
 ): Promise<SuggestionGenerationResult> {
   const parsedInput = parseModelSuggestionsGenerateInput(rawInput);
   const {
@@ -138,6 +140,7 @@ export async function generateModelSuggestions(
       "generation_in_progress",
       "This generation is already reserved; no second provider submission is allowed.",
     );
+  onCommitted?.();
   const row = started.row;
   const retainedPreview =
     row.preview as unknown as import("./generation-schema").SuggestionGenerationPreview;
@@ -225,4 +228,18 @@ export async function generateModelSuggestions(
       retainedPreview.paymentConsent,
     );
   }
+}
+
+export function generateModelSuggestions(...args: Parameters<typeof generateModelSuggestionsImpl>) {
+  const context = args[0];
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "prompt_research",
+      operationKey: `suggestion-generation/${context.projectId}/${args[2]}`,
+    },
+    () => generateModelSuggestionsImpl(...args),
+  );
 }

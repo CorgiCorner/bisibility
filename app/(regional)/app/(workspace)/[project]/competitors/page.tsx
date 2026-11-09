@@ -1,8 +1,8 @@
 import { CompetitorsMessagesBoundary } from "@/components/competitors/CompetitorsMessagesBoundary";
 import { CompetitorsWorkspace } from "@/components/competitors/CompetitorsWorkspace";
 import { PageContent } from "@/components/shell/PageContent";
-import { addKeywords } from "@/lib/actions/keyword";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addKeywords } from "@/lib/capacity/client-actions";
 import { emptyCompetitorFilter } from "@/lib/competitors/competitor-market-model";
 import { parseCompetitorScope } from "@/lib/competitors/scope-model";
 import { resolveProjectAccess } from "@/lib/queries/_auth";

@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { syncProjectTrafficNow } from "@/lib/traffic/sync-now";
 import { z } from "zod";
 import {
@@ -20,6 +20,12 @@ export async function syncProjectTraffic(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
   const summary = await syncProjectTrafficNow({ actorId: actor.id, projectId: project.id });
+  if (
+    summary.runs.some(
+      (run) => run.status === "succeeded_with_data" || run.status === "succeeded_empty",
+    )
+  )
+    recordAppAction(actor);
   revalidateKeywordViews();
 
   return summary;

@@ -1,4 +1,5 @@
 import type { SamplePlan } from "@/lib/ai-tracking/contract";
+import type { TrackingEnvelope } from "@/lib/ai-tracking/providers/envelope";
 
 export function samplePlan(overrides: Partial<SamplePlan> = {}): SamplePlan {
   return {
@@ -27,5 +28,12 @@ export function samplePlan(overrides: Partial<SamplePlan> = {}): SamplePlan {
     attemptId: "attempt",
     deadline: new Date(Date.now() + 3600_000).toISOString(),
     ...overrides,
+  };
+}
+
+export function submittedEnvelope(plan: SamplePlan): TrackingEnvelope {
+  return {
+    status_code: 20000,
+    tasks: [{ status_code: 20100, id: `task-${plan.attemptId}`, cost: 0.0102 }],
   };
 }

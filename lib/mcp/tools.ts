@@ -3,6 +3,7 @@ import type { ApiOperationId } from "@/lib/api/operation-policy";
 import { dispatchAgentToolRoute } from "./agent-tool-routes";
 import { dispatchPromptTrackerTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
+import { dispatchDomainVerification } from "./domain-verification-tools";
 import { dispatchExtendedToolRoute, providerSettingsBody } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLocalMonitorTool } from "./local-monitor-tools";
@@ -37,6 +38,8 @@ function call(
 
 function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
+  const domainRoute = dispatchDomainVerification(name, input);
+  if (domainRoute) return domainRoute;
   const rankRunRoute = dispatchRankRunTool(name, input);
   if (rankRunRoute) return rankRunRoute;
   const localRoute = dispatchLocalMonitorTool(name, input);

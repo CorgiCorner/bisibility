@@ -1,3 +1,5 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { prepareKeywordScheduleChange } from "@/lib/capacity/schedule-change";
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
@@ -173,6 +175,7 @@ export async function assignKeywordsToSchedule(
 ) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const schedule = await requireSchedule(tx, projectId, data.scheduleId);
       const candidates = await tx.keyword.findMany({
@@ -186,6 +189,7 @@ export async function assignKeywordsToSchedule(
       });
       const moved = candidates.filter((keyword) => keyword.checkScheduleId !== schedule.id);
       const keywordIds = moved.map((keyword) => keyword.id);
+      const capacity = await prepareKeywordScheduleChange(tx, projectId, keywordIds, schedule);
       if (keywordIds.length > 0) {
         await tx.keyword.updateMany({
           data: { checkScheduleId: schedule.id },
@@ -218,6 +222,7 @@ export async function assignKeywordsToSchedule(
         },
         tx,
       );
+      await capacity.check();
       return { updated: moved.length };
     },
     { maxWait: 10_000, timeout: 60_000 },
@@ -231,6 +236,7 @@ export async function removeKeywordsFromSchedule(
 ) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const schedule = await requireSchedule(tx, projectId, data.scheduleId);
       const moved = await tx.keyword.findMany({

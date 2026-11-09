@@ -1,5 +1,6 @@
 "use server";
 import { getActionActor } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { resolveManualLocalDriver } from "@/lib/local-monitoring-host/manual-driver";
 import {
   launchMonitorFor,
@@ -12,7 +13,10 @@ export async function previewMonitorLaunchAction(input: unknown) {
   return previewMonitorFor(input, { actor: await getActionActor() }, resolveManualLocalDriver);
 }
 export async function launchMonitorAction(input: unknown) {
-  return launchMonitorFor(input, { actor: await getActionActor() });
+  const actor = await getActionActor();
+  const result = await launchMonitorFor(input, { actor });
+  if (result?.kind === "queued" && !result.receipt.replayed) recordAppAction(actor);
+  return result;
 }
 export async function readMonitorLaunchAction(input: unknown) {
   return readMonitorLaunchFor(input, { actor: await getActionActor() });

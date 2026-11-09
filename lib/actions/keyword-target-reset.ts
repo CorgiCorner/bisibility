@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -45,6 +45,8 @@ export async function resetKeywordTargetToInherit(input: unknown) {
     );
     return row;
   });
+  recordAppAction(actor);
   revalidateKeywordViews(updated.publicId);
+
   return { keywordId: updated.publicId, targetUrl: updated.targetUrl };
 }

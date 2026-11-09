@@ -1,3 +1,4 @@
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import "server-only";
 
 import { deploymentProviderCredentials } from "./credential-extension";
@@ -11,6 +12,7 @@ import type { ProviderCredentials } from "./types";
  */
 export async function resolveConnectionCredentials(
   connection: {
+    id?: string;
     provider: string;
     credentialsEncrypted: string | null;
     credentialSource: "own" | "hosted";
@@ -19,11 +21,37 @@ export async function resolveConnectionCredentials(
 ): Promise<ProviderCredentials | null> {
   switch (connection.credentialSource) {
     case "own":
-      return resolveProviderCredentials(connection.provider, connection.credentialsEncrypted);
-    case "hosted":
-      return purpose
+      return {
+        ...resolveProviderCredentials(connection.provider, connection.credentialsEncrypted),
+        ...(connection.id
+          ? {
+              captureResponse: connectionResponseRecorder(
+                connection.id,
+                connection.provider,
+                "catalog",
+              ),
+            }
+          : {}),
+      };
+    case "hosted": {
+      const credentials = await (purpose
         ? deploymentProviderCredentials(connection.provider, purpose)
-        : deploymentProviderCredentials(connection.provider);
+        : deploymentProviderCredentials(connection.provider));
+      return (
+        credentials && {
+          ...credentials,
+          ...(connection.id
+            ? {
+                captureResponse: connectionResponseRecorder(
+                  connection.id,
+                  connection.provider,
+                  "catalog",
+                ),
+              }
+            : {}),
+        }
+      );
+    }
     default:
       return null;
   }

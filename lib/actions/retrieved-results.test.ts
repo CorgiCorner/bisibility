@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadRetrievedResults } from "./retrieved-results";
 
 const mocks = vi.hoisted(() => ({
+  receipt: vi.fn(),
   getActionActor: vi.fn(),
   loadRetrievedResultsForChecks: vi.fn(),
   parseActionInput: vi.fn((schema: { parse: (v: unknown) => unknown }, input: unknown) =>
@@ -10,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   requireProjectScope: vi.fn(),
 }));
 
+vi.mock("@/lib/activity/result-receipt-extension", () => ({ recordResultReceipt: mocks.receipt }));
 vi.mock("@/lib/queries/retrieved-results", () => ({
   loadRetrievedResultsForChecks: mocks.loadRetrievedResultsForChecks,
 }));
@@ -89,8 +91,23 @@ describe("loadRetrievedResults action", () => {
       { type: "keyword" },
     );
     expect(mocks.loadRetrievedResultsForChecks).not.toHaveBeenCalled();
+    expect(mocks.receipt).not.toHaveBeenCalled();
   });
 
+  it("records a nonempty app result only after the authorized read", async () => {
+    mocks.loadRetrievedResultsForChecks.mockResolvedValue([
+      { tier: "full", checkedAt: "2026-11-05", rows: [{ position: 1 }] },
+    ]);
+    await loadRetrievedResults({ checkIds: ["check_1"], projectId: PROJECT_PUBLIC_ID });
+    expect(mocks.receipt).toHaveBeenCalledWith({
+      userId: "user_1",
+      surface: "app",
+      nonEmpty: true,
+    });
+    expect(mocks.loadRetrievedResultsForChecks.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.receipt.mock.invocationCallOrder[0],
+    );
+  });
   it("accepts exactly two checkIds", async () => {
     mocks.loadRetrievedResultsForChecks.mockResolvedValue([{ tier: "none" }, { tier: "none" }]);
 

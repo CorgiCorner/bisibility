@@ -1,6 +1,7 @@
 "use client";
 
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
+import { DashboardEmptyBody } from "@/components/dashboard-layout/DashboardEmptyBody";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
@@ -45,9 +46,13 @@ export function DomainRatingCard({
           });
   return (
     <div className="min-w-0">
-      <Card className="min-w-0 p-4" size="md" data-domain-rating-card="">
+      <Card
+        className="flex min-h-[24.625rem] min-w-0 flex-col p-4"
+        size="md"
+        data-domain-rating-card=""
+      >
         <div
-          className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2"
+          className="flex min-h-24 flex-wrap items-start justify-between gap-x-4 gap-y-2"
           data-rating-header=""
         >
           <div>
@@ -85,13 +90,10 @@ export function DomainRatingCard({
           </div>
         </div>
         {latest === null ? (
-          <div className="flex min-h-[130px] flex-col items-center justify-center gap-1 text-center">
-            <p className="m-0 text-xs font-medium">{t("empty")}</p>
-            <p className="m-0 max-w-md text-[11px] leading-5 text-fg-muted">{status}</p>
-          </div>
+          <DashboardEmptyBody title={t("empty")} description={status} />
         ) : (
           <ChartRegion
-            className="mt-1 h-[140px]"
+            className="mt-1 min-h-[140px] flex-1"
             label={t("chartLabel", { domain: data.domain ?? "" })}
           >
             <TimeSeriesChart

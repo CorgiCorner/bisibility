@@ -5,6 +5,7 @@ import type {
 } from "@/lib/ai-tracking/contract";
 import { boundedRaw, boundedUtf8, payloadHash } from "@/lib/ai-tracking/identity";
 import { persistTrackingResultSchema } from "@/lib/ai-tracking/schema";
+import { queueTrackingRunUsage } from "@/lib/analytics/tracking-run-usage";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
 import { canonicalReceipt } from "@/lib/metering/usage-read";
@@ -129,7 +130,7 @@ async function finishRun(tx: TrackingTransaction, projectId: string, runId: stri
   const remaining = await tx.aiTrackingSample.count({
     where: { projectId, runId, dispatch: { not: "terminal" } },
   });
-  if (remaining) return;
+  if (remaining) return false;
   const samples = await tx.aiTrackingSample.findMany({
     where: { projectId, runId },
     select: { measurement: true },
@@ -145,10 +146,11 @@ async function finishRun(tx: TrackingTransaction, projectId: string, runId: stri
         : samples.every((sample) => sample.measurement === "unavailable")
           ? "blocked"
           : "failed";
-  await tx.aiTrackingRun.updateMany({
+  const changed = await tx.aiTrackingRun.updateMany({
     where: { projectId, id: runId, state: { in: ["running", "planned"] } },
     data: { state, finishedAt: new Date() },
   });
+  return changed.count > 0;
 }
 export function persistTrackingResult(
   projectId: string,
@@ -173,7 +175,8 @@ export function persistTrackingResult(
     rawTruncated: input.evidence.rawTruncated || raw.truncated,
   };
   const hash = payloadHash(input);
-  return prisma.$transaction(async (tx) => {
+  let finalizedRunId: string | null = null;
+  const transaction = prisma.$transaction(async (tx) => {
     await lockTrackingProject(tx, projectId);
     const sample = await tx.aiTrackingSample.findFirst({
       where: { projectId, id: sampleId, attemptId: input.attemptId },
@@ -270,11 +273,15 @@ export function persistTrackingResult(
           snippet: observation.snippet ? boundedUtf8(observation.snippet, 4096).text : null,
         })),
       });
-    await finishRun(tx, projectId, sample.runId);
+    if (await finishRun(tx, projectId, sample.runId)) finalizedRunId = sample.runId;
     return tx.aiTrackingSample.findUniqueOrThrow({
       where: { id: sampleId },
       include: { citations: true, observations: true },
     });
+  });
+  return transaction.then((result) => {
+    if (finalizedRunId) queueTrackingRunUsage(finalizedRunId);
+    return result;
   });
 }
 

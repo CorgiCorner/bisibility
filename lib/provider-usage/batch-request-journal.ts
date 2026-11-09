@@ -6,6 +6,7 @@ import {
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
 import type { NativeRequestGuard } from "@/lib/metering/paid-attempt-types";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { ProviderRequest } from "@usagekit/providers";
@@ -85,6 +86,7 @@ export async function beginProviderTaskset(
   }).catch((cause) => {
     if (
       cause instanceof DeploymentAdmissionExhaustedError ||
+      cause instanceof WeeklyRequestCapError ||
       cause instanceof BudgetExhaustedError ||
       cause instanceof ProviderAllocationExhaustedError ||
       cause instanceof ProviderUsagePersistenceError

@@ -2,12 +2,14 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import type { RunCheckInput } from "./runner-input";
 import { credentialsFromConnection, isProviderThrottleError, rankCheckRaw } from "./runner-support";
 import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
@@ -155,13 +157,28 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
       stopOnMatch: resolveSerpStopOnMatch(input.stopOnMatch),
       attribution: providerUsage,
       tag: providerUsage?.tag,
-      credentials: journal ? { ...credentials, usageObserver: journal.observer } : credentials,
+      credentials: journal
+        ? {
+            ...credentials,
+            usageObserver: journal.observer,
+            ...(input.projectId && input.connection.id
+              ? {
+                  captureResponse: connectionResponseRecorder(
+                    input.connection.id,
+                    provider.id,
+                    "rank_check",
+                  ),
+                }
+              : {}),
+          }
+        : credentials,
     });
   } catch (caughtError) {
     let error = caughtError;
     await recordRunnerRefusal(error, input, provider.id, journal?.fenced ?? 0);
     if (
       error instanceof DeploymentAdmissionExhaustedError ||
+      error instanceof WeeklyRequestCapError ||
       error instanceof BudgetExhaustedError ||
       error instanceof ProviderAllocationExhaustedError
     )

@@ -1,5 +1,6 @@
 import { ActionPaymentError } from "@/lib/action-payment/token";
 import { AuthorizationError } from "@/lib/auth/authorize";
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import {
   BudgetExhaustedError,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/metering/admission-errors";
 import { reportRequestFailure } from "@/lib/observability/request-failure";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
 import {
@@ -34,6 +36,21 @@ export function errorFromUnknown(
   admissionDetails?: AdmissionErrorDetails | null,
 ) {
   const instance = `urn:bisibility:api:v1:${url.pathname}`;
+  if (error instanceof WeeklyRequestCapError) {
+    const limitedHeaders = new Headers(headers);
+    limitedHeaders.set("Retry-After", String(error.retryAfterSeconds()));
+    return errorResponse(error.code, error.message, 429, {
+      headers: limitedHeaders,
+      instance,
+      problemDetails: { code: error.code, resetsAt: error.resetsAt },
+    });
+  }
+  if (error instanceof CapacityLimitError)
+    return errorResponse("plan_limit_reached", error.message, 403, {
+      headers,
+      instance,
+      problemDetails: error.toJSON(),
+    });
   if (error instanceof ActionPaymentError)
     return errorResponse(
       "conflict",
@@ -134,6 +151,13 @@ export function errorFromUnknown(
     return errorResponse("forbidden", error.message, 403, { headers, instance });
   }
   if (isOperationAccessDeniedError(error)) {
+    if (error.subscriptionRequired)
+      return errorResponse(
+        "subscription_required",
+        "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+        403,
+        { headers, instance },
+      );
     return errorResponse("forbidden", error.message, 403, { headers, instance });
   }
   if (error instanceof ProjectReadOnlyError) {

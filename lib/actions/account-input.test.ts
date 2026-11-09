@@ -31,7 +31,11 @@ describe("account action input", () => {
       role: "owner",
     });
 
-    expect(mocks.updateProfileNameRecord).toHaveBeenCalledWith("user_1", "Safe name");
+    expect(mocks.updateProfileNameRecord).toHaveBeenCalledWith(
+      "user_1",
+      "Safe name",
+      expect.any(Function),
+    );
     expect(mocks.updateProfileNameRecord).toHaveBeenCalledTimes(1);
   });
 });

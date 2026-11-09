@@ -18,15 +18,15 @@ export function OverviewChartHeader({
   trailing,
 }: Readonly<OverviewChartHeaderProps>) {
   return (
-    <div className="flex min-h-[96px] items-start justify-between gap-3" data-overview-chart-header>
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-3" data-overview-chart-header>
+      <div className="min-w-0 flex-1">
         <SectionTitle>{title}</SectionTitle>
-        <p className="mt-[3px] block min-h-[2lh] font-sans text-[11px] leading-normal text-fg-muted">
+        <p className="mt-[3px] block font-sans text-[11px] leading-normal text-fg-muted">
           {definition}
         </p>
         <ConclusionSubtitle loading={captionLoading} text={caption} />
       </div>
-      {trailing}
+      {trailing ? <div className="max-w-full shrink-0">{trailing}</div> : null}
     </div>
   );
 }

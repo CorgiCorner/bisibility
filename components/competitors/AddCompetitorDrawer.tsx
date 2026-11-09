@@ -1,11 +1,14 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const addManagedCompetitor = capacityActionClient(addManagedCompetitorCapacityAction);
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Sheet } from "@/components/ui/Sheet";
-import { addManagedCompetitor } from "@/lib/actions/competitors";
+import { addManagedCompetitor as addManagedCompetitorCapacityAction } from "@/lib/actions/competitors";
 import {
   type AddManagedCompetitorInput,
   addManagedCompetitorSchema,

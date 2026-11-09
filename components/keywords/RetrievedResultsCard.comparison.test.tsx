@@ -41,9 +41,7 @@ describe("RetrievedResultsCard comparison", () => {
 
     expect(screen.getByRole("heading", { name: "SERP snapshot" })).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "What Google returned around your result, kept from the moment each check ran.",
-      ),
+      screen.getByRole("button", { name: /What Google returned around your result/ }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Stop comparing" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stored checks" })).toHaveTextContent(
@@ -130,10 +128,8 @@ describe("RetrievedResultsCard comparison", () => {
       "Mar 12, 2026, 06:00 · top 8 kept",
     );
     expect(screen.getByRole("button", { name: "Stop comparing" })).toBeVisible();
-    expect(within(header).getByRole("button", { name: "Earlier check" })).toHaveClass(
-      "min-h-[34px]",
-    );
-    expect(within(header).getByRole("button", { name: "Later check" })).toHaveClass("min-h-[34px]");
+    expect(within(header).getByRole("button", { name: "Earlier check" })).toHaveClass("min-h-9");
+    expect(within(header).getByRole("button", { name: "Later check" })).toHaveClass("min-h-9");
   });
 
   it("uses one outer card outline without an enclosing header border", () => {
@@ -197,7 +193,7 @@ describe("RetrievedResultsCard comparison", () => {
     const body = screen.getByTestId("retrieved-results-body");
     const pickers = screen.getByTestId("retrieved-picker-slots");
     expect(body).toHaveClass("h-[480px]", "sm:h-[520px]", "overflow-y-auto");
-    expect(pickers).toHaveClass("flex", "sm:justify-end");
+    expect(pickers).toHaveClass("contents", "sm:justify-end");
     const compare = screen.getByRole("button", { name: "Compare" });
     expect(compare).toBeEnabled();
     fireEvent.click(compare);

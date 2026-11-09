@@ -92,7 +92,7 @@ describe("TrackingSettingsPage", () => {
     expect(document.querySelectorAll("[data-tracking-section-test]")).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Manage schedules" })).toHaveAttribute(
       "href",
-      "/app/prj_1/runs/schedules",
+      "/app/prj_1/schedules",
     );
   });
 

@@ -20,7 +20,8 @@ describe("RetrievedResultsCard loading", () => {
     );
     expect(screen.getByText("Loading stored results...")).toBeInTheDocument();
     const body = screen.getByTestId("retrieved-results-body");
-    expect(body).toHaveClass("h-[480px]", "sm:h-[520px]", "overflow-y-auto");
+    expect(body).toHaveClass("overflow-y-auto");
+    expect(body).not.toHaveClass("h-[480px]");
 
     rerender(
       <RetrievedResultsCard

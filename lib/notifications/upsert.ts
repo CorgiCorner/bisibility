@@ -1,12 +1,18 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { hasNotificationResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Notification, NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { z } from "zod";
 import { notificationDeliveryAllowed } from "./delivery-guard";
 import type { NotificationPayload } from "./format";
 import { notificationStoredCopy } from "./stored-copy";
-import { notificationTransaction, queueNotificationEvent } from "./transaction";
+import {
+  notificationTransaction,
+  queueNotificationAfterCommit,
+  queueNotificationEvent,
+} from "./transaction";
 
 export type VersionedNotification = {
   userId: string;
@@ -59,6 +65,13 @@ export async function upsertNotification(
       RETURNING *, (xmax = 0) AS inserted`;
     const row = rows[0];
     if (!row) return { status: "stale" as const, notification: null };
+    queueNotificationAfterCommit(tx, async () => {
+      recordResultReceipt({
+        userId: row.userId,
+        surface: "alert",
+        nonEmpty: hasNotificationResult(input.type, input.payload),
+      });
+    });
     queueNotificationEvent(tx, {
       id: row.id,
       userId: row.userId,

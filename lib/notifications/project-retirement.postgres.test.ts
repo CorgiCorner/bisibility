@@ -20,7 +20,10 @@ import { upsertNotification } from "./upsert";
 
 const state = vi.hoisted(() => ({ userId: "", publish: vi.fn(async () => {}), snapshot: vi.fn() }));
 vi.mock("@/lib/notifications/realtime", () => ({ publishNotificationCreated: state.publish }));
-vi.mock("@/lib/account/account-deletion-extension", () => ({ onAccountDeletion: vi.fn() }));
+vi.mock("@/lib/account/account-deletion-extension", () => ({
+  assertAccountDeletionAllowed: vi.fn(),
+  onAccountDeletion: vi.fn(),
+}));
 vi.mock("@/lib/analytics/person-deletion", () => ({
   queueAnalyticsPersonDeletion: vi.fn(),
   flushAnalyticsPersonDeletions: vi.fn(),

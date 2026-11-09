@@ -283,10 +283,7 @@ describe("SettingsShell", () => {
 
     const links = screen.getAllByRole("link", { name: /Provider budgets and usage/i });
     expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute(
-      "href",
-      "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage",
-    );
+    expect(links[0]).toHaveAttribute("href", "/app/prj_7Kd2Qf9m/usage#provider-usage");
     expect(links[0]).toHaveTextContent("Providers / Usage");
     expect(screen.getByRole("list", { name: "Matching settings" })).toBeInTheDocument();
   });
@@ -309,15 +306,13 @@ describe("SettingsShell", () => {
     await user.type(search, "presupuesto");
 
     const result = screen.getByRole("link", { name: /Uso y presupuesto de proveedores/i });
-    expect(result).toHaveAttribute("href", "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage");
+    expect(result).toHaveAttribute("href", "/app/prj_7Kd2Qf9m/usage#provider-usage");
     expect(result).toHaveTextContent("Proveedores / Uso");
     expect(screen.getByRole("list", { name: "Resultados de ajustes" })).toBeInTheDocument();
     expect(screen.getByText("1 ajuste encontrado")).toBeVisible();
 
     await user.keyboard("{Enter}");
-    expect(routerMock.push).toHaveBeenCalledWith(
-      "/app/prj_7Kd2Qf9m/providers?tab=usage#provider-usage",
-    );
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/usage#provider-usage");
   });
 
   it("translates the empty-search guidance", async () => {
@@ -471,7 +466,7 @@ describe("SettingsShell", () => {
 
       expect(routerMock.replace).toHaveBeenCalledWith(
         section === "provider-usage"
-          ? `/app/${projectRef}/providers?tab=usage`
+          ? `/app/${projectRef}/usage`
           : `/app/${projectRef}/settings/${section}`,
       );
     },

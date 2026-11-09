@@ -45,6 +45,7 @@ export type SnapshotPageEvidence = {
   completeness: "unknown";
 };
 export type SnapshotExtensionPage = {
+  provider_response?: unknown;
   payment?: ActionPaymentReceipt;
   evidence?: SnapshotPageEvidence | null;
   start: number;

@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { prisma } from "@/lib/db/prisma";
 import {
   DefinitionConflictError,
@@ -21,8 +22,10 @@ export async function configureMeasurementDefinitionPolicyAction(
   const actor = await getActionActor();
   try {
     const result = await configureHostDefinitionPolicy(prisma, { actor }, data);
+    recordAppAction(actor);
     revalidateRankCheckViews();
     revalidatePath(appPath(data.projectId, "settings", "tracking"));
+
     return { kind: "saved", ...result, repreviewRequired: true };
   } catch (error) {
     if (error instanceof DefinitionConflictError) return { kind: "conflict" };

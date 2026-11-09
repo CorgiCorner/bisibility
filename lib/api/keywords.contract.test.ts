@@ -11,8 +11,11 @@ const mocks = vi.hoisted(() => ({
   writeAudit: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/capacity/capacity-extension", () => ({ prepareResourceCapacity: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $transaction: async (callback: (tx: unknown) => unknown) =>
+      callback({ keyword: { update: mocks.update }, keywordTag: { deleteMany: mocks.deleteMany } }),
     keyword: { findFirst: mocks.findFirst, findMany: mocks.findMany, update: mocks.update },
     keywordTag: { deleteMany: mocks.deleteMany },
   },

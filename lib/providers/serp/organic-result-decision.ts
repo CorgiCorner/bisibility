@@ -186,3 +186,30 @@ export function decideOrganicResult(input: {
         rankingUrl: null,
       };
 }
+
+/** For inspection only: retain provider rows without asserting a resolved destination or rank. */
+export function inspectOrganicCandidates(candidates: readonly OrganicResultCandidate[]) {
+  return candidates.flatMap((candidate): NormalizedOrganicResult[] => {
+    if (
+      typeof candidate.rank !== "number" ||
+      !Number.isSafeInteger(candidate.rank) ||
+      candidate.rank < 1 ||
+      typeof candidate.url !== "string"
+    )
+      return [];
+    try {
+      const url = new URL(candidate.url);
+      if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return [];
+    } catch {
+      return [];
+    }
+    return [
+      {
+        rank: candidate.rank,
+        url: candidate.url,
+        domain: typeof candidate.domain === "string" ? candidate.domain : "",
+        title: typeof candidate.title === "string" ? candidate.title : null,
+      },
+    ];
+  });
+}

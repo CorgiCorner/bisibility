@@ -343,7 +343,7 @@
         "removeTeamMemberDangerLabel": "メンバーを削除",
         "removeTeamMemberTitle": "プロジェクトメンバーを削除",
         "removeTeamMemberToastMessage": "プロジェクトメンバーを削除しました",
-        "resetAccountLimitsBody": "このアカウントのレート制限バケットをクリアします。月間の利用額は移動ウィンドウのため、リセットできません。",
+        "resetAccountLimitsBody": "このアカウントのレート制限をクリアします。",
         "resetAccountLimitsDangerLabel": "レート制限をリセット",
         "resetAccountLimitsTitle": "レート制限をリセット",
         "resetAccountLimitsToastMessage": "レート制限のリセットをリクエストしました",
@@ -606,6 +606,7 @@
       "moved": "{title}を{position}番目に移動しました。",
       "shellUnavailable": "補足情報は利用できません。ゼロという意味ではありません。",
       "widgetUnavailable": "このセクションの保存済みレポートは利用できません。",
+      "widgetNoData": "表示できるデータがありません",
       "widgetLoading": "保存済みレポートを読み込んでいます。",
       "widgetError": "このセクションを読み取れませんでした。他のセクションは引き続き利用できます。",
       "span": "{title}の幅",
@@ -665,13 +666,13 @@
       },
       "reasons": {
         "missing_project_access": "プロジェクトの読み取り権限が必要です。",
-        "preset_mismatch": "このセクションは別のプリセットの範囲を使います。",
+        "preset_mismatch": "このセクションに対応するダッシュボードの表示を選択してください。",
         "missing_competitors_access": "競合の読み取り権限が必要です。",
         "missing_local_subject": "ローカルSEOでは店舗識別情報のリビジョンを明示的に選択してください。",
         "foreign_local_subject": "選択した店舗はこのプロジェクトに属していません。",
         "missing_competitor_scope": "競合比較の範囲を明示的に選択してください。",
         "foreign_competitor_scope": "競合の範囲はこのプロジェクトに属していません。",
-        "missing_capability": "このセクションに必要な保存済みデータの機能は利用できません。"
+        "missing_capability": "このプロジェクトでは、このセクションはまだ利用できません。"
       },
       "shell": {
         "scope": "共通の検索範囲",
@@ -698,7 +699,10 @@
       "healthClear": "過去24時間に失敗した計測はありません。",
       "budgetBlocked": "現在の予算により有料計測が停止されています。",
       "budgetReadOnly": "保存済みレポートの閲覧では有料計測は実行されません。",
-      "coverageSummary": "対象{expected}件中{measured}件を判定済み。比較可能な組は{comparable}件です。",
+      "coverageSummary": "{expected} 件のキーワードのうち {measured} 件の結果があります。",
+      "coverageEmpty": "キーワードを追加すると、ここに検索順位が表示されます。",
+      "coverageFilteredEmpty": "この表示条件に一致するキーワードはありません。",
+      "coveragePending": "データが利用可能になると、検索順位の概要が表示されます。",
       "freshnessUnknown": "新しいデータのカバレッジは不明です。",
       "freshCoverage": "新しい判定済み対象: {count}件。",
       "invalidPreset": "この表示セットは利用できません。利用可能なセットを選んでください。",
@@ -1404,6 +1408,11 @@
               "definition": "上位20位までのオーガニック検索結果を表す、定義バージョン付きの指標です。",
               "interpretation": "観測のカバー率、新鮮で判定済みの結果数、比較可能な対象数と合わせて確認してください。",
               "limitation": "トラフィックや問い合わせ数ではありません。不明な結果は不在の確認ではなく、カバー率の変化だけでは改善を示しません。"
+            },
+            "visibility-top20-v2": {
+              "definition": "検索数で重み付けしたGoogleトップ20内の順位の強さです。",
+              "interpretation": "100%は測定済みキーワードがすべて1位であることを示します。トップ10のチェックで確認できた順位も含みます。",
+              "limitation": "トップ20全体での不在を確認できない場合、結果は不明のままです。データのカバー率も確認してください。"
             }
           }
         },
@@ -1776,7 +1785,7 @@
     "providerAccess": {
       "connect": "これらの項目を使用するにはデータソースを選択してください。",
       "supported": "対応プロバイダー: {providers}。",
-      "unavailable": "この機能に対応するデータソースは利用できません。",
+      "unavailable": "プロバイダーを開いて接続を確認し、始めましょう。",
       "action": "プロバイダーを開く",
       "reconnect": "これらの項目を使用するには、選択したデータソースを再接続してください。",
       "reconnectAction": "プロバイダーを再接続",
@@ -1785,7 +1794,8 @@
       "emptyDescription": "検索を実行するには、プロバイダーで対応するデータソースを選択してください。",
       "reconnectDescription": "次の検索を実行する前に、プロバイダーで選択したデータソースを再接続してください。",
       "connectAction": "データソースを選択",
-      "askAdmin": "チェックを開始するには、プロジェクト管理者にデータソースの選択を依頼してください。"
+      "askAdmin": "チェックを開始するには、プロジェクト管理者にデータソースの選択を依頼してください。",
+      "unavailableTitle": "データソースを選択"
     },
     "rankEvidence": {
       "position": "順位 {position, number}",

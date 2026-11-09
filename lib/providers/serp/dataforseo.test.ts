@@ -1653,3 +1653,42 @@ describe("DataForSEO observation completeness and policy", () => {
     expect(result.observation.requestPolicy.findTargetsIn).toBeNull();
   });
 });
+
+it.each([false, true])(
+  "retains the native response for ordinary checks as well as inspection: %s",
+  async (capture) => {
+    const native = serpEnvelope([
+      { type: "organic", rank_group: 1, url: "https://example.com/", title: "Native item" },
+    ]);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(native)));
+    const result = await dataForSeoProvider.fetchRank({
+      ...rankInput({ depth: 10 }),
+      captureProviderResponse: capture,
+    });
+    expect(result.providerResponse).toEqual(capture ? native : undefined);
+    expect(result.raw?.provider_response).toEqual(native);
+  },
+);
+
+it("retains an incomplete SERP for inspection without making a ranking claim or paying for redirect resolution", async () => {
+  const items = Array.from({ length: 19 }, (_, index) => ({
+    type: "organic",
+    rank_group: index + 1,
+    url: `https://google.com/goto?url=opaque-${index}`,
+    domain: `site-${index}.example`,
+    title: `Result ${index}`,
+  }));
+  const fetch = vi.fn(async () =>
+    jsonResponse(serpEnvelope([...items, { type: "ai_overview", items: [] }])),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const result = await dataForSeoProvider.fetchRank({
+    ...rankInput({ depth: 20, stopOnMatch: false }),
+    allowIncompleteResults: true,
+  });
+  expect(result.position).toBeNull();
+  expect(result.raw?.organic_results).toHaveLength(19);
+  expect(result.raw?.normalization).toBeUndefined();
+  expect(result.raw?.serp_features).toContain("ai overview");
+  expect(fetch).toHaveBeenCalledTimes(1);
+});

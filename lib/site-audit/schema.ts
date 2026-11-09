@@ -5,9 +5,18 @@ export const siteAuditSchema = z
     maxPages: z.number().int().min(1).max(15).default(10),
   })
   .strict();
-export const siteAuditActionSchema = siteAuditSchema.extend({
+export const siteAuditWorkerSchema = siteAuditSchema.extend({
+  maxPages: z.number().int().min(1).max(100_000).default(10),
+});
+export const siteAuditActionSchema = siteAuditWorkerSchema.extend({
   projectId: z.string().trim().min(1).max(120),
 });
+export const siteAuditPagesQuery = z
+  .object({
+    offset: z.coerce.number().int().min(0).max(100_000).default(0),
+    limit: z.coerce.number().int().min(1).max(100).default(15),
+  })
+  .strict();
 export type SiteAuditInput = z.input<typeof siteAuditSchema>;
 export type SiteAuditIssue = SiteAuditPage["issues"][number];
 export type SiteAuditPage = z.output<typeof pageSchema>;
@@ -29,9 +38,18 @@ export type SavedSiteAudit = {
   createdAt: string;
   cached: boolean;
   result: SiteAuditResult;
+  run?: {
+    state: string;
+    stopReason: string | null;
+    pagesCrawled: number;
+    budgetPages: number;
+    requests: number;
+    startedAt: string | null;
+    completedAt: string | null;
+  };
 };
 
-const pageSchema = z.object({
+export const pageSchema = z.object({
   url: z.string().max(1024),
   finalUrl: z.string().max(1024),
   status: z.number().int().min(100).max(599).nullable(),
@@ -68,12 +86,12 @@ export const siteAuditResultSchema = z.object({
   state: z.enum(["complete", "partial"]),
   stopReason: z.enum(["finished", "page_limit", "time_limit", "request_limit"]),
   limits: z.object({
-    maxPages: z.number().int().min(1).max(15),
-    maxRequests: z.literal(20),
-    maxDurationMs: z.literal(15000),
+    maxPages: z.number().int().min(1),
+    maxRequests: z.number().int().min(1),
+    maxDurationMs: z.number().int().min(1),
     maxPageBytes: z.literal(524288),
   }),
-  requests: z.number().int().min(0).max(20),
+  requests: z.number().int().min(0),
   pages: z.array(pageSchema).max(15),
   summary: z.object({
     pages: z.number().int().nonnegative(),

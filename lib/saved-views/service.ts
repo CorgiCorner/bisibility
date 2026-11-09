@@ -16,6 +16,7 @@ export async function createSavedViewFor(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ): Promise<SavedViewResource> {
   const data = parseActionInput(createProjectSavedViewSchema, input);
   const result = await db.$transaction(async (tx) => {
@@ -32,6 +33,7 @@ export async function createSavedViewFor(
     if (!resource) throw new SavedViewUnavailableError();
     return resource;
   });
+  onCommitted?.();
   revalidateKeywordViews();
   return result;
 }
@@ -40,6 +42,7 @@ export async function deleteSavedViewFor(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(deleteSavedViewSchema.strict(), input);
   // Legacy transport never deletes private resources, even with a matching actor ID.
@@ -54,6 +57,7 @@ export async function deleteSavedViewFor(
       ? deleteViewInTransaction(tx, scope, legacyContext, data.viewId)
       : { deleted: false };
   });
+  if (result.deleted) onCommitted?.();
   revalidateKeywordViews();
   return result;
 }

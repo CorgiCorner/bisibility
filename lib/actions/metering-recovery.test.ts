@@ -1,18 +1,32 @@
 import { AdminTwoFactorRequiredError } from "@/lib/auth/admin-dangerous-action";
 import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ session: vi.fn(), limit: vi.fn(), commit: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  session: vi.fn(),
+  limit: vi.fn(),
+  commit: vi.fn(),
+  preview: vi.fn(),
+  triage: vi.fn(),
+  command: vi.fn(),
+  page: vi.fn(),
+}));
 vi.mock("@/lib/auth/instance-admin", () => ({ getInstanceAdminSession: mocks.session }));
 vi.mock("@/lib/api/ratelimit", () => ({ consume: mocks.limit }));
 vi.mock("@/lib/metering/recovery/commands", () => ({
   commitRecovery: mocks.commit,
-  getRecoveryCommand: vi.fn(),
+  getRecoveryCommand: mocks.command,
 }));
-vi.mock("@/lib/metering/recovery/service", () => ({ getRecoveryPage: vi.fn() }));
-vi.mock("@/lib/metering/recovery/preview", () => ({ previewRecovery: vi.fn() }));
-vi.mock("@/lib/metering/recovery/triage", () => ({ updateRecoveryTriage: vi.fn() }));
+vi.mock("@/lib/metering/recovery/service", () => ({ getRecoveryPage: mocks.page }));
+vi.mock("@/lib/metering/recovery/preview", () => ({ previewRecovery: mocks.preview }));
+vi.mock("@/lib/metering/recovery/triage", () => ({ updateRecoveryTriage: mocks.triage }));
 
-import { commitRecoveryAction } from "./metering-recovery";
+import {
+  commitRecoveryAction,
+  getRecoveryCommandAction,
+  loadRecoveryPageAction,
+  previewRecoveryAction,
+  updateRecoveryTriageAction,
+} from "./metering-recovery";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,4 +61,26 @@ vi.mock("@/lib/auth/admin-dangerous-action", async (original) => ({
 it("refuses the dangerous operation when the admin has no enabled 2FA", async () => {
   dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("test_action"));
   expect(await commitRecoveryAction({})).toMatchObject({ ok: false, code: "two_factor_required" });
+});
+
+it.each([
+  commitRecoveryAction,
+  previewRecoveryAction,
+  updateRecoveryTriageAction,
+  getRecoveryCommandAction,
+  loadRecoveryPageAction,
+])("denies absent and non-admin sessions before recovery service calls", async (run) => {
+  for (const state of ["unauthenticated", "non-admin"]) {
+    mocks.session.mockResolvedValue(null);
+    expect(await run("fixture")).toEqual({ ok: false, code: "forbidden" });
+    for (const service of [
+      mocks.commit,
+      mocks.preview,
+      mocks.triage,
+      mocks.command,
+      mocks.page,
+      mocks.limit,
+    ])
+      expect(service, state).not.toHaveBeenCalled();
+  }
 });

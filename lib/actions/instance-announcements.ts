@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   AdminTwoFactorRequiredError,
   requireAdminTwoFactorForDangerousAction,
@@ -62,6 +62,7 @@ export async function mutateInstanceAnnouncement(input: unknown): Promise<Announ
                 ? { enabled: mutation.enabled }
                 : { delete: true },
           );
+    if (result.status === "saved" || result.status === "deleted") recordAppAction(session);
     return result;
   } catch {
     return { status: "unavailable" };

@@ -7,6 +7,9 @@ afterEach(() => vi.restoreAllMocks());
 
 const mocks = vi.hoisted(() => ({
   canProjectAction: vi.fn(),
+  domainVerificationEnabled: vi.fn(),
+  readDomainVerification: vi.fn(),
+  verificationResource: vi.fn(),
   readCache: vi.fn(),
   getSettings: vi.fn(),
   getProjectRole: vi.fn(),
@@ -15,6 +18,22 @@ const mocks = vi.hoisted(() => ({
   resolveRegionalDocumentLocale: vi.fn(),
 }));
 
+vi.mock("@/lib/domain-verification/feature", () => ({
+  domainVerificationEnabled: mocks.domainVerificationEnabled,
+}));
+vi.mock("@/lib/domain-verification/service", () => ({
+  readDomainVerification: mocks.readDomainVerification,
+  verificationResource: mocks.verificationResource,
+}));
+vi.mock("@/components/settings/general/DomainVerificationCard", async () => {
+  const { useState } = await import("react");
+  return {
+    DomainVerificationCard: ({ initial }: { initial: { domain: string } | null }) => {
+      const [verification] = useState(initial);
+      return <div data-testid="domain-verification">{verification?.domain ?? "unverified"}</div>;
+    },
+  };
+});
 vi.mock("@/lib/actions/project-data-cache", () => ({ readProjectDataCache: mocks.readCache }));
 vi.mock("@/components/settings/general/DataCacheSettings", () => ({
   DataCacheSettings: ({ initial }: { initial: unknown }) => (
@@ -57,13 +76,16 @@ import GeneralSettingsPage from "@/app/(regional)/app/(workspace)/[project]/sett
 describe("GeneralSettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.domainVerificationEnabled.mockResolvedValue(false);
     mocks.readCache.mockResolvedValue({
       ttlSeconds: null,
       page: { available: true, entries: [], cursor: "0" },
     });
     mocks.canProjectAction.mockImplementation(
       (role: string | null, action: string) =>
-        role === "owner" || role === "admin" || (role === "member" && action !== "delete"),
+        role === "owner" ||
+        role === "admin" ||
+        (role === "member" && ["read", "create", "update"].includes(action)),
     );
     mocks.getProjectRole.mockImplementation(
       (actor: { memberships: { projectId: string; role: string }[] }, projectId: string) =>
@@ -93,6 +115,49 @@ describe("GeneralSettingsPage", () => {
     mocks.loadCoreMessages.mockResolvedValue({});
   });
 
+  it("shows domain verification only when enabled for a project manager", async () => {
+    mocks.domainVerificationEnabled.mockResolvedValue(true);
+    mocks.readDomainVerification.mockResolvedValue({ id: "row" });
+    mocks.verificationResource.mockReturnValue({ domain: "example.com" });
+    mocks.requireReadableProject.mockResolvedValue({
+      actor: { id: "owner", memberships: [{ projectId: "project_1", role: "admin" }] },
+      project: { id: "project_1", publicId: "prj_resolved" },
+    });
+    render(await GeneralSettingsPage({ params: Promise.resolve({ project: "prj_untrusted" }) }));
+    expect(screen.getByTestId("domain-verification")).toBeVisible();
+    expect(mocks.readDomainVerification).toHaveBeenCalledWith(
+      "project_1",
+      expect.objectContaining({ id: "owner" }),
+    );
+  });
+  it("resets the verification card after the project's domain changes", async () => {
+    mocks.domainVerificationEnabled.mockResolvedValue(true);
+    mocks.requireReadableProject.mockResolvedValue({
+      actor: { id: "owner", memberships: [{ projectId: "project_1", role: "owner" }] },
+      project: { id: "project_1", publicId: "prj_resolved" },
+    });
+    mocks.verificationResource.mockReturnValue({ domain: "example.com" });
+    const params = Promise.resolve({ project: "prj_resolved" });
+    const view = render(await GeneralSettingsPage({ params }));
+    expect(screen.getByTestId("domain-verification")).toHaveTextContent("example.com");
+    mocks.getSettings.mockResolvedValue({
+      project: { domain: "example.org", name: "Example", writeMode: "active" },
+      tags: [],
+    });
+    mocks.verificationResource.mockReturnValue(null);
+    view.rerender(await GeneralSettingsPage({ params }));
+    expect(screen.getByTestId("domain-verification")).toHaveTextContent("unverified");
+  });
+  it.each(["viewer", "member"])("does not show domain verification to a %s", async (role) => {
+    mocks.domainVerificationEnabled.mockResolvedValue(true);
+    mocks.requireReadableProject.mockResolvedValue({
+      actor: { id: "viewer", memberships: [{ projectId: "project_1", role }] },
+      project: { id: "project_1", publicId: "prj_resolved" },
+    });
+    render(await GeneralSettingsPage({ params: Promise.resolve({ project: "prj_untrusted" }) }));
+    expect(screen.queryByTestId("domain-verification")).not.toBeInTheDocument();
+    expect(mocks.readDomainVerification).not.toHaveBeenCalled();
+  });
   it("loads project data and server-side access before rendering General", async () => {
     render(await GeneralSettingsPage({ params: Promise.resolve({ project: "prj_untrusted" }) }));
 
@@ -105,6 +170,7 @@ describe("GeneralSettingsPage", () => {
       "projectSettingsUsage",
     ]);
     expect(screen.getByRole("main")).toHaveAttribute("data-project-ref", "prj_resolved");
+    expect(screen.queryByTestId("domain-verification")).not.toBeInTheDocument();
 
     const section = document.querySelector("[data-general-project-name]");
     expect(section).toHaveAttribute("data-general-project-name", "Example");

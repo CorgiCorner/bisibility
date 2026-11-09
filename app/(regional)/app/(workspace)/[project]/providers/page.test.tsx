@@ -1,7 +1,9 @@
 import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
+import { redirect } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import UsagePage from "../usage/page";
 import IntegrationsPage from "./page";
 
 const mocks = vi.hoisted(() => ({
@@ -105,15 +107,19 @@ describe("IntegrationsPage", () => {
     });
   });
 
-  it.each(["usage", "byok"])("opens the unified Usage tab for %s", async (tab) => {
+  it.each(["usage", "byok"])("redirects the legacy %s tab to its separate page", async (tab) => {
+    await IntegrationsPage({
+      params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
+      searchParams: Promise.resolve({ tab, budget: "edit" }),
+    });
+    expect(redirect).toHaveBeenCalledWith("/app/prj_abcdefghijklmnopqrstuvwx/usage?budget=edit");
+  });
+
+  it("renders Usage without a provider tab strip", async () => {
     render(
-      await IntegrationsPage({
-        params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
-        searchParams: Promise.resolve({ tab }),
-      }),
+      await UsagePage({ params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }) }),
     );
-    expect(screen.getByRole("tab", { name: "Usage", selected: true })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(2);
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(screen.getByText("Usage panel")).toBeInTheDocument();
   });
 
@@ -130,7 +136,7 @@ describe("IntegrationsPage", () => {
       ],
     });
     render(
-      await IntegrationsPage({
+      await UsagePage({
         params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
         searchParams: Promise.resolve({ tab: "usage" }),
       }),

@@ -128,6 +128,7 @@ export type DashboardMessageKey =
   | "shellUnavailable"
   | "widgetUnavailable"
   | "widgetLoading"
+  | "widgetNoData"
   | "widgetError"
   | "widgetLoadOnSave"
   | "viewDetails"

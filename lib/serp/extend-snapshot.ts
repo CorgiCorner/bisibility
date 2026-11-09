@@ -144,6 +144,9 @@ export async function extendSnapshot(input: SnapshotPaymentInput) {
               ? {}
               : { organicReturned: next.organicReturned - precedingOrganicCount }),
             evidence: readSnapshotPageEvidence(raw),
+            ...(raw.provider_response === undefined
+              ? {}
+              : { provider_response: raw.provider_response }),
           },
         ],
       },

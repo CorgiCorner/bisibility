@@ -206,7 +206,15 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
     );
     if (admission.blockedReason) {
       await tx.rankCheckRun.updateMany({
-        data: { blockedReason: admission.blockedReason, status: "blocked" },
+        data:
+          admission.blockedReason === "weekly_request_cap_reached"
+            ? {
+                blockedReason: admission.blockedReason,
+                finishedAt: now,
+                outcome: "deferred",
+                status: "completed",
+              }
+            : { blockedReason: admission.blockedReason, status: "blocked" },
         where: { id: runId, status: run.status },
       });
       return "not_ready" as const;

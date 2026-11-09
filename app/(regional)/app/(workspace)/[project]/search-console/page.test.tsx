@@ -3,6 +3,7 @@ import { startTransition, use } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SearchInsightsPage from "./page";
 
+vi.mock("@/lib/capacity/client-actions", () => ({ addKeywordsMatrix: mocks.addKeywords }));
 vi.mock("./PageIndexingSection", () => ({
   SearchConsoleNavigation: () => <nav data-testid="search-console-tabs" />,
   PageIndexingView: () => <div data-testid="page-indexing" />,

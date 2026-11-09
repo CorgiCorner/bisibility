@@ -141,7 +141,7 @@ export async function approveTrackingConfiguration(
 export async function launchTrackingRun(
   projectId: string,
   input: PlanTrackingRunInput & { consent: boolean },
-) {
+): ReturnType<typeof planTrackingRun> {
   await reauthorizeTrackingActor(projectId, input);
   if (input.origin === "manual" && input.paymentScope === "recurring")
     throw new Error("Manual tracking requires a manual payment review.");
@@ -167,7 +167,7 @@ export async function launchTrackingRun(
       ]);
     if (identity(input) !== identity(stored))
       throw new Error("Tracking idempotency key is bound to another request.");
-    return prior;
+    return { ...prior, replayed: true };
   }
   const approved = await approveTrackingConfiguration(projectId, input);
   const { consent: _consent, acceptedPayment: _accepted, ...plan } = input;

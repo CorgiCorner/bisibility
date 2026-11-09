@@ -3,6 +3,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import "server-only";
@@ -204,7 +205,17 @@ async function executePaidProviderCall<
   });
   try {
     result = await input.call(
-      journal ? { ...credentials, usageObserver: journal.observer } : credentials,
+      journal
+        ? {
+            ...credentials,
+            usageObserver: journal.observer,
+            captureResponse: connectionResponseRecorder(
+              input.connection.id,
+              input.provider.id,
+              input.feature,
+            ),
+          }
+        : credentials,
       usage,
     );
   } catch (error) {

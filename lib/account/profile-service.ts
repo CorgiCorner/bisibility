@@ -5,7 +5,11 @@ import { prisma } from "@/lib/db/prisma";
 import { assertEditableDemoAccountMutable } from "@/lib/demo/identity";
 
 /** Shared by the session action and personal-token API; callers authorize and revalidate. */
-export async function updateProfileNameRecord(userId: string, name: string) {
+export async function updateProfileNameRecord(
+  userId: string,
+  name: string,
+  onCommitted?: () => void,
+) {
   await assertEditableDemoAccountMutable(userId);
   const before = await prisma.user.findUnique({
     select: { name: true, publicId: true },
@@ -21,6 +25,7 @@ export async function updateProfileNameRecord(userId: string, name: string) {
     where: { id: userId },
   });
 
+  onCommitted?.();
   await writeAudit({
     action: "account.profile_updated",
     actorId: userId,

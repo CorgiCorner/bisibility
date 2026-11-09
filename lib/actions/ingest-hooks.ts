@@ -1,6 +1,6 @@
 "use server";
-
 import { randomBytes } from "node:crypto";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -65,6 +65,7 @@ export async function createIngestHook(input: unknown) {
     select: { createdAt: true, disabled: true, id: true, label: true, publicId: true },
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "ingest_hook.create",
     actorId: actor.id,
@@ -103,6 +104,7 @@ export async function disableIngestHook(input: unknown) {
     where: { id: before.id },
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "ingest_hook.disable",
     actorId: actor.id,
@@ -114,7 +116,9 @@ export async function disableIngestHook(input: unknown) {
   });
   revalidateSettingsViews();
 
-  return safeHook(hook);
+  const actionResult = await safeHook(hook);
+
+  return actionResult;
 }
 
 export async function rotateIngestHook(input: unknown) {
@@ -152,6 +156,7 @@ export async function rotateIngestHook(input: unknown) {
     );
     return updated;
   });
+  recordAppAction(actor);
   revalidateSettingsViews();
 
   return {
@@ -192,8 +197,10 @@ export async function sendIngestHookTest(input: unknown) {
     throw new Error("Deploy webhook test event could not be created.");
   }
 
+  recordAppAction(actor);
   revalidateTimelineViews();
   const signalId = result.signal.publicId;
+
   return {
     signalHref: `${appPath(project.publicId, "timeline")}?filter=deploys&q=${encodeURIComponent(signalId)}#signal-${signalId}`,
     signalId,
@@ -212,6 +219,7 @@ export async function deleteIngestHook(input: unknown) {
   }
 
   await prisma.ingestHook.delete({ where: { id: before.id } });
+  recordAppAction(actor);
   await writeAudit({
     action: "ingest_hook.delete",
     actorId: actor.id,

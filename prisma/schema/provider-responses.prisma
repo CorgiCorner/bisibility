@@ -1,0 +1,24 @@
+// Native provider payloads are separate from normalized product data and accounting receipts.
+model ProviderResponseCapture {
+  id               String   @id
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  connectionId     String?
+  provider         String
+  feature          String
+  operationId      String?
+  attemptId        String?
+  httpStatus       Int
+  requestUrl       String?
+  payloadEncrypted String
+  payloadHash      String
+  payloadBytes     Int
+  encoding         String   @default("gzip-json-v1")
+  capturedAt       DateTime @default(now())
+  expiresAt        DateTime?
+
+  @@index([projectId, capturedAt])
+  @@index([projectId, operationId])
+  @@index([expiresAt])
+  @@map("provider_response_captures")
+}

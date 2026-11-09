@@ -1,4 +1,5 @@
 import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import { researchCacheIdentity } from "./cache-identity";
 import { AiResearchPaidFailure, outcome } from "./outcome";
 import {
@@ -249,12 +250,43 @@ async function run(
 }
 
 export function analyzeAiVisibility(context: AiResearchContext, input: unknown) {
-  return outcome(() => run(context, "ai_visibility", visibilitySchema.parse(input)));
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "ai_visibility",
+    },
+    () => outcome(() => run(context, "ai_visibility", visibilitySchema.parse(input))),
+  );
 }
 export function compareAiPrompts(context: AiResearchContext, input: unknown) {
-  return outcome(() => run(context, "prompt_explorer", promptSchema.parse(input)));
+  const idempotencyKey =
+    input && typeof input === "object" && "idempotency_key" in input
+      ? input.idempotency_key
+      : undefined;
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "prompt_explorer",
+      ...(typeof idempotencyKey === "string" && /^[0-9a-f-]{36}$/i.test(idempotencyKey)
+        ? { operationKey: `prompt-explorer/${context.projectId}/${idempotencyKey}` }
+        : {}),
+    },
+    () => outcome(() => run(context, "prompt_explorer", promptSchema.parse(input))),
+  );
 }
 
 export function researchAiQuestions(context: AiResearchContext, input: unknown) {
-  return outcome(() => run(context, "prompt_research", promptResearchSchema.parse(input)));
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "prompt_research",
+    },
+    () => outcome(() => run(context, "prompt_research", promptResearchSchema.parse(input))),
+  );
 }

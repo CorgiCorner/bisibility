@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   renumberProviderChain: vi.fn(),
 }));
 
+vi.mock("@/lib/analytics/request-usage-delivery", () => ({ queueRequestUsageEvent: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/db/public-id", () => ({ makePublicId: vi.fn() }));
 vi.mock("@/lib/format/currency", () => ({ dollarsToCents: vi.fn() }));

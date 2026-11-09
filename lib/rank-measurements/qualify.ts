@@ -50,6 +50,13 @@ export function qualifyMeasurement(
   else if (measurement.position !== null && position === null) reason = "invalid_position";
   else if (
     policy.minimumRequestedDepth !== undefined &&
+    !(
+      policy.allowShallowPositive &&
+      position !== null &&
+      measurement.requestedDepth !== null &&
+      measurement.requestedDepth > 0 &&
+      position <= measurement.requestedDepth
+    ) &&
     (measurement.requestedDepth === null ||
       measurement.requestedDepth < policy.minimumRequestedDepth)
   )

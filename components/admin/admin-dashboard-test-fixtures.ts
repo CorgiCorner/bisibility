@@ -1,4 +1,4 @@
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 
 const heartbeat = {
   inspectionErrors: 0,

@@ -126,7 +126,7 @@ describe("KeywordsFilterBar", () => {
     );
 
     const refresh = screen.getByRole("button", { name: "Refresh table" });
-    expect(refresh.querySelector(".lg\\:inline")).toHaveTextContent("Refresh table");
+    expect(refresh.querySelector(".xl\\:inline")).toHaveTextContent("Refresh table");
     expect(refresh.querySelector("svg")).toHaveClass("text-fg-muted");
     expect(refresh.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
       "data-tooltip-label",
@@ -150,13 +150,13 @@ describe("KeywordsFilterBar", () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it("applies the wider xl search grid template (min 320px)", () => {
+  it("keeps search and actions on separate rows until wide desktop", () => {
     render(<KeywordsFilterBar {...baseProps} />);
 
     const label = screen.getByRole("searchbox", { name: "Search keywords" }).closest("label");
     const grid = label?.parentElement;
-    expect(grid).toHaveClass("xl:grid-cols-[minmax(320px,1fr)_auto]");
-    expect(grid).toHaveClass("lg:grid-cols-[minmax(220px,1fr)_auto]");
+    expect(grid).toHaveClass("grid-cols-1");
+    expect(grid).toHaveClass("2xl:grid-cols-[minmax(220px,1fr)_auto]");
   });
 
   it("renders filter chips and clear-all, and calls onClearFilters", () => {

@@ -19,10 +19,17 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/api/app-route", () => ({
   withAppRoute:
-    (handler: (request: Request, actor: typeof mocks.actor, context?: unknown) => unknown) =>
+    (
+      handler: (
+        request: Request,
+        actor: typeof mocks.actor,
+        context: unknown,
+        onCommitted: () => void,
+      ) => unknown,
+    ) =>
     async (request: Request, context?: unknown) => {
       try {
-        return await handler(request, mocks.actor, context);
+        return await handler(request, mocks.actor, context, () => {});
       } catch (error) {
         if (error instanceof Error && error.name === "ZodError") {
           return new Response("Request validation failed.", { status: 400 });

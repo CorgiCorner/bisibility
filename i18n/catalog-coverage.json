@@ -62,9 +62,12 @@
     "app/(regional)/app/(workspace)/[project]/runs/schedules/[publicId]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/runs/schedules/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/runs/schedules/page.tsx",
+    "app/(regional)/app/(workspace)/[project]/schedules/[publicId]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/search-console/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/search-console/page.tsx",
     "app/(regional)/app/(workspace)/[project]/search-console/SearchInsightsSections.tsx",
+    "app/(regional)/app/(workspace)/[project]/serp-playground/loading.tsx",
+    "app/(regional)/app/(workspace)/[project]/serp-playground/page.tsx",
     "app/(regional)/app/(workspace)/[project]/settings/(sections)/advanced/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/settings/(sections)/advanced/page.tsx",
     "app/(regional)/app/(workspace)/[project]/settings/(sections)/billing/loading.tsx",
@@ -118,15 +121,42 @@
     "app/(regional)/app/(workspace)/account/security/page.tsx",
     "app/(regional)/app/(workspace)/loading.tsx",
     "app/(regional)/app/(workspace)/workspace-shell.tsx",
-    "app/(regional)/app/admin/administration/loading.tsx",
     "app/(regional)/app/admin/administration/page.tsx",
+    "app/(regional)/app/admin/audit/error.tsx",
     "app/(regional)/app/admin/audit/loading.tsx",
     "app/(regional)/app/admin/audit/page.tsx",
+    "app/(regional)/app/admin/email/sending-today/error.tsx",
+    "app/(regional)/app/admin/email/sending-today/loading.tsx",
+    "app/(regional)/app/admin/email/sending-today/page.tsx",
+    "app/(regional)/app/admin/email/settings/error.tsx",
+    "app/(regional)/app/admin/email/settings/loading.tsx",
+    "app/(regional)/app/admin/email/settings/page.tsx",
     "app/(regional)/app/admin/layout.tsx",
     "app/(regional)/app/admin/loading.tsx",
-    "app/(regional)/app/admin/metering/loading.tsx",
-    "app/(regional)/app/admin/metering/recovery/loading.tsx",
+    "app/(regional)/app/admin/metering/page.tsx",
+    "app/(regional)/app/admin/metering/recovery/page.tsx",
+    "app/(regional)/app/admin/operations/checks/error.tsx",
+    "app/(regional)/app/admin/operations/checks/loading.tsx",
+    "app/(regional)/app/admin/operations/checks/page.tsx",
+    "app/(regional)/app/admin/operations/data-sources/error.tsx",
+    "app/(regional)/app/admin/operations/data-sources/loading.tsx",
+    "app/(regional)/app/admin/operations/data-sources/page.tsx",
+    "app/(regional)/app/admin/operations/notifications/error.tsx",
+    "app/(regional)/app/admin/operations/notifications/loading.tsx",
+    "app/(regional)/app/admin/operations/notifications/page.tsx",
+    "app/(regional)/app/admin/operations/tasks/error.tsx",
+    "app/(regional)/app/admin/operations/tasks/loading.tsx",
+    "app/(regional)/app/admin/operations/tasks/page.tsx",
+    "app/(regional)/app/admin/operations/worker/error.tsx",
+    "app/(regional)/app/admin/operations/worker/loading.tsx",
+    "app/(regional)/app/admin/operations/worker/page.tsx",
+    "app/(regional)/app/admin/overview/status/error.tsx",
+    "app/(regional)/app/admin/overview/status/loading.tsx",
+    "app/(regional)/app/admin/overview/status/page.tsx",
     "app/(regional)/app/admin/page.tsx",
+    "app/(regional)/app/admin/users/accounts/error.tsx",
+    "app/(regional)/app/admin/users/accounts/loading.tsx",
+    "app/(regional)/app/admin/users/accounts/page.tsx",
     "app/(regional)/app/AppErrorDiagnostics.tsx",
     "app/(regional)/app/error.tsx",
     "app/(regional)/app/layout.tsx",
@@ -145,6 +175,7 @@
     "app/(regional)/invite/[token]/page.tsx",
     "app/(regional)/layout.tsx",
     "app/(regional)/onboarding/actions.ts",
+    "app/(regional)/onboarding/capacity-actions.ts",
     "app/(regional)/onboarding/initial-first-check-candidates.ts",
     "app/(regional)/onboarding/layout.tsx",
     "app/(regional)/onboarding/loading.tsx",
@@ -216,30 +247,39 @@
     "components/admin/admin-provider-table-columns.tsx",
     "components/admin/AdminAccountActions.tsx",
     "components/admin/AdminAccountLookup.tsx",
-    "components/admin/AdminAdministration.tsx",
     "components/admin/AdminAnnouncements.tsx",
-    "components/admin/AdminAuditTable.tsx",
     "components/admin/AdminBudgetTable.tsx",
-    "components/admin/AdminDashboard.tsx",
-    "components/admin/AdminDashboardLoading.tsx",
     "components/admin/AdminFailureBreakdown.tsx",
     "components/admin/AdminHealthPills.tsx",
-    "components/admin/AdminMeteringFrame.tsx",
-    "components/admin/AdminMeteringLoading.tsx",
-    "components/admin/AdminOpsActions.tsx",
     "components/admin/AdminPrimitives.tsx",
     "components/admin/AdminProviderHealth.tsx",
     "components/admin/AdminProviderUsageTable.tsx",
-    "components/admin/AdminRefresh.tsx",
-    "components/admin/AdminSectionLoading.tsx",
     "components/admin/AdminSectionUnavailable.tsx",
-    "components/admin/AdminShell.tsx",
-    "components/admin/AdminTabs.tsx",
+    "components/admin/AdminTableState.tsx",
     "components/admin/AdminTemporalHealth.tsx",
     "components/admin/AdminTemporalSchedules.tsx",
     "components/admin/AdminWorkerHealth.tsx",
     "components/admin/AnnouncementEditor.tsx",
     "components/admin/DangerousActionGate.tsx",
+    "components/admin/InstanceMailSettingsField.tsx",
+    "components/admin/pages/AdminPageError.tsx",
+    "components/admin/pages/AdminPageLoading.tsx",
+    "components/admin/pages/AdminRouteChrome.tsx",
+    "components/admin/pages/AdminRouteFrame.tsx",
+    "components/admin/pages/AdminRouteRefresh.tsx",
+    "components/admin/pages/OssAdminPage.tsx",
+    "components/admin/pages/OssLivePage.tsx",
+    "components/admin/pages/useAdminAccount.ts",
+    "components/admin/pages/useAdminQuery.ts",
+    "components/admin/pages/useRecoveryBatch.ts",
+    "components/admin/pages/useTaskActions.ts",
+    "components/admin/recovery/RecoveryLoadFallback.tsx",
+    "components/admin/recovery/useRecoverySelection.ts",
+    "components/admin/redesign/OssOpsActions.tsx",
+    "components/admin/redesign/OssRecovery.tsx",
+    "components/admin/redesign/OssRecoveryBatchDialog.tsx",
+    "components/admin/redesign/OssRecoveryDetails.tsx",
+    "components/admin/redesign/PreviewNavigationContext.ts",
     "components/agent-reports/AgentReportDetailLayout.tsx",
     "components/agent-reports/AgentReportDetailLoading.tsx",
     "components/agent-reports/SavedAuditPages.tsx",
@@ -442,6 +482,7 @@
     "components/dashboard-layout/dashboard-translator.ts",
     "components/dashboard-layout/DashboardCompositor.tsx",
     "components/dashboard-layout/DashboardConflictReview.tsx",
+    "components/dashboard-layout/DashboardEmptyBody.tsx",
     "components/dashboard-layout/DashboardLayoutEditor.tsx",
     "components/dashboard-layout/DashboardPreferenceRecovery.tsx",
     "components/dashboard-layout/DashboardScopeUnavailable.tsx",
@@ -586,16 +627,19 @@
     "components/keyword-detail-history/AttemptHistoryTable.tsx",
     "components/keyword-detail-history/history-chart-model.ts",
     "components/keyword-detail-history/history-page-state.ts",
+    "components/keyword-detail-history/HistoryDetails.tsx",
     "components/keyword-detail-history/HistoryPosition.tsx",
     "components/keyword-detail-history/HistoryResultKind.tsx",
     "components/keyword-detail-history/HistoryScope.tsx",
     "components/keyword-detail-history/HistoryTime.tsx",
     "components/keyword-detail-history/KeywordDetailHistory.tsx",
+    "components/keyword-detail-history/KeywordHistoryLog.tsx",
     "components/keyword-detail-history/no-match-presentation.ts",
     "components/keyword-detail-history/ObservationHistoryTable.tsx",
     "components/keyword-detail-history/RecordedHistoryChart.tsx",
     "components/keyword-detail-history/RecordedUrlHistory.tsx",
     "components/keyword-detail-history/RetainedSnapshotCard.tsx",
+    "components/keyword-detail-history/section-disclosure.tsx",
     "components/keyword-detail-history/use-keyword-detail-history.ts",
     "components/keyword-detail/shared/KeywordDetailPageSkeleton.tsx",
     "components/keyword-detail/shared/story-theme-preview.tsx",
@@ -749,7 +793,6 @@
     "components/keywords/KeywordDetailHeaderSlot.tsx",
     "components/keywords/KeywordDetailRankSlot.tsx",
     "components/keywords/KeywordDetailRetainedUrl.tsx",
-    "components/keywords/KeywordDetailScopeProof.tsx",
     "components/keywords/KeywordEditDrawer.tsx",
     "components/keywords/KeywordHeaderActions.tsx",
     "components/keywords/KeywordHeaderCard.test-utils.tsx",
@@ -781,6 +824,7 @@
     "components/keywords/RankTrackerSearchDraft.tsx",
     "components/keywords/retrieved-results-picker-model.ts",
     "components/keywords/retrieved-results-test-fixtures.tsx",
+    "components/keywords/RetrievedAiOverview.tsx",
     "components/keywords/RetrievedResultsCard.tsx",
     "components/keywords/RetrievedResultsCompare.tsx",
     "components/keywords/RetrievedResultsHeader.tsx",
@@ -798,7 +842,15 @@
     "components/keywords/saved/SavedKeywordsTableChrome.tsx",
     "components/keywords/saved/SavedKeywordsTableRows.tsx",
     "components/keywords/saved/SavedKeywordsWorkspace.tsx",
+    "components/keywords/serp-playground/PlaygroundQueryScope.tsx",
+    "components/keywords/serp-playground/RawProviderResult.tsx",
+    "components/keywords/serp-playground/RecentPlaygroundQueries.tsx",
+    "components/keywords/serp-playground/SavePlaygroundResult.tsx",
+    "components/keywords/serp-playground/SerpPlayground.tsx",
+    "components/keywords/serp-playground/SerpPlaygroundResults.tsx",
+    "components/keywords/serp-playground/useSerpPlayground.ts",
     "components/keywords/SerpCompetitorComparison.tsx",
+    "components/keywords/SerpFeatureSummary.tsx",
     "components/keywords/snapshot-export.ts",
     "components/keywords/SnapshotDownloads.tsx",
     "components/keywords/SnapshotExtensionControl.tsx",
@@ -969,6 +1021,7 @@
     "components/overview/OverviewChartHeader.tsx",
     "components/overview/OverviewCompetitorsCard.tsx",
     "components/overview/OverviewContributorsCard.tsx",
+    "components/overview/OverviewCoverageSummary.tsx",
     "components/overview/OverviewDashboardView.tsx",
     "components/overview/OverviewHeaderContext.tsx",
     "components/overview/OverviewHeaderContextBoundary.tsx",
@@ -1203,6 +1256,7 @@
     "components/settings/experimental/ExperimentalSettingsLoading.tsx",
     "components/settings/general/DataCacheSettings.tsx",
     "components/settings/general/DomainChangeConfirmation.tsx",
+    "components/settings/general/DomainVerificationCard.tsx",
     "components/settings/general/general-settings-layout.ts",
     "components/settings/general/GeneralSettingsContent.tsx",
     "components/settings/general/GeneralSettingsLoading.tsx",
@@ -1274,6 +1328,7 @@
     "components/settings/webhooks/DeployHookCreateModal.tsx",
     "components/settings/webhooks/DeployHookReveal.tsx",
     "components/settings/webhooks/DeployHookRotationModal.tsx",
+    "components/shell/AdminPageExtension.tsx",
     "components/shell/AppFooter.tsx",
     "components/shell/AppHeader.tsx",
     "components/shell/AppHeaderFrame.tsx",
@@ -5479,6 +5534,126 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.accounts.adminRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.connections",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.copyId",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "instanceAdmin.accounts.count",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.created",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.details",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.email",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.find",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.lastActive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.notFound",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.notReported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.projects",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.question",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.searchLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.searchPlaceholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.status",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.statuses.active",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.statuses.deactivated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.accounts.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.administration.consumption.checks",
         "tags": []
       },
@@ -5649,6 +5824,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.administration.growth.users",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.growth.utcNote",
         "tags": []
       },
       {
@@ -6117,6 +6297,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "instanceAdmin.audit.targetType",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "targetType",
@@ -6453,6 +6638,11 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.rankChecks.statusLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.rankChecks.title",
         "tags": []
       },
@@ -6489,6 +6679,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.dashboard.stats.projects",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.stats.providerUsageTitle",
         "tags": []
       },
       {
@@ -6679,6 +6874,16 @@
       {
         "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "timeZone",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.dashboard.timeZone",
         "tags": []
       },
       {
@@ -7008,6 +7213,11 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.navigation.email",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.navigation.instance",
         "tags": []
       },
@@ -7024,6 +7234,31 @@
       {
         "arguments": [],
         "key": "instanceAdmin.navigation.operations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.overview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.revenue",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.usageCosts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.navigation.users",
         "tags": []
       },
       {
@@ -7108,6 +7343,431 @@
       {
         "arguments": [],
         "key": "instanceAdmin.opsTable.tableLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.attempts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.auditFilters.account",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.auditFilters.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.auditFilters.ops",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.auditFilters.setup",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.blockedReason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.accounting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.closed_unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.historical",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.categories.unfinished",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.category",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.closedUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "state",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.pages.command",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandOutcomes.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandOutcomes.queued",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandOutcomes.recovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandOutcomes.skipped",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandOutcomes.unchanged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandStatuses.completed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandStatuses.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandStatuses.queued",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.commandStatuses.running",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.console",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.copyTarget",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.details",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.due",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.emptyAudit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.evidenceColumns.acceptance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.evidenceColumns.classification",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.evidenceColumns.incident",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.evidenceColumns.lookup",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.failureClass",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.historical",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.instance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.lastExhaustion",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.loadingCases",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.mail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.namespace",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.noAdmin",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.older",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.preparing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.presenceHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.previewTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.accounts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.checks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.dataSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.notifications",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.sendingToday",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.status",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.tasks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.questions.worker",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.reasonRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.refreshCases",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.retainedScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.retry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.retryCommand",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.saveTriage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.startFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.starting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.startRecovery",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReasons.investigating",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReasons.missing_proof",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReasons.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReasons.provider_support",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageReasons.waiting_export",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatus",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatuses.acknowledged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatuses.escalated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatuses.investigating",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatuses.open",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.triageStatuses.waiting_evidence",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.pages.unavailable",
         "tags": []
       },
       {
@@ -7351,6 +8011,20 @@
           ]
         ],
         "key": "instanceAdmin.recovery.approvedExposure",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "attempts",
+            2
+          ],
+          [
+            "targets",
+            2
+          ]
+        ],
+        "key": "instanceAdmin.recovery.approvedScope",
         "tags": []
       },
       {
@@ -7819,6 +8493,11 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.recovery.evidence.taskLookupReason",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.recovery.evidence.unclassified",
         "tags": []
       },
@@ -8269,6 +8948,80 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.accountingState",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.authorizationRequired",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "connections",
+            2
+          ],
+          [
+            "projects",
+            2
+          ]
+        ],
+        "key": "instanceAdmin.recovery.taskOnly.blockedScopes",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.closedUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.closedUnknownNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.connectionBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.newAttemptNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.noSpend",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "instanceAdmin.recovery.taskOnly.originalRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.projectBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.triageNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.taskOnly.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.recovery.triage",
         "tags": []
       },
@@ -8374,7 +9127,47 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.shell.accountingHealth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.accounts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.aiEngine",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.analyticsExclusions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.announcements",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.shell.backToApp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.billing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.budgets",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.checks",
         "tags": []
       },
       {
@@ -8384,12 +9177,142 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.shell.credits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.dataSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.shell.description",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.shell.hostedProviders",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.journey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.ledger",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.meteringView",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.notifications",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.previewDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.providerCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.refreshData",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "time",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.shell.refreshed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.refreshing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.retention",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.sendingToday",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.signups",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.status",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.subscriptions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.summary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.survey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.tasks",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.shell.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.trials",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "tab",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.shell.viewNavigation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shell.worker",
         "tags": []
       },
       {
@@ -15750,6 +16673,16 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.domainVerificationGranted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.domainVerificationRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.entityMatchConfirmed",
         "tags": []
       },
@@ -16474,6 +17407,16 @@
       {
         "arguments": [],
         "key": "projectAudit.presentation.event.signedIn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.siteAuditCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.siteAuditResumed",
         "tags": []
       },
       {
@@ -20254,6 +21197,30 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.localReport.averagePosition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.businessTop3",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "measured",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectDashboard.localReport.checkedKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.localReport.choose",
         "tags": []
       },
@@ -20270,6 +21237,11 @@
       {
         "arguments": [],
         "key": "projectDashboard.localReport.cleared",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.comparisonHelp",
         "tags": []
       },
       {
@@ -20320,7 +21292,27 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.localReport.dataAvailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.localReport.definition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.details",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.detailsIntro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.detailsTitle",
         "tags": []
       },
       {
@@ -20366,6 +21358,16 @@
       {
         "arguments": [],
         "key": "projectDashboard.localReport.scope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.scopeHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.localReport.searchesWithPack",
         "tags": []
       },
       {
@@ -21048,7 +22050,17 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.reportWidgets.chartView",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.reportWidgets.contribution",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.contributionDescription",
         "tags": []
       },
       {
@@ -21082,6 +22094,16 @@
       {
         "arguments": [],
         "key": "projectDashboard.reportWidgets.device",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.emptyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.emptyTitle",
         "tags": []
       },
       {
@@ -21166,6 +22188,11 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.reportWidgets.historyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.reportWidgets.historyFreshness",
         "tags": []
       },
@@ -21177,6 +22204,11 @@
           ]
         ],
         "key": "projectDashboard.reportWidgets.historyScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.historyView",
         "tags": []
       },
       {
@@ -21202,6 +22234,11 @@
       {
         "arguments": [],
         "key": "projectDashboard.reportWidgets.pairedChange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.qualityDescription",
         "tags": []
       },
       {
@@ -21236,6 +22273,11 @@
           ]
         ],
         "key": "projectDashboard.reportWidgets.sum",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.reportWidgets.tableView",
         "tags": []
       },
       {
@@ -30741,6 +31783,26 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.checksDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.checksTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "section",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.collapseSection",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.columns.absoluteRank",
         "tags": []
       },
@@ -30880,6 +31942,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.detailToggle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.effectiveScope",
         "tags": []
       },
@@ -30971,6 +32038,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.execution.running",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "section",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.expandSection",
         "tags": []
       },
       {
@@ -31383,6 +32460,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.urlHistoryDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.urlHistoryMeaning",
         "tags": []
       },
@@ -31398,10 +32480,6 @@
       },
       {
         "arguments": [
-          [
-            "basis",
-            1
-          ],
           [
             "from",
             1
@@ -31466,6 +32544,16 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.compactSummary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.compactTip",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.compareAction",
         "tags": []
       },
@@ -31517,6 +32605,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.competitorsInCheck",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.competitorSubtitle",
         "tags": []
       },
       {
@@ -31796,6 +32889,31 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.featureDetails",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "feature",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.featureDetailsLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.featureNotRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.featureRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.features.ads.description",
         "tags": []
       },
@@ -31960,6 +33078,16 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.fullResultsMissing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.fullResultsMissingHelp",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "end",
@@ -32026,6 +33154,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.localContentNotStored",
         "tags": []
       },
       {
@@ -32134,6 +33267,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.onPage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.openMap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewSources",
         "tags": []
       },
       {
@@ -32281,6 +33424,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.snapshots",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.snapshotSubtitle",
         "tags": []
       },
       {
@@ -39110,6 +40258,411 @@
       {
         "arguments": [],
         "key": "projectRankTracker.reportScope.view",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.accessRequired",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.addProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.allHistory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.compareProviderHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.compareProviderTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.connect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.connectHelp",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.connectProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.copyJson",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.costUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.depth",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.depthOption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.desktop",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.device",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.emptyHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.emptyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.estimatedTotal",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.freshSearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.history",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.historyCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.historyEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.historyFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.historyLoading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.intro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.language",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.loadingResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.location",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationCity",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationClear",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationCountries",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationLoading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationRegion",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.locationRegions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.mobile",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.noResults",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.noResultsHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.normalizedJson",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.previous",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.provider",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.providerAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.providerJson",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.providers",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.query",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.queryPlaceholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.rawError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.rawMissing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.rawMissingHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.rawRedacted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.refresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.refreshHelp",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.resultCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.resultFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.resultFailedHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.results",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.reviewHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.reviewTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.saveConfirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.saveDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.savedResult",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.saveMismatch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.saveTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.scope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.search",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.searchFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.searchHistory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.stillRunning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.view",
         "tags": []
       },
       {
@@ -48573,6 +50126,16 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.domainVerificationGranted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.domainVerificationRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.entityMatchConfirmed",
         "tags": []
       },
@@ -49297,6 +50860,16 @@
       {
         "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.signedIn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.siteAuditCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.siteAuditResumed",
         "tags": []
       },
       {
@@ -50731,6 +52304,71 @@
       {
         "arguments": [],
         "key": "projectSettingsGeneral.domainChange.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.check",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.copied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.copy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.error",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.recordHost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.recordValue",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.startDns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.startSearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.unverified",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.verifiedDns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.domainVerification.verifiedSearch",
         "tags": []
       },
       {
@@ -55186,6 +56824,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "limit",
+            2
+          ]
+        ],
+        "key": "projectSiteAudit.availableLimit",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSiteAudit.bullets.0",
         "tags": []
@@ -55198,6 +56846,11 @@
       {
         "arguments": [],
         "key": "projectSiteAudit.bullets.2",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.cancelRun",
         "tags": []
       },
       {
@@ -55462,6 +57115,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSiteAudit.nextPages",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSiteAudit.no",
         "tags": []
       },
@@ -55496,7 +57154,12 @@
         "tags": []
       },
       {
-        "arguments": [],
+        "arguments": [
+          [
+            "limit",
+            2
+          ]
+        ],
         "key": "projectSiteAudit.pageLimitError",
         "tags": []
       },
@@ -55522,7 +57185,17 @@
       },
       {
         "arguments": [],
+        "key": "projectSiteAudit.previousPages",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSiteAudit.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.resumeRun",
         "tags": []
       },
       {
@@ -55538,6 +57211,64 @@
       {
         "arguments": [],
         "key": "projectSiteAudit.running",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "budget",
+            2
+          ],
+          [
+            "pages",
+            2
+          ],
+          [
+            "state",
+            1
+          ]
+        ],
+        "key": "projectSiteAudit.runProgress",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.cancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.complete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.queued",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.running",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.stopped",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.runStates.unknown",
         "tags": []
       },
       {
@@ -55650,6 +57381,16 @@
       {
         "arguments": [],
         "key": "projectSiteAudit.urlIssues",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.verifyDomain",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.workerCost",
         "tags": []
       },
       {
@@ -56175,6 +57916,74 @@
       {
         "arguments": [],
         "key": "projectTimeline.row.deviceMobile",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.alertRulesAndWebhooks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.competitorsPerProject",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.concurrentCrawls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.crawlPagesPerCrawl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.projects",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.promptSchedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.resource",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.scheduledKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.scheduleFrequencies",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.trackedPrompts",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            1
+          ],
+          [
+            "requested",
+            1
+          ],
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "resourceCapacity.usage",
         "tags": []
       },
       {
@@ -59118,11 +60927,22 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "shared.dashboardLayout.coverageEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.dashboardLayout.coverageFilteredEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.dashboardLayout.coveragePending",
+        "tags": []
+      },
+      {
         "arguments": [
-          [
-            "comparable",
-            1
-          ],
           [
             "expected",
             1
@@ -59487,6 +61307,11 @@
       {
         "arguments": [],
         "key": "shared.dashboardLayout.widgetLoadOnSave",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.dashboardLayout.widgetNoData",
         "tags": []
       },
       {
@@ -62515,6 +64340,21 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "shared.measurementHelp.entries.visibility_top20.versions.visibility-top20-v2.definition",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.measurementHelp.entries.visibility_top20.versions.visibility-top20-v2.interpretation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.measurementHelp.entries.visibility_top20.versions.visibility-top20-v2.limitation",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "title",
@@ -64330,6 +66170,11 @@
       {
         "arguments": [],
         "key": "shared.providerAccess.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.unavailableTitle",
         "tags": []
       },
       {
@@ -66605,12 +68450,22 @@
       },
       {
         "arguments": [],
+        "key": "shell.header.titles.schedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.header.titles.searchConsole",
         "tags": []
       },
       {
         "arguments": [],
         "key": "shell.header.titles.security",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.header.titles.serpPlayground",
         "tags": []
       },
       {
@@ -66626,6 +68481,11 @@
       {
         "arguments": [],
         "key": "shell.header.titles.timeline",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.header.titles.usage",
         "tags": []
       },
       {
@@ -66855,7 +68715,17 @@
       },
       {
         "arguments": [],
+        "key": "shell.navigation.items.schedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.navigation.items.searchConsole",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.items.serpPlayground",
         "tags": []
       },
       {
@@ -66866,6 +68736,11 @@
       {
         "arguments": [],
         "key": "shell.navigation.items.siteAudit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.items.usage",
         "tags": []
       },
       {

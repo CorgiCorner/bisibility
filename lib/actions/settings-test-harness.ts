@@ -65,7 +65,9 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: settingsActionMocks.prisma }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: settingsActionMocks.resolveKeywordLocation,
 }));
-vi.mock("@/lib/actions/rankCheck", () => ({ runCheckNow: settingsActionMocks.runCheckNow }));
+vi.mock("@/lib/rank-check/manual-run", () => ({
+  manualRunCheckNow: settingsActionMocks.runCheckNow,
+}));
 
 export function getSettingsActionMocks() {
   return settingsActionMocks;

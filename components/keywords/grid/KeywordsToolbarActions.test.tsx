@@ -44,7 +44,7 @@ const props = {
 };
 
 function expectCompactWidth(button: HTMLElement) {
-  expect(button).toHaveClass("max-xl:min-w-10", "max-xl:gap-0");
+  expect(button).toHaveClass("max-xl:min-w-9", "max-xl:w-9", "max-xl:gap-0");
 }
 
 describe("KeywordsToolbarActions", () => {

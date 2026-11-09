@@ -1,4 +1,5 @@
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import type { ProviderCredentials, SerpDevice } from "@/lib/providers/types";
 import type { DataForSeoQueuePriority } from "@/lib/rank-check/queued-config";
 import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
@@ -89,6 +90,7 @@ async function postTasks(
       redirect: "error",
       signal: controller.signal,
     });
+    await captureHttpResponse(response, credentials.captureResponse, TASK_POST_URL);
     if (response.status >= 500) {
       throw new DataForSeoAmbiguousSubmissionError(
         `DataForSEO task submission returned HTTP ${response.status}; acceptance is unknown.`,
@@ -255,6 +257,7 @@ async function getEnvelope(
       signal,
     });
     const data = (await response.json()) as TaskPostResponse;
+    await credentials.captureResponse?.(response.status, data, url);
     if (!response.ok || data.status_code !== 20000) {
       throw new DataForSeoError(
         redactedMessage(

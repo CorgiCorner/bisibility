@@ -155,7 +155,7 @@ export function ProviderRecovery({
             view.state === "ready"
               ? router.push(projectSchedulesPath(projectId))
               : reason === "accounting_review"
-                ? router.push(`${appPath(asProjectRef(projectId), "providers")}?tab=usage`)
+                ? router.push(`${appPath(asProjectRef(projectId), "usage")}`)
                 : void showChecks()
           }
           state={state}

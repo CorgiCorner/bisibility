@@ -9,6 +9,7 @@ import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
 import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { errorFromUnknown } from "./error-mapper";
+import { ApiForbiddenError } from "./errors";
 
 const headers = new Headers();
 const url = new URL("https://example.com/api/v1/keywords/kw_a00000000000000000000000/checks");
@@ -201,6 +202,43 @@ describe("errorFromUnknown", () => {
     expect(response.status).toBe(429);
     await expect(response.json()).resolves.toMatchObject({
       type: "https://bisibility.com/problems/budget_exhausted",
+    });
+  });
+
+  it("maps a subscription denial to a distinct 403 problem", async () => {
+    const response = errorFromUnknown(
+      new OperationAccessDeniedError({ subscriptionRequired: true }),
+      new Headers({ "X-Request-Id": "request_1" }),
+      url,
+    );
+    expect(response.status).toBe(403);
+    expect(response.headers.get("Content-Type")).toBe("application/problem+json");
+    expect(response.headers.get("X-Request-Id")).toBe("request_1");
+    await expect(response.json()).resolves.toEqual({
+      type: "https://bisibility.com/problems/subscription-required",
+      code: "subscription_required",
+      title: "Paid access required",
+      status: 403,
+      detail:
+        "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+      subscriptionRequired: true,
+      instance: `urn:bisibility:api:v1:${url.pathname}`,
+      docs_url: "https://bisibility.com/docs/api/errors#subscription-required",
+    });
+  });
+
+  it.each([
+    new OperationAccessDeniedError(),
+    new OperationAccessDeniedError({ subscriptionRequired: false }),
+    new ApiForbiddenError("This operation is unavailable for this project."),
+  ])("keeps other operation denials unchanged", async (error) => {
+    await expect(errorFromUnknown(error, headers, url).json()).resolves.toEqual({
+      type: "https://bisibility.com/problems/forbidden",
+      title: "Forbidden",
+      status: 403,
+      detail: "This operation is unavailable for this project.",
+      instance: `urn:bisibility:api:v1:${url.pathname}`,
+      docs_url: "https://bisibility.com/docs/api/errors#forbidden",
     });
   });
 

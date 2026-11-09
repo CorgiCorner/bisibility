@@ -41,6 +41,11 @@ const mocks = vi.hoisted(() => ({
   wizard: vi.fn((_props: unknown) => null),
 }));
 
+vi.mock("@/lib/capacity/client-actions", () => ({
+  addKeywordsMatrix: vi.fn(),
+  createProjectMarket: vi.fn(),
+  updateDefaultRankCheckSettings: vi.fn(),
+}));
 vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
   renderAccountDataSourceExtension: mocks.accountDataSource,
 }));

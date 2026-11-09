@@ -1,3 +1,4 @@
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { appPath } from "@/lib/routing/app-path";
 import { deferred } from "@/tests/deferred";
@@ -11,6 +12,8 @@ import {
 } from "./competitor-set";
 import { addManagedCompetitor } from "./competitors";
 
+const capacity = vi.hoisted(() => ({ prepare: vi.fn(), check: vi.fn() }));
+vi.mock("@/lib/capacity/capacity-extension", () => ({ prepareResourceCapacity: capacity.prepare }));
 const competitorPublicId = "cmp_abcdefghijklmnopqrstuvwx";
 const projectPublicId = "prj_abcdefghijklmnopqrstuvwx";
 
@@ -40,7 +43,7 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    competitorSuggestionDismissal: { upsert: vi.fn() },
+    competitorSuggestionDismissal: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     project: { findFirst: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -118,6 +121,8 @@ function freshProjectSetup() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  capacity.prepare.mockResolvedValue({ enabled: true, check: capacity.check });
+  capacity.check.mockResolvedValue(undefined);
   actor();
   mocks.prisma.project.findFirst.mockResolvedValue({
     id: "project_1",
@@ -131,7 +136,7 @@ beforeEach(() => {
   mocks.prisma.competitor.update.mockResolvedValue(competitor());
   mocks.prisma.project.updateMany.mockResolvedValue({ count: 1 });
   mocks.prisma.$queryRaw.mockResolvedValue([]);
-  mocks.prisma.competitorSuggestionDismissal.upsert.mockResolvedValue({});
+  mocks.prisma.competitorSuggestionDismissal.createMany.mockResolvedValue({});
   mocks.writeAudit.mockResolvedValue({});
 });
 
@@ -312,12 +317,13 @@ describe("competitor-set actions", () => {
     await skipCompetitorSetup({ projectId: projectPublicId });
     await skipCompetitorSetup({ projectId: projectPublicId });
 
-    expect(mocks.prisma.competitorSuggestionDismissal.upsert).toHaveBeenCalledWith(
+    expect(mocks.prisma.competitorSuggestionDismissal.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { projectId_domain: { domain: "competitor.example.com", projectId: "project_1" } },
+        data: [{ domain: "competitor.example.com", projectId: "project_1" }],
+        skipDuplicates: true,
       }),
     );
-    expect(mocks.prisma.competitorSuggestionDismissal.upsert).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.competitorSuggestionDismissal.createMany).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.competitor.create).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "competitor.suggestion.dismiss", targetType: "project" }),
@@ -616,3 +622,32 @@ describe("competitor-set actions", () => {
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 });
+
+it.each([addManualCompetitor, confirmSuggestedCompetitor])(
+  "retains the typed competitor capacity denial at the actual action boundary",
+  async (create) => {
+    mocks.getCompetitorSuggestions.mockResolvedValue([{ domain: "competitor.example.com" }]);
+    const error = new CapacityLimitError({
+      dimension: "competitorsPerProject",
+      limit: 3,
+      used: 3,
+      requested: 1,
+      scope: "project",
+      upgradeUrl: "/pricing",
+    });
+    capacity.prepare.mockRejectedValueOnce(error);
+    const result = await create({
+      projectId: projectPublicId,
+      domain: "competitor.example.com",
+      aliases: [],
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      capacityFailure: {
+        code: "plan_limit_reached",
+        details: { dimension: "competitorsPerProject" },
+      },
+    });
+    expect(mocks.prisma.competitor.create).not.toHaveBeenCalled();
+  },
+);

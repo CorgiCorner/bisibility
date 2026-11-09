@@ -2,6 +2,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -92,6 +93,7 @@ async function observedAttempt(url: string, creds: ProviderCredentials, timeoutM
   try {
     // Keep the deadline armed until the body and its receipt have been consumed.
     const result = await readObservedResponse<SerpApiResponse>({
+      captureResponse: creds.captureResponse,
       observer: search ? creds.usageObserver : undefined,
       request: () => fetch(url, { signal: controller.signal }),
       ...(search
@@ -175,6 +177,7 @@ export async function requestJson(
     } catch (error) {
       if (
         error instanceof ProviderCostLimitError ||
+        error instanceof WeeklyRequestCapError ||
         error instanceof DeploymentAdmissionExhaustedError ||
         error instanceof BudgetExhaustedError ||
         error instanceof ProviderAllocationExhaustedError

@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
@@ -30,7 +31,19 @@ const projectSelect = {
 export async function createProjectRecord(data: CreateProjectData, ownerId: string) {
   const schedule = data.defaults ? normalizeSchedule(data.defaults) : null;
   return prisma.$transaction(async (tx) => {
-    await assertProjectCapacity(tx, ownerId);
+    const capacity = await prepareResourceCapacity(tx, {
+      ownerId,
+      dimensions: ["projects"],
+      ...(schedule
+        ? {
+            cadence: {
+              dimension: "scheduleFrequencies" as const,
+              after: { ...schedule, enabled: true },
+            },
+          }
+        : {}),
+    });
+    if (!capacity.enabled) await assertProjectCapacity(tx, ownerId);
     const project = await tx.project.create({
       data: {
         defaults: schedule ? { create: schedule } : undefined,
@@ -59,6 +72,7 @@ export async function createProjectRecord(data: CreateProjectData, ownerId: stri
       tx,
     );
 
+    await capacity.check();
     return project;
   });
 }

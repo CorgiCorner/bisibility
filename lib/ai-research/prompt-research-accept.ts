@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { researchTrackSchema } from "./prompt-research-schema";
 import "server-only";
 import { getAgentReport } from "@/lib/agent-reports/service";
@@ -26,6 +27,7 @@ export async function acceptResearchedPrompts(
     throw new Error("Provider dataset report not found.");
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId, dimensions: [] });
       await lockTrackingProject(tx, projectId);
       const state = await researchProjectState(projectId, tx);
       const rows = report.body.result as { rows: AiResearchRow[] };

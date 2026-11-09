@@ -1,7 +1,7 @@
 "use server";
-
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import { paymentFailure } from "@/lib/action-payment/session";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { extendSnapshot } from "@/lib/serp/extend-snapshot";
 import { prepareSnapshotExtensionPayment } from "@/lib/serp/snapshot-payment";
 import { z } from "zod";
@@ -27,7 +27,9 @@ export async function extendSerpSnapshot(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
   const result = await extendSnapshot({ ...data, actorId: actor.id, projectId: project.id });
+  if (result.ok) recordAppAction(actor);
   revalidateRankCheckViews();
+
   return result;
 }
 

@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
@@ -183,13 +183,16 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
         select: { domain: true, id: true, isSample: true },
         where: { id: keywordScope.projectId },
       });
-      const launched = await launchSingleRankCheckRun({
-        actorId: actor.id,
-        keywordId: keywordScope.publicId as `kw_${string}`,
-        origin: APP_REQUEST_ORIGIN,
-        project,
-        trigger: "manual",
-      });
+      const launched = await launchSingleRankCheckRun(
+        {
+          actorId: actor.id,
+          keywordId: keywordScope.publicId as `kw_${string}`,
+          origin: APP_REQUEST_ORIGIN,
+          project,
+          trigger: "manual",
+        },
+        () => recordAppAction(actor),
+      );
       const result: RunFirstCheckPreviewResult = isLaunchRankCheckRunNothingToRun(launched)
         ? previewFailure("failed", launched.message)
         : { runId: launched.publicId, status: "queued" };
@@ -202,7 +205,8 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
         targetType: "runId" in result ? "rank_check_run" : "keyword",
       });
       revalidateRankCheckViews(keywordScope.publicId);
-      return emitResult(result);
+      const actionResult = await emitResult(result);
+      return actionResult;
     } catch (error) {
       const expected = expectedPreviewFailure(error);
       if (!expected) throw error;

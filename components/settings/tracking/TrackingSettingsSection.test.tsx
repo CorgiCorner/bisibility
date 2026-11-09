@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   updateDefaultRankCheckSettings: vi.fn(),
 }));
 
+vi.mock("@/lib/capacity/client-actions", () => ({
+  updateDefaultRankCheckSettings: mocks.updateDefaultRankCheckSettings,
+}));
 vi.mock("@/components/settings/tracking/TrackingSettingsContent", () => ({
   TrackingSettingsContent: (props: unknown) => {
     mocks.contentProps = props;

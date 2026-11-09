@@ -1,4 +1,6 @@
+import { DeliveryHttpError } from "@/lib/alerts/delivery-http-error";
 import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "@/lib/alerts/webhook-target";
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { decryptSecret } from "@/lib/providers/crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -19,16 +21,6 @@ const tagPublicId = "tag_a00000000000000000000000";
 const webhookPublicId = "we_a00000000000000000000000";
 
 const mocks = vi.hoisted(() => {
-  class DeliveryHttpError extends Error {
-    constructor(
-      message: string,
-      readonly status: number,
-      readonly retryAfterSeconds: number | null,
-      readonly latencyMs: number | null,
-    ) {
-      super(message);
-    }
-  }
   class AuthorizationError extends Error {
     constructor(readonly code: "forbidden" | "unauthenticated") {
       super("You are not authorized to perform this action.");
@@ -74,7 +66,6 @@ const mocks = vi.hoisted(() => {
   return {
     assertWebhookUrlAllowed: vi.fn(),
     AuthorizationError,
-    DeliveryHttpError,
     authorize: vi.fn((actor, action, resource) => {
       if (!actor) {
         throw new AuthorizationError("unauthenticated");
@@ -118,7 +109,6 @@ vi.mock("@/lib/alerts/webhook-guard", () => ({
   assertWebhookUrlAllowed: mocks.assertWebhookUrlAllowed,
 }));
 vi.mock("@/lib/alerts/delivery", () => ({
-  DeliveryHttpError: mocks.DeliveryHttpError,
   postSignedWebhookTest: mocks.postSignedWebhookTest,
 }));
 
@@ -346,15 +336,17 @@ describe("alert actions", () => {
       publicId: rulePublicId,
     });
 
-    const result = await createAlertRule({
-      channels: [],
-      conditionType: "threshold",
-      name: "Top 50",
-      projectId: projectPublicId,
-      targetIds: [keywordPublicId],
-      targetType: "keyword",
-      thresholdPosition: 50,
-    });
+    const result = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "threshold",
+        name: "Top 50",
+        projectId: projectPublicId,
+        targetIds: [keywordPublicId],
+        targetType: "keyword",
+        thresholdPosition: 50,
+      }),
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
@@ -377,16 +369,18 @@ describe("alert actions", () => {
       topN: 10,
     });
 
-    const result = await createAlertRule({
-      channels: [],
-      conditionType: "exits_top_n",
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-      topN: 3,
-    });
+    const result = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "exits_top_n",
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+        topN: 3,
+      }),
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
@@ -413,16 +407,18 @@ describe("alert actions", () => {
       targets: [{ keyword: { publicId: keywordPublicId }, tag: null }],
     });
 
-    const keywordResult = await createAlertRule({
-      channels: [],
-      conditionType: "position_drop",
-      dropPositions: 5,
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-    });
+    const keywordResult = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "position_drop",
+        dropPositions: 5,
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+      }),
+    );
 
     expect(keywordResult.ok).toBe(true);
     if (!keywordResult.ok) throw new Error(keywordResult.error);
@@ -444,16 +440,18 @@ describe("alert actions", () => {
       targets: [{ keyword: null, tag: { publicId: tagPublicId } }],
     });
 
-    const tagResult = await createAlertRule({
-      channels: [],
-      conditionType: "position_drop",
-      dropPositions: 5,
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-    });
+    const tagResult = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "position_drop",
+        dropPositions: 5,
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+      }),
+    );
 
     expect(tagResult.ok).toBe(true);
     if (!tagResult.ok) throw new Error(tagResult.error);
@@ -653,7 +651,7 @@ describe("alert actions", () => {
       publicId: webhookPublicId,
     });
     mocks.postSignedWebhookTest.mockRejectedValueOnce(
-      new mocks.DeliveryHttpError("Webhook delivery failed with status 500.", 500, null, 19),
+      new DeliveryHttpError("Webhook delivery failed with status 500.", 500, null, 19),
     );
 
     await expect(

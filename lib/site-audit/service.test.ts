@@ -10,6 +10,10 @@ const mocks = vi.hoisted(() => ({
   write: vi.fn(),
   policy: vi.fn(),
   access: vi.fn(),
+  worker: vi.fn(),
+  inlineFallback: vi.fn(),
+  createRun: vi.fn(),
+  readRun: vi.fn(),
 }));
 vi.mock("@/lib/agent-reports/service", () => ({
   createAgentReport: mocks.create,
@@ -38,6 +42,14 @@ vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/deployment/project-write-mode", () => ({ assertProjectWritable: mocks.write }));
 vi.mock("@/lib/operations/access-extension", () => ({ assertOperationAccess: mocks.access }));
 vi.mock("./crawl", () => ({ crawlSite: mocks.crawl }));
+vi.mock("./worker-config", () => ({
+  siteAuditWorkerEnabled: mocks.worker,
+  siteAuditInlineFallbackEnabled: mocks.inlineFallback,
+}));
+vi.mock("./runs", () => ({
+  createSiteAuditRun: mocks.createRun,
+  readSiteAuditRunReport: mocks.readRun,
+}));
 
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { AuditRateLimitError } from "./errors";
@@ -68,8 +80,27 @@ beforeEach(() => {
   mocks.consume.mockResolvedValue({ success: true });
   mocks.crawl.mockResolvedValue(result);
   mocks.create.mockResolvedValue({ id: "agr_result", createdAt: result.completedAt });
+  mocks.worker.mockResolvedValue(false);
+  mocks.inlineFallback.mockResolvedValue(false);
 });
 describe("site audit service", () => {
+  it("retains worker progress and page access when reusing a cached run", async () => {
+    mocks.list.mockResolvedValue([{ id: "agr_saved", createdAt: new Date().toISOString() }]);
+    mocks.get.mockResolvedValue({
+      kind: "site_audit",
+      body: result,
+      provenance: { source: "bounded_http_crawl_worker" },
+    });
+    const run = { state: "complete", pagesCrawled: 10, budgetPages: 10 };
+    mocks.readRun.mockResolvedValue({ result, run });
+    expect(await runSiteAudit(context, {})).toMatchObject({
+      id: "agr_saved",
+      cached: true,
+      result,
+      run,
+    });
+    expect(mocks.crawl).not.toHaveBeenCalled();
+  });
   it("authorizes and checks write mode before any cache or network work", async () => {
     mocks.authorize.mockImplementation(() => {
       throw new Error("forbidden");
@@ -204,6 +235,42 @@ describe("site audit service", () => {
         provenance: expect.objectContaining({ source: "bounded_http_crawl", providerCostCents: 0 }),
       }),
     );
+  });
+  it("queues a worker run instead of fetching when the setting is enabled", async () => {
+    mocks.worker.mockResolvedValue(true);
+    mocks.createRun.mockResolvedValue({
+      id: "agr_queued",
+      cached: false,
+      result,
+      run: { state: "queued" },
+    });
+    await expect(runSiteAudit(context, { maxPages: 120 })).resolves.toMatchObject({
+      id: "agr_queued",
+      run: { state: "queued" },
+    });
+    expect(mocks.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: "project1",
+        target: "https://example.com/",
+        requestedPages: 120,
+      }),
+    );
+    expect(mocks.crawl).not.toHaveBeenCalled();
+  });
+  it("does not queue a run without a scheduler unless inline fallback is enabled", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+    try {
+      mocks.worker.mockResolvedValue(true);
+      await expect(runSiteAudit(context, {})).rejects.toThrow(/scheduler|scheduled execution/i);
+      expect(mocks.createRun).not.toHaveBeenCalled();
+      expect(mocks.crawl).not.toHaveBeenCalled();
+      mocks.inlineFallback.mockResolvedValue(true);
+      await expect(runSiteAudit(context, {})).resolves.toMatchObject({ id: "agr_result" });
+      expect(mocks.crawl).toHaveBeenCalledExactlyOnceWith("example.com", 10);
+      expect(mocks.createRun).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
   it("denies the third uncached run even when page limits vary and retries after expiry", async () => {
     const limiter =

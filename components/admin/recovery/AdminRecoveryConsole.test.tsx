@@ -1,3 +1,4 @@
+import { AdminTableState } from "@/components/admin/AdminTableState";
 import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
 import { renderWithInstanceAdminMessages as renderMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { recoveryViewFixture } from "@/lib/metering/recovery/view-fixture";
@@ -71,7 +72,7 @@ it("requires the server preview before committing a bounded repair", async () =>
     commandId: expect.any(String),
   });
 });
-it("retries an uncertain commit with the same command identity and exposes no raw error", async () => {
+it("reads status after an uncertain commit without resubmitting the command", async () => {
   actions.commit.mockRejectedValueOnce(new Error("private bearer secret"));
   render(<AdminRecoveryConsole initial={recoveryViewFixture()} />);
   fireEvent.click(screen.getByRole("checkbox", { name: "Select prj_example_pending, dataforseo" }));
@@ -79,11 +80,10 @@ it("retries an uncertain commit with the same command identity and exposes no ra
   const button = await screen.findByRole("button", { name: "Start recovery" });
   await waitFor(() => expect(button).toBeEnabled());
   fireEvent.click(button);
-  await waitFor(() => expect(actions.commit).toHaveBeenCalledTimes(1));
-  await waitFor(() => expect(button).toBeEnabled());
-  fireEvent.click(button);
-  await waitFor(() => expect(actions.commit).toHaveBeenCalledTimes(2));
-  expect(actions.commit.mock.calls[0][0].commandId).toBe(actions.commit.mock.calls[1][0].commandId);
+  await waitFor(() =>
+    expect(actions.status).toHaveBeenCalledWith(actions.commit.mock.calls[0][0].commandId),
+  );
+  expect(actions.commit).toHaveBeenCalledTimes(1);
   expect(screen.queryByText(/private bearer/)).not.toBeInTheDocument();
 });
 it("caps selection at 25 eligible cases", () => {
@@ -151,3 +151,76 @@ function render(ui: Parameters<typeof renderMessages>[0]) {
     <DangerousActionAccessProvider allowed>{ui}</DangerousActionAccessProvider>,
   );
 }
+
+it("P2-3 restores authorized previews and command status after URL navigation and reload", async () => {
+  const params = new URLSearchParams('batch=["case-result"]');
+  const update = vi.fn((values: Record<string, string | undefined>) => {
+    for (const [key, value] of Object.entries(values)) {
+      if (value === undefined) params.delete(key);
+      else params.set(key, value);
+    }
+  });
+  const content = () => (
+    <AdminTableState value={{ get: (key) => params.get(key), update }}>
+      <AdminRecoveryConsole initial={recoveryViewFixture()} />
+    </AdminTableState>
+  );
+  const view = render(content());
+  await screen.findByRole("button", { name: "Start recovery" });
+  expect(actions.preview).toHaveBeenCalledWith({ caseTokens: ["case-result"] });
+  expect(actions.commit).not.toHaveBeenCalled();
+  params.set("case", "case-off-page");
+  params.set("recoverySort", "provider");
+  view.rerender(<DangerousActionAccessProvider allowed>{content()}</DangerousActionAccessProvider>);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Start recovery" })).toBeEnabled());
+  expect(actions.commit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Start recovery" }));
+  await waitFor(() => expect(actions.commit).toHaveBeenCalledTimes(1));
+  const id = actions.commit.mock.calls[0][0].commandId;
+  expect(params.get("command")).toBe(id);
+  expect(params.has("batch")).toBe(false);
+  view.unmount();
+  actions.status.mockClear();
+  params.set("category", "failed");
+  render(content());
+  await waitFor(() => expect(actions.status).toHaveBeenCalledWith(id));
+  expect(actions.commit).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole("button", { name: "Start recovery" })).not.toBeInTheDocument();
+});
+
+it.each(["case_changed", "rate_limited"])(
+  "P2-R1 Cloud recovery prepares another selection after %s rejection",
+  async (code) => {
+    actions.commit.mockResolvedValue({ ok: false, code });
+    render(<AdminRecoveryConsole initial={recoveryViewFixture()} />);
+    const first = screen.getByRole("checkbox", { name: "Select prj_example_pending, dataforseo" });
+    fireEvent.click(first);
+    fireEvent.click(screen.getByRole("button", { name: "Review selected (1)" }));
+    const confirm = await screen.findByRole("button", { name: "Start recovery" });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    await screen.findByRole("alert");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(actions.status).not.toHaveBeenCalled();
+    fireEvent.click(first);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select prj_example_queued, dataforseo" }),
+    );
+    actions.preview.mockResolvedValue({
+      ok: true,
+      value: {
+        token: "different-preview",
+        expiresAt: "2099-01-01T00:00:00Z",
+        eligible: [{ caseToken: "case-run", action: "resume_queued_run" }],
+        excluded: [],
+        providerCalls: 0,
+        newPaidAttempts: 0,
+        originalRuns: 1,
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review selected (1)" }));
+    await screen.findByRole("dialog");
+    expect(actions.preview).toHaveBeenCalledWith({ caseTokens: ["case-run"] });
+    expect(actions.commit).toHaveBeenCalledTimes(1);
+  },
+);

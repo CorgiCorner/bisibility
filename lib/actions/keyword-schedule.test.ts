@@ -1,3 +1,4 @@
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import { appPath } from "@/lib/routing/app-path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -126,7 +127,9 @@ describe("updateKeywordSchedule", () => {
       "alerts deeper than 20 will not fire. Affected alerts: Lost top 50.",
     );
 
-    const result = await updateKeywordSchedule(scheduleInput({ serpDepth: 20 }));
+    const result = unwrapCapacityResult(
+      await updateKeywordSchedule(scheduleInput({ serpDepth: 20 })),
+    );
 
     expect(result.warning).toContain("Affected alerts: Lost top 50");
     expect(mocks.getKeywordDepthDecreaseWarning).toHaveBeenCalledWith("keyword_1", 20);

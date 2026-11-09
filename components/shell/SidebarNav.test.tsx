@@ -81,11 +81,14 @@ describe("SidebarNav", () => {
   });
 
   it.each(["", "/new", "/sch_daily"])(
-    "marks Runs as current on schedule routes ending in %s",
+    "marks Schedules as current on schedule routes ending in %s",
     (suffix) => {
-      setNavigationState({ pathname: `/app/prj_1/runs/schedules${suffix}` });
+      setNavigationState({ pathname: `/app/prj_1/schedules${suffix}` });
       render(<SidebarNav projectRef="prj_1" />);
-      expect(screen.getByRole("link", { name: "Runs" })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
       expect(screen.getByRole("link", { name: "Rank Tracker" })).not.toHaveAttribute(
         "aria-current",
       );
@@ -198,12 +201,13 @@ describe("SidebarNav", () => {
 
     expect(expanded.queryByText("Activity")).toBeNull();
     expect(expanded.getByText("SEO")).toBeInTheDocument();
-    expect(expanded.getByText("AI Search")).toBeInTheDocument();
+    expect(expanded.getByText("AI visibility")).toBeInTheDocument();
     expect(expanded.getByText("Data & reports")).toBeInTheDocument();
     expect(expanded.getByText("Project")).toBeInTheDocument();
     expect(expanded.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
+      "/app/prj_1/serp-playground",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
@@ -218,7 +222,9 @@ describe("SidebarNav", () => {
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
+      "/app/prj_1/schedules",
       "/app/prj_1/providers",
+      "/app/prj_1/usage",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);
@@ -246,6 +252,7 @@ describe("SidebarNav", () => {
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
+      "/app/prj_1/serp-playground",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
@@ -260,7 +267,9 @@ describe("SidebarNav", () => {
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
+      "/app/prj_1/schedules",
       "/app/prj_1/providers",
+      "/app/prj_1/usage",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);

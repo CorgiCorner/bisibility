@@ -20,10 +20,15 @@ export const GET = withAppRoute(async (request, actor) => {
   return dataResponse(await listCheckSchedules(project.id));
 });
 
-export const POST = withAppRoute(async (request, actor) => {
-  const data = createCheckScheduleSchema.parse(await request.json());
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "check_schedule",
-  });
-  return dataResponse(await createSchedule(actor.id, project.id, data));
-});
+export const POST = withAppRoute(
+  async (request, actor, _context, onCommitted) => {
+    const data = createCheckScheduleSchema.parse(await request.json());
+    const project = await requireProjectScope(actor, "update", data.projectId, {
+      type: "check_schedule",
+    });
+    const result = await createSchedule(actor.id, project.id, data);
+    onCommitted();
+    return dataResponse(result);
+  },
+  { mutation: true, explicitCommit: true },
+);

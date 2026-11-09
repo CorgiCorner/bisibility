@@ -1,6 +1,8 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { assertDefinitionActor } from "@/lib/measurement-definitions/access";
 import type { ReviewedConsentSummary } from "@/lib/measurement-settings/host/reviewed-consent";
+import { transferOnScheduleDelete } from "./transfer-on-delete";
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
@@ -76,6 +78,7 @@ export async function createSchedule(
 ) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const timezone = data.timezone ?? (await projectTimezone(tx, projectId));
       const cadence = normalizeSchedule({
@@ -89,6 +92,14 @@ export async function createSchedule(
         data.cronExpression,
         cadence.cronExpression,
       );
+      const capacity = await prepareResourceCapacity(tx, {
+        projectId,
+        dimensions: [],
+        cadence: {
+          dimension: "scheduleFrequencies",
+          after: { ...cadence, enabled: true },
+        },
+      });
       const schedule = await tx.checkSchedule.create({
         data: {
           cronExpression,
@@ -117,6 +128,7 @@ export async function createSchedule(
         },
         tx,
       );
+      await capacity.check();
       return { publicId: schedule.publicId };
     },
     { maxWait: 10_000, timeout: 60_000 },
@@ -131,12 +143,13 @@ export async function updateScheduleInTransaction(
   consent?: ReviewedConsentSummary,
 ) {
   await assertDefinitionActor(tx, actorId, projectId, "update", "check_schedule");
+  await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
   await lockProjectForProviderMutation(tx, projectId);
   const project = await tx.project.findUnique({
     where: { id: projectId },
     select: { writeMode: true },
   });
-  if (!project || project.writeMode !== "active") throw new ProjectReadOnlyError(projectId);
+  if (project?.writeMode !== "active") throw new ProjectReadOnlyError(projectId);
   const before = await requireSchedule(tx, projectId, data.scheduleId);
   const storedTimezone = data.timezone === undefined ? before.timezone : data.timezone;
   const resolvedTimezone = storedTimezone ?? (await projectTimezone(tx, projectId));
@@ -154,6 +167,15 @@ export async function updateScheduleInTransaction(
     inputCronExpression,
     cadence.cronExpression,
   );
+  const capacity = await prepareResourceCapacity(tx, {
+    projectId,
+    dimensions: ["scheduledKeywords"],
+    cadence: {
+      dimension: "scheduleFrequencies",
+      before,
+      after: { ...cadence, enabled: data.enabled ?? before.enabled },
+    },
+  });
   const schedule = await tx.checkSchedule.update({
     data: {
       ...(data.enabled === undefined ? {} : { enabled: data.enabled }),
@@ -194,6 +216,7 @@ export async function updateScheduleInTransaction(
     },
     tx,
   );
+  await capacity.check();
   return { publicId: schedule.publicId };
 }
 export async function updateSchedule(
@@ -210,6 +233,7 @@ export async function updateSchedule(
 export async function setDefaultSchedule(actorId: string, projectId: string, scheduleId: string) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const schedule = await requireSchedule(tx, projectId, scheduleId);
       const previous = await tx.checkSchedule.findFirst({
@@ -246,6 +270,7 @@ export async function setDefaultSchedule(actorId: string, projectId: string, sch
 export async function deleteSchedule(actorId: string, projectId: string, scheduleId: string) {
   return prisma.$transaction(
     async (tx) => {
+      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const schedule = await requireSchedule(tx, projectId, scheduleId);
       if (schedule.isDefault) throw new DefaultCheckScheduleDeletionError();
@@ -259,13 +284,7 @@ export async function deleteSchedule(actorId: string, projectId: string, schedul
         where: { checkScheduleId: schedule.id },
       });
       const keywordIds = members.map((keyword) => keyword.id);
-      if (keywordIds.length > 0) {
-        await tx.keyword.updateMany({
-          data: { checkScheduleId: fallback.id },
-          where: { id: { in: keywordIds } },
-        });
-      }
-      await mirrorScheduleToKeywords(tx, projectId, fallback, keywordIds);
+      const movedTo = await transferOnScheduleDelete(tx, projectId, keywordIds, fallback);
       await reconcilePlannedRunsForSchedule(schedule.id, tx, { deleting: true });
       await reconcilePlannedRunsForSchedule(fallback.id, tx);
       await tx.checkSchedule.delete({ where: { id: schedule.id } });
@@ -275,7 +294,7 @@ export async function deleteSchedule(actorId: string, projectId: string, schedul
           actorId,
           after: {
             keywordIds: members.map((keyword) => keyword.publicId),
-            movedTo: fallback.publicId,
+            movedTo,
           },
           before: checkScheduleAudit(schedule),
           projectId,

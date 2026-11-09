@@ -60,7 +60,7 @@ it("opens Integrations without promising a compatible provider when none is avai
   render(<ProviderAccessEmptyState href="/app/prj_1/providers" providers={[]} />);
   expect(
     screen.getByRole("heading", {
-      name: "No supported data source is available for this feature.",
+      name: "Choose a data source",
     }),
   ).toBeVisible();
   expect(screen.getByRole("link", { name: "Open Providers" })).toHaveAttribute(

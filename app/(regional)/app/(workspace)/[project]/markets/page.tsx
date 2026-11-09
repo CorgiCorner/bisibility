@@ -1,12 +1,7 @@
 import { MarketsPageContent } from "@/components/markets/page/MarketsPageContent";
 import { ProjectMarketsMessagesBoundary } from "@/components/markets/page/ProjectMarketsMessagesBoundary";
 import { PageContent } from "@/components/shell/PageContent";
-import { addKeywords } from "@/lib/actions/keyword";
-import { createProjectMarket } from "@/lib/actions/project-market-create";
-import {
-  addProjectMarketDeviceTargets,
-  previewProjectMarketDeviceTargets,
-} from "@/lib/actions/project-market-devices";
+import { previewProjectMarketDeviceTargets } from "@/lib/actions/project-market-devices";
 import {
   removeProjectMarketFromProject,
   restoreProjectMarketFromProject,
@@ -15,6 +10,11 @@ import {
 } from "@/lib/actions/project-market-lifecycle";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import {
+  addKeywords,
+  addProjectMarketDeviceTargets,
+  createProjectMarket,
+} from "@/lib/capacity/client-actions";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getArchivedProjectMarkets, getProjectMarkets } from "@/lib/queries/project-markets";
 

@@ -37,9 +37,7 @@ describe("instance-admin confirmation copy", () => {
     expect(confirmation.deactivateAccountBody).toContain("pause scheduled checks");
     expect(confirmation.reactivateAccountBody).toContain("reconverge");
     expect(confirmation.reactivateAccountBody).toContain("stay revoked and must be recreated");
-    expect(confirmation.resetAccountLimitsBody).toContain(
-      "Monthly spend is a rolling window and cannot be reset",
-    );
+    expect(confirmation.resetAccountLimitsBody).toBe("Clear this account's rate-limit buckets.");
   });
 
   it("warns that migration token revoke and roll invalidate the current token", () => {

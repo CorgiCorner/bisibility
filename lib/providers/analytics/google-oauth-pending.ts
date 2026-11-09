@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   getActionActor,
   requireProjectScope,
@@ -101,10 +100,14 @@ export async function getPendingGoogleOAuthProvider(projectId: string) {
   return (await pendingForProject(projectId))?.pending.provider ?? null;
 }
 
-export async function cancelPendingGoogleOAuth(projectId: string) {
+export async function cancelPendingGoogleOAuth(
+  projectId: string,
+  onCommitted?: (actor: Awaited<ReturnType<typeof getActionActor>>) => void,
+) {
   const context = await pendingForProject(projectId);
   if (!context) return { status: "not_found" as const };
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
+  onCommitted?.(context.actor);
   return { status: "cancelled" as const };
 }
 
@@ -161,10 +164,10 @@ export async function getPendingGoogleOAuthSetup(
   }
 }
 
-export async function completePendingGooglePropertySelection(input: {
-  projectId: string;
-  property: string;
-}): Promise<GooglePropertySelectionResult> {
+export async function completePendingGooglePropertySelection(
+  input: { projectId: string; property: string },
+  onCommitted?: (actor: Awaited<ReturnType<typeof getActionActor>>) => void,
+): Promise<GooglePropertySelectionResult> {
   const context = await pendingForProject(input.projectId);
   if (!context) return { status: "reauth_required" };
 
@@ -256,6 +259,7 @@ export async function completePendingGooglePropertySelection(input: {
     );
     return { saved, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
   });
+  onCommitted?.(context.actor);
   if (savedConnection.shouldWake)
     void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);

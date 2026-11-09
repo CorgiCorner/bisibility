@@ -36,7 +36,7 @@
     },
     "tags": {
       "cancel": "Cancelar",
-      "description": "Las etiquetas agrupan palabras clave y páginas. Las vistas guardadas pueden filtrar por ellas.",
+      "description": "Agrupa palabras clave con etiquetas y filtra las vistas guardadas.",
       "duplicate": "{name} ya existe.",
       "remove": "Quitar etiqueta",
       "removeError": "No se ha podido quitar la etiqueta.",
@@ -52,16 +52,16 @@
       "title": "Caché de datos",
       "help": "Compartida por los módulos de este proyecto. Un plazo menor limita también resultados existentes; uno mayor se aplica a los nuevos. Se conservan informes, historial y comprobantes de pago.",
       "lifetime": "Reutilizar durante",
-      "default": "Valor de la instancia",
+      "default": "Predeterminado",
       "hours": "{count, plural, one {# hora} other {# horas}}",
       "days": "{count, plural, one {# día} other {# días}}",
       "weeks": "{count, plural, one {# semana} other {# semanas}}",
       "save": "Guardar",
       "saved": "Guardado",
       "list": "Resultados guardados",
-      "refresh": "Volver a cargar los resultados guardados",
+      "refresh": "Actualizar",
       "loadError": "No se pudieron cargar los resultados guardados. Inténtalo de nuevo.",
-      "refreshHelp": "Vuelve a cargar la lista de resultados guardados. No realiza nuevas búsquedas ni solicitudes de pago al proveedor.",
+      "refreshHelp": "Vuelve a cargar los resultados guardados. No inicia búsquedas.",
       "retry": "Reintentar la carga",
       "next": "Página siguiente",
       "back": "Primera página",
@@ -102,6 +102,21 @@
         "prompt_research": "Investigación de preguntas",
         "site_audit": "Auditoría web"
       }
+    },
+    "domainVerification": {
+      "title": "Verificación del dominio",
+      "description": "Verifica la propiedad para activar funciones de tu dominio.",
+      "verifiedDns": "Verificado por DNS",
+      "verifiedSearch": "Verificado por Search Console",
+      "unverified": "Sin verificar",
+      "recordHost": "Nombre del registro TXT",
+      "recordValue": "Valor del registro TXT",
+      "copy": "Copiar valor",
+      "startDns": "Usar DNS TXT",
+      "startSearch": "Usar Search Console",
+      "check": "Comprobar ahora",
+      "error": "No se pudo actualizar la verificación. Inténtalo de nuevo.",
+      "copied": "Copiado."
     }
   }
 }

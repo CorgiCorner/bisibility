@@ -193,8 +193,9 @@ export function KeywordDetailHeaderChrome({
               href={currentRankingUrl}
               rel="noreferrer noopener"
               target="_blank"
+              title={currentRankingUrl}
             >
-              <span className="truncate">
+              <span className="min-w-0 truncate">
                 {pathLabel(currentRankingUrl, t("common.notAvailable"))}
               </span>
               <ArrowUpRight aria-hidden className="shrink-0" size={10} weight="regular" />

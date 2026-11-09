@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { isDeepStrictEqual } from "node:util";
@@ -20,6 +21,10 @@ export async function importCompetitors(
   competitors: CloudImportBody["competitors"],
   client: Prisma.TransactionClient,
 ) {
+  const capacity = await prepareResourceCapacity(client, {
+    projectId,
+    dimensions: ["competitorsPerProject"],
+  });
   const unique = [...new Map(competitors.map((item) => [item.domain, item])).values()];
   const existing = await client.competitor.findMany({
     select: { domain: true, label: true },
@@ -48,6 +53,7 @@ export async function importCompetitors(
     });
     imported += 1;
   }
+  await capacity.check();
   return { imported, skipped };
 }
 
@@ -115,18 +121,8 @@ function alertData(rule: ImportAlertRule) {
 }
 
 function alertIdentity(rule: ImportAlertRule) {
-  return {
-    changePct: rule.changePct,
-    competitorDomain: rule.competitorDomain,
-    conditionType: rule.conditionType,
-    dropPositions: rule.dropPositions,
-    name: rule.name,
-    serpFeature: rule.serpFeature,
-    severity: rule.severity,
-    targetType: rule.targetType,
-    thresholdPosition: rule.thresholdPosition,
-    topN: rule.topN,
-  };
+  const { channels: _channels, enabled: _enabled, ...identity } = alertData(rule);
+  return identity;
 }
 
 async function tagIds(
@@ -192,6 +188,10 @@ export async function importAlertRules(
   keywords: KeywordMaps,
   client: Prisma.TransactionClient,
 ) {
+  const capacity = await prepareResourceCapacity(client, {
+    projectId,
+    dimensions: ["alertRulesAndWebhooks"],
+  });
   const tags = await tagIds(projectId, rules, client);
   let imported = 0;
   let skipped = 0;
@@ -223,6 +223,14 @@ export async function importAlertRules(
       skipped += 1;
       continue;
     }
+    if (existing && !existing.enabled && rule.enabled) {
+      const activation = await prepareResourceCapacity(client, {
+        projectId,
+        dimensions: ["alertRulesAndWebhooks"],
+        activating: true,
+      });
+      await activation.check();
+    }
     const row =
       existing ??
       (await client.alertRule.create({
@@ -235,6 +243,7 @@ export async function importAlertRules(
     await writeRuleTargets(row.id, targets, client);
     imported += 1;
   }
+  await capacity.check();
   return { imported, skipped };
 }
 

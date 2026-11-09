@@ -78,27 +78,34 @@ export function DashboardLayoutEditor({
   const id = useId();
   const pendingFocus = useRef<{ key: string } | null>(null);
   const composition = composeDashboardLayout(state.draft, access);
+  const available = composition.widgets.filter((widget) =>
+    widget.definition.presets.includes(state.draft.preset),
+  );
   const saving = state.status === "saving" || pending;
   const conflict = state.status === "conflict";
   function change(action: DashboardDraftAction) {
     onChange(updateDashboardDraft(state, action));
   }
   function moveTo(widget: WidgetId, target: number, control: "handle" | "up" | "down") {
-    const next = moveDashboardWidgetTo(state, widget, target);
+    const targetIndex = state.draft.widgets.findIndex(
+      (item) => item.id === available[target]?.selection.id,
+    );
+    if (targetIndex < 0) return;
+    const next = moveDashboardWidgetTo(state, widget, targetIndex);
     if (next === state) return;
     const nextControl =
       control === "handle"
         ? control
         : target === 0
           ? "down"
-          : target === state.draft.widgets.length - 1
+          : target === available.length - 1
             ? "up"
             : control;
     pendingFocus.current = { key: `${widget}:${nextControl}` };
     onChange(next);
   }
   const reorder = useWidgetReorder({
-    order: state.draft.widgets.map((widget) => widget.id),
+    order: available.map((widget) => widget.selection.id),
     disabled: saving,
     onDrop: (widget, target) => moveTo(widget, target, "handle"),
   });
@@ -123,14 +130,14 @@ export function DashboardLayoutEditor({
         else cancel();
       }}
     >
-      <header className="flex flex-col items-stretch gap-3 border-b border-border pb-3 xl:flex-row xl:items-end xl:justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
         {embedded ? (
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {onSetDefault ? (
               <Button
                 variant="outline"
                 size="sm"
-                className="min-h-11 font-normal xl:min-h-[34px]"
+                className="min-h-9 font-normal xl:min-h-[34px]"
                 disabled={defaultDisabled || saving}
                 onClick={onSetDefault}
               >
@@ -148,7 +155,7 @@ export function DashboardLayoutEditor({
           </div>
         )}
         <div className="flex shrink-0 items-center justify-between gap-2 xl:justify-start">
-          <span className="text-[12.5px] text-fg-muted">{t("preset")}</span>
+          <span className="sr-only text-[12.5px] text-fg-muted sm:not-sr-only">{t("preset")}</span>
           <MenuSelect
             ariaLabel={t("preset")}
             value={state.draft.preset}
@@ -165,7 +172,10 @@ export function DashboardLayoutEditor({
           />
         </div>
       </header>
-      <p id={`${id}-reorder-hint`} className="m-0 py-2 text-[12.5px] leading-5 text-fg-muted">
+      <p
+        id={`${id}-reorder-hint`}
+        className="sr-only m-0 text-[12.5px] leading-5 text-fg-muted sm:not-sr-only sm:py-2"
+      >
         {t("reorderHint")}
       </p>
       <div
@@ -179,12 +189,12 @@ export function DashboardLayoutEditor({
           aria-busy={saving}
           className={`m-0 flex list-none flex-col gap-2 p-0 ${reorder.preview ? "select-none" : ""}`}
         >
-          {composition.widgets.map((widget, index) => (
+          {available.map((widget, index) => (
             <DashboardWidgetRow
               key={widget.selection.id}
               widget={widget}
               index={index}
-              count={state.draft.widgets.length}
+              count={available.length}
               saving={saving}
               dragging={reorder.preview?.id === widget.selection.id}
               dropEdge={
@@ -225,7 +235,7 @@ export function DashboardLayoutEditor({
         <div className="flex max-w-full shrink-0 flex-wrap justify-end gap-2 self-end sm:ml-auto">
           <Button
             variant="ghost"
-            className="min-h-11 xl:min-h-[34px]"
+            className="min-h-11 min-w-0 px-2 text-xs sm:px-4 sm:text-[13px] xl:min-h-[34px]"
             disabled={saving || conflict}
             onClick={() => {
               reorder.cancel();
@@ -236,14 +246,14 @@ export function DashboardLayoutEditor({
           </Button>
           <Button
             variant="ghost"
-            className="min-h-11 xl:min-h-[34px]"
+            className="min-h-11 min-w-0 px-2 text-xs sm:px-4 sm:text-[13px] xl:min-h-[34px]"
             disabled={saving || conflict}
             onClick={cancel}
           >
             {t("cancel")}
           </Button>
           <Button
-            className="min-h-11 xl:min-h-[34px]"
+            className="min-h-11 min-w-0 px-2 text-xs sm:px-4 sm:text-[13px] xl:min-h-[34px]"
             disabled={
               !composition.authorized ||
               canSavePersonalLayout !== true ||

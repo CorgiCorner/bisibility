@@ -27,7 +27,10 @@ vi.mock("@/lib/actions/_shared", () => ({
   revalidateRankCheckViews: vi.fn(),
   revalidateSettingsViews: vi.fn(),
 }));
-vi.mock("@/lib/account/account-deletion-extension", () => ({ onAccountDeletion: vi.fn() }));
+vi.mock("@/lib/account/account-deletion-extension", () => ({
+  assertAccountDeletionAllowed: vi.fn(),
+  onAccountDeletion: vi.fn(),
+}));
 vi.mock("@/lib/analytics/person-deletion", () => ({
   queueAnalyticsPersonDeletion: vi.fn(),
   flushAnalyticsPersonDeletions: vi.fn(),

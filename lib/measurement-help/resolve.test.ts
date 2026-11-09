@@ -39,6 +39,7 @@ describe("versioned measurement help", () => {
     ).toEqual([
       ["organic_visibility_top20", "v1"],
       ["visibility_top20", "visibility-top20-v1"],
+      ["visibility_top20", "visibility-top20-v2"],
       ["organic_top10_rate", "qualified-v1"],
       ["competitor_share_of_voice_top10", "bisibility-sov-top10-v2"],
     ]);

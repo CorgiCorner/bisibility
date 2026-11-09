@@ -1,3 +1,4 @@
+import { domainVerificationPaths } from "./openapi-domain-verification";
 import { pageParameters } from "./openapi-parameters";
 import { problemResponse } from "./openapi-problem";
 import { publicIdSchema } from "./openapi-public-id";
@@ -21,6 +22,7 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
     { $ref: "#/components/parameters/IdempotencyKey" },
   ];
   return {
+    ...domainVerificationPaths(bearer),
     "/alert-rules/{rule_id}": {
       delete: bearer(
         "Delete an alert rule",

@@ -259,7 +259,7 @@ export function UsageDetailsTable({
     .filter((group) => group.entries.length);
   return (
     <Card className="min-w-0 space-y-3 overflow-hidden p-0">
-      <div className="space-y-1 px-4 pt-4">
+      <div className="space-y-1 px-4 py-4">
         <h2 className="text-base font-semibold">{m.usageMonth}</h2>
         <p className="text-xs text-fg-muted">
           {groups.length ? m.usageMonthHelp : m.usageMonthEmpty}

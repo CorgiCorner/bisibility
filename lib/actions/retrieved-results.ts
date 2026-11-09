@@ -1,5 +1,6 @@
 "use server";
-
+import { hasReceivedRankResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import { loadRetrievedResultsForChecks } from "@/lib/queries/retrieved-results";
 import { z } from "zod";
@@ -14,5 +15,11 @@ export async function loadRetrievedResults(input: unknown): Promise<RetrievedRes
   const { checkIds, projectId } = parseActionInput(inputSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "read", projectId, { type: "keyword" });
-  return loadRetrievedResultsForChecks({ checkIds, projectId: project.id });
+  const result = await loadRetrievedResultsForChecks({ checkIds, projectId: project.id });
+  recordResultReceipt({
+    userId: actor.id,
+    surface: "app",
+    nonEmpty: hasReceivedRankResult(result),
+  });
+  return result;
 }

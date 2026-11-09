@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { projectCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiKey } from "./api-keys";
 import type { ApiContext } from "./context";
@@ -9,6 +10,8 @@ type AddedColumn = {
   source: string;
   table: string;
 };
+
+vi.mock("@/lib/auth/account-capability-extension", { spy: true });
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -188,6 +191,13 @@ describe("createApiKey", () => {
       expires_at: "2026-08-25T12:00:00.000Z",
       scope: "read",
     });
+  });
+  it("does not mint a token when the account capability is denied", async () => {
+    vi.mocked(projectCapabilityAvailable).mockResolvedValueOnce(false);
+    await expect(createApiKey(context({ name: "Automation", scope: "read" }))).rejects.toThrow(
+      "Account access is required",
+    );
+    expect(mocks.prisma.apiKey.create).not.toHaveBeenCalled();
   });
 });
 

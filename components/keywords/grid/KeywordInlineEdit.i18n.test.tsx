@@ -2,6 +2,7 @@ import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import { renderWithFeatureMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import detailMessages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
 import projectRankTrackerKeywordImportMessages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
@@ -14,6 +15,14 @@ const grid =
 
 const polishMessages = mergeMessageCatalogs({
   projectRankTracker: {
+    keywordDetail: {
+      ...detailMessages.projectRankTracker.keywordDetail,
+      context: {
+        ...detailMessages.projectRankTracker.keywordDetail.context,
+        mobile: "Komorka",
+        desktop: "Komputer",
+      },
+    },
     keywordImport: {
       ...projectRankTrackerKeywordImportMessages.projectRankTracker.keywordImport,
       management: {
@@ -129,7 +138,7 @@ describe("KeywordInlineEdit localized consumer contract", () => {
   it("localizes the stored device label while identity fields are locked", () => {
     renderEditor({ keyword: keyword({ device: "Mobile" }), layout: "drawer", lockIdentity: true });
 
-    expect(document.querySelector("p")?.textContent).toContain("Komorka");
+    expect(screen.getByText("Komorka")).toBeInTheDocument();
     expect(screen.queryByText("Mobile")).not.toBeInTheDocument();
   });
 

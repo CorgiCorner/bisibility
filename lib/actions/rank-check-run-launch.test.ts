@@ -75,20 +75,23 @@ describe("launchRankCheckRunAction", () => {
     expect(mocks.requireProjectScope).toHaveBeenCalledWith({ id: "user_1" }, "update", PROJECT_ID, {
       type: "keyword",
     });
-    expect(mocks.launch).toHaveBeenCalledWith({
-      actorId: "user_1",
-      paymentOptionId: undefined,
-      acceptedPayment: undefined,
-      requirePayment: true,
-      depth: undefined,
-      idempotencyKey: "request-0001",
-      origin: { source: "app" },
-      previewToken: "signed-token",
-      project,
-      providerId: undefined,
-      spec: input.spec,
-      trigger: "manual",
-    });
+    expect(mocks.launch).toHaveBeenCalledWith(
+      {
+        actorId: "user_1",
+        paymentOptionId: undefined,
+        acceptedPayment: undefined,
+        requirePayment: true,
+        depth: undefined,
+        idempotencyKey: "request-0001",
+        origin: { source: "app" },
+        previewToken: "signed-token",
+        project,
+        providerId: undefined,
+        spec: input.spec,
+        trigger: "manual",
+      },
+      { onCommitted: expect.any(Function) },
+    );
   });
 
   it.each([

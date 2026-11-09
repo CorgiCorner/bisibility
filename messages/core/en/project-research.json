@@ -76,8 +76,8 @@
       "modeLabel": "Mode:",
       "countryAria": "Country",
       "countryHelp": "Defaults to the country you track most",
-      "clickstream": "Clickstream volumes",
-      "clickstreamHelp": "Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost.",
+      "clickstream": "Clickstream-adjusted search volume",
+      "clickstreamHelp": "Estimate monthly searches using clickstream data to separate close keyword variants.",
       "pricing": "How is this priced?",
       "button": "{researching, select, true {Researching} other {Research}}{cached, select, true { free, cached} other {}}{cost, select, none {} other { {cost}}}",
       "seedHelp": "Press Enter or comma after each keyword. Up to 5 keywords."

@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -99,7 +99,9 @@ export async function setProjectMarketEnabled(input: unknown) {
     );
     return { status: nextStatus };
   });
+  recordAppAction(actor);
   revalidateMarketViews();
+
   return result;
 }
 
@@ -127,7 +129,9 @@ export async function updateProjectMarket(input: unknown) {
     );
     return { futureKeywordDevices: data.futureKeywordDevices, name: data.name };
   });
+  recordAppAction(actor);
   revalidateMarketViews();
+
   return updated;
 }
 
@@ -169,7 +173,9 @@ export async function restoreProjectMarketFromProject(input: unknown) {
         },
         { isolationLevel: "Serializable" },
       );
+      recordAppAction(actor);
       revalidateMarketViews();
+
       return { resumedKeywords };
     } catch (error) {
       if (attempt === 2 || !isSerializableConflict(error)) throw error;
@@ -201,6 +207,8 @@ export async function removeProjectMarketFromProject(input: unknown) {
     );
     return { status: ProjectMarketStatus.removed };
   });
+  recordAppAction(actor);
   revalidateMarketViews();
+
   return removed;
 }

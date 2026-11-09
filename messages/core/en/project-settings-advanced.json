@@ -149,6 +149,8 @@
         "pricingFeedbackSubmitted": "Pricing feedback submitted",
         "projectCheckRequested": "Project check requested",
         "projectCreated": "Project created",
+        "domainVerificationGranted": "Domain verification granted",
+        "domainVerificationRevoked": "Domain verification revoked",
         "projectDefaultViewUpdated": "Project default view updated",
         "projectDefaultsUpdated": "Project defaults updated",
         "projectDeleted": "Project deleted",
@@ -236,7 +238,9 @@
         "webhookCreated": "Webhook created",
         "webhookDeleted": "Webhook deleted",
         "webhookUpdated": "Webhook updated",
-        "weeklyDigestSent": "Weekly report sent"
+        "weeklyDigestSent": "Weekly report sent",
+        "siteAuditCancelled": "Site audit cancelled",
+        "siteAuditResumed": "Site audit resumed"
       },
       "timestampUnavailable": "Time unavailable",
       "systemEvent": {

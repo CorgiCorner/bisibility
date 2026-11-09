@@ -9,10 +9,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/capacity/capacity-extension", () => ({ prepareResourceCapacity: vi.fn() }));
 vi.mock("@/lib/actions/keyword-helpers", () => ({ addTags: vi.fn() }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $transaction: async (callback: (tx: unknown) => unknown) =>
+      callback({ keyword: { update: mocks.update }, keywordTag: { deleteMany: vi.fn() } }),
     keyword: { findFirst: mocks.findFirst, update: mocks.update },
     keywordSchedule: { upsert: vi.fn() },
     keywordTag: { deleteMany: vi.fn() },

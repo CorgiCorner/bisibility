@@ -1,5 +1,4 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
@@ -7,6 +6,7 @@ import {
   revalidateProviderViews,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { updateUnmeasuredProject } from "@/lib/onboarding/update-project";
 import { onboardingWebsiteSchema } from "@/lib/onboarding/website";
 import { websiteProjectIdentity } from "@/lib/onboarding/website.server";
@@ -28,6 +28,7 @@ export async function updateOnboardingProject(input: unknown) {
     projectId: project.id,
     identity: websiteProjectIdentity(data.website),
   });
+  if (result.ok && result.changed) recordAppAction(actor);
   if (result.ok && result.changed) {
     if ((await getPendingGoogleOAuthProvider(project.publicId)) === "gsc") {
       await cancelPendingGoogleOAuth(project.publicId);

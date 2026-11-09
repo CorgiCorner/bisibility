@@ -1,6 +1,7 @@
 import "server-only";
-
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { MISSING_PROJECT_BUDGET_MESSAGE } from "@/lib/metering/budget-denial";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 
 type ErrorLike = {
   code?: unknown;
@@ -30,6 +31,20 @@ function isErrorLike(error: unknown): error is ErrorLike {
 }
 
 export function serializeToolError(error: unknown) {
+  if (error instanceof CapacityLimitError)
+    return {
+      code: error.code,
+      message: `${error.message}${error.upgradeUrl ? ` Review plans: ${error.upgradeUrl}` : ""}`,
+      details: error.toJSON(),
+      status: 403,
+    };
+  if (isOperationAccessDeniedError(error) && error.subscriptionRequired)
+    return {
+      code: "subscription_required",
+      message:
+        "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+      status: 403,
+    };
   if (!isErrorLike(error)) {
     return {
       message: typeof error === "string" ? error : "Unknown error.",
@@ -114,6 +129,53 @@ function ownKeyRequiredMessage(payload: Record<string, unknown>) {
 }
 
 export function restFailureToolError(payload: unknown, status: number | undefined) {
+  if (
+    status === 429 &&
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    (payload as { type?: unknown }).type ===
+      "https://bisibility.com/problems/weekly_request_cap_reached"
+  ) {
+    return {
+      code: "weekly_request_cap_reached",
+      message:
+        typeof (payload as { detail?: unknown }).detail === "string"
+          ? (payload as { detail: string }).detail
+          : "Weekly request capacity reached. Retry after the weekly reset.",
+      payload,
+      status,
+    };
+  }
+  if (
+    status === 403 &&
+    payload &&
+    typeof payload === "object" &&
+    (payload as { type?: unknown }).type === "https://bisibility.com/problems/plan_limit_reached"
+  ) {
+    const problem = payload as { detail?: string; details?: { upgradeUrl?: string } };
+    return {
+      code: "plan_limit_reached",
+      message: `${problem.detail ?? "Capacity limit reached."}${problem.details?.upgradeUrl ? ` Review plans: ${problem.details.upgradeUrl}` : ""}`,
+      payload,
+      status,
+    };
+  }
+  if (
+    status === 403 &&
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    (payload as { type?: unknown }).type === "https://bisibility.com/problems/subscription-required"
+  ) {
+    return {
+      code: "subscription_required",
+      message:
+        "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+      payload,
+      status: 403,
+    };
+  }
   if (
     status === 403 &&
     payload &&

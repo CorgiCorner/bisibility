@@ -39,7 +39,11 @@ describe("MCP dependency failures through real auth and limiter code", () => {
     vi.resetAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.stubEnv("DSH_PLUGIN_MIN_VERSION", "");
-    mocks.bearer.mockResolvedValue({ kind: "project_key", apiKey: { id: "key" } });
+    mocks.bearer.mockResolvedValue({
+      kind: "project_key",
+      apiKey: { id: "key" },
+      project: { ownerId: "owner" },
+    });
     mocks.verify.mockResolvedValue({ sub: "user", client_id: "test-client", scope: "read" });
     mocks.policy.mockResolvedValue({
       name: "Example",

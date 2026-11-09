@@ -341,11 +341,21 @@ describe("public API app surface routes", () => {
     ]);
     expect(mocks.providerService.connectProviderConnection).toHaveBeenCalledWith(
       expect.objectContaining({ costPerCheck: 0.01, providerId: "serpapi" }),
-      { actorId: null, projectId: "project_1", projectPublicId: ids.project },
+      {
+        actorId: null,
+        analyticsTrigger: "api",
+        projectId: "project_1",
+        projectPublicId: ids.project,
+      },
     );
     expect(mocks.providerService.testProviderConnection).toHaveBeenCalledWith(
       expect.objectContaining({ providerId: "serpapi" }),
-      { actorId: null, projectId: "project_1", projectPublicId: ids.project },
+      {
+        actorId: null,
+        analyticsTrigger: "api",
+        projectId: "project_1",
+        projectPublicId: ids.project,
+      },
     );
     expect(mocks.providerService.setProviderSettings).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false, priority: 20 }),

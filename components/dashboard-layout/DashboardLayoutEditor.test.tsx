@@ -298,3 +298,10 @@ describe("controlled dashboard layout editor", () => {
     ).toHaveAccessibleDescription(/Select an explicit business identity revision for Local SEO\./);
   });
 });
+
+it("does not offer local-only widgets while customizing General", async () => {
+  const user = userEvent.setup();
+  renderWithSharedMessages(<Harness />);
+  await user.click(screen.getByRole("button", { name: "Customize" }));
+  expect(screen.queryByRole("switch", { name: "Local Google results" })).not.toBeInTheDocument();
+});

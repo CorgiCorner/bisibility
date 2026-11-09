@@ -129,3 +129,22 @@ it("retains the source phase for an unknown pre-dispatch error without changing 
     extra: { phase: "before_dispatch", error_type: "RangeError" },
   });
 });
+
+it("preserves an uncharged subscription denial for the REST mapper", () => {
+  const error = new OperationAccessDeniedError({ subscriptionRequired: true });
+  expect(() => domainOverviewFailure(error)).toThrow(error);
+});
+
+it("retains subscription refusals inside paid or aggregate module results", () => {
+  const error = new OperationAccessDeniedError({ subscriptionRequired: true });
+  for (const [receipt, module] of [
+    [undefined, true],
+    [{} as never, false],
+  ] as const) {
+    expect(domainOverviewFailure(error, receipt, module)).toMatchObject({
+      ok: false,
+      reason: "operation_access_denied",
+      phase: "before_dispatch",
+    });
+  }
+});

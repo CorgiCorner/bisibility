@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -85,6 +86,7 @@ export async function importCloudExport(
   try {
     const { counts, finished } = await prisma.$transaction(
       async (tx) => {
+        await prepareResourceCapacity(tx, { projectId: project.id, dimensions: [] });
         await advanceJob(job.id, "importing", 50, undefined, undefined, tx);
         const keywordCounts = await createKeywordRows(project, url, body.keywords, tx);
         const keywordMaps = await loadKeywordMaps(project.id, body.keywords, tx);

@@ -155,8 +155,8 @@ vi.mock("@/lib/providers/analytics/google-stored-property", () => ({
   loadStoredGoogleProperties: mocks.loadStoredGoogleProperties,
   saveStoredGoogleProperty: mocks.saveStoredGoogleProperty,
 }));
-vi.mock("./presence-settings", () => ({
-  updateSearchSyncSettings: mocks.updateSearchSyncSettings,
+vi.mock("@/lib/settings/search-sync-save", () => ({
+  saveSearchSyncSettings: mocks.updateSearchSyncSettings,
 }));
 vi.mock("./_shared", () => ({
   getActionActor: mocks.getActionActor,
@@ -287,12 +287,15 @@ describe("provider actions", () => {
       "prj_a00000000000000000000000",
       { type: "provider_connection" },
     );
-    expect(mocks.saveStoredGoogleProperty).toHaveBeenCalledWith({
-      actorId: "user_1",
-      projectId: "project_1",
-      property: "sc-domain:example.com",
-      provider: "gsc",
-    });
+    expect(mocks.saveStoredGoogleProperty).toHaveBeenCalledWith(
+      {
+        actorId: "user_1",
+        projectId: "project_1",
+        property: "sc-domain:example.com",
+        provider: "gsc",
+      },
+      expect.any(Function),
+    );
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/integrations");
     expect(result).toEqual({ property: "sc-domain:example.com", status: "saved" });
   });
@@ -323,11 +326,14 @@ describe("provider actions", () => {
     });
 
     await vi.waitFor(() => {
-      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith({
-        pace: "gentle",
-        projectId: "prj_a00000000000000000000000",
-        retentionMonths: 6,
-      });
+      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith(
+        {
+          pace: "gentle",
+          projectId: "prj_a00000000000000000000000",
+          retentionMonths: 6,
+        },
+        expect.any(Function),
+      );
     });
     expect(mocks.completePendingGooglePropertySelection).not.toHaveBeenCalled();
 
@@ -356,10 +362,10 @@ describe("provider actions", () => {
       "prj_a00000000000000000000000",
     );
     expect(mocks.updateSearchSyncSettings).not.toHaveBeenCalled();
-    expect(mocks.completePendingGooglePropertySelection).toHaveBeenCalledWith({
-      projectId: "prj_a00000000000000000000000",
-      property: "123456789",
-    });
+    expect(mocks.completePendingGooglePropertySelection).toHaveBeenCalledWith(
+      { projectId: "prj_a00000000000000000000000", property: "123456789" },
+      expect.any(Function),
+    );
   });
 
   it("commits stored Search Console settings before saving its property", async () => {
@@ -389,11 +395,14 @@ describe("provider actions", () => {
     });
 
     await vi.waitFor(() => {
-      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith({
-        pace: "normal",
-        projectId: "prj_a00000000000000000000000",
-        retentionMonths: 12,
-      });
+      expect(mocks.updateSearchSyncSettings).toHaveBeenCalledWith(
+        {
+          pace: "normal",
+          projectId: "prj_a00000000000000000000000",
+          retentionMonths: 12,
+        },
+        expect.any(Function),
+      );
     });
     expect(mocks.saveStoredGoogleProperty).not.toHaveBeenCalled();
 
@@ -1345,7 +1354,10 @@ describe("provider actions", () => {
     expect(mocks.prisma.providerConnection.delete).toHaveBeenCalledWith({
       where: { id: "conn_gsc" },
     });
-    expect(mocks.cancelPendingGoogleOAuth).toHaveBeenCalledWith("prj_a00000000000000000000000");
+    expect(mocks.cancelPendingGoogleOAuth).toHaveBeenCalledWith(
+      "prj_a00000000000000000000000",
+      expect.any(Function),
+    );
     expect(mocks.prisma.searchAnalyticsDaily.deleteMany).not.toHaveBeenCalled();
     expect(mocks.prisma.searchAnalyticsImport.deleteMany).not.toHaveBeenCalled();
   });

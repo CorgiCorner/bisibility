@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { manualReportSchema } from "@/lib/agent-reports/manual-model";
 import { externalAgentReportSchema } from "@/lib/agent-reports/model";
 import { createAgentReport } from "@/lib/agent-reports/service";
@@ -15,7 +15,9 @@ export async function saveProjectContextAction(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", projectId, { type: "project" });
   const result = await saveProjectContext(project.id, data);
+  recordAppAction(actor);
   revalidatePath(appPath(asProjectRef(project.publicId), "context"));
+
   return result;
 }
 
@@ -28,7 +30,9 @@ export async function createAgentReportAction(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", projectId, { type: "project" });
   const report = await createAgentReport({ ...data, projectId: project.id, actorId: actor.id });
+  recordAppAction(actor);
   revalidatePath(appPath(asProjectRef(project.publicId), "agent-reports"));
+
   return report;
 }
 

@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { parseActionInput } from "@/lib/actions/_shared";
@@ -192,43 +193,49 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
     }
     throw error;
   }
-  const updated = await prisma.keyword.update({
-    data: {
-      device: data.device,
-      location: resolved ? denormalizedLocationLabel(resolved.location) : undefined,
-      locationId: resolved?.location.id,
-      targetUrl: data.target_url,
-      text: data.keyword,
-      topic: data.topic,
-      intent: data.intent,
-    },
-    include: keywordInclude,
-    where: { id: keyword.id },
-  });
-  if (data.tags) {
-    await prisma.keywordTag.deleteMany({ where: { keywordId: keyword.id } });
-    await addTags(prisma, ctx.auth.project.id, [keyword.id], data.tags);
-  }
-  if (schedule) {
-    await prisma.$transaction(async (tx) => {
-      await setKeywordCadence(tx, ctx.auth.project.id, [keyword.id], schedule, ctx.actorId ?? null);
+  const updated = await prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: ctx.auth.project.id, dimensions: [] });
+    const updated = await tx.keyword.update({
+      data: {
+        device: data.device,
+        location: resolved ? denormalizedLocationLabel(resolved.location) : undefined,
+        locationId: resolved?.location.id,
+        targetUrl: data.target_url,
+        text: data.keyword,
+        topic: data.topic,
+        intent: data.intent,
+      },
+      include: keywordInclude,
+      where: { id: keyword.id },
     });
-  }
+    if (data.tags) {
+      await tx.keywordTag.deleteMany({ where: { keywordId: keyword.id } });
+      await addTags(tx, ctx.auth.project.id, [keyword.id], data.tags);
+    }
+    if (schedule) {
+      await setKeywordCadence(tx, ctx.auth.project.id, [keyword.id], schedule, ctx.actorId ?? null);
+    }
 
-  await writeAudit({
-    action: "keyword.update",
-    actorId: null,
-    after: {
-      intent: data.intent,
-      keywordId,
-      tags: data.tags,
-      targetUrl: data.target_url,
-      topic: data.topic,
-    },
-    before: { intent: keyword.intent, targetUrl: keyword.targetUrl, topic: keyword.topic },
-    projectId: ctx.auth.project.id,
-    targetId: keyword.publicId,
-    targetType: "keyword",
+    await writeAudit(
+      {
+        action: "keyword.update",
+        actorId: null,
+        after: {
+          intent: data.intent,
+          keywordId,
+          tags: data.tags,
+          targetUrl: data.target_url,
+          topic: data.topic,
+        },
+        before: { intent: keyword.intent, targetUrl: keyword.targetUrl, topic: keyword.topic },
+        projectId: ctx.auth.project.id,
+        targetId: keyword.publicId,
+        targetType: "keyword",
+      },
+      tx,
+    );
+
+    return updated;
   });
 
   return getKeyword(ctx, updated.publicId);

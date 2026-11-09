@@ -91,14 +91,17 @@ describe("provider comparison action authorization", () => {
       ok: true,
       run: { keyword: { id: scope.keywordRef } },
     });
-    expect(mocks.launch).toHaveBeenCalledWith({
-      projectId: "project",
-      keywordId: "keyword",
-      actorId: "actor",
-      previewId: uuid,
-      previewHash: "a".repeat(64),
-      requestKey: uuid,
-    });
+    expect(mocks.launch).toHaveBeenCalledWith(
+      {
+        projectId: "project",
+        keywordId: "keyword",
+        actorId: "actor",
+        previewId: uuid,
+        previewHash: "a".repeat(64),
+        requestKey: uuid,
+      },
+      expect.any(Function),
+    );
   });
   it("refuses another keyword result and redacts internal service errors", async () => {
     mocks.read.mockResolvedValue({ ...run, keyword: { id: "foreign" } });

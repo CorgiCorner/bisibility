@@ -1,6 +1,6 @@
 "use server";
-
 import { getActionActor } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import type {
   AssignmentSummary,
   BusinessCommandResult,
@@ -79,8 +79,10 @@ export async function saveBusinessIdentity(
     const data = revising.data;
     const read = () => readLocationSummaryFor(data.projectId, data.locationId, ctx);
     return result(async () => {
-      await reviseBusinessLocationFor(data, ctx);
-      return read();
+      const saved = await reviseBusinessLocationFor(data, ctx);
+      if (!saved.replayed) recordAppAction(ctx.actor);
+      const actionResult = await read();
+      return actionResult;
     }, read);
   }
   const creation = createLocationSchema.safeParse(input);
@@ -88,7 +90,14 @@ export async function saveBusinessIdentity(
   return result(async () => {
     const saved = await createBusinessLocationFor(creation.data, ctx);
     if (saved.receipt.kind !== "identity") throw new BusinessLocationUnavailableError();
-    return readLocationSummaryFor(creation.data.projectId, saved.receipt.publicId, ctx);
+
+    if (!saved.replayed) recordAppAction(ctx.actor);
+    const actionResult = await readLocationSummaryFor(
+      creation.data.projectId,
+      saved.receipt.publicId,
+      ctx,
+    );
+    return actionResult;
   });
 }
 export async function saveBusinessLocationState(
@@ -99,8 +108,10 @@ export async function saveBusinessLocationState(
   if (!parsed.success) return { kind: "error" };
   const read = () => readLocationSummaryFor(parsed.data.projectId, parsed.data.locationId, ctx);
   return result(async () => {
-    await setBusinessLocationStateFor(parsed.data, ctx);
-    return read();
+    const saved = await setBusinessLocationStateFor(parsed.data, ctx);
+    if (!saved.replayed) recordAppAction(ctx.actor);
+    const actionResult = await read();
+    return actionResult;
   }, read);
 }
 export async function readBusinessAssignmentCurrent(projectId: string, selected: unknown) {
@@ -118,8 +129,10 @@ export async function saveBusinessAssignment(
   if (!parsed.success) return { kind: "error" };
   const read = () => readAssignmentSummaryFor(parsed.data.projectId, parsed.data.scope, ctx);
   return result(async () => {
-    await assignBusinessLocationFor(parsed.data, ctx);
-    return read();
+    const saved = await assignBusinessLocationFor(parsed.data, ctx);
+    if (!saved.replayed) recordAppAction(ctx.actor);
+    const actionResult = await read();
+    return actionResult;
   }, read);
 }
 export async function readBusinessMatchCurrent(
@@ -147,8 +160,10 @@ export async function reviewBusinessMatch(
     return current;
   };
   return result(async () => {
-    await reviewBusinessCandidateFor(parsed.data, ctx);
-    return read();
+    const saved = await reviewBusinessCandidateFor(parsed.data, ctx);
+    if (!saved.replayed) recordAppAction(ctx.actor);
+    const actionResult = await read();
+    return actionResult;
   }, read);
 }
 export async function rematchBusinessObservations(
@@ -160,6 +175,8 @@ export async function rematchBusinessObservations(
   return result(async () => {
     const saved = await rematchBusinessLocationFor(parsed.data, ctx);
     if (saved.receipt.kind !== "match") throw new BusinessLocationUnavailableError();
+
+    if (!saved.replayed) recordAppAction(ctx.actor);
     return { decisionCount: saved.receipt.decisionIds.length };
   });
 }

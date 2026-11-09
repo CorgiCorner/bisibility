@@ -23,9 +23,16 @@ vi.mock("@/lib/actions/rank-check-preview-analytics", () => ({
 }));
 vi.mock("@/lib/api/app-route", () => ({
   withAppRoute:
-    (handler: (request: Request, actor: typeof mocks.actor, context?: unknown) => unknown) =>
+    (
+      handler: (
+        request: Request,
+        actor: typeof mocks.actor,
+        context: unknown,
+        onCommitted: () => void,
+      ) => unknown,
+    ) =>
     (request: Request, context?: unknown) =>
-      handler(request, mocks.actor, context),
+      handler(request, mocks.actor, context, () => {}),
 }));
 vi.mock("@/lib/actions/_shared", () => ({ requireProjectScope: mocks.requireScope }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
@@ -178,6 +185,7 @@ describe("rank-check run app routes", () => {
         origin: { source: "app" },
         trigger: "api",
       }),
+      { onCommitted: expect.any(Function) },
     );
   });
 
@@ -260,19 +268,24 @@ describe("rank-check run app routes", () => {
   });
 
   it("returns a run DTO after cancellation even when Temporal handling was best effort", async () => {
-    mocks.cancel.mockResolvedValue(undefined);
+    mocks.cancel.mockResolvedValue({ changed: true });
     const response = await cancel(
       json(`/api/rank-check-runs/${publicId}/cancel`, { projectId }),
       context,
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.cancel).toHaveBeenCalledWith({
-      actorId: "user_1",
-      projectId: "project_1",
-      publicId,
+    expect(mocks.cancel).toHaveBeenCalledWith(
+      {
+        actorId: "user_1",
+        projectId: "project_1",
+        publicId,
+      },
+      expect.any(Function),
+    );
+    await expect(response.json()).resolves.toEqual({
+      data: { id: publicId, status: "queued" },
     });
-    await expect(response.json()).resolves.toEqual({ data: { id: publicId, status: "queued" } });
   });
 
   it("routes retry, run-now, skip, and item reads through their library functions", async () => {
@@ -293,8 +306,12 @@ describe("rank-check run app routes", () => {
         origin: { source: "app" },
         relation: "retry_failed",
       }),
+      { onCommitted: expect.any(Function) },
     );
-    expect(mocks.runNow).toHaveBeenCalledWith(expect.objectContaining({ runId: "run_1" }));
+    expect(mocks.runNow).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: "run_1" }),
+      expect.any(Function),
+    );
     expect(mocks.skip).toHaveBeenCalledWith(expect.objectContaining({ runId: "run_1" }));
     expect(mocks.listItems).toHaveBeenCalledWith("project_1", publicId, expect.any(URL));
   });

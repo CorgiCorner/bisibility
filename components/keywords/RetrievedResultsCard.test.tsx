@@ -72,7 +72,7 @@ describe("RetrievedResultsCard", () => {
         timeZone="UTC"
       />,
     );
-    const competitors = screen.getByRole("region", { name: "Competitors in this check" });
+    const competitors = screen.getByRole("region", { name: "Competitors" });
     expect(screen.getByTestId("retrieved-results-body")).not.toContainElement(competitors);
     const chooser = within(competitors).getByRole("button", { name: "Competitor check" });
     expect(chooser).toHaveTextContent("Aug 2, 2026");
@@ -123,7 +123,7 @@ describe("RetrievedResultsCard", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Checks may stop at the first tracked-domain match when that project setting is enabled. This card shows what this check kept and which positions it did not retrieve.",
+        name: /Checks may stop at the first tracked-domain match/,
       }),
     ).toBeInTheDocument();
   });
@@ -144,8 +144,8 @@ describe("RetrievedResultsCard", () => {
     const results = fullResults({ requestedDepth: 20, retrievedPositions: 9, trackedPosition: 1 });
     results.rows = results.rows.filter((row) => row.position <= 9);
     renderCard([entry()], results);
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Partial snapshot. Missing competitors may still rank in the Top 20.",
+    expect(screen.getByRole("button", { name: /Partial snapshot/ })).toHaveAccessibleName(
+      /Partial snapshot. Missing competitors may still rank in the Top 20./,
     );
   });
 
@@ -153,7 +153,9 @@ describe("RetrievedResultsCard", () => {
     const results = fullResults({ requestedDepth: 20, retrievedPositions: 20 });
     results.rows = results.rows.filter((row) => row.position !== 2 && row.position <= 20);
     renderCard([entry()], results);
-    expect(screen.getByRole("status")).toHaveTextContent("Partial snapshot.");
+    expect(screen.getByRole("button", { name: /Partial snapshot/ })).toHaveAccessibleName(
+      /Partial snapshot./,
+    );
   });
 
   it("counts saved rows separately from their highest rank", () => {
@@ -212,7 +214,7 @@ describe("RetrievedResultsCard", () => {
       tier: "compact",
     });
 
-    expect(screen.getByText(/Compact record/)).toBeInTheDocument();
+    expect(screen.getByText("Only domains and positions were saved.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Retrieved results")).not.toBeInTheDocument();
   });
 
@@ -228,4 +230,41 @@ describe("RetrievedResultsCard", () => {
     expect(screen.getByText("No stored results for this check")).toBeInTheDocument();
     expect(screen.getByText(/history built from it, are unaffected/)).toBeInTheDocument();
   });
+});
+
+it("keeps a compact empty snapshot short and centered", () => {
+  renderCard([entry({ tier: "compact", retrievedPositions: null })], {
+    checkId: CHECK_ID,
+    checkedAt: "2025-04-12T06:00:00.000Z",
+    domains: [],
+    expiredAt: "2025-07-11T06:00:00.000Z",
+    provider: "dataforseo",
+    providerLabel: "DataForSEO",
+    tier: "compact",
+  });
+  expect(
+    screen.getByText("Full results were not saved").closest("[data-empty-state]"),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId("retrieved-results-body")).not.toHaveClass("min-h-[240px]");
+});
+
+it("hides expired continuation controls even for a failed extension", () => {
+  render(
+    <RetrievedResultsCard
+      entries={[entry()]}
+      initialResults={fullResults({
+        extension: {
+          reason: "failed",
+          expiresAt: "2000-01-01T00:00:00.000Z",
+          nextStart: 20,
+          pages: [],
+        },
+      })}
+      loadResults={async () => []}
+      projectRef="prj_test"
+      retentionDays={90}
+      timeZone="UTC"
+    />,
+  );
+  expect(screen.queryByTestId("snapshot-extension-section")).not.toBeInTheDocument();
 });

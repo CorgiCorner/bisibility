@@ -17,6 +17,9 @@ const mocks = vi.hoisted(() => ({
   socialProviders: { github: true, google: false },
 }));
 
+vi.mock("@/components/account/AccountDeletionExtension", () => ({
+  AccountDeletionExtension: ({ children }: { children: import("react").ReactNode }) => children,
+}));
 vi.mock("@/components/account/AccountEmailCard", () => ({
   AccountEmailCard: mocks.AccountEmailCard,
 }));

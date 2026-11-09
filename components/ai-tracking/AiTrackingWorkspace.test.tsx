@@ -197,7 +197,7 @@ describe("tracking approval and evidence UI", () => {
     for (const action of [save, launch, preview, cancel]) expect(action).not.toHaveBeenCalled();
   });
   it("links schedules to the common Schedules page instead of a private tab", () => {
-    workspace({ schedulesHref: "/app/prj_fixture/runs/schedules" });
+    workspace({ schedulesHref: "/app/prj_fixture/schedules" });
     expect(screen.queryByRole("tab", { name: "Schedules" })).toBeNull();
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
       "Prompts",
@@ -205,7 +205,7 @@ describe("tracking approval and evidence UI", () => {
     ]);
     expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute(
       "href",
-      "/app/prj_fixture/runs/schedules",
+      "/app/prj_fixture/schedules",
     );
     expect(screen.queryByRole("button", { name: "Add schedule" })).toBeNull();
   });

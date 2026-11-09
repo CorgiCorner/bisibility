@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { type Plugin, searchForWorkspaceRoot } from "vite";
+import { adminPageAliases } from "./admin-page-extension";
 
 const aiResearchActionsStub = fileURLToPath(
   new URL("./ai-research-action-stubs.ts", import.meta.url),
@@ -24,6 +25,9 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/domain-verification": fileURLToPath(
+    new URL("./domain-verification-action-stubs.ts", import.meta.url),
+  ),
   "@/lib/actions/prompt-research": fileURLToPath(
     new URL("./prompt-research-action-stubs.ts", import.meta.url),
   ),
@@ -111,7 +115,17 @@ const prismaRuntimeStubPatterns = [
 ];
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
+const adminActionStub = fileURLToPath(new URL("./instance-admin-action-stubs.ts", import.meta.url));
+const adminActionBoundaries = {
+  "@/lib/actions/instance-admin-pages": adminActionStub,
+  "@/lib/actions/instance-admin": adminActionStub,
+  "@/lib/actions/instance-admin-account-actions": adminActionStub,
+  "@/lib/actions/instance-mail-settings": adminActionStub,
+};
+
 export const runtimeAliases = {
+  ...adminPageAliases,
+  ...adminActionBoundaries,
   "@/lib/actions/run-tray": fileURLToPath(new URL("./run-tray-action-stubs.ts", import.meta.url)),
   "@/lib/actions/instance-announcements": announcementActionsStub,
   "@/lib/actions/metering-recovery": fileURLToPath(
@@ -203,6 +217,8 @@ export const runtimeStubPlugin = {
   resolveId(source, importer) {
     if (source === "@/lib/actions/ai-research") return aiResearchActionsStub;
     if (source === "@/lib/actions/instance-announcements") return announcementActionsStub;
+    if (source in adminActionBoundaries)
+      return adminActionBoundaries[source as keyof typeof adminActionBoundaries];
     const candidates = candidateModuleIds(source, importer);
     const cleanSource = source.split("?", 1)[0] ?? source;
     const keywordActionBoundary = resolveKeywordActionBoundary(cleanSource);

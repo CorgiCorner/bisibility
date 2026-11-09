@@ -1,5 +1,6 @@
 import type { MarketDefinitionProps } from "@/components/markets/blocks/MarketDefinition";
 import { renderWithKeywordManagementMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { capacityNoticeSnapshot, publishCapacityNotice } from "@/lib/capacity/notice-store";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
@@ -877,3 +878,26 @@ it("copies from the same market sources with an explicitly chosen schedule and d
     }),
   );
 }, 15_000);
+
+it.each(["plan_limit_reached", "subscription_required"] as const)(
+  "keeps the CSV drawer open and publishes %s instead of reporting success",
+  async (code) => {
+    publishCapacityNotice(null);
+    const onAdded = vi.fn();
+    const failure = { code, message: "Account capacity denied this import." };
+    const action = vi.fn(async () => ({ ok: false, capacityFailure: failure }));
+    const { onClose } = renderDrawer({ initialTab: "csv", addKeywordsAction: action, onAdded });
+    fireEvent.change(screen.getByLabelText("Paste CSV"), {
+      target: { value: "keyword,country,device\nrank tracker,US,desktop" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review keywords/i }));
+    await screen.findByRole("heading", { name: "Review keywords" });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(action).toHaveBeenCalledOnce());
+    await waitFor(() => expect(capacityNoticeSnapshot()).toEqual(failure));
+    expect(await screen.findByRole("alert")).toBeVisible();
+    expect(onAdded).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    publishCapacityNotice(null);
+  },
+);

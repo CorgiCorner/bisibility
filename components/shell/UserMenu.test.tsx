@@ -52,7 +52,7 @@ import { UserMenu } from "./UserMenu";
 let assignedHref: string | null = null;
 let restoreLocation = () => {};
 
-function renderMenu(roleLine = "Member") {
+function renderMenu() {
   render(
     <UserMenu
       anchorEl={document.createElement("button")}
@@ -60,7 +60,6 @@ function renderMenu(roleLine = "Member") {
       email="member@example.com"
       name="Member Example"
       onClose={vi.fn()}
-      roleLine={roleLine}
     />,
   );
 }
@@ -111,19 +110,9 @@ describe("UserMenu", () => {
     expect(screen.queryByRole("button", { name: "Keyboard shortcuts" })).not.toBeInTheDocument();
   });
 
-  it("uses the quiet metadata color for the uppercase role line", () => {
+  it("omits the project role from the account menu", () => {
     renderMenu();
-
-    const roleLine = screen.getByText("Member");
-
-    expect(roleLine).toHaveClass("text-fg-muted");
-    expect(roleLine).not.toHaveClass("text-accent-text");
-  });
-
-  it("renders the server-localized role line without rewriting its project name", () => {
-    renderMenu("Właściciel w Projekt Example");
-
-    expect(screen.getByText("Właściciel w Projekt Example")).toBeInTheDocument();
+    expect(screen.queryByText("Member")).not.toBeInTheDocument();
   });
 
   it("keeps the user informed when sign out fails", async () => {

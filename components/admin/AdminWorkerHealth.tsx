@@ -4,7 +4,7 @@ import { Badge, displayTime, Metric, Panel } from "@/components/admin/AdminPrimi
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import type { MigrationComparison } from "@/lib/db/migration-state";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { useTranslations } from "next-intl";
 
 type WorkerTranslations = ReturnType<typeof useTranslations<"instanceAdmin.worker">>;

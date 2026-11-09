@@ -1,3 +1,4 @@
+import { AccountDeletionExtension } from "@/components/account/AccountDeletionExtension";
 import { AccountEmailCard } from "@/components/account/AccountEmailCard";
 import { AccountPrivacyChoices } from "@/components/account/AccountPrivacyChoices";
 import { AccountShell } from "@/components/account/AccountShell";
@@ -51,7 +52,9 @@ export default async function AccountPage() {
           configuredProviders={ENABLED_SOCIAL_PROVIDERS}
         />
         <AccountPrivacyChoices />
-        <DeleteAccount deleteAccount={deleteAccount} email={account.email} />
+        <AccountDeletionExtension>
+          <DeleteAccount deleteAccount={deleteAccount} email={account.email} />
+        </AccountDeletionExtension>
       </div>
     </AccountShell>
   );

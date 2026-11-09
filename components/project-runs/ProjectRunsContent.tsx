@@ -17,7 +17,6 @@ import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/csr/Pla
 import { useTranslations } from "next-intl";
 import { ProjectRunsFilters } from "./ProjectRunsFilters";
 import { ProjectRunsTable } from "./ProjectRunsTable";
-import { ProjectRunsTabs } from "./ProjectRunsTabs";
 import { ProjectRunsTimelineTabs } from "./ProjectRunsTimelineTabs";
 import { applyOperationSnapshotToRuns } from "./project-runs-presentation";
 
@@ -138,7 +137,6 @@ export function ProjectRunsLoadError({
   const t = useTranslations("projectRuns.content");
   return (
     <div className="grid gap-4">
-      <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
       <ProjectRunsTimelineTabs projectRef={projectRef} query={query} />
       <section
         className="rounded-card border border-border bg-bg-elev px-4 py-10 text-center"
@@ -197,7 +195,6 @@ export function ProjectRunsContent({
       className="grid min-w-0 gap-4"
       aria-label={query.view === "planned" ? t("upcomingRuns") : t("runs")}
     >
-      <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
       <ProjectRunsTimelineTabs projectRef={projectRef} query={query} />
       {showPlanningNotice ? <SchedulePlanningNotice minutes={schedulePlanningMinutes} /> : null}
       <Card className="min-w-0 overflow-hidden p-0" size="sm">

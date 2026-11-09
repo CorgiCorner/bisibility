@@ -1,8 +1,10 @@
 import "server-only";
 
 import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
+import { classifyCreatedAccount } from "@/lib/auth/account-classification-extension";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
+import { onUserCreated } from "./signup-extension";
 
 type CreatedUser = Record<string, unknown>;
 
@@ -43,12 +45,14 @@ export async function handleCreatedUser(
   user: { id: string },
   context: UserCreationContext,
 ): Promise<void> {
+  const { channel } = await onUserCreated(user.id, context);
+  await classifyCreatedAccount(user.id);
   await wakeCloudWelcomeSequenceWorker();
   const method = signupMethodFromContext(context);
   if (!method) return;
   await trackServerEvent("user_signed_up", {
     consent: await readConsentFromCookies(),
     userId: user.id,
-    properties: { method },
+    properties: { method, channel },
   });
 }

@@ -537,4 +537,25 @@ describe("rank-check run planner", () => {
     expect(result.blockedReason).toBeNull();
     expect(mocks.loadChain).toHaveBeenCalled();
   });
+
+  it("skips weekly-capped scheduled admission and resumes on the next window", async () => {
+    const { WeeklyRequestCapError } = await import("@/lib/operations/weekly-request-error");
+    const input = {
+      keywords: [{ id: "keyword_1", text: "plain" }],
+      project: { defaults: { serpDepth: 20 } },
+      projectId: "project_1",
+      providerPolicy: "project",
+      serpDepth: null,
+    };
+    mocks.assertOperationAccess.mockRejectedValueOnce(
+      new WeeklyRequestCapError("2026-11-12T00:00:00Z"),
+    );
+    expect((await scheduleAdmission(input, new Date("2026-11-11Z"))).blockedReason).toBe(
+      "weekly_request_cap_reached",
+    );
+    expect(mocks.loadChain).not.toHaveBeenCalled();
+    expect((await scheduleAdmission(input, new Date("2026-11-12Z"))).blockedReason).not.toBe(
+      "weekly_request_cap_reached",
+    );
+  });
 });

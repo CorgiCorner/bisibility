@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  setAnalyticsSyncConnection,
+  withAnalyticsSyncScope,
+} from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
@@ -69,10 +73,11 @@ export async function rereadOrganicSessionsMetrics(input: {
   return { capHit, daysProcessed: days.length };
 }
 
-export async function runOrganicSessionsIncrementalSync(input: {
+async function runOrganicSessionsIncrementalSyncImpl(input: {
   now?: Date;
   projectId: string;
   property?: string;
+  analyticsTrigger?: "manual" | "scheduled" | "api" | "unknown";
 }): Promise<SessionsIncrementalResult> {
   if (await isProjectGscUserPaused(input.projectId)) {
     return { daysProcessed: 0, projectId: input.projectId, status: "not_connected" };
@@ -80,6 +85,7 @@ export async function runOrganicSessionsIncrementalSync(input: {
   const connection = await resolveOrganicSessionsConnection(input.projectId);
   if (!connection) return { daysProcessed: 0, projectId: input.projectId, status: "not_connected" };
 
+  setAnalyticsSyncConnection(connection.connectionId);
   const now = input.now ?? new Date();
   const property = input.property ?? connection.property;
   const row = await prisma.searchAnalyticsImport.findUnique({
@@ -181,6 +187,7 @@ export async function runOrganicSessionsIncrementalForAllProjects(now = new Date
         source: ORGANIC_SESSIONS_SOURCE,
       });
       await runOrganicSessionsIncrementalSync({
+        analyticsTrigger: "scheduled",
         now,
         projectId: project.id,
         property: connection.property,
@@ -192,4 +199,14 @@ export async function runOrganicSessionsIncrementalForAllProjects(now = new Date
       });
     }
   }
+}
+
+export function runOrganicSessionsIncrementalSync(
+  input: Parameters<typeof runOrganicSessionsIncrementalSyncImpl>[0],
+) {
+  return withAnalyticsSyncScope(
+    { projectId: input.projectId, provider: "ga4", trigger: input.analyticsTrigger ?? "unknown" },
+    () => runOrganicSessionsIncrementalSyncImpl(input),
+    (result) => result.status === "synced",
+  );
 }

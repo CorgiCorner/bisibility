@@ -1,7 +1,7 @@
 "use server";
-
 import { deleteAccountRecords } from "@/lib/account/account-deletion";
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
@@ -33,9 +33,12 @@ export type UpdateProfileNameInput = z.infer<typeof nameSchema>;
 export async function updateProfileName(input: unknown): Promise<{ name: string }> {
   const data = nameSchema.parse(input);
   const session = await requireSession();
-  const updated = await updateProfileNameRecord(session.user.id, data.name);
+  const updated = await updateProfileNameRecord(session.user.id, data.name, () =>
+    recordAppAction(session),
+  );
 
   revalidatePath("/app/account");
+
   return updated;
 }
 
@@ -77,6 +80,7 @@ export async function updateAvatar(input: unknown): Promise<{ image: string | nu
     where: { id: session.user.id },
   });
 
+  recordAppAction(session);
   await writeAudit({
     action: "account.avatar_updated",
     actorId: session.user.id,
@@ -87,6 +91,7 @@ export async function updateAvatar(input: unknown): Promise<{ image: string | nu
   });
 
   revalidatePath("/app/account");
+
   return { image: updated.image };
 }
 
@@ -96,6 +101,7 @@ export async function signOutEverywhere() {
 
   const count = await revokeOtherSessions(session);
 
+  if (count > 0) recordAppAction(session);
   await writeAudit({
     action: "account.sessions_revoked",
     actorId: session.user.id,
@@ -105,6 +111,7 @@ export async function signOutEverywhere() {
   });
 
   revalidatePath("/app/account/security");
+
   return { revokedCount: count };
 }
 
@@ -133,6 +140,7 @@ export async function revokeSession(input: unknown) {
     where: { id: target.id },
   });
 
+  recordAppAction(session);
   await writeAudit({
     action: "account.session_revoked",
     actorId: session.user.id,
@@ -142,6 +150,7 @@ export async function revokeSession(input: unknown) {
   });
 
   revalidatePath("/app/account/security");
+
   return { revoked: true };
 }
 
@@ -157,5 +166,6 @@ export async function deleteAccount(input: unknown) {
     source: "web",
     userId: session.user.id,
   });
+  recordAppAction(session);
   redirect("/login");
 }

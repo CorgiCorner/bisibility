@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { consume } from "@/lib/api/ratelimit";
 import { writeAudit } from "@/lib/auth/audit";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
@@ -126,6 +126,7 @@ export async function sendTestSlackNotification(): Promise<SendTestSlackResult> 
 
   const result = await sendOpsTestNotification(config);
   if (result.status === "delivered") {
+    recordAppAction(session);
     await writeAudit({
       action: "instance_admin.ops_test.send",
       actorId,
@@ -133,6 +134,7 @@ export async function sendTestSlackNotification(): Promise<SendTestSlackResult> 
       targetId: "ops-slack",
       targetType: "instance_ops",
     });
+
     return { message: "Test notification delivered to Slack.", status: "delivered" };
   }
 
@@ -209,6 +211,7 @@ export async function runOpsSweepNow(): Promise<RunOpsSweepResult> {
     });
     return { message: "Outbox sweep failed.", status: "failed" };
   }
+  if (result.committed) recordAppAction(session);
   await writeAudit({
     action: "instance_admin.ops_sweep.run",
     actorId,
@@ -216,8 +219,10 @@ export async function runOpsSweepNow(): Promise<RunOpsSweepResult> {
     targetId: "ops-event-outbox",
     targetType: "instance_ops",
   });
+
   return {
-    ...result,
+    attempted: result.attempted,
+    delivered: result.delivered,
     message: `Outbox sweep completed: ${result.delivered} of ${result.attempted} delivered.`,
     status: "completed",
   };

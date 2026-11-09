@@ -1,9 +1,11 @@
 import "server-only";
+import { hasNotificationResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import type { AlertExternalDeliveryPayload } from "@/lib/alerts/alert-delivery-payload";
 import { NotificationType, type Prisma } from "@/lib/generated/prisma/client";
 import { appPath } from "@/lib/routing/app-path";
 import { notificationCreateData } from "./create";
-import { queueNotificationEvent } from "./transaction";
+import { queueNotificationAfterCommit, queueNotificationEvent } from "./transaction";
 
 export type TriggeredAlertNotificationInput = {
   payload: AlertExternalDeliveryPayload;
@@ -22,6 +24,7 @@ export function triggeredAlertNotificationInput(input: TriggeredAlertNotificatio
       alertId: payload.alertId,
       beforePosition: payload.beforePosition,
       conditionType: payload.conditionType,
+      test: payload.test === true,
       firedAt: payload.firedAt,
       keyword: payload.keyword,
       keywordId: payload.keywordId,
@@ -64,9 +67,16 @@ export async function notifyTriggeredAlertsDelivered(
     const rows = await tx.notification.createManyAndReturn({
       data: batch,
       skipDuplicates: true,
-      select: { id: true, userId: true, projectId: true, createdAt: true },
+      select: { id: true, userId: true, projectId: true, createdAt: true, payload: true },
     });
     for (const row of rows) {
+      queueNotificationAfterCommit(tx, async () => {
+        recordResultReceipt({
+          userId: row.userId,
+          surface: "alert",
+          nonEmpty: hasNotificationResult(NotificationType.alert_fired, row.payload),
+        });
+      });
       queueNotificationEvent(tx, {
         id: row.id,
         userId: row.userId,

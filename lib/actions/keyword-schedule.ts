@@ -1,7 +1,8 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { getKeywordDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.server";
 import { writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
 import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
@@ -38,48 +39,51 @@ function scheduleView(schedule: ScheduleViewInput) {
 }
 
 export async function updateKeywordSchedule(input: unknown) {
-  const data = parseActionInput(keywordScheduleUpdateSchema, input);
-  const actor = await getActionActor();
-  const keyword = await requireKeywordScope(actor, "update", data.keywordId);
-  const before = await prisma.keywordSchedule.findUnique({ where: { keywordId: keyword.id } });
-  const schedule = normalizeSchedule(data, new Date(), keyword.id);
-  const warning = await getKeywordDepthDecreaseWarning(keyword.id, data.serpDepth);
-  const stored = await prisma.$transaction(async (tx) => {
-    const memberships = await setKeywordCadence(
-      tx,
-      keyword.projectId,
-      [keyword.id],
-      schedule,
-      actor.id,
-    );
-    const updated = await tx.keywordSchedule.findUniqueOrThrow({
-      select: {
-        cronExpression: true,
-        frequency: true,
-        jitterMinutes: true,
-        lastCheckedAt: true,
-        nextCheckAt: true,
-        serpDepth: true,
-        timezone: true,
-      },
-      where: { keywordId: keyword.id },
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(keywordScheduleUpdateSchema, input);
+    const actor = await getActionActor();
+    const keyword = await requireKeywordScope(actor, "update", data.keywordId);
+    const before = await prisma.keywordSchedule.findUnique({ where: { keywordId: keyword.id } });
+    const schedule = normalizeSchedule(data, new Date(), keyword.id);
+    const warning = await getKeywordDepthDecreaseWarning(keyword.id, data.serpDepth);
+    const stored = await prisma.$transaction(async (tx) => {
+      const memberships = await setKeywordCadence(
+        tx,
+        keyword.projectId,
+        [keyword.id],
+        schedule,
+        actor.id,
+      );
+      const updated = await tx.keywordSchedule.findUniqueOrThrow({
+        select: {
+          cronExpression: true,
+          frequency: true,
+          jitterMinutes: true,
+          lastCheckedAt: true,
+          nextCheckAt: true,
+          serpDepth: true,
+          timezone: true,
+        },
+        where: { keywordId: keyword.id },
+      });
+      return {
+        ...updated,
+        ...keywordMembershipSchedule(memberships.get(keyword.id), keyword.id, updated.timezone),
+      };
     });
-    return {
-      ...updated,
-      ...keywordMembershipSchedule(memberships.get(keyword.id), keyword.id, updated.timezone),
-    };
-  });
 
-  await writeAudit({
-    action: "keyword_schedule.update",
-    actorId: actor.id,
-    after: schedule,
-    before,
-    projectId: keyword.projectId,
-    targetId: keyword.publicId,
-    targetType: "keyword_schedule",
-  });
-  revalidateKeywords(keyword.publicId);
+    recordAppAction(actor);
+    await writeAudit({
+      action: "keyword_schedule.update",
+      actorId: actor.id,
+      after: schedule,
+      before,
+      projectId: keyword.projectId,
+      targetId: keyword.publicId,
+      targetType: "keyword_schedule",
+    });
+    revalidateKeywords(keyword.publicId);
 
-  return { ...scheduleView(stored), warning };
+    return { ...scheduleView(stored), warning };
+  });
 }

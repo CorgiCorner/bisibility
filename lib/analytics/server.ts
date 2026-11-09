@@ -19,10 +19,13 @@ async function captureServerEvent(_input: unknown): Promise<void> {}
 import { cookies, headers } from "next/headers";
 
 export interface ServerAnalyticsEventRegistry {
+  analytics_data_synced: true;
   consent_updated: true;
+  free_request_used: true;
   keywords_added: true;
   onboarding_completed: true;
   onboarding_project_created: true;
+  paid_request_used: true;
   provider_connected: true;
   provider_connection_tested: true;
   rank_check_preview_completed: true;

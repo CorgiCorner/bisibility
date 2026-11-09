@@ -42,6 +42,8 @@ const keywordId = `kw_${"c".repeat(24)}`;
 describe("check schedule actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.assign.mockResolvedValue({ updated: 1 });
+    mocks.remove.mockResolvedValue({ updated: 1 });
     mocks.getActionActor.mockResolvedValue({ id: "user_1" });
     mocks.requireProjectScope.mockResolvedValue({ id: "project_1" });
   });

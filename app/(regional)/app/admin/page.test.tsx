@@ -1,54 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { permanentRedirect } from "@/tests/next-navigation";
+import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  dashboard: vi.fn(),
-  emailAllowance: vi.fn(),
-  dateFormat: vi.fn(),
-  requireAdmin: vi.fn(),
-}));
+const mocks = vi.hoisted(() => ({ access: vi.fn() }));
+vi.mock("@/lib/auth/instance-admin", () => ({ requireInstanceAdmin: mocks.access }));
 
-vi.mock("@/components/admin/AdminDashboard", () => ({
-  AdminDashboard: () => <div>Admin dashboard</div>,
-}));
-vi.mock("@/lib/auth/instance-admin", () => ({
-  requireInstanceAdmin: mocks.requireAdmin,
-}));
-vi.mock("@/lib/dates/request", () => ({
-  getResolvedDateFormat: mocks.dateFormat,
-}));
-vi.mock("@/lib/email/allowance", () => ({ getInstanceAdminEmailAllowance: mocks.emailAllowance }));
-vi.mock("@/lib/queries/instance-admin", () => ({
-  getInstanceAdminDashboard: mocks.dashboard,
-}));
+import Page from "./page";
 
-import InstanceAdminPage from "./page";
-
-describe("instance admin page", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("loads diagnostics only after the instance-admin gate passes", async () => {
-    mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
-    mocks.dashboard.mockResolvedValue({});
-    mocks.dateFormat.mockResolvedValue({ resolved: "month_first" });
-
-    await InstanceAdminPage();
-
-    expect(mocks.requireAdmin).toHaveBeenCalledOnce();
-    expect(mocks.dashboard).toHaveBeenCalledOnce();
-    expect(mocks.emailAllowance).toHaveBeenCalledOnce();
-    expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.emailAllowance.mock.invocationCallOrder[0] ?? 0,
-    );
-    expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.dashboard.mock.invocationCallOrder[0] ?? 0,
-    );
-  });
-
-  it("never queries cross-instance data when the gate rejects", async () => {
-    mocks.requireAdmin.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
-
-    await expect(InstanceAdminPage()).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mocks.dashboard).not.toHaveBeenCalled();
-    expect(mocks.emailAllowance).not.toHaveBeenCalled();
-  });
+beforeEach(() => vi.clearAllMocks());
+it("redirects an authorized administrator to Status", async () => {
+  mocks.access.mockResolvedValue({ user: { id: "admin" } });
+  await Page();
+  expect(permanentRedirect).toHaveBeenCalledWith("/app/admin/overview/status");
+});
+it("does not redirect an unauthorized visitor", async () => {
+  mocks.access.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
+  await expect(Page()).rejects.toThrow("NEXT_NOT_FOUND");
+  expect(permanentRedirect).not.toHaveBeenCalled();
 });

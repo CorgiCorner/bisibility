@@ -1,3 +1,4 @@
+import type { SerpDepth } from "@/lib/serp/constants";
 export const comparisonProviders = ["dataforseo", "serpapi"] as const;
 export type ComparisonProvider = (typeof comparisonProviders)[number];
 export type ComparisonSideStatus =
@@ -30,10 +31,11 @@ export type ComparisonPreview = {
   hash: string;
   expiresAt: string;
   keyword: ComparisonContext["keyword"];
-  depth: 20;
+  depth: SerpDepth;
   sides: ComparisonQuote[];
 };
 export type ComparisonResult = {
+  features?: import("@/lib/checks/serp-feature-presentation").SerpFeaturePresentation;
   observedAt: string | null;
   recordedAt: string;
   position: number | null;
@@ -47,10 +49,16 @@ export type ComparisonResult = {
   completeThrough: number | null;
 };
 export type ComparisonRun = {
+  search?: {
+    locationKey: string;
+    locationKind: "country" | "region" | "city";
+    countryCode: string;
+    language: string;
+  };
   id: string;
   createdAt: string;
   keyword: ComparisonContext["keyword"];
-  depth: 20;
+  depth: SerpDepth;
   sides: {
     provider: ComparisonProvider;
     status: ComparisonSideStatus;
@@ -60,5 +68,7 @@ export type ComparisonRun = {
     quantity: number | null;
     reason: string | null;
     result: ComparisonResult | null;
+    canSave?: boolean;
+    savedCheckRef?: string | null;
   }[];
 };

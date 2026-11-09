@@ -1,3 +1,4 @@
+import { prepareKeywordScheduleChange } from "@/lib/capacity/schedule-change";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { mirrorScheduleToKeywords } from "@/lib/rank-check/schedules/service-membership";
 
@@ -44,9 +45,11 @@ export async function linkCheckSchedule(
 ) {
   if (created.length === 0) return;
   const keywordIds = created.map((keyword) => keyword.id);
+  const capacity = await prepareKeywordScheduleChange(tx, projectId, keywordIds, schedule);
   await tx.keyword.updateMany({
     data: { checkScheduleId: schedule.id },
     where: { id: { in: keywordIds } },
   });
   await mirrorScheduleToKeywords(tx, projectId, schedule, keywordIds);
+  await capacity.check();
 }

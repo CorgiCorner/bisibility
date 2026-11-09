@@ -16,3 +16,12 @@ export class DeliveryHttpError extends Error {
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+
+export function webhookTestFailure(error: unknown) {
+  return {
+    error: error instanceof Error ? error.message : "Webhook test delivery failed.",
+    latencyMs: error instanceof DeliveryHttpError ? error.latencyMs : null,
+    ok: false as const,
+    status: error instanceof DeliveryHttpError ? error.status : null,
+  };
+}

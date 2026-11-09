@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   appleAccounts: vi.fn(),
   currentUser: vi.fn(),
+  assertAccountDeletionAllowed: vi.fn(),
   onAccountDeletion: vi.fn(),
   transaction: vi.fn(),
   writeAudit: vi.fn(),
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 // The public snapshot replaces this seam with a no-op, so the core test asserts the call only.
 vi.mock("@/lib/account/account-deletion-extension", () => ({
+  assertAccountDeletionAllowed: mocks.assertAccountDeletionAllowed,
   onAccountDeletion: mocks.onAccountDeletion,
 }));
 vi.mock("@/lib/analytics/deletion-provider", () => ({

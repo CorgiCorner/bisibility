@@ -49,7 +49,7 @@ const mocks = vi.hoisted(() => {
       findMany: vi.fn().mockResolvedValue([]),
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
-    savedKeyword: { deleteMany: vi.fn() },
+    savedKeyword: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
     keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
     projectMarket: {

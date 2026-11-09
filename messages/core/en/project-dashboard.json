@@ -309,8 +309,8 @@
       "counts": "{left, number} / {right, number}",
       "competitor": "Competitor",
       "description": "Latest completed check per target within the selected period, markets, devices and tags.",
-      "footer": "Missing domains are not treated as losses. Average position uses found results only.{limited, select, true { Showing the 2,000 most recently added targets.} other {}}",
-      "footerWithNoSavedSerps": "No saved SERPs for these competitors in the selected period. Missing domains are not treated as losses. Average position uses found results only.{limited, select, true { Showing the 2,000 most recently added targets.} other {}}",
+      "footer": "A missing competitor does not mean it lost rankings. Averages include only results we found. {limited, select, true { Showing the 2,000 most recently added targets.} other {}}",
+      "footerWithNoSavedSerps": "A missing competitor does not mean it lost rankings. Averages include only results we found. {limited, select, true { Showing the 2,000 most recently added targets.} other {}}",
       "found": "Found",
       "foundDescription": "Targets where this domain appears, out of saved SERPs in its selected markets. Each market and device is a separate target.",
       "manage": "Manage competitors",
@@ -330,8 +330,16 @@
       "mobile": "Mobile"
     },
     "reportWidgets": {
+      "historyDescription": "Daily changes in your search visibility.",
+      "qualityDescription": "How much keyword data is available over time.",
+      "historyView": "View history as",
+      "chartView": "Chart",
+      "tableView": "Data",
+      "emptyTitle": "No ranking data yet",
+      "emptyDescription": "This section will fill in after your keywords have been checked.",
+      "contributionDescription": "See which keywords contribute most to your visibility.",
       "visibilityHistory": "Visibility history",
-      "qualityHistory": "Data quality history",
+      "qualityHistory": "Data availability",
       "contributors": "Keyword contributions",
       "historyScope": "Retained observations for the targets selected at {asOf}, using weights frozen at that time.",
       "historyFreshness": "Historical freshness policy is unknown. Observed coverage describes evidence; gaps remain gaps.",
@@ -405,7 +413,17 @@
       "setupTitle": "Set up local tracking",
       "setupDescription": "Assign a business location to keywords or a market to see local results here.",
       "chooseDescription": "Choose a location and scope to see its local results.",
-      "manageLocations": "Set up a business location"
+      "manageLocations": "Set up a business location",
+      "businessTop3": "Business in top 3",
+      "averagePosition": "Average position",
+      "searchesWithPack": "Searches with local results",
+      "dataAvailable": "Data available",
+      "checkedKeywords": "{measured, number} of {total, number} keywords checked",
+      "details": "Details",
+      "detailsTitle": "About local results",
+      "detailsIntro": "These numbers describe the selected business in local Google results.",
+      "scopeHelp": "Only organic local results are included. Ads, Google Maps and Local Finder are excluded.",
+      "comparisonHelp": "Changes over time will appear when a comparable earlier set of checks is available."
     }
   }
 }

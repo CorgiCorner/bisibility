@@ -13,10 +13,11 @@ export async function mutateProviderUi(
   tx: Prisma.TransactionClient,
   state: ProviderUiState,
   command: ProviderUiCommand,
+  onWrite?: () => void,
 ): Promise<ProviderActionResult | null> {
   const nonce = { commandId: command.commandId };
   if (!state.binding.canManage) return { ...nonce, outcome: "forbidden" };
-  if (command.kind === "project_chain") return mutateProjectChain(tx, state, command);
+  if (command.kind === "project_chain") return mutateProjectChain(tx, state, command, onWrite);
   if (command.kind === "rates") {
     const connection = state.connections.find((row) => row.publicId === command.connectionId);
     if (!connection) return { ...nonce, outcome: "forbidden" };
@@ -43,6 +44,7 @@ export async function mutateProviderUi(
         },
         { actorId: state.actor.id, projectId: state.project.id },
       );
+    if (command.rates.length > 0) onWrite?.();
     return null;
   }
   if (command.expectedRevision !== state.revision)
@@ -63,5 +65,6 @@ export async function mutateProviderUi(
       connectionPublicId,
       projectPublicId: state.project.publicId,
     });
+  onWrite?.();
   return null;
 }

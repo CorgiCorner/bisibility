@@ -7,6 +7,10 @@ import {
   renderWithFeatureMessages,
   teamSettingsFeatureTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { withCapacityFailure } from "@/lib/capacity/action";
+import { CapacityLimitError } from "@/lib/capacity/errors";
+import { capacityNoticeSnapshot, publishCapacityNotice } from "@/lib/capacity/notice-store";
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import type { TeamMemberData } from "@/lib/queries/team";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -94,7 +98,10 @@ function renderCard(overrides: Partial<TeamMembersCardProps> = {}) {
 }
 
 describe("TeamMembersCard", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    publishCapacityNotice(null);
+  });
 
   it("renders a member's server-derived avatar URL", () => {
     renderCard({
@@ -326,4 +333,84 @@ describe("TeamMembersCard", () => {
       );
     },
   );
+
+  it("reports ownership transfer capacity denial through PlanLimitNotice", async () => {
+    const transferOwnership = vi.fn().mockRejectedValue(
+      new CapacityLimitError({
+        dimension: "projects",
+        limit: 2,
+        used: 2,
+        requested: 1,
+        scope: "account",
+        upgradeUrl: "/pricing",
+      }),
+    );
+    renderCard({ transferOwnership });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Audit Example" }));
+    const menu = await screen.findByRole("menu", { name: "Actions for Audit Example" });
+    fireEvent.click(within(menu).getByText("Transfer ownership"));
+    const dialog = await screen.findByRole("dialog", { name: "Transfer project ownership" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Transfer ownership" }));
+    await waitFor(() => expect(transferOwnership).toHaveBeenCalledOnce());
+    await screen.findByRole("alert");
+    expect(capacityNoticeSnapshot()).toMatchObject({ code: "plan_limit_reached" });
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      code: "plan_limit_reached",
+      error: new CapacityLimitError({
+        dimension: "projects",
+        limit: 2,
+        used: 2,
+        requested: 1,
+        scope: "account",
+        upgradeUrl: "/pricing",
+      }),
+    },
+    {
+      code: "subscription_required",
+      error: new OperationAccessDeniedError({ subscriptionRequired: true }),
+    },
+  ])("publishes serialized transfer $code without refreshing", async ({ code, error }) => {
+    const transferOwnership = vi.fn(async () =>
+      JSON.parse(
+        JSON.stringify(
+          await withCapacityFailure(async () => {
+            throw error;
+          }),
+        ),
+      ),
+    );
+    renderCard({ transferOwnership });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Audit Example" }));
+    const menu = await screen.findByRole("menu", { name: "Actions for Audit Example" });
+    fireEvent.click(within(menu).getByText("Transfer ownership"));
+    const dialog = await screen.findByRole("dialog", { name: "Transfer project ownership" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Transfer ownership" }));
+    await screen.findByRole("alert");
+    expect(transferOwnership).toHaveBeenCalledOnce();
+    expect(capacityNoticeSnapshot()).toMatchObject({ code, message: error.message });
+    if (error instanceof CapacityLimitError) {
+      expect(capacityNoticeSnapshot()?.details).toEqual(error.toJSON());
+    }
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+  });
+
+  it("refreshes after a successful ownership transfer without publishing a notice", async () => {
+    const transferOwnership = vi
+      .fn()
+      .mockResolvedValue({ id: auditor.id, ownerId: "usr_recipient" });
+    renderCard({ transferOwnership });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Audit Example" }));
+    const menu = await screen.findByRole("menu", { name: "Actions for Audit Example" });
+    fireEvent.click(within(menu).getByText("Transfer ownership"));
+    const dialog = await screen.findByRole("dialog", { name: "Transfer project ownership" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Transfer ownership" }));
+    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
+    expect(transferOwnership).toHaveBeenCalledOnce();
+    expect(capacityNoticeSnapshot()).toBeNull();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });

@@ -28,7 +28,7 @@ describe("AiTrackingPage", () => {
       params: Promise.resolve({ project: "prj_1" }),
       searchParams: Promise.resolve({ tab: "schedules" }),
     });
-    expect(redirect).toHaveBeenCalledWith("/app/prj_1/runs/schedules");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_1/schedules");
   });
 
   it("keeps a schedule deep link by opening its drawer on the Schedules page", async () => {
@@ -36,7 +36,7 @@ describe("AiTrackingPage", () => {
       params: Promise.resolve({ project: "prj_1" }),
       searchParams: Promise.resolve({ tab: "schedules", schedule: "ais_weekly" }),
     });
-    expect(redirect).toHaveBeenCalledWith("/app/prj_1/runs/schedules?ai=ais_weekly");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_1/schedules?ai=ais_weekly");
   });
 
   it("renders the workspace for other tabs", async () => {

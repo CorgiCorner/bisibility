@@ -200,12 +200,12 @@ export const settingsSearchEntries = [
   ),
   searchEntry(
     (t) => t("search.sections.providerUsage"),
-    "providers",
+    "usage",
     (t) => ({
       label: t("search.entries.providerBudgets.label"),
       keywords: t("search.entries.providerBudgets.keywords"),
     }),
-    { anchor: "provider-usage", query: "tab=usage" },
+    { anchor: "provider-usage" },
   ),
 ] as const satisfies readonly SearchEntryDefinition[];
 

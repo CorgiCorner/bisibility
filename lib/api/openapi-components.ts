@@ -14,6 +14,12 @@ import { keywordCheckStateSchemas, keywordMatchSchemas } from "./openapi-keyword
 import { migrationSchemas } from "./openapi-migration-components";
 import { pageIndexingSchemas } from "./openapi-page-indexing-components";
 import { personalAccessSchemas } from "./openapi-pat-components";
+import {
+  capacityLimitDetailsSchema,
+  capacityLimitProblemSchema,
+  problemSchema,
+  subscriptionRequiredProblemSchema,
+} from "./openapi-problem";
 import { projectSchemas } from "./openapi-project-components";
 import { providerSchemas } from "./openapi-provider-components";
 import { publicIdSchema } from "./openapi-public-id";
@@ -47,21 +53,6 @@ const keywordResourceRequiredFields = [
   "location_key", "previous_position", "ranking_url", "schedule", "tags", "target_url",
   "topic", "intent", "created_at", "updated_at",
 ];
-
-const problemSchema = {
-  properties: {
-    detail: { type: "string" },
-    details: { additionalProperties: true, type: "object" },
-    docs_url: { type: "string" },
-    errors: {},
-    instance: { type: "string" },
-    status: { type: "integer" },
-    title: { type: "string" },
-    type: { type: "string" },
-  },
-  required: ["type", "title", "status", "detail", "instance", "docs_url"],
-  type: "object",
-};
 
 export const schemas = {
   ...searchIndexSchemas,
@@ -178,6 +169,9 @@ export const schemas = {
   },
   KeywordPatch: keywordPatchSchema,
   Problem: problemSchema,
+  CapacityLimitDetails: capacityLimitDetailsSchema,
+  CapacityLimitProblem: capacityLimitProblemSchema,
+  SubscriptionRequiredProblem: subscriptionRequiredProblemSchema,
   MeDeletionForbidden: {
     ...problemSchema,
     properties: {

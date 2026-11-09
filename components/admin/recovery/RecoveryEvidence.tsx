@@ -5,10 +5,12 @@ import { useFormatter, useTranslations } from "next-intl";
 type EvidenceColumn = "classification" | "acceptance" | "incident" | "lookup";
 export function RecoveryEvidence({
   value,
+  showCost = true,
   column,
 }: {
   value?: RecoveryEvidenceView;
   column: EvidenceColumn;
+  showCost?: boolean;
 }) {
   const t = useTranslations("instanceAdmin.recovery.evidence");
   const format = useFormatter();
@@ -44,9 +46,11 @@ export function RecoveryEvidence({
         <div>
           {t("result")}: {projection.result ? t(`results.${projection.result}`) : t("unclassified")}
         </div>
-        <div>
-          {t("cost")}: {projection.cost ? t(`costs.${projection.cost}`) : t("unclassified")}
-        </div>
+        {showCost && (
+          <div>
+            {t("cost")}: {projection.cost ? t(`costs.${projection.cost}`) : t("unclassified")}
+          </div>
+        )}
       </div>
     );
   if (column === "acceptance")
@@ -73,7 +77,14 @@ export function RecoveryEvidence({
       <dt>{t("next")}</dt>
       <dd className="m-0 tabular-nums">{timestamp(projection.recovery?.nextAttemptAt)}</dd>
       <dt>{t("reason")}</dt>
-      <dd className="m-0 break-words">{projection.recovery?.reason ?? "-"}</dd>
+      <dd className="m-0 break-words">
+        {projection.recovery?.reason
+          ? showCost ||
+            !/\b(?:cost|spend|charge|budget|USD)\b|[$€£]/i.test(projection.recovery.reason)
+            ? projection.recovery.reason
+            : t("taskLookupReason")
+          : "-"}
+      </dd>
     </dl>
   );
 }

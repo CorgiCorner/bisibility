@@ -309,8 +309,8 @@
       "counts": "{left, number} / {right, number}",
       "competitor": "競合ドメイン",
       "description": "選択した期間、市場、デバイス、タグの範囲で、対象ごとの最新の完了済みチェックです。",
-      "footer": "見つからなかったドメインは損失として扱いません。平均順位には見つかった結果だけを使用します。{limited, select, true {直近に追加された対象2,000件を表示しています。} other {}}",
-      "footerWithNoSavedSerps": "選択した期間に、これらの競合ドメインの保存済み SERP はありません。見つからなかったドメインは損失として扱いません。平均順位には見つかった結果だけを使用します。{limited, select, true {直近に追加された対象2,000件を表示しています。} other {}}",
+      "footer": "競合が見つからなくても、順位が下がったとは限りません。平均には見つかった結果だけを含めます。 {limited, select, true {直近に追加された対象2,000件を表示しています。} other {}}",
+      "footerWithNoSavedSerps": "競合が見つからなくても、順位が下がったとは限りません。平均には見つかった結果だけを含めます。 {limited, select, true {直近に追加された対象2,000件を表示しています。} other {}}",
       "found": "検出",
       "foundDescription": "選択した市場の保存済み SERP のうち、このドメインが出現する対象です。市場とデバイスの組み合わせごとに別の対象になります。",
       "manage": "競合を管理",
@@ -330,8 +330,16 @@
       "mobile": "モバイル"
     },
     "reportWidgets": {
+      "historyDescription": "検索結果での表示状況の日々の変化。",
+      "qualityDescription": "キーワードのデータがどの程度そろっているかの推移。",
+      "historyView": "履歴の表示形式",
+      "chartView": "グラフ",
+      "tableView": "データ",
+      "emptyTitle": "順位データはまだありません",
+      "emptyDescription": "キーワードの順位を確認すると、このセクションに結果が表示されます。",
+      "contributionDescription": "表示状況に最も貢献しているキーワードを確認できます。",
       "visibilityHistory": "Visibility の履歴",
-      "qualityHistory": "データ品質の履歴",
+      "qualityHistory": "データの有無",
       "contributors": "キーワードの寄与",
       "historyScope": "{asOf} 時点で選択された対象の保存済み観測です。重みはその時点の値に固定されています。",
       "historyFreshness": "過去の鮮度方針は不明です。観測カバレッジは確認できた証拠を示し、欠測は補完しません。",
@@ -405,7 +413,17 @@
       "setupTitle": "ローカル順位計測を設定",
       "setupDescription": "店舗をキーワードまたは市場に割り当てると、ここにローカル検索結果が表示されます。",
       "chooseDescription": "店舗と対象範囲を選択してローカル検索結果を確認してください。",
-      "manageLocations": "店舗を設定"
+      "manageLocations": "店舗を設定",
+      "businessTop3": "上位3位の店舗",
+      "averagePosition": "平均順位",
+      "searchesWithPack": "ローカル結果のある検索",
+      "dataAvailable": "利用可能なデータ",
+      "checkedKeywords": "{total, number}語中{measured, number}語を確認済み",
+      "details": "詳細",
+      "detailsTitle": "ローカル結果について",
+      "detailsIntro": "選択した店舗のGoogleローカル検索結果を示します。",
+      "scopeHelp": "広告、Googleマップ、Local Finderを除く自然検索のローカル結果が対象です。",
+      "comparisonHelp": "比較可能な過去のチェックが揃うと、変化を表示できます。"
     }
   }
 }

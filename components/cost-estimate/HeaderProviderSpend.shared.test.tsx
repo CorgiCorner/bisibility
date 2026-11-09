@@ -126,10 +126,7 @@ it("offers budget editing without a fabricated spend for an unbounded project", 
       }}
     />,
   );
-  expect(screen.getByRole("link")).toHaveAttribute(
-    "href",
-    "/app/prj_example/providers?tab=usage&budget=edit",
-  );
+  expect(screen.getByRole("link")).toHaveAttribute("href", "/app/prj_example/usage?budget=edit");
   expect(screen.getByRole("link")).not.toHaveTextContent("$0");
 });
 
@@ -156,8 +153,7 @@ it("links configured project bounds to usage and preserves every denomination", 
   );
   const links = screen.getAllByRole("link");
   expect(links).toHaveLength(1);
-  for (const link of links)
-    expect(link).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
+  for (const link of links) expect(link).toHaveAttribute("href", "/app/prj_example/usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
   expect(tooltip).toHaveTextContent("1 billing unit");
@@ -274,7 +270,7 @@ it("gives the no-budget header link its Polish accessible name", async () => {
   );
   expect(screen.getByRole("link", { name: "Brak budżetu, ustaw go" })).toHaveAttribute(
     "href",
-    "/app/prj_example/providers?tab=usage&budget=edit",
+    "/app/prj_example/usage?budget=edit",
   );
 });
 
@@ -342,7 +338,7 @@ it("keeps unavailable scoped budgets reachable without leaking redacted figures"
       }}
     />,
   );
-  expect(screen.getByRole("link")).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
+  expect(screen.getByRole("link")).toHaveAttribute("href", "/app/prj_example/usage");
   await userEvent.tab();
   expect(await screen.findByRole("tooltip")).not.toHaveTextContent("998");
 });
@@ -449,13 +445,13 @@ it.each(
   );
   expect(
     screen.getByRole("link", { name: "Budget usage: No limit. View details" }),
-  ).toHaveAttribute("href", "/app/prj_example/providers?tab=usage");
+  ).toHaveAttribute("href", "/app/prj_example/usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
   if (kind === "disabled" && role === "owner") {
     expect(within(tooltip).getByRole("link", { name: "Set limit" })).toHaveAttribute(
       "href",
-      "/app/prj_example/providers?tab=usage&budget=edit",
+      "/app/prj_example/usage?budget=edit",
     );
   } else {
     expect(within(tooltip).getByText("No limit")).toBeVisible();

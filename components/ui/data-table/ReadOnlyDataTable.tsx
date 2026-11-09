@@ -13,12 +13,14 @@ export function ReadOnlyDataTable({
   headers,
   rows,
   emptyState,
+  fillLastColumn = false,
 }: Readonly<{
   id: string;
   label: string;
   headers: readonly string[];
   rows: readonly EvidenceRow[];
   emptyState?: ReactNode;
+  fillLastColumn?: boolean;
 }>) {
   const columns = useMemo<readonly DataTableColumn<EvidenceRow>[]>(
     () =>
@@ -32,9 +34,13 @@ export function ReadOnlyDataTable({
         enableSorting: false,
         size: 180,
         minSize: 120,
-        meta: { lockResize: true, lockVisible: true },
+        meta: {
+          lockResize: true,
+          lockVisible: true,
+          ...(fillLastColumn && index === headers.length - 1 ? { flex: 1 } : {}),
+        },
       })),
-    [headers],
+    [headers, fillLastColumn],
   );
   return (
     <DataTable

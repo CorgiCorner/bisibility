@@ -1,3 +1,4 @@
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import "server-only";
 import { createHash, createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
@@ -132,6 +133,11 @@ export async function collectQueuedSource(
   const credentials =
     recovery?.credentials ??
     resolveProviderCredentials("dataforseo", connection.credentialsEncrypted);
+  credentials.captureResponse = connectionResponseRecorder(
+    connection.id,
+    "dataforseo",
+    "rank_check",
+  );
   // A missing binding must not block the GET: a failed provider task settles without one.
   const definition = await retainedQueuedDefinition(task, lease);
   const bindings = credentialBindings(credentials);

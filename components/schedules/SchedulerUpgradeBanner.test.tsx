@@ -19,7 +19,7 @@ it("shows affected keywords and routes to real project schedules and keyword pag
   expect(screen.getByText("2 keywords need schedule review")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Open Schedules" })).toHaveAttribute(
     "href",
-    "/app/prj_example/runs/schedules",
+    "/app/prj_example/schedules",
   );
   expect(screen.getByText("seo tools")).toHaveAttribute(
     "href",

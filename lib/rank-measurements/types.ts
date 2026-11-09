@@ -44,6 +44,8 @@ export type MeasurementEvidence = {
 export type MeasurementPolicy = {
   asOf: Date;
   horizon: number;
+  /** V2 may use a confirmed positive within a shallower requested depth. */
+  allowShallowPositive?: boolean;
   minimumRequestedDepth?: number;
   freshForMs?: number | null;
   expectedScope?: MeasurementScope | null;

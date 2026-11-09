@@ -133,7 +133,12 @@ export const PHASE_C_PENDING_TOOL_NAMES = ["list_stored_reports", "get_stored_re
 
 export type McpToolName = (typeof MCP_TOOL_NAMES)[number];
 
-const canonicalNames = new Set<string>(MCP_TOOL_NAMES);
+const canonicalNames = new Set<string>([
+  ...MCP_TOOL_NAMES,
+  "get_domain_verification",
+  "issue_domain_verification",
+  "check_domain_verification",
+]);
 const internalNameOverrides: Record<string, string> = {
   get_keyword_metrics: "get_keyword_metrics",
   research_keywords: "research_keywords",

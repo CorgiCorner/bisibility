@@ -1,3 +1,4 @@
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import type {
   ProviderCredentials,
   ProviderTestResult,
@@ -8,7 +9,11 @@ import type {
 import { resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import { serpApiObservationRun } from "./observation-extract-serpapi";
 import { OrganicCoverageError } from "./organic-coverage-error";
-import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
+import {
+  decideOrganicResult,
+  inspectOrganicCandidates,
+  type OrganicResultCandidate,
+} from "./organic-result-decision";
 import { serpApiPageCoverage } from "./serpapi-page-coverage";
 import { rawPayload, requireSerpApiOrganicDecision, type SerpApiResponse } from "./serpapi-payload";
 import {
@@ -178,11 +183,16 @@ export const serpApiProvider: SerpProvider = {
       sentPages,
       stoppedOnMatch,
     } = await fetchGoogleOrganicResults(input, requireApiKey(credentials));
-    const decision = requireSerpApiOrganicDecision(
-      decideOrganicResult({ candidates, depth, domain: input.domain }),
-    );
-    const complete = reachedEnd || coveredPrefix >= depth;
-    if (!complete && (decision.position === null || decision.position > coveredPrefix)) {
+    const candidate = decideOrganicResult({ candidates, depth, domain: input.domain });
+    const decision = input.allowIncompleteResults
+      ? candidate
+      : requireSerpApiOrganicDecision(candidate);
+    const complete = decision.outcome !== "indeterminate" && (reachedEnd || coveredPrefix >= depth);
+    if (
+      !input.allowIncompleteResults &&
+      !complete &&
+      (decision.position === null || decision.position > coveredPrefix)
+    ) {
       throw new OrganicCoverageError(
         `${coveredPrefix}/${depth} continuous organic ranks within the admitted page budget`,
       );
@@ -192,12 +202,16 @@ export const serpApiProvider: SerpProvider = {
     const checkedAt = new Date();
     return {
       billingUnits,
+      ...(input.captureProviderResponse ? { providerResponse: redactProviderResponse(pages) } : {}),
       position: decision.position,
       rankingUrl: decision.rankingUrl,
       costCents: 0,
       checkedAt,
       raw: {
         ...rawPayload(pages, decision),
+        ...(decision.outcome === "indeterminate"
+          ? { organic_results: inspectOrganicCandidates(candidates) }
+          : {}),
         snapshotContinuation: {
           version: 1,
           capturedAt,

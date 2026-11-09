@@ -1,3 +1,4 @@
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
 import { dataForSeoOrganicDecision } from "./dataforseo-payload";
 import duplicates from "./fixtures/goto/converter_duplicates.json";
@@ -185,3 +186,12 @@ it.each([null, "ftp://example.org/page", "https://google.com./goto?url=x", "not 
     expect(result.candidates[0]).toEqual(row);
   },
 );
+
+it("does not turn an archive failure into another converter request", async () => {
+  const failure = new ProviderUsagePersistenceError({ phase: "settlement" });
+  const transport = vi.fn(async () => {
+    throw failure;
+  });
+  await expect(resolveRedirectRows(items, transport)).rejects.toBe(failure);
+  expect(transport).toHaveBeenCalledOnce();
+});

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { projectFundingTag } from "../metering/project-funding-budgets";
 import { meteringNamespace } from "../metering/runtime";
+import { WeeklyRequestCapError } from "../operations/weekly-request-error";
 import {
   PROJECT_DOMAIN_REQUIRED_MESSAGE,
   ProjectDomainRequiredError,
@@ -20,7 +21,7 @@ import {
   OwnProviderKeyRequiredError,
 } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
-import { ProviderUsagePersistenceError } from "../providers/usage";
+import { ProviderUsagePersistenceError, readObservedResponse } from "../providers/usage";
 import { BudgetExhaustedError } from "../rank-check/budget";
 import { ProviderChainError } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
@@ -1554,6 +1555,37 @@ describe("rank-check activities", () => {
       expect(chainError.attempts).toHaveLength(earlierFailure ? 2 : 1);
     },
   );
+
+  it("defers a weekly cap crossed after preflight at the native fence", async () => {
+    const request = vi.fn();
+    const cancel = vi.fn();
+    mocks.runKeywordCheckWithFallback.mockImplementationOnce(() =>
+      readObservedResponse({
+        observer: {
+          begin: async () => "attempt",
+          beforeDispatch: async () => {
+            throw new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+          },
+          cancel,
+          settle: vi.fn(),
+        },
+        request,
+        measure: vi.fn(),
+      }),
+    );
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_scheduled_1",
+        source: "dispatcher",
+      }),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "weekly_request_cap_reached",
+    });
+    expect(cancel).toHaveBeenCalledExactlyOnceWith("attempt");
+    expect(request).not.toHaveBeenCalled();
+  });
 
   it("defers a scheduled check without an own key, without retrying or spending", async () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");

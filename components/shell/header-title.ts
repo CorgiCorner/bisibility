@@ -46,14 +46,11 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
       "Growth, consumption and account administration.",
     );
   }
-
-  if (matches(sectionPath, "/admin/metering")) return { title: "Instance administration" };
-
   if (matches(sectionPath, "/admin/audit")) {
     return sectionMeta("Instance administration", "Instance administrator activity and outcomes.");
   }
 
-  if (sectionPath === "/admin") {
+  if (matches(sectionPath, "/admin")) {
     return sectionMeta("Instance administration", "Worker health and operator diagnostics.");
   }
 
@@ -62,11 +59,16 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return { id: projectRunMatch[1], title: "Run" };
   }
 
-  if (matches(sectionPath, "/runs")) {
-    return sectionMeta("Runs", "Rank checks and Search Console imports for this project.");
-  }
+  if (
+    matches(sectionPath, "/schedules") ||
+    matches(sectionPath, "/runs/schedules") ||
+    matches(sectionPath, "/rank-tracker/schedules")
+  )
+    return { title: "Schedules" };
+  if (matches(sectionPath, "/serp-playground")) return { title: "SERP Playground" };
+  if (matches(sectionPath, "/usage")) return { title: "Usage" };
 
-  if (matches(sectionPath, "/rank-tracker/schedules")) {
+  if (matches(sectionPath, "/runs")) {
     return sectionMeta("Runs", "Rank checks and Search Console imports for this project.");
   }
 

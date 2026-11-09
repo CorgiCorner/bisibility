@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import {
@@ -95,10 +96,15 @@ async function recordConfirmedSetupOutcome(
 export async function addManagedCompetitorFor(
   input: unknown,
   context: { actor: Actor; auditActorId: string | null },
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(addManagedCompetitorSchema, input);
   const { project } = await competitorProjectScope(context.actor, "create", data.projectId);
   const result = await prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: project.id,
+      dimensions: ["competitorsPerProject"],
+    });
     await lockProjectForSetup(tx, project.id);
     const existing = await tx.competitor.findUnique({
       select: { domain: true, id: true, label: true, publicId: true },
@@ -128,9 +134,11 @@ export async function addManagedCompetitorFor(
       },
       tx,
     );
+    await capacity.check();
     await recordConfirmedSetupOutcome(tx, project, context.auditActorId);
     return safeCompetitor(competitor);
   });
+  onCommitted?.();
   revalidateCompetitorViews();
 
   return result;
@@ -139,6 +147,7 @@ export async function addManagedCompetitorFor(
 export async function renameManagedCompetitorFor(
   input: unknown,
   context: { actor: Actor; auditActorId: string | null },
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(renameManagedCompetitorSchema, input);
   const { project } = await competitorProjectScope(context.actor, "update", data.projectId);
@@ -149,6 +158,7 @@ export async function renameManagedCompetitorFor(
     where: { id: before.id },
   });
 
+  onCommitted?.();
   await writeAudit({
     action: "competitor.rename",
     actorId: context.auditActorId,
@@ -166,6 +176,7 @@ export async function renameManagedCompetitorFor(
 export async function removeManagedCompetitorFor(
   input: unknown,
   context: { actor: Actor; auditActorId: string | null },
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(removeManagedCompetitorSchema, input);
   const { project } = await competitorProjectScope(context.actor, "delete", data.projectId);
@@ -197,6 +208,7 @@ export async function removeManagedCompetitorFor(
       tx,
     );
   });
+  onCommitted?.();
   revalidateCompetitorViews();
 
   return { removed: true };

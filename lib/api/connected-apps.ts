@@ -46,6 +46,10 @@ export async function revokeUserConnectedApp(
         tx,
       );
     }
-    return { revoked: true as const, revokedCreatedTokenCount };
+    return {
+      changed: consent.count + refresh.count + access.count + revokedCreatedTokenCount > 0,
+      revoked: true as const,
+      revokedCreatedTokenCount,
+    };
   });
 }

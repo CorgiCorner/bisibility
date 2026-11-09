@@ -1,3 +1,4 @@
+import { queueRankRunUsage } from "@/lib/analytics/rank-run-usage";
 import { recomputeSummaryForRun } from "@/lib/notifications/check-summaries/triggers";
 import "server-only";
 
@@ -126,6 +127,7 @@ export async function reconcileRankCheckRuns(
         run: { ...run, status },
       });
       if (finalized.finalized) {
+        queueRankRunUsage(run.id);
         await recomputeSummaryForRun(run.id).catch(() => undefined);
         await publishOperationChanged({ projectId: finalized.projectId }).catch(() => undefined);
       }

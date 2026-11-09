@@ -8,7 +8,10 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 export async function sweepUndeliveredOpsEvents(
   options: { limit?: number; maxAttempts?: number } = {},
 ) {
-  if (!getOpsConfig().enabled) return { attempted: 0, delivered: 0 };
+  if (!getOpsConfig().enabled) return { attempted: 0, delivered: 0, committed: false };
+  let attempted = 0;
+  let delivered = 0;
+  let committed = false;
   try {
     const { prisma } = await import("@/lib/db/prisma");
     const events = await prisma.opsEvent.findMany({
@@ -19,13 +22,15 @@ export async function sweepUndeliveredOpsEvents(
         deliveredAt: null,
       },
     });
-    let delivered = 0;
+    attempted = events.length;
     for (const event of events) {
-      if (await deliverPersistedOpsEvent(event)) delivered += 1;
+      const result = await deliverPersistedOpsEvent(event);
+      if (result.delivered) delivered += 1;
+      committed ||= result.delivered || result.committed;
     }
-    return { attempted: events.length, delivered };
+    return { attempted, delivered, committed };
   } catch (error) {
     console.error(`[ops] outbox sweep failed: ${redactOpsText(error)}`);
-    return { attempted: 0, delivered: 0 };
+    return { attempted, delivered, committed };
   }
 }

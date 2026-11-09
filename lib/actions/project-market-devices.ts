@@ -1,4 +1,6 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import {
   marketDeviceConfirmSchema,
@@ -21,13 +23,19 @@ export async function previewProjectMarketDeviceTargets(raw: unknown) {
   });
 }
 export async function addProjectMarketDeviceTargets(raw: unknown) {
-  const input = parseActionInput(marketDeviceConfirmSchema, raw);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "create", input.projectId, { type: "keyword" });
-  requireTrackedDomain(project);
-  const result = await prisma.$transaction((tx) =>
-    addMarketDeviceTargets(tx, actor.id, project.id, input),
-  );
-  if (result.outcome === "created") revalidateKeywords();
-  return result;
+  return withCapacityFailure(async () => {
+    const input = parseActionInput(marketDeviceConfirmSchema, raw);
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "create", input.projectId, {
+      type: "keyword",
+    });
+    requireTrackedDomain(project);
+    const result = await prisma.$transaction((tx) =>
+      addMarketDeviceTargets(tx, actor.id, project.id, input),
+    );
+    if (result.outcome === "created" && result.created > 0) recordAppAction(actor);
+    if (result.outcome === "created") revalidateKeywords();
+
+    return result;
+  });
 }

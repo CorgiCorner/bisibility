@@ -1,5 +1,5 @@
 "use server";
-import { paymentFailure } from "@/lib/action-payment/session";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { trackingSampleProjection } from "@/lib/ai-tracking/projections/evidence";
 import { trackingPromptOperationProjection } from "@/lib/ai-tracking/projections/operations";
 import {
@@ -25,10 +25,10 @@ import {
   trackingScope,
 } from "@/lib/api/ai-tracking-service";
 import { AuthorizationError, getProjectRole } from "@/lib/auth/authorize";
-import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { revalidatePath } from "next/cache";
 import { getActionActor, ProjectNotFoundError } from "./_shared";
-import { actionFailureResult, handledActionResult } from "./action-result";
+import { trackingActionResult } from "./tracking-action-result";
 
 export async function getAiTrackingPage(projectId: string): Promise<TrackingWorkspaceData> {
   const actor = await getActionActor();
@@ -141,39 +141,33 @@ export async function mutateAiTrackingAction(
   input: unknown,
   member?: string,
 ) {
-  const actor = await getActionActor();
-  const project = await trackingScope(actor, projectId, true);
-  const value =
-    resource === "schedules" && (input as { configuration?: unknown }).configuration
-      ? {
-          ...(input as object),
-          configuration: {
-            ...(input as { configuration: object }).configuration,
-            requirePayment: true,
-            actorId: actor.id,
-            actorCredential: undefined,
-            entrySource: "app",
-            origin: "manual",
-          },
-        }
-      : input;
-  const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
-  await auditTrackingCatalog(actor, project, resource, method, value, result);
-  revalidatePath(`/app/${projectId}/prompt-tracker`);
-  if (resource === "schedules") revalidatePath(`/app/${projectId}/runs/schedules`);
-  return getAiTrackingPage(projectId);
-}
-async function trackingActionResult<T>(run: () => Promise<T>) {
-  try {
-    return await handledActionResult(run);
-  } catch (error) {
-    const payment = paymentFailure(error);
-    if (payment)
-      return actionFailureResult({ code: "conflict", message: payment.reason, status: 409 });
-    const budget = budgetFailureResult(error);
-    if (!budget) throw error;
-    return actionFailureResult({ code: budget.code, message: budget.message, status: 429 });
-  }
+  return withCapacityFailure(async () => {
+    const actor = await getActionActor();
+    const project = await trackingScope(actor, projectId, true);
+    const value =
+      resource === "schedules" && (input as { configuration?: unknown }).configuration
+        ? {
+            ...(input as object),
+            configuration: {
+              ...(input as { configuration: object }).configuration,
+              requirePayment: true,
+              actorId: actor.id,
+              actorCredential: undefined,
+              entrySource: "app",
+              origin: "manual",
+            },
+          }
+        : input;
+    const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
+    if (!("replayed" in result && result.replayed)) recordAppAction(actor);
+    await auditTrackingCatalog(actor, project, resource, method, value, result);
+    revalidatePath(`/app/${projectId}/prompt-tracker`);
+    if (resource === "schedules") {
+      revalidatePath(`/app/${projectId}/schedules`);
+      revalidatePath(`/app/${projectId}/runs/schedules`);
+    }
+    return getAiTrackingPage(projectId);
+  });
 }
 
 export async function previewAiTrackingAction(projectId: string, input: unknown) {
@@ -203,9 +197,12 @@ export async function launchAiTrackingAction(projectId: string, input: unknown) 
       },
       false,
     );
+    if (!("replayed" in result && result.replayed)) recordAppAction(actor);
     await auditTrackingRun(actor, project, "launch", result);
     revalidatePath(`/app/${projectId}/prompt-tracker`);
-    return result;
+
+    const { replayed: _replayed, ...value } = result;
+    return value;
   });
 }
 export async function getAiTrackingSamplesAction(
@@ -246,9 +243,12 @@ export async function aiTrackingRunAction(
     entrySource: "app",
     origin: "manual",
   });
+  if (!("replayed" in result && result.replayed)) recordAppAction(actor);
   await auditTrackingRun(actor, project, operation, result);
   revalidatePath(`/app/${projectId}/prompt-tracker`);
-  return result;
+
+  const { replayed: _replayed, ...value } = result;
+  return value;
 }
 
 export async function getAiTrackingTrendsAction(

@@ -16,7 +16,7 @@ describe("LegacySchedulesPage", () => {
   it("redirects the old schedule list to the resolved project's Runs section", async () => {
     await expect(
       LegacySchedulesPage({ params: Promise.resolve({ project: "project-alias" }) }),
-    ).rejects.toThrow("NEXT_REDIRECT:/app/prj_canonical/runs/schedules");
+    ).rejects.toThrow("NEXT_REDIRECT:/app/prj_canonical/schedules");
     expect(resolve).toHaveBeenCalledWith("project-alias");
   });
 });

@@ -1,0 +1,85 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "domain": "example.com",
+          "method": "dns_txt",
+          "dns_host": "_bisibility.example.com",
+          "dns_value": "bisibility-site-verification=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "verified_at": "2026-07-10T23:00:00.000Z",
+          "last_checked_at": "2026-07-10T23:00:00.000Z",
+          "last_check_result": "verified",
+          "failures": 0,
+          "revoked_at": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getDomainVerification",
+      "path": "/projects/{project_id}/domain-verification",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "domain": "example.com",
+          "method": "dns_txt",
+          "dns_host": "_bisibility.example.com",
+          "dns_value": "bisibility-site-verification=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "verified_at": "2026-07-10T23:00:00.000Z",
+          "last_checked_at": "2026-07-10T23:00:00.000Z",
+          "last_check_result": "verified",
+          "failures": 0,
+          "revoked_at": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "checkDomainVerification",
+      "path": "/projects/{project_id}/domain-verification/check",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "domain": "example.com",
+          "method": "dns_txt",
+          "dns_host": "_bisibility.example.com",
+          "dns_value": "bisibility-site-verification=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "verified_at": null,
+          "last_checked_at": null,
+          "last_check_result": null,
+          "failures": 0,
+          "revoked_at": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getDomainVerification",
+      "path": "/projects/{project_id}/domain-verification",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "domain": "example.com",
+          "method": "dns_txt",
+          "dns_host": "_bisibility.example.com",
+          "dns_value": "bisibility-site-verification=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "verified_at": null,
+          "last_checked_at": null,
+          "last_check_result": null,
+          "failures": 0,
+          "revoked_at": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "issueDomainVerification",
+      "path": "/projects/{project_id}/domain-verification",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/domain-verification-router.test.ts"
+}

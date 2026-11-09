@@ -61,6 +61,8 @@ export type RankReportPolicy = {
   freshForMs: number | null;
   horizon: number;
   metric: { curve: readonly number[]; definitionVersion: string; id: string };
+  /** V2 may use a confirmed positive within a shallower requested depth. */
+  allowShallowPositive?: boolean;
   minimumRequestedDepth: number | null;
   weightProvenance: MeasurementReport["weightProvenance"];
 };

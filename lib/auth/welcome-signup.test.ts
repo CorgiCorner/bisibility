@@ -8,9 +8,14 @@ import {
 } from "./welcome-signup";
 
 const mocks = vi.hoisted(() => ({
+  classifyCreatedAccount: vi.fn(),
   publishWorkerIntent: vi.fn(),
   readConsentFromCookies: vi.fn(),
   trackServerEvent: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/account-classification-extension", () => ({
+  classifyCreatedAccount: mocks.classifyCreatedAccount,
 }));
 
 vi.mock("@/lib/analytics/server", () => ({
@@ -89,11 +94,12 @@ describe("signup welcome sequence", () => {
 
     await handleCreatedUser({ id: "user_1" }, { path: "/sign-in/email-otp" });
 
+    expect(mocks.classifyCreatedAccount).toHaveBeenCalledWith("user_1");
     expect(mocks.readConsentFromCookies).toHaveBeenCalledOnce();
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("user_signed_up", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
       userId: "user_1",
-      properties: { method: "otp" },
+      properties: { method: "otp", channel: "organic" },
     });
   });
 

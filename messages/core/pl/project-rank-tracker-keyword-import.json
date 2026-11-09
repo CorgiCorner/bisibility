@@ -419,7 +419,7 @@
           "chooseDepth": "Wybierz głębokość sprawdzenia",
           "depthMenu": "Głębokość sprawdzenia",
           "changeDefault": "Zmień domyślną głębokość",
-          "shallowVisibility": "Sprawdzenia Top 10 nie aktualizują widoczności. Objęte nimi słowa kluczowe nadal liczą się do jej pokrycia."
+          "shallowVisibility": "Sprawdzenia Top 10 aktualizują widoczność, gdy znajdą Twoją pozycję. W przeciwnym razie wynik pozostaje nieznany."
         },
         "runConfirmation": {
           "titleConfirm": "Uruchom {count, plural, one {sprawdzenie pozycji} few {sprawdzenia pozycji} many {sprawdzenia pozycji} other {sprawdzenia pozycji}}",

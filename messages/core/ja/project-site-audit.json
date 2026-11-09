@@ -3,7 +3,7 @@
     "heading": "サイト監査",
     "description": "{domain} の HTTP、メタデータ、見出し、インデックス可能性、リンク、画像の代替テキストを確認します。",
     "pageLimit": "ページ上限",
-    "pageLimitError": "1〜15 ページを選択してください。",
+    "pageLimitError": "1〜{limit, number}ページを選択してください。",
     "run": "監査を実行",
     "running": "サイトを巡回中",
     "cost": "最大 15 秒 · プロバイダーのクレジット不要 · プロジェクトのキャッシュ設定に従って結果を再利用",
@@ -85,6 +85,24 @@
       "unknown": "ページを取得できませんでした。HTTP ステータスと SEO 測定値は不明です。"
     },
     "savedPages": "保存済みのページ",
-    "savedDetails": "保存済みレポートの詳細"
+    "savedDetails": "保存済みレポートの詳細",
+    "workerCost": "バックグラウンドで実行 · プロバイダーのクレジット不要",
+    "runProgress": "{state} · {budget, number} ページ中 {pages, number} ページ",
+    "verifyDomain": "このドメインを確認すると、より多くのページをクロールできます。",
+    "cancelRun": "監査をキャンセル",
+    "resumeRun": "監査を再開",
+    "previousPages": "前のページ",
+    "nextPages": "次のページ",
+    "runStates": {
+      "queued": "待機中",
+      "running": "実行中",
+      "paused": "一時停止",
+      "complete": "完了",
+      "stopped": "停止",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み",
+      "unknown": "不明"
+    },
+    "availableLimit": "現在、監査ごとに最大{limit, number}ページを利用できます。"
   }
 }

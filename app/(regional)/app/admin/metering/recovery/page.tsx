@@ -1,5 +1,6 @@
-import MeteringPage from "@/app/(regional)/app/admin/metering/page";
-/** Stable alert link: operational URL sanitization deliberately strips query strings. */
-export default function RecoveryPage() {
-  return MeteringPage({ searchParams: Promise.resolve({ tab: "incidents" }) });
+import { redirectLegacyAdmin } from "@/lib/instance-admin/legacy-redirect";
+import type { AdminSearch } from "@/lib/instance-admin/page-data";
+
+export default async function Page({ searchParams }: { searchParams?: Promise<AdminSearch> } = {}) {
+  return redirectLegacyAdmin("metering/recovery", searchParams);
 }

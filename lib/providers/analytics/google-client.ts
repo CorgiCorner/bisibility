@@ -1,3 +1,4 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 
 import { awaitWithSignal } from "@/lib/async/abort";
@@ -27,6 +28,7 @@ export type GoogleProviderId = "gsc" | "ga4";
 
 // GSC/GA4 data calls pass provider and account to enforce a shared account budget.
 export type GoogleFetchContext = {
+  captureResponse?: (status: number, body: unknown, url?: string) => Promise<void>;
   providerId: GoogleProviderId;
   accountKey: string;
 };
@@ -204,6 +206,7 @@ export async function googleApiFetch<T>(
   accessToken: string,
   init: RequestInit = {},
   context?: GoogleFetchContext,
+  captureResponse?: GoogleFetchContext["captureResponse"],
 ): Promise<T> {
   init.signal?.throwIfAborted();
   if (context) {
@@ -235,6 +238,7 @@ export async function googleApiFetch<T>(
       }),
     init.signal,
   );
+  await captureHttpResponse(response, captureResponse ?? context?.captureResponse, url);
   const payload = (await awaitWithSignal(() => response.json().catch(() => null), init.signal)) as
     | (T & GoogleApiErrorPayload)
     | null;
@@ -261,10 +265,13 @@ export async function googleApiFetch<T>(
 
 export type GoogleSite = { permissionLevel: string; siteUrl: string };
 
-export async function listGoogleSites(accessToken: string): Promise<GoogleSite[]> {
+export async function listGoogleSites(
+  accessToken: string,
+  signal?: AbortSignal,
+): Promise<GoogleSite[]> {
   const data = await googleApiFetch<{
     siteEntry?: Array<{ permissionLevel?: unknown; siteUrl?: unknown }>;
-  }>(GSC_SITES_URL, accessToken);
+  }>(GSC_SITES_URL, accessToken, { signal });
 
   return (data.siteEntry ?? [])
     .map((entry) => ({

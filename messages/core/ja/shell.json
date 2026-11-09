@@ -52,9 +52,9 @@
           "tooltip": "順位を追跡し、キーワード、ウェブサイト、バックリンク、サイトの健全性を調査します。"
         },
         "ai": {
-          "label": "AI検索",
+          "label": "AIでの可視性",
           "tag": "AI",
-          "tooltip": "AIの回答がブランドにどう言及するかを追跡し、調査します。"
+          "tooltip": "AIの回答でのブランドの可視性を追跡します。"
         },
         "reports": {
           "label": "データとレポート",
@@ -79,6 +79,8 @@
         "markets": "市場",
         "rankTracker": "順位トラッカー",
         "runs": "実行",
+        "schedules": "スケジュール",
+        "usage": "使用量",
         "searchConsole": "Search Console",
         "settings": "設定",
         "aiVisibility": "ブランド可視性",
@@ -87,7 +89,8 @@
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
         "agentReports": "エージェントのレポート",
-        "aiTracking": "プロンプトトラッカー"
+        "aiTracking": "プロンプトトラッカー",
+        "serpPlayground": "SERP Playground"
       },
       "menu": "メニュー"
     },
@@ -319,6 +322,8 @@
         "rankTracker": "順位トラッカー",
         "run": "実行",
         "runs": "実行",
+        "schedules": "スケジュール",
+        "usage": "使用量",
         "searchConsole": "Search Console",
         "security": "セキュリティ",
         "settings": "設定",
@@ -329,7 +334,8 @@
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
         "agentReports": "エージェントのレポート",
-        "aiTracking": "プロンプトトラッカー"
+        "aiTracking": "プロンプトトラッカー",
+        "serpPlayground": "SERP Playground"
       }
     },
     "footer": {

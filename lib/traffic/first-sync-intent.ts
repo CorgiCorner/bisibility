@@ -10,7 +10,10 @@ type SyncProject = (
   projectId: string,
   now: Date,
   scheduledFor?: Date | null,
-  options?: { connectionId?: string },
+  options?: {
+    connectionId?: string;
+    analyticsTrigger?: "unknown";
+  },
 ) => Promise<unknown>;
 
 type RunClaimedFirstTrafficSyncIntentOptions = {
@@ -39,6 +42,7 @@ export async function runClaimedFirstTrafficSyncIntent(
   });
   await (options.syncProject ?? syncTrafficForProject)(claimed.projectId, now, null, {
     connectionId: claimed.id,
+    analyticsTrigger: "unknown",
   });
   await client.providerConnection.updateMany({
     data: { firstSyncFinishedAt: new Date() },

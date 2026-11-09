@@ -52,7 +52,7 @@ export async function dispatchMcpRestCall(
   const response = await awaitWithSignal(
     () =>
       typeof authorization === "string"
-        ? handleApiRequest(request, path)
+        ? handleApiRequest(request, path, true)
         : handleMcpPreauthenticatedApiRequest(request, path, { auth: authorization }),
     signal,
   );

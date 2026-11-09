@@ -1,0 +1,1514 @@
+[
+  {
+    "id": "S001",
+    "capability": "Return to app"
+  },
+  {
+    "id": "S002",
+    "capability": "Refresh admin data"
+  },
+  {
+    "id": "S003",
+    "capability": "Operations navigation"
+  },
+  {
+    "id": "S004",
+    "capability": "Users navigation"
+  },
+  {
+    "id": "S005",
+    "capability": "Audit navigation"
+  },
+  {
+    "id": "S008",
+    "capability": "Operations loading state"
+  },
+  {
+    "id": "S009",
+    "capability": "Administration loading state"
+  },
+  {
+    "id": "O001",
+    "capability": "Worker: Status"
+  },
+  {
+    "id": "O002",
+    "capability": "Worker: Last heartbeat"
+  },
+  {
+    "id": "O003",
+    "capability": "Worker: Release"
+  },
+  {
+    "id": "O004",
+    "capability": "Worker: Environment"
+  },
+  {
+    "id": "O005",
+    "capability": "Worker: Scheduler driver"
+  },
+  {
+    "id": "O006",
+    "capability": "Worker: Schema status"
+  },
+  {
+    "id": "O007",
+    "capability": "Worker: Bundled migration"
+  },
+  {
+    "id": "O008",
+    "capability": "Worker: Applied migration"
+  },
+  {
+    "id": "O009",
+    "capability": "Worker: Slack ops"
+  },
+  {
+    "id": "O010",
+    "capability": "Worker unavailable state"
+  },
+  {
+    "id": "O011",
+    "capability": "Worker scheduling disabled state"
+  },
+  {
+    "id": "O012",
+    "capability": "Worker health pill"
+  },
+  {
+    "id": "O013",
+    "capability": "Check failure-rate pill"
+  },
+  {
+    "id": "O014",
+    "capability": "Per-provider failure-rate pill"
+  },
+  {
+    "id": "O015",
+    "capability": "Undelivered event-count pill"
+  },
+  {
+    "id": "O016",
+    "capability": "Unknown worker hint and scheduling documentation link"
+  },
+  {
+    "id": "O017",
+    "capability": "Last 24 hours: Scheduled"
+  },
+  {
+    "id": "O018",
+    "capability": "Last 24 hours: Succeeded"
+  },
+  {
+    "id": "O019",
+    "capability": "Last 24 hours: Failed"
+  },
+  {
+    "id": "O020",
+    "capability": "Last 24 hours: Deferred"
+  },
+  {
+    "id": "O021",
+    "capability": "Last 24 hours: Stuck"
+  },
+  {
+    "id": "O022",
+    "capability": "Last 24 hours: Lag p50"
+  },
+  {
+    "id": "O023",
+    "capability": "Last 24 hours: Lag p95"
+  },
+  {
+    "id": "O024",
+    "capability": "Last 7 days: Scheduled"
+  },
+  {
+    "id": "O025",
+    "capability": "Last 7 days: Succeeded"
+  },
+  {
+    "id": "O026",
+    "capability": "Last 7 days: Failed"
+  },
+  {
+    "id": "O027",
+    "capability": "Last 7 days: Deferred"
+  },
+  {
+    "id": "O028",
+    "capability": "Last 7 days: Stuck"
+  },
+  {
+    "id": "O029",
+    "capability": "Last 7 days: Lag p50"
+  },
+  {
+    "id": "O030",
+    "capability": "Last 7 days: Lag p95"
+  },
+  {
+    "id": "O031",
+    "capability": "Rank checks unavailable state"
+  },
+  {
+    "id": "O032",
+    "capability": "Failures empty state"
+  },
+  {
+    "id": "O033",
+    "capability": "Failures: count"
+  },
+  {
+    "id": "O034",
+    "capability": "Failures: error summary"
+  },
+  {
+    "id": "O035",
+    "capability": "Failures: provider"
+  },
+  {
+    "id": "O036",
+    "capability": "Failures: affected project count"
+  },
+  {
+    "id": "O037",
+    "capability": "Failures: project ID copy"
+  },
+  {
+    "id": "O038",
+    "capability": "Failures: first seen"
+  },
+  {
+    "id": "O039",
+    "capability": "Failures: last seen"
+  },
+  {
+    "id": "O040",
+    "capability": "Failures: remaining classes"
+  },
+  {
+    "id": "O041",
+    "capability": "Fallbacks empty state"
+  },
+  {
+    "id": "O042",
+    "capability": "Fallbacks: count"
+  },
+  {
+    "id": "O043",
+    "capability": "Fallbacks: error summary"
+  },
+  {
+    "id": "O044",
+    "capability": "Fallbacks: provider"
+  },
+  {
+    "id": "O045",
+    "capability": "Fallbacks: affected project count"
+  },
+  {
+    "id": "O046",
+    "capability": "Fallbacks: project ID copy"
+  },
+  {
+    "id": "O047",
+    "capability": "Fallbacks: first seen"
+  },
+  {
+    "id": "O048",
+    "capability": "Fallbacks: last seen"
+  },
+  {
+    "id": "O049",
+    "capability": "Fallbacks: remaining classes"
+  },
+  {
+    "id": "O050",
+    "capability": "Data-source health: provider"
+  },
+  {
+    "id": "O051",
+    "capability": "Data-source health: ok"
+  },
+  {
+    "id": "O052",
+    "capability": "Data-source health: stale"
+  },
+  {
+    "id": "O053",
+    "capability": "Data-source health: failed"
+  },
+  {
+    "id": "O054",
+    "capability": "Data-source health: notRun"
+  },
+  {
+    "id": "O055",
+    "capability": "Data-source health: p95LastSuccess"
+  },
+  {
+    "id": "O056",
+    "capability": "Data-source health: failureRate"
+  },
+  {
+    "id": "O057",
+    "capability": "Data-source health empty state"
+  },
+  {
+    "id": "O058",
+    "capability": "Data-source health unavailable state"
+  },
+  {
+    "id": "O059",
+    "capability": "URL presence: Deferred URLs"
+  },
+  {
+    "id": "O060",
+    "capability": "URL presence: Affected projects"
+  },
+  {
+    "id": "O061",
+    "capability": "URL presence: Last budget exhaustion"
+  },
+  {
+    "id": "O062",
+    "capability": "URL presence unavailable state"
+  },
+  {
+    "id": "O063",
+    "capability": "Temporal: Schedules"
+  },
+  {
+    "id": "O064",
+    "capability": "Temporal: Recent actions"
+  },
+  {
+    "id": "O065",
+    "capability": "Temporal: Missed starts"
+  },
+  {
+    "id": "O066",
+    "capability": "Temporal: Skipped while busy"
+  },
+  {
+    "id": "O067",
+    "capability": "Temporal: Inspection errors"
+  },
+  {
+    "id": "O068",
+    "capability": "Temporal: Next action"
+  },
+  {
+    "id": "O069",
+    "capability": "Temporal as-of time"
+  },
+  {
+    "id": "O070",
+    "capability": "Temporal snapshotUnavailable"
+  },
+  {
+    "id": "O071",
+    "capability": "Temporal snapshotStale"
+  },
+  {
+    "id": "O072",
+    "capability": "Temporal disabled"
+  },
+  {
+    "id": "O073",
+    "capability": "Temporal empty schedule history"
+  },
+  {
+    "id": "O074",
+    "capability": "Temporal column Task"
+  },
+  {
+    "id": "O075",
+    "capability": "Temporal sort Task"
+  },
+  {
+    "id": "O076",
+    "capability": "Temporal column Missed starts"
+  },
+  {
+    "id": "O077",
+    "capability": "Temporal sort Missed starts"
+  },
+  {
+    "id": "O078",
+    "capability": "Temporal column Skipped while busy"
+  },
+  {
+    "id": "O079",
+    "capability": "Temporal sort Skipped while busy"
+  },
+  {
+    "id": "O080",
+    "capability": "Temporal inspectionPartial"
+  },
+  {
+    "id": "O081",
+    "capability": "Temporal diagnostics"
+  },
+  {
+    "id": "O088",
+    "capability": "Ops events column Kind"
+  },
+  {
+    "id": "O089",
+    "capability": "Ops events sort Kind"
+  },
+  {
+    "id": "O090",
+    "capability": "Ops events column Severity"
+  },
+  {
+    "id": "O091",
+    "capability": "Ops events sort Severity"
+  },
+  {
+    "id": "O092",
+    "capability": "Ops events column Created"
+  },
+  {
+    "id": "O093",
+    "capability": "Ops events sort Created"
+  },
+  {
+    "id": "O094",
+    "capability": "Ops events column Delivery"
+  },
+  {
+    "id": "O095",
+    "capability": "Ops events sort Delivery"
+  },
+  {
+    "id": "O096",
+    "capability": "Ops events column Attempts"
+  },
+  {
+    "id": "O097",
+    "capability": "Ops events sort Attempts"
+  },
+  {
+    "id": "O098",
+    "capability": "Ops empty"
+  },
+  {
+    "id": "O099",
+    "capability": "Ops deliveryUnavailable"
+  },
+  {
+    "id": "O100",
+    "capability": "Ops historyUnavailable"
+  },
+  {
+    "id": "O101",
+    "capability": "Ops slackMissing"
+  },
+  {
+    "id": "O102",
+    "capability": "Ops slackMissingLink"
+  },
+  {
+    "id": "O103",
+    "capability": "Send test notification"
+  },
+  {
+    "id": "O104",
+    "capability": "Run outbox sweep"
+  },
+  {
+    "id": "O105",
+    "capability": "Ops feedback: not configured"
+  },
+  {
+    "id": "O106",
+    "capability": "Ops feedback: rate limited"
+  },
+  {
+    "id": "O107",
+    "capability": "Ops feedback: delivery failed"
+  },
+  {
+    "id": "O108",
+    "capability": "Ops feedback: forbidden"
+  },
+  {
+    "id": "O109",
+    "capability": "Ops feedback: delivered"
+  },
+  {
+    "id": "O110",
+    "capability": "Ops feedback: sweep result counts"
+  },
+  {
+    "id": "O111",
+    "capability": "Ops controls disabled during request"
+  },
+  {
+    "id": "O112",
+    "capability": "Ops sweep failed and thrown-error feedback"
+  },
+  {
+    "id": "O113",
+    "capability": "Bulk email: Reserved attempts"
+  },
+  {
+    "id": "O114",
+    "capability": "Bulk email: Remaining"
+  },
+  {
+    "id": "O115",
+    "capability": "Bulk email: Daily limit"
+  },
+  {
+    "id": "O116",
+    "capability": "Transactional email: Reserved attempts"
+  },
+  {
+    "id": "O117",
+    "capability": "Transactional email: Remaining"
+  },
+  {
+    "id": "O118",
+    "capability": "Transactional email: Daily limit"
+  },
+  {
+    "id": "O119",
+    "capability": "Email allowance reset"
+  },
+  {
+    "id": "O120",
+    "capability": "Email allowance asOf"
+  },
+  {
+    "id": "O121",
+    "capability": "Email allowance help"
+  },
+  {
+    "id": "O122",
+    "capability": "Email allowance notConfigured"
+  },
+  {
+    "id": "O123",
+    "capability": "Email allowance setup"
+  },
+  {
+    "id": "O124",
+    "capability": "Email allowance countsUnavailable"
+  },
+  {
+    "id": "O125",
+    "capability": "Email allowance configurationUnavailable"
+  },
+  {
+    "id": "A032",
+    "capability": "Exact email / user ID lookup"
+  },
+  {
+    "id": "A033",
+    "capability": "Submit lookup and busy state"
+  },
+  {
+    "id": "A034",
+    "capability": "Lookup validation"
+  },
+  {
+    "id": "A035",
+    "capability": "Lookup not-found state"
+  },
+  {
+    "id": "A036",
+    "capability": "Lookup audit notice"
+  },
+  {
+    "id": "A037",
+    "capability": "Account public ID"
+  },
+  {
+    "id": "A038",
+    "capability": "Copy account public ID"
+  },
+  {
+    "id": "A039",
+    "capability": "Account email"
+  },
+  {
+    "id": "A040",
+    "capability": "Account active/deactivated status"
+  },
+  {
+    "id": "A041",
+    "capability": "Account created date"
+  },
+  {
+    "id": "A042",
+    "capability": "Account last active session"
+  },
+  {
+    "id": "A043",
+    "capability": "Account projects"
+  },
+  {
+    "id": "A044",
+    "capability": "Account keywords"
+  },
+  {
+    "id": "A046",
+    "capability": "Account connections by kind"
+  },
+  {
+    "id": "A047",
+    "capability": "Lookup failed feedback"
+  },
+  {
+    "id": "A048",
+    "capability": "Lookup forbidden feedback"
+  },
+  {
+    "id": "A049",
+    "capability": "Lookup rate-limit feedback"
+  },
+  {
+    "id": "A050",
+    "capability": "Deactivate action"
+  },
+  {
+    "id": "A051",
+    "capability": "Deactivate confirmation and cancel"
+  },
+  {
+    "id": "A052",
+    "capability": "Reactivate action"
+  },
+  {
+    "id": "A053",
+    "capability": "Reactivate confirmation and cancel"
+  },
+  {
+    "id": "A054",
+    "capability": "Reset rate limits action"
+  },
+  {
+    "id": "A055",
+    "capability": "Reset rate limits confirmation and cancel"
+  },
+  {
+    "id": "A056",
+    "capability": "Account status 2FA notice"
+  },
+  {
+    "id": "A057",
+    "capability": "Account status security-enable link"
+  },
+  {
+    "id": "A058",
+    "capability": "Account result: deactivated"
+  },
+  {
+    "id": "A059",
+    "capability": "Account result: reactivated"
+  },
+  {
+    "id": "A060",
+    "capability": "Account result: blocked"
+  },
+  {
+    "id": "A061",
+    "capability": "Account result: forbidden"
+  },
+  {
+    "id": "A062",
+    "capability": "Account result: rateLimited"
+  },
+  {
+    "id": "A063",
+    "capability": "Account result: failed"
+  },
+  {
+    "id": "A064",
+    "capability": "Account result: limitsCompleted"
+  },
+  {
+    "id": "A065",
+    "capability": "Account result: limitsFailed"
+  },
+  {
+    "id": "A066",
+    "capability": "Mailer-unconfigured warning"
+  },
+  {
+    "id": "A067",
+    "capability": "Environment variables override saved mail settings"
+  },
+  {
+    "id": "A068",
+    "capability": "Email setup documentation link"
+  },
+  {
+    "id": "A069",
+    "capability": "Existing provider/sender/credential configuration loads"
+  },
+  {
+    "id": "A070",
+    "capability": "Mail provider selector"
+  },
+  {
+    "id": "A071",
+    "capability": "Mail provider option resend"
+  },
+  {
+    "id": "A072",
+    "capability": "Mail provider option ses"
+  },
+  {
+    "id": "A073",
+    "capability": "Mail provider option smtp"
+  },
+  {
+    "id": "A074",
+    "capability": "Mail sender"
+  },
+  {
+    "id": "A075",
+    "capability": "Mail field API key (Resend)"
+  },
+  {
+    "id": "A076",
+    "capability": "Mail field Region (Amazon SES)"
+  },
+  {
+    "id": "A077",
+    "capability": "Mail field Access key ID (Amazon SES)"
+  },
+  {
+    "id": "A078",
+    "capability": "Mail field Secret access key (Amazon SES)"
+  },
+  {
+    "id": "A079",
+    "capability": "Mail field Host (SMTP)"
+  },
+  {
+    "id": "A080",
+    "capability": "Mail field Port (SMTP)"
+  },
+  {
+    "id": "A081",
+    "capability": "Mail field Username (SMTP)"
+  },
+  {
+    "id": "A082",
+    "capability": "Mail field Password (SMTP)"
+  },
+  {
+    "id": "A083",
+    "capability": "SES default credential-chain hint"
+  },
+  {
+    "id": "A084",
+    "capability": "Mail form validation errors"
+  },
+  {
+    "id": "A085",
+    "capability": "Mail saved-credentials notice"
+  },
+  {
+    "id": "A086",
+    "capability": "Replace saved mail credentials"
+  },
+  {
+    "id": "A087",
+    "capability": "Save mail settings"
+  },
+  {
+    "id": "A088",
+    "capability": "Clear saved mail settings"
+  },
+  {
+    "id": "A089",
+    "capability": "Mail 2FA notice"
+  },
+  {
+    "id": "A090",
+    "capability": "Mail 2FA security-enable link"
+  },
+  {
+    "id": "A091",
+    "capability": "Mail result: saved"
+  },
+  {
+    "id": "A092",
+    "capability": "Mail result: cleared"
+  },
+  {
+    "id": "A093",
+    "capability": "Mail result: forbidden"
+  },
+  {
+    "id": "A094",
+    "capability": "Mail result: rateLimited"
+  },
+  {
+    "id": "A095",
+    "capability": "Mail result: twoFactorRequired"
+  },
+  {
+    "id": "A096",
+    "capability": "Mail result: unavailable"
+  },
+  {
+    "id": "A097",
+    "capability": "Mail result: invalid"
+  },
+  {
+    "id": "A098",
+    "capability": "Mail save/clear pending labels"
+  },
+  {
+    "id": "T001",
+    "capability": "Audit filter all"
+  },
+  {
+    "id": "T002",
+    "capability": "Audit filter account"
+  },
+  {
+    "id": "T003",
+    "capability": "Audit filter ops"
+  },
+  {
+    "id": "T004",
+    "capability": "Audit filter setup"
+  },
+  {
+    "id": "T005",
+    "capability": "Audit column time"
+  },
+  {
+    "id": "T006",
+    "capability": "Audit sort time"
+  },
+  {
+    "id": "T007",
+    "capability": "Audit column actor"
+  },
+  {
+    "id": "T008",
+    "capability": "Audit sort actor"
+  },
+  {
+    "id": "T009",
+    "capability": "Audit column action"
+  },
+  {
+    "id": "T010",
+    "capability": "Audit sort action"
+  },
+  {
+    "id": "T011",
+    "capability": "Audit column target"
+  },
+  {
+    "id": "T012",
+    "capability": "Audit sort target"
+  },
+  {
+    "id": "T013",
+    "capability": "Audit column result"
+  },
+  {
+    "id": "T014",
+    "capability": "Audit sort result"
+  },
+  {
+    "id": "T015",
+    "capability": "Audit target type"
+  },
+  {
+    "id": "T016",
+    "capability": "Copy audit target ID"
+  },
+  {
+    "id": "T017",
+    "capability": "Audit success result"
+  },
+  {
+    "id": "T018",
+    "capability": "Audit failed result"
+  },
+  {
+    "id": "T019",
+    "capability": "Audit blocked result"
+  },
+  {
+    "id": "T020",
+    "capability": "Audit empty filter state"
+  },
+  {
+    "id": "T021",
+    "capability": "Audit older entries"
+  },
+  {
+    "id": "R001",
+    "capability": "Instance identifier"
+  },
+  {
+    "id": "R002",
+    "capability": "Temporal namespace"
+  },
+  {
+    "id": "R003",
+    "capability": "Refresh cases"
+  },
+  {
+    "id": "R004",
+    "capability": "Category filter"
+  },
+  {
+    "id": "R005",
+    "capability": "Provider filter"
+  },
+  {
+    "id": "R006",
+    "capability": "Category all"
+  },
+  {
+    "id": "R007",
+    "capability": "Category unfinished"
+  },
+  {
+    "id": "R008",
+    "capability": "Category accounting"
+  },
+  {
+    "id": "R009",
+    "capability": "Category failed"
+  },
+  {
+    "id": "R010",
+    "capability": "Category historical"
+  },
+  {
+    "id": "R011",
+    "capability": "Category closed_unknown"
+  },
+  {
+    "id": "R012",
+    "capability": "Review selected cases"
+  },
+  {
+    "id": "R013",
+    "capability": "Batch selection limit help"
+  },
+  {
+    "id": "R014",
+    "capability": "Operation error state"
+  },
+  {
+    "id": "R015",
+    "capability": "Command retrieval error"
+  },
+  {
+    "id": "R016",
+    "capability": "Retry command status"
+  },
+  {
+    "id": "R017",
+    "capability": "Command state queued"
+  },
+  {
+    "id": "R018",
+    "capability": "Command state completed"
+  },
+  {
+    "id": "R019",
+    "capability": "Command state running"
+  },
+  {
+    "id": "R020",
+    "capability": "Command state failed"
+  },
+  {
+    "id": "R021",
+    "capability": "Command queued outcome count"
+  },
+  {
+    "id": "R022",
+    "capability": "Command unchanged outcome count"
+  },
+  {
+    "id": "R023",
+    "capability": "Command recovered outcome count"
+  },
+  {
+    "id": "R024",
+    "capability": "Command failed outcome count"
+  },
+  {
+    "id": "R025",
+    "capability": "Command skipped outcome count"
+  },
+  {
+    "id": "R026",
+    "capability": "Refresh after command completion"
+  },
+  {
+    "id": "R027",
+    "capability": "First case page"
+  },
+  {
+    "id": "R028",
+    "capability": "Next case page"
+  },
+  {
+    "id": "R029",
+    "capability": "Initial recovery unavailable state"
+  },
+  {
+    "id": "R030",
+    "capability": "Retry unavailable recovery"
+  },
+  {
+    "id": "R031",
+    "capability": "Summary unfinished count"
+  },
+  {
+    "id": "R032",
+    "capability": "Summary unconfirmed count"
+  },
+  {
+    "id": "R033",
+    "capability": "Summary closedUnknown count"
+  },
+  {
+    "id": "R034",
+    "capability": "Summary failed count"
+  },
+  {
+    "id": "R035",
+    "capability": "Summary historical count"
+  },
+  {
+    "id": "R036",
+    "capability": "Summary retainedResults count"
+  },
+  {
+    "id": "R037",
+    "capability": "Closed unknown explanation"
+  },
+  {
+    "id": "R038",
+    "capability": "Blocked project and connection scopes warning"
+  },
+  {
+    "id": "R039",
+    "capability": "Summary lastActivityAt"
+  },
+  {
+    "id": "R040",
+    "capability": "Summary lastCompletedAt"
+  },
+  {
+    "id": "R041",
+    "capability": "Summary lastCleanAt"
+  },
+  {
+    "id": "R042",
+    "capability": "Summary lastResultActivityAt"
+  },
+  {
+    "id": "R043",
+    "capability": "Select eligible case with batch cap"
+  },
+  {
+    "id": "R044",
+    "capability": "Case column project"
+  },
+  {
+    "id": "R045",
+    "capability": "Case sort project"
+  },
+  {
+    "id": "R046",
+    "capability": "Case column provider"
+  },
+  {
+    "id": "R047",
+    "capability": "Case sort provider"
+  },
+  {
+    "id": "R048",
+    "capability": "Case column send"
+  },
+  {
+    "id": "R049",
+    "capability": "Case sort send"
+  },
+  {
+    "id": "R050",
+    "capability": "Case column work"
+  },
+  {
+    "id": "R051",
+    "capability": "Case sort work"
+  },
+  {
+    "id": "R054",
+    "capability": "Case column classification"
+  },
+  {
+    "id": "R055",
+    "capability": "Case sort classification"
+  },
+  {
+    "id": "R056",
+    "capability": "Case column acceptance"
+  },
+  {
+    "id": "R057",
+    "capability": "Case sort acceptance"
+  },
+  {
+    "id": "R058",
+    "capability": "Case column incident"
+  },
+  {
+    "id": "R059",
+    "capability": "Case sort incident"
+  },
+  {
+    "id": "R060",
+    "capability": "Case column lookup"
+  },
+  {
+    "id": "R061",
+    "capability": "Case sort lookup"
+  },
+  {
+    "id": "R062",
+    "capability": "Case column triage"
+  },
+  {
+    "id": "R063",
+    "capability": "Case sort triage"
+  },
+  {
+    "id": "R064",
+    "capability": "Open case details"
+  },
+  {
+    "id": "R065",
+    "capability": "Group cases by project/cause/action"
+  },
+  {
+    "id": "R066",
+    "capability": "Grouping applies to loaded page explanation"
+  },
+  {
+    "id": "R067",
+    "capability": "Empty cases state"
+  },
+  {
+    "id": "R068",
+    "capability": "Closed-unknown case state"
+  },
+  {
+    "id": "R069",
+    "capability": "Case created time"
+  },
+  {
+    "id": "R070",
+    "capability": "Case connection"
+  },
+  {
+    "id": "R072",
+    "capability": "Unknown dimensions"
+  },
+  {
+    "id": "R073",
+    "capability": "Failure class"
+  },
+  {
+    "id": "R074",
+    "capability": "Failure attempts"
+  },
+  {
+    "id": "R075",
+    "capability": "First failure time"
+  },
+  {
+    "id": "R076",
+    "capability": "Last failure time"
+  },
+  {
+    "id": "R077",
+    "capability": "Recommended recovery action"
+  },
+  {
+    "id": "R078",
+    "capability": "Blocked-reason explanation"
+  },
+  {
+    "id": "R079",
+    "capability": "Project spending block warning"
+  },
+  {
+    "id": "R080",
+    "capability": "Connection spending block warning"
+  },
+  {
+    "id": "R081",
+    "capability": "New paid attempt requires project member authority explanation"
+  },
+  {
+    "id": "R082",
+    "capability": "Closed-unknown details remain read-only"
+  },
+  {
+    "id": "R083",
+    "capability": "Triage status"
+  },
+  {
+    "id": "R084",
+    "capability": "Triage reason"
+  },
+  {
+    "id": "R085",
+    "capability": "Triage due time"
+  },
+  {
+    "id": "R086",
+    "capability": "Preserve existing triage due time"
+  },
+  {
+    "id": "R087",
+    "capability": "Assign case to self"
+  },
+  {
+    "id": "R088",
+    "capability": "Save triage"
+  },
+  {
+    "id": "R089",
+    "capability": "Triage non-financial effect explanation"
+  },
+  {
+    "id": "R090",
+    "capability": "Triage error feedback"
+  },
+  {
+    "id": "R091",
+    "capability": "Batch eligible count"
+  },
+  {
+    "id": "R092",
+    "capability": "Batch excluded count"
+  },
+  {
+    "id": "R093",
+    "capability": "No-spend explanation"
+  },
+  {
+    "id": "R094",
+    "capability": "Original-run spend warning"
+  },
+  {
+    "id": "R095",
+    "capability": "Preview expiry"
+  },
+  {
+    "id": "R097",
+    "capability": "Approved targets"
+  },
+  {
+    "id": "R098",
+    "capability": "Approved attempts"
+  },
+  {
+    "id": "R099",
+    "capability": "Batch count recover_proof"
+  },
+  {
+    "id": "R100",
+    "capability": "Batch count restore_result"
+  },
+  {
+    "id": "R101",
+    "capability": "Batch count resume_queued_run"
+  },
+  {
+    "id": "R102",
+    "capability": "Batch worker recheck / changed cases explanation"
+  },
+  {
+    "id": "R103",
+    "capability": "Confirm recovery batch"
+  },
+  {
+    "id": "R104",
+    "capability": "Recovery batch 2FA security-enable link"
+  },
+  {
+    "id": "R105",
+    "capability": "Batch error feedback"
+  },
+  {
+    "id": "R106",
+    "capability": "Incident evidence link"
+  },
+  {
+    "id": "R107",
+    "capability": "Incident opened time"
+  },
+  {
+    "id": "R108",
+    "capability": "Incident age"
+  },
+  {
+    "id": "R109",
+    "capability": "Evidence result classification"
+  },
+  {
+    "id": "R111",
+    "capability": "Acceptance state"
+  },
+  {
+    "id": "R112",
+    "capability": "Recovery state"
+  },
+  {
+    "id": "R113",
+    "capability": "Last lookup time"
+  },
+  {
+    "id": "R114",
+    "capability": "Next lookup time"
+  },
+  {
+    "id": "R115",
+    "capability": "Lookup reason"
+  },
+  {
+    "id": "R116",
+    "capability": "Partial evidence column project"
+  },
+  {
+    "id": "R117",
+    "capability": "Partial evidence sort project"
+  },
+  {
+    "id": "R118",
+    "capability": "Partial evidence column kind"
+  },
+  {
+    "id": "R119",
+    "capability": "Partial evidence sort kind"
+  },
+  {
+    "id": "R120",
+    "capability": "Partial evidence column depth"
+  },
+  {
+    "id": "R121",
+    "capability": "Partial evidence sort depth"
+  },
+  {
+    "id": "R122",
+    "capability": "Partial evidence column created"
+  },
+  {
+    "id": "R123",
+    "capability": "Partial evidence sort created"
+  },
+  {
+    "id": "R124",
+    "capability": "Partial evidence project result link"
+  },
+  {
+    "id": "R125",
+    "capability": "Partial evidence empty state"
+  },
+  {
+    "id": "R126",
+    "capability": "Partial evidence bounded/restore limitation explanation"
+  },
+  {
+    "id": "O126",
+    "capability": "Worker schema worker-behind"
+  },
+  {
+    "id": "O127",
+    "capability": "Worker schema worker-ahead"
+  },
+  {
+    "id": "O128",
+    "capability": "Worker schema unknown"
+  },
+  {
+    "id": "O129",
+    "capability": "Unknown check failure rate"
+  },
+  {
+    "id": "O130",
+    "capability": "Unknown operational delivery"
+  },
+  {
+    "id": "O131",
+    "capability": "Unknown provider failure rate"
+  },
+  {
+    "id": "O132",
+    "capability": "Unknown provider last-success age"
+  },
+  {
+    "id": "A099",
+    "capability": "deactivate confirmation consequences"
+  },
+  {
+    "id": "A100",
+    "capability": "reactivate confirmation consequences"
+  },
+  {
+    "id": "A101",
+    "capability": "reset confirmation consequences"
+  },
+  {
+    "id": "A102",
+    "capability": "Sender address validation"
+  },
+  {
+    "id": "A103",
+    "capability": "SMTP port validation"
+  },
+  {
+    "id": "A104",
+    "capability": "SES credential-pair validation"
+  },
+  {
+    "id": "O133",
+    "capability": "Ops events resize columns (pointer/keyboard)"
+  },
+  {
+    "id": "O134",
+    "capability": "Ops events reset column width"
+  },
+  {
+    "id": "O135",
+    "capability": "Schedule history resize columns (pointer/keyboard)"
+  },
+  {
+    "id": "O136",
+    "capability": "Schedule history reset column width"
+  },
+  {
+    "id": "T022",
+    "capability": "Audit resize columns (pointer/keyboard)"
+  },
+  {
+    "id": "T023",
+    "capability": "Audit reset column width"
+  },
+  {
+    "id": "R127",
+    "capability": "Recovery cases resize columns (pointer/keyboard)"
+  },
+  {
+    "id": "R128",
+    "capability": "Recovery cases reset column width"
+  },
+  {
+    "id": "R129",
+    "capability": "Partial evidence resize columns (pointer/keyboard)"
+  },
+  {
+    "id": "R130",
+    "capability": "Partial evidence reset column width"
+  },
+  {
+    "id": "S011",
+    "capability": "ID copy success feedback"
+  },
+  {
+    "id": "S012",
+    "capability": "ID copy failure toast"
+  },
+  {
+    "id": "T024",
+    "capability": "Audit initial loading state"
+  },
+  {
+    "id": "R131",
+    "capability": "Recovery initial loading state"
+  },
+  {
+    "id": "O137",
+    "capability": "Ops sending loading state"
+  },
+  {
+    "id": "O138",
+    "capability": "Ops running loading state"
+  },
+  {
+    "id": "O139",
+    "capability": "Operational timestamp timezone indicator"
+  },
+  {
+    "id": "S013",
+    "capability": "Configured admin locale in navigation and replacement controls"
+  },
+  {
+    "id": "L001",
+    "capability": "Accounts total user count"
+  },
+  {
+    "id": "L002",
+    "capability": "Accounts email search"
+  },
+  {
+    "id": "L003",
+    "capability": "Accounts public ID search"
+  },
+  {
+    "id": "L004",
+    "capability": "Accounts paging and filter page reset"
+  },
+  {
+    "id": "L005",
+    "capability": "Accounts row opens guarded details"
+  },
+  {
+    "id": "L006",
+    "capability": "Accounts sort Email in both directions"
+  },
+  {
+    "id": "L007",
+    "capability": "Accounts sort Status in both directions"
+  },
+  {
+    "id": "L008",
+    "capability": "Accounts sort Created in both directions"
+  },
+  {
+    "id": "L009",
+    "capability": "Accounts sort Last active in both directions"
+  },
+  {
+    "id": "L010",
+    "capability": "Accounts sort Projects in both directions"
+  },
+  {
+    "id": "L011",
+    "capability": "Accounts EmptyAccounts state"
+  },
+  {
+    "id": "L012",
+    "capability": "Accounts LoadingAccounts state"
+  },
+  {
+    "id": "L013",
+    "capability": "Accounts UnavailableAccounts state"
+  }
+]

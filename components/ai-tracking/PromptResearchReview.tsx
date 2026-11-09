@@ -4,13 +4,13 @@ import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { trackPromptResearchAction } from "@/lib/actions/prompt-research";
 import {
   normalizedResearchText,
   type ResearchedPrompt,
 } from "@/lib/ai-research/prompt-research-projection";
 import { researchTopicSchema } from "@/lib/ai-research/prompt-research-schema";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
+import { trackPromptResearchAction } from "@/lib/capacity/client-actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useState } from "react";

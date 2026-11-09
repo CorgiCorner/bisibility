@@ -1,6 +1,7 @@
 // Temporal sandbox module: no Prisma, providers, Node built-ins, or side effects.
 // Only deterministic Temporal packages and type-only activity imports are allowed.
 export { aiTrackingRunWorkflow } from "./ai-tracking-workflows";
+export { siteAuditCrawlWorkflow } from "./site-audit-workflows";
 
 import { defineSearchAttributeKey, SearchAttributeType } from "@temporalio/common";
 import { ApplicationFailure, proxyActivities, workflowInfo } from "@temporalio/workflow";
@@ -26,6 +27,7 @@ import {
   PROJECT_READ_ONLY_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
   RANK_CHECK_CLOSED_FAILURE,
+  WEEKLY_REQUEST_CAP_FAILURE,
 } from "./rank-check-activity-contract";
 import type {
   RankCheckWorkflowInput,
@@ -44,6 +46,7 @@ const DEFERRED_FAILURE_TYPES = new Set([
   BUDGET_EXHAUSTED_FAILURE,
   BALANCE_EXHAUSTED_FAILURE,
   OPERATION_ACCESS_DENIED_FAILURE,
+  WEEKLY_REQUEST_CAP_FAILURE,
   "provider_account_blocked",
   "usage_unconfirmed",
 ]);
@@ -261,5 +264,6 @@ export async function rankCheckWorkflow(
 
 export { checkNotificationSummariesWorkflow } from "./check-summary-maintenance-workflow";
 export { collectDomainRatingsWorkflow } from "./domain-rating-workflow";
+export { domainVerificationWorkflow } from "./domain-verification-workflow";
 export { localMonitorRunWorkflow } from "./local-monitor-workflow";
 export { providerComparisonWorkflow } from "./provider-comparison-workflow";

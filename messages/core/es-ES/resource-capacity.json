@@ -1,0 +1,15 @@
+{
+  "resourceCapacity": {
+    "resource": "Recurso",
+    "projects": "proyectos",
+    "scheduledKeywords": "palabras clave programadas",
+    "scheduleFrequencies": "frecuencia de programación",
+    "trackedPrompts": "prompts monitorizados",
+    "promptSchedules": "frecuencia de programación de prompts",
+    "competitorsPerProject": "competidores por proyecto",
+    "alertRulesAndWebhooks": "reglas de alertas y webhooks",
+    "usage": "{used} de {limit} utilizados. Solicitados: {requested}.",
+    "crawlPagesPerCrawl": "páginas por rastreo",
+    "concurrentCrawls": "rastreos simultáneos"
+  }
+}

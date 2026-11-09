@@ -1,5 +1,5 @@
 import "server-only";
-
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import type { TriggeredAlertDeliveryPayload } from "@/lib/alerts/alert-delivery-payload";
 import { recordDeliveryAttempt } from "@/lib/alerts/delivery";
 import { reserveEmailDailyBudget } from "@/lib/email/budget";
@@ -94,7 +94,7 @@ export async function deliverAlertEmailActivity(input: {
       await prismaPreparedEmailStore.compareAndSet(identity, "prepared", { to: latest.email });
     }
     const provider = resolveEmailProvider();
-    return await deliverPreparedEmail({
+    const result = await deliverPreparedEmail({
       checkSuppression: assertMailNotSuppressed,
       identity,
       record: (status, error) => recordDeliveryAttempt(input.alertId, "email", status, error),
@@ -126,6 +126,16 @@ export async function deliverAlertEmailActivity(input: {
       store: prismaPreparedEmailStore,
       transport: describeEmailTransport(provider?.id ?? null),
     });
+    recordResultReceipt({
+      userId: gate.userId,
+      surface: "alert",
+      nonEmpty:
+        result.delivered &&
+        existing?.state !== "accepted" &&
+        input.payload.test !== true &&
+        (input.payload.afterPosition !== null || input.payload.beforePosition !== null),
+    });
+    return result;
   } catch (error) {
     if (error instanceof AlertDeliverySkipped || error instanceof EmailSuppressedError) {
       await recordDeliveryAttempt(input.alertId, "email", "skipped", error.message);

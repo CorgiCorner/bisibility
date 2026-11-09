@@ -65,11 +65,14 @@ describe("alert feed actions", () => {
       projectId: "prj_a00000000000000000000000",
     });
 
-    expect(mocks.coreMuteTriggeredAlert).toHaveBeenCalledWith({
-      actor: { id: "user_1" },
-      alertId: "al_a00000000000000000000000",
-      projectId: "prj_a00000000000000000000000",
-    });
+    expect(mocks.coreMuteTriggeredAlert).toHaveBeenCalledWith(
+      {
+        actor: { id: "user_1" },
+        alertId: "al_a00000000000000000000000",
+        projectId: "prj_a00000000000000000000000",
+      },
+      expect.any(Function),
+    );
     expect(result).toEqual({ muted: true, snoozedUntil: new Date("2026-01-02T06:00:00.000Z") });
   });
 

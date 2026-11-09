@@ -71,6 +71,6 @@ it("points AI schedules at the common project Schedules page", () => {
     { messages: en },
   );
   expect(mocks.workspace.mock.calls[0][0]).toMatchObject({
-    schedulesHref: "/app/prj_fixture/runs/schedules",
+    schedulesHref: "/app/prj_fixture/schedules",
   });
 });

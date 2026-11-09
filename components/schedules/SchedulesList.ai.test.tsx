@@ -114,7 +114,7 @@ describe("SchedulesList with AI schedules", () => {
     const ai = controller();
     renderList({ ai });
     fireEvent.click(screen.getByRole("button", { name: "Resume Paused prompts" }));
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/runs/schedules?ai=ais_paused");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/schedules?ai=ais_paused");
     expect(ai.onPause).not.toHaveBeenCalled();
     expect(ai.onArchive).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
@@ -124,19 +124,19 @@ describe("SchedulesList with AI schedules", () => {
     renderList();
     expect(screen.getByRole("link", { name: "Weekly prompts" })).toHaveAttribute(
       "href",
-      "/app/prj_story/runs/schedules?ai=ais_weekly",
+      "/app/prj_story/schedules?ai=ais_weekly",
     );
     expect(screen.getByRole("link", { name: "Daily 06:00" })).toHaveAttribute(
       "href",
-      "/app/prj_story/runs/schedules/sch_daily",
+      "/app/prj_story/schedules/sch_daily",
     );
     fireEvent.click(screen.getByRole("row", { name: /Weekly prompts/ }));
-    expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/runs/schedules?ai=ais_weekly");
+    expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/schedules?ai=ais_weekly");
     fireEvent.click(screen.getByRole("row", { name: /Daily 06:00/ }));
-    expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/runs/schedules/sch_daily");
+    expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/schedules/sch_daily");
     expect(screen.getByRole("link", { name: "New Prompt Tracker schedule" })).toHaveAttribute(
       "href",
-      "/app/prj_story/runs/schedules?ai=new",
+      "/app/prj_story/schedules?ai=new",
     );
   });
 

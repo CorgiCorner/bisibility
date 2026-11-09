@@ -1,3 +1,6 @@
+import { errorFromUnknown } from "@/lib/api/error-mapper";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
+import { readObservedResponse } from "@/lib/providers/usage";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,6 +38,40 @@ async function callListProjects() {
 describe("MCP budget-exhausted tool errors", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("retains the native weekly fence denial and reset in the MCP result", async () => {
+    const request = vi.fn();
+    const denial = await readObservedResponse({
+      observer: {
+        begin: async () => "attempt",
+        beforeDispatch: async () => {
+          throw new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+        },
+        cancel: async () => {},
+        settle: vi.fn(),
+      },
+      request,
+      measure: vi.fn(),
+    }).catch((error: unknown) => error);
+    const response = errorFromUnknown(
+      denial,
+      new Headers(),
+      new URL("https://example.com/api/v1/projects"),
+    );
+    mocks.handleApiRequest.mockResolvedValue(response);
+    const result = await callListProjects();
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      error: {
+        code: "weekly_request_cap_reached",
+        status: 429,
+        payload: {
+          details: { code: "weekly_request_cap_reached", resetsAt: "2026-11-12T00:00:00Z" },
+        },
+      },
+    });
+    expect(request).not.toHaveBeenCalled();
   });
 
   it("derives the agent-facing message from the problem reset time", () => {

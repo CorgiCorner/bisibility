@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { domainRatingSettingsSchema } from "@/lib/domain-rating/settings";
@@ -34,6 +34,8 @@ export async function setDomainRatingTracking(input: unknown) {
       tx,
     );
   });
+  recordAppAction(actor);
   revalidatePath("/app", "layout");
+
   return { ok: true };
 }

@@ -1,4 +1,5 @@
 import { assertKeywordCapacity, lockKeywordCapacity } from "@/lib/api/resource-limits";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { restoreKeyword } from "@/lib/keywords/archive";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
@@ -146,7 +147,12 @@ export async function createKeywordBatchSet(
   if (rows.length === 0) return { accepted: [], created: [], restored: [] };
   const rowsByKey = uniqueRows(rows);
   const canonicalRows = [...rowsByKey.values()];
+  const capacity = await prepareResourceCapacity(client as Prisma.TransactionClient, {
+    projectId,
+    dimensions: ["scheduledKeywords"],
+  });
   await lockProjectForProviderMutation(client, projectId);
+
   const limit = await lockKeywordCapacity(client, projectId);
   const marketResult = await ensureKeywordProjectMarketsWithinLimit(
     projectId,
@@ -209,7 +215,7 @@ export async function createKeywordBatchSet(
       text: row.keyword,
       topic: row.topic ?? null,
     }));
-  await assertKeywordCapacity(client, projectId, candidates.length, limit);
+  await assertKeywordCapacity(client, projectId, candidates.length, capacity.enabled ? 0 : limit);
   if (candidates.length > 0) {
     await client.keyword.createMany({ data: candidates, skipDuplicates: true });
   }
@@ -234,6 +240,25 @@ export async function createKeywordBatchSet(
     ]),
   );
   const created = inserted;
+  const checkedCadences = new Set<string>();
+  for (const keyword of created) {
+    const selected = rowsByKey.get(
+      keywordTupleKey(keyword.text, keyword.locationId, keyword.device),
+    )?.schedule;
+    const cadenceKey =
+      selected && JSON.stringify([selected.frequency, selected.cronExpression, selected.timezone]);
+    if (selected && cadenceKey && !checkedCadences.has(cadenceKey)) {
+      checkedCadences.add(cadenceKey);
+      await prepareResourceCapacity(client as Prisma.TransactionClient, {
+        projectId,
+        dimensions: [],
+        cadence: {
+          dimension: "scheduleFrequencies",
+          after: { ...selected, enabled: true },
+        },
+      });
+    }
+  }
   await attachSchedules(client, created, rowsByKey);
   await attachTags(client, projectId, created, rowsByKey);
   await seedKeywordDispatchStates(
@@ -251,6 +276,7 @@ export async function createKeywordBatchSet(
     const restored = unclaimedRestored.delete(keyword.publicId);
     return { created, keyword, restored, row };
   });
+  await capacity.check();
   return { accepted, created, restored };
 }
 

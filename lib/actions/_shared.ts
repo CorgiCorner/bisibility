@@ -65,8 +65,10 @@ export function parseActionInput<TSchema extends z.ZodTypeAny>(
   return schema.parse(input);
 }
 
-export async function getActionActor(): Promise<Actor> {
-  const session = await requireSession();
+export async function getActionActor(authenticatedSession?: {
+  user: { id: string; email: string };
+}): Promise<Actor> {
+  const session = authenticatedSession ?? (await requireSession());
   const user = await prisma.user.findUnique({
     select: {
       id: true,
@@ -78,6 +80,7 @@ export async function getActionActor(): Promise<Actor> {
 
   return {
     id: session.user.id,
+    email: session.user.email,
     memberships: user?.memberships ?? [],
     role: user?.role ?? null,
   };
@@ -199,6 +202,8 @@ export function revalidateKeywordViews(keywordId?: string | null) {
     projectPage("dashboard"),
     projectPage("timeline"),
     projectPage("runs"),
+    projectPage("schedules"),
+    projectPage("schedules", "[publicId]"),
     projectPage("runs", "schedules"),
     projectPage("runs", "schedules", "[publicId]"),
     projectPage("alerts"),
@@ -218,6 +223,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
     projectPage("competitors"),
     projectPage("settings", "audit"),
     projectPage("providers"),
+    projectPage("usage"),
   ]);
 }
 
@@ -226,6 +232,7 @@ export function revalidateProviderViews() {
     projectPage("rank-tracker"),
     marketPage("rank-tracker"),
     projectPage("providers"),
+    projectPage("usage"),
     projectPage("dashboard"),
     projectPage("settings"),
     projectPage("settings", "audit"),
@@ -255,6 +262,7 @@ export function revalidateBudgetViews() {
   revalidateTargets([
     { path: appRootPath(), type: "layout" },
     projectPage("dashboard"),
+    projectPage("usage"),
     projectPage("settings"),
     projectPage("settings", "audit"),
   ]);

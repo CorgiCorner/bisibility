@@ -570,6 +570,8 @@ model WaitlistInterest {
 }
 
 model Project {
+  providerResponseCaptures ProviderResponseCapture[]
+  domainVerifications ProjectDomainVerification[]
   providerComparisonPreviews ProviderComparisonPreview[]
   providerComparisonRuns ProviderComparisonRun[]
   historyEvidenceReplayRuns HistoryEvidenceReplayRun[]
@@ -625,6 +627,7 @@ model Project {
   keywordResearchSnapshots         KeywordResearchSnapshot[]
   context                          ProjectContext?
   agentReports                     AgentReport[]
+  siteAuditRuns                    SiteAuditRun[]
   pageTrafficSnapshots             PageTrafficSnapshot[]
   searchAnalyticsDaily             SearchAnalyticsDaily[]
   searchAnalyticsQueryDaily        SearchAnalyticsQueryDaily[]
@@ -1572,6 +1575,7 @@ model ProviderConnection {
   firstSyncRequestedAt                        DateTime?
   firstSyncStartedAt                          DateTime?
   firstSyncFinishedAt                         DateTime?
+  analyticsDataSyncedAt                       DateTime?
   createdAt                                   DateTime                 @default(now())
   updatedAt                                   DateTime                 @updatedAt
 
@@ -2533,6 +2537,7 @@ model SearchInsightsPropertyRegistry {
   projectId     String
   project       Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   propertyKey   String
+  permissionLevel String?
   status        SearchInsightsPropertyStatus
   ga4PropertyId String?
   activatedAt   DateTime                     @default(now())
@@ -2833,6 +2838,7 @@ model ProjectContext {
 }
 
 model AgentReport {
+  siteAuditRun SiteAuditRun?
   cacheReuseUntil DateTime?
   id          String   @id @default(cuid())
   publicId    String   @unique
@@ -2998,4 +3004,29 @@ model MailFeedbackEvent {
   createdAt DateTime @default(now())
 
   @@map("mail_feedback_events")
+}
+
+model ProjectDomainVerification {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  domain String
+  method String
+  token String @unique
+  issuedAt DateTime @default(now())
+  /// Last successful proof time; reads expire it after 72 hours.
+  verifiedAt DateTime?
+  lastCheckedAt DateTime?
+  lastCheckResult String?
+  proofScope String?
+  failures Int @default(0)
+  revision Int @default(0)
+  revokedAt DateTime?
+  noticeSentAt DateTime?
+  nextCheckAt DateTime?
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, domain])
+  @@index([nextCheckAt])
+  @@map("project_domain_verifications")
 }

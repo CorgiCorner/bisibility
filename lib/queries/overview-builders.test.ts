@@ -482,8 +482,9 @@ describe("overview builders", () => {
       0,
     );
     expect(shallow.find((item) => item.id === "visibility")?.delta).toEqual({
-      kind: "awaitingTop20",
+      kind: "new",
     });
+    expect(shallow.find((item) => item.id === "visibility")?.value).toEqual(expect.any(Number));
   });
 
   it("keeps failed first-check KPIs actionable without a display fallback", () => {

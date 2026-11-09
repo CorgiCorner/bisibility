@@ -1,3 +1,5 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { inlineCron, inlineScheduleName } from "./create-schedule";
 import "server-only";
 
 import { scheduleForKeyword } from "@/lib/actions/_schedule";
@@ -60,24 +62,6 @@ export class MarketScheduleError extends Error {
 
 type CreateHooks = { afterKeywordInsert?: () => void; afterMarketInsert?: () => void };
 
-function inlineScheduleName(
-  input: Extract<NonNullable<NewMarketCreateInput["schedule"]>, { kind: "inline" }>,
-) {
-  return (
-    input.name ||
-    `${input.frequency[0].toUpperCase()}${input.frequency.slice(1)} ${input.timeOfDay ?? "06:00"}`
-  );
-}
-
-function inlineCron(
-  input: Extract<NonNullable<NewMarketCreateInput["schedule"]>, { kind: "inline" }>,
-) {
-  const hour = Number((input.timeOfDay ?? "06:00").slice(0, 2));
-  if (input.frequency === "weekly") return `0 ${hour} * * 1`;
-  if (input.frequency === "monthly") return `0 ${hour} 1 * *`;
-  return null;
-}
-
 async function termsForCreate(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   projectId: string,
@@ -114,6 +98,10 @@ export async function createProjectMarket(
   const resolved = await resolveMarketLocation(projectId, data);
   return prisma.$transaction(
     async (tx) => {
+      const capacity = await prepareResourceCapacity(tx, {
+        projectId,
+        dimensions: ["scheduledKeywords"],
+      });
       const location = await tx.location.findUnique({
         select: {
           canonicalKey: true,
@@ -190,6 +178,15 @@ export async function createProjectMarket(
             })
         : null;
       if (selectedSchedule && !schedule) throw new MarketScheduleError();
+      if (schedule)
+        await prepareResourceCapacity(tx, {
+          projectId,
+          dimensions: [],
+          cadence: {
+            dimension: "scheduleFrequencies",
+            after: schedule,
+          },
+        });
       const market = await tx.projectMarket.create({
         data: {
           futureKeywordDevices: data.devices,
@@ -294,6 +291,7 @@ export async function createProjectMarket(
         },
         tx,
       );
+      await capacity.check();
       return {
         canonicalKey: location.canonicalKey,
         countryCode: location.countryCode,

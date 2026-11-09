@@ -1,3 +1,5 @@
+import { aiOverviewPresentation } from "@/lib/checks/ai-overview-presentation";
+import { serpFeaturePresentation } from "@/lib/checks/serp-feature-presentation";
 import "server-only";
 import { providerLabel } from "@/lib/checks/attempts";
 import type { RetrievedResults, RetrievedRow, StoredResultsTier } from "@/lib/checks/contract";
@@ -138,6 +140,8 @@ async function buildFullResult(
         : null,
     },
     observationCompleteness: observation?.completeness ?? null,
+    featureSummary: serpFeaturePresentation(observation?.items ?? [], features),
+    aiOverviewContent: aiOverviewPresentation(overviewItems),
     aiOverviewContentLoaded: overviewItems.length
       ? overviewItems.some((item) => Boolean(item.title))
       : undefined,

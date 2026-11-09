@@ -1,3 +1,5 @@
+import { hasReceivedRankResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import "server-only";
 
 import {
@@ -89,6 +91,11 @@ export async function singleRankCheckRunStatus(
       runPublicIds: [run.publicId],
     });
   }
+  recordResultReceipt({
+    userId: actor.id,
+    surface: "app",
+    nonEmpty: hasReceivedRankResult(result),
+  });
   return result;
 }
 

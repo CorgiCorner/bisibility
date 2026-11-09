@@ -1,0 +1,152 @@
+{
+  "lib/queries/admin/oss-access.ts": [
+    "lib/auth/authorize.ts",
+    "lib/auth/instance-admin.ts",
+    "lib/auth/session.ts"
+  ],
+  "lib/queries/admin/oss-account-list.ts": [
+    "lib/db/prisma.ts",
+    "lib/db/schema-config.mjs",
+    "lib/generated/prisma/client.ts",
+    "lib/instance-admin/account-list-input.ts"
+  ],
+  "lib/queries/admin/oss-accounts.ts": [
+    "lib/api/ratelimit.ts",
+    "lib/auth/audit.ts",
+    "lib/queries/instance-admin-account-facts.ts",
+    "lib/queries/admin/oss-access.ts",
+    "lib/queries/admin/oss-account-list.ts"
+  ],
+  "lib/api/ratelimit.ts": [
+    "lib/env/positive-int.ts",
+    "lib/http/client-ip.ts",
+    "lib/redis/redis.ts",
+    "lib/api/ratelimit-reset.ts",
+    "lib/api/ratelimit-scripts.ts",
+    "lib/api/responses.ts",
+    "lib/api/rate-limit-extension.ts"
+  ],
+  "lib/env/positive-int.ts": [],
+  "lib/http/client-ip.ts": ["lib/deployment/runtime-env.generated.ts"],
+  "lib/api/ratelimit-reset.ts": ["lib/redis/redis.ts"],
+  "lib/api/ratelimit-scripts.ts": [],
+  "lib/api/responses.ts": [],
+  "lib/queries/instance-admin-account-facts.ts": ["lib/auth/audit.ts", "lib/db/prisma.ts"],
+  "lib/queries/admin/oss-audit.ts": [
+    "lib/queries/instance-admin-audit.ts",
+    "lib/queries/admin/oss-access.ts"
+  ],
+  "lib/queries/instance-admin-audit.ts": [
+    "lib/api/pagination.ts",
+    "lib/auth/instance-admin.ts",
+    "lib/db/prisma.ts",
+    "lib/db/public-id.ts",
+    "lib/queries/audit-public-values.ts"
+  ],
+  "lib/api/pagination.ts": ["lib/db/public-id-resources.ts", "lib/api/errors.ts"],
+  "lib/api/errors.ts": [],
+  "lib/queries/audit-public-values.ts": ["lib/audit/target-policy.ts", "lib/db/public-id.ts"],
+  "lib/audit/target-policy.ts": [],
+  "lib/queries/admin/oss-email.ts": [
+    "lib/email/allowance.ts",
+    "lib/email/instance-mail-store.ts",
+    "lib/email/registry.ts",
+    "lib/queries/admin/oss-access.ts"
+  ],
+  "lib/email/allowance.ts": [
+    "lib/auth/instance-admin.ts",
+    "lib/db/prisma.ts",
+    "lib/demo/config.ts",
+    "lib/deployment/deployment.ts",
+    "lib/email/budget.ts",
+    "lib/email/from.ts",
+    "lib/email/instance-mail-store.ts",
+    "lib/email/registry.ts"
+  ],
+  "lib/demo/config.ts": ["lib/db/public-id.ts"],
+  "lib/email/budget.ts": ["lib/db/prisma.ts"],
+  "lib/email/from.ts": ["lib/email/instance-mail-runtime.ts"],
+  "lib/email/instance-mail-runtime.ts": ["lib/email/types.ts"],
+  "lib/email/types.ts": [],
+  "lib/email/instance-mail-store.ts": [
+    "lib/auth/audit.ts",
+    "lib/auth/instance-admin.ts",
+    "lib/db/prisma.ts",
+    "lib/deployment/deployment.ts",
+    "lib/providers/crypto.ts",
+    "lib/email/instance-mail-runtime.ts"
+  ],
+  "lib/providers/crypto.ts": [],
+  "lib/email/registry.ts": [
+    "lib/email/instance-mail-runtime.ts",
+    "lib/email/providers/resend.ts",
+    "lib/email/providers/ses.ts",
+    "lib/email/providers/smtp.ts",
+    "lib/email/types.ts"
+  ],
+  "lib/email/providers/resend.ts": [
+    "lib/email/instance-mail-runtime.ts",
+    "lib/email/send-counter.ts",
+    "lib/email/types.ts",
+    "lib/http/retry-after.ts"
+  ],
+  "lib/email/send-counter.ts": ["lib/db/prisma.ts"],
+  "lib/http/retry-after.ts": [],
+  "lib/email/providers/ses.ts": ["lib/email/instance-mail-runtime.ts", "lib/email/types.ts"],
+  "lib/email/providers/smtp.ts": ["lib/email/instance-mail-runtime.ts", "lib/email/types.ts"],
+  "lib/queries/admin/oss-operations.ts": [
+    "lib/email/allowance.ts",
+    "lib/queries/instance-admin-operational.ts",
+    "lib/queries/admin/oss-access.ts"
+  ],
+  "lib/queries/instance-admin-operational.ts": [
+    "lib/db/prisma.ts",
+    "lib/ops/config.ts",
+    "lib/ops/heartbeat-operational.ts",
+    "lib/ops/heartbeat-rank-operational.ts",
+    "lib/ops/instance-admin-health.ts",
+    "lib/ops/liveness.ts",
+    "lib/ops/temporal-snapshot.ts",
+    "lib/ops/worker-temporal-identity.ts",
+    "lib/scheduler/driver.ts",
+    "lib/temporal/deployment-config.ts",
+    "lib/queries/instance-admin-section.ts"
+  ],
+  "lib/ops/config.ts": ["lib/deployment/runtime-env.generated.ts"],
+  "lib/ops/heartbeat-operational.ts": ["lib/db/prisma.ts", "lib/ops/heartbeat-traffic-data.ts"],
+  "lib/ops/heartbeat-traffic-data.ts": [
+    "lib/db/prisma.ts",
+    "lib/ops/labels.ts",
+    "lib/traffic/failure-policy.ts",
+    "lib/ops/heartbeat-traffic-metrics.ts"
+  ],
+  "lib/ops/labels.ts": ["lib/ops/config.ts"],
+  "lib/traffic/failure-policy.ts": [],
+  "lib/ops/heartbeat-traffic-metrics.ts": [],
+  "lib/ops/heartbeat-rank-operational.ts": [
+    "lib/db/prisma.ts",
+    "lib/ops/labels.ts",
+    "lib/rank-check/stale-window.ts",
+    "lib/ops/rank-failure-summary.ts"
+  ],
+  "lib/rank-check/stale-window.ts": [],
+  "lib/ops/rank-failure-summary.ts": [],
+  "lib/ops/instance-admin-health.ts": [],
+  "lib/ops/liveness.ts": [
+    "lib/db/migration-state.ts",
+    "lib/deployment/runtime-env.generated.ts",
+    "lib/rank-check/scheduler-mode.ts",
+    "lib/redis/redis.ts",
+    "lib/scheduler/driver.ts",
+    "lib/temporal/deployment-config.ts"
+  ],
+  "lib/rank-check/scheduler-mode.ts": ["lib/deployment/runtime-env.generated.ts"],
+  "lib/ops/temporal-snapshot.ts": ["lib/redis/redis.ts", "lib/ops/liveness.ts"],
+  "lib/ops/worker-temporal-identity.ts": [],
+  "lib/queries/instance-admin-section.ts": [],
+  "lib/queries/admin/oss-tasks.ts": [
+    "lib/metering/recovery/service.ts",
+    "lib/queries/admin/oss-access.ts"
+  ],
+  "lib/instance-admin/account-list-input.ts": []
+}

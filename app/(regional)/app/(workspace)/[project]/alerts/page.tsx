@@ -4,18 +4,16 @@ import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvid
 import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
-import {
-  createAlertRule,
-  deleteAlertRule,
-  deleteWebhookEndpoint,
-  setAlertRuleEnabled,
-  testWebhookEndpoint,
-  updateAlertRule,
-  upsertWebhookEndpoint,
-} from "@/lib/actions/alerts";
+import { deleteAlertRule, deleteWebhookEndpoint, testWebhookEndpoint } from "@/lib/actions/alerts";
 import { alertTemplates } from "@/lib/alerts/alert-data";
 import { getAlertFeedStats } from "@/lib/api/alert-list";
 import { canProjectAction, canReadProjectAudit } from "@/lib/auth/capabilities";
+import {
+  createAlertRule,
+  setAlertRuleEnabled,
+  updateAlertRule,
+  upsertWebhookEndpoint,
+} from "@/lib/capacity/client-actions";
 import { gscInstallUrl } from "@/lib/providers/analytics/gsc-install-url";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { getAlertsView } from "@/lib/queries/alerts";

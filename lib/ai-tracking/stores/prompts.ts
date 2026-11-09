@@ -1,6 +1,7 @@
 import { DEFAULT_TRACKING_LIMITS, type TrackingLimits } from "@/lib/ai-tracking/contract";
 import { exactTextHash } from "@/lib/ai-tracking/identity";
 import { promptInputSchema } from "@/lib/ai-tracking/schema";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { resolvePromptProvenance } from "./prompt-provenance";
@@ -48,8 +49,13 @@ export function createPrompt(
 ) {
   const data = promptInputSchema.parse(input);
   return inTrackingTransaction(transaction, async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     await topicExists(tx, projectId, data.topicId);
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: ["trackedPrompts"],
+    });
     const provenance = await resolvePromptProvenance(tx, projectId, data);
     const created = await tx.aiPrompt.create({
       data: {
@@ -76,6 +82,7 @@ export function createPrompt(
       limits.activePrompts
     )
       throw new Error("Tracking prompt limit reached.");
+    await capacity.check();
     return created;
   });
 }
@@ -87,6 +94,7 @@ export function updatePrompt(
 ) {
   const data = promptInputSchema.partial().parse(input);
   return prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     await topicExists(tx, projectId, data.topicId);
     const prompt = requireFound(
@@ -124,6 +132,11 @@ export function updatePrompt(
         },
       });
     }
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: ["trackedPrompts"],
+      activating: data.paused === false && prompt.pausedAt !== null,
+    });
     const updated = await tx.aiPrompt.update({
       where: { id: promptId },
       data: {
@@ -138,11 +151,13 @@ export function updatePrompt(
       limits.activePrompts
     )
       throw new Error("Tracking prompt limit reached.");
+    await capacity.check();
     return updated;
   });
 }
 export function archivePrompt(projectId: string, promptId: string) {
   return prisma.$transaction(async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     const prompt = requireFound(
       await tx.aiPrompt.findFirst({ where: { projectId, id: promptId } }),

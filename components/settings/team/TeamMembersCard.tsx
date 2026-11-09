@@ -12,6 +12,7 @@ import { useTeamActionError } from "@/components/settings/team/useTeamActionErro
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { capacityActionClient } from "@/lib/capacity/action";
 import { formatDisplayDate } from "@/lib/dates/format";
 import type { TeamMemberData } from "@/lib/queries/team";
 import { cn } from "@/lib/ui/cn";
@@ -54,6 +55,7 @@ const avatarColors = {
 
 export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
   const { canAssignAdmin, canManageTeam, domain, members, projectId, readOnly = false } = props;
+  const transferOwnership = capacityActionClient(props.transferOwnership);
   const dateDisplay = useDateDisplay();
   const router = useRouter();
   const presentActionError = useTeamActionError();
@@ -211,7 +213,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                       }
                       onTransferOwnership={() =>
                         void runAction(`transfer:${member.id}`, () =>
-                          props.transferOwnership({ memberId: member.id, projectId }),
+                          transferOwnership({ memberId: member.id, projectId }),
                         )
                       }
                       pending={Boolean(actionPending)}

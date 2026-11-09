@@ -209,4 +209,32 @@ describe("instance admin ops actions", () => {
       expect.objectContaining({ after: { result: "not_configured" }, status: "failed" }),
     );
   });
+  describe.each(["self-host", "cloud"])("%s operational contracts", (edition) => {
+    it.each([sendTestSlackNotification, runOpsSweepNow])(
+      "denies missing or non-admin sessions without side effects",
+      async (run) => {
+        vi.stubEnv("DEPLOYMENT_MODE", edition);
+        for (const identity of ["unauthenticated", "non-admin"]) {
+          mocks.getInstanceAdminSession.mockResolvedValue(null);
+          expect(await run()).toMatchObject({ status: "forbidden" });
+          expect(mocks.sendTest, identity).not.toHaveBeenCalled();
+          expect(mocks.sweep, identity).not.toHaveBeenCalled();
+          expect(mocks.writeAudit, identity).not.toHaveBeenCalled();
+        }
+      },
+    );
+    it.each([sendTestSlackNotification, runOpsSweepNow])(
+      "allows non-dangerous operations without 2FA and writes an audit",
+      async (run) => {
+        vi.stubEnv("DEPLOYMENT_MODE", edition);
+        mocks.getInstanceAdminSession.mockResolvedValue({
+          user: { id: "admin_1", twoFactorEnabled: false },
+        });
+        await run();
+        expect(mocks.writeAudit).toHaveBeenCalledWith(
+          expect.objectContaining({ actorId: "admin_1", targetType: "instance_ops" }),
+        );
+      },
+    );
+  });
 });

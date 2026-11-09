@@ -600,6 +600,7 @@ describe("rankCheckWorkflow", () => {
     ["provider_account_blocked", "provider_account_blocked", "provider_account_blocked"],
     ["usage_unconfirmed", "usage_unconfirmed", "usage_unconfirmed"],
     ["budget_exhausted", "monthly budget reached", "monthly budget reached"],
+    ["weekly_request_cap_reached", "weekly reset pending", "weekly reset pending"],
     ["credits_exhausted", "Deployment credits are exhausted.", "Deployment credits are exhausted."],
     ["project_read_only", "read-only", "Project is in read-only mode."],
   ])("discards the running row when %s defers the check", async (type, message, reason) => {

@@ -1,6 +1,6 @@
 import { TrackingSettingsContent } from "@/components/settings/tracking/TrackingSettingsContent";
 import { previewDefaultSettings } from "@/lib/actions/defaults-reviewed";
-import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
+import { updateDefaultRankCheckSettings } from "@/lib/capacity/client-actions";
 import type { DefaultsData } from "@/lib/settings/options";
 
 type TrackingSettingsSectionProps = {

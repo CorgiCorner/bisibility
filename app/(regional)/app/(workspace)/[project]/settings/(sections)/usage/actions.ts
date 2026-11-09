@@ -1,8 +1,8 @@
 "use server";
-
 import { getActionActor, parseActionInput, requireProjectScope } from "@/lib/actions/_shared";
 import { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { joinWaitlist } from "@/lib/actions/waitlist";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { requireSession } from "@/lib/auth/session";
 import { deploymentMode } from "@/lib/deployment/deployment";
@@ -41,6 +41,7 @@ export async function submitHostedPricingFeedback(input: unknown) {
   if (!result.ok) {
     return result;
   }
+  recordAppAction(actor);
   await writeAudit({
     action: "settings.hosted_pricing_feedback.submit",
     actorId: actor.id,

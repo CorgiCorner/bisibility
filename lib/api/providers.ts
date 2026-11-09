@@ -89,7 +89,9 @@ export async function connectProviderForProject(
     project_id: projectId,
     provider_id: providerId,
   });
-  const provider = await runDomain(() => connectProviderConnection(input, providerContext(ctx)));
+  const provider = await runDomain(() =>
+    connectProviderConnection(input, { ...providerContext(ctx), analyticsTrigger: "api" }),
+  );
 
   return resourceResponse(snakeizeKeys(providerConnectionResource(provider)), {
     headers: ctx.headers,
@@ -111,7 +113,9 @@ export async function testProviderForProject(
     project_id: projectId,
     provider_id: providerId,
   });
-  const result = await runDomain(() => testProviderConnection(input, providerContext(ctx)));
+  const result = await runDomain(() =>
+    testProviderConnection(input, { ...providerContext(ctx), analyticsTrigger: "api" }),
+  );
 
   return resourceResponse(snakeizeKeys(result), { headers: ctx.headers });
 }

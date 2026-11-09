@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -62,6 +62,7 @@ export async function addSignalNote(input: unknown) {
     url: data.url,
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "signal.note_added",
     actorId: actor.id,
@@ -103,6 +104,7 @@ export async function removeSignalNote(input: unknown) {
   }
 
   await prisma.signal.delete({ where: { id: signal.id } });
+  recordAppAction(actor);
   await writeAudit({
     action: "signal.note_removed",
     actorId: actor.id,

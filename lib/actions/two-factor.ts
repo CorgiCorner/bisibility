@@ -1,10 +1,10 @@
 "use server";
-
 import {
   type ActionFailure,
   type ActionResult,
   actionFailureResult,
 } from "@/lib/actions/action-result";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { auth } from "@/lib/auth/auth";
 import {
   beginTwoFactorEnrollment,
@@ -82,7 +82,9 @@ export async function beginTwoFactorEnrollmentAction(
 
     const operation = enrollmentOperation(context);
     const grantId = await authorizeTwoFactorOperation(context, operation, parsed.data);
-    return { ok: true, value: await beginTwoFactorEnrollment(context, grantId) };
+    const value = await beginTwoFactorEnrollment(context, grantId);
+    recordAppAction({ id: context.actorId, email: context.email });
+    return { ok: true, value };
   } catch (error) {
     return managementFailure(error);
   }
@@ -98,7 +100,9 @@ export async function completeTwoFactorEnrollmentAction(
 
   try {
     const context = await securityContext();
-    return { ok: true, value: await completeTwoFactorEnrollment(context, parsed.data) };
+    const value = await completeTwoFactorEnrollment(context, parsed.data);
+    recordAppAction({ id: context.actorId, email: context.email });
+    return { ok: true, value };
   } catch (error) {
     return managementFailure(error);
   }
@@ -121,7 +125,9 @@ export async function regenerateTwoFactorBackupCodesAction(
     }
 
     const grantId = await authorizeTwoFactorOperation(context, "regenerate", parsed.data);
-    return { ok: true, value: await regenerateTwoFactorBackupCodes(context, grantId) };
+    const value = await regenerateTwoFactorBackupCodes(context, grantId);
+    recordAppAction({ id: context.actorId, email: context.email });
+    return { ok: true, value };
   } catch (error) {
     return managementFailure(error);
   }
@@ -152,6 +158,7 @@ export async function disableTwoFactorAction(
         "[two-factor] Account was secured but the session cookie could not be cleared.",
       );
     }
+    recordAppAction({ id: context.actorId, email: context.email });
     return { ok: true, value };
   } catch (error) {
     return managementFailure(error);

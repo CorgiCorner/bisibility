@@ -18,6 +18,7 @@ export async function setPersonalDefaultFor(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(setPersonalDefaultSchema, input);
   const result = await db.$transaction(async (tx) => {
@@ -44,6 +45,7 @@ export async function setPersonalDefaultFor(
     );
     return preference;
   });
+  onCommitted?.();
   revalidateKeywordViews();
   return result;
 }
@@ -52,6 +54,7 @@ export async function savePersonalPresentationFor(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(savePersonalPresentationSchema, input);
   const result = await db.$transaction(async (tx) => {
@@ -73,6 +76,7 @@ export async function savePersonalPresentationFor(
     );
     return preference;
   });
+  onCommitted?.();
   revalidateKeywordViews();
   return result;
 }

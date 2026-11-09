@@ -343,7 +343,7 @@
         "removeTeamMemberDangerLabel": "Quitar al miembro",
         "removeTeamMemberTitle": "Quitar a un miembro del proyecto",
         "removeTeamMemberToastMessage": "Miembro del proyecto quitado",
-        "resetAccountLimitsBody": "Vacía los contadores de límite de peticiones de esta cuenta. El gasto mensual es una ventana móvil y no se puede restablecer.",
+        "resetAccountLimitsBody": "Borra los límites de solicitudes de esta cuenta.",
         "resetAccountLimitsDangerLabel": "Restablecer los límites",
         "resetAccountLimitsTitle": "Restablecer los límites de peticiones",
         "resetAccountLimitsToastMessage": "Restablecimiento de límites solicitado",
@@ -606,6 +606,7 @@
       "moved": "{title} se ha movido a la posición {position}.",
       "shellUnavailable": "El contexto no está disponible. Esto no significa cero.",
       "widgetUnavailable": "El informe guardado de esta sección no está disponible.",
+      "widgetNoData": "No hay datos para mostrar",
       "widgetLoading": "Cargando informe guardado.",
       "widgetError": "No se pudo leer esta sección. Las demás siguen disponibles.",
       "span": "Anchura de {title}",
@@ -665,13 +666,13 @@
       },
       "reasons": {
         "missing_project_access": "Se requiere acceso de lectura al proyecto.",
-        "preset_mismatch": "Esta sección usa el alcance de otro preset.",
+        "preset_mismatch": "Elige la vista de dashboard correspondiente para usar esta sección.",
         "missing_competitors_access": "Se requiere acceso de lectura a los competidores.",
         "missing_local_subject": "Selecciona una revisión explícita de la identidad del negocio para SEO local.",
         "foreign_local_subject": "El negocio seleccionado no pertenece a este proyecto.",
         "missing_competitor_scope": "Selecciona un alcance explícito de comparación de competidores.",
         "foreign_competitor_scope": "El alcance de competidores no pertenece a este proyecto.",
-        "missing_capability": "La capacidad de datos guardados necesaria para esta sección no está disponible."
+        "missing_capability": "Esta sección aún no está disponible para este proyecto."
       },
       "shell": {
         "scope": "Alcance de búsqueda compartido",
@@ -698,7 +699,10 @@
       "healthClear": "Sin mediciones fallidas en las últimas 24 horas.",
       "budgetBlocked": "El presupuesto actual bloquea las mediciones de pago.",
       "budgetReadOnly": "Leer informes guardados no inicia una medición de pago.",
-      "coverageSummary": "{measured} de {expected} objetivos resueltos; {comparable} pares comparables.",
+      "coverageSummary": "Hay resultados para {measured} de {expected} palabras clave.",
+      "coverageEmpty": "Añade palabras clave para ver aquí sus posiciones.",
+      "coverageFilteredEmpty": "Ninguna palabra clave coincide con esta vista.",
+      "coveragePending": "El resumen de posiciones aparecerá cuando haya datos disponibles.",
       "freshnessUnknown": "Se desconoce la cobertura de datos recientes.",
       "freshCoverage": "Objetivos recientes resueltos: {count}.",
       "invalidPreset": "Este conjunto de vista no está disponible. Elige uno disponible.",
@@ -1404,6 +1408,11 @@
               "definition": "Un índice versionado de resultados orgánicos en las primeras 20 posiciones.",
               "interpretation": "Lee el índice junto con la cobertura observada, los resultados recientes concluyentes y los objetivos comparables.",
               "limitation": "No mide tráfico ni contactos. Un resultado desconocido no confirma ausencia; un cambio de cobertura por sí solo no demuestra mejora."
+            },
+            "visibility-top20-v2": {
+              "definition": "Fuerza de posicionamiento en el Top 20 de Google, ponderada por volumen.",
+              "interpretation": "El 100% significa que todas las palabras medidas están en primera posición. También cuentan las posiciones confirmadas del Top 10.",
+              "limitation": "Los resultados ausentes siguen siendo desconocidos hasta confirmar su ausencia en el Top 20. Revisa también la cobertura."
             }
           }
         },
@@ -1776,7 +1785,7 @@
     "providerAccess": {
       "connect": "Elige una fuente de datos para usar estos campos.",
       "supported": "Proveedores compatibles: {providers}.",
-      "unavailable": "No hay ninguna fuente de datos compatible disponible para esta función.",
+      "unavailable": "Abre Proveedores para revisar tus conexiones y empezar.",
       "action": "Abrir proveedores",
       "reconnect": "Vuelve a conectar la fuente de datos seleccionada para usar estos campos.",
       "reconnectAction": "Reconectar proveedor",
@@ -1785,7 +1794,8 @@
       "emptyDescription": "Elige una fuente de datos compatible en Proveedores para realizar una búsqueda.",
       "reconnectDescription": "Vuelve a conectar la fuente de datos seleccionada en Proveedores antes de realizar otra búsqueda.",
       "connectAction": "Elige una fuente de datos",
-      "askAdmin": "Pide a un administrador del proyecto que elija una fuente de datos antes de iniciar las comprobaciones."
+      "askAdmin": "Pide a un administrador del proyecto que elija una fuente de datos antes de iniciar las comprobaciones.",
+      "unavailableTitle": "Elige una fuente de datos"
     },
     "rankEvidence": {
       "position": "Posición {position, number}",

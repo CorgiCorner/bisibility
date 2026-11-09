@@ -22,15 +22,19 @@ export async function createSavedViewV2For(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(createSavedViewV2Schema, input);
   personalSessionUserId(context);
+  let committed = false;
   const result = await db.$transaction(async (tx) => {
     const scope = await savedViewProjectScope(tx, context, data.projectId);
     const { replayed, view } = await createViewInTransaction(tx, scope, context, data);
     if (!replayed) await auditViewMutation(tx, scope, context, "create", view);
+    committed = !replayed;
     return canonicalResource(view, scope);
   });
+  if (committed) onCommitted?.();
   revalidateKeywordViews();
   return result;
 }
@@ -39,6 +43,7 @@ export async function updateSavedViewV2For(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(updateSavedViewV2Schema, input);
   personalSessionUserId(context);
@@ -50,6 +55,7 @@ export async function updateSavedViewV2For(
       data,
     ),
   );
+  onCommitted?.();
   revalidateKeywordViews();
   return result;
 }
@@ -58,6 +64,7 @@ export async function deleteSavedViewV2For(
   input: unknown,
   context: SavedViewContext,
   db: ViewDatabase = prisma,
+  onCommitted?: () => void,
 ) {
   const data = parseActionInput(deleteSavedViewV2Schema, input);
   personalSessionUserId(context);
@@ -70,6 +77,7 @@ export async function deleteSavedViewV2For(
       data.expectedRevision,
     ),
   );
+  onCommitted?.();
   revalidateKeywordViews();
   return result;
 }

@@ -155,12 +155,15 @@ describe("search insights actions", () => {
       selectSearchInsightsProperty({ projectId: "prj_1", property: "sc-domain:example.com" }),
     ).resolves.toEqual({ property: "sc-domain:example.com", status: "saved" });
 
-    expect(mocks.saveProperty).toHaveBeenCalledWith({
-      actorId: "user_1",
-      projectId: "project_1",
-      property: "sc-domain:example.com",
-      provider: "gsc",
-    });
+    expect(mocks.saveProperty).toHaveBeenCalledWith(
+      {
+        actorId: "user_1",
+        projectId: "project_1",
+        property: "sc-domain:example.com",
+        provider: "gsc",
+      },
+      expect.any(Function),
+    );
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/search-console", "page");
   });
 

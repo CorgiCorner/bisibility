@@ -13,7 +13,7 @@ import {
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { assertEditableDemoIdentityPreserved } from "@/lib/demo/identity";
-import { onAccountDeletion } from "./account-deletion-extension";
+import { assertAccountDeletionAllowed, onAccountDeletion } from "./account-deletion-extension";
 
 const MAX_DELETE_TRANSACTION_ATTEMPTS = 3;
 const DELETE_TRANSACTION_TIMEOUT_MS = 30_000;
@@ -90,6 +90,7 @@ export async function deleteAccountRecords(input: {
   });
   if (!current?.publicId) throw new Error("Account not found.");
   if (!sameEmail(input.confirmEmail, current.email)) throw new AccountDeletionConfirmationError();
+  await assertAccountDeletionAllowed(input.userId);
   await revokeExternalSignIns(input.userId, current.publicId);
 
   let result: "blocked" | "deleted" | undefined;

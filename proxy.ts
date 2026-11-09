@@ -12,9 +12,11 @@ import {
 } from "@/lib/markets/last-market-cookie";
 import { appAnchorRedirect, legacyKeywordPathRedirect } from "@/lib/routing/app-route-redirects";
 import { additionalAppSurfacePaths } from "@/lib/routing/app-surface-extension";
+import { extendRequestHeaders, extendResponse } from "@/lib/routing/request-extension";
 import { securityHeaders } from "@/lib/routing/security-headers";
 import { unsupportedProbeResponse } from "@/lib/routing/unsupported-probe-path";
 import { type NextRequest, NextResponse } from "next/server";
+import { ACTIVITY_METHOD_HEADER } from "./lib/activity/request";
 import {
   createMarkdownForRequest,
   markdownWordCount,
@@ -189,6 +191,8 @@ function withAcceptVary(response: NextResponse) {
 
 function nextResponse(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
+  extendRequestHeaders(request, requestHeaders);
+  requestHeaders.set(ACTIVITY_METHOD_HEADER, request.method.toUpperCase());
   requestHeaders.set(
     RETURN_TO_REQUEST_HEADER,
     `${request.nextUrl.pathname}${request.nextUrl.search}`,
@@ -227,7 +231,7 @@ function withResponsePolicies(request: NextRequest, response: NextResponse) {
     response.cookies.set(lastMarket.name, lastMarket.value, LAST_MARKET_COOKIE_OPTIONS);
   }
 
-  return response;
+  return extendResponse(request, response);
 }
 
 export function proxy(request: NextRequest) {

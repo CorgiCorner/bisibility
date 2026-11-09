@@ -4,12 +4,20 @@ import { consume } from "@/lib/api/ratelimit";
 import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
-import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
+import { SchedulerDisabledError, schedulerDriver } from "@/lib/scheduler/driver";
+import { assertSiteAuditOperationAccess } from "./budget-extension";
 import { crawlSite } from "./crawl";
 import { AuditRateLimitError } from "./errors";
-import { type SavedSiteAudit, siteAuditResultSchema, siteAuditSchema } from "./schema";
+import { createSiteAuditRun, readSiteAuditRunReport } from "./runs";
+import {
+  type SavedSiteAudit,
+  siteAuditResultSchema,
+  siteAuditSchema,
+  siteAuditWorkerSchema,
+} from "./schema";
 import { auditTarget } from "./target";
+import { siteAuditInlineFallbackEnabled, siteAuditWorkerEnabled } from "./worker-config";
 
 export const SITE_AUDIT_KIND = "site_audit";
 type AuditProject = { id: string; domain: string | null; writeMode?: unknown };
@@ -17,10 +25,16 @@ export async function runSiteAudit(
   context: { actor: Actor; actorId?: string | null; project: AuditProject },
   input: unknown,
 ): Promise<SavedSiteAudit> {
-  const { maxPages } = siteAuditSchema.parse(input);
+  const { maxPages } = siteAuditWorkerSchema.parse(input);
   const { project } = context;
   authorize(context.actor, "create", { projectId: project.id, type: "project" });
   assertProjectWritable(project);
+  let workerEnabled = await siteAuditWorkerEnabled();
+  if (workerEnabled && schedulerDriver() === "none") {
+    if (!(await siteAuditInlineFallbackEnabled())) throw new SchedulerDisabledError();
+    workerEnabled = false;
+  }
+  if (!workerEnabled) siteAuditSchema.parse(input);
   const domain = requireTrackedDomain(project);
   const target = auditTarget(domain);
   const policy = await prisma.project.findUniqueOrThrow({
@@ -60,10 +74,20 @@ export async function runSiteAudit(
       result.limits.maxPages === maxPages &&
       result.target === target.href
     ) {
-      return { id: recent[0].id, createdAt: recent[0].createdAt, cached: true, result };
+      const live =
+        saved?.provenance?.source === "bounded_http_crawl_worker"
+          ? await readSiteAuditRunReport(project.id, recent[0].id)
+          : null;
+      return {
+        id: recent[0].id,
+        createdAt: recent[0].createdAt,
+        cached: true,
+        result: live?.result ?? result,
+        ...(live ? { run: live.run } : {}),
+      };
     }
   }
-  await assertOperationAccess(project.id);
+  await assertSiteAuditOperationAccess(project.id);
   const allowed = await consume({
     prefix: "bisibility:site-audit",
     bucketKey: project.id,
@@ -72,6 +96,14 @@ export async function runSiteAudit(
   });
   if (!allowed.success)
     throw new AuditRateLimitError(allowed.resetAt, allowed.limit, allowed.remaining);
+  if (workerEnabled)
+    return createSiteAuditRun({
+      projectId: project.id,
+      actorId: context.actorId ?? context.actor.id,
+      domain,
+      target: target.href,
+      requestedPages: maxPages,
+    });
   const result = await crawlSite(domain, maxPages);
   const report = await createAgentReport({
     projectId: project.id,
@@ -89,7 +121,17 @@ export async function readSiteAudit(projectId: string, reportId: string) {
   if (!report || report.kind !== SITE_AUDIT_KIND) return null;
   const result = siteAuditResultSchema.safeParse(report.body);
   if (!result.success) return null;
-  return { id: report.id, createdAt: report.createdAt, cached: true, result: result.data };
+  const live =
+    report.provenance?.source === "bounded_http_crawl_worker"
+      ? await readSiteAuditRunReport(projectId, reportId)
+      : null;
+  return {
+    id: report.id,
+    createdAt: report.createdAt,
+    cached: true,
+    result: live?.result ?? result.data,
+    ...(live ? { run: live.run } : {}),
+  };
 }
 export async function listSiteAudits(projectId: string) {
   return listAgentReports({ projectId, kind: SITE_AUDIT_KIND, limit: 30 });

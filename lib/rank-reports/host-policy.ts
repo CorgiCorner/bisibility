@@ -1,5 +1,5 @@
 import {
-  VISIBILITY_DEFINITION_VERSION_V1,
+  VISIBILITY_DEFINITION_VERSION_V2,
   VISIBILITY_HORIZON,
   VISIBILITY_METRIC_ID_V1,
   VISIBILITY_POSITION_WEIGHTS_V1,
@@ -14,7 +14,7 @@ export const RANK_REPORT_HOST_LIMITS: Readonly<RankReportLimits> = {
 };
 export const RANK_REPORT_CALENDAR_CONFIGURATION = "host-own-calendar-v1";
 
-/** V1 curve/depth are unchanged. Freshness and baseline tolerance come from each captured target policy. */
+/** V2 retains the Top 20 curve, accepting proven positives from shallower checks. */
 export function hostOrganicReportPolicy(asOf: Date, comparisonDays = 7): RankReportPolicy {
   if (
     !Number.isFinite(asOf.getTime()) ||
@@ -36,10 +36,11 @@ export function hostOrganicReportPolicy(asOf: Date, comparisonDays = 7): RankRep
     horizon: VISIBILITY_HORIZON,
     metric: {
       curve: VISIBILITY_POSITION_WEIGHTS_V1,
-      definitionVersion: VISIBILITY_DEFINITION_VERSION_V1,
+      definitionVersion: VISIBILITY_DEFINITION_VERSION_V2,
       id: VISIBILITY_METRIC_ID_V1,
     },
     minimumRequestedDepth: VISIBILITY_HORIZON,
+    allowShallowPositive: true,
     weightProvenance: { market: null, period: null, source: "retained_provider_keyword_metrics" },
   };
 }

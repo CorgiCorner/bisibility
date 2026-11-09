@@ -14,6 +14,12 @@ const mocks = vi.hoisted(() => ({
   resolveProjectAccess: vi.fn(),
 }));
 
+vi.mock("@/lib/capacity/client-actions", () => ({
+  createAlertRule: vi.fn(),
+  setAlertRuleEnabled: vi.fn(),
+  updateAlertRule: vi.fn(),
+  upsertWebhookEndpoint: vi.fn(),
+}));
 vi.mock("@/lib/api/alert-list", () => ({ getAlertFeedStats: mocks.getAlertFeedStats }));
 vi.mock("@/lib/actions/alerts", () => ({
   createAlertRule: vi.fn(),

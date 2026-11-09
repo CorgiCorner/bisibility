@@ -1,5 +1,6 @@
 "use server";
-
+import { hasReceivedRankResult } from "@/lib/activity/result-payload";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -66,6 +67,11 @@ export async function getRankCheckStatus(input: unknown): Promise<GetRankCheckSt
     }
     throw error;
   }
+  recordResultReceipt({
+    userId: actor.id,
+    surface: "app",
+    nonEmpty: rankCheck.status === "completed" && rankCheck.finishedAt !== null,
+  });
   return {
     error: rankCheck.error,
     errorCode: rankCheck.errorCode,
@@ -134,6 +140,13 @@ export async function getRankCheckStatuses(input: unknown): Promise<GetRankCheck
     });
     rankChecks.push(...rows);
   }
+  recordResultReceipt({
+    userId: actor.id,
+    surface: "app",
+    nonEmpty:
+      hasReceivedRankResult(runStatuses) ||
+      rankChecks.some((row) => row.status === "completed" && row.finishedAt !== null),
+  });
   return [
     ...runStatuses,
     ...rankChecks.map((rankCheck) => ({

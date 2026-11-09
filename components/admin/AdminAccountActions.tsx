@@ -54,10 +54,16 @@ export function AdminAccountActions({
   onStatusChange,
   status,
   userId,
+  onAction,
+  busy = false,
 }: Readonly<{
   onStatusChange: (status: AccountStatus) => void;
   status: AccountStatus;
   userId: string;
+  busy?: boolean;
+  onAction?: (
+    action: "deactivate" | "reactivate" | "reset",
+  ) => AccountActionResult | void | Promise<AccountActionResult | void>;
 }>) {
   const { showToast } = useToast();
   const sharedErrors = useSharedErrorMessages();
@@ -70,10 +76,10 @@ export function AdminAccountActions({
   function changeState() {
     startTransition(async () => {
       try {
-        const result = await setInstanceAdminAccountDeactivated({
-          deactivated: !deactivated,
-          userId,
-        });
+        const result = onAction
+          ? await onAction(deactivated ? "reactivate" : "deactivate")
+          : await setInstanceAdminAccountDeactivated({ deactivated: !deactivated, userId });
+        if (!result || (result.status === "completed" && !("accountStatus" in result))) return;
         if (result.status === "completed") onStatusChange(result.accountStatus);
         showToast(stateActionMessage(result, t), { severity: actionSeverity(result) });
       } catch (error) {
@@ -88,7 +94,15 @@ export function AdminAccountActions({
   function resetLimits() {
     startTransition(async () => {
       try {
-        const result = await resetInstanceAdminAccountLimits({ userId });
+        const result = onAction
+          ? await onAction("reset")
+          : await resetInstanceAdminAccountLimits({ userId });
+        if (
+          !result ||
+          result.status === "blocked" ||
+          (result.status === "completed" && !("clearedBuckets" in result))
+        )
+          return;
         showToast(limitActionMessage(result, t), { severity: actionSeverity(result) });
       } catch (error) {
         const message = presentAdminActionError(error, sharedErrors, t("limitsFailed"));
@@ -104,7 +118,7 @@ export function AdminAccountActions({
       <div className="mt-3 flex flex-wrap gap-2">
         <DangerousActionGate action="changeAccountStatus">
           <Button
-            disabled={pending}
+            disabled={pending || busy}
             onClick={() => setModal("state")}
             size="sm"
             startIcon={
@@ -119,20 +133,20 @@ export function AdminAccountActions({
           >
             {deactivated ? controls("reactivateAccount") : controls("deactivateAccount")}
           </Button>
+          <Button
+            disabled={pending || busy}
+            onClick={() => setModal("limits")}
+            size="sm"
+            startIcon={<Gauge aria-hidden size={14} weight="regular" />}
+            type="button"
+            variant="secondary"
+          >
+            {controls("resetRateLimits")}
+          </Button>
         </DangerousActionGate>
-        <Button
-          disabled={pending}
-          onClick={() => setModal("limits")}
-          size="sm"
-          startIcon={<Gauge aria-hidden size={14} weight="regular" />}
-          type="button"
-          variant="secondary"
-        >
-          {controls("resetRateLimits")}
-        </Button>
       </div>
       <ConfirmModal
-        busy={pending}
+        busy={pending || busy}
         kind={deactivated ? "reactivateAccount" : "deactivateAccount"}
         onClose={() => setModal(null)}
         onConfirm={changeState}
@@ -140,7 +154,7 @@ export function AdminAccountActions({
         showConfirmationToast={false}
       />
       <ConfirmModal
-        busy={pending}
+        busy={pending || busy}
         kind="resetAccountLimits"
         onClose={() => setModal(null)}
         onConfirm={resetLimits}

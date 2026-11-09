@@ -1,5 +1,4 @@
 "use client";
-
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -9,6 +8,7 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { TableCardHeader } from "@/components/ui/TableCardHeader";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useToast } from "@/components/ui/toast-context";
+import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
@@ -148,6 +148,7 @@ export function SchedulesList({
           method: "PATCH",
         });
         if (!response.ok) {
+          publishCapacityProblem(await response.json().catch(() => null));
           showToast(t("list.toggleFailed"), { severity: "error" });
           return;
         }

@@ -30,6 +30,7 @@ model MeteringOperation {
   unknownCloseout        MeteringUnknownCloseout?
 
   @@unique([namespace, operation_id])
+  @@index([namespace, principal, created_at], map: "metering_operation_principal_created_idx")
   @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")
   @@map("metering_operation")
 

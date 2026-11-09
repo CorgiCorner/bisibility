@@ -68,7 +68,7 @@ beforeEach(() => {
 });
 it("collects the initial rating only after the verified connection commits", async () => {
   await connectProviderConnection(input, context);
-  expect(mocks.initial).toHaveBeenCalledWith("internal-project");
+  expect(mocks.initial).toHaveBeenCalledWith("internal-project", expect.any(Date), "u", undefined);
   expect(mocks.verify.mock.invocationCallOrder[0]).toBeLessThan(
     mocks.transaction.mock.invocationCallOrder[0],
   );

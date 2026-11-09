@@ -1,10 +1,10 @@
 "use client";
-
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { Button } from "@/components/ui/Button";
 import { RowActionsMenu } from "@/components/ui/RowActionsMenu";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useToast } from "@/components/ui/toast-context";
+import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { RUNS_PER_MONTH } from "@/lib/cost-estimate/estimate";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -76,7 +76,10 @@ export function ScheduleDetailsSummary({
           }),
         },
       );
-      if (!response.ok) throw new Error("schedule_action_failed");
+      if (!response.ok) {
+        publishCapacityProblem(await response.json().catch(() => null));
+        throw new Error("schedule_action_failed");
+      }
       router.refresh();
     } catch {
       showToast(t("list.toggleFailed"), { severity: "error" });

@@ -11,7 +11,7 @@ describe("RunsTable", () => {
   it("uses run labels without repeating run", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[
           historyRun,
@@ -34,9 +34,7 @@ describe("RunsTable", () => {
 
   it("shows a compact run ID while retaining the full copy value and tooltip", () => {
     const run = { ...historyRun, id: "rcr_9d2e41abcdef" };
-    render(
-      <RunsTable emptyActionHref="/app/prj_1/runs/schedules" projectRef="prj_1" rows={[run]} />,
-    );
+    render(<RunsTable emptyActionHref="/app/prj_1/schedules" projectRef="prj_1" rows={[run]} />);
 
     expect(screen.getByText("rcr_9d2e41abcdef").parentElement).toHaveAttribute("title", run.id);
     expect(screen.getByRole("button", { name: `Copy run ID ${run.id}` })).toBeInTheDocument();
@@ -45,11 +43,7 @@ describe("RunsTable", () => {
   it("formats Started with the user date preference", () => {
     render(
       <DateFormatProvider value="day_first">
-        <RunsTable
-          emptyActionHref="/app/prj_1/runs/schedules"
-          projectRef="prj_1"
-          rows={[historyRun]}
-        />
+        <RunsTable emptyActionHref="/app/prj_1/schedules" projectRef="prj_1" rows={[historyRun]} />
       </DateFormatProvider>,
     );
 
@@ -59,7 +53,7 @@ describe("RunsTable", () => {
   it("shows the terminal outcome as the one History badge", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, outcome: "partial", status: "completed" }]}
       />,
@@ -71,11 +65,7 @@ describe("RunsTable", () => {
 
   it("does not repeat a one-to-one keyword and target selection", () => {
     render(
-      <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
-        projectRef="prj_1"
-        rows={[historyRun]}
-      />,
+      <RunsTable emptyActionHref="/app/prj_1/schedules" projectRef="prj_1" rows={[historyRun]} />,
     );
 
     expect(screen.queryByText(/24 keywords.*24 targets/)).toBeNull();
@@ -84,7 +74,7 @@ describe("RunsTable", () => {
   it("shows both counts when a selection expands to more targets", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, keywordCount: 1, targetCount: 2 }]}
       />,
@@ -96,7 +86,7 @@ describe("RunsTable", () => {
   it("uses the blocked presentation instead of the stored reason code", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, blockedReason: "temporal_unavailable", status: "blocked" }]}
       />,
@@ -109,7 +99,7 @@ describe("RunsTable", () => {
   it("shows the effective first slot while a running run has claimed nothing", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -140,7 +130,7 @@ describe("RunsTable", () => {
   it("shows actual cost for a blocked run that already launched", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -170,7 +160,7 @@ describe("RunsTable", () => {
   it("does not invent a payer charge from a legacy run estimate", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -193,7 +183,7 @@ describe("RunsTable", () => {
   it("does not relabel a legacy provider estimate as a customer charge", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -233,7 +223,7 @@ describe("RunsTable", () => {
     const apiRun = { ...historyRun, id: "rcr_api", requestedBy: null, trigger: "api" as const };
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[userRun, initialsRun, scheduledRun, apiRun]}
       />,
@@ -294,11 +284,7 @@ describe("RunsTable", () => {
       status: "cancelled" as const,
     };
     render(
-      <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
-        projectRef="prj_1"
-        rows={[skippedRun]}
-      />,
+      <RunsTable emptyActionHref="/app/prj_1/schedules" projectRef="prj_1" rows={[skippedRun]} />,
     );
 
     expect(screen.getByText("Skipped").closest("[data-status-chip-tone]")).toHaveAttribute(
@@ -319,7 +305,7 @@ describe("RunsTable", () => {
   it("sends malformed legacy run IDs to the Runs list", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/runs/schedules"
+        emptyActionHref="/app/prj_1/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, id: "rcr_legacy" }]}
       />,

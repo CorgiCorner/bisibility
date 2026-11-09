@@ -24,7 +24,10 @@ vi.mock("@/lib/provider-usage/admission-extension", async () => ({
   ownAdmission: (await import("@/lib/metering/own-admission.test-fixture")).fixtureOwnAdmission,
 }));
 
-import { TrackingDeadlineError } from "@/lib/ai-tracking/providers/dispatch-error";
+import {
+  TrackingDeadlineError,
+  TrackingResponseCaptureError,
+} from "@/lib/ai-tracking/providers/dispatch-error";
 import { createPrompt } from "@/lib/ai-tracking/stores/prompts";
 import { planTrackingRun } from "@/lib/ai-tracking/stores/runs";
 import {
@@ -34,6 +37,7 @@ import {
   transitionTrackingSample,
 } from "@/lib/ai-tracking/stores/samples";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
+import { submittedEnvelope } from "./fixture";
 import { TrackingDispatchDeniedError, type TrackingExecutionPorts } from "./ports";
 import { executeTrackingSample } from "./sample";
 
@@ -162,46 +166,63 @@ function ports(plan: SamplePlan, submit: () => Promise<unknown>) {
   };
   return value;
 }
-it("replacement worker GET reuses real provider ledger and native proof after settlement-before-result crash", async () => {
-  const plan = await planned("journal-recovery");
-  const post = vi.fn(async () => undefined);
-  const first = ports(plan, post);
-  await executeTrackingSample(first, plan.projectId, plan.sampleId);
-  const deposit = (
-    await readCanonicalUsage(
+it.each([false, true])(
+  "replacement GET keeps real ledger proof after result crash (archive failure: %s)",
+  async (archiveFailure) => {
+    const plan = await planned(`journal-recovery-${archiveFailure}`);
+    const post = vi.fn(async () => undefined);
+    const first = ports(plan, post);
+    if (archiveFailure) {
+      post.mockRejectedValueOnce(
+        new TrackingResponseCaptureError(submittedEnvelope(plan), new Error("archive unavailable")),
+      );
+      await expect(executeTrackingSample(first, plan.projectId, plan.sampleId)).rejects.toThrow(
+        /archived/,
+      );
+      expect((await getTrackingSample(plan.projectId, plan.sampleId))?.providerTaskId).toBe(
+        `task-${plan.attemptId}`,
+      );
+    } else await executeTrackingSample(first, plan.projectId, plan.sampleId);
+    const deposit = (
+      await readCanonicalUsage(
+        Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
+        database.client,
+      )
+    )[0]!;
+    expect(deposit.costCents?.toString()).toBe("1.02");
+    vi.mocked(first.persist).mockRejectedValueOnce(
+      new Error("crash after real journal settlement"),
+    );
+    await expect(executeTrackingSample(first, plan.projectId, plan.sampleId)).rejects.toThrow(
+      /crash/,
+    );
+    const proof = await database.client.meteringUsageEvidence.findUniqueOrThrow({
+      where: { id: deposit.id },
+    });
+    const replacement = ports(plan, post);
+    expect(await executeTrackingSample(replacement, plan.projectId, plan.sampleId)).toBe(
+      "terminal",
+    );
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(first.collect).toHaveBeenCalledTimes(1);
+    expect(replacement.collect).toHaveBeenCalledTimes(1);
+    const entries = await readCanonicalUsage(
       Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
       database.client,
-    )
-  )[0]!;
-  expect(deposit.costCents?.toString()).toBe("1.02");
-  vi.mocked(first.persist).mockRejectedValueOnce(new Error("crash after real journal settlement"));
-  await expect(executeTrackingSample(first, plan.projectId, plan.sampleId)).rejects.toThrow(
-    /crash/,
-  );
-  const proof = await database.client.meteringUsageEvidence.findUniqueOrThrow({
-    where: { id: deposit.id },
-  });
-  const replacement = ports(plan, post);
-  expect(await executeTrackingSample(replacement, plan.projectId, plan.sampleId)).toBe("terminal");
-  expect(post).toHaveBeenCalledTimes(1);
-  expect(first.collect).toHaveBeenCalledTimes(1);
-  expect(replacement.collect).toHaveBeenCalledTimes(1);
-  const entries = await readCanonicalUsage(
-    Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
-    database.client,
-  );
-  expect(entries).toHaveLength(1);
-  expect(entries[0].id).toBe(deposit.id);
-  expect(entries[0].costCents?.toString()).toBe("0.32");
-  expect(entries[0].usageQuantity?.toString()).toBe("1");
-  expect(
-    (await database.client.meteringUsageEvidence.findUniqueOrThrow({ where: { id: deposit.id } }))
-      .proofVersion,
-  ).toBe(proof.proofVersion);
-  const retained = await getTrackingSample(plan.projectId, plan.sampleId);
-  expect(receiptOperationId(retained?.receipt)).toBe(deposit.id);
-  expect(retained?.dispatch).toBe("terminal");
-});
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0].id).toBe(deposit.id);
+    expect(entries[0].costCents?.toString()).toBe("0.32");
+    expect(entries[0].usageQuantity?.toString()).toBe("1");
+    expect(
+      (await database.client.meteringUsageEvidence.findUniqueOrThrow({ where: { id: deposit.id } }))
+        .proofVersion,
+    ).toBe(proof.proofVersion);
+    const retained = await getTrackingSample(plan.projectId, plan.sampleId);
+    expect(receiptOperationId(retained?.receipt)).toBe(deposit.id);
+    expect(retained?.dispatch).toBe("terminal");
+  },
+);
 it("ambiguous POST retains real unknown usage and replacement never repeats the paid call", async () => {
   const plan = await planned("journal-unknown");
   const post = vi.fn(async () => {

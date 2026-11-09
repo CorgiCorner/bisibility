@@ -1,11 +1,14 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const addKeywordsMatrix = capacityActionClient(addKeywordsMatrixCapacityAction);
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { ExistingKeyword } from "@/components/keywords/AddKeywordCsvReviewModel";
 import { hasActionWarning } from "@/components/keywords/action-utils";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { presentSafeActionError } from "@/components/keywords/safe-action-error";
-import { addKeywordsMatrix } from "@/lib/actions/keyword";
+import { addKeywordsMatrix as addKeywordsMatrixCapacityAction } from "@/lib/actions/keyword";
 import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
@@ -72,7 +75,9 @@ export function useAddKeywordDrawerSave({
           ? { ...pending.input, consumeSavedIds: [...consumeSavedIds] }
           : pending.input;
         const result =
-          activeTab === "manual" ? await addKeywordsMatrix(input) : await addKeywordsAction(input);
+          activeTab === "manual"
+            ? await addKeywordsMatrix(input)
+            : await capacityActionClient(addKeywordsAction)(input);
         const addedKeywords = addedKeywordResult(result);
         if (hasActionWarning(result)) {
           setActionWarning(t("locationDegraded"));

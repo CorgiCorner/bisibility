@@ -1,15 +1,10 @@
 "use client";
-
 import { GettingStartedChecklist } from "@/components/getting-started/GettingStartedChecklist";
 import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
 import { manualPreflightDepth, useRunPreflight } from "@/components/rank-runs/useRunPreflight";
-import {
-  addManualCompetitor,
-  confirmSuggestedCompetitor,
-  dismissCompetitorSuggestion,
-  skipCompetitorSetup,
-} from "@/lib/actions/competitor-set";
+import { dismissCompetitorSuggestion, skipCompetitorSetup } from "@/lib/actions/competitor-set";
 import type { RunCheckNowResult } from "@/lib/actions/rankCheck";
+import { addManualCompetitor, confirmSuggestedCompetitor } from "@/lib/capacity/client-actions";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { isPublicIdOfType, type PublicIdForPrefix } from "@/lib/db/public-id";
 import type { SetupContext, SetupCta } from "@/lib/getting-started/setup-steps";

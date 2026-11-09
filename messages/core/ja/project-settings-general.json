@@ -36,7 +36,7 @@
     },
     "tags": {
       "cancel": "キャンセル",
-      "description": "タグはキーワードとページをグループ化します。保存済みビューでタグによる絞り込みができます。",
+      "description": "タグでキーワードを整理し、保存済みビューを絞り込めます。",
       "duplicate": "{name} はすでに存在します。",
       "remove": "タグを削除",
       "removeError": "タグを削除できませんでした。",
@@ -52,16 +52,16 @@
       "title": "データキャッシュ",
       "help": "プロジェクトの各モジュールで共有します。短縮は既存の結果にも、延長は新しく取得した結果に適用されます。レポート、計測履歴、決済記録は保持されます。",
       "lifetime": "結果の再利用期間",
-      "default": "インスタンスの既定値",
+      "default": "デフォルト",
       "hours": "{count, plural, other {#時間}}",
       "days": "{count, plural, other {#日}}",
       "weeks": "{count, plural, other {#週間}}",
       "save": "保存",
       "saved": "保存しました",
       "list": "保存された結果",
-      "refresh": "保存済みの結果を再読み込み",
+      "refresh": "更新",
       "loadError": "保存済みの結果を読み込めませんでした。もう一度お試しください。",
-      "refreshHelp": "保存済みの結果一覧を再読み込みします。新しい検索やプロバイダーへの有料リクエストは実行しません。",
+      "refreshHelp": "保存済みの結果を再読み込みします。検索は実行しません。",
       "retry": "読み込みを再試行",
       "next": "次のページ",
       "back": "最初のページ",
@@ -102,6 +102,21 @@
         "prompt_research": "質問リサーチ",
         "site_audit": "サイト監査"
       }
+    },
+    "domainVerification": {
+      "title": "ドメインの確認",
+      "description": "所有権を確認してドメインの機能を有効にします。",
+      "verifiedDns": "DNS で確認済み",
+      "verifiedSearch": "Search Console で確認済み",
+      "unverified": "未確認",
+      "recordHost": "TXT レコードのホスト",
+      "recordValue": "TXT レコードの値",
+      "copy": "値をコピー",
+      "startDns": "DNS TXT を使用",
+      "startSearch": "Search Console を使用",
+      "check": "今すぐ確認",
+      "error": "確認を更新できませんでした。もう一度お試しください。",
+      "copied": "コピーしました。"
     }
   }
 }

@@ -1,5 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import type { ActiveLocale } from "@/i18n/config";
+import { capacityNoticeSnapshot, publishCapacityNotice } from "@/lib/capacity/notice-store";
 import en from "@/messages/core/en/project-site-audit.json";
 import sharedEn from "@/messages/core/en/shared.json";
 import pl from "@/messages/core/pl/project-site-audit.json";
@@ -30,6 +31,64 @@ const wrap = (locale: ActiveLocale = "en", overrides = {}) =>
     </FeatureMessagesProvider>,
   );
 describe("site audit workspace", () => {
+  it("accepts a catalog-sized crawl above the legacy page ceiling", async () => {
+    const action = vi.fn(async () => auditFixture);
+    wrap("en", { runAction: action, maxPages: 5000, workerEnabled: true });
+    fireEvent.change(screen.getByLabelText("Page limit"), { target: { value: "120" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run audit" }));
+    await waitFor(() =>
+      expect(action).toHaveBeenCalledWith({ projectId: "prj_demo", maxPages: 120 }),
+    );
+  });
+  it("publishes structured start and resume denials without a generic error or success refresh", async () => {
+    const denial = {
+      ok: false,
+      capacityFailure: {
+        code: "plan_limit_reached",
+        message: "Capacity reached",
+        details: {
+          dimension: "concurrentCrawls",
+          limit: 1,
+          used: 1,
+          requested: 1,
+          scope: "account",
+        },
+      },
+    };
+    const action = vi.fn(async () => denial);
+    const readAction = vi.fn();
+    const saved = {
+      ...auditFixture,
+      run: {
+        state: "cancelled",
+        stopReason: "cancelled",
+        pagesCrawled: 1,
+        budgetPages: 5000,
+        requests: 1,
+        startedAt: null,
+        completedAt: null,
+      },
+    };
+    wrap("en", {
+      runAction: action,
+      resumeAction: action,
+      readAction,
+      workerEnabled: true,
+      initial: saved,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Run audit" }));
+    await waitFor(() =>
+      expect(capacityNoticeSnapshot()?.details?.dimension).toBe("concurrentCrawls"),
+    );
+    publishCapacityNotice(null);
+    fireEvent.click(screen.getByRole("button", { name: "Resume audit" }));
+    await waitFor(() =>
+      expect(capacityNoticeSnapshot()?.details?.dimension).toBe("concurrentCrawls"),
+    );
+    expect(screen.queryByText(en.projectSiteAudit.errorRun)).toBeNull();
+    expect(readAction).not.toHaveBeenCalled();
+    publishCapacityNotice(null);
+  });
   it("leaves the page title to the shared shell", () => {
     wrap();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
@@ -69,7 +128,7 @@ describe("site audit workspace", () => {
   it("runs the form and shows real returned URL issues", async () => {
     wrap();
     fireEvent.click(screen.getByRole("button", { name: "Run audit" }));
-    await waitFor(() => expect(screen.getByText("URL issues")).toBeTruthy());
+    await screen.findByText("Meta description is missing.", {}, { timeout: 10_000 });
     expect(run).toHaveBeenCalledWith({ projectId: "prj_demo", maxPages: 10 });
     expect(screen.getByText("Meta description is missing.")).toBeTruthy();
   });
@@ -127,5 +186,64 @@ describe("site audit workspace", () => {
     expect(screen.getByRole("button", { name: "Uruchom audyt" })).toBeTruthy();
     expect(screen.getByText("Brak opisu meta.")).toBeTruthy();
     expect(screen.getByText("Nagłówki H1: 0; oczekiwany jeden.")).toBeTruthy();
+  });
+  it("shows worker progress and lets a writer cancel the active audit", async () => {
+    const active = {
+      ...structuredClone(auditFixture),
+      run: {
+        state: "running",
+        stopReason: null,
+        pagesCrawled: 2,
+        budgetPages: 15,
+        requests: 3,
+        startedAt: null,
+        completedAt: null,
+      },
+    };
+    const cancelled = {
+      ...active,
+      run: { ...active.run, state: "cancelled", stopReason: "cancelled" },
+    };
+    const cancelAction = vi.fn(async () => cancelled.run);
+    const readAction = vi.fn(async () => cancelled);
+    wrap("en", { domain: "example.com", initial: active, cancelAction, readAction });
+    expect(screen.getByText(/Running.*2.*15/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel audit" }));
+    await waitFor(() => expect(screen.getByText(/Cancelled.*2.*15/)).toBeTruthy());
+    expect(cancelAction).toHaveBeenCalledWith({ projectId: "prj_demo", reportId: active.id });
+  });
+  it("does not offer cancellation to a read-only viewer", () => {
+    const active = {
+      ...structuredClone(auditFixture),
+      run: {
+        state: "running",
+        stopReason: null,
+        pagesCrawled: 2,
+        budgetPages: 15,
+        requests: 3,
+        startedAt: null,
+        completedAt: null,
+      },
+    };
+    wrap("en", { domain: "example.com", canRun: false, initial: active, cancelAction: vi.fn() });
+    expect(screen.queryByRole("button", { name: "Cancel audit" })).toBeNull();
+  });
+  it("links an unverified crawl stop to domain verification", () => {
+    const stopped = {
+      ...structuredClone(auditFixture),
+      run: {
+        state: "stopped",
+        stopReason: "unverified_cap",
+        pagesCrawled: 500,
+        budgetPages: 500,
+        requests: 500,
+        startedAt: null,
+        completedAt: "2026-10-02T10:00:02.000Z",
+      },
+    };
+    wrap("en", { initial: stopped });
+    expect(
+      screen.getByRole("link", { name: "Verify this domain to crawl more pages." }),
+    ).toHaveAttribute("href", "/app/prj_demo/settings/general");
   });
 });

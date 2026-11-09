@@ -1,12 +1,12 @@
 "use client";
-
 import { Badge, displayTime } from "@/components/admin/AdminPrimitives";
+import { useAdminTableSort } from "@/components/admin/AdminTableState";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 type OpsEvent = InstanceAdminDashboard["ops"]["events"][number];
 type OpsEventRow = Omit<OpsEvent, "kind"> & { eventKind: OpsEvent["kind"]; id: string };
@@ -80,7 +80,7 @@ export function AdminDashboardOpsEventsTable({
   const format = useFormatter();
   const t = useTranslations("instanceAdmin.opsTable");
   const values = useTranslations("instanceAdmin.values");
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [sorting, setSorting] = useAdminTableSort("events");
   const columns = useMemo(
     () => opsEventColumns(context, format, t, values("unavailable")),
     [context, format, t, values],

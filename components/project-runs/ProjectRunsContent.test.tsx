@@ -164,17 +164,13 @@ describe("ProjectRunsContent", () => {
     },
   );
 
-  it("keeps schedules discoverable from the Upcoming Search Console empty state", () => {
+  it("keeps the Upcoming Search Console state without cross-page tabs", () => {
     renderContent({
       query: { cursor: null, limit: 20, source: "search_console", status: "all", view: "planned" },
     });
 
     expect(screen.getByText("No upcoming Search Console runs")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute(
-      "href",
-      `/app/${projectRef}/runs/schedules`,
-    );
-    expect(screen.getByRole("link", { name: "Runs" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Runs" })).not.toBeInTheDocument();
   });
 
   it("selects Planned from another status and clears the old cursor", () => {
@@ -256,7 +252,7 @@ describe("ProjectRunsContent", () => {
       `/app/${projectRef}/runs?view=planned&source=rank_checks`,
     );
     expect(screen.queryByRole("link", { name: "Planned" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Runs" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Runs" })).not.toBeInTheDocument();
   });
 
   it("renders qualifying coverage, property href, and no-op-free DataTable controls for an active import", () => {
@@ -384,7 +380,7 @@ describe("ProjectRunsContent", () => {
   it("distinguishes global no-runs and stale cursor errors", () => {
     const { rerender } = renderContent();
     expect(screen.getByText("No runs yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Schedules" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Schedules" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radiogroup", { name: "Runs view" })).not.toBeInTheDocument();
     expect(
       screen.getByText(
@@ -411,7 +407,7 @@ describe("ProjectRunsContent", () => {
 
     rerender(<ProjectRunsLoadError projectRef={projectRef} stale />);
     expect(screen.getByRole("alert")).toHaveTextContent("This Runs page is stale");
-    expect(screen.getByRole("link", { name: "Schedules" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Schedules" })).not.toBeInTheDocument();
   });
 });
 

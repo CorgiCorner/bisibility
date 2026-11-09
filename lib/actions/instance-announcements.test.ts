@@ -67,6 +67,17 @@ describe("announcement actions", () => {
       status: "two_factor_required",
     });
   });
+  it.each(["create", "update", "toggle", "delete"])(
+    "denies %s without 2FA before storage",
+    async (kind) => {
+      dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("announcement"));
+      expect(await mutateInstanceAnnouncement({ kind, content, identity, enabled: true })).toEqual({
+        status: "two_factor_required",
+      });
+      expect(mocks.create).not.toHaveBeenCalled();
+      expect(mocks.change).not.toHaveBeenCalled();
+    },
+  );
 });
 
 const dangerousActionGuard = vi.hoisted(() => vi.fn(async () => undefined));

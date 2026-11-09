@@ -1,6 +1,7 @@
 import { ReplaySurface } from "@/components/analytics/ReplaySurface";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
+import { renderCapacityNoticeExtension } from "@/components/shell/AccountNoticeExtension";
 import { shellUserEmail } from "@/components/shell/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLockup } from "@/components/ui/BrandLockup";
@@ -49,6 +50,7 @@ type OnboardingLayoutProps = {
 export default async function OnboardingLayout({ children }: Readonly<OnboardingLayoutProps>) {
   await redirectToSetupIfFirstRun();
   const [session, runtime] = await Promise.all([requireSession(), onboardingRuntime()]);
+  await appExtensions.guardAccountSurface(session.user.id);
 
   const email = shellUserEmail(session.user);
   const initials = avatarInitials(session.user.name ?? "", email);
@@ -70,6 +72,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
     >
       <main className="flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] text-fg sm:px-6">
         {supportWidget}
+        {await renderCapacityNoticeExtension(runtime.locale)}
         <div className="flex w-full max-w-[940px] flex-1 flex-col">
           <header className="flex flex-wrap items-center justify-between gap-3">
             <BrandLockup />

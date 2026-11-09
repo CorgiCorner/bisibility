@@ -1,9 +1,9 @@
 "use client";
-
 import { displayTime } from "@/components/admin/AdminPrimitives";
+import { useAdminTableSort } from "@/components/admin/AdminTableState";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import { StatusPill } from "@/components/ui/StatusPill";
 import type {
@@ -11,7 +11,7 @@ import type {
   InstanceAdminAuditResult,
 } from "@/lib/queries/instance-admin-audit";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 type AdminAuditRow = InstanceAdminAuditPage["entries"][number];
 type AuditTranslations = ReturnType<typeof useTranslations<"instanceAdmin.audit">>;
@@ -40,6 +40,8 @@ function adminAuditColumns(
   context: ReturnType<typeof useDateDisplay>,
   t: AuditTranslations,
   unavailable: string,
+  copyLabel?: string,
+  separateTargetType = false,
 ): readonly DataTableColumn<AdminAuditRow>[] {
   return [
     {
@@ -81,16 +83,31 @@ function adminAuditColumns(
       minSize: 168,
       size: 168,
     },
+    ...(separateTargetType
+      ? [
+          {
+            accessorFn: (row: AdminAuditRow) => row.targetType,
+            cell: ({ row }: { row: { original: AdminAuditRow } }) => (
+              <span>{row.original.targetType}</span>
+            ),
+            header: t("targetType"),
+            id: "targetType",
+            meta: { sortable: true, title: t("targetType") },
+            minSize: 120,
+            size: 120,
+          } satisfies DataTableColumn<AdminAuditRow>,
+        ]
+      : []),
     {
       accessorFn: (row) => auditTarget(row, t),
       cell: ({ row }) => {
         const target = auditTarget(row.original, t);
         return row.original.targetId ? (
           <span className="inline-flex max-w-full flex-wrap items-center gap-1">
-            <span>{row.original.targetType}</span>
+            {!separateTargetType && <span>{row.original.targetType}</span>}
             <IdChip
               className="min-w-0 max-w-full border-0 bg-transparent px-0"
-              copyLabel={t("copyTargetId", { targetId: row.original.targetId })}
+              copyLabel={copyLabel ?? t("copyTargetId", { targetId: row.original.targetId })}
               size="sm"
               value={row.original.targetId}
             />
@@ -119,14 +136,20 @@ function adminAuditColumns(
 
 export function AdminAuditDataTable({
   entries,
-}: Readonly<{ entries: InstanceAdminAuditPage["entries"] }>) {
+  copyLabel,
+  separateTargetType = false,
+}: Readonly<{
+  entries: InstanceAdminAuditPage["entries"];
+  copyLabel?: string;
+  separateTargetType?: boolean;
+}>) {
   const context = useDateDisplay();
   const t = useTranslations("instanceAdmin.audit");
   const values = useTranslations("instanceAdmin.values");
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [sorting, setSorting] = useAdminTableSort("audit");
   const columns = useMemo(
-    () => adminAuditColumns(context, t, values("unavailable")),
-    [context, t, values],
+    () => adminAuditColumns(context, t, values("unavailable"), copyLabel, separateTargetType),
+    [context, t, values, copyLabel, separateTargetType],
   );
 
   return (

@@ -1,10 +1,9 @@
 "use client";
-
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { createCloudImportWorkspace } from "@/lib/actions/cloud";
+import { createCloudImportWorkspace } from "@/lib/capacity/client-actions";
 import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";

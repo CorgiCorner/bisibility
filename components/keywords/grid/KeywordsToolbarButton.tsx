@@ -46,8 +46,8 @@ export function KeywordsToolbarButton({
         className={cn(
           "shrink-0 whitespace-nowrap",
           iconOnly || compactBelowXl
-            ? "max-xl:min-w-10 max-xl:gap-0"
-            : "max-lg:min-w-10 max-lg:gap-0",
+            ? "max-xl:min-w-9 max-xl:w-9 max-xl:gap-0 max-xl:px-0"
+            : "max-lg:min-w-9 max-lg:w-9 max-lg:gap-0 max-lg:px-0",
           props.variant === "secondary" && toolbarControlClassName,
           props.variant === "secondary" && "[&_[data-button-start-icon]]:text-fg-muted",
           className,

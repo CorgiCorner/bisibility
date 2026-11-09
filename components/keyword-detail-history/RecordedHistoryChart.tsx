@@ -2,7 +2,7 @@
 
 import { ChartRegion } from "@/components/ui/ChartRegion";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { chartColors } from "@/lib/theme/chart-colors";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { historyTimestampFraction, recordedHistorySegments } from "./history-chart-model";
@@ -42,7 +42,7 @@ export function RecordedHistoryChart({
   const to = Date.parse(page.window.to);
   const positions = segments.flatMap((segment) => segment.points.map(({ position }) => position));
   const max = positions.reduce((max, position) => Math.max(max, position), 20);
-  const left = 40,
+  const left = 48,
     right = width - 16,
     top = 12,
     bottom = 240;
@@ -55,6 +55,15 @@ export function RecordedHistoryChart({
   const validWindow = Number.isFinite(from) && Number.isFinite(to) && from <= to;
   const completeWindow = page.records.length === page.totalCount && page.nextCursor === null;
   const empty = !validWindow || positions.length === 0;
+  const seenLabels = new Set<string>();
+  const dateTicks = validWindow
+    ? ticks.flatMap((at, index) => {
+        const label = format.dateTime(new Date(at), { month: "short", day: "numeric", timeZone });
+        if (seenLabels.has(label)) return [];
+        seenLabels.add(label);
+        return [{ at, index, label }];
+      })
+    : [];
   return (
     <>
       <ChartRegion
@@ -85,9 +94,9 @@ export function RecordedHistoryChart({
                   stroke="var(--border)"
                 />
                 <text
-                  x={left - 8}
+                  x={0}
                   y={y(position) + 4}
-                  textAnchor="end"
+                  textAnchor="start"
                   fill="var(--fg-muted)"
                   fontSize={10}
                 >
@@ -95,16 +104,16 @@ export function RecordedHistoryChart({
                 </text>
               </g>
             ))}
-            {ticks.map((at, index) => (
+            {dateTicks.map(({ at, index, label }) => (
               <text
                 key={index}
-                x={x(at) ?? undefined}
+                x={index === 0 ? 0 : index === 2 ? width : (x(at) ?? undefined)}
                 y={265}
                 textAnchor={index === 0 ? "start" : index === 2 ? "end" : "middle"}
                 fill="var(--fg-muted)"
                 fontSize={10}
               >
-                {format.dateTime(new Date(at), { month: "short", day: "numeric", timeZone })}
+                {label}
               </text>
             ))}
             {segments.map((segment) => (
@@ -112,7 +121,7 @@ export function RecordedHistoryChart({
                 {completeWindow ? (
                   <polyline
                     fill="none"
-                    stroke={chartColors.accent}
+                    stroke="var(--accent)"
                     strokeWidth={2}
                     points={segment.points
                       .map((point) => `${x(point.at)},${y(point.position)}`)
@@ -132,7 +141,7 @@ export function RecordedHistoryChart({
                       <button
                         type="button"
                         className="block h-full w-full rounded-full border-2 border-bg-elev p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                        style={{ backgroundColor: chartColors.accent }}
+                        style={{ backgroundColor: "var(--accent)" }}
                         aria-label={t("openObservation", { id: observation.id })}
                         data-observation-at={at}
                         onClick={() => onOpen(observation.id)}
@@ -155,15 +164,17 @@ export function RecordedHistoryChart({
       </ChartRegion>
       {!empty ? (
         <>
-          <p className="m-0 mt-3 text-[11px] text-fg-muted">
-            {t("chartLoaded", {
-              loaded: format.number(page.records.length),
-              total: format.number(page.totalCount),
-              gaps: format.number(gaps),
-              boundaries: format.number(boundaries),
-            })}
-          </p>
-          <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartMeaning")}</p>
+          <div className="mt-3 flex items-center gap-1 text-[11px] text-fg-muted">
+            <span>
+              {t("loadedCount", {
+                loaded: format.number(page.records.length),
+                total: format.number(page.totalCount),
+              })}
+            </span>
+            <InfoTooltip
+              text={`${t("chartLoaded", { loaded: format.number(page.records.length), total: format.number(page.totalCount), gaps: format.number(gaps), boundaries: format.number(boundaries) })} ${t("chartMeaning")}`}
+            />
+          </div>
           {!completeWindow ? (
             <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartPartial")}</p>
           ) : null}

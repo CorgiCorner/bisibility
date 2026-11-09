@@ -1,4 +1,5 @@
 "use server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { consume } from "@/lib/api/ratelimit";
 import {
   AdminTwoFactorRequiredError,
@@ -22,7 +23,7 @@ export type RecoveryActionResult<T> =
 async function run<T>(
   kind: string,
   write: boolean,
-  work: () => Promise<T>,
+  work: (onCommitted: () => void) => Promise<T>,
 ): Promise<RecoveryActionResult<T>> {
   const session = await getInstanceAdminSession();
   if (!session) return { ok: false, code: "forbidden" };
@@ -42,7 +43,9 @@ async function run<T>(
   }
   if (!allowed.success) return { ok: false, code: "rate_limited" };
   try {
-    return { ok: true, value: await work() };
+    const value = await work(() => recordAppAction(session));
+    if (write && kind !== "commit") recordAppAction(session);
+    return { ok: true, value };
   } catch (error) {
     if (error instanceof AdminTwoFactorRequiredError) return { ok: false, code: error.code };
     if (error instanceof RecoveryAuthorizationError) return { ok: false, code: "forbidden" };
@@ -58,7 +61,7 @@ export async function previewRecoveryAction(input: unknown) {
   return run("preview", false, () => previewRecovery(input));
 }
 export async function commitRecoveryAction(input: unknown) {
-  return run("commit", true, () => commitRecovery(input));
+  return run("commit", true, (onCommitted) => commitRecovery(input, onCommitted));
 }
 export async function updateRecoveryTriageAction(input: unknown) {
   return run("triage", true, () => updateRecoveryTriage(input));

@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { MAX_WEBHOOK_ENDPOINTS_PER_PROJECT } from "@/lib/alerts/limits";
@@ -86,6 +87,10 @@ export async function createWebhookEndpointRecord(
 ) {
   const hmacSecret = encryptSecret(data.hmacSecret);
   return prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: scope.projectId,
+      dimensions: ["alertRulesAndWebhooks"],
+    });
     await tx.$queryRaw`
       SELECT "id"
       FROM "projects"
@@ -120,6 +125,7 @@ export async function createWebhookEndpointRecord(
       },
       tx,
     );
+    await capacity.check();
     return endpoint;
   });
 }
@@ -133,8 +139,10 @@ export async function updateWebhookEndpointRecord(
     url?: string;
   },
   scope: MutationScope,
+  onCommitted?: () => void,
 ) {
-  if (data.hmacSecret === null || data.hmacSecret === "") {
+  const { hmacSecret } = data;
+  if (hmacSecret === null || hmacSecret === "") {
     throw new ApiInputError("Webhook HMAC secret must be a non-empty string when provided.");
   }
   const before = await findWebhookEndpoint(scope.projectId, endpointId);
@@ -142,17 +150,34 @@ export async function updateWebhookEndpointRecord(
     return null;
   }
 
-  const endpoint = await prisma.webhookEndpoint.update({
-    data: {
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
-      ...(data.hmacSecret !== undefined ? { hmacSecret: encryptSecret(data.hmacSecret) } : {}),
-      ...(data.url !== undefined ? { url: data.url } : {}),
-    },
-    select: endpointSelect,
-    where: { id: before.id },
+  const endpoint = await prisma.$transaction(async (tx) => {
+    const admission = await prepareResourceCapacity(tx, {
+      projectId: scope.projectId,
+      dimensions: [],
+    });
+    const current = admission.enabled
+      ? await tx.webhookEndpoint.findUniqueOrThrow({ where: { id: before.id } })
+      : before;
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: scope.projectId,
+      dimensions: ["alertRulesAndWebhooks"],
+      activating: data.enabled === true && !current.enabled,
+    });
+    const updated = await tx.webhookEndpoint.update({
+      data: {
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
+        ...(hmacSecret !== undefined ? { hmacSecret: encryptSecret(hmacSecret) } : {}),
+        ...(data.url !== undefined ? { url: data.url } : {}),
+      },
+      select: endpointSelect,
+      where: { id: before.id },
+    });
+    await capacity.check();
+    return updated;
   });
 
+  onCommitted?.();
   await writeAudit({
     action: "webhook_endpoint.update",
     actorId: scope.actorId,
@@ -166,7 +191,11 @@ export async function updateWebhookEndpointRecord(
   return endpoint;
 }
 
-export async function deleteWebhookEndpointRecord(endpointId: string, scope: MutationScope) {
+export async function deleteWebhookEndpointRecord(
+  endpointId: string,
+  scope: MutationScope,
+  onCommitted?: () => void,
+) {
   const before = await findWebhookEndpoint(scope.projectId, endpointId);
   if (!before) {
     return null;
@@ -174,6 +203,7 @@ export async function deleteWebhookEndpointRecord(endpointId: string, scope: Mut
 
   await prisma.webhookEndpoint.delete({ where: { id: before.id } });
 
+  onCommitted?.();
   await writeAudit({
     action: "webhook_endpoint.delete",
     actorId: scope.actorId,

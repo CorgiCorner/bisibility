@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
   runtime: vi.fn(),
 }));
 
-vi.mock("@/components/admin/AdminShell", () => ({
-  AdminShell: ({ children }: { children: ReactNode }) => <div data-admin-shell>{children}</div>,
-}));
 vi.mock("@/lib/auth/admin-dangerous-action", () => ({
   adminDangerousActionAllowed: vi.fn(async () => true),
 }));
@@ -36,7 +33,7 @@ import InstanceAdminLayout from "./layout";
 describe("instance admin layout", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("gates every nested route before rendering the shared shell", async () => {
+  it("gates every nested route before rendering the shared providers", async () => {
     mocks.requireAdmin.mockResolvedValue({ user: { id: "admin_1" } });
     mocks.runtime.mockResolvedValue({ locale: "en", timeZone: "UTC" });
     mocks.dateFormat.mockResolvedValue({ resolved: "month_first" });
@@ -46,7 +43,6 @@ describe("instance admin layout", () => {
 
     expect(mocks.requireAdmin).toHaveBeenCalledOnce();
     expect(mocks.loadMessages).toHaveBeenCalledWith("en", ["shared", "instanceAdmin", "account"]);
-    expect(renderToStaticMarkup(result)).toContain("data-admin-shell");
     expect(renderToStaticMarkup(result)).toContain("Admin route");
   });
 
@@ -56,5 +52,8 @@ describe("instance admin layout", () => {
     await expect(InstanceAdminLayout({ children: <p>Hidden admin route</p> })).rejects.toThrow(
       "NEXT_NOT_FOUND",
     );
+    expect(mocks.runtime).not.toHaveBeenCalled();
+    expect(mocks.dateFormat).not.toHaveBeenCalled();
+    expect(mocks.loadMessages).not.toHaveBeenCalled();
   });
 });

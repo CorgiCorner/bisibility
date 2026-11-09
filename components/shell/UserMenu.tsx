@@ -46,7 +46,6 @@ export type UserMenuProps = {
   onClose: () => void;
   /** Fired alongside onClose when a row navigates (closes the mobile drawer). */
   onNavigate?: () => void;
-  roleLine: string;
   showHostedLinks?: boolean;
 };
 
@@ -57,7 +56,6 @@ export function UserMenu({
   name,
   onClose,
   onNavigate,
-  roleLine,
   showHostedLinks = false,
 }: Readonly<UserMenuProps>) {
   const t = useTranslations("shell.userMenu");
@@ -106,10 +104,9 @@ export function UserMenu({
         />
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold leading-tight">{name}</span>
-          <span className="block truncate text-[10.5px] text-fg-muted">{email}</span>
-          <span className="mt-1 block text-[9px] uppercase tracking-[0.4px] text-fg-muted">
-            {roleLine}
-          </span>
+          {email !== name ? (
+            <span className="block truncate text-[10.5px] text-fg-muted">{email}</span>
+          ) : null}
         </span>
       </div>
       <Divider style={{ ...DIVIDER_STYLE, marginTop: "2px" }} />

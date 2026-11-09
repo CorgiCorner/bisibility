@@ -88,6 +88,7 @@ describe("makePublicId", () => {
 describe("revalidateProviderViews", () => {
   it("refreshes the Rank Tracker checks tab provider indicator after configuration changes", () => {
     revalidateProviderViews();
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/usage", "page");
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
   });
@@ -96,6 +97,11 @@ describe("revalidateProviderViews", () => {
 describe("revalidateKeywordViews", () => {
   it("refreshes the project and market Rank Tracker routes after a mutation", () => {
     revalidateKeywordViews();
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/schedules", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      "/app/[project]/schedules/[publicId]",
+      "page",
+    );
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(

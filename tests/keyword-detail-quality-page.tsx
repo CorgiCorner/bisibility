@@ -61,6 +61,7 @@ vi.mock("@/lib/queries/retrieved-results", () => ({
   loadRetrievedResultsForChecks: detailPageMocks.rawLoad,
 }));
 vi.mock("@/lib/actions/alerts", () => ({ createKeywordAlertRule: detailPageMocks.paid }));
+vi.mock("@/lib/capacity/client-actions", () => ({ createKeywordAlertRule: detailPageMocks.paid }));
 vi.mock("@/lib/actions/extend-snapshot", () => ({ extendSerpSnapshot: detailPageMocks.paid }));
 vi.mock("@/lib/actions/keyword", () => ({ updateKeyword: detailPageMocks.paid }));
 vi.mock("@/lib/actions/rankCheck", () => ({ runCheckNow: detailPageMocks.paid }));

@@ -40,7 +40,7 @@ function LadderRow({
   return (
     <li
       aria-label={rowLabel(row, t)}
-      className={`relative grid list-none min-h-[64px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-2.5 last:border-b-0 sm:gap-3 sm:px-6 ${row.tracked ? "m-3 rounded-control border border-border-control px-3 last:border-b sm:px-4" : ""}`}
+      className={`relative grid list-none min-h-[64px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-2.5 last:border-b-0 sm:gap-3 sm:px-6 ${row.tracked ? "bg-bg-sunken font-medium" : ""}`}
       data-tracked={row.tracked ? "true" : undefined}
       ref={row.tracked ? trackedRef : undefined}
     >

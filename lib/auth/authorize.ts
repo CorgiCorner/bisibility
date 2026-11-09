@@ -29,6 +29,7 @@ export type MembershipFact = {
 
 export type Actor = {
   id: string;
+  email?: string;
   memberships?: readonly MembershipFact[];
   role?: Role | null;
 };

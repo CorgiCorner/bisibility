@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateBudgetViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { prisma } from "@/lib/db/prisma";
 import { setProjectSpendingLimit } from "@/lib/metering/project-spending-limit";
 import { z } from "zod";
@@ -39,6 +39,7 @@ export async function updateProjectBudgetAction(input: unknown) {
       funding: data.funding,
     }),
   );
+  recordAppAction(actor);
   revalidateBudgetViews();
 
   return updated;

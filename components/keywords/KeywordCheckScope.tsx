@@ -10,16 +10,22 @@ import { useLocale, useTranslations } from "next-intl";
 export function KeywordCheckScope({
   keyword,
   marketLabel,
+  locationLabel,
+  as: Component = "div",
 }: Readonly<{
-  keyword: Pick<KeywordRow, "location" | "device" | "engine">;
+  keyword: Pick<KeywordRow, "device" | "engine"> & {
+    location: Pick<KeywordRow["location"], "countryCode" | "displayName" | "hl" | "languageLabel">;
+  };
   marketLabel?: string;
+  locationLabel?: string;
+  as?: "div" | "span";
 }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.context");
   const locale = useLocale();
   const mobile = keyword.device.toLowerCase() === "mobile";
   const DeviceIcon = mobile ? DeviceMobile : Desktop;
   return (
-    <div
+    <Component
       aria-label={t("label")}
       className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] leading-5 text-fg-muted"
     >
@@ -32,6 +38,7 @@ export function KeywordCheckScope({
         ) : null}
         <span className="font-medium text-fg">
           {marketLabel ??
+            locationLabel ??
             regionDisplayName(keyword.location.countryCode, keyword.location.displayName, locale)}
         </span>
         {!marketLabel ? (
@@ -49,6 +56,6 @@ export function KeywordCheckScope({
         {t(mobile ? "mobile" : "desktop")}
       </span>
       <span>{keyword.engine}</span>
-    </div>
+    </Component>
   );
 }
