@@ -10,6 +10,7 @@
     "alertRulesAndWebhooks": "アラートルールとWebhook",
     "usage": "{limit} 件中 {used} 件を使用。追加要求: {requested} 件。",
     "crawlPagesPerCrawl": "クロールごとのページ数",
-    "concurrentCrawls": "同時クロール数"
+    "concurrentCrawls": "同時クロール数",
+    "teamMembers": "チームメンバー"
   }
 }

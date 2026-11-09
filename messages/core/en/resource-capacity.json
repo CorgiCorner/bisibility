@@ -10,6 +10,7 @@
     "alertRulesAndWebhooks": "alert rules and webhooks",
     "usage": "{used} used of {limit}. Requested: {requested}.",
     "crawlPagesPerCrawl": "pages per crawl",
-    "concurrentCrawls": "concurrent crawls"
+    "concurrentCrawls": "concurrent crawls",
+    "teamMembers": "team members"
   }
 }

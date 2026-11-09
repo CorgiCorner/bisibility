@@ -27,6 +27,7 @@
     "validEmail": "Introduce una dirección de correo válida.",
     "verifyAndReturn": "Verificar y volver a la invitación",
     "verifyCode": "Introduce el código de 6 dígitos.",
-    "verifyFailed": "Se ha producido un error. Inténtalo de nuevo."
+    "verifyFailed": "Se ha producido un error. Inténtalo de nuevo.",
+    "capacityReached": "Esta cuenta no puede añadir a otra persona al equipo. Pide al propietario del proyecto que revise su plan."
   }
 }

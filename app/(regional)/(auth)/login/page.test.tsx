@@ -486,6 +486,16 @@ describe("session-aware sign in", () => {
     expect(redirect).toHaveBeenCalledWith("/cloud/import");
   });
 
+  it.each(["/onboarding", "/onboarding?website=example.com"])(
+    "opens the existing account for a trial link to %s",
+    async (next) => {
+      mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
+      await renderLoginPage({}, { next });
+      expect(redirect).toHaveBeenCalledWith("/app");
+      expect(mocks.loginForm).not.toHaveBeenCalled();
+    },
+  );
+
   it("rejects an off-origin next destination", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "usr_1" } });
     await renderLoginPage({}, { next: "https://evil.example.com/steal" });

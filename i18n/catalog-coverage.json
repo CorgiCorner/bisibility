@@ -6808,6 +6808,71 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.checkAlertHealth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.collectSearchInsights",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.deliverAlerts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.dispatchChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.maintainRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.planChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.reconcileChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.reconcileUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.recoverChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.recoverImports",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.releaseMigrationHolds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.releaseReservations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.sendDigests",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.tasks.checkAlertHealth",
         "tags": []
       },
@@ -7308,6 +7373,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.opsActions.sweepFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.opsActions.sweepHelp",
         "tags": []
       },
       {
@@ -9607,6 +9677,11 @@
       {
         "arguments": [],
         "key": "invite.alreadyUsedBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "invite.capacityReached",
         "tags": []
       },
       {
@@ -57961,6 +58036,11 @@
       {
         "arguments": [],
         "key": "resourceCapacity.scheduleFrequencies",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.teamMembers",
         "tags": []
       },
       {

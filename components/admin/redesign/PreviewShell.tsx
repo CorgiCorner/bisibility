@@ -1,5 +1,6 @@
 "use client";
 import { AdminScrollNav } from "@/components/admin/pages/AdminScrollNav";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -81,6 +82,7 @@ export function PreviewShell({
   children: (tab: string, view: string, label: string) => ReactNode;
 }) {
   const t = useTranslations("instanceAdmin");
+  const dateDisplay = useDateDisplay();
   const navLabels: Record<string, string> = {
     Overview: t("navigation.overview"),
     "Usage & costs": t("navigation.usageCosts"),
@@ -174,7 +176,10 @@ export function PreviewShell({
         <main className="mx-auto grid min-w-0 w-full max-w-[1180px] grid-cols-1 gap-4 px-4 pt-7 pb-20 sm:px-[26px] sm:pt-[30px]">
           <div>
             <h1 className="text-2xl font-semibold tracking-[-0.7px]">{t("shell.title")}</h1>
-            <p className="mt-1.5 text-[13px] text-fg-muted">{t("shell.previewDescription")}</p>
+            <p className="mt-1.5 text-[13px] text-fg-muted">
+              {t("shell.previewDescription")}{" "}
+              {t("dashboard.timeZone", { timeZone: dateDisplay.timeZone })}
+            </p>
           </div>
           <AdminScrollNav label={t("navigation.label")} activeKey={tab}>
             {Object.keys(navigation).map((name) => (

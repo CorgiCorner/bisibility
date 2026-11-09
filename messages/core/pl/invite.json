@@ -27,6 +27,7 @@
     "validEmail": "Podaj prawidłowy adres e-mail.",
     "verifyAndReturn": "Zweryfikuj i wróć",
     "verifyCode": "Podaj 6-cyfrowy kod.",
-    "verifyFailed": "Coś poszło nie tak. Spróbuj ponownie."
+    "verifyFailed": "Coś poszło nie tak. Spróbuj ponownie.",
+    "capacityReached": "To konto nie może dodać kolejnej osoby. Poproś właściciela projektu o sprawdzenie planu."
   }
 }

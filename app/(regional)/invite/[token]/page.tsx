@@ -3,17 +3,18 @@ import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvid
 import { InviteSignInForm } from "@/components/invite/InviteSignInForm";
 import { InviteSignOutButton } from "@/components/invite/InviteSignOutButton";
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import { Button } from "@/components/ui/Button";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveAnonymousDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { acceptInvite } from "@/lib/actions/team";
 import { getSession } from "@/lib/auth/session";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { type DateFormat, formatDisplayDate } from "@/lib/dates/format";
 import { resolveDateFormat } from "@/lib/dates/resolve";
 import { getInviteByTokenHash } from "@/lib/queries/invite";
 import { appPath } from "@/lib/routing/app-path";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
@@ -25,6 +26,7 @@ import type { ReactNode } from "react";
 
 type InvitePageProps = {
   params: Promise<{ token: string }>;
+  searchParams?: Promise<{ capacity?: string }>;
 };
 
 type InviteStatus = "expired" | "invalid" | "used";
@@ -40,7 +42,7 @@ type InviteState =
 
 export async function generateMetadata(): Promise<Metadata> {
   const runtime = await resolveAnonymousDocumentLocale();
-  const messages = await loadCoreMessages(runtime.locale, ["invite"]);
+  const messages = await loadCoreMessages(runtime.locale, ["shared", "invite"]);
   const t = createIntlTranslator(runtime.locale, messages, runtime);
   return createNoindexMetadata({
     description: t("invite.metadataDescription"),
@@ -121,10 +123,10 @@ function InvalidInvite({
   );
 }
 
-export default async function InvitePage({ params }: Readonly<InvitePageProps>) {
+export default async function InvitePage({ params, searchParams }: Readonly<InvitePageProps>) {
   const { token } = await params;
   const runtime = await resolveAnonymousDocumentLocale();
-  const messages = await loadCoreMessages(runtime.locale, ["invite"]);
+  const messages = await loadCoreMessages(runtime.locale, ["shared", "invite"]);
   const t = createIntlTranslator(runtime.locale, messages, runtime);
   const roleLabel = (role: "admin" | "member" | "viewer") => {
     if (role === "admin") return t("invite.roles.admin");
@@ -158,23 +160,27 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   const invitedEmail = invite.email.toLowerCase();
   const canAccept = Boolean(session && signedInEmail === invitedEmail);
   const returnTo = `/invite/${encodeURIComponent(token)}`;
+  const capacityDenied = (await searchParams)?.capacity === "1";
 
   async function acceptInviteAction() {
     "use server";
-    const result = await acceptInvite({ token });
+    const result = await withCapacityFailure(() => acceptInvite({ token }));
+    if ("capacityFailure" in result) redirect(`${returnTo}?capacity=1`);
     redirect(appPath(result.publicId, "dashboard"));
   }
 
   let inviteAction = <InviteSignInForm email={invite.email} />;
   if (canAccept) {
     inviteAction = (
-      <form action={acceptInviteAction} className="mt-5">
-        <button
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:opacity-90"
-          type="submit"
-        >
-          {t("invite.accept")} <CaretRight aria-hidden size={15} weight="regular" />
-        </button>
+      <form action={acceptInviteAction} className="mt-5 space-y-3">
+        {capacityDenied && (
+          <p role="alert" className="m-0 text-sm text-fg-muted">
+            {t("invite.capacityReached")}
+          </p>
+        )}
+        <Button className="w-full" type="submit">
+          {t("invite.accept")}
+        </Button>
       </form>
     );
   } else if (session) {

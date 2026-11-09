@@ -3,8 +3,11 @@
 import { Badge, displayTime, Metric, Panel } from "@/components/admin/AdminPrimitives";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { IdChip } from "@/components/ui/IdChip";
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
+import { DOCS_URL } from "@/lib/site/site";
 import { useTranslations } from "next-intl";
 
 type WorkerTranslations = ReturnType<typeof useTranslations<"instanceAdmin.worker">>;
@@ -28,13 +31,22 @@ export function AdminWorkerHealth({
   const context = useDateDisplay();
   const t = useTranslations("instanceAdmin.worker");
   const statusT = useTranslations("instanceAdmin.status");
+  const workerDocsLabel = useTranslations("instanceAdmin.shellHealth")("workerUnknownDocs");
   const values = useTranslations("instanceAdmin.values");
   const status = schemaStatus(worker.schemaComparison, t, statusT("unknown"));
 
   return (
     <Panel description={t("description")} id="admin-worker" title={t("title")}>
       {!available ? (
-        <AdminSectionUnavailable>{t("unavailable")}</AdminSectionUnavailable>
+        <div className="grid gap-3">
+          <AdminSectionUnavailable>{t("unavailable")}</AdminSectionUnavailable>
+          <ExternalLink
+            href={`${DOCS_URL}/self-hosting/temporal#scheduled-rank-checks`}
+            className="text-sm underline"
+          >
+            {workerDocsLabel}
+          </ExternalLink>
+        </div>
       ) : worker.schedulerDriver === "none" ? (
         <AdminSectionUnavailable>{t("disabled")}</AdminSectionUnavailable>
       ) : (
@@ -48,7 +60,13 @@ export function AdminWorkerHealth({
               </span>
             }
           />
-          <Metric technical label={t("release")} value={<span>{worker.release}</span>} />
+          <Metric
+            technical
+            label={t("release")}
+            value={
+              worker.release ? <IdChip value={worker.release} size="lg" /> : values("unavailable")
+            }
+          />
           <Metric technical label={t("environment")} value={<span>{worker.environment}</span>} />
           <Metric
             technical
@@ -62,12 +80,24 @@ export function AdminWorkerHealth({
           <Metric
             technical
             label={t("bundledMigration")}
-            value={<span>{worker.bundledMigration ?? values("unavailable")}</span>}
+            value={
+              worker.bundledMigration ? (
+                <IdChip value={worker.bundledMigration} size="lg" />
+              ) : (
+                values("unavailable")
+              )
+            }
           />
           <Metric
             technical
             label={t("appliedMigration")}
-            value={<span>{worker.appliedMigration ?? values("unavailable")}</span>}
+            value={
+              worker.appliedMigration ? (
+                <IdChip value={worker.appliedMigration} size="lg" />
+              ) : (
+                values("unavailable")
+              )
+            }
           />
           <Metric
             label={t("slackOps")}

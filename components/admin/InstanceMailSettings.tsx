@@ -3,6 +3,7 @@
 import { InstanceMailSettingsField as Field } from "@/components/admin/InstanceMailSettingsField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import {
@@ -57,11 +58,11 @@ export function InstanceMailSettings({
   busy?: boolean;
   onSaveSettings?: (
     values: InstanceMailFormValues,
-  ) => InstanceMailSettingsResult | void | Promise<InstanceMailSettingsResult | void>;
+  ) => InstanceMailSettingsResult | undefined | Promise<InstanceMailSettingsResult | undefined>;
   onClearSettings?: () =>
     | InstanceMailSettingsResult
-    | void
-    | Promise<InstanceMailSettingsResult | void>;
+    | undefined
+    | Promise<InstanceMailSettingsResult | undefined>;
 }>) {
   const t = useTranslations("instanceAdmin.administration.mailer.form");
   const router = useRouter();
@@ -145,27 +146,31 @@ export function InstanceMailSettings({
         <p className="mt-2 text-xs text-yellow-text">{t("envOverride")}</p>
       ) : null}
       <form className="mt-4 flex flex-col gap-3" onSubmit={handleSubmit(onSave)}>
-        <Controller
-          control={control}
-          name="provider"
-          render={({ field }) => (
-            <MenuSelect
-              ariaLabel={t("provider")}
-              onChange={(value) => {
-                field.onChange(value);
-                if (settings.credentialsConfigured && value !== settings.provider) {
-                  setReplacing(true);
-                }
-              }}
-              options={[
-                { label: t("providerResend"), value: "resend" },
-                { label: t("providerSes"), value: "ses" },
-                { label: t("providerSmtp"), value: "smtp" },
-              ]}
-              value={field.value}
-            />
-          )}
-        />
+        <div className="grid max-w-md gap-1.5">
+          <FieldLabel className="text-sm font-medium text-fg" label={t("provider")} />
+          <Controller
+            control={control}
+            name="provider"
+            render={({ field }) => (
+              <MenuSelect
+                size="input"
+                ariaLabel={t("provider")}
+                onChange={(value) => {
+                  field.onChange(value);
+                  if (settings.credentialsConfigured && value !== settings.provider) {
+                    setReplacing(true);
+                  }
+                }}
+                options={[
+                  { label: t("providerResend"), value: "resend" },
+                  { label: t("providerSes"), value: "ses" },
+                  { label: t("providerSmtp"), value: "smtp" },
+                ]}
+                value={field.value}
+              />
+            )}
+          />
+        </div>
         <Field
           error={errors.sender?.message}
           id="instance-mail-sender"

@@ -4,6 +4,7 @@ import { realPage } from "./real-page-mocks.test-fixture";
 /** Same capability assertions, with real route links and production error copy. */
 export function realCapability(entry: Entry): Entry {
   const proof = { ...entry.proof };
+  if (entry.id === "O139") proof.text = "Times in UTC";
   if (["S003", "S004", "S005", "S013"].includes(entry.id)) proof.role = "link";
   if (["A057", "A090"].includes(entry.id))
     proof.href = `/app/account/security?returnTo=${encodeURIComponent(`${realPage.path}?${realPage.params}`)}`;

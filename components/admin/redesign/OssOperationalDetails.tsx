@@ -1,6 +1,6 @@
 "use client";
 import { AdminFailureBreakdown } from "@/components/admin/AdminFailureBreakdown";
-import { displayTime, Metric, Panel, RankWindow } from "@/components/admin/AdminPrimitives";
+import { Badge, displayTime, Metric, Panel, RankWindow } from "@/components/admin/AdminPrimitives";
 import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminTemporalHealth } from "@/components/admin/AdminTemporalHealth";
@@ -32,9 +32,6 @@ export function OssOperationalDetails({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
-      <p className="text-xs text-fg-muted">
-        {t("dashboard.timeZone", { timeZone: context.timeZone })}
-      </p>
       {view === "Worker" && (
         <>
           <AdminWorkerHealth
@@ -146,6 +143,13 @@ export function OssOperationalDetails({
           id="admin-ops-events"
           title={t("dashboard.ops.title")}
         >
+          {data.availability.opsDelivery && (
+            <div className="mb-3">
+              <Badge status={data.ops.undeliveredCount ? "warning" : "ok"}>
+                {t("shellHealth.undelivered", { count: data.ops.undeliveredCount })}
+              </Badge>
+            </div>
+          )}
           {!data.ops.configured ? (
             <div className="mb-3 rounded-card bg-yellow/10 p-3">
               <p className="m-0 text-[13px] leading-relaxed text-yellow-text">

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.47.1] - 2026-11-09
+
+### Fixed
+
+- Improved administrator status cards, forms and loading states.
+
+- Fixed trial links opening project setup for people who are already signed in.
+
+- Fixed invitation acceptance when its link or role changes during confirmation.
+
 ## [0.47.0] - 2026-11-09
 
 ### Added

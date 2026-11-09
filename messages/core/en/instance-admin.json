@@ -180,7 +180,22 @@
           "releaseMigrationHolds": "Release migration holds",
           "reconcileChecks": "Reconcile rank checks"
         },
-        "inspectionPartial": "{count, plural, one {# schedule could not be inspected.} other {# schedules could not be inspected.}} These totals may be incomplete."
+        "inspectionPartial": "{count, plural, one {# schedule could not be inspected.} other {# schedules could not be inspected.}} These totals may be incomplete.",
+        "taskHelp": {
+          "planChecks": "Creates scheduled rank checks when they are due.",
+          "deliverAlerts": "Sends pending ranking alerts to their recipients.",
+          "recoverImports": "Resumes imports that stopped before completion.",
+          "recoverChecks": "Finds interrupted checks and marks or resumes them safely.",
+          "releaseReservations": "Releases reservations no longer needed by completed work.",
+          "dispatchChecks": "Sends queued rank checks to available workers.",
+          "maintainRuns": "Closes finished runs and recovers runs that stopped progressing.",
+          "reconcileUsage": "Confirms provider request outcomes using existing evidence.",
+          "sendDigests": "Sends grouped alerts when their delivery window arrives.",
+          "collectSearchInsights": "Imports queued Search Console data into the project.",
+          "checkAlertHealth": "Detects stalled alert delivery and reports problems.",
+          "releaseMigrationHolds": "Releases work paused for a database migration after it is safe to continue.",
+          "reconcileChecks": "Reconciles saved check results with their run status."
+        }
       },
       "ops": {
         "title": "Ops events",
@@ -415,7 +430,8 @@
       "temporarilyUnavailable": "Admin action is temporarily unavailable.",
       "sweepFailed": "Outbox sweep failed.",
       "sweepCompleted": "Outbox sweep completed: {delivered, number} of {attempted, number} delivered.",
-      "failed": "The operator action could not be completed."
+      "failed": "The operator action could not be completed.",
+      "sweepHelp": "Retries pending notifications that are ready to send. It does not create new alerts."
     },
     "audit": {
       "title": "Admin activity",
@@ -527,13 +543,13 @@
       "preview": "Review recovery",
       "commit": "Start recovery",
       "previewCount": "Eligible cases: {count, number}",
-      "noSpend": "Proof reconciliation and result restoration make no provider requests and create no additional paid attempts. Restoring a result does not settle an unknown charge.",
+      "noSpend": "Checks saved evidence and restores results without new provider requests. Original costs may still be unknown.",
       "excluded": "Skipped cases: {count, number}",
       "expires": "Preview expires",
       "recheckNote": "Each case and administrator permission will be checked again by the worker. Changed cases are skipped.",
       "previewSelected": "Review selected ({count, number})",
       "batchLimit": "Up to {count, number} cases per command",
-      "safetyNote": "A missing confirmation does not mean the request was never sent. Only positive evidence can prove acceptance or a safe no-send state. Historical accounting uncertainty is shown separately from unfinished work.",
+      "safetyNote": "A missing confirmation does not prove a request was never sent.",
       "selectCase": "Select {project}, {provider}",
       "historical": "Historical accounting",
       "empty": "No cases match these filters.",
@@ -715,16 +731,16 @@
         "taskLookupReason": "Native provider evidence is still required."
       },
       "closedUnknown": "Closed, cost unknown",
-      "closedUnknownNote": "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again.",
+      "closedUnknownNote": "Closed by an operator. Cost is still unknown; history is kept and recovery will not run again.",
       "approvedScope": "{targets, number} targets, {attempts, number} attempt per target.",
       "taskOnly": {
         "closedUnknown": "Closed, accounting unknown",
-        "closedUnknownNote": "These requests were closed by an operator. Accounting remains unknown. History is retained; the same requests will not trigger recovery or reminders again.",
+        "closedUnknownNote": "Closed by an operator. Accounting is still unknown; history is kept and recovery will not run again.",
         "blockedScopes": "Recovery restricted by uncertainty: {projects, number} projects, {connections, number} connections.",
         "newAttemptNote": "If there is no retained result and no positive proof that sending never began, ask a project member to create a new run through the normal preview and authorization checks.",
         "projectBlocked": "Project actions are restricted by unresolved accounting.",
         "connectionBlocked": "Connection actions are restricted by unresolved accounting.",
-        "noSpend": "Proof reconciliation and result restoration make no provider requests. Restoring a result does not settle an unknown accounting state.",
+        "noSpend": "Restores saved results without new provider requests. Accounting may remain unknown.",
         "originalRun": "Resume {count, number} original, unstarted runs under the owner’s retained authorization. Normal provider admission still applies. No new run or duplicate attempt is created.",
         "accountingState": "Accounting state",
         "unknown": "Unknown",
