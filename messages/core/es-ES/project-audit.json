@@ -172,6 +172,8 @@
         "pricingFeedbackSubmitted": "Opinión sobre precios enviada",
         "projectCheckRequested": "Comprobación del proyecto solicitada",
         "projectCreated": "Proyecto creado",
+        "domainVerificationGranted": "Verificación de dominio concedida",
+        "domainVerificationRevoked": "Verificación de dominio revocada",
         "projectDefaultViewUpdated": "Vista predeterminada del proyecto actualizada",
         "projectDefaultsUpdated": "Valores predeterminados del proyecto actualizados",
         "projectDeleted": "Proyecto eliminado",
@@ -259,7 +261,9 @@
         "webhookCreated": "Webhook creado",
         "webhookDeleted": "Webhook eliminado",
         "webhookUpdated": "Webhook actualizado",
-        "weeklyDigestSent": "Informe semanal enviado"
+        "weeklyDigestSent": "Informe semanal enviado",
+        "siteAuditCancelled": "Auditoría del sitio cancelada",
+        "siteAuditResumed": "Auditoría del sitio reanudada"
       }
     },
     "filters": {

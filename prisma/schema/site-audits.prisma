@@ -1,0 +1,60 @@
+model SiteAuditRun {
+  id              String              @id @default(cuid())
+  publicId        String              @unique
+  projectId       String
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reportId        String              @unique
+  report          AgentReport         @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  target          String
+  state           String              @default("queued")
+  stopReason      String?
+  requestedPages  Int
+  budgetPages     Int
+  pagesCrawled    Int                 @default(0)
+  requests        Int                 @default(0)
+  priority        Int                 @default(0)
+  generation      Int                 @default(0)
+  leaseToken      String?
+  leaseExpiresAt  DateTime?
+  workflowId      String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  lastHeartbeatAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  pages           SiteAuditPage[]
+  frontier        SiteAuditFrontier[]
+
+  @@index([state, createdAt, id])
+  @@index([projectId, createdAt, id])
+  @@map("site_audit_runs")
+}
+
+model SiteAuditPage {
+  id        String       @id @default(cuid())
+  runId     String
+  run       SiteAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  urlHash   String       @db.VarChar(64)
+  ordinal   Int
+  facts     Json
+  createdAt DateTime     @default(now())
+
+  @@unique([runId, urlHash])
+  @@unique([runId, ordinal])
+  @@map("site_audit_pages")
+}
+
+model SiteAuditFrontier {
+  id        String       @id @default(cuid())
+  runId     String
+  run       SiteAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  urlHash   String       @db.VarChar(64)
+  url       String
+  depth     Int
+  state     String       @default("queued")
+  createdAt DateTime     @default(now())
+
+  @@unique([runId, urlHash])
+  @@index([runId, state, depth, createdAt, id])
+  @@map("site_audit_frontier")
+}

@@ -77,6 +77,39 @@ describe("notifyOps", () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
+  it("persists and delivers once when the throttle lookup rejects", async () => {
+    enableOps();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.set.mockRejectedValueOnce(new Error("throttle lookup unavailable"));
+    const delivery = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", delivery);
+
+    await expect(
+      notifyOps({
+        dedupeKey: "sync:project:gsc",
+        kind: "traffic_sync",
+        severity: "error",
+        title: "Sync failed",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(mocks.set).toHaveBeenCalledTimes(1);
+    expect(mocks.create).toHaveBeenCalledExactlyOnceWith({
+      data: {
+        dedupeKey: "sync:project:gsc",
+        fields: undefined,
+        kind: "traffic_sync",
+        severity: "error",
+        title: "Sync failed",
+      },
+    });
+    expect(delivery).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledExactlyOnceWith({
+      data: { attempts: { increment: 1 }, deliveredAt: expect.any(Date), lastError: null },
+      where: { id: "event_1" },
+    });
+  });
+
   it("persists a redacted outbox row before a failed Slack attempt", async () => {
     enableOps();
     const sequence: string[] = [];

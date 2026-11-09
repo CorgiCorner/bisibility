@@ -1,9 +1,9 @@
 "use server";
-
 import {
   consumeAccountEmailCodeBudget,
   isCurrentEmailOtpError,
 } from "@/lib/actions/account-email-code-budget";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   confirmAccountEmailChangeSchema,
   confirmCurrentAccountEmailVerificationSchema,
@@ -104,6 +104,7 @@ export async function requestAccountEmailChangeCode(): Promise<AccountEmailChang
     throw new Error("Verification code could not be sent.");
   }
 
+  recordAppAction(session);
   await writeAudit({
     action: "account.email_change_code_requested",
     actorId: session.user.id,
@@ -139,6 +140,7 @@ export async function requestAccountEmailChange(
     throw new Error("Verification code could not be sent.");
   }
 
+  recordAppAction(session);
   await writeAudit({
     action: "account.email_change_requested",
     actorId: session.user.id,
@@ -179,17 +181,14 @@ export async function confirmAccountEmailChange(input: unknown): Promise<Account
   const session = await requireSession();
   const data = confirmAccountEmailChangeSchema.parse(input);
   const current = await accountEmailContext(session.user.id);
-
   if (sameEmail(current.email, data.newEmail)) {
     throw new Error("Enter a different email address.");
   }
-
   // Other sessions are revoked by the `user.update.before` auth hook, which Better Auth runs
   // after the code has been verified and consumed and before the address is written. A wrong
   // code therefore never touches sessions, and a revocation failure aborts the change. The
   // count is taken here for the audit row; the sweep below only catches a hook that did not run.
   const revokedSessionCount = await countOtherSessions(session);
-
   try {
     await auth.api.changeEmailEmailOTP({
       body: { newEmail: data.newEmail, otp: data.code },
@@ -198,17 +197,15 @@ export async function confirmAccountEmailChange(input: unknown): Promise<Account
   } catch {
     throw new Error("The verification code is invalid or expired, or the email is unavailable.");
   }
-
+  recordAppAction(session);
   const updated = await accountEmailContext(session.user.id);
   if (!sameEmail(updated.email, data.newEmail) || !updated.emailVerified) {
     throw new Error("Email change could not be confirmed.");
   }
-
   const survivors = await revokeOtherSessions(session);
   if (survivors > 0) {
     console.error("[account] sessions survived the email change hook", { survivors });
   }
-
   revalidateAccountEmailViews();
   await notifyPreviousAddress({
     dateFormat: current.dateFormat,
@@ -238,7 +235,6 @@ export async function requestCurrentAccountEmailVerification(
   if (current.emailVerified) {
     throw new Error("Email is already verified.");
   }
-
   try {
     await auth.api.sendVerificationOTP({
       body: { email: data.email, type: "email-verification" },
@@ -247,7 +243,7 @@ export async function requestCurrentAccountEmailVerification(
   } catch {
     throw new Error("Verification code could not be sent.");
   }
-
+  recordAppAction(session);
   await writeAudit({
     action: "account.email_verification_requested",
     actorId: session.user.id,
@@ -269,7 +265,6 @@ export async function confirmCurrentAccountEmailVerification(
   if (current.emailVerified) {
     throw new Error("Email is already verified.");
   }
-
   let verifiedUserId: string;
   try {
     const response = await auth.api.verifyEmailOTP({
@@ -280,10 +275,10 @@ export async function confirmCurrentAccountEmailVerification(
   } catch {
     throw new Error("The verification code is invalid or expired.");
   }
-
   if (verifiedUserId !== session.user.id) {
     throw new Error("Email verification could not be confirmed.");
   }
+  recordAppAction(session);
   const updated = await accountEmailContext(session.user.id);
   if (!sameEmail(updated.email, data.email) || !updated.emailVerified) {
     throw new Error("Email verification could not be confirmed.");
@@ -297,7 +292,7 @@ export async function confirmCurrentAccountEmailVerification(
     targetId: current.publicId,
     targetType: "user",
   });
-
   revalidateAccountEmailViews();
+
   return { email: updated.email, emailVerification: "verified", status: "verified" };
 }

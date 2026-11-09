@@ -15,12 +15,11 @@ describe("OverviewChartHeader", () => {
     expect(definition).toHaveClass(
       "mt-[3px]",
       "block",
-      "min-h-[2lh]",
       "font-sans",
       "text-[11px]",
       "leading-normal",
       "text-fg-muted",
     );
-    expect(definition).not.toHaveClass("font-mono");
+    expect(definition).not.toHaveClass("font-mono", "min-h-[2lh]");
   });
 });

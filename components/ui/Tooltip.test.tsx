@@ -332,3 +332,90 @@ describe("Tooltip server rendering", () => {
     ).not.toThrow();
   });
 });
+
+it("opens click-enabled feature help with one tap and dismisses with Escape", async () => {
+  render(
+    <Tooltip content="Count reports, not individual links" semantics="description" openOnClick>
+      <button type="button">Backlink help</button>
+    </Tooltip>,
+  );
+  const trigger = screen.getByRole("button", { name: "Backlink help" });
+  await act(async () => {
+    fireEvent.click(trigger);
+  });
+  expect(screen.getByRole("tooltip")).toHaveTextContent("Count reports, not individual links");
+  expect(trigger).toHaveAccessibleDescription("Count reports, not individual links");
+  fireEvent.keyDown(document, { key: "Escape" });
+  act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
+  expect(screen.queryByRole("tooltip")).toBeNull();
+});
+it("keeps click-enabled help open when focus already opened it before the click", async () => {
+  render(
+    <Tooltip content="Report details" semantics="description" openOnClick>
+      <button type="button">Report help</button>
+    </Tooltip>,
+  );
+  const trigger = screen.getByRole("button", { name: "Report help" });
+  fireEvent.focus(trigger);
+  expect(screen.getByRole("tooltip")).toBeVisible();
+  await act(async () => fireEvent.click(trigger));
+  act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
+  expect(screen.getByRole("tooltip")).toBeVisible();
+});
+it("does not opt ordinary or disabled tooltips into click opening", () => {
+  render(
+    <>
+      <Tooltip content="Ordinary tip" semantics="description">
+        <button type="button">Ordinary</button>
+      </Tooltip>
+      <Tooltip content="Disabled tip" semantics="description" openOnClick disabled>
+        <button type="button">Disabled</button>
+      </Tooltip>
+    </>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Ordinary" }));
+  fireEvent.click(screen.getByRole("button", { name: "Disabled" }));
+  act(() => vi.advanceTimersByTime(500));
+  expect(screen.queryByRole("tooltip")).toBeNull();
+});
+
+it.each([
+  ["Escape", 0],
+  ["outside", 0],
+  ["Escape", 900],
+  ["outside", 900],
+])(
+  "dismisses click-enabled help with %s after %dms of the touch leave delay",
+  (dismissal, elapsed) => {
+    render(
+      <Tooltip content="Report details" semantics="description" openOnClick>
+        <button type="button">Report help</button>
+      </Tooltip>,
+    );
+    const trigger = screen.getByRole("button", { name: "Report help" });
+    fireEvent.touchStart(trigger);
+    act(() => vi.advanceTimersByTime(700));
+    fireEvent.touchEnd(trigger);
+    act(() => vi.advanceTimersByTime(elapsed));
+    expect(screen.getByRole("tooltip")).toBeVisible();
+    if (dismissal === "Escape") fireEvent.keyDown(document, { key: "Escape" });
+    else {
+      fireEvent.pointerDown(document.body, { pointerType: "mouse" });
+    }
+    act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    act(() => vi.advanceTimersByTime(1500));
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  },
+);
+
+it("preserves the default long-press leave delay", () => {
+  const trigger = renderSingle();
+  fireEvent.touchStart(trigger);
+  act(() => vi.advanceTimersByTime(700));
+  fireEvent.touchEnd(trigger);
+  act(() => vi.advanceTimersByTime(1499));
+  expect(screen.getByRole("tooltip")).toBeVisible();
+  act(() => vi.advanceTimersByTime(1 + MOTION_TOOLTIP));
+  expect(screen.queryByRole("tooltip")).toBeNull();
+});

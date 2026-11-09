@@ -1,3 +1,4 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
@@ -49,6 +50,7 @@ export async function aiProviderRequest(
     ? await reserveLiveResponseCapacity(credentials, projectId)
     : undefined;
   const observed = await readObservedResponse<DataForSeoResponse>({
+    captureResponse: credentials.captureResponse,
     observer: credentials.usageObserver,
     requireMeasuredUsage: true,
     measure: aiUsageReceipt,
@@ -159,6 +161,12 @@ export async function supportedPromptModels(
     cache: "no-store",
     redirect: "error",
   });
+  await captureHttpResponse(
+    response,
+    credentials.captureResponse,
+    `${BASE}chat_gpt/llm_responses/models`,
+    2 * 1024 * 1024,
+  );
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined);
     throw new ProviderCallError("Provider model capabilities are unavailable.", 0);

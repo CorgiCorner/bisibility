@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assertAuthRequestCapability } from "./account-capability-extension";
 import { READ_ONLY_OAUTH_CALLBACK_HOSTS } from "./oauth-consent-copy";
+
+vi.mock("./account-capability-extension", { spy: true });
 
 const mocks = vi.hoisted(() => ({ getClient: vi.fn(), getPolicy: vi.fn() }));
 vi.mock("@/lib/queries/oauth-consent", () => ({
@@ -297,5 +300,12 @@ describe("OAuth consent scope guard", () => {
     };
     await handler?.(request as never);
     expect(request.body).toMatchObject({ scope: "openid read" });
+  });
+  it("refuses accepted consent when the account capability is denied", async () => {
+    vi.mocked(assertAuthRequestCapability).mockRejectedValueOnce(
+      new Error("Account access required"),
+    );
+    await expect(handler?.(context() as never)).rejects.toThrow("Account access required");
+    expect(mocks.getClient).not.toHaveBeenCalled();
   });
 });

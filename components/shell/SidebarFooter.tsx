@@ -22,10 +22,11 @@ export function SidebarFooter({
   planStatus = null,
   projectRef,
   showBrand = false,
+  showHostedLinks = false,
   version,
 }: Readonly<SidebarFooterProps>) {
   const badge =
-    planStatus && projectRef ? (
+    showHostedLinks && planStatus && projectRef ? (
       <PlanStatusBadge collapsed={collapsed} projectRef={projectRef} status={planStatus} />
     ) : null;
 

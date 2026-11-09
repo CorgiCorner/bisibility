@@ -3,6 +3,7 @@ import { captureDailyActivity } from "@/lib/achievements/capture";
 import { updateAchievementPreferences } from "@/lib/achievements/preferences";
 import { readAchievements } from "@/lib/achievements/read";
 import { setAchievementSharing } from "@/lib/achievements/sharing";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { getOptionalAvailableSession, requireSession } from "@/lib/auth/session";
 export async function touchAchievementVisit() {
   let session: Awaited<ReturnType<typeof getOptionalAvailableSession>>;
@@ -21,9 +22,15 @@ export async function loadAchievementProgress() {
 }
 export async function saveAchievementPreferences(input: unknown) {
   const session = await requireSession();
-  return updateAchievementPreferences(session.user.id, input);
+  const actionResult = await updateAchievementPreferences(session.user.id, input, () =>
+    recordAppAction(session),
+  );
+  return actionResult;
 }
 export async function shareAchievement(input: unknown) {
   const session = await requireSession();
-  return setAchievementSharing(session.user.id, input);
+  const actionResult = await setAchievementSharing(session.user.id, input, () =>
+    recordAppAction(session),
+  );
+  return actionResult;
 }

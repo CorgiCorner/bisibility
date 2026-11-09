@@ -1,9 +1,12 @@
+import { projectCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { hashApiKey } from "@/lib/providers/crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { issueApiKey, regenerateApiKey } from "./apiKey";
 
 const KEY_OLD = "key_abcdefghijklmnopqrstuvwx";
 const KEY_NEW = "key_bbcdefghijklmnopqrstuvwx";
+
+vi.mock("@/lib/auth/account-capability-extension", { spy: true });
 
 const mocks = vi.hoisted(() => {
   const prisma = {
@@ -23,7 +26,10 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
+vi.mock("@/lib/auth/authorize", async (original) => ({
+  ...(await original<typeof import("@/lib/auth/authorize")>()),
+  authorize: mocks.authorize,
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
@@ -222,5 +228,17 @@ describe("API key actions", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "api_key.regenerate", targetId: KEY_NEW }),
     );
+  });
+  it("does not issue a key when the account capability is denied", async () => {
+    vi.mocked(projectCapabilityAvailable).mockResolvedValueOnce(false);
+    await expect(
+      issueApiKey({
+        name: "Automation",
+        scope: "read",
+        expiresInDays: 30,
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+      }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    expect(mocks.prisma.apiKey.create).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SidebarFooter } from "./SidebarFooter";
 
@@ -56,5 +57,27 @@ describe("SidebarFooter", () => {
     const { container } = render(<SidebarFooter />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+  it("does not show a trial in self-hosted chrome even when a status was supplied", () => {
+    const view = render(
+      <SidebarFooter
+        showBrand
+        version="1.2.3"
+        projectRef="prj_test"
+        planStatus={{ kind: "trial", days: 7 }}
+        showHostedLinks={false}
+      />,
+    );
+    expect(screen.queryByText(/Trial/)).toBeNull();
+    view.rerender(
+      <SidebarFooter
+        showBrand
+        version="1.2.3"
+        projectRef="prj_test"
+        planStatus={{ kind: "trial", days: 7 }}
+        showHostedLinks
+      />,
+    );
+    expect(screen.getByText(/Trial/)).toBeVisible();
   });
 });

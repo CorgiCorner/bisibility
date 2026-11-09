@@ -25,7 +25,7 @@
     "topBar": {
       "beta": "Cloud",
       "fallbackWorkspace": "プロジェクト",
-      "setupProgress": "セットアップ / {current, number}/{total, number}"
+      "setupProgress": "{total, number} ステップ中 {current, number}"
     },
     "token": {
       "activeDescription": "値は非表示です。コピーが必要な場合はトークンをローテーションしてください。",

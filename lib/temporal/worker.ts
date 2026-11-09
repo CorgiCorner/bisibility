@@ -25,6 +25,7 @@ import { temporalConnectionOptions, temporalSdkConnectionOptions } from "./conne
 import { temporalDeploymentConfig } from "./deployment-config";
 import { fencedDigestTaskQueue } from "./digest-fencing";
 import { ensureDomainRatingSchedule } from "./domain-rating-bootstrap";
+import { ensureDomainVerificationSchedule } from "./domain-verification-bootstrap";
 import {
   ensureAlertDigestFlushSchedule,
   ensureAlertHealthSchedule,
@@ -49,6 +50,7 @@ import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 // bootstrap.ts for the calendar helpers, so re-exporting it there would close an import cycle.
 import { ensureSearchInsightsSyncSchedule } from "./search-insights-bootstrap";
 import { ensureSearchInsightsQueueReconciliationSchedule } from "./search-insights-reconciliation-bootstrap";
+import { withSiteAuditIntentProcessor } from "./site-audit-runtime";
 import { deleteRetiredTrafficIntentSweepSchedule } from "./traffic-bootstrap";
 import { ensureTrafficRuntimeSchedules } from "./traffic-runtime";
 import { probeTemporalTransport } from "./transport-probe";
@@ -198,6 +200,7 @@ async function run() {
         ensureCheckNotificationSummariesSchedule(),
         ensureAuditPurgeSchedule(),
         ensureDomainRatingSchedule(),
+        ensureDomainVerificationSchedule(),
         ensureRankCheckRawPurgeSchedule(),
         ensureQueuedRankCheckRetentionSchedule(),
         ensureAlertDigestFlushSchedule(),
@@ -262,11 +265,13 @@ async function run() {
       scheduler_driver: schedulerDriverValue,
       task_queues: taskQueues,
     });
-    await runWelcomeIntentRuntime({
-      connectionOptions,
-      deliveryWorker,
-      additionalWorkers: [fencedDigestWorker],
-      worker,
+    await withSiteAuditIntentProcessor(async () => {
+      await runWelcomeIntentRuntime({
+        connectionOptions,
+        deliveryWorker,
+        additionalWorkers: [fencedDigestWorker],
+        worker,
+      });
     });
   } finally {
     // Swallow close failures so `finally` cannot replace the original startup error;

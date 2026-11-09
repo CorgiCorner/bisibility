@@ -10,6 +10,7 @@ type AccountRequest = {
   auth: PersonalTokenAuth;
   headers: Headers;
   method: string;
+  onSuccess?: () => void;
   path: string[];
   req: Request;
   url: URL;
@@ -29,6 +30,7 @@ export async function handleAccountRequest(input: AccountRequest) {
   const execute = async () => {
     try {
       const response = await dispatchAccountRoute(ctx);
+      if (response?.ok) input.onSuccess?.();
       return response ?? errorResponse("not_found", "Route not found.", 404, { headers, instance });
     } catch (error) {
       return errorFromUnknown(error, headers, url);

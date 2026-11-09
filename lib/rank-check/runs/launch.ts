@@ -241,6 +241,7 @@ export async function launchRankCheckRun(
   }
   if ("outcome" in created) return created;
   if ("existing" in created) return created.existing;
+  host.onCommitted?.();
   // The committed row is the intent; this wake only shortens the worker's pickup latency.
   void publishWorkerIntent("rank_run").catch(() => undefined);
   return {
@@ -252,34 +253,40 @@ export async function launchRankCheckRun(
     targetCount: created.targetCount,
   };
 }
-export function launchRetryRun(input: {
-  actorId: string;
-  origin: ProviderRequestOrigin;
-  parentRun: RetryParentRun;
-  relation: RetryLaunch["relation"];
-}) {
+export function launchRetryRun(
+  input: {
+    actorId: string;
+    origin: ProviderRequestOrigin;
+    parentRun: RetryParentRun;
+    relation: RetryLaunch["relation"];
+  },
+  host: RankRunHostBoundary = {},
+) {
   if (input.parentRun.status !== "completed" && input.parentRun.status !== "cancelled") {
     throw new ApiConflictError("Only completed or cancelled runs can be retried.");
   }
   const itemStatus = input.relation === "retry_failed" ? "failed" : "deferred";
   const items = input.parentRun.items.filter((item) => item.status === itemStatus);
   if (items.length === 0) throw new ApiConflictError("The run has no matching items to retry.");
-  return launchRankCheckRun({
-    actorId: input.actorId,
-    origin: input.origin,
-    previewToken: "",
-    project: input.parentRun.project,
-    retry: {
-      parentRunId: input.parentRun.id,
-      parentRunPublicId: input.parentRun.publicId,
-      relation: input.relation,
-      sources: new Map(items.map((item) => [item.keyword.id, item.id])),
+  return launchRankCheckRun(
+    {
+      actorId: input.actorId,
+      origin: input.origin,
+      previewToken: "",
+      project: input.parentRun.project,
+      retry: {
+        parentRunId: input.parentRun.id,
+        parentRunPublicId: input.parentRun.publicId,
+        relation: input.relation,
+        sources: new Map(items.map((item) => [item.keyword.id, item.id])),
+      },
+      spec: {
+        kind: "selected",
+        keywordIds: items.map((item) => item.keyword.publicId as `kw_${string}`),
+        v: 1,
+      },
+      trigger: "retry" as LaunchRankCheckRunInput["trigger"],
     },
-    spec: {
-      kind: "selected",
-      keywordIds: items.map((item) => item.keyword.publicId as `kw_${string}`),
-      v: 1,
-    },
-    trigger: "retry" as LaunchRankCheckRunInput["trigger"],
-  });
+    host,
+  );
 }

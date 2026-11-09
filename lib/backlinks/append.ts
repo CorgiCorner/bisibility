@@ -1,3 +1,4 @@
+import { withRequestUsage } from "@/lib/analytics/request-usage-context";
 import "server-only";
 import { paymentFailure } from "@/lib/action-payment/session";
 import { ActionPaymentError } from "@/lib/action-payment/token";
@@ -76,7 +77,22 @@ export function loadMoreBacklinkRows(
   context: BacklinksServiceContext,
   options: LoadMoreBacklinkRowsOptions,
 ): Promise<BacklinksRowsOutcome>;
-export async function loadMoreBacklinkRows(
+export function loadMoreBacklinkRows(
+  context: BacklinksServiceContext,
+  options: LoadMoreBacklinkRowsOptions,
+): Promise<BacklinksRowsOutcome> {
+  return withRequestUsage(
+    {
+      projectId: context.projectId,
+      actorId: context.actorId,
+      source: context.origin.source,
+      feature: "backlinks",
+    },
+    () => loadMoreBacklinkRowsImpl(context, options),
+  );
+}
+
+async function loadMoreBacklinkRowsImpl(
   context: BacklinksServiceContext,
   options: LoadMoreBacklinkRowsOptions,
 ): Promise<BacklinksRowsOutcome> {

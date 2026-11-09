@@ -14,7 +14,7 @@ describe("ScheduleCell", () => {
     render(<ScheduleCell projectRef="prj_1" targets={[target("kw_a", "Daily")]} />);
     expect(screen.getByRole("link", { name: "Daily" })).toHaveAttribute(
       "href",
-      "/app/prj_1/runs/schedules/sch_Daily",
+      "/app/prj_1/schedules/sch_Daily",
     );
   });
   it("identifies manual targets without inventing a schedule", () => {
@@ -36,10 +36,10 @@ describe("ScheduleCell", () => {
     fireEvent.click(screen.getByRole("button", { name: "2 schedules" }));
     expect(
       await screen.findByRole("menuitem", { name: /Daily.*United States.*Desktop/ }),
-    ).toHaveAttribute("href", "/app/prj_1/runs/schedules/sch_Daily");
+    ).toHaveAttribute("href", "/app/prj_1/schedules/sch_Daily");
     expect(screen.getByRole("menuitem", { name: /Weekly.*Mobile/ })).toHaveAttribute(
       "href",
-      "/app/prj_1/runs/schedules/sch_Weekly",
+      "/app/prj_1/schedules/sch_Weekly",
     );
     expect(screen.getByRole("menuitem", { name: /Manual/ })).toHaveAttribute(
       "aria-disabled",

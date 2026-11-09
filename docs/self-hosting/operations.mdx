@@ -55,41 +55,41 @@ for process or host outages also ping an external dead-man monitor such as healt
 
 ## Instance admin
 
-An empty installation redirects marketing, sign-in, onboarding, and application pages to `/setup`.
-Enter a name and email, then verify the code. Account creation, administrator assignment, and the
-audit commit together. Only one setup submission can complete. `/setup` stays open only while no
-account exists. Without email delivery, the first code appears in server logs. Production codes never
-use logs afterward. Setup never offers another account, and non-admins receive not-found at
-`/app/admin`.
+An empty installation redirects marketing, sign-in, onboarding and application pages to `/setup`. Enter a name and email, then verify the code. Account creation, administrator assignment and the audit commit together; only one submission can complete.
+`/setup` stays open only while no account exists. Without email delivery, the first code appears in server logs; production codes never use logs afterward.
+Setup never offers another account, and non-admins receive not-found at `/app/admin`.
 
 > **Upgrade note:** Existing installations with user accounts do not enter the setup flow, even if no
 > administrator is assigned. Use the seed command below to choose an administrator after upgrading.
 
-`/app/admin` provides cross-instance operations without extending project permissions. It shows
-worker identity and liveness, check totals and lag, recent failures, analytics freshness, Temporal signals, the event outbox, instance counts, and monthly rank-check cost. Rate-limited actions test
-Slack and retry undelivered events. Existing deployments can grant the role by email after migrations:
+`/app/admin` provides instance operations without extending project permissions:
+
+- **Overview > Status:** worker, checks, failures and email health, with links to the relevant operations.
+- **Operations > Worker:** worker heartbeat, release and environment, schema health and Temporal schedules.
+- **Operations > Checks:** check totals, failures, fallbacks and deferred URL presence checks.
+- **Operations > Data sources:** provider health, data age and failures.
+- **Operations > Tasks:** inspect and recover interrupted tasks, with protected recovery actions.
+- **Operations > Notifications:** delivery history, test notifications and outbox processing.
+- **Users > Accounts:** search accounts and inspect status, creation date, last activity and project count; deactivate or reactivate an account and reset rate limits when authorized.
+- **Email > Sending today** and **Email > Settings:** daily allowances and instance mail configuration.
+- **Audit:** filter and page through the history of administrator actions.
+
+Usage and costs belong to project dashboards, not the instance admin. Provider credentials are managed through project integrations; Data sources reports operational health only.
+
+Existing deployments can grant the administrator role by email after migrations:
 
 ```bash
 node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com
 ```
 
-Run it inside the deployed app container, such as `docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`.
-Equivalent platform shells include `fly ssh console` and `railway ssh`. A checkout also works when `DATABASE_URL` targets the instance; hosted databases need its public connection string.
+Run inside the app container: `docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`. Platform shells such as `fly ssh console` and `railway ssh` also work, as does a checkout whose `DATABASE_URL` targets the instance.
 
-The seed is idempotent for an existing instance admin. It refuses another grant while an admin exists.
-Pass `--force` to add the named admin without revoking others. `INSTANCE_ADMIN_EMAIL` can provide the
-email. If an account has lost its authenticator and all backup codes, see
-[Admin recovery](/self-hosting/security#admin-recovery) for the audited emergency two-factor reset
-procedure.
+The seed is idempotent for an existing admin and refuses another grant while an admin exists. `--force` adds the named admin without revoking others; `INSTANCE_ADMIN_EMAIL` can supply the email. For a lost authenticator and backup codes, see [Admin recovery](/self-hosting/security#admin-recovery).
 
-Cross-tenant lists contain only identifiers, counts, statuses, durations and categorized errors, excluding keyword text, project names, email addresses, tenant domains and account data.
-Instance administration grants no tenant project access. Normal authorization still protects every project link.
-Without operator Slack, Redis still supplies worker liveness and instance stats remain available; Slack-specific controls report that Slack is not configured.
+Operational diagnostics omit customer content. Users > Accounts intentionally exposes account email addresses for administration. Instance administration grants no tenant project access. Normal project authorization still applies.
+Without operator notifications configured, worker health remains available and notification controls explain the missing configuration.
 
-Metering separates monthly recorded usage, current-cycle budgets and operations needing attention. Unknown amounts stay unknown; short IDs copy in full.
-Project names require existing ownership or membership. Other scopes show public IDs; administrator status grants no extra project access.
-Recovery actions remain separate from ordinary usage and require review.
-Unavailable budgets do not hide confirmed usage or operations needing attention. Paging reads and replaces only the selected usage or attention page, keeping the other page and budget snapshot unchanged. Failed or forbidden page reads retain previous rows and cursor for retry. Refresh for new budgets.
+Task recovery lives in **Operations > Tasks**. Review the evidence before resuming a task; accounting uncertainty remains a task state, without displaying money here.
 Task recovery retries a rolled-back database transaction at most twice, after 10 and 20 seconds, without provider requests or paid replay. Persistent failures remain visible; missing authority and changed business state are not retried.
 
 ## Routine operational checks
@@ -100,7 +100,7 @@ Run these source-checked checks at a cadence suitable to your deployment.
   authenticated `GET /api/v1/health` for worker state. A marker older than 26 hours is stale (HTTP 503).
 - **Worker revision:** When scheduled work is used, verify the worker is running and that the app and
   worker share the exact release revision.
-- **Operator notification delivery:** Check the event outbox and suppression state in `/app/admin`.
+- **Operator notification delivery:** Check the event outbox and suppression state in **Operations > Notifications** at `/app/admin`.
   Confirm the last digest arrived, and pair the channel with an external dead-man monitor for process
   or host failures.
 - **Backup freshness and restore rehearsal:** Confirm recent backups exist and perform a restore

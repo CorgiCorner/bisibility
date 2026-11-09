@@ -18,7 +18,7 @@ describe("LegacySchedulePage", () => {
     async (publicId) => {
       await expect(
         LegacySchedulePage({ params: Promise.resolve({ project: "project-alias", publicId }) }),
-      ).rejects.toThrow(`NEXT_REDIRECT:/app/prj_canonical/runs/schedules/${publicId}`);
+      ).rejects.toThrow(`NEXT_REDIRECT:/app/prj_canonical/schedules/${publicId}`);
       expect(resolve).toHaveBeenCalledWith("project-alias");
     },
   );

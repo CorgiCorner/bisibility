@@ -4,7 +4,6 @@ import { HistoryTime } from "@/components/keyword-detail-history/HistoryTime";
 import { positivePoint } from "@/components/keywords/grid/keyword-rank-quality-view";
 import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import { useFormatter, useTranslations } from "next-intl";
-import { KeywordCheckProvider } from "./KeywordCheckProvider";
 import { KeywordDetailComparison } from "./KeywordDetailComparison";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
 import { KeywordDetailRankEvidence } from "./KeywordDetailRankEvidence";
@@ -30,45 +29,6 @@ export function KeywordDetailRankSlot({
       state={positive ? "numeric" : "textual"}
       detail={
         <div className="grid gap-1.5 text-[12px]" data-testid="keyword-detail-qualified-position">
-          {current ? (
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span>
-                {t("checked")} <HistoryTime value={current.observedAt} timeZone={timeZone} />
-              </span>
-              <span>
-                <KeywordCheckProvider provider={current.provider} />
-              </span>
-            </div>
-          ) : null}
-          {!positive ||
-          (quality.best?.qualifyingCount ?? 0) > 1 ||
-          current?.freshness === "stale" ||
-          q.currentScopeState === "unavailable" ? (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              {!positive ? (
-                <KeywordDetailComparison
-                  quality={quality}
-                  timeZone={timeZone}
-                  showBaseline={false}
-                />
-              ) : null}
-              {quality.best && quality.best.qualifyingCount > 1 ? (
-                <span className="font-medium text-fg">
-                  {t(
-                    quality.best.definitionOrigin === "current_definition"
-                      ? "bestSummary"
-                      : "historicalBestSummary",
-                    { position: quality.best.position },
-                  )}
-                </span>
-              ) : null}
-              {current?.freshness === "stale" ? <span>{history("freshness.stale")}</span> : null}
-              {q.currentScopeState === "unavailable" ? (
-                <span>{t("currentScopeUnavailable")}</span>
-              ) : null}
-            </div>
-          ) : null}
-
           {!positive && historical ? (
             <div data-testid="keyword-detail-last-known">
               {t("lastKnown", { position: historical.position })} ·{" "}
@@ -81,6 +41,7 @@ export function KeywordDetailRankSlot({
               · <HistoryTime value={legacy.observedAt ?? legacy.recordedAt} timeZone={timeZone} />
             </div>
           ) : null}
+          {current?.freshness === "stale" ? <span>{history("freshness.stale")}</span> : null}
           <KeywordDetailRankEvidence quality={quality} timeZone={timeZone} />
         </div>
       }

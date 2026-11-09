@@ -20,6 +20,10 @@ const titles = {
   runSiteAudit: "Run site audit",
   listSiteAudits: "List site audits",
   getSiteAudit: "Get site audit",
+  getSiteAuditRun: "Get site audit run progress",
+  listSiteAuditPages: "List site audit pages",
+  cancelSiteAuditRun: "Cancel site audit run",
+  resumeSiteAuditRun: "Resume site audit run",
 } as const;
 
 const json = (schema: object) => ({ "application/json": { schema } });
@@ -29,16 +33,23 @@ export function researchWorkspacePaths() {
   const paths: Record<string, Record<string, object>> = {};
   for (const [key, policy] of Object.entries(researchWorkspaceOperationPolicy)) {
     const operationId = key as keyof typeof titles;
-    const audit = ["runSiteAudit", "listSiteAudits", "getSiteAudit"].includes(operationId);
+    const audit = operationId.includes("SiteAudit");
+    const auditControl = audit && operationId !== "runSiteAudit";
     const input = audit
       ? {
           properties: {
             project_id: publicIdSchema("prj"),
-            ...(operationId === "getSiteAudit" ? { report_id: publicIdSchema("agr") } : {}),
+            ...(policy.path.includes("{report_id}") ? { report_id: publicIdSchema("agr") } : {}),
+            ...(operationId === "listSiteAuditPages"
+              ? {
+                  offset: { type: "integer", minimum: 0, maximum: 100_000, default: 0 },
+                  limit: { type: "integer", minimum: 1, maximum: 100, default: 15 },
+                }
+              : {}),
           },
           required: ["project_id"],
         }
-      : researchWorkspaceSchemas[operationId];
+      : researchWorkspaceSchemas[operationId as keyof typeof researchWorkspaceSchemas];
     const pathParameters = ["project_id", "report_id"]
       .filter((name) => policy.path.includes(`{${name}}`))
       .map((name) => ({ in: "path", name, required: true, schema: input.properties?.[name] }));
@@ -98,10 +109,10 @@ export function researchWorkspacePaths() {
       parameters: mutation
         ? [
             ...pathParameters,
-            ...(audit ? [{ $ref: "#/components/parameters/IdempotencyKey" }] : []),
+            ...(audit && !auditControl ? [{ $ref: "#/components/parameters/IdempotencyKey" }] : []),
           ]
         : [...pathParameters, ...parameters],
-      ...(mutation
+      ...(mutation && !auditControl
         ? {
             requestBody: {
               content: json(

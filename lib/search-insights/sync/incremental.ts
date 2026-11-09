@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  setAnalyticsSyncConnection,
+  withAnalyticsSyncScope,
+} from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import { createGscSearchAnalyticsSession } from "@/lib/providers/analytics/gsc-search-analytics";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
@@ -56,11 +60,12 @@ const FAILURE_STATUS = {
 // Older days belong to the backfill workflow, which owns the cursor walking backward. A fresh
 // import overlaps it on one day, and later advancing runs reread a short tail; each writer
 // replaces the whole day slice, so whichever lands last is authoritative.
-export async function runIncrementalSync(input: {
+async function runIncrementalSyncImpl(input: {
   now?: Date;
   projectId: string;
   property?: string;
   syncSessions?: boolean;
+  analyticsTrigger?: "manual" | "scheduled" | "api" | "unknown";
 }): Promise<IncrementalResult> {
   const syncSessions = input.syncSessions ?? true;
   const connection = await resolveSearchInsightsConnection(input.projectId);
@@ -74,6 +79,7 @@ export async function runIncrementalSync(input: {
     return { daysProcessed: 0, projectId: input.projectId, status: "not_connected" };
   }
 
+  setAnalyticsSyncConnection(connection.connectionId);
   const now = input.now ?? new Date();
   const property = input.property ?? connection.property;
   const key = {
@@ -280,7 +286,14 @@ export async function runIncrementalForAllProjects(
   const results: IncrementalResult[] = [];
   for (const project of projects) {
     try {
-      results.push(await runIncrementalSync({ now, projectId: project.id, syncSessions: false }));
+      results.push(
+        await runIncrementalSync({
+          now,
+          projectId: project.id,
+          syncSessions: false,
+          analyticsTrigger: "scheduled",
+        }),
+      );
     } catch (error) {
       console.error("[search-insights] project sync failed", { error, projectId: project.id });
       results.push({ daysProcessed: 0, projectId: project.id, status: "failed" });
@@ -293,4 +306,15 @@ export async function runIncrementalForAllProjects(
     console.error("[search-insights] sessions sweep failed", { error });
   }
   return { projects: results };
+}
+
+export function runIncrementalSync(input: Parameters<typeof runIncrementalSyncImpl>[0]) {
+  return withAnalyticsSyncScope(
+    { projectId: input.projectId, provider: "gsc", trigger: input.analyticsTrigger ?? "unknown" },
+    () => runIncrementalSyncImpl(input),
+    (result) =>
+      !["failed", "needs_reauth", "rate_limited", "not_connected", "user_paused"].includes(
+        result.status,
+      ),
+  );
 }

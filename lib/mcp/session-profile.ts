@@ -2,7 +2,9 @@ import "server-only";
 
 import { type ApiAuth, authenticateBearer } from "@/lib/api/auth";
 import { type ApiScope, hasApiScope } from "@/lib/api/scope-policy";
+import { domainVerificationEnabled } from "@/lib/domain-verification/feature";
 import { getMcpToolDefinitions } from "./definitions";
+import { domainVerificationTools } from "./domain-verification-tools";
 import type { McpApiAuthorization } from "./rest-call";
 
 // The hosted MCP registers the full catalog and has no toolset filter, so every
@@ -62,6 +64,8 @@ async function resolveSessionScopes(authorization: McpApiAuthorization) {
 export async function dispatchSessionProfile(authorization: McpApiAuthorization) {
   const scopes = await resolveSessionScopes(authorization);
   const definitions = getMcpToolDefinitions();
+  if (await domainVerificationEnabled().catch(() => false))
+    definitions.push(...domainVerificationTools);
   const names = definitions.map((tool) => tool.name);
   const readOnlyCount = definitions.filter((tool) => tool.annotations.readOnlyHint).length;
   const profile: SessionProfile = {

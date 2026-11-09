@@ -1,6 +1,7 @@
 "use server";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requireAiSource } from "@/lib/ai-research/context";
 import { acceptResearchedPrompts } from "@/lib/ai-research/prompt-research-accept";
 import { researchProjectState } from "@/lib/ai-research/prompt-research-project";
@@ -11,6 +12,7 @@ import { canWriteAiTracking } from "@/lib/ai-tracking/projections/schedule-list"
 import { auditTrackingAcceptance, auditTrackingCatalog } from "@/lib/api/ai-tracking-audit";
 import { trackingScope } from "@/lib/api/ai-tracking-service";
 import { getProjectRole } from "@/lib/auth/authorize";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { reuseWindowLabel } from "@/lib/project-data-cache/duration";
 import { effectiveProjectLookupTtl } from "@/lib/provider-lookups/effective-lookup-ttl";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
@@ -69,7 +71,10 @@ export async function lookupPromptResearchAction(projectId: string, value: unkno
       },
     );
     if (!outcome.ok || outcome.estimate) return outcome;
+    if (!outcome.cached && !input.estimate_only && input.max_cost_cents !== 0)
+      recordAppAction(actor);
     const state = await researchProjectState(project.id);
+
     return { ...outcome, prompts: projectResearchQuestions(outcome.result.rows, state) };
   } catch (error) {
     const budget = budgetFailureResult(error);
@@ -78,15 +83,19 @@ export async function lookupPromptResearchAction(projectId: string, value: unkno
   }
 }
 export async function trackPromptResearchAction(projectId: string, value: unknown) {
-  const actor = await getActionActor();
-  const project = await trackingScope(actor, projectId, true);
-  const result = await acceptResearchedPrompts(project.id, value, (resource, saved, tx) =>
-    auditTrackingCatalog(actor, project, resource, "POST", {}, saved, tx),
-  );
-  await auditTrackingAcceptance(actor, project, result.added);
-  revalidatePath(`/app/${projectId}/prompt-tracker`);
-  revalidatePath(`/app/${projectId}/prompt-research`);
-  return { added: result.added, topics: result.state.topics, tracked: result.state.tracked };
+  return withCapacityFailure(async () => {
+    const actor = await getActionActor();
+    const project = await trackingScope(actor, projectId, true);
+    const result = await acceptResearchedPrompts(project.id, value, (resource, saved, tx) =>
+      auditTrackingCatalog(actor, project, resource, "POST", {}, saved, tx),
+    );
+    if (result.added > 0) recordAppAction(actor);
+    await auditTrackingAcceptance(actor, project, result.added);
+    revalidatePath(`/app/${projectId}/prompt-tracker`);
+    revalidatePath(`/app/${projectId}/prompt-research`);
+
+    return { added: result.added, topics: result.state.topics, tracked: result.state.tracked };
+  });
 }
 
 export type PromptResearchPageData = Omit<

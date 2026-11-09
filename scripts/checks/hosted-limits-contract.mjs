@@ -1,22 +1,10 @@
 #!/usr/bin/env node
-/**
- * Hosted limits docs and env-template contract checker.
- *
- * Imports the same machine contract as production deployment and proves the
- * canonical docs page (`docs/deployment-options.mdx`) contains both current
- * hosted limit values. Rejects missing, wrong, or duplicated current values in
- * any other public docs page so the numbers stay in exactly one place.
- *
- * Also rejects current hosted commercial values reintroduced alongside the
- * limit variable names in the root and generated release environment
- * templates. Blank optional entries and mechanism-only comments do not trigger
- * false positives.
- */
+/** Keeps hosted commercial values out of public docs and optional environment templates. */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { HOSTED_LIMITS } from "../contracts/hosted-limits.mjs";
+import { RESOURCE_LIMIT_KEYS } from "../contracts/hosted-limits.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, "../..");
@@ -29,45 +17,12 @@ function escapeRegex(str) {
   return str.replaceAll(/[$()*+.?[\\\]{}^|]/g, "\\$&");
 }
 
-function commaFormat(value) {
-  return value.replace(/(\d)(?=(\d{3})+$)/g, "$1,");
-}
-
-/**
- * Build the canonical, duplication, and env-line regexes for each hosted limit.
- *
- * The canonical page must match the canonical regex. No other page may match
- * the duplication regex. Both use contextual phrases so common bare numbers
- * (e.g. "3" or "1000" in API docs) do not false-positive. The duplication
- * regex also catches the variable name on the same line as the value.
- *
- * The env-line regex matches a line that contains the limit variable name and
- * the raw contracted value on the same line. Blank optional entries and
- * mechanism-only comments (no value) do not match.
- */
-const LIMIT_CHECKS = Object.entries(HOSTED_LIMITS).map(([key, value]) => {
-  const comma = commaFormat(value);
-  const escapedVar = escapeRegex(key);
-  const escapedValue = escapeRegex(value);
-  const escapedComma = escapeRegex(comma);
-
-  let phrase;
-  let varLine;
-  if (key === "BISIBILITY_MAX_KEYWORDS_PER_PROJECT") {
-    const numAlt = [escapedComma, escapedValue].join("|");
-    phrase = `\\b(?:${numAlt})\\W+keywords?\\s+per\\s+project`;
-    varLine = `${escapedVar}[^\\n]*\\b${escapedValue}\\b`;
-  } else {
-    phrase = `\\b${escapedValue}\\W+(?:owned\\s+)?projects?\\s+per\\s+user`;
-    varLine = `${escapedVar}[^\\n]*\\b${escapedValue}\\b`;
-  }
-
-  const canonicalRegex = new RegExp(phrase, "i");
-  const duplicationRegex = new RegExp(`${phrase}|${varLine}`, "i");
-  const envLineRegex = new RegExp(varLine, "i");
-
-  return { key, value, canonicalRegex, duplicationRegex, envLineRegex };
-});
+// Reject commercial defaults without treating ordinary self-host examples as plans.
+const COMMERCIAL_CLAIMS = [
+  /\b1,?000\s+keywords?\s+per\s+project\b/i,
+  /\b3\s+(?:owned\s+)?projects?\s+per\s+user\b/i,
+  /\b(?:hosted|cloud|solo|pro|agency)\b[^\n]*\b\d[\d,.]*\s+(?:scheduled\s+|tracked\s+|owned\s+)?(?:projects?|keywords?|seats?)\b/i,
+];
 
 function readDocPages(docsRoot) {
   const pages = [];
@@ -90,15 +45,12 @@ function checkEnvFiles(envFiles) {
   for (const file of envFiles) {
     if (!existsSync(file)) continue;
     const content = readFileSync(file, "utf8");
-    for (const { key, value, envLineRegex } of LIMIT_CHECKS) {
-      if (envLineRegex.test(content)) {
-        const rel = path.relative(root, file);
-        errors.push(
-          `${rel} contains ${key} value ${value}; current hosted numbers belong only in docs/deployment-options.mdx.`,
-        );
-      }
+    for (const key of RESOURCE_LIMIT_KEYS) {
+      const defaults = new RegExp(`${escapeRegex(key)}[^\\n]*[=:]\\s*[\\x60\\x22]?([1-9][0-9,]*)`, "i");
+      if (defaults.test(content)) errors.push(`${path.relative(root, file)} contains a commercial default for ${key}.`);
     }
   }
+
   return errors;
 }
 
@@ -110,23 +62,12 @@ export function check({
   const errors = [];
 
   const canonicalContent = readFileSync(canonicalPage, "utf8");
-  for (const { key, value, canonicalRegex } of LIMIT_CHECKS) {
-    if (!canonicalRegex.test(canonicalContent)) {
-      errors.push(`Canonical page missing ${key} value ${value}.`);
-    }
-  }
-
-  const pages = readDocPages(docsRoot);
-  for (const page of pages) {
-    if (path.resolve(page) === path.resolve(canonicalPage)) continue;
+  if (!canonicalContent.includes("https://bisibility.com/pricing")) errors.push("Canonical page must link to pricing.");
+  if (!/Unset or [`]?0[`]? means unlimited/.test(canonicalContent)) errors.push("Canonical page must explain unlimited self-host defaults.");
+  for (const page of readDocPages(docsRoot)) {
     const content = readFileSync(page, "utf8");
-    for (const { key, value, duplicationRegex } of LIMIT_CHECKS) {
-      if (duplicationRegex.test(content)) {
-        const rel = path.relative(root, page);
-        errors.push(
-          `${rel} contains ${key} value ${value}; current hosted numbers belong only in docs/deployment-options.mdx.`,
-        );
-      }
+    if (COMMERCIAL_CLAIMS.some((pattern) => pattern.test(content))) {
+      errors.push(`${path.relative(root, page)} contains hosted commercial limits; link to pricing instead.`);
     }
   }
 

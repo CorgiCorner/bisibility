@@ -30,7 +30,10 @@ const plainIssueKeys = {
 
 type AuditRow = SiteAuditPage & { id: string };
 
-export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult }>) {
+export function SiteAuditResults({
+  result,
+  showPartial = true,
+}: Readonly<{ result: SiteAuditResult; showPartial?: boolean }>) {
   const t = useTranslations("projectSiteAudit");
   const [sorting, setSorting] = useState<DataTableSort | null>(null);
   const [selectedPage, setSelectedPage] = useState<SiteAuditPage | null>(null);
@@ -155,7 +158,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
         })}
         tone={result.summary.errors ? "dropped" : "steady"}
       />
-      {result.state === "partial" ? (
+      {showPartial && result.state === "partial" ? (
         <p className="m-0 text-[13px] text-fg-muted" role="status">
           {result.stopReason === "finished"
             ? t("partialUnavailable")

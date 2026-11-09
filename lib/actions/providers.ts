@@ -1,6 +1,5 @@
 "use server";
-
-import { updateSearchSyncSettings } from "@/lib/actions/presence-settings";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   readAnalyticsSurfaceFromHeaders,
   readConsentFromCookies,
@@ -34,6 +33,7 @@ import {
   updateProviderCostSchema,
   updateProviderRateSchema,
 } from "@/lib/schemas/provider";
+import { saveSearchSyncSettings } from "@/lib/settings/search-sync-save";
 import { z } from "zod";
 import {
   getActionActor,
@@ -75,42 +75,65 @@ const storedGooglePropertySaveSchema = z
 
 const providerMutationSuccess = { ok: true } as const;
 
-async function persistSelectedSearchSyncSettings(data: {
-  pace?: "gentle" | "normal";
-  projectId: string;
-  retentionMonths?: 3 | 6 | 12 | 16;
-}) {
-  if (data.pace === undefined || data.retentionMonths === undefined) return;
-  await updateSearchSyncSettings({
-    pace: data.pace,
-    projectId: data.projectId,
-    retentionMonths: data.retentionMonths,
-  });
+async function persistSelectedSearchSyncSettings(
+  data: {
+    pace?: "gentle" | "normal";
+    projectId: string;
+    retentionMonths?: 3 | 6 | 12 | 16;
+  },
+  onCommitted: (actor: Awaited<ReturnType<typeof getActionActor>>) => void,
+) {
+  if (data.pace === undefined || data.retentionMonths === undefined) return null;
+  return saveSearchSyncSettings(
+    {
+      pace: data.pace,
+      projectId: data.projectId,
+      retentionMonths: data.retentionMonths,
+    },
+    onCommitted,
+  );
 }
 
 export async function completeGooglePropertySelection(input: unknown) {
   const data = parseActionInput(googlePropertySelectionSchema, input);
-  if ((await getPendingGoogleOAuthProvider(data.projectId)) === "gsc") {
-    await persistSelectedSearchSyncSettings(data);
+  let committedActor: Parameters<typeof recordAppAction>[0] = null;
+  try {
+    if ((await getPendingGoogleOAuthProvider(data.projectId)) === "gsc") {
+      await persistSelectedSearchSyncSettings(data, (actor) => {
+        committedActor = actor;
+      });
+    }
+    return await completePendingGooglePropertySelection(
+      { projectId: data.projectId, property: data.property },
+      (actor) => {
+        committedActor = actor;
+      },
+    );
+  } finally {
+    if (committedActor) recordAppAction(committedActor);
   }
-  return completePendingGooglePropertySelection({
-    projectId: data.projectId,
-    property: data.property,
-  });
 }
 
 export async function cancelGooglePropertySelection(input: unknown) {
   const data = parseActionInput(cancelGooglePropertySelectionSchema, input);
-  return cancelPendingGoogleOAuth(data.projectId);
+  return cancelPendingGoogleOAuth(data.projectId, (actor) => recordAppAction(actor));
 }
 
 export async function disconnectGoogleSearchConsole(input: unknown) {
   const data = parseActionInput(cancelGooglePropertySelectionSchema, input);
+  const { actor, scope } = await providerScope(data.projectId);
   const result = await disconnectProviderConnection(
     { projectId: data.projectId, providerId: "gsc" },
-    await providerScope(data.projectId),
+    scope,
   );
-  await cancelPendingGoogleOAuth(data.projectId);
+  let committed = !!result;
+  try {
+    await cancelPendingGoogleOAuth(data.projectId, () => {
+      committed = true;
+    });
+  } finally {
+    if (committed) recordAppAction(actor);
+  }
   revalidateProviderViews();
   return result;
 }
@@ -120,33 +143,47 @@ async function providerScope(projectId: string) {
   const project = await requireProjectScope(actor, "manage", projectId, {
     type: "provider_connection",
   });
-  return { actorId: actor.id, projectId: project.id };
+  return { actor, scope: { actorId: actor.id, projectId: project.id } };
 }
 
 export async function loadStoredGoogleProperties(input: unknown) {
   const data = parseActionInput(storedGooglePropertyLoadSchema, input);
-  const scope = await providerScope(data.projectId);
+  const { scope } = await providerScope(data.projectId);
   return loadStoredGooglePropertiesService({ projectId: scope.projectId, provider: data.provider });
 }
 
 export async function saveStoredGoogleProperty(input: unknown) {
   const data = parseActionInput(storedGooglePropertySaveSchema, input);
-  const scope = await providerScope(data.projectId);
-  if (data.provider === "gsc") await persistSelectedSearchSyncSettings(data);
-  const result = await saveStoredGooglePropertyService({
-    actorId: scope.actorId,
-    projectId: scope.projectId,
-    property: data.property,
-    provider: data.provider,
-  });
-  if (result.status === "saved") revalidateProviderViews();
-  return result;
+  const { actor, scope } = await providerScope(data.projectId);
+  let committed = false;
+  try {
+    if (data.provider === "gsc")
+      await persistSelectedSearchSyncSettings(data, () => {
+        committed = true;
+      });
+    const result = await saveStoredGooglePropertyService(
+      {
+        actorId: scope.actorId,
+        projectId: scope.projectId,
+        property: data.property,
+        provider: data.provider,
+      },
+      () => {
+        committed = true;
+      },
+    );
+    committed ||= result.status === "saved";
+    if (result.status === "saved") revalidateProviderViews();
+    return result;
+  } finally {
+    if (committed) recordAppAction(actor);
+  }
 }
 
 export async function connectProvider(input: unknown) {
   const data = parseActionInput(connectProviderActionSchema, input);
-  const scope = await providerScope(data.projectId);
-  await connectProviderConnection(data, scope);
+  const { actor, scope } = await providerScope(data.projectId);
+  await connectProviderConnection(data, scope, {}, () => recordAppAction(actor));
   revalidateProviderViews();
   const surface = await readAnalyticsSurfaceFromHeaders();
   if (surface) {
@@ -162,8 +199,9 @@ export async function connectProvider(input: unknown) {
 
 export async function testConnection(input: unknown) {
   const data = parseActionInput(testProviderConnectionSchema, input);
-  const scope = await providerScope(data.projectId);
+  const { actor, scope } = await providerScope(data.projectId);
   const result = await testProviderConnection(data, scope);
+  if (result.ok) recordAppAction(actor);
   await trackServerEvent("provider_connection_tested", {
     consent: await readConsentFromCookies(),
     userId: scope.actorId ?? undefined,
@@ -177,12 +215,14 @@ export async function testConnection(input: unknown) {
       provider: data.providerId,
     },
   });
+
   return result;
 }
 
 export async function updateProviderSettings(input: unknown) {
   const data = parseActionInput(providerSettingsSchema, input);
-  await setProviderSettings(data, await providerScope(data.projectId));
+  const { actor, scope } = await providerScope(data.projectId);
+  await setProviderSettings(data, scope, () => recordAppAction(actor));
   revalidateProviderViews();
 
   return providerMutationSuccess;
@@ -190,7 +230,9 @@ export async function updateProviderSettings(input: unknown) {
 
 export async function updateProviderCost(input: unknown) {
   const data = parseActionInput(updateProviderCostSchema, input);
-  await updateProviderCostConnection(data, await providerScope(data.projectId));
+  const { actor, scope } = await providerScope(data.projectId);
+  await updateProviderCostConnection(data, scope);
+  recordAppAction(actor);
   revalidateProviderViews();
 
   return providerMutationSuccess;
@@ -198,7 +240,9 @@ export async function updateProviderCost(input: unknown) {
 
 export async function updateProviderRate(input: unknown) {
   const data = parseActionInput(updateProviderRateSchema, input);
-  await updateProviderConnectionRate(data, await providerScope(data.projectId));
+  const { actor, scope } = await providerScope(data.projectId);
+  await updateProviderConnectionRate(data, scope);
+  recordAppAction(actor);
   revalidateProviderViews();
 
   return providerMutationSuccess;
@@ -206,7 +250,9 @@ export async function updateProviderRate(input: unknown) {
 
 export async function disconnectProvider(input: unknown) {
   const data = parseActionInput(disconnectProviderSchema, input);
-  const result = await disconnectProviderConnection(data, await providerScope(data.projectId));
+  const { actor, scope } = await providerScope(data.projectId);
+  const result = await disconnectProviderConnection(data, scope);
+  if (result) recordAppAction(actor);
   revalidateProviderViews();
 
   return result;

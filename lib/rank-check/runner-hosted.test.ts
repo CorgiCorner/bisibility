@@ -14,6 +14,7 @@ vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) =
 
 import { DefinitionUnavailableError } from "@/lib/measurement-definitions/errors";
 import * as workerDefinitions from "@/lib/measurement-definitions/worker-session";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import type { SerpProvider } from "@/lib/providers/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -93,6 +94,26 @@ const provider: SerpProvider = {
   testConnection: vi.fn(),
   fetchRank: mocks.fetchRank,
 };
+
+it("preserves a weekly hosted refusal and finishes the execution without fallback", async () => {
+  const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+  const finish = vi.fn();
+  mocks.connection.mockResolvedValue({
+    credentialSource: "hosted",
+    projectId: "project_1",
+    provider: "dataforseo",
+  });
+  mocks.startExecution.mockResolvedValue({
+    credentials: {},
+    started: true,
+    costCents: null,
+    lastRequestCostCents: null,
+    finish,
+  });
+  mocks.fetchRank.mockRejectedValueOnce(denial);
+  await expect(runCheck(input(provider))).rejects.toBe(denial);
+  expect(finish).toHaveBeenCalledOnce();
+});
 
 beforeEach(() => {
   resetRecordedWorkerDefinition();

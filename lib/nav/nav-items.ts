@@ -14,11 +14,14 @@ import {
 import { DOCS_URL } from "@/lib/site/site";
 import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/ssr/Binoculars";
 import { BookOpenTextIcon as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
 import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
+import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
 import { GearSixIcon as GearSix } from "@phosphor-icons/react/dist/ssr/GearSix";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/ssr/Globe";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/ssr/Link";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { MapTrifoldIcon as MapTrifold } from "@phosphor-icons/react/dist/ssr/MapTrifold";
 import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/ssr/PlayCircle";
 import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
@@ -125,9 +128,9 @@ export const navItemGroups = [
   },
   {
     id: "ai",
-    label: "AI Search",
+    label: "AI visibility",
     tag: "AI",
-    tooltip: "Track and research how AI answers mention your brand.",
+    tooltip: "Track brand visibility in AI answers.",
   },
   {
     id: "reports",
@@ -200,6 +203,13 @@ const railNavEntries = [
   },
   {
     group: "seo",
+    label: "SERP Playground",
+    scope: "own-axis",
+    segment: "serp-playground",
+    icon: MagnifyingGlass,
+  },
+  {
+    group: "seo",
     label: "Keyword Research",
     scope: "own-axis",
     segment: "keyword-research",
@@ -245,11 +255,19 @@ const railNavEntries = [
   { group: "project", label: "Runs", scope: "project", segment: "runs", icon: PlayCircle },
   {
     group: "project",
+    label: "Schedules",
+    scope: "project",
+    segment: "schedules",
+    icon: CalendarBlank,
+  },
+  {
+    group: "project",
     label: "Providers",
     scope: "project",
     segment: "providers",
     icon: PuzzlePiece,
   },
+  { group: "project", label: "Usage", scope: "project", segment: "usage", icon: Gauge },
   { group: "project", label: "Install", scope: "project", segment: "install", icon: Sparkle },
   { group: "project", label: "Settings", scope: "project", segment: "settings", icon: GearSix },
 ] as const satisfies readonly RailNavEntry[];

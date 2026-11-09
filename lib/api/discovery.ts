@@ -4,6 +4,7 @@ import { type MigrationReadiness, readMigrationReadiness } from "@/lib/data-migr
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import { prisma } from "@/lib/db/prisma";
 import { getBakedAppRevision } from "@/lib/deployment/runtime-env.generated";
+import { domainVerificationEnabled } from "@/lib/domain-verification/feature";
 import { getWorkerLivenessDetails, type WorkerLivenessStatus } from "@/lib/ops/liveness";
 import { getTemporalSnapshot, type TemporalSnapshotState } from "@/lib/ops/temporal-snapshot";
 import { providerRateLimitPolicy } from "@/lib/providers/rate-limit";
@@ -239,8 +240,22 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
   return jsonResponse(body, { headers: ctx.headers, status: degraded ? 503 : 200 });
 }
 
-export function getOpenApi(ctx: Pick<ApiContext, "headers">) {
-  return jsonResponse(getOpenApiDocument(), { headers: ctx.headers });
+export async function getOpenApi(ctx: Pick<ApiContext, "headers">) {
+  const document = getOpenApiDocument();
+  if (await domainVerificationEnabled().catch(() => false)) {
+    return jsonResponse(document, { headers: ctx.headers });
+  }
+  const paths: Record<string, unknown> = { ...document.paths };
+  const schemas: Record<string, unknown> = { ...document.components.schemas };
+  delete paths["/projects/{project_id}/domain-verification"];
+  delete paths["/projects/{project_id}/domain-verification/check"];
+  delete schemas.DomainVerification;
+  delete schemas.DomainVerificationInput;
+  delete schemas.DomainVerificationResponse;
+  return jsonResponse(
+    { ...document, paths, components: { ...document.components, schemas } },
+    { headers: ctx.headers },
+  );
 }
 
 export function capabilities(ctx: Pick<ApiContext, "headers">) {

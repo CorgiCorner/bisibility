@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 import { normalizeSchedule } from "@/lib/actions/_schedule";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
@@ -38,6 +39,7 @@ export async function updateProjectDefaultsInTransaction(
     if (auditActorId !== null) throw new DefaultsReviewRequiredError();
     await assertDefaultsProjectKey(tx, principal.id, project, true, new Date());
   } else await assertDefinitionActor(tx, actorId, project.id, "update", "project_defaults");
+  await prepareResourceCapacity(tx, { projectId: project.id, dimensions: [] });
   await lockProjectForProviderMutation(tx, project.id);
   const writable = await tx.project.findUnique({
     where: { id: project.id },
@@ -56,6 +58,15 @@ export async function updateProjectDefaultsInTransaction(
     locationKey: resolved.locationKey,
   };
   const cadence = normalizeSchedule(data);
+  const capacity = await prepareResourceCapacity(tx, {
+    projectId: project.id,
+    dimensions: ["scheduledKeywords"],
+    cadence: {
+      dimension: "scheduleFrequencies",
+      before: before ? { ...before, enabled: true } : undefined,
+      after: { ...cadence, enabled: true },
+    },
+  });
   const stored = await tx.projectDefaults.upsert(
     projectDefaultsUpsertArgs({
       defaults: { ...cadence, ...(persistMarket ? market : {}) },
@@ -87,5 +98,6 @@ export async function updateProjectDefaultsInTransaction(
     },
     tx,
   );
+  await capacity.check();
   return stored;
 }

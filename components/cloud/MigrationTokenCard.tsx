@@ -251,14 +251,14 @@ export function MigrationTokenCard({
         ) : null}
       </div>
       {tokenSecurityNote && status !== "error" && (status === "none" || !visibleToken) ? (
-        <div className="flex items-start gap-[9px] border-border border-t bg-bg-sunken px-[22px] py-3.5 text-[12px] leading-[1.5] text-fg-muted">
-          <LockSimple
-            aria-hidden
-            className="mt-px flex-none text-green-text"
-            size={14}
-            weight="regular"
-          />
-          <span>{tokenSecurityNote}</span>
+        <div
+          className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-2 border-border border-t bg-bg-sunken px-5.5 py-3.5 text-xs leading-5 text-fg-muted"
+          data-migration-security-note
+        >
+          <span className="grid h-5 w-4 place-items-center">
+            <LockSimple aria-hidden className="text-green-text" size={14} weight="regular" />
+          </span>
+          <span className="min-w-0">{tokenSecurityNote}</span>
         </div>
       ) : null}
     </div>

@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -83,6 +84,7 @@ async function importChunk(
 ) {
   const chunk = storedChunk(row);
   if (chunk.kind === "sections") {
+    await prepareResourceCapacity(tx, { projectId: project.id, dimensions: [] });
     const maps = await loadKeywordMapsForProject(tx, project.id, chunk.sections.sourceKeywordIds);
     return importCloudImportSections(token, project, chunk.sections, maps, tx);
   }
@@ -133,6 +135,7 @@ export async function finalizeImportSession(
   token: VerifiedMigrationToken,
   sessionId: string,
   url: URL,
+  onCommitted?: () => void,
 ) {
   const project = await loadMigrationProject(token);
   const job = await ownedJob(token, sessionId);
@@ -153,6 +156,7 @@ export async function finalizeImportSession(
     throw conflict("Import session is already finalizing.");
   }
 
+  onCommitted?.();
   let counts = recordCounts(job.counts);
   let imported = await prisma.migrationImportChunk.count({
     where: { importedAt: { not: null }, jobId: job.id },

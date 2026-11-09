@@ -1,14 +1,14 @@
 "use client";
+import { useAdminTableSort } from "@/components/admin/AdminTableState";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import type { PartialEvidenceView } from "@/lib/metering/recovery/evidence-model";
 import { useFormatter, useTranslations } from "next-intl";
-import { useState } from "react";
 
 type PartialRow = Omit<PartialEvidenceView, "kind"> & { evidenceKind: PartialEvidenceView["kind"] };
 
 export function RecoveryPartialEvidence({ rows }: { rows: PartialEvidenceView[] }) {
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [sorting, setSorting] = useAdminTableSort("evidence");
   const t = useTranslations("instanceAdmin.recovery.evidence");
   const format = useFormatter();
   const columns: DataTableColumn<PartialRow>[] = [
@@ -61,7 +61,11 @@ export function RecoveryPartialEvidence({ rows }: { rows: PartialEvidenceView[] 
     },
   ];
   return (
-    <section className="grid gap-3" aria-label={t("partialTitle")}>
+    <section
+      data-testid="oss-partial-evidence"
+      className="grid gap-3"
+      aria-label={t("partialTitle")}
+    >
       <h3 className="m-0 text-sm font-semibold">{t("partialTitle")}</h3>
       <p className="m-0 text-xs text-fg-muted">{t("partialHelp")}</p>
       <DataTable

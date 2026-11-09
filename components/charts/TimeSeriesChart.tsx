@@ -172,9 +172,9 @@ export function TimeSeriesChart({
           scale="point"
           axisLine={false}
           tickLine={false}
-          height={alignedDates ? 48 : 28}
+          height={alignedDates ? 48 : 36}
           tickSize={alignedDates ? 0 : 6}
-          tickMargin={alignedDates ? 20 : 2}
+          tickMargin={alignedDates ? 20 : 10}
           interval={alignedDates ? "preserveStartEnd" : "preserveEnd"}
           tick={
             alignedDates
@@ -200,6 +200,7 @@ export function TimeSeriesChart({
           minTickGap={16}
         />
         <YAxis
+          tickMargin={10}
           domain={[min, max ?? "auto"]}
           allowDataOverflow={max !== undefined}
           reversed={reversed}

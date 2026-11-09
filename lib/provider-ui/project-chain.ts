@@ -12,6 +12,7 @@ export async function mutateProjectChain(
   tx: Prisma.TransactionClient,
   state: ProviderUiState,
   command: ChainCommand,
+  onWrite?: () => void,
 ): Promise<ProviderActionResult | null> {
   const nonce = { commandId: command.commandId };
   if (command.expectedRevision !== state.revision)
@@ -77,5 +78,6 @@ export async function mutateProjectChain(
       tx,
     );
   }
+  if (ordered.length > 0) onWrite?.();
   return null;
 }

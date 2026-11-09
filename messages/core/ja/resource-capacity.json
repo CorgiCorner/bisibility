@@ -1,0 +1,15 @@
+{
+  "resourceCapacity": {
+    "resource": "リソース",
+    "projects": "プロジェクト",
+    "scheduledKeywords": "スケジュール済みキーワード",
+    "scheduleFrequencies": "スケジュール頻度",
+    "trackedPrompts": "追跡プロンプト",
+    "promptSchedules": "プロンプトのスケジュール頻度",
+    "competitorsPerProject": "プロジェクトの競合",
+    "alertRulesAndWebhooks": "アラートルールとWebhook",
+    "usage": "{limit} 件中 {used} 件を使用。追加要求: {requested} 件。",
+    "crawlPagesPerCrawl": "クロールごとのページ数",
+    "concurrentCrawls": "同時クロール数"
+  }
+}

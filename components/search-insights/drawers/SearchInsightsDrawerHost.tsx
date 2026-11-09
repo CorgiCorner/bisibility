@@ -1,13 +1,12 @@
 "use client";
-
 import { trackingScheduleValueWithDepthOverride } from "@/components/keywords/add/AddKeywordDrawerExtensions";
 import { useToast } from "@/components/ui/toast-context";
-import type { addKeywordsMatrix } from "@/lib/actions/keyword";
 import type {
   LoadSearchInsightsTrackDialogAction,
   SearchInsightsTrackDialogPayload,
 } from "@/lib/actions/search-insights-drawers";
 import { track } from "@/lib/analytics/client";
+import type { addKeywordsMatrix } from "@/lib/capacity/client-actions";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";

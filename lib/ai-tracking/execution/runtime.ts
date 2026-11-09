@@ -1,5 +1,6 @@
 import { aiPaymentGuard } from "@/lib/ai-research/payment";
 import { receiptOperationId } from "@/lib/metering/operation-reference";
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import "server-only";
 import { trackingAdmissionContext } from "@/lib/ai-tracking/admission/context";
 import { recheckTrackingAdmission } from "@/lib/ai-tracking/admission/launch";
@@ -90,7 +91,14 @@ export const trackingExecutionPorts: TrackingExecutionPorts = {
   },
   async prepare(plan) {
     const context = await recheckTrackingAdmission(plan);
-    await freshModelCapabilities(plan, context.credentials);
+    await freshModelCapabilities(plan, {
+      ...context.credentials,
+      captureResponse: connectionResponseRecorder(
+        plan.credentialConnectionId,
+        plan.provider,
+        "ai_catalog",
+      ),
+    });
     const { journal, attribution } = await trackingJournal(plan, context.estimatedCostCents);
     return {
       observer: journal.observer,

@@ -1,5 +1,5 @@
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { observation, observationPage } from "./history.test-fixture";
 import { determinateHistoryAbsence } from "./no-match-presentation";
@@ -21,11 +21,13 @@ it("shows determinate absence without rank-only unknown fields", () => {
     />,
   );
   expect(screen.getByText("Not in top 20")).toBeVisible();
+  expect(screen.queryByText("Checked top 20")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Details" }));
   expect(screen.getByText("Checked top 20")).toBeVisible();
   expect(screen.getByText("No ranked result to compare")).toBeVisible();
   expect(
     screen.queryByText(
-      /Qualification unknown|Freshness unknown|Comparison unknown|ranking URL: unknown/,
+      /No confirmed position|Freshness unknown|Comparison unknown|ranking URL: unknown/,
     ),
   ).toBeNull();
 });
@@ -47,7 +49,7 @@ it("keeps unknown qualification for indeterminate coverage", () => {
     />,
   );
   expect(screen.queryByText("Not in top 20")).toBeNull();
-  expect(screen.getByText("Qualification unknown")).toBeVisible();
+  expect(screen.getByText("No confirmed position")).toBeVisible();
 });
 
 it("preserves a known exit event for a determinate absence", () => {

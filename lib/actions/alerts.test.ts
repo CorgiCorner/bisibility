@@ -1,4 +1,5 @@
 import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "@/lib/alerts/webhook-target";
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { decryptSecret } from "@/lib/providers/crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -346,15 +347,17 @@ describe("alert actions", () => {
       publicId: rulePublicId,
     });
 
-    const result = await createAlertRule({
-      channels: [],
-      conditionType: "threshold",
-      name: "Top 50",
-      projectId: projectPublicId,
-      targetIds: [keywordPublicId],
-      targetType: "keyword",
-      thresholdPosition: 50,
-    });
+    const result = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "threshold",
+        name: "Top 50",
+        projectId: projectPublicId,
+        targetIds: [keywordPublicId],
+        targetType: "keyword",
+        thresholdPosition: 50,
+      }),
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
@@ -377,16 +380,18 @@ describe("alert actions", () => {
       topN: 10,
     });
 
-    const result = await createAlertRule({
-      channels: [],
-      conditionType: "exits_top_n",
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-      topN: 3,
-    });
+    const result = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "exits_top_n",
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+        topN: 3,
+      }),
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
@@ -413,16 +418,18 @@ describe("alert actions", () => {
       targets: [{ keyword: { publicId: keywordPublicId }, tag: null }],
     });
 
-    const keywordResult = await createAlertRule({
-      channels: [],
-      conditionType: "position_drop",
-      dropPositions: 5,
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-    });
+    const keywordResult = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "position_drop",
+        dropPositions: 5,
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+      }),
+    );
 
     expect(keywordResult.ok).toBe(true);
     if (!keywordResult.ok) throw new Error(keywordResult.error);
@@ -444,16 +451,18 @@ describe("alert actions", () => {
       targets: [{ keyword: null, tag: { publicId: tagPublicId } }],
     });
 
-    const tagResult = await createAlertRule({
-      channels: [],
-      conditionType: "position_drop",
-      dropPositions: 5,
-      name: "Edited name",
-      projectId: projectPublicId,
-      requestId: rulePublicId,
-      targetIds: [],
-      targetType: "all",
-    });
+    const tagResult = unwrapCapacityResult(
+      await createAlertRule({
+        channels: [],
+        conditionType: "position_drop",
+        dropPositions: 5,
+        name: "Edited name",
+        projectId: projectPublicId,
+        requestId: rulePublicId,
+        targetIds: [],
+        targetType: "all",
+      }),
+    );
 
     expect(tagResult.ok).toBe(true);
     if (!tagResult.ok) throw new Error(tagResult.error);

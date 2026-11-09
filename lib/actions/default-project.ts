@@ -1,7 +1,7 @@
 "use server";
-
 import { getActionActor } from "@/lib/actions/_shared";
 import type { ActionFailureResult, ActionResult } from "@/lib/actions/action-result";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { requireMutableAccountSession } from "@/lib/demo/mutable-account-session";
@@ -56,6 +56,7 @@ export async function setDefaultProject(
 
   const result = await persistDefaultProject(session.user.id, target);
   const projectId = target?.publicId ?? null;
+  if (result.changed) recordAppAction(session);
   if (result.changed) {
     await writeAudit({
       action: "user.default_project.update",
@@ -66,5 +67,6 @@ export async function setDefaultProject(
       targetType: "user",
     });
   }
+
   return { ok: true, value: { projectId } };
 }

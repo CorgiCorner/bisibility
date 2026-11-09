@@ -31,6 +31,7 @@ export function resolveRankReportTargets(
         freshForMs: targetReportFreshForMs(target, policy),
         horizon: policy.horizon,
         minimumRequestedDepth: policy.minimumRequestedDepth ?? undefined,
+        allowShallowPositive: policy.allowShallowPositive,
         requestedGeo: target.requestedGeo,
       },
     ),

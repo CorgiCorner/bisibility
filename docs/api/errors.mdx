@@ -28,6 +28,7 @@ Errors use `application/problem+json`.
 | <span id="unauthorized"></span>`unauthorized` | 401 | Missing or invalid bearer API key. |
 | `unauthorized` | 419 | Instance import migration token is invalid, expired, or already used. |
 | <span id="forbidden"></span>`forbidden` | 403 | API key scope or project scope does not allow the operation. |
+| <span id="subscription-required"></span>`subscription_required` | 403 | Paid access is required for this operation. The problem includes `code: "subscription_required"` and `subscriptionRequired: true`. Ask the project owner to activate a subscription. |
 | <span id="byok_required"></span>`byok_required` | 403 | The account runs paid provider work only on its own provider keys, and none serves this request. `details.provider` and `details.capability` name the key to connect. Nothing was sent to a provider or charged. |
 | <span id="not_found"></span>`not_found` | 404 | Route or resource was not found. |
 | <span id="method_not_allowed"></span>`method_not_allowed` | 405 | HTTP method is not handled by the router. |
@@ -64,6 +65,35 @@ the likely cause and the next action.
 | HTTP | `401` |
 | Problem type | `unauthorized` |
 | Related guide | [Authentication](/authentication) |
+
+### Paid access required
+
+The problem type is `https://bisibility.com/problems/subscription-required`.
+HTTP status remains `403`. This refusal applies when a paid operation requires
+active access, including a new site audit after trial access ends. Existing
+permission refusals continue to use `forbidden`.
+
+```json
+{
+  "type": "https://bisibility.com/problems/subscription-required",
+  "code": "subscription_required",
+  "title": "Paid access required",
+  "status": 403,
+  "detail": "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+  "subscriptionRequired": true,
+  "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_a00000000000000000000000/site-audits",
+  "docs_url": "https://bisibility.com/docs/api/errors#subscription-required"
+}
+```
+
+Ask the project owner to activate a subscription before retrying. Connecting a
+provider key or adding usage credits alone does not grant the required access.
+Cached results and existing reports can remain readable without starting new work.
+
+MCP returns a tool result with `isError: true`. Both
+`structuredContent.error.code` and the JSON in `content[].text` contain
+`subscription_required`, a paid-access message, status `403`, and the original
+REST problem in `error.payload`. It is not a JSON-RPC transport error.
 
 ### 403 forbidden
 

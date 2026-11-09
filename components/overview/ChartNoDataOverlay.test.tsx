@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 
 describe("ChartNoDataOverlay", () => {
-  it("uses the sunken surface token for the icon well", () => {
+  it("uses the shared empty-state surface for the icon well", () => {
     const { container } = render(
       <ProjectDashboardMessages>
         <ChartNoDataOverlay />
@@ -12,7 +12,7 @@ describe("ChartNoDataOverlay", () => {
     );
 
     const iconWell = container.querySelector("svg")?.closest("span");
-    expect(iconWell).toHaveClass("bg-bg-sunken");
+    expect(iconWell).toHaveClass("bg-accent-soft");
     expect(iconWell).not.toHaveAttribute("style");
   });
 });

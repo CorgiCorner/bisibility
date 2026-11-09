@@ -1,4 +1,5 @@
 import "server-only";
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { prisma } from "@/lib/db/prisma";
 import { isLocalDevelopmentDeployment } from "@/lib/deployment/deployment";
 import { EmailNotSubmittedError, EmailProviderUnavailableError } from "@/lib/email/types";
@@ -110,6 +111,7 @@ export async function sendWeeklyDigestForProject(
     }
     // Persistence failure after handoff must leave claimed, never a retryable transport failure.
     await finishDigest(key, { status: "sent" });
+    recordResultReceipt({ userId, surface: "email", nonEmpty: data.checkedKeywords > 0 && !data.incidentOnly });
   }
   const metrics = { failedChecksCount: data.failedChecksCount, topMovers: data.topMovers.length };
   const outcome = await finalizeDigest(project, now, metrics, incidentDigest);

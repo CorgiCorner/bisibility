@@ -3,11 +3,12 @@ import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvid
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
-import { addManualCompetitor, replaceCompetitorMarkets } from "@/lib/actions/competitor-set";
+import { replaceCompetitorMarkets } from "@/lib/actions/competitor-set";
 import { updateCompetitorDetails } from "@/lib/actions/competitor-set-edit";
 import { removeManagedCompetitor } from "@/lib/actions/competitors";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addManualCompetitor } from "@/lib/capacity/client-actions";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getCompetitorSetSettings } from "@/lib/queries/competitor-set-settings";
 import { asProjectRef } from "@/lib/routing/app-path";

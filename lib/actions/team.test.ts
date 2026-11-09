@@ -18,6 +18,7 @@ const USER_PUBLIC_ID = "usr_abcdefghijklmnopqrstuvwx";
 const mocks = vi.hoisted(() => ({
   prisma: {
     $transaction: vi.fn(),
+    $executeRaw: vi.fn(),
     alertRuleRecipient: { deleteMany: vi.fn() },
     dailySendCounter: { upsert: vi.fn() },
     invite: {
@@ -36,7 +37,7 @@ const mocks = vi.hoisted(() => ({
       updateMany: vi.fn(),
     },
     notificationPreference: { deleteMany: vi.fn() },
-    project: { findFirst: vi.fn(), update: vi.fn() },
+    project: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn() },
   },
   requireSession: vi.fn(),
@@ -90,6 +91,7 @@ describe("team actions", () => {
       notificationDue: false,
     });
     mocks.prisma.$transaction.mockImplementation((fn) => fn(mocks.prisma));
+    mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "actor_1" });
     mocks.prisma.invite.updateMany.mockResolvedValue({ count: 1 });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
     mocks.prisma.invite.findUnique.mockResolvedValue(null);

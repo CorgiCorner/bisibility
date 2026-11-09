@@ -38,6 +38,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   const anonymous = await anonymousRateLimit(req);
   if ("response" in anonymous) return anonymous.response;
 
+  let committed = false;
   try {
     const params = await context.params;
     const sessionId = importSessionIdSchema.safeParse(params.sessionId);
@@ -67,8 +68,11 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       index,
       body.data,
       bytes,
+      () => {
+        committed = true;
+      },
     );
-    return resourceResponse(
+    const response = resourceResponse(
       {
         chunk_count: result.chunkCount,
         chunks_received: result.chunksReceived,
@@ -76,7 +80,11 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       },
       { headers: auth.headers },
     );
+    response.headers.set("X-Mutation-Committed", String(committed));
+    return response;
   } catch (error) {
-    return mapImportSessionError(req, error, anonymous.headers);
+    const response = mapImportSessionError(req, error, anonymous.headers);
+    response.headers.set("X-Mutation-Committed", String(committed));
+    return response;
   }
 }

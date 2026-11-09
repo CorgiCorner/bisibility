@@ -6,6 +6,7 @@ import {
   MISSING_PROJECT_BUDGET_MESSAGE,
   UNRESOLVED_USAGE_MESSAGE,
 } from "@/lib/metering/budget-denial";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -39,6 +40,7 @@ export async function outcome(load: () => Promise<AiResearchOutcome>): Promise<A
       return { ...payment, message: "Review the current payment quote before starting." };
     const safe = caught instanceof AiPreDispatchRefusal;
     const error = safe ? caught.original : caught;
+    if (isOperationAccessDeniedError(error) && error.subscriptionRequired) throw error;
     const refusal = safe ? { safeToStartNewRequest: true, retryBlocked: false } : {};
     if (error instanceof AiResearchValidationError)
       return {

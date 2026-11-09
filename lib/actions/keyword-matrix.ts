@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
@@ -117,10 +117,10 @@ export async function addKeywordsMatrix(input: unknown) {
       );
     const skippedDuplicates = rows.length - created.length;
     const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
-      FROM "keywords"
-      WHERE "projectId" = ${project.id}
-    `;
+    SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
+    FROM "keywords"
+    WHERE "projectId" = ${project.id}
+  `;
 
     await writeAudit(
       {
@@ -141,12 +141,24 @@ export async function addKeywordsMatrix(input: unknown) {
       },
       tx,
     );
-    await consumeSavedKeywords(tx, project.id, data.consumeSavedIds, promotedPairs);
-    return { created, persistedKeywordCount: keywordCountRow?.count ?? 0, skippedDuplicates };
+    const consumed = await consumeSavedKeywords(
+      tx,
+      project.id,
+      data.consumeSavedIds,
+      promotedPairs,
+    );
+    return {
+      created,
+      changed: persisted.created.length + persisted.restored.length + consumed > 0,
+      persistedKeywordCount: keywordCountRow?.count ?? 0,
+      skippedDuplicates,
+    };
   });
 
+  if (result.changed) recordAppAction(actor);
   revalidateKeywords();
   const warnings = uniqueWarnings(locations);
+
   return {
     created: result.created.length,
     persistedKeywordCount: result.persistedKeywordCount,

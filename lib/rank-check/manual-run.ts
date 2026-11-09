@@ -1,11 +1,11 @@
 import "server-only";
-
 import {
   getActionActor,
   parseActionInput,
   requireKeywordScope,
   revalidateRankCheckViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -32,7 +32,10 @@ function blockedCode(reason: LaunchRankCheckRunNothingToRunReason): RunCheckNowB
 
 export type { RunCheckNowResult } from "./manual-run-result";
 
-export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResult> {
+export async function manualRunCheckNow(
+  input: unknown,
+  onCommitted?: () => void,
+): Promise<RunCheckNowResult> {
   const data = parseActionInput(runCheckNowSchema, input);
   const actor = await getActionActor();
   const keyword = await requireKeywordScope(actor, "update", data.keywordId);
@@ -51,15 +54,18 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
 
   let launched: Awaited<ReturnType<typeof launchSingleRankCheckRun>>;
   try {
-    launched = await launchSingleRankCheckRun({
-      actorId: actor.id,
-      depth: data.depth,
-      keywordId: keyword.publicId as `kw_${string}`,
-      origin: APP_REQUEST_ORIGIN,
-      project,
-      providerId: data.providerId,
-      trigger: "manual",
-    });
+    launched = await launchSingleRankCheckRun(
+      {
+        actorId: actor.id,
+        depth: data.depth,
+        keywordId: keyword.publicId as `kw_${string}`,
+        origin: APP_REQUEST_ORIGIN,
+        project,
+        providerId: data.providerId,
+        trigger: "manual",
+      },
+      onCommitted ?? (() => recordAppAction(actor)),
+    );
   } catch (error) {
     const budgetFailure = budgetFailureResult(error);
     if (budgetFailure) return budgetFailure;

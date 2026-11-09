@@ -1,3 +1,5 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { createRecipientIds, recipientCreates } from "./alert-recipients";
 import "server-only";
 
 import { MAX_ALERT_RULES_PER_PROJECT } from "@/lib/alerts/limits";
@@ -22,7 +24,7 @@ const ruleInclude = {
 } as const;
 
 type TargetCreate = { keywordId?: string; tagId?: string };
-type RecipientCreate = { userId: string };
+
 type MarketCreate = { projectMarketId: string };
 
 function uniqueIds(ids: string[]) {
@@ -64,26 +66,6 @@ async function targetCreates(projectId: string, targetType: string, rawIds: stri
   return [];
 }
 
-async function recipientCreates(projectId: string, rawIds: string[]): Promise<RecipientCreate[]> {
-  const ids = uniqueIds(rawIds);
-  if (ids.length === 0) return [];
-  const users = await prisma.user.findMany({
-    select: { id: true },
-    where: {
-      OR: [{ id: { in: ids } }, { publicId: { in: ids } }],
-      AND: [
-        {
-          OR: [{ projects: { some: { id: projectId } } }, { memberships: { some: { projectId } } }],
-        },
-      ],
-    },
-  });
-  if (users.length !== ids.length) {
-    throw new Error("One or more recipients are not project members.");
-  }
-  return users.map(({ id }) => ({ userId: id }));
-}
-
 async function marketCreates(projectId: string, rawIds: string[]): Promise<MarketCreate[]> {
   const ids = uniqueIds(rawIds);
   if (ids.length === 0) return [];
@@ -99,26 +81,6 @@ async function marketCreates(projectId: string, rawIds: string[]): Promise<Marke
     throw new Error("One or more alert markets are not active project markets.");
   }
   return markets.map(({ id }) => ({ projectMarketId: id }));
-}
-
-async function createRecipientIds(data: AlertRuleForm, context: AlertMutationContext) {
-  if (data.recipientIds !== undefined) {
-    return data.recipientIds;
-  }
-  if (context.actorId) {
-    return [context.actorId];
-  }
-  if (!data.channels.includes("email")) {
-    return [];
-  }
-  const project = await prisma.project.findUnique({
-    select: { ownerId: true },
-    where: { id: context.projectId },
-  });
-  if (!project) {
-    throw new Error("Project owner could not be resolved for email alert recipients.");
-  }
-  return [project.ownerId];
 }
 
 function ruleData(
@@ -182,6 +144,10 @@ export async function createAlertRuleRecord(
   try {
     return await prisma.$transaction(
       async (tx) => {
+        const capacity = await prepareResourceCapacity(tx, {
+          projectId: context.projectId,
+          dimensions: ["alertRulesAndWebhooks"],
+        });
         const lockKey = `alert-rule-capacity:${context.projectId}`;
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
         const count = await tx.alertRule.count({ where: { projectId: context.projectId } });
@@ -216,6 +182,7 @@ export async function createAlertRuleRecord(
           },
           tx,
         );
+        await capacity.check();
         return rule;
       },
       { timeout: 20_000 },
@@ -251,6 +218,18 @@ export async function updateAlertRuleRecord(
     ? await recipientCreates(context.projectId, data.recipientIds ?? [])
     : [];
   return prisma.$transaction(async (tx) => {
+    const admission = await prepareResourceCapacity(tx, {
+      projectId: context.projectId,
+      dimensions: [],
+    });
+    const current = admission.enabled
+      ? await tx.alertRule.findUniqueOrThrow({ where: { id: before.id } })
+      : before;
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: context.projectId,
+      dimensions: ["alertRulesAndWebhooks"],
+      activating: data.enabled === true && !current.enabled,
+    });
     if (replacesMarkets) {
       await tx.alertRuleMarket.deleteMany({ where: { ruleId: before.id } });
     }
@@ -278,6 +257,7 @@ export async function updateAlertRuleRecord(
       },
       tx,
     );
+    await capacity.check();
     return updated;
   });
 }

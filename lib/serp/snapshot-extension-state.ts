@@ -68,6 +68,7 @@ const extensionSchema = z.object({
   pages: z
     .array(
       z.object({
+        provider_response: z.unknown().optional(),
         payment: actionPaymentReceiptSchema.optional(),
         evidence: snapshotPageEvidenceSchema.nullable().optional(),
         start: z.number().int().min(10).max(90).multipleOf(10),
@@ -138,15 +139,17 @@ export function snapshotExtensionView(
     ...(extension.payment ? { payment: extension.payment } : {}),
     expiresAt: new Date(expiry).toISOString(),
     nextStart: extension.nextStart,
-    pages: extension.pages.map(({ organicReturned: _organicReturned, ...page }) => ({
-      ...page,
-      rows: page.rows.map((row) => ({
-        position: row.rank,
-        url: row.url,
-        domain: row.domain ?? "",
-        title: row.title,
-        tracked: domainMatches(row.domain ?? "", continuation.domain),
-      })),
-    })),
+    pages: extension.pages.map(
+      ({ organicReturned: _organicReturned, provider_response: _providerResponse, ...page }) => ({
+        ...page,
+        rows: page.rows.map((row) => ({
+          position: row.rank,
+          url: row.url,
+          domain: row.domain ?? "",
+          title: row.title,
+          tracked: domainMatches(row.domain ?? "", continuation.domain),
+        })),
+      }),
+    ),
   };
 }

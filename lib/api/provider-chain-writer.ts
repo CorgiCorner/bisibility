@@ -49,7 +49,7 @@ export async function newSerpConnectionSettings(projectId: string, client: Provi
 export async function connectedProviderChainSettings(
   projectId: string,
   kind: ProviderKind,
-  before: { enabled: boolean; priority: number } | null,
+  before: { enabled: boolean; priority: number; status?: string } | null,
   input: { enabled: boolean; priority?: number },
   options: { restoreStoredCredentials?: boolean; activateStoredCredentials?: boolean },
   client: ProviderChainClient,
@@ -68,6 +68,9 @@ export async function connectedProviderChainSettings(
   const enabled =
     options.restoreStoredCredentials && before
       ? options.activateStoredCredentials === true || before.enabled
-      : priority === 0 || input.enabled;
+      : priority === 0 ||
+        (kind === "serp"
+          ? Boolean(before?.enabled && (!before.status || before.status === "connected"))
+          : input.enabled);
   return { priority, enabled };
 }

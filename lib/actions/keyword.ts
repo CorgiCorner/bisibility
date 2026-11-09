@@ -1,6 +1,7 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import { assertKeywordIdentityUnchanged } from "@/lib/keywords/identity";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
@@ -32,42 +33,133 @@ import { linkCheckSchedule, resolveCheckSchedule } from "./keyword-schedule-assi
 import { addSingleKeyword } from "./keyword-single";
 
 export async function addKeywordsMatrix(input: unknown) {
-  return addKeywordsMatrixWithAnalytics(input);
+  return withCapacityFailure(async () => {
+    return addKeywordsMatrixWithAnalytics(input);
+  });
 }
 
 export async function addKeyword(input: unknown) {
-  return addSingleKeyword(input);
+  return withCapacityFailure(async () => {
+    return addSingleKeyword(input);
+  });
 }
 
 export async function addKeywords(input: unknown) {
-  const data = parseActionInput(addKeywordsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
-  const schedule = data.schedule ? normalizeSchedule(data.schedule) : null;
-  const rows = data.rows;
-  if (rows?.length) {
-    const resolvedRows = await resolveKeywordRows(rows, project.id);
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(addKeywordsSchema, input);
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
+    const schedule = data.schedule ? normalizeSchedule(data.schedule) : null;
+    const rows = data.rows;
+    if (rows?.length) {
+      const resolvedRows = await resolveKeywordRows(rows, project.id);
+      const keywords = await prisma.$transaction(async (tx) => {
+        const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
+        const persisted = await createKeywordBatchSet(
+          tx,
+          project.id,
+          resolvedRows.map(({ resolved, row }) => ({
+            device: row.device,
+            keyword: row.keyword,
+            location: denormalizedLocationLabel(resolved.location),
+            locationId: resolved.location.id,
+            schedule,
+            tags: row.tags,
+            targetUrl: row.targetUrl,
+            topic: row.topic,
+            intent: row.intent,
+          })),
+        );
+        const promotedPairs = persisted.accepted.flatMap(({ keyword }, index) => {
+          const resolved = resolvedRows[index]?.resolved;
+          return resolved
+            ? promotedSavedKeywordPairs([keyword], resolved.location.canonicalKey)
+            : [];
+        });
+        const created = persisted.created;
+        const assignmentRows = [...created, ...persisted.restored];
+        if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
+        else if (schedule)
+          await setKeywordCadence(
+            tx,
+            project.id,
+            assignmentRows.map(({ id }) => id),
+            schedule,
+            actor.id,
+          );
+        const targetKeyword = created.length === 1 ? created[0] : null;
+        await writeAudit(
+          {
+            action: "keyword.batch_add",
+            actorId: actor.id,
+            after: {
+              checkScheduleId: assigned?.publicId ?? null,
+              keywordIds: created.map((keyword) => keyword.publicId),
+              rows: rows.map((row) => ({
+                device: row.device,
+                keyword: row.keyword,
+                location: row.locationKey ?? row.location,
+                tags: row.tags,
+                targetUrl: row.targetUrl ?? null,
+                topic: row.topic ?? null,
+                intent: row.intent ?? null,
+              })),
+            },
+            projectId: project.id,
+            targetId: targetKeyword?.publicId ?? project.publicId,
+            targetType: targetKeyword ? "keyword" : "project",
+          },
+          tx,
+        );
+        const consumed = await consumeSavedKeywords(
+          tx,
+          project.id,
+          data.consumeSavedIds,
+          promotedPairs,
+        );
+        return {
+          created,
+          changed: persisted.created.length + persisted.restored.length + consumed > 0,
+        };
+      });
+      const warnings = uniqueLocationWarnings(resolvedRows);
+      if (keywords.changed) recordAppAction(actor);
+      revalidateKeywords();
+
+      return {
+        created: keywords.created.length,
+        keywords: keywords.created.map(publicKeywordView),
+        warning: warnings[0] ?? null,
+        ...(warnings.length > 0 ? { warnings } : {}),
+      };
+    }
+    // One location per batch (all keywords share the country/city); resolve once.
+    const resolved = await resolveKeywordLocation(
+      keywordLocationResolverInput({
+        city: data.city,
+        location: data.location,
+        locationKey: data.locationKey,
+        projectId: project.id,
+      }),
+    );
+    const keywordText = data.keywords ?? [];
     const keywords = await prisma.$transaction(async (tx) => {
       const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
       const persisted = await createKeywordBatchSet(
         tx,
         project.id,
-        resolvedRows.map(({ resolved, row }) => ({
-          device: row.device,
-          keyword: row.keyword,
+        keywordText.map((keyword) => ({
+          device: data.device,
+          keyword,
           location: denormalizedLocationLabel(resolved.location),
           locationId: resolved.location.id,
           schedule,
-          tags: row.tags,
-          targetUrl: row.targetUrl,
-          topic: row.topic,
-          intent: row.intent,
+          tags: data.tags,
+          targetUrl: data.targetUrl,
+          topic: data.topic,
+          intent: data.intent,
         })),
       );
-      const promotedPairs = persisted.accepted.flatMap(({ keyword }, index) => {
-        const resolved = resolvedRows[index]?.resolved;
-        return resolved ? promotedSavedKeywordPairs([keyword], resolved.location.canonicalKey) : [];
-      });
       const created = persisted.created;
       const assignmentRows = [...created, ...persisted.restored];
       if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
@@ -87,15 +179,10 @@ export async function addKeywords(input: unknown) {
           after: {
             checkScheduleId: assigned?.publicId ?? null,
             keywordIds: created.map((keyword) => keyword.publicId),
-            rows: rows.map((row) => ({
-              device: row.device,
-              keyword: row.keyword,
-              location: row.locationKey ?? row.location,
-              tags: row.tags,
-              targetUrl: row.targetUrl ?? null,
-              topic: row.topic ?? null,
-              intent: row.intent ?? null,
-            })),
+            intent: data.intent ?? null,
+            tags: data.tags,
+            targetUrl: data.targetUrl ?? null,
+            topic: data.topic ?? null,
           },
           projectId: project.id,
           targetId: targetKeyword?.publicId ?? project.publicId,
@@ -103,94 +190,31 @@ export async function addKeywords(input: unknown) {
         },
         tx,
       );
-      await consumeSavedKeywords(tx, project.id, data.consumeSavedIds, promotedPairs);
-      return created;
-    });
-    const warnings = uniqueLocationWarnings(resolvedRows);
-    revalidateKeywords();
-    return {
-      created: keywords.length,
-      keywords: keywords.map(publicKeywordView),
-      warning: warnings[0] ?? null,
-      ...(warnings.length > 0 ? { warnings } : {}),
-    };
-  }
-  // One location per batch (all keywords share the country/city); resolve once.
-  const resolved = await resolveKeywordLocation(
-    keywordLocationResolverInput({
-      city: data.city,
-      location: data.location,
-      locationKey: data.locationKey,
-      projectId: project.id,
-    }),
-  );
-  const keywordText = data.keywords ?? [];
-  const keywords = await prisma.$transaction(async (tx) => {
-    const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
-    const persisted = await createKeywordBatchSet(
-      tx,
-      project.id,
-      keywordText.map((keyword) => ({
-        device: data.device,
-        keyword,
-        location: denormalizedLocationLabel(resolved.location),
-        locationId: resolved.location.id,
-        schedule,
-        tags: data.tags,
-        targetUrl: data.targetUrl,
-        topic: data.topic,
-        intent: data.intent,
-      })),
-    );
-    const created = persisted.created;
-    const assignmentRows = [...created, ...persisted.restored];
-    if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
-    else if (schedule)
-      await setKeywordCadence(
+      const consumed = await consumeSavedKeywords(
         tx,
         project.id,
-        assignmentRows.map(({ id }) => id),
-        schedule,
-        actor.id,
+        data.consumeSavedIds,
+        promotedSavedKeywordPairs(
+          persisted.accepted.map(({ keyword }) => keyword),
+          resolved.location.canonicalKey,
+        ),
       );
-    const targetKeyword = created.length === 1 ? created[0] : null;
-    await writeAudit(
-      {
-        action: "keyword.batch_add",
-        actorId: actor.id,
-        after: {
-          checkScheduleId: assigned?.publicId ?? null,
-          keywordIds: created.map((keyword) => keyword.publicId),
-          intent: data.intent ?? null,
-          tags: data.tags,
-          targetUrl: data.targetUrl ?? null,
-          topic: data.topic ?? null,
-        },
-        projectId: project.id,
-        targetId: targetKeyword?.publicId ?? project.publicId,
-        targetType: targetKeyword ? "keyword" : "project",
-      },
-      tx,
-    );
-    await consumeSavedKeywords(
-      tx,
-      project.id,
-      data.consumeSavedIds,
-      promotedSavedKeywordPairs(
-        persisted.accepted.map(({ keyword }) => keyword),
-        resolved.location.canonicalKey,
-      ),
-    );
 
-    return created;
+      return {
+        created,
+        changed: persisted.created.length + persisted.restored.length + consumed > 0,
+      };
+    });
+
+    if (keywords.changed) recordAppAction(actor);
+    revalidateKeywords();
+
+    return {
+      created: keywords.created.length,
+      keywords: keywords.created.map(publicKeywordView),
+      warning: resolved.warning,
+    };
   });
-
-  revalidateKeywords();
-  return {
-    created: keywords.length,
-    keywords: keywords.map(publicKeywordView),
-    warning: resolved.warning,
-  };
 }
 
 export async function updateKeyword(input: unknown) {
@@ -241,6 +265,7 @@ export async function updateKeyword(input: unknown) {
     where: { id: keyword.id },
   });
 
+  recordAppAction(actor);
   if (data.tags) {
     await prisma.keywordTag.deleteMany({ where: { keywordId: keyword.id } });
     await addTags(prisma, keyword.projectId, [keyword.id], data.tags);

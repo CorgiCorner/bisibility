@@ -9,10 +9,12 @@ const mocks = vi.hoisted(() => ({
   getActionActor: vi.fn(),
   persistDefaultProject: vi.fn(),
   requireMutableAccountSession: vi.fn(),
+  record: vi.fn(),
   writeAudit: vi.fn(),
   writeAuditFailure: vi.fn(),
 }));
 
+vi.mock("@/lib/activity/app-mutation", () => ({ recordAppAction: mocks.record }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/actions/_shared", () => ({ getActionActor: mocks.getActionActor }));
 vi.mock("@/lib/auth/audit", () => ({
@@ -55,6 +57,7 @@ describe("setDefaultProject", () => {
       value: { projectId },
     });
 
+    expect(mocks.record).toHaveBeenCalledExactlyOnceWith({ user: { id: "user_1" } });
     expect(mocks.findDefaultProjectCandidate).toHaveBeenCalledWith(projectId);
     expect(mocks.persistDefaultProject).toHaveBeenCalledWith("user_1", {
       id: "project_1",
@@ -133,15 +136,16 @@ describe("setDefaultProject", () => {
     );
   });
 
-  it("skips the audit when the default is already that project", async () => {
+  it.each([projectId, null])("skips recording an unchanged default %s", async (unchanged) => {
     mocks.persistDefaultProject.mockResolvedValue({
       changed: false,
       previousProjectId: projectId,
       publicId: userPublicId,
     });
 
-    await expect(setDefaultProject({ projectId })).resolves.toMatchObject({ ok: true });
+    await expect(setDefaultProject({ projectId: unchanged })).resolves.toMatchObject({ ok: true });
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+    expect(mocks.record).not.toHaveBeenCalled();
   });
 
   it.each([

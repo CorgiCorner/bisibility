@@ -52,6 +52,7 @@ vi.mock("@/lib/deployment/deployment", () => ({
 vi.mock("@/lib/demo/config", () => ({ readDemoConfig: () => mocks.demo.value }));
 vi.mock("@/lib/app-extensions", () => ({
   appExtensions: {
+    guardAccountSurface: vi.fn().mockResolvedValue(undefined),
     renderOnboardingQuizSlot: mocks.renderOnboardingQuizSlot,
     renderSupportWidget: mocks.renderSupportWidget,
   },

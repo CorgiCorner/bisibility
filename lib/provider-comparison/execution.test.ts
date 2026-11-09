@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   connection: vi.fn(),
   access: vi.fn(),
   quote: vi.fn(),
+  playgroundQuote: vi.fn(),
   start: vi.fn(),
   journal: vi.fn(),
   fetch: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 vi.mock("./access", () => ({ assertComparisonAccess: mocks.access }));
 vi.mock("./quote", () => ({ quoteComparison: mocks.quote }));
+vi.mock("./playground-quote", () => ({ quotePlaygroundComparison: mocks.playgroundQuote }));
 vi.mock("./fence", () => ({ comparisonFences: mocks.fence }));
 vi.mock("@/lib/providers/execution-extension", () => ({
   startDeploymentExecution: mocks.start,
@@ -139,6 +141,7 @@ describe("comparison worker execution remains separate from rank history", () =>
     mocks.access.mockResolvedValue(undefined);
     mocks.ownKey.mockResolvedValue(undefined);
     mocks.quote.mockImplementation(async () => snapshot);
+    mocks.playgroundQuote.mockImplementation(async () => snapshot);
     mocks.fence.mockReturnValue({
       beforeReserve: { lockBusiness: vi.fn(), assertRequest: vi.fn() },
       beforeFence: { lockBusiness: vi.fn(), assertDispatch: vi.fn() },
@@ -192,6 +195,20 @@ describe("comparison worker execution remains separate from rank history", () =>
     );
     await executeComparisonSide(input);
     expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
+  it("executes an untracked playground query without attaching a keyword or rank check", async () => {
+    Object.assign(snapshot, { version: 2, keywordId: null });
+    await executeComparisonSide(input);
+    expect(mocks.playgroundQuote).toHaveBeenCalledOnce();
+    expect(mocks.quote).not.toHaveBeenCalled();
+    expect(mocks.journal.mock.calls[0][1]).not.toHaveProperty("keywordId");
+    expect(row.status).toBe("completed");
+  });
+  it("does not call an unselected provider for a one-provider playground run", async () => {
+    Object.assign(snapshot, { version: 2, keywordId: null });
+    await executeComparisonSide({ ...input, provider: "serpapi" });
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.start).not.toHaveBeenCalled();
   });
   it("hosted generic rank execution passes BOTH rank IDs absent to the maintained facade", async () => {
     snapshot = comparisonFixture("hosted");

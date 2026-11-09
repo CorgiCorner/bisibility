@@ -4,8 +4,9 @@ import { BinocularsIcon } from "@phosphor-icons/react/dist/csr/Binoculars";
 import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { AccentCtaLink } from "./AccentCtaLink";
+import { Button } from "./Button";
 import { EmptyState } from "./EmptyState";
 import { ProviderAccessActions } from "./ProviderAccessActions";
 
@@ -29,7 +30,7 @@ export function ProviderAccessEmptyState({
 }>) {
   const t = useTranslations("shared.providerAccess");
   const available = providers.length > 0 || reconnect;
-  const title = t(available ? (reconnect ? "reconnectTitle" : "emptyTitle") : "unavailable");
+  const title = t(available ? (reconnect ? "reconnectTitle" : "emptyTitle") : "unavailableTitle");
   const Icon = moduleIcons[surface];
   return (
     <section aria-label={title} data-provider-empty-state>
@@ -44,7 +45,9 @@ export function ProviderAccessEmptyState({
                 <span>{t("supported", { providers: providers.join(", ") })}</span>
               ) : null}
             </div>
-          ) : undefined
+          ) : (
+            t("unavailable")
+          )
         }
         action={
           <ProviderAccessActions
@@ -53,9 +56,11 @@ export function ProviderAccessEmptyState({
             reconnect={reconnect}
             surface={surface}
           >
-            <AccentCtaLink href={href}>
-              {t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
-            </AccentCtaLink>
+            <Button asChild>
+              <Link href={href}>
+                {t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
+              </Link>
+            </Button>
           </ProviderAccessActions>
         }
       />

@@ -4,6 +4,11 @@ import { reviewedConsentPolicy } from "./audit-field-declarations-consent";
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 
 export function registerRankCheckRunAuditDeclarations(declare: Declare) {
+  const auditRun = { ...f.strings("state"), ...f.numbers("generation") };
+  declare(["site_audit.cancel", "site_audit.resume"], {
+    before: auditRun,
+    after: { ...auditRun, ...f.strings("credentialId", "credentialKind") },
+  });
   declare(["rank_check.snapshot_extend"], {
     after: {
       ...f.strings("keywordId", "status"),

@@ -19,13 +19,14 @@ export function KeywordDetailRetainedUrl({
   const href = historyExternalUrl(point?.rankingUrl ?? null);
   if (!href || !point) return null;
   return (
-    <span className="mt-1 block" data-testid="keyword-detail-retained-url">
+    <span className="mt-1 block min-w-0" data-testid="keyword-detail-retained-url">
       {t("lastKnownUrl")}:{" "}
       <a
         href={href}
         rel="noreferrer noopener"
         target="_blank"
-        className="font-semibold text-accent-text hover:underline"
+        className="inline-block max-w-full truncate align-bottom font-semibold text-accent-text hover:underline"
+        title={href}
       >
         {pathLabel(href, detail("common.notAvailable"))}
       </a>{" "}

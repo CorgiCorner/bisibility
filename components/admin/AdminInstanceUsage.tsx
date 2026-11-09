@@ -1,9 +1,8 @@
 "use client";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import type { InstanceUsagePeriod, InstanceUsageReport } from "@/lib/queries/instance-usage-report";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useAdminTableSort } from "./AdminTableState";
 import { formatRecordedUsd } from "./admin-usage-money";
 import { InstanceUsagePeriodSelect } from "./InstanceUsagePeriodSelect";
 import { type InstanceUsageRow, instanceUsageColumns } from "./instance-usage-columns";
@@ -20,7 +19,7 @@ export function AdminInstanceUsage({
   const t = useTranslations("instanceAdmin.instanceUsage"),
     locale = useLocale(),
     format = useFormatter();
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [sorting, setSorting] = useAdminTableSort(projects ? "consumption" : "ledger");
   const rows: InstanceUsageRow[] = report
     ? projects
       ? report.topProjects.map((row) => ({

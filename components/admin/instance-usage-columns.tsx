@@ -2,6 +2,7 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import { IdChip } from "@/components/ui/IdChip";
 import type { InstanceProviderUsage } from "@/lib/queries/instance-usage-report";
 import type { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { formatRecordedUsd } from "./admin-usage-money";
 
 export type InstanceUsageRow = InstanceProviderUsage & {
@@ -22,6 +23,7 @@ export function instanceUsageColumns(
   t: Messages,
   locale: string,
   projects: boolean,
+  formatCost?: (units: string, locale: string) => ReactNode,
 ): DataTableColumn<InstanceUsageRow>[] {
   const number = (value: number) => new Intl.NumberFormat(locale).format(value);
   const columns: DataTableColumn<InstanceUsageRow>[] = [];
@@ -72,13 +74,11 @@ export function instanceUsageColumns(
           right = BigInt(b.original.costUsdUnits ?? "0");
         return left < right ? -1 : left > right ? 1 : 0;
       },
-      cell: ({ row }) => (
-        <span>
-          {row.original.costUsdUnits === null
-            ? t("unknown")
-            : formatRecordedUsd(row.original.costUsdUnits, locale)}
-        </span>
-      ),
+      cell: ({ row }) =>
+        row.original.costUsdUnits === null
+          ? t("unknown")
+          : (formatCost?.(row.original.costUsdUnits, locale) ??
+            formatRecordedUsd(row.original.costUsdUnits, locale)),
     },
     {
       id: "unknown",

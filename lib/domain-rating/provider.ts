@@ -1,5 +1,7 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 
+import { recordFreeUsage } from "@/lib/analytics/request-usage-context";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { z } from "zod";
 
@@ -18,7 +20,11 @@ export class DomainRatingError extends Error {
   }
 }
 
-export async function fetchDomainRating(domain: string, apiKey: string): Promise<number> {
+export async function fetchDomainRating(
+  domain: string,
+  apiKey: string,
+  capture?: ProviderCredentials["captureResponse"],
+): Promise<number> {
   const url = new URL("https://api.ahrefs.com/v3/public/domain-rating-free");
   url.search = new URLSearchParams({
     target: domain,
@@ -36,12 +42,16 @@ export async function fetchDomainRating(domain: string, apiKey: string): Promise
   } catch {
     throw new DomainRatingError("unavailable");
   }
+  await captureHttpResponse(response, capture, url.href);
+  const payload = await response.json().catch(() => null);
   if (response.status === 401 || response.status === 403)
     throw new DomainRatingError("authentication");
   if (response.status === 429) throw new DomainRatingError("rate_limited");
   if (!response.ok) throw new DomainRatingError("unavailable");
   try {
-    return responseSchema.parse(await response.json()).domain_rating.domain_rating;
+    const rating = responseSchema.parse(payload).domain_rating.domain_rating;
+    recordFreeUsage("ahrefs");
+    return rating;
   } catch {
     throw new DomainRatingError("invalid_response");
   }

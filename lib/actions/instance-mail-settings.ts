@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   AdminActionRateLimitError,
   consumeAdminActionBudget,
@@ -36,7 +36,7 @@ async function authorizedMailActor() {
   if (!session || deploymentMode() === "cloud") return null;
   await requireAdminTwoFactorForDangerousAction(session, "change_mail_settings");
   await consumeAdminActionBudget(session.user.id);
-  return { actorId: session.user.id };
+  return { actorId: session.user.id, session };
 }
 
 function credentialsFrom(
@@ -73,15 +73,18 @@ export async function saveInstanceMailSettings(
     }).safeParse(input);
     if (!parsed.success) return { status: "invalid" };
     const sender = parsed.data.sender || existing.sender;
-    await saveInstanceMailConfig({
-      actorId: actor.actorId,
-      credentials:
-        replaceFlag.data.replaceCredentials || !existing.credentialsConfigured
-          ? credentialsFrom(parsed.data)
-          : null,
-      provider: parsed.data.provider,
-      sender,
-    });
+    await saveInstanceMailConfig(
+      {
+        actorId: actor.actorId,
+        credentials:
+          replaceFlag.data.replaceCredentials || !existing.credentialsConfigured
+            ? credentialsFrom(parsed.data)
+            : null,
+        provider: parsed.data.provider,
+        sender,
+      },
+      () => recordAppAction(actor.session),
+    );
     return { status: "saved" };
   } catch (error) {
     if (error instanceof InstanceMailSettingsError) return { status: "invalid" };
@@ -96,7 +99,8 @@ export async function clearInstanceMailSettings(): Promise<InstanceMailSettingsR
   try {
     const actor = await authorizedMailActor();
     if (!actor) return { status: "forbidden" };
-    await clearInstanceMailConfig(actor.actorId);
+    const changed = await clearInstanceMailConfig(actor.actorId);
+    if (changed) recordAppAction(actor.session);
     return { status: "cleared" };
   } catch (error) {
     if (error instanceof AdminTwoFactorRequiredError) return { status: error.code };

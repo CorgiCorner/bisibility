@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
@@ -78,6 +78,7 @@ export async function installSampleData() {
     return { installed: true, project };
   });
 
+  if (result.installed) recordAppAction(actor);
   if (result.installed) {
     revalidateSampleDataViews();
   }
@@ -109,6 +110,7 @@ export async function removeSampleData(input: unknown) {
       tx,
     );
   });
+  recordAppAction(actor);
   revalidateSampleDataViews();
 
   return { projectId: project.publicId, publicId: project.publicId };

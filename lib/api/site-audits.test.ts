@@ -7,6 +7,10 @@ const mocks = vi.hoisted(() => ({
   run: vi.fn(),
   list: vi.fn(),
   read: vi.fn(),
+  progress: vi.fn(),
+  pages: vi.fn(),
+  cancel: vi.fn(),
+  resume: vi.fn(),
 }));
 vi.mock("@/lib/actions/_shared", () => ({ requireProjectScope: mocks.requireScope }));
 vi.mock("@/lib/site-audit/service", () => ({
@@ -14,6 +18,13 @@ vi.mock("@/lib/site-audit/service", () => ({
   listSiteAudits: mocks.list,
   readSiteAudit: mocks.read,
 }));
+vi.mock("@/lib/site-audit/runs", () => ({
+  readSiteAuditRun: mocks.progress,
+  listSiteAuditRunPages: mocks.pages,
+  cancelSiteAuditRun: mocks.cancel,
+  resumeSiteAuditRun: mocks.resume,
+}));
+vi.mock("@/lib/site-audit/worker-config", () => ({ siteAuditWorkerEnabled: async () => false }));
 
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { AuditRateLimitError } from "@/lib/site-audit/errors";
@@ -34,7 +45,13 @@ const ctx = (method: string, path: string[], body = {}) =>
       ...(method === "GET" ? {} : { body: JSON.stringify(body) }),
     }),
     url: new URL("https://example.test/api/v1"),
-    origin: { kind: "api" },
+    actorId: "user",
+    origin: {
+      credentialId: "credential",
+      credentialKind: "personal_token",
+      source: "api",
+      surface: "programmatic",
+    },
   }) as unknown as ApiContext;
 describe("site audit REST contract", () => {
   beforeEach(() => vi.resetAllMocks());
@@ -125,4 +142,58 @@ describe("site audit REST contract", () => {
     expect(report?.status).toBe(404);
     expect(mocks.read).toHaveBeenCalledWith("internal1", "agr_missing");
   });
+  it("denies cross-project worker control before any run lookup", async () => {
+    const response = await siteAuditsRoute(
+      ctx("POST", ["projects", "prj_other", "site-audits", "agr_one", "cancel"]),
+    );
+    expect(response?.status).toBe(403);
+    expect(mocks.cancel).not.toHaveBeenCalled();
+  });
+  it("requires write authority to cancel and scopes the run to the project", async () => {
+    mocks.requireScope.mockResolvedValue({ id: "internal1", domain: "example.com" });
+    mocks.cancel.mockResolvedValue({ state: "cancelled", pagesCrawled: 2 });
+    const response = await siteAuditsRoute(
+      ctx("POST", ["projects", "prj_one", "site-audits", "agr_one", "cancel"]),
+    );
+    expect(response?.status).toBe(200);
+    expect(mocks.requireScope).toHaveBeenCalledWith(expect.anything(), "create", "prj_one", {
+      type: "project",
+    });
+    expect(mocks.cancel).toHaveBeenCalledWith("internal1", "agr_one", {
+      actorId: "user",
+      credentialId: "credential",
+      credentialKind: "personal_token",
+    });
+  });
+  it.each(["cancel", "resume"] as const)(
+    "passes credential attribution for a project-key %s",
+    async (action) => {
+      mocks.requireScope.mockResolvedValue({ id: "internal1", writeMode: "active" });
+      mocks[action].mockResolvedValue({ state: "queued" });
+      const context = ctx("POST", ["projects", "prj_one", "site-audits", "agr_one", action]);
+      context.actorId = null;
+      context.origin = {
+        credentialId: "project-key",
+        credentialKind: "project_key",
+        source: "api",
+        surface: "programmatic",
+      };
+      await siteAuditsRoute(context);
+      expect(mocks[action]).toHaveBeenCalledWith("internal1", "agr_one", {
+        actorId: null,
+        credentialId: "project-key",
+        credentialKind: "project_key",
+      });
+    },
+  );
+  it.each(["cancel", "resume"] as const)(
+    "does not call %s after denied authorization",
+    async (action) => {
+      mocks.requireScope.mockRejectedValue(new Error("forbidden"));
+      await expect(
+        siteAuditsRoute(ctx("POST", ["projects", "prj_one", "site-audits", "agr_one", action])),
+      ).rejects.toThrow("forbidden");
+      expect(mocks[action]).not.toHaveBeenCalled();
+    },
+  );
 });

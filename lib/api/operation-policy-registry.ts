@@ -1,3 +1,4 @@
+import { domainVerificationPolicies } from "./domain-verification-policy";
 import * as caps from "./operation-capabilities";
 import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 import { type OperationPolicy, policy } from "./operation-policy-helpers";
@@ -6,6 +7,7 @@ import { rankRunOperationPolicies } from "./operation-policy-rank-runs";
 import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 
 export const operationPolicy = {
+  ...domainVerificationPolicies,
   ...localMonitorReadPolicies,
   ...rankRunOperationPolicies,
   ...promptResearchPolicies,

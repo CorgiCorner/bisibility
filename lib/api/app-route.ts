@@ -1,6 +1,8 @@
+import { CapacityLimitError } from "@/lib/capacity/errors";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import "server-only";
-
 import { getActionActor, ProjectNotFoundError } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { appAdmissionErrorDetails } from "@/lib/api/admission-error-details";
 import { budgetExhaustedResponse } from "@/lib/api/budget-exhausted";
 import { ownProviderKeyRequiredResponse } from "@/lib/api/byok-required";
@@ -31,6 +33,7 @@ type AppRouteHandler<TContext> = (
   request: Request,
   actor: Actor,
   context: TContext,
+  onCommitted: () => void,
 ) => Promise<Response>;
 
 function problem(
@@ -50,6 +53,19 @@ function mappedError(
   error: unknown,
   admissionDetails?: AdmissionErrorDetails | null,
 ): Response | null {
+  if (error instanceof CapacityLimitError)
+    return errorResponse("plan_limit_reached", error.message, 403, {
+      headers: CACHE_HEADERS,
+      instance: APP_INSTANCE,
+      problemDetails: error.toJSON(),
+    });
+  if (isOperationAccessDeniedError(error) && error.subscriptionRequired)
+    return errorResponse(
+      "subscription_required",
+      "Paid access is required for this operation. Ask the project owner to activate a subscription.",
+      403,
+      { headers: CACHE_HEADERS, instance: APP_INSTANCE },
+    );
   if (error instanceof ProviderChainError && error.fundingExhaustion)
     return mappedError(error.fundingExhaustion, admissionDetails);
   if (
@@ -167,16 +183,33 @@ function mappedError(
   return null;
 }
 
-export function withAppRoute<TContext = undefined>(handler: AppRouteHandler<TContext>) {
+export function withAppRoute<TContext = undefined>(
+  handler: AppRouteHandler<TContext>,
+  options: {
+    mutation?: boolean;
+    mutationResult?: "changed" | "updated";
+    explicitCommit?: boolean;
+  } = {},
+) {
   return async (request: Request, context?: TContext) => {
     let actor: Actor | null = null;
+    let session: Awaited<ReturnType<typeof getSession>> = null;
+    let committed = false;
     try {
-      if (!(await getSession())) {
+      session = await getSession();
+      if (!session) {
         throw new AuthorizationError("unauthenticated", "Authentication is required.");
       }
-      actor = await getActionActor();
-      const response = await handler(request, actor, context as TContext);
+      actor = await getActionActor(session);
+      const response = await handler(request, actor, context as TContext, () => {
+        committed = true;
+      });
       response.headers.set("Cache-Control", CACHE_HEADERS["Cache-Control"]);
+      if (!options.explicitCommit && response.ok) {
+        committed = options.mutationResult
+          ? Boolean((await response.clone().json()).data?.[options.mutationResult])
+          : true;
+      }
       return response;
     } catch (error) {
       const details = await appAdmissionErrorDetails(error, actor);
@@ -184,6 +217,13 @@ export function withAppRoute<TContext = undefined>(handler: AppRouteHandler<TCon
       if (response) return response;
       console.error("[rank-check-runs] App route failed.", error);
       return problem("internal_server_error", "The request could not be completed.", 500);
+    } finally {
+      if (
+        committed &&
+        options.mutation &&
+        ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)
+      )
+        recordAppAction(session);
     }
   };
 }

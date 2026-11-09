@@ -52,9 +52,9 @@
           "tooltip": "Sigue las posiciones e investiga palabras clave, sitios web, backlinks y el estado del sitio."
         },
         "ai": {
-          "label": "Búsqueda con IA",
+          "label": "Visibilidad en IA",
           "tag": "IA",
-          "tooltip": "Sigue e investiga cómo las respuestas de IA mencionan tu marca."
+          "tooltip": "Sigue tu visibilidad en respuestas de IA."
         },
         "reports": {
           "label": "Datos e informes",
@@ -79,6 +79,8 @@
         "markets": "Mercados",
         "rankTracker": "Seguimiento de posiciones",
         "runs": "Ejecuciones",
+        "schedules": "Programaciones",
+        "usage": "Uso",
         "searchConsole": "Search Console",
         "settings": "Ajustes",
         "aiVisibility": "Visibilidad de marca",
@@ -87,7 +89,8 @@
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
         "agentReports": "Informes de agentes",
-        "aiTracking": "Seguimiento de prompts"
+        "aiTracking": "Seguimiento de prompts",
+        "serpPlayground": "SERP Playground"
       },
       "menu": "Menú"
     },
@@ -319,6 +322,8 @@
         "rankTracker": "Seguimiento de posiciones",
         "run": "Ejecución",
         "runs": "Ejecuciones",
+        "schedules": "Programaciones",
+        "usage": "Uso",
         "searchConsole": "Search Console",
         "security": "Seguridad",
         "settings": "Ajustes",
@@ -329,7 +334,8 @@
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
         "agentReports": "Informes de agentes",
-        "aiTracking": "Seguimiento de prompts"
+        "aiTracking": "Seguimiento de prompts",
+        "serpPlayground": "SERP Playground"
       }
     },
     "footer": {

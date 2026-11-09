@@ -136,13 +136,14 @@ export async function receiveImportSessionChunk(
   index: number,
   chunk: ImportSessionChunk,
   bytes: number,
+  onCommitted?: () => void,
 ) {
   if (!isPublicIdOfType(sessionId, "imp")) {
     throw badRequest("Import session ID must be a v3 job public ID.");
   }
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      return await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         const job = await tx.cloudImportJob.findFirst({
           where: { projectId: token.projectId, publicId: sessionId, tokenId: token.id },
         });
@@ -166,7 +167,14 @@ export async function receiveImportSessionChunk(
             throw conflict(`Chunk ${index} was already received with different content.`);
           }
           const count = await receivedCount(tx, job.id);
-          return { chunkCount: job.chunkCount, chunksReceived: count, state: "receiving" as const };
+          return {
+            changed: false,
+            value: {
+              chunkCount: job.chunkCount,
+              chunksReceived: count,
+              state: "receiving" as const,
+            },
+          };
         }
 
         const buffered = await tx.migrationImportChunk.aggregate({
@@ -192,8 +200,13 @@ export async function receiveImportSessionChunk(
           data: { chunksReceived: count, progress: progress(count, job.chunkCount, 1) },
           where: { id: job.id },
         });
-        return { chunkCount: job.chunkCount, chunksReceived: count, state: "receiving" as const };
+        return {
+          changed: true,
+          value: { chunkCount: job.chunkCount, chunksReceived: count, state: "receiving" as const },
+        };
       });
+      if (result.changed) onCommitted?.();
+      return result.value;
     } catch (error) {
       if (!isUniqueChunkIndexConflict(error) || attempt === 1) throw error;
     }

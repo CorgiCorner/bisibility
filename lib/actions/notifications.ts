@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
@@ -50,7 +50,9 @@ export async function markNotificationRead(input: unknown) {
     },
   });
 
+  if (result.count > 0) recordAppAction(actor);
   revalidateNotificationViews();
+
   return { updated: result.count };
 }
 
@@ -65,6 +67,8 @@ export async function markAllNotificationsRead(projectId: string, input?: unknow
     where: notificationFeedWhere(actor.id, project.id, "unread"),
   });
 
+  if (result.count > 0) recordAppAction(actor);
   revalidateNotificationViews();
+
   return { updated: result.count };
 }

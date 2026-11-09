@@ -1,3 +1,4 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import "server-only";
 import { createKeywordBatchSet } from "@/lib/actions/keyword-batch";
 import { linkCheckSchedule, resolveCheckSchedule } from "@/lib/actions/keyword-schedule-assignment";
@@ -88,6 +89,7 @@ export async function addMarketDeviceTargets(
   raw: MarketDeviceConfirm,
 ): Promise<MarketDeviceResult> {
   const { fingerprint, ...input } = raw;
+  await prepareResourceCapacity(tx, { projectId, dimensions: [] });
   await lockProjectForProviderMutation(tx, projectId);
   await tx.$queryRaw`SELECT id FROM project_markets WHERE "projectId"=${projectId} AND "publicId"=${input.marketId} FOR UPDATE`;
   const initial = await load(tx, projectId, input);

@@ -25,7 +25,7 @@
     "topBar": {
       "beta": "Cloud",
       "fallbackWorkspace": "Proyecto",
-      "setupProgress": "Configuración / {current, number} de {total, number}"
+      "setupProgress": "Paso {current, number} de {total, number}"
     },
     "token": {
       "activeDescription": "Su valor está oculto. Regenera el token si necesitas copiar uno.",

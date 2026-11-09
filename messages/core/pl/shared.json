@@ -343,7 +343,7 @@
         "removeTeamMemberDangerLabel": "Usuń członka z projektu",
         "removeTeamMemberTitle": "Usunąć członka z projektu?",
         "removeTeamMemberToastMessage": "Usunięto członka z projektu",
-        "resetAccountLimitsBody": "Czyści liczniki limitów zapytań tego konta. Miesięczne wydatki liczone są w oknie kroczącym i nie można ich zresetować.",
+        "resetAccountLimitsBody": "Wyczyść limity żądań tego konta.",
         "resetAccountLimitsDangerLabel": "Zresetuj limity zapytań",
         "resetAccountLimitsTitle": "Zresetować limity zapytań?",
         "resetAccountLimitsToastMessage": "Zgłoszono reset limitów zapytań",
@@ -606,6 +606,7 @@
       "moved": "Przeniesiono {title} na miejsce {position}.",
       "shellUnavailable": "Kontekst nie jest dostępny. To nie oznacza zera.",
       "widgetUnavailable": "Zapisany raport tej sekcji nie jest dostępny.",
+      "widgetNoData": "Brak danych do wyświetlenia",
       "widgetLoading": "Wczytywanie zapisanego raportu.",
       "widgetError": "Nie udało się odczytać tej sekcji. Pozostałe sekcje pozostają dostępne.",
       "span": "Szerokość: {title}",
@@ -665,13 +666,13 @@
       },
       "reasons": {
         "missing_project_access": "Wymagany jest dostęp do odczytu projektu.",
-        "preset_mismatch": "Ta sekcja korzysta z zakresu innego presetu.",
+        "preset_mismatch": "Wybierz odpowiedni widok dashboardu, aby korzystać z tej sekcji.",
         "missing_competitors_access": "Wymagany jest dostęp do odczytu konkurentów.",
         "missing_local_subject": "Wybierz jawną wersję tożsamości placówki dla Local SEO.",
         "foreign_local_subject": "Wybrana placówka nie należy do tego projektu.",
         "missing_competitor_scope": "Wybierz jawny zakres porównania konkurentów.",
         "foreign_competitor_scope": "Zakres konkurentów nie należy do tego projektu.",
-        "missing_capability": "Wymagana przez tę sekcję możliwość odczytu zapisanych danych nie jest dostępna."
+        "missing_capability": "Ta sekcja nie jest jeszcze dostępna w tym projekcie."
       },
       "shell": {
         "scope": "Wspólny zakres wyszukiwania",
@@ -698,7 +699,10 @@
       "healthClear": "Brak nieudanych pomiarów w ostatnich 24 godzinach.",
       "budgetBlocked": "Bieżący budżet blokuje płatne pomiary.",
       "budgetReadOnly": "Odczyt zapisanych raportów nie uruchamia płatnego pomiaru.",
-      "coverageSummary": "Rozstrzygnięto {measured} z {expected} targetów; porównywalnych par: {comparable}.",
+      "coverageSummary": "Wyniki są dostępne dla {measured} z {expected} słów kluczowych.",
+      "coverageEmpty": "Dodaj słowa kluczowe, aby zobaczyć tutaj ich pozycje.",
+      "coverageFilteredEmpty": "Żadne słowa kluczowe nie pasują do tego widoku.",
+      "coveragePending": "Podsumowanie pozycji pojawi się, gdy będą dostępne dane.",
       "freshnessUnknown": "Pokrycie świeżymi danymi jest nieznane.",
       "freshCoverage": "Świeże rozstrzygnięte targety: {count}.",
       "invalidPreset": "Ten zestaw widoku jest niedostępny. Wybierz dostępny zestaw.",
@@ -1404,6 +1408,11 @@
               "definition": "Wersjonowany indeks wyników organicznych na pierwszych 20 pozycjach.",
               "interpretation": "Czytaj indeks razem z pokryciem obserwacji, liczbą świeżych rozstrzygniętych wyników i porównywalnych targetów.",
               "limitation": "To nie ruch ani leady. Nieznany wynik nie oznacza potwierdzonej nieobecności; sama zmiana pokrycia nie dowodzi poprawy."
+            },
+            "visibility-top20-v2": {
+              "definition": "Siła pozycji w Google Top 20, ważona liczbą wyszukiwań.",
+              "interpretation": "100% oznacza pierwszą pozycję każdej zmierzonej frazy. Potwierdzone pozycje ze sprawdzeń Top 10 też się liczą.",
+              "limitation": "Brak wyniku pozostaje nieznany, dopóki dane nie potwierdzą nieobecności w całym Top 20. Sprawdzaj też pokrycie danych."
             }
           }
         },
@@ -1776,7 +1785,7 @@
     "providerAccess": {
       "connect": "Wybierz źródło danych, aby korzystać z tych pól.",
       "supported": "Obsługiwani dostawcy: {providers}.",
-      "unavailable": "Dla tej funkcji nie ma dostępnego obsługiwanego źródła danych.",
+      "unavailable": "Otwórz Dostawców, aby sprawdzić połączenia i rozpocząć.",
       "action": "Otwórz dostawców",
       "reconnect": "Połącz ponownie wybrane źródło danych, aby korzystać z tych pól.",
       "reconnectAction": "Połącz ponownie",
@@ -1785,7 +1794,8 @@
       "emptyDescription": "Wybierz obsługiwane źródło danych w sekcji Dostawcy, aby rozpocząć wyszukiwanie.",
       "reconnectDescription": "Przed kolejnym wyszukiwaniem połącz ponownie wybrane źródło danych w sekcji Dostawcy.",
       "connectAction": "Wybierz źródło danych",
-      "askAdmin": "Poproś administratora projektu o wybór źródła danych do sprawdzania."
+      "askAdmin": "Poproś administratora projektu o wybór źródła danych do sprawdzania.",
+      "unavailableTitle": "Wybierz źródło danych"
     },
     "rankEvidence": {
       "position": "Pozycja {position, number}",

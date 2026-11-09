@@ -94,15 +94,17 @@ export function AppHeaderFrame({
         </div>
       </div>
       {/* Right cluster: spend pill and account utilities share one rhythm. */}
-      <div className="col-start-3 row-start-1 flex flex-none items-center gap-2.5">
+      <div className="col-start-3 row-start-1 flex flex-none items-center gap-1.5 sm:gap-2.5">
+        <span className="hidden xl:inline-flex">
+          <RealtimeIndicator />
+        </span>
         {actions}
-        <RealtimeIndicator />
         <OperationsTray defaultOpen={operationsTrayDefaultOpen} projectRef={projectRef} />
         <div className="lg:hidden">
           <CommandPaletteTrigger variant="header" />
         </div>
         {notificationControl}
-        {accountActions}
+        <span className="hidden xl:inline-flex">{accountActions}</span>
         {user ? (
           <SidebarUserButton collapsed showHostedLinks={showHostedLinks} user={user} />
         ) : null}

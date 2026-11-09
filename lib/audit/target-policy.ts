@@ -45,6 +45,7 @@ export const AUDIT_TARGET_POLICIES = {
   search_analytics_import: { mode: "opaque" },
   saved_view: { mode: "public", prefix: "viw", resource: "Saved view" },
   session: { mode: "public", prefix: "sid", resource: "Session" },
+  site_audit_run: { mode: "public", prefix: "agr", resource: "Site audit run" },
   signal: { mode: "public", prefix: "sig", resource: "Signal" },
   sitemap_monitor: { mode: "public", prefix: "prj", resource: "Sitemap monitor" },
   slack_connection: { mode: "opaque" },

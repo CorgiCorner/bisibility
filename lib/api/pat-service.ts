@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
+import { accountCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
@@ -9,6 +10,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { hashApiKey } from "@/lib/providers/crypto";
 import type { ApiKeyScope } from "@/lib/schemas/apiKey";
 import { personalTokenAuditResource } from "./audit-resources";
+import { ApiForbiddenError } from "./errors";
 import { scopesForTier } from "./key-scope";
 import { requireApiPublicId } from "./public-id";
 
@@ -48,7 +50,10 @@ export async function issuePersonalToken(
   userId: string,
   input: IssuePersonalTokenInput,
   audit: { action?: "pat.exchange_login" | "pat.issue"; viaClientId?: string | null } = {},
+  onCommitted?: () => void,
 ) {
+  if (!(await accountCapabilityAvailable(userId)))
+    throw new ApiForbiddenError("Account access is required.");
   await assertEditableDemoAccountMutable(userId);
   const raw = newRawPersonalToken();
   const publicId = makePublicId("pat");
@@ -68,6 +73,7 @@ export async function issuePersonalToken(
     select: tokenSelect,
   });
 
+  onCommitted?.();
   await writeAudit({
     action: audit.action ?? "pat.issue",
     actorId: userId,
@@ -91,6 +97,7 @@ export async function revokePersonalToken(
   userId: string,
   tokenId: string,
   client: Pick<Prisma.TransactionClient, "personalAccessToken" | "auditLog"> = prisma,
+  onCommitted?: () => void,
 ) {
   await assertEditableDemoAccountMutable(userId);
   const before = await client.personalAccessToken.findFirst({
@@ -107,6 +114,7 @@ export async function revokePersonalToken(
     where: { id: before.id },
   });
 
+  onCommitted?.();
   await writeAudit(
     {
       action: "pat.revoke",

@@ -73,6 +73,13 @@ export function domainOverviewFailure(
   receipt?: ActionPaymentReceipt,
   module = false,
 ): DomainOverviewLookupFailure {
+  if (
+    error instanceof OperationAccessDeniedError &&
+    error.subscriptionRequired &&
+    !receipt &&
+    !module
+  )
+    throw error;
   const payment = paymentFailure(error);
   if (payment) return { ...payment, costCents: 0, phase: "before_dispatch" };
   if (error instanceof DeploymentAdmissionExhaustedError) {

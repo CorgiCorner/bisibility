@@ -1,8 +1,13 @@
 import { readBodyWithLimit } from "@/lib/http/bounded-body";
+import { storeProviderResponse } from "@/lib/provider-responses/store";
 import { assertLiveResponseCapacity } from "@/lib/providers/live-capacity";
 import { requireDataForSeoLogin } from "@/lib/providers/serp/dataforseo-client";
 import type { ProviderCredentials } from "@/lib/providers/types";
-import { assertTrackingDeadline, TrackingDispatchDeniedError } from "./dispatch-error";
+import {
+  assertTrackingDeadline,
+  TrackingDispatchDeniedError,
+  TrackingResponseCaptureError,
+} from "./dispatch-error";
 import type { TrackingEnvelope } from "./envelope";
 import { admitTrackingRequest } from "./request-admission";
 
@@ -61,7 +66,32 @@ export async function trackingTransport(input: {
   const responseBody = await readBodyWithLimit(response, 4 * 1024 * 1024);
   if (!responseBody.ok)
     throw new Error("Tracking provider response exceeds its bound or is unreadable.");
-  const envelope = JSON.parse(responseBody.bytes.toString("utf8")) as TrackingEnvelope;
+  const text = responseBody.bytes.toString("utf8");
+  let envelope: TrackingEnvelope;
+  try {
+    envelope = JSON.parse(text) as TrackingEnvelope;
+  } catch (error) {
+    if (input.projectId)
+      await storeProviderResponse(
+        { projectId: input.projectId, provider: "dataforseo", feature: "ai_tracking" },
+        { status: response.status, body: text },
+      );
+    throw error;
+  }
+  if (input.projectId) {
+    try {
+      await storeProviderResponse(
+        { projectId: input.projectId, provider: "dataforseo", feature: "ai_tracking" },
+        {
+          status: response.status,
+          body: envelope,
+          url: `https://api.dataforseo.com/v3/${input.endpoint}`,
+        },
+      );
+    } catch (cause) {
+      throw new TrackingResponseCaptureError(envelope, cause);
+    }
+  }
   if (!response.ok) throw new TrackingTransportError("http", response.status);
   return envelope;
 }

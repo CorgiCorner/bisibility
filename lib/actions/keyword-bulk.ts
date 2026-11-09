@@ -1,6 +1,7 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import { deleteKeywordTargets } from "@/lib/keywords/delete";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
@@ -29,6 +30,7 @@ export async function bulkDeleteKeywords(input: unknown) {
   const keywords = await prisma.$transaction((tx) =>
     deleteKeywordTargets(tx, project.id, data.keywordIds),
   );
+  if (keywords.length > 0) recordAppAction(actor);
   await writeAudit({
     action: "keyword.bulk_delete",
     actorId: actor.id,
@@ -51,23 +53,32 @@ export async function bulkTagKeywords(input: unknown) {
     where: keywordIdsWhere(project.id, data.keywordIds),
   });
 
-  await addTags(
-    prisma,
-    project.id,
-    keywords.map((keyword) => keyword.id),
-    data.tags,
-  );
-  await writeAudit({
-    action: "keyword.bulk_tag",
-    actorId: actor.id,
-    after: { keywordIds: keywords.map((keyword) => auditKeyword(keyword).id), tags: data.tags },
-    projectId: project.id,
-    targetId: project.publicId,
-    targetType: "project",
-  });
-  revalidateKeywords();
+  let committed = false;
+  try {
+    const written = await addTags(
+      prisma,
+      project.id,
+      keywords.map((keyword) => keyword.id),
+      data.tags,
+      () => {
+        committed = true;
+      },
+    );
+    committed ||= written > 0;
+    await writeAudit({
+      action: "keyword.bulk_tag",
+      actorId: actor.id,
+      after: { keywordIds: keywords.map((keyword) => auditKeyword(keyword).id), tags: data.tags },
+      projectId: project.id,
+      targetId: project.publicId,
+      targetType: "project",
+    });
+    revalidateKeywords();
 
-  return { tagged: keywords.length };
+    return { tagged: keywords.length };
+  } finally {
+    if (committed) recordAppAction(actor);
+  }
 }
 
 export async function bulkSetTargetUrl(input: unknown) {
@@ -79,10 +90,11 @@ export async function bulkSetTargetUrl(input: unknown) {
     where: keywordIdsWhere(project.id, data.keywordIds),
   });
 
-  await prisma.keyword.updateMany({
+  const updated = await prisma.keyword.updateMany({
     data: { targetUrl: data.targetUrl },
     where: { id: { in: before.map((keyword) => keyword.id) } },
   });
+  if (updated.count > 0) recordAppAction(actor);
   await writeAudit({
     action: "keyword.bulk_set_target",
     actorId: actor.id,
@@ -106,10 +118,11 @@ export async function bulkClearTargetUrls(input: unknown) {
     where: keywordIdsWhere(project.id, data.keywordIds),
   });
 
-  await prisma.keyword.updateMany({
+  const updated = await prisma.keyword.updateMany({
     data: { targetUrl: null },
     where: { id: { in: before.map((keyword) => keyword.id) } },
   });
+  if (updated.count > 0) recordAppAction(actor);
   await writeAudit({
     action: "keyword.bulk_clear_target",
     actorId: actor.id,
@@ -125,33 +138,36 @@ export async function bulkClearTargetUrls(input: unknown) {
 }
 
 export async function bulkSetFrequency(input: unknown) {
-  const data = parseActionInput(bulkKeywordFrequencySchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
-  const schedule = normalizeSchedule(data.schedule);
-  const keywords = await prisma.keyword.findMany({
-    select: { id: true, publicId: true },
-    where: keywordIdsWhere(project.id, data.keywordIds),
-  });
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(bulkKeywordFrequencySchema, input);
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
+    const schedule = normalizeSchedule(data.schedule);
+    const keywords = await prisma.keyword.findMany({
+      select: { id: true, publicId: true },
+      where: keywordIdsWhere(project.id, data.keywordIds),
+    });
 
-  await prisma.$transaction(async (tx) => {
-    await setKeywordCadence(
-      tx,
-      project.id,
-      keywords.map((keyword) => keyword.id),
-      schedule,
-      actor.id,
-    );
-  });
-  await writeAudit({
-    action: "keyword.bulk_set_frequency",
-    actorId: actor.id,
-    after: { keywordIds: keywords.map((keyword) => auditKeyword(keyword).id), schedule },
-    projectId: project.id,
-    targetId: project.publicId,
-    targetType: "project",
-  });
-  revalidateKeywords();
+    await prisma.$transaction(async (tx) => {
+      await setKeywordCadence(
+        tx,
+        project.id,
+        keywords.map((keyword) => keyword.id),
+        schedule,
+        actor.id,
+      );
+    });
+    if (keywords.length > 0) recordAppAction(actor);
+    await writeAudit({
+      action: "keyword.bulk_set_frequency",
+      actorId: actor.id,
+      after: { keywordIds: keywords.map((keyword) => auditKeyword(keyword).id), schedule },
+      projectId: project.id,
+      targetId: project.publicId,
+      targetType: "project",
+    });
+    revalidateKeywords();
 
-  return { updated: keywords.length };
+    return { updated: keywords.length };
+  });
 }

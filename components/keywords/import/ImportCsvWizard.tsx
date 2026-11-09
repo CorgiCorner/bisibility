@@ -1,9 +1,12 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const importKeywordsFromCsv = capacityActionClient(importKeywordsFromCsvCapacityAction);
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import {
-  importKeywordsFromCsv,
+  importKeywordsFromCsv as importKeywordsFromCsvCapacityAction,
   previewKeywordImportFile,
   reviewKeywordImport,
 } from "@/lib/actions/keyword-import-export";

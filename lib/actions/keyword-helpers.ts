@@ -52,14 +52,15 @@ export async function consumeSavedKeywords(
     normalizedText: string;
   }[],
 ) {
-  if (!publicIds?.length || promotedPairs.length === 0) return;
-  await tx.savedKeyword.deleteMany({
+  if (!publicIds?.length || promotedPairs.length === 0) return 0;
+  const removed = await tx.savedKeyword.deleteMany({
     where: {
       OR: [...promotedPairs],
       projectId,
       publicId: { in: [...publicIds] },
     },
   });
+  return removed.count;
 }
 
 type KeywordTagClient = Pick<Prisma.TransactionClient, "keywordTag" | "tag">;
@@ -68,22 +69,26 @@ export async function addTags(
   projectId: string,
   keywordIds: string[],
   tags: string[],
+  onCommitted?: () => void,
 ) {
   if (tags.length === 0) {
-    return;
+    return 0;
   }
 
-  await client.tag.createMany({
+  const created = await client.tag.createMany({
     data: tags.map((name) => ({ name, projectId, publicId: makePublicId("tag") })),
     skipDuplicates: true,
   });
+  if (created.count > 0) onCommitted?.();
   const tagRows = await client.tag.findMany({
     select: { id: true },
     where: { name: { in: tags }, projectId },
   });
 
-  await client.keywordTag.createMany({
+  const linked = await client.keywordTag.createMany({
     data: keywordIds.flatMap((keywordId) => tagRows.map((tag) => ({ keywordId, tagId: tag.id }))),
     skipDuplicates: true,
   });
+  if (linked.count > 0) onCommitted?.();
+  return created.count + linked.count;
 }

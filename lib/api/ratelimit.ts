@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { positiveIntFromEnv } from "@/lib/env/positive-int";
 import { resolveClientIp } from "@/lib/http/client-ip";
 import { getRedisClient, redisConfigured, resetRedisClientForTests } from "@/lib/redis/redis";
+import { readAccountRateBucket } from "./rate-limit-extension";
 import { type ResetBucketsResult, resetScopedBuckets } from "./ratelimit-reset";
 import { REDIS_CONSUME_SCRIPT, REDIS_PEEK_SCRIPT } from "./ratelimit-scripts";
 import { errorResponse } from "./responses";
@@ -16,10 +17,12 @@ const DEFAULT_ANON_LIMIT = 60;
 type Identity =
   | {
       id: string;
+      ownerId?: string;
       kind: "api-key";
     }
   | {
       id: string;
+      ownerId?: string;
       kind: "personal-token";
     }
   | {
@@ -27,6 +30,7 @@ type Identity =
     };
 
 type LimitResult = {
+  accountScoped?: boolean;
   headers: Headers;
   success: boolean;
 };
@@ -254,9 +258,30 @@ export async function checkRateLimit(req: Request, identity: Identity): Promise<
     windowSeconds: HTTP_WINDOW_SECONDS,
   });
 
+  const account =
+    result.success && identity.kind !== "anonymous" && identity.ownerId
+      ? await readAccountRateBucket(identity.ownerId)
+      : null;
+  const accountResult = account
+    ? await consume({
+        ...account,
+        prefix: "bisibility:api:v1:account",
+        windowSeconds: HTTP_WINDOW_SECONDS,
+      })
+    : null;
+  const effective =
+    accountResult && (!accountResult.success || accountResult.remaining < result.remaining)
+      ? accountResult
+      : result;
   return {
-    headers: rateHeaders(result.limit, result.remaining, result.resetAt, result.success),
-    success: result.success,
+    ...(accountResult ? { accountScoped: true } : {}),
+    headers: rateHeaders(
+      effective.limit,
+      effective.remaining,
+      effective.resetAt,
+      effective.success,
+    ),
+    success: effective.success,
   };
 }
 

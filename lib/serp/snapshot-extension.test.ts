@@ -188,7 +188,7 @@ describe("snapshot continuation organic count", () => {
     ).toBeNull();
     expect(readSnapshotContinuation(raw)?.organicReturned).toBeUndefined();
   });
-  it("does not expose the persisted per-page organic count in the view", () => {
+  it("does not expose native responses or the persisted per-page organic count in the view", () => {
     const view = snapshotExtensionView(
       "serpapi",
       {
@@ -204,6 +204,7 @@ describe("snapshot continuation organic count", () => {
               fetchedAt: capturedAt,
               skippedDuplicates: 0,
               organicReturned: 10,
+              provider_response: [{ native: true }],
               rows: [],
             },
           ],
@@ -213,5 +214,6 @@ describe("snapshot continuation organic count", () => {
     );
     expect(view.pages).toHaveLength(1);
     expect(view.pages[0]).not.toHaveProperty("organicReturned");
+    expect(view.pages[0]).not.toHaveProperty("provider_response");
   });
 });

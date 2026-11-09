@@ -1,5 +1,4 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
@@ -7,6 +6,7 @@ import {
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
 import { joinWaitlist } from "@/lib/actions/waitlist";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { assertEditableDemoProjectPreserved } from "@/lib/demo/identity";
 import { waitlistSchema } from "@/lib/landing/waitlist-schema";
@@ -54,6 +54,7 @@ export async function updateProject(input: unknown) {
 
   const updated = await updateProjectSettingsSnapshot(project.id, data);
 
+  recordAppAction(actor);
   await writeAudit({
     action: "project.update",
     actorId: actor.id,
@@ -94,6 +95,7 @@ export async function deleteWorkspace(input: unknown) {
     before,
     targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
   });
+  recordAppAction(actor);
   const nextProject = (await readActorProjects(actor.id))[0] ?? null;
 
   revalidateSettingsViews();
@@ -111,5 +113,7 @@ export async function submitBillingInterest(input: unknown) {
   const actor = await getActionActor();
   await requireProjectScope(actor, "manage", data.projectId, { type: "billing" });
 
-  return joinWaitlist(data);
+  const result = await joinWaitlist(data);
+  if (result.ok) recordAppAction(actor);
+  return result;
 }

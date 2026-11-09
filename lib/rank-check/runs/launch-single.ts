@@ -31,6 +31,7 @@ type LaunchSingleRankCheckRunInput = {
 
 export async function launchSingleRankCheckRun(
   input: LaunchSingleRankCheckRunInput,
+  onCommitted?: () => void,
 ): Promise<LaunchRankCheckRunResult> {
   const spec = { kind: "single" as const, keywordId: input.keywordId, v: 1 as const };
   const preview = await previewRankCheckRun({
@@ -54,20 +55,23 @@ export async function launchSingleRankCheckRun(
       preview.estimate.costCents ?? undefined,
     );
   }
-  const launched = await launchRankCheckRun({
-    actorId: input.actorId,
-    paymentOptionId: input.paymentOptionId,
-    acceptedPayment: input.acceptedPayment,
-    requirePayment: input.requirePayment,
-    idempotencyKey: input.idempotencyKey,
-    depth: input.depth,
-    origin: input.origin,
-    previewToken: preview.previewToken,
-    project: input.project,
-    providerId: input.providerId,
-    spec,
-    trigger: input.trigger,
-  });
+  const launched = await launchRankCheckRun(
+    {
+      actorId: input.actorId,
+      paymentOptionId: input.paymentOptionId,
+      acceptedPayment: input.acceptedPayment,
+      requirePayment: input.requirePayment,
+      idempotencyKey: input.idempotencyKey,
+      depth: input.depth,
+      origin: input.origin,
+      previewToken: preview.previewToken,
+      project: input.project,
+      providerId: input.providerId,
+      spec,
+      trigger: input.trigger,
+    },
+    { onCommitted },
+  );
   if (!isLaunchRankCheckRunNothingToRun(launched)) return launched;
   // The launch reads the row under a lock and is the later read, so a predicate verdict from it
   // wins outright. It falls back to "already in progress" when it had no row to judge - the one

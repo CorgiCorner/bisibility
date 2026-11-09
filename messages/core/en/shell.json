@@ -52,9 +52,9 @@
           "tooltip": "Track rankings and research keywords, websites, backlinks and site health."
         },
         "ai": {
-          "label": "AI Search",
+          "label": "AI visibility",
           "tag": "AI",
-          "tooltip": "Track and research how AI answers mention your brand."
+          "tooltip": "Track brand visibility in AI answers."
         },
         "reports": {
           "label": "Data & reports",
@@ -79,6 +79,8 @@
         "markets": "Markets",
         "rankTracker": "Rank Tracker",
         "runs": "Runs",
+        "schedules": "Schedules",
+        "usage": "Usage",
         "searchConsole": "Search Console",
         "settings": "Settings",
         "aiVisibility": "Brand Visibility",
@@ -87,7 +89,8 @@
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
         "agentReports": "Agent Reports",
-        "aiTracking": "Prompt Tracker"
+        "aiTracking": "Prompt Tracker",
+        "serpPlayground": "SERP Playground"
       },
       "menu": "Menu"
     },
@@ -319,6 +322,8 @@
         "rankTracker": "Rank Tracker",
         "run": "Run",
         "runs": "Runs",
+        "schedules": "Schedules",
+        "usage": "Usage",
         "searchConsole": "Search Console",
         "security": "Security",
         "settings": "Settings",
@@ -329,7 +334,8 @@
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
         "agentReports": "Agent Reports",
-        "aiTracking": "Prompt Tracker"
+        "aiTracking": "Prompt Tracker",
+        "serpPlayground": "SERP Playground"
       }
     },
     "footer": {

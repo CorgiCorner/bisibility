@@ -2,7 +2,6 @@ import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { deploymentMode } from "@/lib/deployment/deployment";
 import { Prisma } from "@/lib/generated/prisma/client";
 import {
   cleanupRankCheckRawPurgeProgress,
@@ -12,21 +11,19 @@ import {
   purgeWithDurableProgress,
 } from "@/lib/rank-check/raw-retention-progress";
 import {
-  DEFAULT_CLOUD_RETENTION_DAYS,
   type PurgeRankCheckRawPayloadsInput,
   type PurgeRankCheckRawPayloadsSummary,
   RANK_CHECK_RAW_PURGE_BATCH_SIZE,
   RANK_CHECK_RAW_PURGE_MAX_BATCHES_PER_ACTIVITY,
 } from "@/lib/rank-check/raw-retention-types";
-import { z } from "zod";
-
-const retentionDaysSchema = z.coerce.number().int().min(1).max(3650);
+import { getRankCheckRawRetentionDays, retentionDaysSchema } from "./raw-retention-config";
 
 export type {
   PurgeRankCheckRawPayloadsInput,
   PurgeRankCheckRawPayloadsProgress,
   PurgeRankCheckRawPayloadsSummary,
 } from "@/lib/rank-check/raw-retention-types";
+export { getRankCheckRawRetentionDays } from "./raw-retention-config";
 export {
   cleanupRankCheckRawPurgeProgress,
   RANK_CHECK_RAW_PURGE_BATCH_SIZE,
@@ -43,13 +40,6 @@ function assertBatchLimit(value: number) {
       `maxBatches must be an integer from 1 to ${RANK_CHECK_RAW_PURGE_MAX_BATCHES_PER_ACTIVITY}.`,
     );
   }
-}
-
-export function getRankCheckRawRetentionDays() {
-  if (deploymentMode() === "cloud") return DEFAULT_CLOUD_RETENTION_DAYS;
-  const raw = process.env.RANK_CHECK_RAW_RETENTION_DAYS?.trim();
-  if (!raw || raw.toLowerCase() === "unlimited") return null;
-  return retentionDaysSchema.parse(raw);
 }
 
 async function purgeWithoutDurableProgress(

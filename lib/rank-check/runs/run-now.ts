@@ -7,19 +7,23 @@ import { runPlannedRunNow } from "@/lib/rank-check/planner/skip-run-now";
 
 const transactionOptions = { maxWait: 10_000, timeout: 60_000 } as const;
 
-export async function runRankCheckRunNowCommand(input: {
-  actorId: string;
-  orchestrationWorkflowId: string | null;
-  projectId: string;
-  runId: string;
-  publicId: string;
-}) {
+export async function runRankCheckRunNowCommand(
+  input: {
+    actorId: string;
+    orchestrationWorkflowId: string | null;
+    projectId: string;
+    runId: string;
+    publicId: string;
+  },
+  onCommitted?: () => void,
+) {
   if (!input.orchestrationWorkflowId) {
     throw new ApiConflictError("Rank-check run data defect: reserved workflow ID is missing.");
   }
   if (!(await runPlannedRunNow(input.runId))) {
     throw new ApiConflictError("Only planned runs can be run now.");
   }
+  onCommitted?.();
   await prisma.$transaction(
     (tx) =>
       writeAudit(

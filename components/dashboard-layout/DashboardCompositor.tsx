@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type {
   DashboardComposition,
   DashboardTranslator,
@@ -6,6 +7,7 @@ import type {
   WidgetId,
 } from "@/lib/dashboard-layout/types";
 import type { ReactNode } from "react";
+import { DashboardEmptyBody } from "./DashboardEmptyBody";
 import { DashboardViewHelp } from "./DashboardViewHelp";
 
 type WidgetContent = Readonly<
@@ -62,7 +64,10 @@ export function DashboardCompositor({
       <div className="flex flex-wrap items-center gap-2">{composition.shell.map(shellSection)}</div>
       <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         {composition.widgets
-          .filter(({ selection }) => selection.visible)
+          .filter(
+            ({ selection, definition }) =>
+              selection.visible && definition.presets.includes(composition.layout.preset),
+          )
           .map(({ selection, definition, reason }) => {
             const data = widgets[selection.id];
             return (
@@ -70,13 +75,20 @@ export function DashboardCompositor({
                 key={selection.id}
                 aria-label={t(definition.labelKey)}
                 data-dashboard-widget={selection.id}
-                className={selection.span === "wide" ? "min-w-0 lg:col-span-2" : "min-w-0"}
+                className={
+                  selection.span === "wide" ? "h-full min-w-0 lg:col-span-2" : "h-full min-w-0"
+                }
               >
                 {reason || !data || data.state !== "ready" ? (
-                  <Card>
-                    <h2 className="font-semibold">{t(definition.labelKey)}</h2>
-                    <p className="mt-2 text-sm text-fg-muted">
-                      {t(
+                  <Card className="flex h-full min-h-[24.625rem] flex-col overflow-hidden p-0">
+                    <div className="px-5 py-4.5">
+                      <div>
+                        <SectionTitle>{t(definition.labelKey)}</SectionTitle>
+                      </div>
+                    </div>
+                    <DashboardEmptyBody
+                      title={t(data?.state === "loading" ? "widgetLoading" : "widgetNoData")}
+                      description={t(
                         reason
                           ? `reasons.${reason}`
                           : !data
@@ -87,7 +99,7 @@ export function DashboardCompositor({
                                 ? "widgetLoadOnSave"
                                 : "widgetError",
                       )}
-                    </p>
+                    />
                   </Card>
                 ) : (
                   data.content

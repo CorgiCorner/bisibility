@@ -1,0 +1,31 @@
+export type Proof = {
+  role?: string;
+  within?: { role: string; name: string };
+  scopeHeading?: string;
+  label?: string;
+  absent?: boolean;
+  name?: string;
+  text?: string;
+  exact?: boolean;
+  scope?: string;
+  scopeText?: string;
+  busyContent?: boolean;
+  auditLoading?: boolean;
+  tagName?: string;
+  href?: string;
+  disabled?: boolean;
+  value?: string;
+  fieldValue?: string;
+  dateTime?: string;
+  title?: string;
+};
+export type Entry = {
+  id: string;
+  capability: string;
+  story: string;
+  tab: string;
+  subtab: string;
+  proof: Proof;
+  status: string;
+  interaction?: string[];
+};

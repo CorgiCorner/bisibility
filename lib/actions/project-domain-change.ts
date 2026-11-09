@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
@@ -85,6 +85,7 @@ export async function confirmProjectDomainChange(input: unknown) {
     );
     return after;
   });
+  recordAppAction(actor);
   revalidateSettingsViews();
 
   return { domain: updated.domain, projectId: updated.publicId };

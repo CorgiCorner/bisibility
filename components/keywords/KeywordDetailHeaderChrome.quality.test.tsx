@@ -1,5 +1,5 @@
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import {
@@ -20,6 +20,7 @@ describe("installed detail header quality sidecar", () => {
       />,
     );
     expect(screen.getByTestId("keyword-detail-slot-value-position")).toHaveTextContent("#6");
+    fireEvent.click(screen.getByRole("button", { name: "Measurement details" }));
     expect(screen.getByTestId("keyword-detail-retained-best")).toHaveTextContent(
       "Best #3 for the current definition",
     );
@@ -48,6 +49,7 @@ describe("installed detail header quality sidecar", () => {
       "Current rank unknown",
     );
     expect(screen.getByTestId("keyword-detail-last-known")).toHaveTextContent("Last known #6");
+    fireEvent.click(screen.getByRole("button", { name: "Measurement details" }));
     expect(screen.getByTestId("keyword-detail-retained-best")).toHaveTextContent(
       "Best #3 for the last known definition",
     );
@@ -56,7 +58,7 @@ describe("installed detail header quality sidecar", () => {
     );
     const retained = screen.getByTestId("keyword-detail-retained-url");
     expect(retained).toHaveTextContent("Last known URL");
-    expect(within(retained).getByRole("link")).toHaveAttribute(
+    expect(within(retained).getByRole("link", { hidden: true })).toHaveAttribute(
       "href",
       "https://example.com/retained",
     );
@@ -84,7 +86,7 @@ describe("installed detail header quality sidecar", () => {
       />,
     );
     expect(screen.getByTestId("keyword-detail-stored-unqualified")).toHaveTextContent(
-      "Stored value 2; qualification unavailable",
+      "Saved position (unconfirmed): 2",
     );
     expect(screen.queryByText("#2", { exact: true })).not.toBeInTheDocument();
     expect(screen.queryByTestId("keyword-detail-retained-best")).not.toBeInTheDocument();
@@ -169,8 +171,27 @@ it("shows the first confirmed rank and time without redundant best or unknown fr
   expect(screen.queryByText("Freshness unknown")).not.toBeInTheDocument();
   expect(screen.queryByText(/Best #|Best recorded/)).not.toBeInTheDocument();
   expect(screen.queryByText("First observation")).not.toBeInTheDocument();
-  expect(screen.getByText("Checked")).toBeVisible();
-  const scope = screen.getByTestId("keyword-detail-definition-scope");
-  expect(scope.closest("details")).not.toHaveAttribute("open");
-  expect(scope).not.toBeVisible();
+  expect(screen.queryByText("Checked")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("keyword-detail-definition-scope")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Measurement details" }));
+  expect(screen.queryByTestId("keyword-detail-definition-scope")).not.toBeInTheDocument();
+});
+
+it("keeps measurement details focused on dates without repeated scope or technical tooltips", () => {
+  render(
+    <KeywordDetailHeaderChrome
+      actions={null}
+      keyword={detailMetadataFixture()}
+      quality={detailQualityFixture()}
+      timeZone="UTC"
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Measurement details" }));
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).queryByLabelText("Check scope")).not.toBeInTheDocument();
+  expect(
+    within(dialog).queryByRole("button", { name: /web_serp|Target revision/ }),
+  ).not.toBeInTheDocument();
+  expect(within(dialog).getByText(/confirmed checks/)).toBeVisible();
+  expect(within(dialog).getByText("Snapshot as of")).toBeVisible();
 });

@@ -11,7 +11,10 @@ import { recoveryCommitInputSchema } from "./input";
 import { recoveryScope } from "./read";
 import { openRecoveryCase, openRecoveryPreview, recoveryHash } from "./tokens";
 
-export async function commitRecovery(input: unknown): Promise<RecoveryCommandResult> {
+export async function commitRecovery(
+  input: unknown,
+  onCommitted?: () => void,
+): Promise<RecoveryCommandResult> {
   const session = await requireInstanceAdmin();
   await requireAdminTwoFactorForDangerousAction(session, "commit_metering_recovery");
   const value = recoveryCommitInputSchema.parse(input),
@@ -25,7 +28,8 @@ export async function commitRecovery(input: unknown): Promise<RecoveryCommandRes
       return [identity.kind, identity.id, item.version, item.action];
     }),
   });
-  return prisma.$transaction(
+  let committed = false;
+  const result = await prisma.$transaction(
     async (tx) => {
       await assertRecoveryAdmin(tx, scope.actor);
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`recovery-command:${scope.namespace}:${value.commandId}`}))`;
@@ -64,10 +68,13 @@ export async function commitRecovery(input: unknown): Promise<RecoveryCommandRes
         },
         tx,
       );
-      return { commandId: value.commandId, state: "queued", outcomes: [] };
+      committed = true;
+      return { commandId: value.commandId, state: "queued" as const, outcomes: [] };
     },
     { timeout: 30000 },
   );
+  if (committed) onCommitted?.();
+  return result;
 }
 
 export async function getRecoveryCommand(commandId: string): Promise<RecoveryCommandResult> {

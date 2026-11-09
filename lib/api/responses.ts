@@ -17,11 +17,14 @@ export type ApiErrorCode =
   | "project_domain_required"
   | "project_read_only"
   | "provider_unavailable"
+  | "weekly_request_cap_reached"
   | "rate_limited"
   | "scheduler_unavailable"
   | "self_import"
   | "sample_project"
   | "snapshot_expired"
+  | "plan_limit_reached"
+  | "subscription_required"
   | "saved_view_conflict"
   | "unauthorized"
   | "unsupported_api_version"
@@ -37,6 +40,8 @@ export type ApiEnvelope<T> = {
 };
 
 export type ProblemDetails = {
+  code?: ApiErrorCode;
+  subscriptionRequired?: boolean;
   type: string;
   title: string;
   status: number;
@@ -76,10 +81,13 @@ const errorTitles = {
   project_read_only: "Project read-only",
   sample_project: "Sample project",
   provider_unavailable: "Provider unavailable",
+  weekly_request_cap_reached: "Weekly request capacity reached",
   rate_limited: "Rate limit exceeded",
   scheduler_unavailable: "Scheduler unavailable",
   self_import: "Self import blocked",
   snapshot_expired: "Snapshot expired",
+  plan_limit_reached: "Capacity limit reached",
+  subscription_required: "Paid access required",
   saved_view_conflict: "Conflict",
   unauthorized: "Unauthorized",
   unsupported_api_version: "Unsupported API version",
@@ -122,15 +130,21 @@ export function errorResponse(
   status: number,
   init: ApiResponseInit = {},
 ) {
-  const docsUrl = `${docsBaseUrl}#${code}`;
+  const slug = code === "subscription_required" ? "subscription-required" : code;
+  const docsUrl = `${docsBaseUrl}#${slug}`;
   const body: ProblemDetails = {
     detail,
     docs_url: docsUrl,
     instance: init.instance ?? "urn:bisibility:api:v1:error",
     status,
     title: errorTitles[code],
-    type: `https://bisibility.com/problems/${code}`,
+    type: `https://bisibility.com/problems/${slug}`,
   };
+  if (code === "plan_limit_reached") body.code = code;
+  if (code === "subscription_required") {
+    body.code = code;
+    body.subscriptionRequired = true;
+  }
   if (init.details !== undefined) {
     body.errors = init.details;
   }

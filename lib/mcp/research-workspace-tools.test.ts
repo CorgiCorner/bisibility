@@ -10,18 +10,28 @@ const report = "agr_a00000000000000000000000";
 afterEach(() => vi.unstubAllGlobals());
 
 describe("research workspace MCP/REST contract", () => {
-  it.each(Object.entries(researchWorkspaceOperationPolicy))(
-    "dispatches %s through its exact REST policy",
-    (name, policy) => {
-      const dispatched = dispatchResearchWorkspaceTool(name, {
-        project_id: project,
-        report_id: report,
-      });
-      expect(dispatched).toMatchObject({
-        method: policy.method,
-        projectId: project,
-        path: policy.path.replace("{project_id}", project).replace("{report_id}", report),
-      });
+  it.each(
+    Object.entries(researchWorkspaceOperationPolicy).filter(([name]) =>
+      Object.hasOwn(researchWorkspaceToolNames, name),
+    ),
+  )("dispatches %s through its exact REST policy", (name, policy) => {
+    const dispatched = dispatchResearchWorkspaceTool(name, {
+      project_id: project,
+      report_id: report,
+    });
+    expect(dispatched).toMatchObject({
+      method: policy.method,
+      projectId: project,
+      path: policy.path.replace("{project_id}", project).replace("{report_id}", report),
+    });
+  });
+  it.each(["getSiteAuditRun", "listSiteAuditPages", "cancelSiteAuditRun", "resumeSiteAuditRun"])(
+    "keeps %s out of MCP until the maintained mirror is updated",
+    (name) => {
+      expect(
+        dispatchResearchWorkspaceTool(name, { project_id: project, report_id: report }),
+      ).toBeNull();
+      expect(Object.hasOwn(researchWorkspaceToolNames, name)).toBe(false);
     },
   );
 

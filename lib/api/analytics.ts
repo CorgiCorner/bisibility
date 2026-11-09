@@ -118,6 +118,7 @@ export async function syncProjectTrafficApi(ctx: ApiContext, projectId: string) 
   const scoped = scopedProject(ctx, projectId);
   if (scoped) return scoped;
   const summary = await syncProjectTrafficNow({
+    analyticsTrigger: "api",
     actorId: ctx.actorId,
     projectId: ctx.auth.project.id,
   });

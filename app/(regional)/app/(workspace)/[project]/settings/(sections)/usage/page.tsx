@@ -26,7 +26,7 @@ export default async function UsageSettingsPage({
   if (!content) {
     const query = await searchParams;
     return redirect(
-      `${appPath(access.project.publicId, "providers")}?tab=usage${query?.budget === "edit" ? "&budget=edit" : ""}`,
+      `${appPath(access.project.publicId, "usage")}${query?.budget === "edit" ? "?budget=edit" : ""}`,
     );
   }
   const messages = await loadCoreMessages(runtime.locale, [

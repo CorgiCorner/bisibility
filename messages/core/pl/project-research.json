@@ -76,8 +76,8 @@
       "modeLabel": "Tryb:",
       "countryAria": "Kraj",
       "countryHelp": "Domyślnie kraj, który śledzisz najczęściej",
-      "clickstream": "Wolumeny z danych clickstream",
-      "clickstreamHelp": "Wolumeny skorygowane rzeczywistymi danymi o przeglądaniu, a nie wyłącznie szacunkami Google Ads. Koszt wyszukiwania około dwa razy wyższy.",
+      "clickstream": "Liczba wyszukiwań skorygowana danymi clickstream",
+      "clickstreamHelp": "Oszacuj miesięczną liczbę wyszukiwań, rozdzielając podobne warianty fraz na podstawie danych clickstream.",
       "pricing": "Jak naliczana jest opłata?",
       "button": "{researching, select, true {Analizowanie} other {Analizuj}}{cached, select, true { bezpłatnie, z pamięci podręcznej} other {}}{cost, select, none {} other { {cost}}}",
       "seedHelp": "Po każdej frazie naciśnij Enter lub przecinek. Maksymalnie 5 fraz."

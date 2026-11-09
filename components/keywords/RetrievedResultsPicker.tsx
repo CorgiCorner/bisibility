@@ -75,13 +75,13 @@ export function RetrievedResultsPicker({
         aria-label={ariaLabel}
         className={cn(
           toolbarControlClassName,
-          "inline-flex min-h-[34px] max-w-full items-center gap-2 px-3 font-sans tabular-nums text-[12px]",
+          "inline-flex min-h-9 w-full sm:w-[248px] max-w-full shrink-0 items-center gap-2 px-3 font-sans tabular-nums text-[12px]",
         )}
         onClick={(event) => openMenu(event.currentTarget)}
         type="button"
       >
         {leadingIcon}
-        <span className="truncate">
+        <span className="min-w-0 flex-1 truncate text-left">
           {selected
             ? storedCheckLabel(selected, formatDateTime, localizedRetainedLabel(selected))
             : ariaLabel}
@@ -98,7 +98,7 @@ export function RetrievedResultsPicker({
         contentProps={{
           style: {
             ...menuSelectPaperStyle,
-            maxHeight: "min(714px, calc(100dvh - 32px))",
+            maxHeight: "min(714px, calc(100dvh - 32px), var(--radix-popper-available-height))",
             maxWidth: "calc(100vw - 32px)",
             minWidth: "min(560px, calc(100vw - 32px))",
             overflowY: "auto",

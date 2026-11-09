@@ -1,6 +1,6 @@
 "use server";
-
 import { getActionActor } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   BusinessLocationConflictError,
   BusinessLocationUnavailableError,
@@ -16,9 +16,12 @@ import {
 } from "./dashboard-store";
 
 export async function saveDashboardComparisonSelection(input: unknown) {
-  return savedViewActionResult(async () =>
-    saveDashboardComparisonSelectionFor(input, sessionSavedViewContext(await getActionActor())),
-  );
+  return savedViewActionResult(async () => {
+    const actor = await getActionActor();
+    const value = await saveDashboardComparisonSelectionFor(input, sessionSavedViewContext(actor));
+    recordAppAction(actor);
+    return value;
+  });
 }
 
 export async function readDashboardPreference(projectId: string) {
@@ -28,21 +31,30 @@ export async function readDashboardPreference(projectId: string) {
 }
 
 export async function saveDashboardLayout(input: unknown) {
-  return savedViewActionResult(async () =>
-    saveDashboardLayoutFor(input, sessionSavedViewContext(await getActionActor())),
-  );
+  return savedViewActionResult(async () => {
+    const actor = await getActionActor();
+    const value = await saveDashboardLayoutFor(input, sessionSavedViewContext(actor));
+    recordAppAction(actor);
+    return value;
+  });
 }
 export async function setDashboardDefault(input: unknown) {
-  return savedViewActionResult(async () =>
-    setDashboardDefaultFor(input, sessionSavedViewContext(await getActionActor())),
-  );
+  return savedViewActionResult(async () => {
+    const actor = await getActionActor();
+    const value = await setDashboardDefaultFor(input, sessionSavedViewContext(actor));
+    recordAppAction(actor);
+    return value;
+  });
 }
 
 export async function saveDashboardLocalSelection(input: unknown) {
   try {
-    return await savedViewActionResult(async () =>
-      saveDashboardLocalSelectionFor(input, sessionSavedViewContext(await getActionActor())),
-    );
+    return await savedViewActionResult(async () => {
+      const actor = await getActionActor();
+      const value = await saveDashboardLocalSelectionFor(input, sessionSavedViewContext(actor));
+      recordAppAction(actor);
+      return value;
+    });
   } catch (error) {
     if (
       error instanceof BusinessLocationConflictError ||

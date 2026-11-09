@@ -3,10 +3,10 @@ import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeade
 import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import { OverviewHeaderContextBoundary } from "@/components/overview/OverviewHeaderContextBoundary";
 import { HeaderContextSlot } from "@/components/shell/HeaderContextSlot";
-import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addKeywordsMatrix } from "@/lib/capacity/client-actions";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { NextSearchParams } from "@/lib/keywords/rank-tracker-query";
 import { hasMarketRoute, sectionPathOf } from "@/lib/markets/market-route-sections";

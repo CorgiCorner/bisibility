@@ -2,10 +2,10 @@ import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-c
 import { SavedKeywordsWorkspace } from "@/components/keywords/saved/SavedKeywordsWorkspace";
 import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { PageContent } from "@/components/shell/PageContent";
-import { addKeywords } from "@/lib/actions/keyword";
 import { removeSavedKeywords } from "@/lib/actions/saved-keyword";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addKeywords } from "@/lib/capacity/client-actions";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getKeywordCount, getKeywordDefaultMarket } from "@/lib/queries/keywords";
 import { getProjectMarkets } from "@/lib/queries/project-markets";

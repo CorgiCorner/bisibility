@@ -4,7 +4,7 @@ import { requireInstanceAdmin } from "@/lib/auth/instance-admin";
 import { recoveryFiltersSchema } from "./input";
 import { readRecoveryPage } from "./read";
 
-export async function getRecoveryPage(input: unknown) {
+export async function getRecoveryPage(input: unknown, now = new Date()) {
   const session = await requireInstanceAdmin();
   const filters = recoveryFiltersSchema.parse(input);
   await writeAudit({
@@ -14,7 +14,7 @@ export async function getRecoveryPage(input: unknown) {
     targetId: "metering-recovery",
     after: { category: filters.category ?? "all" },
   });
-  return readRecoveryPage(session.user.id, filters);
+  return readRecoveryPage(session.user.id, filters, now);
 }
 
 export async function getRecoveryLanding() {

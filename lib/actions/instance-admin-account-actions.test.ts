@@ -43,6 +43,7 @@ vi.mock("@/lib/db/prisma", () => ({
 describe("instance admin account actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dangerousActionGuard.mockReset().mockResolvedValue(undefined);
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
     mocks.consume.mockResolvedValue({ limit: 5, remaining: 4, resetAt: Date.now(), success: true });
     mocks.tx.user.findUnique.mockResolvedValue({
@@ -203,6 +204,57 @@ describe("instance admin account actions", () => {
         deactivated: true,
       }),
     ).toMatchObject({ status: "two_factor_required" });
+  });
+  describe.each(["self-host", "cloud"])("%s action contract", (edition) => {
+    const actions = [
+      {
+        name: "deactivate",
+        run: () =>
+          setInstanceAdminAccountDeactivated({ userId: USER_PUBLIC_ID, deactivated: true }),
+        audit: "instance_admin.account_deactivated",
+      },
+      {
+        name: "reactivate",
+        run: () =>
+          setInstanceAdminAccountDeactivated({ userId: USER_PUBLIC_ID, deactivated: false }),
+        audit: "instance_admin.account_reactivated",
+      },
+      {
+        name: "reset",
+        run: () => resetInstanceAdminAccountLimits({ userId: USER_PUBLIC_ID }),
+        audit: "instance_admin.account_limits_reset",
+      },
+    ];
+    describe.each(actions)("$name", ({ run, audit }) => {
+      it.each(["unauthenticated", "non-admin", "two-factor missing"])(
+        "denies %s without mutation",
+        async (state) => {
+          vi.stubEnv("DEPLOYMENT_MODE", edition);
+          if (state === "two-factor missing")
+            dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("account"));
+          else mocks.getInstanceAdminSession.mockResolvedValue(null);
+          expect(await run()).toMatchObject({
+            status: state === "two-factor missing" ? "two_factor_required" : "forbidden",
+          });
+          for (const call of [
+            mocks.tx.user.update,
+            mocks.tx.session.deleteMany,
+            mocks.tx.personalAccessToken.updateMany,
+            mocks.resetBucketsFor,
+            mocks.writeAudit,
+          ])
+            expect(call).not.toHaveBeenCalled();
+        },
+      );
+      it("audits successful changes", async () => {
+        vi.stubEnv("DEPLOYMENT_MODE", edition);
+        expect(await run()).toMatchObject({ status: "completed" });
+        expect(mocks.writeAudit).toHaveBeenCalledWith(
+          expect.objectContaining({ action: audit, actorId: "admin_1", targetId: USER_PUBLIC_ID }),
+          ...(audit.endsWith("limits_reset") ? [] : [mocks.tx]),
+        );
+      });
+    });
   });
 });
 

@@ -34,13 +34,14 @@ export async function deliverPersistedOpsEvent(event: {
   const config = getOpsConfig();
   if (!config.enabled) {
     logDisabledOnce();
-    return false;
+    return { delivered: false, committed: false };
   }
   const store = await opsEventStore().catch((error) => {
     logFailure(error);
     return null;
   });
-  if (!store) return false;
+  if (!store) return { delivered: false, committed: false };
+  let delivered = false;
   try {
     await postOpsSlackWebhook(config, {
       fields:
@@ -52,21 +53,26 @@ export async function deliverPersistedOpsEvent(event: {
         event.severity === "error" || event.severity === "warning" ? event.severity : "info",
       title: event.title,
     });
+    delivered = true;
     await store.update({
       data: { attempts: { increment: 1 }, deliveredAt: new Date(), lastError: null },
       where: { id: event.id },
     });
-    return true;
+    return { delivered, committed: true };
   } catch (error) {
     const message = redactOpsText(error);
-    await store
+    const committed = await store
       .update({
         data: { attempts: { increment: 1 }, lastError: message },
         where: { id: event.id },
       })
-      .catch(logFailure);
+      .then(() => true)
+      .catch((failure) => {
+        logFailure(failure);
+        return false;
+      });
     logFailure(error);
-    return false;
+    return { delivered, committed };
   }
 }
 

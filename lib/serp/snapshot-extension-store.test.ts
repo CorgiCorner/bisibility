@@ -235,7 +235,13 @@ describe("snapshot extension claim", () => {
   it("appends only extension data without replacing rank, original rows or dates", async () => {
     const claim = await claimSnapshotExtension(input);
     if (!claim.ok) throw new Error("Expected claim");
-    const page = { start: 20, fetchedAt: new Date().toISOString(), rows: [], skippedDuplicates: 1 };
+    const page = {
+      start: 20,
+      fetchedAt: new Date().toISOString(),
+      rows: [],
+      skippedDuplicates: 1,
+      provider_response: [{ native: true }],
+    };
     await finishSnapshotExtension({
       ...input,
       claim,

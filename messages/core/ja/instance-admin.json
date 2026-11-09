@@ -1,18 +1,56 @@
 {
   "instanceAdmin": {
     "shell": {
+      "status": "ステータス",
+      "accounts": "アカウント",
+      "viewNavigation": "{tab}のビュー",
+      "summary": "概要",
+      "ledger": "台帳",
+      "budgets": "予算",
+      "meteringView": "使用量計測",
+      "aiEngine": "AIエンジン",
+      "announcements": "お知らせ",
+      "refreshData": "データを更新",
+      "refreshing": "更新中",
+      "refreshed": "更新済み {time}",
+      "previewDescription": "インスタンス管理と運用状況",
       "context": "インスタンス管理",
       "backToApp": "アプリに戻る",
       "title": "インスタンス管理",
-      "description": "インスタンス全体の運用診断情報です。テナントのデータは識別子のみで表示されます。"
+      "description": "インスタンス全体の運用診断情報です。テナントのデータは識別子のみで表示されます。",
+      "settings": "設定",
+      "sendingToday": "本日の送信",
+      "worker": "ワーカー",
+      "checks": "チェック",
+      "dataSources": "データソース",
+      "tasks": "タスク",
+      "notifications": "通知",
+      "journey": "ジャーニー",
+      "retention": "継続率",
+      "survey": "アンケート",
+      "signups": "登録",
+      "subscriptions": "サブスクリプション",
+      "trials": "トライアル",
+      "credits": "クレジット",
+      "billing": "請求",
+      "hostedProviders": "ホスト型プロバイダー",
+      "providerCredits": "プロバイダークレジット",
+      "analyticsExclusions": "分析の除外",
+      "accountingHealth": "会計の状態"
     },
     "navigation": {
+      "overview": "概要",
+      "usageCosts": "使用量と費用",
+      "settings": "設定",
       "instance": "インスタンス",
       "label": "インスタンス管理のセクション",
       "operations": "運用",
       "administration": "管理",
       "audit": "監査",
-      "metering": "使用量計測"
+      "metering": "使用量計測",
+      "users": "ユーザー",
+      "revenue": "収益",
+      "email": "メール"
     },
     "controls": {
       "refresh": "更新",
@@ -81,10 +119,12 @@
       "lagP95": "遅延 p95"
     },
     "dashboard": {
+      "timeZone": "時刻: {timeZone}",
       "rankChecks": {
         "title": "順位チェック",
         "description": "実行の合計と、スケジュールから開始までの遅延です。延期された行は成功に含まれません。",
         "unavailable": "順位チェックの診断情報は利用できません。",
+        "statusLabel": "順位チェック（24時間）",
         "last24Hours": "過去24時間",
         "last7Days": "過去7日間",
         "failures": "失敗（24時間）",
@@ -155,6 +195,7 @@
         "title": "インスタンス統計",
         "description": "全プロジェクトと全種類の操作を対象としたインスタンスの件数とプロバイダー利用です。下で期間を選択できます。",
         "unavailable": "インスタンス統計は利用できません。",
+        "providerUsageTitle": "プロバイダー使用量の参考情報",
         "users": "ユーザー",
         "projects": "プロジェクト",
         "keywords": "キーワード",
@@ -250,7 +291,8 @@
     "administration": {
       "growth": {
         "title": "成長",
-        "description": "30日間（UTC）の集計です。行動分析やテナントのコンテンツは含まれません。",
+        "description": "過去30日間",
+        "utcNote": "日はUTC",
         "users": "ユーザー",
         "projects": "プロジェクト",
         "keywords": "キーワード",
@@ -360,7 +402,7 @@
         "temporarilyUnavailable": "アカウント操作は一時的に利用できません。",
         "accountNotFound": "アカウントが見つかりません。",
         "failed": "アカウント操作を実行できませんでした。",
-        "limitsCompleted": "レート制限をリセットしました。月間の利用額はローリングウィンドウのためリセットできません。",
+        "limitsCompleted": "レート制限をリセットしました。",
         "limitsFailed": "レート制限をリセットできませんでした。"
       }
     },
@@ -390,6 +432,7 @@
       "actor": "実行者",
       "action": "アクション",
       "target": "対象",
+      "targetType": "対象の種類",
       "result": "結果",
       "resultOk": "OK",
       "resultBlocked": "ブロック済み",
@@ -668,10 +711,26 @@
           "partial": "部分的",
           "unresolved": "未解決"
         },
-        "utcTimestamp": "{timestamp} UTC"
+        "utcTimestamp": "{timestamp} UTC",
+        "taskLookupReason": "プロバイダーの元の証跡が引き続き必要です。"
       },
       "closedUnknown": "終了済み・費用不明",
-      "closedUnknownNote": "管理者がこれらのリクエストを終了しました。元の費用は不明のままです。履歴は保持され、同じリクエストに対する復旧処理や通知は繰り返されません。"
+      "closedUnknownNote": "管理者がこれらのリクエストを終了しました。元の費用は不明のままです。履歴は保持され、同じリクエストに対する復旧処理や通知は繰り返されません。",
+      "approvedScope": "対象: {targets, number}、対象ごとの試行回数: {attempts, number}。",
+      "taskOnly": {
+        "closedUnknown": "終了済み、会計状態は不明",
+        "closedUnknownNote": "これらのリクエストは管理者が終了しました。会計状態は不明のままです。履歴は保持され、同じリクエストで復旧や通知が再び実行されることはありません。",
+        "blockedScopes": "不確実な状態により復旧が制限されています。プロジェクト: {projects, number}、接続: {connections, number}。",
+        "newAttemptNote": "保存された結果がなく、送信が開始されていないという確実な証拠もない場合は、プロジェクトのメンバーに通常のプレビューと権限確認を経て新しい実行を作成するよう依頼してください。",
+        "projectBlocked": "未解決の会計状態によりプロジェクトの操作が制限されています。",
+        "connectionBlocked": "未解決の会計状態により接続の操作が制限されています。",
+        "noSpend": "証跡の照合と結果の復元ではプロバイダーにリクエストを送信しません。結果を復元しても不明な会計状態は解決されません。",
+        "originalRun": "所有者の保存された承認に基づき、未開始の元の実行を {count, number} 件再開します。通常のプロバイダー利用条件が適用されます。新しい実行や重複した試行は作成されません。",
+        "accountingState": "会計状態",
+        "unknown": "不明",
+        "triageNote": "対応状況、担当者の割り当て、待機では会計状態は解決されず、操作制限も解除されません。案件の変更や待機期間の終了により案件が再開されます。",
+        "authorizationRequired": "新しい試行にはプロジェクトメンバーの承認と通常の利用条件の確認が必要です。"
+      }
     },
     "dangerousActions": {
       "notice": "{action}には、二要素認証を有効にしてください。",
@@ -721,6 +780,135 @@
       "note": "各操作の最終記録に基づく費用です。訂正は一度だけ計上します。不明な金額は合計に含めません。プロバイダーの請求書が正式な記録です。",
       "topNote": "記録費用が多いプロジェクトとプロバイダーの上位10組です。割合はインスタンス全体の記録費用が基準です。不明な金額と識別情報を保持します。",
       "referenceTitle": "SERP の参考費用（今月・UTC）"
+    },
+    "accounts": {
+      "title": "アカウント",
+      "count": "アカウント ({count, number})",
+      "email": "メール",
+      "status": "状態",
+      "created": "作成日",
+      "lastActive": "最終アクティビティ",
+      "projects": "プロジェクト",
+      "keywords": "キーワード",
+      "connections": "接続",
+      "searchLabel": "アカウントを検索",
+      "searchPlaceholder": "メールまたはIDでアカウントを検索",
+      "loading": "アカウントを読み込み中...",
+      "unavailable": "アカウントを利用できません。",
+      "empty": "アカウントが見つかりません。",
+      "notReported": "データなし",
+      "find": "アカウントを探す",
+      "notFound": "アカウントが見つかりません。",
+      "details": "アカウントの詳細",
+      "copyId": "IDをコピー",
+      "adminRequired": "管理者権限が必要です。",
+      "question": "対応が必要なアカウントはどれですか？",
+      "statuses": {
+        "active": "有効",
+        "deactivated": "無効"
+      }
+    },
+    "pages": {
+      "description": "インスタンスの状態、運用、管理。",
+      "unavailable": "インスタンスのデータを取得できません。",
+      "retry": "再試行",
+      "saved": "フォローアップを保存しました。",
+      "console": "復旧コンソール",
+      "refreshCases": "ケースを更新",
+      "loadingCases": "ケースを読み込み中...",
+      "instance": "インスタンス",
+      "namespace": "Temporal 名前空間",
+      "noAdmin": "管理者アクセスが必要です。",
+      "previewTitle": "復旧バッチのプレビュー",
+      "starting": "復旧を開始中...",
+      "confirm": "復旧を確認",
+      "startFailed": "復旧を開始できませんでした。再試行してください。",
+      "expired": "プレビューの有効期限が切れました。更新してケースを再確認してください。",
+      "preparing": "プレビューを準備中...",
+      "details": "ケースの詳細",
+      "triage": "フォローアップ",
+      "triageStatus": "フォローアップの状態",
+      "triageReason": "フォローアップの理由",
+      "due": "期限",
+      "saveTriage": "フォローアップを保存",
+      "reasonRequired": "調査理由を選択してください。",
+      "audit": "監査履歴",
+      "emptyAudit": "このフィルターに一致する履歴はありません。",
+      "older": "過去の履歴",
+      "copyTarget": "対象 ID をコピー",
+      "mail": "インスタンスのメール設定",
+      "lastExhaustion": "最後に上限に達した日時",
+      "presenceHelp": "日次 URL 存在確認で延期された最新の URL。上限は自動的にリセットされます。",
+      "questions": {
+        "status": "インスタンスは正常ですか？",
+        "worker": "ワーカーとスケジュールは正常ですか？",
+        "checks": "順位確認と URL 存在確認は正常ですか？",
+        "dataSources": "データソースは正常ですか？",
+        "tasks": "復旧が必要なタスクはどれですか？",
+        "notifications": "運用通知は配信されていますか？",
+        "accounts": "対応が必要なアカウントはどれですか？",
+        "sendingToday": "このインスタンスは今日何通のメールを送信できますか？",
+        "settings": "インスタンスのメールはどのように設定されていますか？",
+        "audit": "インスタンスで何が変更されましたか？"
+      },
+      "category": "カテゴリ",
+      "startRecovery": "復旧を開始する",
+      "retryCommand": "コマンドの状態を再確認",
+      "attempts": "試行回数",
+      "failureClass": "エラー分類",
+      "blockedReason": "ブロック理由",
+      "historical": "過去の不確実性",
+      "closedUnknown": "終了、計上状態不明",
+      "categories": {
+        "all": "すべての案件",
+        "unfinished": "未完了の作業",
+        "accounting": "未確認の会計情報",
+        "failed": "失敗した復旧",
+        "historical": "過去の不確実性",
+        "closed_unknown": "終了、計上状態不明"
+      },
+      "triageStatuses": {
+        "open": "未対応",
+        "acknowledged": "受付済み",
+        "investigating": "調査中",
+        "waiting_evidence": "証拠待ち",
+        "escalated": "エスカレーション済み"
+      },
+      "triageReasons": {
+        "none": "理由未選択",
+        "investigating": "調査中",
+        "provider_support": "プロバイダーサポート",
+        "waiting_export": "プロバイダーのエクスポート待ち",
+        "missing_proof": "ネイティブ証拠が不足"
+      },
+      "retainedScope": "保持された範囲または削除済みの範囲",
+      "auditFilters": {
+        "all": "すべて",
+        "account": "アカウント",
+        "ops": "運用",
+        "setup": "セットアップ"
+      },
+      "evidenceColumns": {
+        "classification": "証拠の分類",
+        "acceptance": "受付 / 復旧",
+        "incident": "インシデント",
+        "lookup": "検索試行"
+      },
+      "command": "コマンド: {state}",
+      "commandStatuses": {
+        "queued": "復旧を待機中",
+        "running": "復旧を実行中",
+        "completed": "復旧操作が完了",
+        "failed": "復旧操作が停止"
+      },
+      "triageSaved": "フォローアップを保存しました。",
+      "commandOutcomes": {
+        "queued": "待機中",
+        "unchanged": "変更なし",
+        "recovered": "復旧済み",
+        "failed": "失敗",
+        "skipped": "スキップ"
+      }
     }
   }
 }

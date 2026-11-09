@@ -1,3 +1,5 @@
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
+import { prepareKeywordScheduleChange } from "@/lib/capacity/schedule-change";
 import "server-only";
 
 import { normalizeSchedule, type StoredSchedule } from "@/lib/actions/_schedule";
@@ -47,6 +49,7 @@ export async function setKeywordCadence(
         "Custom cron requires a supported numeric five-field expression with a future occurrence.",
       );
   }
+  await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
   await lockProjectForProviderMutation(tx, projectId);
   const keywords = await tx.keyword.findMany({
     select: {
@@ -63,6 +66,10 @@ export async function setKeywordCadence(
   await tx.$queryRaw(
     Prisma.sql`SELECT "id" FROM "keywords" WHERE "id" IN (${Prisma.join(ids)}) ORDER BY "id" FOR UPDATE`,
   );
+  const capacity = await prepareKeywordScheduleChange(tx, projectId, ids, {
+    ...input,
+    enabled: true,
+  });
   const groups = new Map<string, CadenceGroup>();
   for (const keyword of keywords) {
     // An assigned schedule owns depth, including null inheritance. Frequency alone
@@ -88,6 +95,7 @@ export async function setKeywordCadence(
     const schedule = await assignCadenceGroup(tx, projectId, group, actorId);
     for (const keyword of group.keywords) assignments.set(keyword.id, schedule);
   }
+  await capacity.check();
   return assignments;
 }
 

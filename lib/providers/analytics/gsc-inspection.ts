@@ -54,6 +54,7 @@ export async function createGscUrlInspectionSession(
           {
             accountKey: providerAccountKey("gsc", { apiKey: creds.apiKey, login: property }),
             providerId: "gsc",
+            ...(creds.captureResponse ? { captureResponse: creds.captureResponse } : {}),
           },
         );
         return normalizeGscInspection(data);

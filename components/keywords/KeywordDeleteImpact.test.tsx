@@ -42,6 +42,6 @@ it("preserves the in-flight deletion warning and concise last-member consequence
   ).toBeVisible();
   expect(screen.getByRole("link", { name: "Daily" })).toHaveAttribute(
     "href",
-    "/app/prj_example/runs/schedules/sch_daily",
+    "/app/prj_example/schedules/sch_daily",
   );
 });

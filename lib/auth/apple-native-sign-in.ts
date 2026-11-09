@@ -27,6 +27,7 @@ import { createAuthEndpoint } from "better-auth/api";
 import { generateRandomString } from "better-auth/crypto";
 import type { JWTVerifyGetKey } from "jose";
 import { z } from "zod";
+import { accountCapabilityAvailable } from "./account-capability-extension";
 
 /** `POST /api/auth/ios/apple`: native Sign in with Apple for the iOS app (ADR-021, Part 1, 3). */
 export const APPLE_NATIVE_SIGN_IN_PATH = "/ios/apple";
@@ -236,6 +237,7 @@ export async function handleAppleNativeSignIn(
     });
   }
 
+  if (!(await accountCapabilityAvailable(userId))) return refuse("sign_in_unavailable", { userId });
   const tokens = await issueAppTokens(userId, deps);
   await recordSignInAudit({
     email: user.email,

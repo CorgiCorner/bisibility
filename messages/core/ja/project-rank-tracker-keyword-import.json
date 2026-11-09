@@ -419,7 +419,7 @@
           "chooseDepth": "チェックの取得深度を選択",
           "depthMenu": "取得深度",
           "changeDefault": "既定値を変更",
-          "shallowVisibility": "上位10位のチェックでは可視性は更新されません。対象のキーワードは可視性の集計対象には引き続き含まれます。"
+          "shallowVisibility": "トップ10のチェックで順位が見つかれば、可視性を更新します。見つからなければ結果は不明のままです。"
         },
         "runConfirmation": {
           "titleConfirm": "{count, plural, other {順位チェックを実行}}",

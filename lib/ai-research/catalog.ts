@@ -1,3 +1,4 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { ProviderCallError } from "@/lib/providers/call-error";
@@ -67,6 +68,12 @@ async function metadata(credentials: ProviderCredentials, path: string, deadline
     cache: "no-store",
     redirect: "error",
   });
+  await captureHttpResponse(
+    response,
+    credentials.captureResponse,
+    `${ROOT}${path}`,
+    2 * 1024 * 1024,
+  );
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined);
     throw new ProviderCallError("AI provider capabilities are unavailable.", 0);

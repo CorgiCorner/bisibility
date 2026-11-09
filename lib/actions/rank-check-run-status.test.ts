@@ -3,12 +3,14 @@ import { getRankCheckStatus, getRankCheckStatuses } from "./rank-check-status";
 
 const mocks = vi.hoisted(() => ({
   actor: vi.fn(),
+  receipt: vi.fn(),
   scope: vi.fn(),
   run: vi.fn(),
   runs: vi.fn(),
   checks: vi.fn(),
   emitCompletion: vi.fn(),
 }));
+vi.mock("@/lib/activity/result-receipt-extension", () => ({ recordResultReceipt: mocks.receipt }));
 vi.mock("@/lib/actions/rank-check-preview-analytics", () => ({
   emitFirstCheckRunCompletion: mocks.emitCompletion,
 }));
@@ -49,6 +51,11 @@ it("polls a queued single run before any attempt exists", async () => {
   await expect(getRankCheckStatus({ rankCheckId: runId })).resolves.toMatchObject({
     status: "running",
     position: null,
+  });
+  expect(mocks.receipt).toHaveBeenCalledWith({
+    userId: "actor_1",
+    surface: "app",
+    nonEmpty: false,
   });
   expect(mocks.scope).toHaveBeenCalledWith(
     { id: "actor_1" },
@@ -92,6 +99,7 @@ it("returns the completed attempt, including its actual depth", async () => {
     requestedDepth: 50,
     finishedAt: "2026-09-26T23:35:00.000Z",
   });
+  expect(mocks.receipt).toHaveBeenCalledWith({ userId: "actor_1", surface: "app", nonEmpty: true });
   expect(mocks.emitCompletion).toHaveBeenCalledWith({
     actorId: "actor_1",
     projectId: "project_1",
@@ -117,6 +125,7 @@ it("does not reveal run results to another project's member", async () => {
   mocks.scope.mockRejectedValue(new AuthorizationError("forbidden"));
   await expect(getRankCheckStatus({ rankCheckId: runId })).rejects.toThrow("Rank check not found.");
   expect(mocks.emitCompletion).not.toHaveBeenCalled();
+  expect(mocks.receipt).not.toHaveBeenCalled();
 });
 
 it("supports queued run ids in the batch poll with the authorized project constraint", async () => {

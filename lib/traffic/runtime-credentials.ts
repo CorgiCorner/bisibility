@@ -1,3 +1,4 @@
+import { connectionResponseRecorder } from "@/lib/provider-responses/connection";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -79,6 +80,7 @@ export function trafficRuntimeCredentials(connection: {
   const runtime = resolveProviderCredentials(connection.provider, connection.credentialsEncrypted);
   const credentials: ProviderCredentials = {
     ...runtime,
+    captureResponse: connectionResponseRecorder(connection.id, connection.provider),
     ...(["gsc", "ga4"].includes(connection.provider)
       ? {
           tokenCacheIdentity: {

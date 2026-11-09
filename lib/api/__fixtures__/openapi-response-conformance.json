@@ -11,6 +11,11 @@
   },
   {
     "kinds": ["no-capture"],
+    "operation": "cancelSiteAuditRun",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
     "operation": "compareAiPrompts",
     "status": "none"
   },
@@ -175,6 +180,11 @@
   },
   {
     "kinds": ["no-capture"],
+    "operation": "getSiteAuditRun",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
     "operation": "importCloudExport",
     "status": "none"
   },
@@ -260,6 +270,11 @@
     "status": "200"
   },
   {
+    "kinds": ["no-capture"],
+    "operation": "listSiteAuditPages",
+    "status": "none"
+  },
+  {
     "details": ["undeclared-property /data/*/latest_snapshot/id"],
     "kinds": ["undeclared-property"],
     "operation": "listSitemapMonitors",
@@ -313,6 +328,11 @@
     "operation": "resendTeamInvite",
     "sources": ["lib/api/router-team-rbac.test.ts"],
     "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "resumeSiteAuditRun",
+    "status": "none"
   },
   {
     "kinds": ["no-capture"],

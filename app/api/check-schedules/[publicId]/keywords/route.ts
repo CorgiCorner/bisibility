@@ -20,18 +20,28 @@ async function input(request: Request, context: Context) {
   });
 }
 
-export const POST = withAppRoute<Context>(async (request, actor, context) => {
-  const data = await input(request, context);
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "check_schedule",
-  });
-  return dataResponse(await assignKeywordsToSchedule(actor.id, project.id, data));
-});
+export const POST = withAppRoute<Context>(
+  async (request, actor, context, onCommitted) => {
+    const data = await input(request, context);
+    const project = await requireProjectScope(actor, "update", data.projectId, {
+      type: "check_schedule",
+    });
+    const result = await assignKeywordsToSchedule(actor.id, project.id, data);
+    if (result.updated > 0) onCommitted();
+    return dataResponse(result);
+  },
+  { mutation: true, explicitCommit: true },
+);
 
-export const DELETE = withAppRoute<Context>(async (request, actor, context) => {
-  const data = await input(request, context);
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "check_schedule",
-  });
-  return dataResponse(await removeKeywordsFromSchedule(actor.id, project.id, data));
-});
+export const DELETE = withAppRoute<Context>(
+  async (request, actor, context, onCommitted) => {
+    const data = await input(request, context);
+    const project = await requireProjectScope(actor, "update", data.projectId, {
+      type: "check_schedule",
+    });
+    const result = await removeKeywordsFromSchedule(actor.id, project.id, data);
+    if (result.updated > 0) onCommitted();
+    return dataResponse(result);
+  },
+  { mutation: true, explicitCommit: true },
+);

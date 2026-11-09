@@ -62,7 +62,7 @@ test("checks generated types before building and preserves a failed build exit",
       process.execPath, ["node_modules/typescript/lib/tsc.js", "--noEmit", "--checkers", "1"],
     ]);
     assert.deepEqual(calls[3].slice(0, 2), [
-      platform === "win32" ? "npm.cmd" : "npm", ["run", "build", "--", "--webpack"],
+      platform === "win32" ? "npm.cmd" : "npm", ["run", "build", "--", "--turbopack"],
     ]);
     assert.equal(calls[3][2].env.NEXT_TYPES_CHECKED_BEFORE_BUILD, "1");
     for (const call of calls.slice(0, 3)) {

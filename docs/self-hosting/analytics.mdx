@@ -39,12 +39,16 @@ details, passwords, API keys, and credentials are never event properties.
 | `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
 | `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
+| `seo_cost_calculator_changed` | Client | A marketing SEO workload change settles; never on initial render or shared-state restoration. | `surface: "home" \| "pricing"`, `selection`, `frequency`, `funding_mode`, bucketed `rank_volume`, `research_volume`, `domain_volume`, `backlink_volume`; no exact volumes |
 | `language_switched` | Client | The marketing language switcher changes the locale. | `from`, `to`, `surface: "marketing_header" \| "marketing_mobile_menu"` |
 | `marketing_cta_clicked` | Client | A call to action on a hosted marketing page is selected. | `page`, `cta`, `slot`, optional `page_version: "legacy" \| "outcomes_v2"` |
 | `user_signed_up` | Server | A user account is created. | `method: "otp" \| "github" \| "google"` |
 | `onboarding_project_created` | Server | The onboarding project is created. | `frequency` |
 | `provider_connection_tested` | Server | A provider connection test finishes. | `provider`, `ok`, `error_category` |
 | `provider_connected` | Server | A provider is connected. | `provider`, `surface: "onboarding" \| "getting_started" \| "settings"` |
+| `free_request_used` | Server | A successful free provider request is made. | `provider`, `feature`, `trigger` |
+| `paid_request_used` | Server | A successful provider request has measured paid usage. | `provider`, `feature`, `trigger`, `payment` |
+| `analytics_data_synced` | Server | A connection first successfully stores analytics data. | `provider`, `trigger` |
 | `keywords_added` | Server | Keywords are added manually or imported. | `keyword_count`, `market_count`, `source: "manual" \| "search_console"`, `surface` |
 | `rank_check_preview_completed` | Server | A first-check preview is queued, completes, or fails. | `provider`, `status: "queued" \| "completed" \| "failed"`, `duration_ms`, `surface: "onboarding" \| "getting_started"` |
 | `onboarding_step_skipped` | Client | An onboarding step is skipped. | `step`, optional `reason` |

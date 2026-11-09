@@ -1,8 +1,11 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const mutateAiTrackingAction = capacityActionClient(mutateAiTrackingActionCapacityAction);
 
 import { AiScheduleDrawerHost } from "@/components/ai-tracking/AiScheduleDrawerHost";
 import { AlertBanner } from "@/components/ui/AlertBanner";
-import { mutateAiTrackingAction } from "@/lib/actions/ai-tracking";
+import { mutateAiTrackingAction as mutateAiTrackingActionCapacityAction } from "@/lib/actions/ai-tracking";
 import type { TrackingScheduleList } from "@/lib/ai-tracking/projections/schedule-list";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { useRouter } from "next/navigation";

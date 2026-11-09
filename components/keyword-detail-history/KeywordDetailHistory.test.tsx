@@ -15,22 +15,43 @@ import { RecordedUrlHistory } from "./RecordedUrlHistory";
 import { RetainedSnapshotCard } from "./RetainedSnapshotCard";
 
 describe("keyword full retained history UI", () => {
+  it("remembers the Rankings and Check log disclosures independently", () => {
+    localStorage.clear();
+    const port = fixtureHistoryPort();
+    const { unmount } = render(
+      <KeywordDetailHistory history={port} keyword="Target" timeZone="UTC" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Collapse Check history" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Check log" }));
+    expect(screen.getByRole("table", { name: "Check log" })).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: "Rankings" }));
+    expect(screen.getByRole("button", { name: "Expand Check history" })).toBeVisible();
+    unmount();
+    render(<KeywordDetailHistory history={port} keyword="Target" timeZone="UTC" />);
+    expect(screen.getByRole("button", { name: "Expand Check history" })).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: "Check log" }));
+    expect(screen.getByRole("table", { name: "Check log" })).toBeVisible();
+    localStorage.clear();
+  });
   it("does not fetch or perform provider work on mount or on switching already loaded streams", () => {
     const port = fixtureHistoryPort();
     port.readPage = vi.fn(port.readPage);
     port.readWindow = vi.fn(port.readWindow);
     port.readSnapshot = vi.fn(port.readSnapshot);
     render(<KeywordDetailHistory history={port} keyword="Stored target" timeZone="UTC" />);
-    const table = screen.getByRole("table", { name: "Recorded observations" });
-    expect(table).toHaveTextContent("United States");
-    expect(table).toHaveTextContent("Desktop");
+    const table = screen.getByRole("table", { name: "Ranking history" });
+    expect(table).not.toHaveTextContent("United States");
+    fireEvent.click(within(table).getAllByRole("button", { name: "Details" })[0]);
+    expect(screen.getByRole("dialog")).toHaveTextContent("United States");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Desktop");
+    fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
     expect(table.closest(".rounded-card")?.parentElement).toHaveClass("grid-cols-1", "min-w-0");
     expect(screen.getByRole("button", { name: "History date window" })).toHaveClass(
       "min-w-0",
       "max-w-full",
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Attempts" }));
-    expect(screen.getByRole("table", { name: "Recorded logical attempts" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Check log" }));
+    expect(screen.getByRole("table", { name: "Check log" })).toBeInTheDocument();
     expect(port.readPage).not.toHaveBeenCalled();
     expect(port.readWindow).not.toHaveBeenCalled();
     expect(port.readSnapshot).not.toHaveBeenCalled();
@@ -49,19 +70,19 @@ describe("keyword full retained history UI", () => {
       () =>
         expect(
           screen
-            .getByRole("table", { name: "Recorded observations" })
+            .getByRole("table", { name: "Ranking history" })
             .querySelectorAll('[data-testid$="-body"] > [role="row"]'),
         ).toHaveLength(320),
       { timeout: 30_000 },
     );
-    expect(screen.getAllByText("320 of 320 records loaded")).not.toHaveLength(0);
-    fireEvent.click(screen.getByRole("radio", { name: "Attempts" }));
+    expect(screen.getAllByText("Showing 320 of 320 checks")).not.toHaveLength(0);
+    fireEvent.click(screen.getByRole("radio", { name: "Check log" }));
     fireEvent.click(screen.getByRole("button", { name: "Load more history" }));
     await waitFor(
       () =>
         expect(
           screen
-            .getByRole("table", { name: "Recorded logical attempts" })
+            .getByRole("table", { name: "Check log" })
             .querySelectorAll('[data-testid$="-body"] > [role="row"]'),
         ).toHaveLength(320),
       { timeout: 30_000 },
@@ -94,7 +115,7 @@ describe("keyword full retained history UI", () => {
     );
     expect(
       screen
-        .getByRole("table", { name: "Recorded observations" })
+        .getByRole("table", { name: "Ranking history" })
         .querySelectorAll('[data-testid$="-body"] > [role="row"]'),
     ).toHaveLength(250);
     expect(screen.getByRole("button", { name: "Reload history" })).toBeInTheDocument();
@@ -104,7 +125,7 @@ describe("keyword full retained history UI", () => {
     const port = fixtureHistoryPort();
     port.readSnapshot = vi.fn(port.readSnapshot);
     render(<KeywordDetailHistory history={port} keyword={keywordRows[0].keyword} timeZone="UTC" />);
-    const table = screen.getByRole("table", { name: "Recorded observations" });
+    const table = screen.getByRole("table", { name: "Ranking history" });
     const id = port.initial.observations.records[0]?.id;
     if (!id) throw new Error("Fixture requires an observation");
     fireEvent.click(within(table).getByRole("button", { name: `Open saved observation ${id}` }));
@@ -130,7 +151,7 @@ describe("keyword full retained history UI", () => {
     render(<KeywordDetailHistory history={port} keyword="Sensitive target" timeZone="UTC" />);
     fireEvent.click(screen.getByRole("button", { name: "Load more history" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("History access is unavailable.");
-    expect(screen.queryByRole("table", { name: "Recorded observations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Ranking history" })).not.toBeInTheDocument();
     expect(screen.queryByText("Sensitive target")).not.toBeInTheDocument();
   }, 30_000);
 
@@ -173,8 +194,8 @@ describe("keyword full retained history UI", () => {
         timeZone="UTC"
       />,
     );
-    expect(screen.getByText("Qualification unknown")).toBeInTheDocument();
-    expect(screen.getByText("Stored value 2; qualification unavailable")).toBeInTheDocument();
+    expect(screen.getByText("No confirmed position")).toBeInTheDocument();
+    expect(screen.getByText("Saved position (unconfirmed): 2")).toBeInTheDocument();
     expect(screen.queryByText("#2")).not.toBeInTheDocument();
   });
 });

@@ -204,7 +204,7 @@ describe("NoDataKpiRow", () => {
     expect(screen.getByText("Rank checks are paused pending a usage review.")).toBeVisible();
     expect(screen.getByRole("link", { name: "Open Usage" })).toHaveAttribute(
       "href",
-      "/app/prj_example/providers?tab=usage",
+      "/app/prj_example/usage",
     );
   });
   const states: Array<{

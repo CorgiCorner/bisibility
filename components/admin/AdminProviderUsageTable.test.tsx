@@ -3,7 +3,7 @@ import {
   renderWithInstanceAdminMessages as render,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdminProviderUsageTable } from "./AdminProviderUsageTable";

@@ -1,11 +1,11 @@
 "use client";
+import { useAdminTableGroup, useAdminTableSort } from "@/components/admin/AdminTableState";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type {
   DataTableColumn,
   DataTableRowBase,
-  DataTableSort,
 } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -13,7 +13,7 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { RecoveryCase } from "@/lib/metering/recovery/contract";
 import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { RecoveryEvidence } from "./RecoveryEvidence";
 import { recoveryEvidenceSortValue } from "./recovery-sorting";
 
@@ -26,20 +26,22 @@ type Row = DataTableRowBase & {
 };
 export function RecoveryTable({
   rows,
+  showAccounting = true,
   selected,
   busy,
   onSelect,
   onDetails,
 }: {
   rows: RecoveryCase[];
+  showAccounting?: boolean;
   selected: string[];
   busy: boolean;
   onSelect: (token: string, checked: boolean) => void;
   onDetails: (row: RecoveryCase) => void;
 }) {
   const t = useTranslations("instanceAdmin.recovery");
-  const [groupBy, setGroupBy] = useState("none");
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [groupBy, setGroupBy] = useAdminTableGroup("tasks");
+  const [sorting, setSorting] = useAdminTableSort("tasks");
   function label(row: RecoveryCase) {
     if (groupBy === "project") return row.project ?? t("retainedScope");
     if (groupBy === "cause")
@@ -115,7 +117,9 @@ export function RecoveryTable({
                   t("retainedScope")
                 )}
                 {value.historical && (
-                  <span className="mt-1 block text-xs text-fg-muted">{t("historical")}</span>
+                  <span className="mt-1 block text-xs text-fg-muted">
+                    {t(showAccounting ? "historical" : "counts.historical")}
+                  </span>
                 )}
               </div>
             )
@@ -131,42 +135,49 @@ export function RecoveryTable({
         meta: { sortable: true },
         cell: ({ row }) => row.original.value?.provider,
       },
-      ...(["send", "work", "accounting"] as const).map((axis) => ({
-        id: axis,
-        accessorFn: (row: Row) => (row.value ? t(`states.${row.value[axis]}`) : undefined),
-        sortUndefined: "last" as const,
-        header: t(axis),
-        size: axis === "send" ? 260 : 180,
-        meta: { sortable: true },
-        cell: ({ row }: { row: { original: Row } }) => {
-          const value = row.original.value;
-          return (
-            value && (
-              <span
-                className={
-                  !value.closedUnknown &&
-                  (value[axis] === "unknown" || value[axis] === "possibly_sent")
-                    ? "text-warning"
-                    : "text-fg"
-                }
-              >
-                {axis === "accounting" && value.closedUnknown
-                  ? t("closedUnknown")
-                  : t(`states.${value[axis]}`)}
-              </span>
-            )
-          );
-        },
-      })),
+      ...(["send", "work", ...(showAccounting ? ["accounting" as const] : [])] as const).map(
+        (axis) => ({
+          id: axis,
+          accessorFn: (row: Row) => (row.value ? t(`states.${row.value[axis]}`) : undefined),
+          sortUndefined: "last" as const,
+          header: t(axis),
+          size: axis === "send" ? 260 : 180,
+          meta: { sortable: true },
+          cell: ({ row }: { row: { original: Row } }) => {
+            const value = row.original.value;
+            return (
+              value && (
+                <span
+                  className={
+                    !value.closedUnknown &&
+                    (value[axis] === "unknown" || value[axis] === "possibly_sent")
+                      ? "text-warning"
+                      : "text-fg"
+                  }
+                >
+                  {axis === "accounting" && value.closedUnknown
+                    ? t(showAccounting ? "closedUnknown" : "taskOnly.closedUnknown")
+                    : t(`states.${value[axis]}`)}
+                </span>
+              )
+            );
+          },
+        }),
+      ),
       ...(["classification", "acceptance", "incident", "lookup"] as const).map((column) => ({
         id: column,
-        accessorFn: (row: Row) => recoveryEvidenceSortValue(row.value?.evidence, column),
+        accessorFn: (row: Row) =>
+          recoveryEvidenceSortValue(row.value?.evidence, column, showAccounting),
         sortUndefined: "last" as const,
         header: t(`evidence.${column}`),
         size: column === "incident" || column === "lookup" ? 260 : 240,
         meta: { sortable: true },
         cell: ({ row }: { row: { original: Row } }) => (
-          <RecoveryEvidence value={row.original.value?.evidence} column={column} />
+          <RecoveryEvidence
+            value={row.original.value?.evidence}
+            column={column}
+            showCost={showAccounting}
+          />
         ),
       })),
       {
@@ -180,7 +191,9 @@ export function RecoveryTable({
           const value = row.original.value;
           return (
             value &&
-            (value.closedUnknown ? t("closedUnknown") : t(`triageStates.${value.triage.status}`))
+            (value.closedUnknown
+              ? t(showAccounting ? "closedUnknown" : "taskOnly.closedUnknown")
+              : t(`triageStates.${value.triage.status}`))
           );
         },
       },
@@ -202,7 +215,7 @@ export function RecoveryTable({
         },
       },
     ],
-    [t, onSelect, onDetails],
+    [t, onSelect, onDetails, showAccounting],
   );
   return (
     <div className="grid min-w-0 gap-3">

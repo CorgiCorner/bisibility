@@ -70,6 +70,7 @@ export function byokTestEvidence(provider = "serpapi") {
     ),
   };
   return {
+    providerResponseCapture: { create: vi.fn(async () => ({})) },
     meteringUsageEvidence,
     $queryRaw: vi.fn().mockResolvedValue([]),
     project: { findUnique: vi.fn().mockResolvedValue({ ownerId: "owner_1" }) },

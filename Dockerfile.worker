@@ -7,8 +7,7 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package.json package-lock.json ./
-COPY scripts/deploy/bake-runtime-env.mjs ./scripts/deploy/bake-runtime-env.mjs
-COPY scripts/deploy/download-rds-ca.mjs ./scripts/deploy/download-rds-ca.mjs
+COPY scripts/deploy ./scripts/deploy
 COPY scripts/generate/generate-client-if-schema.mjs ./scripts/generate/generate-client-if-schema.mjs
 COPY scripts/generate/root-postinstall.mjs ./scripts/generate/root-postinstall.mjs
 RUN --mount=type=cache,target=/root/.npm apt-get update \

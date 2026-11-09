@@ -13,7 +13,7 @@ import {
 } from "@/lib/search-index/report-schema";
 import { searchIndexInspectionSchema } from "@/lib/search-index/schema";
 import { performanceTotalsQuery } from "@/lib/search-insights/performance-totals-model";
-import { siteAuditSchema } from "@/lib/site-audit/schema";
+import { siteAuditPagesQuery, siteAuditWorkerSchema } from "@/lib/site-audit/schema";
 import { z } from "zod";
 import { snapshotQuery } from "./analytics";
 import { queryStatsQuery } from "./analytics-query-stats";
@@ -92,6 +92,10 @@ export const researchOperationInputs = {
   getRankCheckRun: noInput,
   getReadiness: noInput,
   getSiteAudit: noInput,
+  getSiteAuditRun: noInput,
+  listSiteAuditPages: { query: zodInput(siteAuditPagesQuery) },
+  cancelSiteAuditRun: noInput,
+  resumeSiteAuditRun: noInput,
   // One of the three schemas is selected by the `{kind}` path parameter.
   getStoredResearchReport: {
     query: zodInput(
@@ -159,7 +163,7 @@ export const researchOperationInputs = {
   loadDomainOverviewPages: { body: zodInput(relevantPageBodySchema, { keys: "wire" }) },
   loadMoreBacklinkRows: { body: zodInput(rowsBodySchema, { keys: "wire" }) },
   researchKeywords: { query: zodInput(researchQuerySchema, { handlerDefaults: ["result_limit"] }) },
-  runSiteAudit: { body: zodInput(siteAuditSchema) },
+  runSiteAudit: { body: zodInput(siteAuditWorkerSchema) },
   // `country` is passed as `get("country")`, so it is null rather than absent. A missing `q`
   // becomes "", which the schema rejects, so it stays required.
   searchLocations: {

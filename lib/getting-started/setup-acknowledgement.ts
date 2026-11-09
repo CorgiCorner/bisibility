@@ -94,7 +94,7 @@ async function readMembershipAcknowledgement(
   return membership?.setupAcknowledgedAt ?? null;
 }
 
-export async function markSetupAcknowledged(userId: string, projectRef: string): Promise<void> {
+export async function markSetupAcknowledged(userId: string, projectRef: string): Promise<boolean> {
   if (!isPublicIdOfType(projectRef, "prj")) {
     throw new Error("Project not found.");
   }
@@ -109,13 +109,14 @@ export async function markSetupAcknowledged(userId: string, projectRef: string):
   }
 
   if (membership.setupAcknowledgedAt) {
-    return;
+    return false;
   }
 
   await prisma.membership.update({
     data: { setupAcknowledgedAt: new Date() },
     where: { id: membership.id },
   });
+  return true;
 }
 
 async function backfillLegacyCookieAcknowledgements(

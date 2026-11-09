@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { saveAccountAnalyticsConsent } from "@/lib/analytics/account-consent";
 import {
   analyticsConsentValuesSchema,
@@ -33,45 +33,53 @@ export async function saveAnalyticsConsent(
   };
   const store = await cookies();
   const session = await getSession();
-  if (session) {
-    await saveAccountAnalyticsConsent(
-      session.user.id,
-      consent.analytics,
-      "web",
-      new Date(decidedAt * 1000),
-      { authKind: "session" },
-      true,
-    );
-    const user = await resolveServerAnalyticsUser(session.user.id, consent);
-    if (user)
-      store.set(
-        CONSENT_ACCOUNT_COOKIE,
-        user.distinctId,
-        consentCookieOptions(process.env.NODE_ENV, consent),
+  let committed = false;
+  try {
+    if (session) {
+      await saveAccountAnalyticsConsent(
+        session.user.id,
+        consent.analytics,
+        "web",
+        new Date(decidedAt * 1000),
+        { authKind: "session" },
+        true,
       );
-  } else {
-    store.delete(CONSENT_ACCOUNT_COOKIE);
+      committed = true;
+      const user = await resolveServerAnalyticsUser(session.user.id, consent);
+      if (user)
+        store.set(
+          CONSENT_ACCOUNT_COOKIE,
+          user.distinctId,
+          consentCookieOptions(process.env.NODE_ENV, consent),
+        );
+    } else {
+      store.delete(CONSENT_ACCOUNT_COOKIE);
+    }
+    store.set(
+      CONSENT_COOKIE,
+      serializeConsentCookie(consent),
+      consentCookieOptions(process.env.NODE_ENV, consent),
+    );
+    committed = true;
+    await trackServerEvent("consent_updated", {
+      consent,
+      properties: {
+        ...parsed,
+        version: CONSENT_VERSION,
+        ...(context.success
+          ? {
+              prompt_variant: context.data.variant,
+              decision_source: context.data.source,
+              decision_ms: context.data.decision_ms,
+            }
+          : {}),
+      },
+    });
+
+    return consent;
+  } finally {
+    if (committed) recordAppAction(session);
   }
-  store.set(
-    CONSENT_COOKIE,
-    serializeConsentCookie(consent),
-    consentCookieOptions(process.env.NODE_ENV, consent),
-  );
-  await trackServerEvent("consent_updated", {
-    consent,
-    properties: {
-      ...parsed,
-      version: CONSENT_VERSION,
-      ...(context.success
-        ? {
-            prompt_variant: context.data.variant,
-            decision_source: context.data.source,
-            decision_ms: context.data.decision_ms,
-          }
-        : {}),
-    },
-  });
-  return consent;
 }
 
 export async function syncAccountAnalyticsConsent(expectedPublicId: string): Promise<ConsentState> {

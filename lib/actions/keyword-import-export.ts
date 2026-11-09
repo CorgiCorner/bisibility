@@ -1,6 +1,7 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, requirePublicId } from "@/lib/db/public-id";
 import {
@@ -87,6 +88,7 @@ export async function reviewKeywordImport(input: unknown) {
 
 // biome-ignore format: compact import flow keeps this server action under the file line cap.
 export async function importKeywordsFromCsv(input: unknown) {
+return withCapacityFailure(async () => {
   const data = await readCsvInput(input);
   const actor = await getActionActor();
   const project = await scopedProject(actor, "create", data.projectId);
@@ -94,14 +96,14 @@ export async function importKeywordsFromCsv(input: unknown) {
     data.csv,
     await keywordImportDefaults(project.id, data.defaultMarketKey),
     data.columnMapping,
-  );
-  if (received > KEYWORD_IMPORT_MAX) throw new Error(keywordImportFileLimitMessage(received));
-  if (parsed.length === 0) return { created: 0, errors, failed: errors.length, parsed: 0, received, skipped: 0 };
-  const { skipped, uniqueRows } = deduplicateKeywordImportRows(parsed);
+);
+if (received > KEYWORD_IMPORT_MAX) throw new Error(keywordImportFileLimitMessage(received));
+if (parsed.length === 0) return { created: 0, errors, failed: errors.length, parsed: 0, received, skipped: 0 };
+const { skipped, uniqueRows } = deduplicateKeywordImportRows(parsed);
 
-  const marketReview = await filterReviewRowsByProjectMarkets(project.id, uniqueRows);
-  errors.push(...marketReview.errors);
-  const preparedRows: KeywordBatchRow[] = marketReview.rows.map((row) => ({
+const marketReview = await filterReviewRowsByProjectMarkets(project.id, uniqueRows);
+errors.push(...marketReview.errors);
+const preparedRows: KeywordBatchRow[] = marketReview.rows.map((row) => ({
     device: row.device,
     keyword: row.keyword,
     location: row.locationLabel,
@@ -111,11 +113,11 @@ export async function importKeywordsFromCsv(input: unknown) {
     targetUrl: row.targetUrl,
     intent: row.intent,
     topic: row.topic,
-  }));
+}));
 
-  if (!preparedRows.length) return { created: 0, errors, failed: errors.length, parsed: parsed.length, received, skipped: skipped + marketReview.duplicateRows, warning: null, warnings: [] };
+if (!preparedRows.length) return { created: 0, errors, failed: errors.length, parsed: parsed.length, received, skipped: skipped + marketReview.duplicateRows, warning: null, warnings: [] };
 
-  const created = await prisma.$transaction(async (tx) => {
+const created = await prisma.$transaction(async (tx) => {
     const persisted = await createKeywordBatchSet(tx, project.id, preparedRows);
     const keywords = persisted.created;
     const transactionSkipped = marketReview.duplicateRows + preparedRows.length - keywords.length;
@@ -135,12 +137,15 @@ export async function importKeywordsFromCsv(input: unknown) {
       },
       tx,
     );
-    return { keywords, skipped: skipped + transactionSkipped, warnings: [] as string[] };
-  });
-  if (data.refresh === "immediate") revalidateKeywordViews();
+  return { keywords, restoredCount: persisted.restored.length, skipped: skipped + transactionSkipped, warnings: [] as string[] };
+});
+if (created.keywords.length > 0 || created.restoredCount > 0) recordAppAction(actor);
+if (data.refresh === "immediate") revalidateKeywordViews();
 
-  // biome-ignore format: compact summary keeps this server action under the file line cap.
-  return { created: created.keywords.length, errors, failed: errors.length, parsed: parsed.length, received, skipped: created.skipped, warning: created.warnings[0] ?? null, warnings: created.warnings };
+// biome-ignore format: compact summary keeps this server action under the file line cap.
+return { created: created.keywords.length, errors, failed: errors.length, parsed: parsed.length, received, skipped: created.skipped, warning: created.warnings[0] ?? null, warnings: created.warnings };
+
+});
 }
 
 export async function exportCloudImportPackage(input: unknown) {

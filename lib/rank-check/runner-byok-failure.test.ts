@@ -1,3 +1,5 @@
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
+import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
 import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import type { SerpProvider } from "@/lib/providers/types";
 import { readObservedResponse } from "@/lib/providers/usage";
@@ -122,3 +124,37 @@ it("blocks fallback when a BYOK request started without a confirmed receipt", as
   expect(ledger.rows).toHaveLength(1);
   expect(ledger.rows[0]).toMatchObject({ measurementStatus: "unknown" });
 });
+
+it.each(["reservation", "fence", "later-page"])(
+  "keeps weekly %s denial actionable through the runner",
+  async (phase) => {
+    const denial = new WeeklyRequestCapError("2026-11-12T00:00:00Z");
+    const request = vi.fn(async () => new Response("{}"));
+    const provider: SerpProvider = {
+      id: "dataforseo",
+      label: "Fixture",
+      testConnection: vi.fn(),
+      fetchRank: async ({ credentials }) => {
+        const attempt = () =>
+          readObservedResponse({
+            observer: credentials?.usageObserver,
+            request,
+            measure: () => ({ cached: false, failed: false, costCents: 1.2, quantity: 1 }),
+          });
+        if (phase === "later-page") await attempt();
+        testOwnAdmission[phase === "reservation" ? "reserve" : "fence"].mockRejectedValueOnce(
+          denial,
+        );
+        await attempt();
+        throw new Error("unreachable");
+      },
+    };
+    const error = await failedCheck(provider).catch((cause: unknown) => cause);
+    expect(error).toBe(denial);
+    expect(fallbackAttempt(error, "dataforseo")).toBeNull();
+    expect(request).toHaveBeenCalledTimes(phase === "later-page" ? 1 : 0);
+    expect(ledger.rows.filter((row) => !row.discarded)).toHaveLength(
+      phase === "later-page" ? 1 : 0,
+    );
+  },
+);

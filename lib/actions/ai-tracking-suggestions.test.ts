@@ -45,6 +45,7 @@ describe("serialized model suggestion action failures", () => {
       { projectId: "internal-project", actorId: "trusted-user", origin: { source: "app" } },
       { actorId: "forged", requirePayment: true },
       "key",
+      expect.any(Function),
     );
     const transported = JSON.parse(JSON.stringify(result));
     expect(transported).toMatchObject({

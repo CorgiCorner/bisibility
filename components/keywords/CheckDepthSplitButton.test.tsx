@@ -135,12 +135,12 @@ describe("CheckDepthSplitButton", () => {
 
     const group = screen.getByRole("group");
     expect(group).toHaveAccessibleDescription(
-      "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+      "Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown.",
     );
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     fireEvent.pointerMove(screen.getByRole("button", { name: "Choose check depth" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Top 10 checks do not update Visibility",
+      "Top 10 checks update Visibility when your position is found",
     );
     expect(screen.queryByRole("menu", { name: "Check depth" })).not.toBeInTheDocument();
   });
@@ -156,7 +156,7 @@ describe("CheckDepthSplitButton", () => {
           depthMenu: "Check depth",
           optionLabel: (depth) => `Top ${depth}`,
           shallowVisibility:
-            "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+            "Top 10 checks update Visibility when your position is found. Otherwise, the result stays unknown.",
         }}
         currentDepth={10}
         onAction={vi.fn()}
@@ -176,7 +176,7 @@ describe("CheckDepthSplitButton", () => {
 
     fireEvent.pointerMove(screen.getByRole("button", { name: "Choose check depth" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Top 10 checks do not update Visibility",
+      "Top 10 checks update Visibility when your position is found",
     );
   });
 });

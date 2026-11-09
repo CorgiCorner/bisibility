@@ -112,14 +112,16 @@ describe("comparison preview and launch custody", () => {
     },
   );
   it("returns the durable run when workflow submission is uncertain, and same key reuses it", async () => {
+    const onCommitted = vi.fn();
     mocks.start.mockRejectedValue(new Error("network interrupted"));
-    expect((await launchProviderComparison(input)).id).toBe(run.id);
+    expect((await launchProviderComparison(input, onCommitted)).id).toBe(run.id);
     tx.providerComparisonRun.findUnique.mockResolvedValue(run);
     tx.providerComparisonPreview.findFirst.mockRejectedValue(
       new Error("expired read must not run"),
     );
-    expect((await launchProviderComparison(input)).id).toBe(run.id);
+    expect((await launchProviderComparison(input, onCommitted)).id).toBe(run.id);
     expect(tx.providerComparisonRun.create).toHaveBeenCalledOnce();
+    expect(onCommitted).toHaveBeenCalledOnce();
   });
   it("rejects cross-keyword reuse of an existing request key before wake", async () => {
     tx.providerComparisonRun.findUnique.mockResolvedValue({ ...run, keywordId: "other" });

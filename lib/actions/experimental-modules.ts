@@ -1,11 +1,11 @@
 "use server";
-
 import {
   getActionActor,
   parseActionInput,
   requireProjectScope,
   revalidateExperimentalModuleViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -30,6 +30,7 @@ export async function setExperimentalModules(input: unknown) {
     update: { enabledExperimentalModules },
     where: { projectId: project.id },
   });
+  recordAppAction(actor);
   const beforeEnabledExperimentalModules = normalizeExperimentalModules(
     before?.enabledExperimentalModules,
   );

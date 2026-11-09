@@ -7,7 +7,9 @@ import {
   revalidateSettingsPage,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
+import { withCapacityFailure } from "@/lib/capacity/action";
 import { prisma } from "@/lib/db/prisma";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import {
@@ -98,6 +100,7 @@ export async function updateProjectDetails(input: unknown) {
     select: { domain: true, name: true, publicId: true, trackingScope: true },
     where: { id: project.id },
   });
+  recordAppAction(actor);
   await writeAudit({
     action: "settings.project_details.update",
     actorId: actor.id,
@@ -108,6 +111,7 @@ export async function updateProjectDetails(input: unknown) {
     targetType: "project",
   });
   revalidateSettingsViews();
+
   return {
     domain: updated.domain,
     name: updated.name,
@@ -131,6 +135,7 @@ export async function updateProjectTrackingScope(input: unknown) {
     select: { publicId: true, trackingScope: true },
     where: { id: project.id },
   });
+  recordAppAction(actor);
   await writeAudit({
     action: "settings.project_tracking_scope.update",
     actorId: actor.id,
@@ -141,16 +146,21 @@ export async function updateProjectTrackingScope(input: unknown) {
     targetType: "project",
   });
   revalidateSettingsViews();
+
   return {
     projectId: updated.publicId,
     trackingScope: normalizeTrackingScope(updated.trackingScope),
   };
 }
 export async function updateDefaultRankCheckSettings(input: unknown, review?: unknown) {
-  return saveReviewedDefaultSettings(input, review);
+  return withCapacityFailure(async () => {
+    return saveReviewedDefaultSettings(input, review);
+  });
 }
 export async function updateRankCheckFrequency(input: unknown, review?: unknown) {
-  return saveReviewedFrequencyDefaults(input, review);
+  return withCapacityFailure(async () => {
+    return saveReviewedFrequencyDefaults(input, review);
+  });
 }
 export async function runManualProjectCheck(input: unknown) {
   const data = parseActionInput(runProjectCheckSchema, input);
@@ -162,8 +172,18 @@ export async function runManualProjectCheck(input: unknown) {
   });
   // Defer the rank-check action so its server-only Temporal client stays out of
   // the module graph until a check is actually requested.
-  const { runCheckNow } = await import("@/lib/actions/rankCheck");
-  const result = await runManualChecks(keywords, runCheckNow);
+  const { manualRunCheckNow } = await import("@/lib/rank-check/manual-run");
+  let committed = false;
+  let result: Awaited<ReturnType<typeof runManualChecks>>;
+  try {
+    result = await runManualChecks(keywords, (input) =>
+      manualRunCheckNow(input, () => {
+        committed = true;
+      }),
+    );
+  } finally {
+    if (committed) recordAppAction(actor);
+  }
   await writeAudit({
     action: "settings.run_check_now",
     actorId: actor.id,

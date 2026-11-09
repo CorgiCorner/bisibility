@@ -1,6 +1,7 @@
 "use client";
 
 import { statusLabel } from "@/components/admin/AdminPrimitives";
+import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Tooltip } from "@/components/ui/Tooltip";
 import {
@@ -30,22 +31,31 @@ const WORKER_DOCS = `${DOCS_URL}/self-hosting/temporal#scheduled-rank-checks`;
 
 function HealthPill({
   hint,
+  onClick,
   label,
   tone,
-}: Readonly<{ hint?: ReactNode; label: string; tone: HealthTone }>) {
+}: Readonly<{ hint?: ReactNode; onClick?: () => void; label: string; tone: HealthTone }>) {
   const pill = (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${toneClasses[tone]}`}
       data-tone={tone}
+      tabIndex={hint ? 0 : undefined}
     >
       <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${dotClasses[tone]}`} />
       {label}
     </span>
   );
-  if (!hint) return pill;
+  const interactive = onClick ? (
+    <Button variant="ghost" size="sm" onClick={onClick}>
+      {pill}
+    </Button>
+  ) : (
+    pill
+  );
+  if (!hint) return interactive;
   return (
     <Tooltip content={hint} interactive placement="bottom" semantics="description">
-      {pill}
+      {interactive}
     </Tooltip>
   );
 }
@@ -72,6 +82,7 @@ function worstProvider(rows: readonly ProviderHealthRow[]): ProviderHealthRow | 
 }
 
 export type AdminHealthPillsProps = {
+  onNavigate?: (view: "Worker" | "Checks" | "Data sources" | "Notifications") => void;
   checkFailureRatePercent: number | null;
   compact?: boolean;
   providerHealth: readonly ProviderHealthRow[];
@@ -81,6 +92,7 @@ export type AdminHealthPillsProps = {
 
 export function AdminHealthPills({
   checkFailureRatePercent,
+  onNavigate,
   compact = false,
   providerHealth,
   undeliveredCount,
@@ -98,6 +110,7 @@ export function AdminHealthPills({
   return (
     <div aria-label={t("label")} className="flex flex-wrap items-center gap-1.5">
       <HealthPill
+        onClick={onNavigate ? () => onNavigate("Worker") : undefined}
         hint={workerStatus === "unknown" ? <WorkerUnknownHint /> : undefined}
         label={t("worker", { status: statusLabel(workerStatus, adminT) })}
         tone={workerStatus}
@@ -108,11 +121,13 @@ export function AdminHealthPills({
             ? t("checksUnknown")
             : t("checks", { value: checkFailureRatePercent })
         }
+        onClick={onNavigate ? () => onNavigate("Checks") : undefined}
         tone={healthToneForRate(checkFailureRatePercent)}
       />
       {providers.map((provider) => (
         <HealthPill
           key={provider.provider}
+          onClick={onNavigate ? () => onNavigate("Data sources") : undefined}
           label={
             provider.failureRatePercent === null
               ? t("providerUnknown", { provider: provider.provider })
@@ -127,6 +142,7 @@ export function AdminHealthPills({
             ? t("deliveryUnknown")
             : t("undelivered", { count: undeliveredCount })
         }
+        onClick={onNavigate ? () => onNavigate("Notifications") : undefined}
         tone={undeliveredCount === null ? "unknown" : undeliveredCount === 0 ? "ok" : "stale"}
       />
     </div>

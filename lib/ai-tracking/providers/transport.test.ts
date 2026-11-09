@@ -1,3 +1,7 @@
+vi.mock("@/lib/provider-responses/store", () => ({
+  storeProviderResponse: vi.fn(async () => undefined),
+}));
+
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const gates = vi.hoisted(() => ({ consume: vi.fn(), live: vi.fn(), assert: vi.fn() }));
@@ -13,8 +17,13 @@ vi.mock("@/lib/providers/live-capacity", () => ({
 }));
 
 import { samplePlan } from "@/lib/ai-tracking/execution/fixture";
+import { storeProviderResponse } from "@/lib/provider-responses/store";
 import { freshModelCapabilities } from "./capabilities";
-import { TrackingDeadlineError, TrackingDispatchDeniedError } from "./dispatch-error";
+import {
+  TrackingDeadlineError,
+  TrackingDispatchDeniedError,
+  TrackingResponseCaptureError,
+} from "./dispatch-error";
 import { trackingTransport } from "./transport";
 
 const credentials = { login: "fixture", password: "fixture" };
@@ -130,4 +139,23 @@ it("an expired live reservation is a typed zero-I/O refusal at the final fetch b
     }),
   ).rejects.toBeInstanceOf(TrackingDispatchDeniedError);
   expect(request).not.toHaveBeenCalled();
+});
+
+it("preserves the received task envelope when archiving fails", async () => {
+  const envelope = {
+    status_code: 20000,
+    tasks: [{ status_code: 20100, id: "paid-task", cost: 0.01 }],
+  };
+  vi.mocked(storeProviderResponse).mockRejectedValueOnce(new Error("archive unavailable"));
+  const error = await trackingTransport({
+    endpoint: "ai_optimization/chat_gpt/llm_responses/task_post",
+    credentials,
+    projectId: "project",
+    payload: { user_prompt: "Exact fixture" },
+    deadline: new Date(Date.now() + 10_000).toISOString(),
+    request: vi.fn(async () => Response.json(envelope)),
+  }).catch((error: unknown) => error);
+  expect(error).toBeInstanceOf(TrackingResponseCaptureError);
+  expect((error as TrackingResponseCaptureError).envelope).toEqual(envelope);
+  expect(JSON.stringify(error)).toBe("{}");
 });

@@ -1,6 +1,7 @@
 "use server";
 import { createHash } from "node:crypto";
 import { getActionActor, requireProjectScope } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -48,7 +49,7 @@ export async function readProjectDataCache(input: unknown) {
 export async function saveProjectDataCache(input: unknown) {
   const data = cacheSettingsSchema.parse(input);
   const access = await scope(data.projectId, "update");
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const updated = await tx.project.updateMany({
       where: { id: access.project.id, lookupCacheTtlSeconds: data.expectedTtlSeconds },
       data: { lookupCacheTtlSeconds: data.ttlSeconds },
@@ -68,11 +69,14 @@ export async function saveProjectDataCache(input: unknown) {
     );
     return { kind: "saved" as const, ttlSeconds: data.ttlSeconds };
   });
+  if (result.kind === "saved") recordAppAction(access.actor);
+  return result;
 }
 export async function deleteProjectDataCache(input: unknown) {
   const data = cacheDeleteSchema.parse(input);
   const access = await scope(data.projectId, "update");
   const kind = await removeProjectDataCache(access.project.id, data.token);
+  if (kind === "removed") recordAppAction(access.actor);
   if (kind === "removed")
     await writeAudit({
       actorId: access.actor.id,
@@ -82,5 +86,6 @@ export async function deleteProjectDataCache(input: unknown) {
       after: { entryDigest: createHash("sha256").update(data.token).digest("hex") },
       action: "settings.data_cache.delete",
     });
+
   return { kind };
 }

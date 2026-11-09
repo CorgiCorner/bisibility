@@ -1,9 +1,9 @@
 "use server";
-
 import { getActionActor, parseActionInput, requireProjectScope } from "@/lib/actions/_shared";
 // biome-ignore format: compact imports keep this action module under the file line cap.
 import { type ActionResult, actionFailureResult, destinationRejectionFailure } from "@/lib/actions/action-result";
 import { resolveMigrationTargetActionResult } from "@/lib/actions/migration-target";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { importChunkChecksum } from "@/lib/api/instance-import/session-schemas";
 import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
@@ -134,6 +134,7 @@ async function putChunk(
   index: number,
   payload: Payload,
   origin: string,
+  onCommitted?: () => void,
 ) {
   const response = await migrationFetch(
     sessionUrl(`/api/v1/cloud/import/sessions/${sessionId}/chunks/${index}`, origin),
@@ -146,6 +147,7 @@ async function putChunk(
       timeoutMs: 30_000,
     },
   );
+  if (response.headers.get("X-Mutation-Committed") === "true") onCommitted?.();
   return destinationResult(response, "Instance import chunk transfer failed.", (body) =>
     chunkResponseSchema.parse(body),
   );
@@ -167,7 +169,6 @@ export async function planChunkedTransfer(input: unknown) {
     maxKeywords: CHUNK_TARGET_KEYWORDS,
     projectId: project.id,
   });
-
   return {
     chunkCount: keywordChunks + 1,
     totalKeywords,
@@ -195,7 +196,7 @@ export async function createRemoteImportSession(input: unknown): Promise<CreateS
     method: "POST",
     timeoutMs: 30_000,
   });
-  return destinationResult(response, "Instance import session failed.", (body) => {
+  const result = await destinationResult(response, "Instance import session failed.", (body) => {
     const parsed = createSessionResponseSchema.parse(body);
     return {
       chunkLimits: {
@@ -206,6 +207,8 @@ export async function createRemoteImportSession(input: unknown): Promise<CreateS
       sessionId: parsed.session_id,
     };
   });
+  if (result.ok) recordAppAction(actor);
+  return result;
 }
 
 export async function exportAndTransferChunk(
@@ -232,6 +235,7 @@ export async function exportAndTransferChunk(
       keywords: chunk.keywords,
     },
     origin,
+    () => recordAppAction(actor),
   );
   if (!result.ok) return result;
   return {
@@ -263,6 +267,7 @@ export async function transferSectionsChunk(
       sections,
     },
     origin,
+    () => recordAppAction(actor),
   );
   if (!result.ok) return result;
   return { ok: true as const, value: { chunksReceived: result.value.chunks_received } };
@@ -284,8 +289,10 @@ export async function finalizeRemoteImportSession(input: unknown): Promise<Final
       timeoutMs: 120_000,
     },
   );
-  return destinationResult(response, "Instance import finalize failed.", (body) => {
+  if (response.headers.get("X-Mutation-Committed") === "true") recordAppAction(actor);
+  const result = await destinationResult(response, "Instance import finalize failed.", (body) => {
     const parsed = finalizeResponseSchema.parse(body);
     return { counts: parsed.counts, jobId: parsed.job_id, state: parsed.state };
   });
+  return result;
 }

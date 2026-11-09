@@ -7,11 +7,10 @@ import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTracke
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
 import { PersonalViewScopeNotice } from "@/components/saved-views/PersonalViewScopeNotice";
 import { PageContent } from "@/components/shell/PageContent";
-import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
+import { updateKeyword } from "@/lib/actions/keyword";
 import {
   bulkClearTargetUrls,
   bulkDeleteKeywords,
-  bulkSetFrequency,
   bulkSetTargetUrl,
   bulkTagKeywords,
 } from "@/lib/actions/keyword-bulk";
@@ -22,6 +21,7 @@ import { deleteSavedView } from "@/lib/actions/saved-views";
 import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { addKeywords, bulkSetFrequency } from "@/lib/capacity/client-actions";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { rankTrackerNavigationHref } from "@/lib/keywords/rank-tracker-navigation";

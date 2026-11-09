@@ -142,6 +142,7 @@ export function IndexingTrend({
                   tickMargin={10}
                 />
                 <YAxis
+                  tickMargin={10}
                   axisLine={false}
                   tickLine={false}
                   tick={axis}

@@ -152,7 +152,7 @@ async function persistProviderResult(
     task.keyword.project.defaults?.timezone ?? "UTC",
     checkedAt,
   );
-  const rawPayload = dataForSeoRawPayload(items, decision);
+  const rawPayload = dataForSeoRawPayload(items, decision, data);
   const raw = {
     ...rawPayload,
     ...(resolution ? { redirect_resolutions: resolution.resolutions } : {}),

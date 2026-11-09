@@ -76,8 +76,8 @@
       "modeLabel": "モード:",
       "countryAria": "国",
       "countryHelp": "最も多く追跡している国が既定値になります。",
-      "clickstream": "クリックストリームのボリューム",
-      "clickstreamHelp": "Google Ads の推定値だけでなく、実ユーザーの閲覧データでボリュームを補正します。検索の費用は約2倍になります。",
+      "clickstream": "クリックストリームで補正した検索数",
+      "clickstreamHelp": "クリックストリームデータを使い、類似キーワードを区別して月間検索数を推定します。",
       "pricing": "料金はどのように決まりますか？",
       "button": "{researching, select, true {リサーチ中} other {リサーチ}}{cached, select, true {（キャッシュ・無料）} other {}}{cost, select, none {} other { {cost}}}",
       "seedHelp": "各キーワードの後に Enter キーまたはカンマを入力してください。最大5件。"

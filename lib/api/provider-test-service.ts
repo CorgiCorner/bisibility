@@ -15,6 +15,7 @@ import { requireApiPublicId } from "./public-id";
 
 type ProviderMutationContext = {
   actorId: string | null;
+  analyticsTrigger?: "manual" | "api";
   projectId: string;
   projectPublicId?: string;
 };
@@ -43,6 +44,7 @@ export async function testProviderConnection(
     );
     const result = await probeProviderConnection({
       credentials,
+      analytics: { actorId: context.actorId, trigger: context.analyticsTrigger ?? "manual" },
       projectId: context.projectId,
       provider: item,
     });

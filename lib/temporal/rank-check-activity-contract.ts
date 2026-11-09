@@ -8,6 +8,7 @@ export const BUDGET_EXHAUSTED_FAILURE = "budget_exhausted";
 export const BALANCE_EXHAUSTED_FAILURE = "credits_exhausted";
 export const AUTOMATIC_EXECUTION_DISABLED_FAILURE = "automatic_execution_disabled";
 export const RANK_CHECK_CLOSED_FAILURE = "rank_check_closed";
+export const WEEKLY_REQUEST_CAP_FAILURE = "weekly_request_cap_reached";
 export const OPERATION_ACCESS_DENIED_FAILURE = "operation_access_denied";
 
 export type RankCheckExecutionSource = "ambiguous" | "dispatcher" | "legacy" | "manual";

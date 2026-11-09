@@ -153,6 +153,7 @@ export async function loadStoredGoogleProperties(
 
 export async function saveStoredGoogleProperty(
   context: StoredPropertyContext & { property: string },
+  onCommitted?: () => void,
 ): Promise<GooglePropertySaveResult> {
   const connection = await storedConnection(context.projectId, context.provider);
   const credentials = readCredentials(connection);
@@ -269,6 +270,7 @@ export async function saveStoredGoogleProperty(
     );
   });
 
+  onCommitted?.();
   if (context.provider === "gsc" || context.provider === "ga4") {
     await queueSearchInsightsImport({
       projectId: context.projectId,

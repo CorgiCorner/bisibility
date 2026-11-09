@@ -1,8 +1,10 @@
 "use client";
 
+import { DashboardEmptyBody } from "@/components/dashboard-layout/DashboardEmptyBody";
 import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import { dataTableViewportHeight } from "@/components/ui/data-table/data-table-density";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { OverviewContributor } from "@/lib/queries/overview-contributors";
@@ -94,7 +96,7 @@ export function OverviewContributorsCard({
     <Card
       component="section"
       aria-label={t("contributors")}
-      className="min-w-0 overflow-hidden p-0"
+      className="flex h-full min-h-[24.625rem] min-w-0 flex-col overflow-hidden p-0"
       size="md"
     >
       <div className="px-5 pb-3.5 pt-4.5">
@@ -106,30 +108,38 @@ export function OverviewContributorsCard({
             report={report}
           />
         </div>
-        <p className="mt-2 text-xs text-fg-muted">
-          {t("contributionScope", {
-            asOf: report.asOf,
-            expected: format.number(report.counts.expected),
-            comparable: format.number(report.counts.comparable),
-          })}
-        </p>
-        <p className="text-xs text-fg-muted">
-          {t("sum", { value: number(report.value), delta: number(report.delta) })}
-        </p>
+        <p className="mb-0 mt-2 text-xs leading-5 text-fg-muted">{t("contributionDescription")}</p>
       </div>
-      <DataTable
-        ariaLabel={t("contributors")}
-        bordered={false}
-        columns={columns}
-        density="compact"
-        id="overview-contributors"
-        rows={rows}
-        sorting={null}
-        onSortingChange={() => undefined}
-        pagination={{ ...pagination, pageSizeOptions: [25, 50, 100], rowCount: rows.length }}
-        paginationMode="client"
-        onPaginationChange={setPagination}
-      />
+      {rows.length === 0 ? (
+        <DashboardEmptyBody title={t("emptyTitle")} description={t("emptyDescription")} />
+      ) : (
+        <div
+          className="min-h-0"
+          style={{
+            height: dataTableViewportHeight({
+              density: "compact",
+              maxRows: 5,
+              rows: Math.min(rows.length, pagination.pageSize),
+            }),
+          }}
+          data-contributors-table-viewport
+        >
+          <DataTable
+            ariaLabel={t("contributors")}
+            bordered={false}
+            columns={columns}
+            density="compact"
+            id="overview-contributors"
+            layout="fill"
+            rows={rows}
+            sorting={null}
+            onSortingChange={() => undefined}
+            pagination={{ ...pagination, pageSizeOptions: [25, 50, 100], rowCount: rows.length }}
+            paginationMode="client"
+            onPaginationChange={setPagination}
+          />
+        </div>
+      )}
     </Card>
   );
 }

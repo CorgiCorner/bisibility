@@ -1,6 +1,6 @@
 "use server";
-
 import { createHash } from "node:crypto";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { consume, resetBucketsFor } from "@/lib/api/ratelimit";
 import {
   AdminTwoFactorRequiredError,
@@ -122,7 +122,7 @@ export async function setInstanceAdminAccountDeactivated(
     return limited(rateLimit.resetAt);
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const target = await tx.user.findUnique({
       select: { deactivatedAt: true, id: true, isInstanceAdmin: true, publicId: true },
       where: { publicId: userId },
@@ -202,6 +202,8 @@ export async function setInstanceAdminAccountDeactivated(
       status: "completed",
     } as const;
   });
+  if (result.status === "completed") recordAppAction(session);
+  return result;
 }
 
 export async function resetInstanceAdminAccountLimits(
@@ -209,6 +211,13 @@ export async function resetInstanceAdminAccountLimits(
 ): Promise<ResetAccountLimitsResult> {
   const session = await getInstanceAdminSession();
   if (!session) return forbidden();
+  try {
+    await requireAdminTwoFactorForDangerousAction(session, "reset_account_limits");
+  } catch (error) {
+    if (error instanceof AdminTwoFactorRequiredError)
+      return { message: error.message, status: error.code };
+    throw error;
+  }
 
   const parsed = resetLimitsSchema.safeParse(input);
   if (!parsed.success) {
@@ -250,6 +259,7 @@ export async function resetInstanceAdminAccountLimits(
     const targetPublicId = requiredPublicAuditId(target.publicId, "usr", "User");
     const reset = await resetBucketsFor(target.id);
     const message = "Rate limits reset; monthly spend is a rolling window and cannot be reset";
+    if (reset.deleted > 0) recordAppAction(session);
     await writeAudit({
       action: "instance_admin.account_limits_reset",
       actorId,
@@ -258,6 +268,7 @@ export async function resetInstanceAdminAccountLimits(
       targetId: targetPublicId,
       targetType: "user",
     });
+
     return { clearedBuckets: reset.deleted, message, status: "completed" };
   } catch {
     await auditRejected(

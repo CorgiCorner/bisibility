@@ -116,7 +116,7 @@ describe("rank-check run commands", () => {
 
     await expect(
       cancelRankCheckRunCommand({ actorId: "user_1", projectId: "project_1", publicId }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ changed: true });
 
     expect(log).toHaveBeenCalledWith("[rank-check-runs] Temporal cancellation failed.", error);
     expect(mocks.closeCheck).toHaveBeenCalledTimes(2);

@@ -25,6 +25,8 @@ import {
 beforeEach(() => {
   vi.resetAllMocks();
   f.actor.mockResolvedValue({ id: "verified-session" });
+  f.approve.mockResolvedValue({ kind: "saved", replayed: false, receipt: {} });
+  f.pause.mockResolvedValue({ kind: "saved", replayed: false, receipt: {} });
 });
 describe("recurring trusted session bridge", () => {
   it.each([

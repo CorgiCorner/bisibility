@@ -309,8 +309,8 @@
       "counts": "{left, number} / {right, number}",
       "competitor": "Competidor",
       "description": "Última comprobación completada por objetivo dentro del periodo, los mercados, los dispositivos y las etiquetas que has seleccionado.",
-      "footer": "Los dominios ausentes no se consideran pérdidas. La posición media solo tiene en cuenta los resultados encontrados.{limited, select, true { Se muestran los 2.000 objetivos añadidos más recientemente.} other {}}",
-      "footerWithNoSavedSerps": "No hay SERP guardadas para estos competidores en el periodo seleccionado. Los dominios ausentes no se consideran pérdidas. La posición media solo tiene en cuenta los resultados encontrados.{limited, select, true { Se muestran los 2.000 objetivos añadidos más recientemente.} other {}}",
+      "footer": "Si un competidor no aparece, no significa que haya bajado. La media incluye solo los resultados encontrados. {limited, select, true { Se muestran los 2.000 objetivos añadidos más recientemente.} other {}}",
+      "footerWithNoSavedSerps": "Si un competidor no aparece, no significa que haya bajado. La media incluye solo los resultados encontrados. {limited, select, true { Se muestran los 2.000 objetivos añadidos más recientemente.} other {}}",
       "found": "Encontrados",
       "foundDescription": "Objetivos en los que aparece este dominio, sobre el total de SERP guardadas en sus mercados seleccionados. Cada mercado y cada dispositivo son objetivos distintos.",
       "manage": "Gestionar competidores",
@@ -330,8 +330,16 @@
       "mobile": "Móvil"
     },
     "reportWidgets": {
+      "historyDescription": "Cómo cambia tu visibilidad en los resultados de búsqueda.",
+      "qualityDescription": "Cuántos datos de palabras clave hay disponibles a lo largo del tiempo.",
+      "historyView": "Mostrar historial como",
+      "chartView": "Gráfico",
+      "tableView": "Datos",
+      "emptyTitle": "Aún no hay datos de posiciones",
+      "emptyDescription": "Esta sección se completará después de comprobar tus palabras clave.",
+      "contributionDescription": "Descubre qué palabras clave contribuyen más a tu visibilidad.",
       "visibilityHistory": "Historial de Visibility",
-      "qualityHistory": "Historial de calidad de datos",
+      "qualityHistory": "Disponibilidad de datos",
       "contributors": "Contribuciones de palabras clave",
       "historyScope": "Observaciones conservadas de los objetivos seleccionados a {asOf}, con pesos fijados en ese momento.",
       "historyFreshness": "La política histórica de actualidad es desconocida. La cobertura observada describe pruebas; los huecos se conservan.",
@@ -405,7 +413,17 @@
       "setupTitle": "Configura el seguimiento local",
       "setupDescription": "Asigna una ubicación de empresa a palabras clave o a un mercado para ver aquí los resultados locales.",
       "chooseDescription": "Elige una ubicación y un alcance para ver sus resultados locales.",
-      "manageLocations": "Configurar una ubicación de empresa"
+      "manageLocations": "Configurar una ubicación de empresa",
+      "businessTop3": "Negocio en el top 3",
+      "averagePosition": "Posición media",
+      "searchesWithPack": "Búsquedas con resultados locales",
+      "dataAvailable": "Datos disponibles",
+      "checkedKeywords": "{measured, number} de {total, number} palabras comprobadas",
+      "details": "Detalles",
+      "detailsTitle": "Acerca de los resultados locales",
+      "detailsIntro": "Estas cifras describen el negocio seleccionado en los resultados locales de Google.",
+      "scopeHelp": "Solo se incluyen resultados locales orgánicos, sin anuncios, Google Maps ni Local Finder.",
+      "comparisonHelp": "Los cambios aparecerán cuando haya un conjunto anterior comparable de comprobaciones."
     }
   }
 }

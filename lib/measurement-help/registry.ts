@@ -50,6 +50,7 @@ function entry<const Metric extends string, const Version extends string>(
 export const measurementHelpRegistry = Object.freeze([
   entry("organic_visibility_top20", "v1", "metric", qualityCounts),
   entry("visibility_top20", "visibility-top20-v1", "metric", qualityCounts),
+  entry("visibility_top20", "visibility-top20-v2", "metric", qualityCounts),
   entry("organic_top10_rate", "qualified-v1", "metric", rankCounts),
   entry("competitor_share_of_voice_top10", "bisibility-sov-top10-v2", "metric", [
     "expected",

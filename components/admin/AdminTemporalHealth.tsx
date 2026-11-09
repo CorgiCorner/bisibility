@@ -3,7 +3,7 @@
 import { displayTime, Metric, Panel } from "@/components/admin/AdminPrimitives";
 import { AdminTemporalSchedules } from "@/components/admin/AdminTemporalSchedules";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { useFormatter, useTranslations } from "next-intl";
 
 export function AdminTemporalHealth({

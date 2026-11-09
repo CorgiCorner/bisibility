@@ -1,4 +1,5 @@
 import "server-only";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
@@ -69,7 +70,7 @@ export async function addSingleKeyword(input: unknown) {
     if (created && schedule)
       await setKeywordCadence(tx, project.id, [created.id], schedule, actor.id);
 
-    await addTags(tx, project.id, [stored.id], data.tags);
+    const tagged = await addTags(tx, project.id, [stored.id], data.tags);
     await writeAudit(
       {
         action: "keyword.add",
@@ -88,9 +89,11 @@ export async function addSingleKeyword(input: unknown) {
       },
       tx,
     );
-    return stored;
+    return { ...stored, changed: !!created || tagged > 0 };
   });
+  if (keyword.changed) recordAppAction(actor);
   revalidateKeywords(keyword.publicId);
 
-  return { ...publicKeywordView(keyword), warning: resolved.warning };
+  const { changed: _changed, ...value } = keyword;
+  return { ...publicKeywordView(value), warning: resolved.warning };
 }

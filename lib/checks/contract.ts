@@ -132,7 +132,9 @@ export type RetrievedResults =
       tier: "full";
       extension?: SnapshotExtensionView;
       storedData?: { normalization: unknown; observationItems: unknown[]; scope: unknown };
+      featureSummary?: import("./serp-feature-presentation").SerpFeaturePresentation;
       aiOverviewContentLoaded?: boolean;
+      aiOverviewContent?: { paragraphs: string[]; sources: { title: string; url: string }[] };
       observationCompleteness?: string | null;
       requestedDepth: number | null;
       retrievedPositions: number;

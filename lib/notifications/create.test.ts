@@ -1,8 +1,10 @@
 import { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createNotification } from "./create";
+import { notificationTransaction } from "./transaction";
 
 const mocks = vi.hoisted(() => ({
+  receipt: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
@@ -13,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   publishNotificationCreated: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock("@/lib/activity/result-receipt-extension", () => ({ recordResultReceipt: mocks.receipt }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./realtime", () => ({
   publishNotificationCreated: mocks.publishNotificationCreated,
@@ -112,6 +115,69 @@ describe("notification creation", () => {
     expect(mocks.prisma.notification.create).toHaveBeenCalledOnce();
   });
 
+  it("records a nonempty delivered alert, after its durable row", async () => {
+    await createNotification(
+      "user_1",
+      "project_1",
+      NotificationType.alert_fired,
+      "Ranking alert",
+      null,
+      { afterPosition: 2 },
+    );
+    expect(mocks.receipt).toHaveBeenCalledWith({
+      userId: "user_1",
+      surface: "alert",
+      nonEmpty: true,
+    });
+    expect(mocks.prisma.notification.create.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.receipt.mock.invocationCallOrder[0],
+    );
+  });
+  it.each([false, true])(
+    "external transaction rollback=%s gates result receipts",
+    async (rollback) => {
+      const tx = {
+        ...mocks.prisma,
+        notification: {
+          createManyAndReturn: vi.fn(async ({ data }) => [
+            {
+              ...data,
+              id: "n1",
+              createdAt: new Date("2026-11-05T00:00:00Z"),
+            },
+          ]),
+        },
+      };
+      mocks.prisma.$transaction.mockImplementation(async (persist) => {
+        const result = await persist(tx);
+        expect(mocks.receipt).not.toHaveBeenCalled();
+        if (rollback) throw new Error("commit rejected");
+        return result;
+      });
+      const run = notificationTransaction((client) =>
+        createNotification(
+          "user_1",
+          "project_1",
+          NotificationType.alert_fired,
+          "Ranking alert",
+          null,
+          { afterPosition: 2 },
+          "alert:1",
+          client,
+        ),
+      );
+      if (rollback) await expect(run).rejects.toThrow("commit rejected");
+      else {
+        await run;
+        expect(mocks.receipt).toHaveBeenCalledExactlyOnceWith({
+          userId: "user_1",
+          surface: "alert",
+          nonEmpty: true,
+        });
+      }
+      if (rollback) expect(mocks.receipt).not.toHaveBeenCalled();
+    },
+  );
   it("alert_fired respects alertInApp=false", async () => {
     mocks.prisma.notificationPreference.findUnique.mockResolvedValue({ alertInApp: false });
 
@@ -125,6 +191,7 @@ describe("notification creation", () => {
     expect(result).toBeNull();
     expect(mocks.prisma.notification.create).not.toHaveBeenCalled();
     expect(mocks.publishNotificationCreated).not.toHaveBeenCalled();
+    expect(mocks.receipt).not.toHaveBeenCalled();
   });
 
   it("idempotencyKey is persisted on the column", async () => {
@@ -165,6 +232,7 @@ describe("notification creation", () => {
       ),
     ).resolves.toBeNull();
     expect(mocks.publishNotificationCreated).not.toHaveBeenCalled();
+    expect(mocks.receipt).not.toHaveBeenCalled();
   });
 
   it.each([

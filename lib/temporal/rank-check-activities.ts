@@ -1,3 +1,4 @@
+import { queueRankRunUsage } from "@/lib/analytics/rank-run-usage";
 import { recomputeSummaryForRun } from "../notifications/check-summaries/triggers";
 import { notificationTransaction } from "../notifications/transaction";
 import "server-only";
@@ -6,6 +7,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { prisma } from "../db/prisma";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { isOperationAccessDeniedError } from "../operations/access-error";
+import { WeeklyRequestCapError } from "../operations/weekly-request-error";
 import { ProjectDomainRequiredError } from "../projects/tracked-domain";
 import { markRecoveryAttemptStopped } from "../provider-evidence/recovery/capture";
 import { ProviderCallError } from "../providers/call-error";
@@ -36,6 +38,7 @@ import {
   RANK_CHECK_CLOSED_FAILURE,
   type RankCheckActivitySuccess,
   type RunRankCheckActivityInput,
+  WEEKLY_REQUEST_CAP_FAILURE,
 } from "./rank-check-activity-contract";
 import { indeterminateRankFailure } from "./rank-check-indeterminate";
 import { authorizeRankCheckExecutionActivity } from "./rank-check-mode-activities";
@@ -85,7 +88,10 @@ async function claimPaidCall(rankCheckId: string, inline: boolean) {
   });
   if (item?.run) {
     const result = await finalizeRankCheckRun(prisma, { now, run: item.run });
-    if (result.finalized) await recomputeSummaryForRun(item.run.id).catch(() => undefined);
+    if (result.finalized) {
+      queueRankRunUsage(item.run.id);
+      await recomputeSummaryForRun(item.run.id).catch(() => undefined);
+    }
   }
   throw ApplicationFailure.create({
     message: "Paid provider execution was already attempted for this rank check.",
@@ -210,7 +216,10 @@ export async function runRankCheckActivity(
       throw ApplicationFailure.create({
         message: error.message,
         nonRetryable: true,
-        type: OPERATION_ACCESS_DENIED_FAILURE,
+        type:
+          error instanceof WeeklyRequestCapError
+            ? WEEKLY_REQUEST_CAP_FAILURE
+            : OPERATION_ACCESS_DENIED_FAILURE,
       });
     }
     if (error instanceof ProjectDomainRequiredError) {

@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId, requirePublicId } from "@/lib/db/public-id";
@@ -58,6 +58,7 @@ async function setProjectWriteMode(input: unknown, writeMode: ProjectWriteMode, 
       where: { id: project.id },
     });
   });
+  recordAppAction(actor);
   const projectId = requirePublicId(updated.publicId, "prj");
   const beforeProjectId = requirePublicId(before.publicId, "prj");
 
@@ -138,7 +139,7 @@ export async function cancelMigration(input: unknown) {
 
     // Release the read-only hold only when one is actually active.
     if (!heldProject) {
-      return { job: cancelledJob ?? null, project };
+      return { changed: !!cancelledJob, job: cancelledJob ?? null, project };
     }
 
     const updated = await tx.project.update({
@@ -166,8 +167,9 @@ export async function cancelMigration(input: unknown) {
       },
       tx,
     );
-    return { job: cancelledJob ?? null, project: updated };
+    return { changed: true, job: cancelledJob ?? null, project: updated };
   });
+  if (result.changed) recordAppAction(actor);
   revalidateSettingsViews();
 
   return {

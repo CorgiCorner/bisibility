@@ -1,3 +1,4 @@
+import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import type { ProjectionId } from "@/lib/dashboard-layout/types";
@@ -60,13 +61,21 @@ type OverviewOptions = {
 export async function getOverview(projectId: string, options: OverviewOptions = {}) {
   const readable = await requireReadableProject(projectId);
   const selection = options.localSelection;
-  if (!selection) return readOverview(readable.project, options, prisma);
+  if (!selection) {
+    const result = await readOverview(readable.project, options, prisma);
+    recordResultReceipt({
+      userId: readable.actor.id,
+      surface: "app",
+      nonEmpty: result.visibilityCoverage.measured > 0,
+    });
+    return result;
+  }
   const filters = normalizeOverviewFilters(options.filters);
   const report = await createSessionRankTrackerReportOptions(
     options.now ?? new Date(),
     overviewComparisonDays(filters.range),
   );
-  return prisma.$transaction(
+  const result = await prisma.$transaction(
     async (tx) => {
       await tx.$executeRaw`SET TRANSACTION READ ONLY`;
       const localReport = await readLocalReportInTransaction(
@@ -87,6 +96,12 @@ export async function getOverview(projectId: string, options: OverviewOptions = 
     },
     { ...REPORT_READ_TRANSACTION },
   );
+  recordResultReceipt({
+    userId: readable.actor.id,
+    surface: "app",
+    nonEmpty: result.visibilityCoverage.measured > 0,
+  });
+  return result;
 }
 
 // biome-ignore format: existing dense query assembly preserved during Local scoping.
@@ -99,15 +114,15 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
   const where = localOverviewKeywordWhere(project.id, filters, keywordIds);
   const hasKeywordFilter =
     filters.device !== "all" || filters.marketIds.length > 0 || filters.tag !== null;
-  // Keep independent reads parallel, but reuse the filtered count when no keyword filter is
-  // active so the default dashboard never repeats the same count statement.
-  const [metricData, unfilteredKeywordCount, providerConnections, monthlyCost, tags] = await Promise.all([
-    loadOverviewMetricData(project.id, filters, now, { includeMarkets: true, keywordIds, ...(localReport ? { tx: db } : {}), report }),
-    hasKeywordFilter && !localReport ? db.keyword.count({ where: { projectId: project.id } }) : Promise.resolve(null),
-    db.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { credentialSource: true, credentialsEncrypted: true, enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } }),
-    readOverviewMonthlyCost(project.id, where, now, db, Boolean(localReport)),
-    db.tag.findMany({ orderBy: { name: "asc" }, select: { name: true }, where: { projectId: project.id } }),
-  ]);
+  // Pool reads may run in parallel; a Local report shares one transaction connection.
+  const metricRead = () => loadOverviewMetricData(project.id, filters, now, { includeMarkets: true, keywordIds, ...(localReport ? { tx: db } : {}), report });
+  const countRead = () => hasKeywordFilter && !localReport ? db.keyword.count({ where: { projectId: project.id } }) : Promise.resolve(null);
+  const providerRead = () => db.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { credentialSource: true, credentialsEncrypted: true, enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } });
+  const costRead = () => readOverviewMonthlyCost(project.id, where, now, db, Boolean(localReport));
+  const tagRead = () => db.tag.findMany({ orderBy: { name: "asc" }, select: { name: true }, where: { projectId: project.id } });
+  const [metricData, unfilteredKeywordCount, providerConnections, monthlyCost, tags] = localReport
+    ? [await metricRead(), await countRead(), await providerRead(), await costRead(), await tagRead()] as const
+    : await Promise.all([metricRead(), countRead(), providerRead(), costRead(), tagRead()]);
   const {
     addedThisMonth,
     filteredKeywordCount,

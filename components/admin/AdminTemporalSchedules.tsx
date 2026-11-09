@@ -1,10 +1,10 @@
 "use client";
-
+import { useAdminTableSort } from "@/components/admin/AdminTableState";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import type { TemporalScheduleIssue } from "@/lib/ops/heartbeat-temporal";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 type ScheduleRow = TemporalScheduleIssue & { id: string };
 
@@ -33,7 +33,7 @@ export function AdminTemporalSchedules({
 }>) {
   const t = useTranslations("instanceAdmin.dashboard.temporal");
   const format = useFormatter();
-  const [sorting, setSorting] = useState<DataTableSort | null>({
+  const [sorting, setSorting] = useAdminTableSort("schedules", {
     direction: "desc",
     field: "skippedOverlap",
   });

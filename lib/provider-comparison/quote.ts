@@ -22,21 +22,56 @@ export async function quoteComparison(
 ): Promise<FrozenComparison> {
   const { keyword, connections, location } = await loadComparisonSource(projectId, keywordId, db);
   if (!keyword.project.domain) throw new Error("Comparison project domain is unavailable.");
+  const sides = await quoteComparisonConnections(
+    projectId,
+    keywordId,
+    connections,
+    comparisonProviders,
+    now,
+    db,
+  );
+  return {
+    version: 1,
+    keywordId,
+    text: keyword.text,
+    device: keyword.device,
+    domain: keyword.project.domain,
+    locationId: keyword.locationId,
+    locationLabel: keyword.locationRef.displayName,
+    location,
+    connections: sides,
+  };
+}
+
+export async function quoteComparisonConnections(
+  projectId: string,
+  keywordId: string,
+  connections: Awaited<ReturnType<typeof loadComparisonSource>>["connections"],
+  providers: readonly (typeof comparisonProviders)[number][],
+  now: Date,
+  db: Prisma.TransactionClient,
+  options: { allowDisabled?: boolean; depth?: import("@/lib/serp/constants").SerpDepth } = {},
+): Promise<FrozenComparison["connections"]> {
+  const depth = options.depth ?? comparisonDepth;
   const sides: FrozenComparison["connections"] = [];
-  for (const provider of comparisonProviders) {
+  for (const provider of providers) {
     const connection = connections.find((side) => side.provider === provider);
-    if (!connection?.enabled || connection.status !== "connected")
-      throw new Error("Both comparison providers must be connected.");
+    if (
+      !connection ||
+      (!options.allowDisabled && !connection.enabled) ||
+      connection.status !== "connected"
+    )
+      throw new Error("Selected providers must be connected.");
     const hosted = connection.credentialSource === "hosted";
     const context = hosted
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(connection.id, "rank_check", now, db);
     const providerCost =
-      (hosted ? await hostedRankCheckEstimatedCostCents(provider, comparisonDepth) : null) ??
-      estimatedRankCheckCostCents(provider, comparisonDepth, null, context);
+      (hosted ? await hostedRankCheckEstimatedCostCents(provider, depth) : null) ??
+      estimatedRankCheckCostCents(provider, depth, null, context);
     if (providerCost === null || !Number.isFinite(providerCost) || providerCost <= 0)
       throw new Error("Comparison quote is unavailable.");
-    const quantity = provider === "serpapi" ? 2 : 1;
+    const quantity = provider === "serpapi" ? Math.ceil(depth / 10) : 1;
     const price = hosted
       ? await quoteDeploymentRankReservations(db, {
           projectId,
@@ -75,15 +110,5 @@ export async function quoteComparison(
       },
     });
   }
-  return {
-    version: 1,
-    keywordId,
-    text: keyword.text,
-    device: keyword.device,
-    domain: keyword.project.domain,
-    locationId: keyword.locationId,
-    locationLabel: keyword.locationRef.displayName,
-    location,
-    connections: sides,
-  };
+  return sides;
 }

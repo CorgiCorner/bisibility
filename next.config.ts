@@ -55,6 +55,8 @@ const nextConfig: NextConfig = {
   // hand-written AGENTS.md carrying the private agent instructions, and a dev or build
   // run overwrote it.
   agentRules: false,
+  // Server Function arguments can contain provider credentials.
+  logging: { serverFunctions: false },
   // Keep framework chrome from intercepting bottom-aligned mobile actions.
   devIndicators: false,
   typescript: {
@@ -83,7 +85,12 @@ const nextConfig: NextConfig = {
   distDir: resolveNextDistDir(process.env.NEXT_DIST_DIR),
   webpack(config, { dev }) {
     // Cache serialization can overlap compilation and exceed the managed builder's RAM.
-    if (!dev && isNextBuildMemoryCapped(process.env)) config.cache = false;
+    if (!dev && isNextBuildMemoryCapped(process.env)) {
+      config.cache = false;
+      // Bound in-flight module work as well as the compiler worker count. Source-map
+      // generation otherwise exceeds the 4 GiB heap on managed production builds.
+      config.parallelism = 2;
+    }
     return config;
   },
   outputFileTracingIncludes: {
@@ -256,6 +263,9 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   org: sentryOrg,
   project: "bisibility",
   release: sentryRelease ? { name: sentryRelease } : undefined,
+  // Upload only after compiler workers exit, instead of retaining their source maps
+  // while the upload plugin rewrites and serializes the same assets again.
+  useRunAfterProductionCompileHook: canUploadSentrySourceMaps,
   silent: !process.env.CI,
   sourcemaps: {
     disable: !canUploadSentrySourceMaps,

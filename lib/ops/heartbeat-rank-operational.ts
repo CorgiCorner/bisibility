@@ -1,0 +1,119 @@
+import "server-only";
+import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { keywordLabel } from "@/lib/ops/labels";
+import { DEFAULT_STALE_RUNNING_CHECK_MINUTES } from "@/lib/rank-check/stale-window";
+import type { AdminRankHeartbeat } from "./heartbeat-types";
+import { failureEntries, fallbackEntries } from "./rank-failure-summary";
+
+type RankHeartbeatRow = {
+  publicId?: string;
+  deferredReason?: string | null;
+  attempts: Prisma.JsonValue | null;
+  checkedAt: Date;
+  error: string | null;
+  keyword: { id: string; projectId: string; text: string };
+  provider: string;
+  scheduledAt: Date | null;
+  startedAt: Date | null;
+  status: string;
+};
+
+function percentile(values: number[], percentileValue: number) {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  const index = Math.ceil((percentileValue / 100) * sorted.length) - 1;
+  return sorted[Math.max(0, index)] ?? null;
+}
+
+export async function findRankHeartbeatRows(now: Date, since: Date): Promise<RankHeartbeatRow[]> {
+  const stuckBefore = new Date(now.getTime() - DEFAULT_STALE_RUNNING_CHECK_MINUTES * 60 * 1000);
+  return prisma.rankCheck.findMany({
+    orderBy: { checkedAt: "desc" },
+    select: {
+      attempts: true,
+      publicId: true,
+      deferredReason: true,
+      checkedAt: true,
+      error: true,
+      provider: true,
+      scheduledAt: true,
+      startedAt: true,
+      status: true,
+      keyword: { select: { id: true, projectId: true, text: true } },
+    },
+    where: {
+      OR: [
+        { checkedAt: { gte: since } },
+        { scheduledAt: { gte: since } },
+        { startedAt: { gte: since } },
+        { checkedAt: { lt: stuckBefore }, status: "running" },
+      ],
+    },
+  });
+}
+
+export function summarizeRankHeartbeatRows(
+  rows: RankHeartbeatRow[],
+  now: Date,
+  since: Date,
+  withDetails: boolean,
+): AdminRankHeartbeat {
+  const stuckBefore = new Date(now.getTime() - DEFAULT_STALE_RUNNING_CHECK_MINUTES * 60 * 1000);
+  const recent = rows.filter((row) =>
+    [row.checkedAt, row.scheduledAt, row.startedAt].some((value) => value && value >= since),
+  );
+  const lag = recent.flatMap((row) =>
+    row.scheduledAt && row.startedAt
+      ? [Math.max(0, row.startedAt.getTime() - row.scheduledAt.getTime())]
+      : [],
+  );
+  const failures = rows.filter((row) => row.status === "failed" && row.checkedAt >= since);
+  const fallbacks = rows.filter((row) => row.status === "completed" && row.checkedAt >= since);
+  return {
+    deferredReasons: recent
+      .filter((row) => row.status === "deferred")
+      .reduce<Record<string, number>>((counts, row) => {
+        const reason = row.deferredReason ?? "other";
+        counts[reason] = (counts[reason] ?? 0) + 1;
+        return counts;
+      }, {}),
+    deferred: recent.filter((row) => row.status === "deferred").length,
+    failed: recent.filter((row) => row.status === "failed").length,
+    lagP50Ms: percentile(lag, 50),
+    lagP95Ms: percentile(lag, 95),
+    scheduled: recent.filter((row) => row.scheduledAt !== null).length,
+    stuck: rows.filter(
+      (row) => row.status === "running" && (row.startedAt ?? row.checkedAt) < stuckBefore,
+    ).length,
+    succeeded: recent.filter((row) => row.status === "completed").length,
+    recentFailures: withDetails ? failureEntries(failures) : [],
+    recentFallbacks: withDetails ? fallbackEntries(fallbacks) : [],
+    topFailures: failures
+      .slice(0, 5)
+      .map((row) => `${keywordLabel(row.keyword.id, row.keyword.text)}: failed`),
+  };
+}
+
+// `detailWindows` lists the window keys that keep their recentFailures/recentFallbacks arrays;
+// omit it to build details for every window. Undetailed windows skip the flatMap/parse work.
+export async function collectOperationalRankHeartbeatWindows<
+  const Windows extends Record<string, Date>,
+>(
+  now: Date,
+  windows: Windows,
+  detailWindows?: readonly (keyof Windows)[],
+): Promise<{ [Key in keyof Windows]: AdminRankHeartbeat }> {
+  const entries = Object.entries(windows);
+  if (entries.length === 0) return {} as { [Key in keyof Windows]: AdminRankHeartbeat };
+
+  const detailKeys = detailWindows ? (detailWindows as readonly string[]) : null;
+  const earliest = new Date(Math.min(...entries.map(([, since]) => since.getTime())));
+  const rows = await findRankHeartbeatRows(now, earliest);
+  return Object.fromEntries(
+    entries.map(([key, since]) => [
+      key,
+      summarizeRankHeartbeatRows(rows, now, since, !detailKeys || detailKeys.includes(key)),
+    ]),
+  ) as { [Key in keyof Windows]: AdminRankHeartbeat };
+}

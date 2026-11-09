@@ -3,7 +3,7 @@
     "heading": "Audyt witryny",
     "description": "Sprawdź HTTP, metadane, nagłówki, indeksowalność, linki i tekst alternatywny obrazów dla {domain}.",
     "pageLimit": "Limit stron",
-    "pageLimitError": "Wybierz od 1 do 15 stron.",
+    "pageLimitError": "Wybierz od 1 do {limit, number} stron.",
     "run": "Uruchom audyt",
     "running": "Skanowanie witryny",
     "cost": "Do 15 sekund · Bez kredytów dostawcy · Wyniki wykorzystywane ponownie zgodnie z ustawieniami pamięci podręcznej projektu",
@@ -85,6 +85,24 @@
       "unknown": "Nie udało się pobrać strony. Jej status HTTP i pomiary SEO są nieznane."
     },
     "savedPages": "Zapisane strony",
-    "savedDetails": "Szczegóły zapisanego raportu"
+    "savedDetails": "Szczegóły zapisanego raportu",
+    "workerCost": "Działa w tle · Bez kredytów dostawcy",
+    "runProgress": "{state} · {pages, number} z {budget, number} stron",
+    "verifyDomain": "Zweryfikuj tę domenę, aby skanować więcej stron.",
+    "cancelRun": "Anuluj audyt",
+    "resumeRun": "Wznów audyt",
+    "previousPages": "Poprzednie strony",
+    "nextPages": "Następne strony",
+    "runStates": {
+      "queued": "W kolejce",
+      "running": "W toku",
+      "paused": "Wstrzymany",
+      "complete": "Zakończony",
+      "stopped": "Zatrzymany",
+      "failed": "Niepowodzenie",
+      "cancelled": "Anulowany",
+      "unknown": "Nieznany"
+    },
+    "availableLimit": "Obecnie dostępne: do {limit, number} stron na audyt."
   }
 }

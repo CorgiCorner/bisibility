@@ -1,6 +1,7 @@
 "use server";
 import { withAchievementUse } from "@/lib/achievements/record-use";
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   analyzeDomainOverview,
   loadDomainKeywordsPage,
@@ -111,26 +112,32 @@ async function mutationScope(data: { projectId: string }, type: "keyword" | "pro
 export async function analyzeDomainOverviewAction(input: unknown) {
   const data = parseActionInput(analyzeSchema, input);
   const { actor, project } = await mutationScope(data);
-  return withAchievementUse(actor.id, "analyzeDomainOverview", data.estimateOnly, () =>
-    withLookupBudgetResult(() =>
-      analyzeDomainOverview(
-        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-        {
-          paymentOptionId: data.paymentOptionId,
-          acceptedPayment: data.acceptedPayment,
-          requirePayment: data.requirePayment,
-          estimateOnly: data.estimateOnly,
-          fresh: data.fresh,
-          ...(data.countryCode ? { countryCode: data.countryCode } : {}),
-          languageCode: data.languageCode,
-          locationCode: data.locationCode,
-          maxCostCents: data.maxCostCents,
-          scopeOverride: data.scopeOverride,
-          target: data.target,
-        },
+  const outcome = await withAchievementUse(
+    actor.id,
+    "analyzeDomainOverview",
+    data.estimateOnly,
+    () =>
+      withLookupBudgetResult(() =>
+        analyzeDomainOverview(
+          { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+          {
+            paymentOptionId: data.paymentOptionId,
+            acceptedPayment: data.acceptedPayment,
+            requirePayment: data.requirePayment,
+            estimateOnly: data.estimateOnly,
+            fresh: data.fresh,
+            ...(data.countryCode ? { countryCode: data.countryCode } : {}),
+            languageCode: data.languageCode,
+            locationCode: data.locationCode,
+            maxCostCents: data.maxCostCents,
+            scopeOverride: data.scopeOverride,
+            target: data.target,
+          },
+        ),
       ),
-    ),
   );
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  return outcome;
 }
 
 export async function selectDomainOverviewMarketAction(input: unknown) {
@@ -161,7 +168,7 @@ export async function selectDomainOverviewMarketAction(input: unknown) {
 export async function loadDomainHistoryAction(input: unknown) {
   const data = parseActionInput(historySchema, input);
   const { actor, project } = await mutationScope(data);
-  return withLookupBudgetResult(() =>
+  const outcome = await withLookupBudgetResult(() =>
     loadDomainOverviewHistory(
       { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
       {
@@ -179,6 +186,8 @@ export async function loadDomainHistoryAction(input: unknown) {
       },
     ),
   );
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  return outcome;
 }
 
 async function loadTablePage(
@@ -210,9 +219,12 @@ async function loadTablePage(input: unknown, module: "keywords" | "pages") {
   // sort and filters describe free client-side slicing of fetched rows; the paid cache key is
   // intentionally based only on provider pagination and market dimensions.
   const context = { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id };
-  if (module === "keywords")
-    return withLookupBudgetResult(() => loadDomainKeywordsPage(context, options));
-  return withLookupBudgetResult(() => loadDomainPagesPage(context, options));
+  const outcome =
+    module === "keywords"
+      ? await withLookupBudgetResult(() => loadDomainKeywordsPage(context, options))
+      : await withLookupBudgetResult(() => loadDomainPagesPage(context, options));
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  return outcome;
 }
 
 export async function loadDomainKeywordsPageAction(input: unknown) {
@@ -226,12 +238,17 @@ export async function loadDomainPagesPageAction(input: unknown) {
 export async function saveSelectedKeywordsAction(input: unknown) {
   const data = parseActionInput(saveSelectedSchema, input);
   const { actor, project } = await mutationScope(data, "keyword");
-  const { results: _results, ...outcome } = await saveSavedKeywordRows(data.rows, {
-    actorId: actor.id,
-    projectId: project.id,
-    projectPublicId: project.publicId,
-  });
+  const { results: _results, ...outcome } = await saveSavedKeywordRows(
+    data.rows,
+    {
+      actorId: actor.id,
+      projectId: project.id,
+      projectPublicId: project.publicId,
+    },
+    () => recordAppAction(actor),
+  );
   revalidatePath(appPath(project.publicId, "keywords"));
   revalidatePath(appPath(project.publicId, "domain-overview"));
+
   return outcome;
 }

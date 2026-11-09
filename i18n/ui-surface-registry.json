@@ -1418,14 +1418,6 @@
     },
     {
       "anchor": "function:headerMetaFor",
-      "fingerprint": "97cbaf9f835ddb1e7471b7ae221b7e31b4ef144a9b2385e595cd87f054fc6ca9",
-      "kind": "ui-property",
-      "path": "components/shell/header-title.ts",
-      "reason": "headerMetaFor supplies route metadata to AppHeaderTitle. AppHeaderTitle calls localizedHeaderMeta in header-copy.ts, whose titleKeys maps Instance administration to shell.header.titles.instanceAdministration and translates it before rendering.",
-      "text": "Instance administration"
-    },
-    {
-      "anchor": "function:headerMetaFor",
       "fingerprint": "c86bf7647199850d9ab6d3c65b14183dc3b7d35733e2e52c1bebf7f25b7579f5",
       "kind": "ui-property",
       "path": "components/shell/header-title.ts",
@@ -1900,9 +1892,41 @@
       "anchor": "function:SchedulePage",
       "fingerprint": "c34308c3fa3222eb24c68db5be6dec7a0709395ac67f9bfed110f8f3a8983606",
       "kind": "jsx-expression",
-      "path": "app/(regional)/app/(workspace)/[project]/runs/schedules/[publicId]/page.tsx",
+      "path": "app/(regional)/app/(workspace)/[project]/schedules/[publicId]/page.tsx",
       "text": "UTC",
       "reason": "UTC is the canonical timezone identifier used when the stored schedule and defaults have no timezone. It is retained technical data, not translatable prose."
+    },
+    {
+      "path": "components/shell/header-title.ts",
+      "kind": "ui-property",
+      "anchor": "function:headerMetaFor",
+      "text": "Schedules",
+      "fingerprint": "917cd51ef900776dbdee53087d7abc55aced45858372665bd6bb028ab4afd8f7",
+      "reason": "Route metadata is translated by localizedHeaderMeta through the shell.header.titles catalog before rendering."
+    },
+    {
+      "path": "components/shell/header-title.ts",
+      "kind": "ui-property",
+      "anchor": "function:headerMetaFor",
+      "text": "Usage",
+      "fingerprint": "282e1080a64e717b7d90552158d44c707e8e372719fba55d7f2a200eb94354e2",
+      "reason": "Route metadata is translated by localizedHeaderMeta through the shell.header.titles catalog before rendering."
+    },
+    {
+      "path": "components/shell/header-title.ts",
+      "kind": "ui-property",
+      "anchor": "function:headerMetaFor",
+      "text": "SERP Playground",
+      "fingerprint": "c1fcb7ad98002f6dfaab1c71b0fd3c4110002a33312b325c7ca8311b9f56f26a",
+      "reason": "Route metadata is translated by localizedHeaderMeta through the shell.header.titles catalog before rendering."
+    },
+    {
+      "anchor": "function:OssRecovery",
+      "fingerprint": "6a5c6e5fa6da5a685602e33b5ff8df259b35842c1e8e2ccb15b9d339712ec7b8",
+      "kind": "jsx-text",
+      "path": "components/admin/redesign/OssRecovery.tsx",
+      "reason": "This copy belongs to the Storybook-only admin preview and is not imported by a live product route. Reclassify and localize this source before using it in a live interface.",
+      "text": "Sample data - no live instance connected."
     }
   ],
   "schemaVersion": 1,
@@ -1925,6 +1949,7 @@
       "app/(regional)/app/(workspace)/account/actions.ts",
       "app/(regional)/app/(workspace)/account/preferences/actions.ts",
       "app/(regional)/onboarding/actions.ts",
+      "app/(regional)/onboarding/capacity-actions.ts",
       "app/(regional)/onboarding/initial-first-check-candidates.ts",
       "app/(regional)/onboarding/onboarding-data-source.ts",
       "app/(regional)/onboarding/onboarding-location-state.ts",
@@ -1944,8 +1969,18 @@
       "components/action-payment/useActionPaymentReview.ts",
       "components/action-payment/usePaymentQuoteExpiry.ts",
       "components/admin/admin-action-error.ts",
+      "components/admin/admin-dashboard-test-fixtures.ts",
       "components/admin/admin-usage-money.ts",
+      "components/admin/instance-usage-test-fixture.ts",
+      "components/admin/pages/useAdminAccount.ts",
+      "components/admin/pages/useAdminQuery.ts",
+      "components/admin/pages/useRecoveryBatch.ts",
+      "components/admin/pages/useTaskActions.ts",
       "components/admin/recovery/recovery-sorting.ts",
+      "components/admin/recovery/useRecoverySelection.ts",
+      "components/admin/redesign/OssPreviewData.ts",
+      "components/admin/redesign/PreviewNavigationContext.ts",
+      "components/admin/redesign/require-fixture.ts",
       "components/ai-research/ai-research-failure-copy.ts",
       "components/ai-research/ai-research-presets.ts",
       "components/ai-research/useAiResearchCatalogRefresh.ts",
@@ -2103,6 +2138,9 @@
       "components/keywords/safe-action-error.ts",
       "components/keywords/saved/saved-keywords-export.ts",
       "components/keywords/saved/saved-keywords-table-model.ts",
+      "components/keywords/serp-playground/provider-labels.ts",
+      "components/keywords/serp-playground/search-scope.ts",
+      "components/keywords/serp-playground/useSerpPlayground.ts",
       "components/keywords/snapshot-export.ts",
       "components/keywords/snapshot-extension-payment.ts",
       "components/keywords/use-rank-check-batch-poll.ts",
@@ -2260,6 +2298,7 @@
       "components/shell/workspace-labels.ts",
       "components/shell/workspace-menu-placement.ts",
       "components/site-audit/site-audit-table-layout.ts",
+      "components/site-audit/useSiteAuditProgress.ts",
       "components/timeline/timeline-note-form-schema.ts",
       "components/ui/confirm-copy.ts",
       "components/ui/data-link-styles.ts",
@@ -2687,7 +2726,7 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/runs/schedules/[publicId]/page.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -2702,6 +2741,26 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/runs/summaries/[notificationPublicId]/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/schedules/[publicId]/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/schedules/[publicId]/page.tsx",
+      "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/schedules/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/schedules/page.tsx",
       "status": "pending"
     },
     {
@@ -2722,6 +2781,16 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/search-console/SearchInsightsSections.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/serp-playground/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/serp-playground/page.tsx",
       "status": "migrated"
     },
     {
@@ -2945,6 +3014,16 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/usage/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/usage/page.tsx",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "app/(regional)/app/(workspace)/account/actions.ts",
       "status": "migrated"
@@ -3011,12 +3090,12 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/admin/administration/loading.tsx",
+      "path": "app/(regional)/app/admin/administration/page.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/admin/administration/page.tsx",
+      "path": "app/(regional)/app/admin/audit/error.tsx",
       "status": "migrated"
     },
     {
@@ -3031,6 +3110,36 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/admin/email/sending-today/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/email/sending-today/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/email/sending-today/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/email/settings/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/email/settings/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/email/settings/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/admin/layout.tsx",
       "status": "migrated"
     },
@@ -3041,27 +3150,122 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/admin/metering/loading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "app/(regional)/app/admin/metering/page.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/app/admin/metering/recovery/loading.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "app/(regional)/app/admin/metering/recovery/page.tsx",
-      "status": "pending"
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/checks/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/checks/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/checks/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/data-sources/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/data-sources/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/data-sources/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/notifications/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/notifications/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/notifications/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/tasks/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/tasks/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/tasks/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/worker/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/worker/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/operations/worker/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/overview/status/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/overview/status/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/overview/status/page.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
       "path": "app/(regional)/app/admin/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/users/accounts/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/users/accounts/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/users/accounts/page.tsx",
       "status": "migrated"
     },
     {
@@ -3152,6 +3356,11 @@
     {
       "kind": "ui-data",
       "path": "app/(regional)/onboarding/actions.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "app/(regional)/onboarding/capacity-actions.ts",
       "status": "migrated"
     },
     {
@@ -3273,6 +3482,11 @@
       "kind": "ui-data",
       "path": "components/account/account-ui.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/account/AccountDeletionExtension.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -3575,6 +3789,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/admin/admin-dashboard-test-fixtures.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/admin/admin-provider-table-columns.tsx",
       "status": "migrated"
@@ -3596,32 +3815,12 @@
     },
     {
       "kind": "render",
-      "path": "components/admin/AdminAdministration.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/admin/AdminAnnouncements.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "components/admin/AdminAuditTable.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/admin/AdminBudgetTable.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminDashboard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminDashboardLoading.tsx",
       "status": "migrated"
     },
     {
@@ -3646,31 +3845,6 @@
     },
     {
       "kind": "render",
-      "path": "components/admin/AdminMeteringFilters.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminMeteringFrame.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminMeteringLoading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminMeteringView.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminOpsActions.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/admin/AdminPrimitives.tsx",
       "status": "migrated"
     },
@@ -3691,32 +3865,12 @@
     },
     {
       "kind": "render",
-      "path": "components/admin/AdminRecoveryAccounting.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminRefresh.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminSectionLoading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/admin/AdminSectionUnavailable.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "components/admin/AdminShell.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/admin/AdminTabs.tsx",
+      "path": "components/admin/AdminTableState.tsx",
       "status": "migrated"
     },
     {
@@ -3750,14 +3904,84 @@
       "status": "pending"
     },
     {
+      "kind": "ui-data",
+      "path": "components/admin/instance-usage-test-fixture.ts",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/admin/InstanceMailSettings.tsx",
       "status": "pending"
     },
     {
       "kind": "render",
+      "path": "components/admin/InstanceMailSettingsField.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/InstanceUsagePeriodSelect.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminPageError.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminPageLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminRouteChrome.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminRouteFrame.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminRouteRefresh.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminScrollNav.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/OssAdminPage.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/OssLivePage.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/pages/useAdminAccount.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/pages/useAdminQuery.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/pages/useRecoveryBatch.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/pages/useTaskActions.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -3786,6 +4010,11 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/recovery/RecoveryLoadFallback.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/recovery/RecoveryPartialEvidence.tsx",
       "status": "pending"
     },
@@ -3807,6 +4036,141 @@
     {
       "kind": "render",
       "path": "components/admin/recovery/RecoveryTriageForm.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/recovery/useRecoverySelection.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-1.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-2.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-3.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-4.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-5.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-6.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-7.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/oss-story-fixtures-8.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssAccountsTable.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssAdminComposition.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssAdministration.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssAdminViews.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssAudit.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssEmailAllowance.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssOperationalDetails.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssOpsActions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssPageLoading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssPreview.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/redesign/OssPreviewData.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssRecovery.tsx",
+      "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssRecoveryBatchDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OssRecoveryDetails.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/OverviewInstance.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/redesign/PreviewNavigationContext.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/redesign/PreviewShell.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/admin/redesign/require-fixture.ts",
       "status": "pending"
     },
     {
@@ -5130,6 +5494,11 @@
     },
     {
       "kind": "render",
+      "path": "components/dashboard-layout/DashboardEmptyBody.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/dashboard-layout/DashboardLayoutEditor.tsx",
       "status": "migrated"
     },
@@ -5885,6 +6254,11 @@
     },
     {
       "kind": "render",
+      "path": "components/keyword-detail-history/HistoryDetails.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keyword-detail-history/HistoryPosition.tsx",
       "status": "migrated"
     },
@@ -5906,6 +6280,11 @@
     {
       "kind": "render",
       "path": "components/keyword-detail-history/KeywordDetailHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/KeywordHistoryLog.tsx",
       "status": "migrated"
     },
     {
@@ -5931,6 +6310,11 @@
     {
       "kind": "render",
       "path": "components/keyword-detail-history/RetainedSnapshotCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/section-disclosure.tsx",
       "status": "migrated"
     },
     {
@@ -6077,6 +6461,11 @@
       "kind": "ui-data",
       "path": "components/keywords/AddKeywordCsvReviewModel.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/AiOverviewContent.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -6735,11 +7124,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/KeywordDetailScopeProof.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/KeywordEditDrawer.tsx",
       "status": "migrated"
     },
@@ -6835,6 +7219,11 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/LocalPackDetails.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/location-field-parts.tsx",
       "status": "migrated"
     },
@@ -6897,6 +7286,11 @@
       "kind": "render",
       "path": "components/keywords/retrieved-results-test-fixtures.tsx",
       "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/RetrievedAiOverview.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -6985,7 +7379,82 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/serp-playground/AddPlaygroundProvider.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/PlaygroundHistoryDialog.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/PlaygroundProviders.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/PlaygroundQueryScope.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/PlaygroundReview.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/PlaygroundSearchRow.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/serp-playground/provider-labels.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/RawProviderResult.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/RecentPlaygroundQueries.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/SavePlaygroundResult.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/serp-playground/search-scope.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/SerpPlayground.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/SerpPlaygroundResults.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/serp-playground/useSerpPlayground.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/SerpCompetitorComparison.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/SerpFeatureSummary.tsx",
       "status": "migrated"
     },
     {
@@ -7919,6 +8388,11 @@
     {
       "kind": "render",
       "path": "components/overview/OverviewContributorsCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/overview/OverviewCoverageSummary.tsx",
       "status": "migrated"
     },
     {
@@ -9352,6 +9826,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/settings/general/DomainVerificationCard.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/settings/general/general-settings-layout.ts",
       "status": "migrated"
@@ -9743,6 +10222,11 @@
     },
     {
       "kind": "render",
+      "path": "components/shell/AdminPageExtension.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/shell/AppFooter.tsx",
       "status": "migrated"
     },
@@ -10078,6 +10562,11 @@
     },
     {
       "kind": "render",
+      "path": "components/site-audit/SiteAuditForm.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/site-audit/SiteAuditLoading.tsx",
       "status": "migrated"
     },
@@ -10089,6 +10578,11 @@
     {
       "kind": "render",
       "path": "components/site-audit/SiteAuditWorkspace.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/site-audit/useSiteAuditProgress.ts",
       "status": "pending"
     },
     {

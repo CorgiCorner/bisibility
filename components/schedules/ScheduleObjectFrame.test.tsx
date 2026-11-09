@@ -9,7 +9,7 @@ describe("ScheduleObjectFrame", () => {
         bodyLabel="Schedule body"
         breadcrumbLabel="Breadcrumb"
         title="Daily"
-        navigation={<a href="/app/prj_1/runs/schedules">Schedules</a>}
+        navigation={<a href="/app/prj_1/schedules">Schedules</a>}
       />,
     );
     expect(screen.queryByRole("navigation", { name: "Breadcrumb" })).toBeNull();
@@ -41,14 +41,14 @@ describe("ScheduleObjectFrame", () => {
       <ScheduleObjectFrame
         bodyLabel="Schedule body"
         breadcrumbLabel="Breadcrumb"
-        breadcrumb={{ href: "/app/prj_1/runs/schedules", label: "All schedules" }}
+        breadcrumb={{ href: "/app/prj_1/schedules", label: "All schedules" }}
         title="Schedule"
       />,
     );
 
     expect(screen.getByRole("link", { name: "All schedules" })).toHaveAttribute(
       "href",
-      "/app/prj_1/runs/schedules",
+      "/app/prj_1/schedules",
     );
     expect(screen.getByRole("link", { name: "All schedules" }).querySelector("svg")).toBeVisible();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();

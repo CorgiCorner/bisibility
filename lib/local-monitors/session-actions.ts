@@ -1,6 +1,6 @@
 "use server";
-
 import { getActionActor } from "@/lib/actions/_shared";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   listLocalMonitors,
   readLocalMonitor,
@@ -14,7 +14,12 @@ import { saveMonitorFor } from "./service";
 import { readMonitorSetupChoices } from "./setup-read";
 
 export async function saveMonitorAction(command: MonitorCommand) {
-  return saveMonitorFor(command, { actor: await getActionActor() });
+  const actor = await getActionActor();
+  const result = await saveMonitorFor(command, { actor });
+  if (result?.kind === "saved" && !result.replayed) recordAppAction(actor);
+  if (result.kind !== "saved") return result;
+  const { replayed: _replayed, ...value } = result;
+  return value;
 }
 export async function readMonitorAction(projectId: string, monitorId: string) {
   return readLocalMonitor({ projectId, monitorId }, { actor: await getActionActor() });

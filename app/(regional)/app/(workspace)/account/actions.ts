@@ -1,5 +1,4 @@
 "use server";
-
 import {
   deleteAccount as deleteAccountAction,
   revokeSession as revokeSessionAction,

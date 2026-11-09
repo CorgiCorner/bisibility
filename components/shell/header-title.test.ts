@@ -1,11 +1,17 @@
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { headerMetaFor } from "@/components/shell/header-title";
+import { ossAdminRoutes } from "@/lib/instance-admin/routes";
 import { appPath, appRootPath, marketPath, resolvedContextPath } from "@/lib/routing/app-path";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { describe, expect, it } from "vitest";
 
 const routeCases = [
+  {
+    path: appPath("prj_1", "serp-playground"),
+    pattern: appPath("[project]", "serp-playground"),
+    title: "SERP Playground",
+  },
   {
     path: appPath("prj_1", "runs", "summaries", "ntf_test"),
     pattern: appPath("[project]", "runs", "summaries", "[notificationPublicId]"),
@@ -89,6 +95,13 @@ const routeCases = [
     pattern: "/app/admin/metering/recovery",
     title: "Instance administration",
   },
+  ...ossAdminRoutes
+    .filter((route) => route.href !== "/app/admin/audit")
+    .map((route) => ({
+      path: route.href,
+      pattern: route.href,
+      title: "Instance administration",
+    })),
   { path: "/app/overview", pattern: "/app/overview", title: "Overview" },
   {
     path: appPath("prj_1", "alerts"),
@@ -158,22 +171,37 @@ const routeCases = [
   {
     path: appPath("prj_1", "rank-tracker", "schedules"),
     pattern: appPath("[project]", "rank-tracker", "schedules"),
-    title: "Runs",
+    title: "Schedules",
   },
   {
     path: appPath("prj_1", "rank-tracker", "schedules", "sch_test"),
     pattern: appPath("[project]", "rank-tracker", "schedules", "[publicId]"),
-    title: "Runs",
+    title: "Schedules",
+  },
+  {
+    path: appPath("prj_1", "runs", "schedules"),
+    pattern: appPath("[project]", "runs", "schedules"),
+    title: "Schedules",
+  },
+  {
+    path: appPath("prj_1", "runs", "schedules", "sch_test"),
+    pattern: appPath("[project]", "runs", "schedules", "[publicId]"),
+    title: "Schedules",
+  },
+  {
+    path: appPath("prj_1", "usage"),
+    pattern: appPath("[project]", "usage"),
+    title: "Usage",
   },
   {
     path: projectSchedulesPath("prj_1"),
     pattern: projectSchedulesPath("[project]"),
-    title: "Runs",
+    title: "Schedules",
   },
   {
     path: projectSchedulesPath("prj_1", "sch_test"),
     pattern: projectSchedulesPath("[project]", "[publicId]"),
-    title: "Runs",
+    title: "Schedules",
   },
   {
     path: appPath("prj_1", "rank-tracker", "runs", "rcr_test"),
@@ -365,13 +393,12 @@ describe("dashboard header titles", () => {
     ).toEqual({ id: "rcr_abcdefghijklmnopqrstuvwx", title: "Run" });
   });
 
-  it("keeps schedules in the project Runs section", () => {
-    expect(headerMetaFor(projectSchedulesPath("prj_1"))).toMatchObject({
-      title: "Runs",
+  it("gives Schedules and Usage their own headers", () => {
+    expect(headerMetaFor(projectSchedulesPath("prj_1"))).toEqual({ title: "Schedules" });
+    expect(headerMetaFor(projectSchedulesPath("prj_1", "sch_test"))).toEqual({
+      title: "Schedules",
     });
-    expect(headerMetaFor(projectSchedulesPath("prj_1", "sch_test"))).toMatchObject({
-      title: "Runs",
-    });
+    expect(headerMetaFor(appPath("prj_1", "usage"))).toEqual({ title: "Usage" });
   });
 
   it("keeps Settings free of redundant project-domain metadata", () => {

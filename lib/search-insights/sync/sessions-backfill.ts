@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  setAnalyticsSyncConnection,
+  withAnalyticsSyncScope,
+} from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { addDays, dateFromKey, dateKey, diffDays, pacificToday } from "@/lib/search-insights/dates";
@@ -129,7 +133,7 @@ async function storeRange(input: {
   return daysProcessed;
 }
 
-export async function runOrganicSessionsBackfillBatch(
+async function runOrganicSessionsBackfillBatchImpl(
   input: SessionsBackfillBatchInput,
   options: SessionsBackfillBatchOptions = {},
 ): Promise<SessionsBackfillBatchResult> {
@@ -157,6 +161,7 @@ export async function runOrganicSessionsBackfillBatch(
     return BLOCKED;
   }
 
+  setAnalyticsSyncConnection(connection.connectionId);
   try {
     const plan = await ensurePlan(row, new Date());
     const ranges = nextDateRanges({
@@ -211,4 +216,15 @@ export async function runOrganicSessionsBackfillBatch(
     }
     throw error;
   }
+}
+
+export function runOrganicSessionsBackfillBatch(
+  input: SessionsBackfillBatchInput,
+  options: SessionsBackfillBatchOptions = {},
+) {
+  return withAnalyticsSyncScope(
+    { projectId: input.projectId, provider: "ga4", trigger: "unknown" },
+    () => runOrganicSessionsBackfillBatchImpl(input, options),
+    (result) => !result.blocked,
+  );
 }

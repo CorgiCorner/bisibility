@@ -1,5 +1,6 @@
 import "server-only";
 
+import { noteAnalyticsRowsStored } from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import {
@@ -87,7 +88,7 @@ async function writeDay(
     const existingPages = await tx.organicSessionsPageDaily.count({
       where: { date, projectId: input.projectId, property: input.property },
     });
-    if (existingPages > 0) return;
+    if (existingPages > 0) return 0;
   }
   await tx.organicSessionsDaily.deleteMany({
     where: { date, projectId: input.projectId, property: input.property },
@@ -152,6 +153,7 @@ async function writeDay(
     scope,
     source: ORGANIC_SESSIONS_SOURCE,
   });
+  return input.pages.length + (input.sessions === null ? 0 : 1);
 }
 
 /** A range request is authoritative through the last date its landing-page rows actually cover. */
@@ -172,6 +174,7 @@ export async function syncOrganicSessionsRange(input: {
   let capHit = false;
   let cursor = input.start;
   let iterations = 0;
+  let rowsStored = 0;
 
   while (cursor <= input.end && iterations < maxIterations) {
     const startedAt = Date.now();
@@ -197,9 +200,9 @@ export async function syncOrganicSessionsRange(input: {
 
     for (const date of rangeDays(cursor, coveredThrough)) {
       const pages = pageMap.get(date) ?? [];
-      await prisma.$transaction(
+      rowsStored += await prisma.$transaction(
         async (tx) => {
-          await writeDay(tx, {
+          return writeDay(tx, {
             date,
             durationMs,
             fetchedAt,
@@ -218,5 +221,6 @@ export async function syncOrganicSessionsRange(input: {
     iterations += 1;
   }
 
+  noteAnalyticsRowsStored(rowsStored);
   return { capHit };
 }

@@ -208,7 +208,10 @@ const navigationItemKeys = {
   "Keyword Research": "items.keywordResearch",
   Markets: "items.markets",
   "Rank Tracker": "items.rankTracker",
+  "SERP Playground": "items.serpPlayground",
   Runs: "items.runs",
+  Schedules: "items.schedules",
+  Usage: "items.usage",
   "Search Console": "items.searchConsole",
   Settings: "items.settings",
 } as const;

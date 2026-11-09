@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { createTagSchema, deleteTagSchema, renameTagSchema } from "@/lib/schemas/tag";
@@ -38,6 +38,7 @@ export async function createTag(input: unknown) {
     data: { name: data.name, projectId: project.id, publicId: makePublicId("tag") },
     select: { id: true, name: true, publicId: true },
   });
+  recordAppAction(actor);
   await writeAudit({
     action: "tag.create",
     actorId: actor.id,
@@ -47,6 +48,7 @@ export async function createTag(input: unknown) {
     targetType: "tag",
   });
   revalidateKeywords();
+
   return { created: true };
 }
 
@@ -95,6 +97,7 @@ export async function renameTag(input: unknown) {
     };
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "tag.rename",
     actorId: actor.id,
@@ -105,6 +108,7 @@ export async function renameTag(input: unknown) {
     targetType: "tag",
   });
   revalidateKeywords();
+
   return { merged: result.merged, renamed: result.count };
 }
 
@@ -125,6 +129,7 @@ export async function deleteTag(input: unknown) {
     return { count: tag.keywords.length, name: tag.name, publicId: tag.publicId };
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "tag.delete",
     actorId: actor.id,
@@ -134,6 +139,7 @@ export async function deleteTag(input: unknown) {
     targetType: "tag",
   });
   revalidateKeywords();
+
   return { deleted: result.count };
 }
 

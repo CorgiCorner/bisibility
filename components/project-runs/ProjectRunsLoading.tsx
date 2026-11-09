@@ -68,7 +68,6 @@ export function ProjectRunsLoading({
         {label}
       </span>
       <div aria-hidden className="grid min-w-0 gap-4">
-        <ProjectRunsLoadingTabs active={active} />
         <Card className="min-w-0 overflow-hidden p-0" size="sm">
           <TableCardHeader
             title={<Bar className="h-4 w-20" />}

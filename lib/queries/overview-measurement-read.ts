@@ -17,10 +17,11 @@ export async function readOverviewMeasurements(
   db: Prisma.TransactionClient = prisma,
 ) {
   const selected = { AND: [where, { createdAt: { lte: asOf } }] };
-  const [targetCount, checkCount] = await Promise.all([
-    db.keyword.count({ where: selected }),
-    db.rankCheck.count({ where: { createdAt: { lte: asOf }, keyword: selected } }),
-  ]);
+  // A transaction owns one connection. Finish each query before starting another.
+  const targetCount = await db.keyword.count({ where: selected });
+  const checkCount = await db.rankCheck.count({
+    where: { createdAt: { lte: asOf }, keyword: selected },
+  });
   if (
     targetCount > RANK_REPORT_HOST_LIMITS.maxTargets ||
     checkCount > RANK_REPORT_HOST_LIMITS.maxChecks

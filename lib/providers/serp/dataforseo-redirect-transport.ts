@@ -1,3 +1,4 @@
+import { captureHttpResponse } from "@/lib/providers/provider-response";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { dataForSeoAuthorization } from "./dataforseo-queued-authorization";
 import type { RedirectMapping, RedirectTransport } from "./redirect-resolution";
@@ -21,6 +22,7 @@ export function dataForSeoRedirectTransport(
       redirect: "error",
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
+    await captureHttpResponse(response, credentials.captureResponse, CONVERTER_URL);
     if (!response.ok) throw new Error("Redirect conversion failed.");
     const data = (await response.json()) as {
       status_code?: number;

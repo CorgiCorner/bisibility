@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordUserActivity } from "@/lib/activity/record-extension";
+import { domainVerificationEnabled } from "@/lib/domain-verification/feature";
 import {
   reportRequestFailure,
   setRequestFailureMetadata,
@@ -8,7 +10,9 @@ import {
 import packageJson from "@/package.json";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { isMcpMutation } from "./activity-classification";
 import { getMcpToolDefinitions } from "./definitions";
+import { domainVerificationTools } from "./domain-verification-tools";
 import { mcpRequestMetadata } from "./request-id";
 import type { McpApiAuthorization } from "./rest-call";
 import { errorToolResult, jsonToolResult, restFailureToolError } from "./result";
@@ -16,6 +20,7 @@ import { dispatchMcpTool } from "./tools";
 
 type CreateMcpServerOptions = {
   authorization: McpApiAuthorization;
+  activityUser?: { id: string; email: string } | null;
   /** The caller's `X-Bisibility-Client`, forwarded so tool calls keep its attribution. */
   clientHeader?: string;
   name?: string;
@@ -37,8 +42,10 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
     },
   );
 
-  server.server.setRequestHandler(ListToolsRequestSchema, () => ({
-    tools: getMcpToolDefinitions(),
+  server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: (await domainVerificationEnabled().catch(() => false))
+      ? [...getMcpToolDefinitions(), ...domainVerificationTools]
+      : getMcpToolDefinitions(),
   }));
 
   server.server.setRequestHandler(CallToolRequestSchema, async (request) =>
@@ -48,6 +55,10 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
         httpStatus: 200,
       });
       try {
+        const definition = getMcpToolDefinitions().find(
+          (tool) => tool.name === request.params.name,
+        );
+        const args = request.params.arguments ?? {};
         const result = await dispatchMcpTool(
           request.params.name,
           request.params.arguments ?? {},
@@ -58,6 +69,15 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
           if ((result.status ?? 0) >= 500)
             reportRequestFailure(new Error("API response failed."), "tool_dispatch", result.status);
           return errorToolResult(restFailureToolError(result.payload, result.status));
+        }
+        if (options.activityUser && isMcpMutation(definition, args)) {
+          recordUserActivity({
+            userId: options.activityUser.id,
+            email: options.activityUser.email,
+            channel: "mcp",
+            kind: "acted",
+            interactive: true,
+          });
         }
         return jsonToolResult(result.payload);
       } catch (error) {

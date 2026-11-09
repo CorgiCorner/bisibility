@@ -4,10 +4,12 @@ import type { EstimateFrequency } from "./estimate";
 import { PROVIDER_RATES } from "./provider-rates";
 
 export const AUTO_PLAN_KEY = "auto";
-export const CALCULATOR_KEYWORD_MIN = 1;
-export const CALCULATOR_KEYWORD_MAX = 1000;
-export const CALCULATOR_LOCATION_MIN = 1;
-export const CALCULATOR_LOCATION_MAX = 20;
+export {
+  CALCULATOR_KEYWORD_MAX,
+  CALCULATOR_KEYWORD_MIN,
+  CALCULATOR_LOCATION_MAX,
+  CALCULATOR_LOCATION_MIN,
+} from "./calculator-bounds";
 
 export type CalculatorDevices = "desktop" | "mobile" | "both";
 

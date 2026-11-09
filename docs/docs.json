@@ -260,7 +260,10 @@
               "PATCH /projects/{project_id}",
               "DELETE /projects/{project_id}",
               "GET /projects/{project_id}/defaults",
-              "PATCH /projects/{project_id}/defaults"
+              "PATCH /projects/{project_id}/defaults",
+              "GET /projects/{project_id}/domain-verification",
+              "POST /projects/{project_id}/domain-verification",
+              "POST /projects/{project_id}/domain-verification/check"
             ]
           },
           {
@@ -340,6 +343,10 @@
               "GET /projects/{project_id}/site-audits",
               "POST /projects/{project_id}/site-audits",
               "GET /projects/{project_id}/site-audits/{report_id}",
+              "GET /projects/{project_id}/site-audits/{report_id}/run",
+              "GET /projects/{project_id}/site-audits/{report_id}/pages",
+              "POST /projects/{project_id}/site-audits/{report_id}/cancel",
+              "POST /projects/{project_id}/site-audits/{report_id}/resume",
               "GET /projects/{project_id}/research/reports",
               "GET /projects/{project_id}/research/reports/{kind}"
             ]

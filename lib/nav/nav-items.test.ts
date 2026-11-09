@@ -40,6 +40,7 @@ describe("navItems", () => {
     ).toEqual([
       "Dashboard",
       "Rank Tracker",
+      "SERP Playground",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
@@ -54,7 +55,9 @@ describe("navItems", () => {
       "Markets",
       "Alerts",
       "Runs",
+      "Schedules",
       "Providers",
+      "Usage",
       "Install",
       "Settings",
     ]);
@@ -64,7 +67,7 @@ describe("navItems", () => {
     const items = navItems("prj_example", undefined, allExperimentalModules);
     expect(navItemGroups.map((group) => [group.id, group.label, group.tag])).toEqual([
       ["seo", "SEO", "SEO"],
-      ["ai", "AI Search", "AI"],
+      ["ai", "AI visibility", "AI"],
       ["reports", "Data & reports", "DATA"],
       ["project", "Project", "PROJECT"],
     ]);
@@ -73,6 +76,7 @@ describe("navItems", () => {
     ]);
     expect(items.filter((item) => item.group === "seo").map((item) => item.label)).toEqual([
       "Rank Tracker",
+      "SERP Playground",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
@@ -93,11 +97,13 @@ describe("navItems", () => {
       "Markets",
       "Alerts",
       "Runs",
+      "Schedules",
       "Providers",
+      "Usage",
       "Install",
       "Settings",
     ]);
-    expect(items).toHaveLength(19);
+    expect(items).toHaveLength(22);
     expect(
       items.some((item) => item.label === "Project Context" || item.label === "Analytics"),
     ).toBe(false);
@@ -115,7 +121,7 @@ describe("navItems", () => {
     }
     expect(navItemGroups.map((group) => group.tooltip)).toEqual([
       "Track rankings and research keywords, websites, backlinks and site health.",
-      "Track and research how AI answers mention your brand.",
+      "Track brand visibility in AI answers.",
       "Review connected search data and saved reports.",
       "Project configuration and shared operations.",
     ]);
@@ -241,6 +247,7 @@ describe("navItems", () => {
       "Agent Reports": "project",
       Alerts: "project",
       "Rank Tracker": "market",
+      "SERP Playground": "own-axis",
       Competitors: "market",
       "Keyword Research": "own-axis",
       "Domain Overview": "own-axis",
@@ -248,6 +255,8 @@ describe("navItems", () => {
       "Search Console": "own-axis",
       Markets: "project",
       Runs: "project",
+      Schedules: "project",
+      Usage: "project",
       Providers: "project",
       Install: "project",
       Settings: "project",

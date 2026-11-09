@@ -1,4 +1,8 @@
 import "server-only";
+import {
+  setAnalyticsSyncConnection,
+  withAnalyticsSyncScope,
+} from "@/lib/analytics/analytics-sync-scope";
 import { prisma } from "@/lib/db/prisma";
 import {
   createGscSearchAnalyticsSession,
@@ -120,7 +124,7 @@ async function storeDay(input: {
   input.plan.finalizedThroughDate = input.date;
   return true;
 }
-export async function runBackfillBatch(
+async function runBackfillBatchImpl(
   input: BackfillBatchInput,
   options: BackfillBatchOptions = {},
 ): Promise<BackfillBatchResult> {
@@ -163,6 +167,7 @@ export async function runBackfillBatch(
     return BLOCKED;
   }
 
+  setAnalyticsSyncConnection(connection.connectionId);
   const now = new Date();
   try {
     const session = await createGscSearchAnalyticsSession(connection.credentials);
@@ -267,4 +272,12 @@ export async function runBackfillBatch(
     }
     throw error;
   }
+}
+
+export function runBackfillBatch(input: BackfillBatchInput, options: BackfillBatchOptions = {}) {
+  return withAnalyticsSyncScope(
+    { projectId: input.projectId, provider: "gsc", trigger: "unknown" },
+    () => runBackfillBatchImpl(input, options),
+    (result) => !result.blocked,
+  );
 }

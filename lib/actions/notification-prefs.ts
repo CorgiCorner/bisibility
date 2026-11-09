@@ -1,5 +1,5 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import {
   applyNotificationPreferences,
   type NotificationPreferencesForm,
@@ -15,7 +15,8 @@ export async function updateNotificationPreferences(input: unknown) {
   const data = parseActionInput(notificationPreferencePatchSchema, input);
   const actor = await getActionActor();
   try {
-    return await applyNotificationPreferences(actor, data);
+    const result = await applyNotificationPreferences(actor, data, () => recordAppAction(actor));
+    return result;
   } catch (error) {
     // Authorization and validation failures keep their own errors; only an unconfirmed write
     // answers with the persisted state so the form can show what was actually saved.

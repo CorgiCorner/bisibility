@@ -66,6 +66,7 @@ function assertEditableMember(member: MemberRow | null): asserts member is Membe
 export async function inviteTeamMember(
   data: { email: string; projectId: string; role: "admin" | "member" | "viewer" },
   context: TeamMutationContext,
+  onCommitted?: () => void,
 ) {
   await refreshInstanceMailRuntime();
   assertInviteMailerReady();
@@ -102,6 +103,7 @@ export async function inviteTeamMember(
       ...editableInviteFilter(context, project.id),
     },
   });
+  onCommitted?.();
   const result = await deliverInvite(invite, rawToken);
   await writeAudit({
     action: "team.invite.create",
@@ -136,6 +138,7 @@ export async function revokeTeamInvite(
 export async function resendTeamInvite(
   data: { inviteId: string; projectId: string },
   context: TeamMutationContext,
+  onCommitted?: () => void,
 ) {
   await refreshInstanceMailRuntime();
   assertInviteMailerReady();
@@ -156,6 +159,7 @@ export async function resendTeamInvite(
     include: inviteDeliveryInclude,
     where: { id: before.id, role: before.role },
   });
+  onCommitted?.();
   const result = await deliverInvite(invite, rawToken);
   await writeAudit({
     action: "team.invite.resend",

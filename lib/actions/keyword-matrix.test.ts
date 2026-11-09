@@ -1,3 +1,4 @@
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { addKeywordsMatrix } from "./keyword";
@@ -17,7 +18,7 @@ const mocks = vi.hoisted(() => {
     keyword: { createMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     keywordSchedule: { createMany: vi.fn() },
     keywordTag: { createMany: vi.fn() },
-    savedKeyword: { deleteMany: vi.fn() },
+    savedKeyword: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
     checkSchedule: { findFirst: vi.fn() },
     project: { findFirst: vi.fn() },
     projectMarket: {
@@ -245,30 +246,34 @@ describe("addKeywordsMatrix", () => {
       .mockResolvedValueOnce(createdRows)
       .mockResolvedValueOnce(createdRows);
 
-    const first = await addKeywordsMatrix({
-      devices: ["desktop"],
-      keywords: [" Rank Tracker ", "rank tracker", "seo api"],
-      locations: [{ locationKey: "US" }],
-      projectId: "prj_a00000000000000000000000",
-      schedule: {
-        cronExpression: null,
-        frequency: "paused",
-        jitterMinutes: 60,
-        timezone: "UTC",
-      },
-      tags: [],
-      targetUrl: null,
-      topic: "Product",
-      intent: "commercial",
-    });
-    const second = await addKeywordsMatrix({
-      devices: ["desktop"],
-      keywords: ["Rank Tracker", "seo api"],
-      locations: [{ locationKey: "US" }],
-      projectId: "prj_a00000000000000000000000",
-      tags: [],
-      targetUrl: null,
-    });
+    const first = unwrapCapacityResult(
+      await addKeywordsMatrix({
+        devices: ["desktop"],
+        keywords: [" Rank Tracker ", "rank tracker", "seo api"],
+        locations: [{ locationKey: "US" }],
+        projectId: "prj_a00000000000000000000000",
+        schedule: {
+          cronExpression: null,
+          frequency: "paused",
+          jitterMinutes: 60,
+          timezone: "UTC",
+        },
+        tags: [],
+        targetUrl: null,
+        topic: "Product",
+        intent: "commercial",
+      }),
+    );
+    const second = unwrapCapacityResult(
+      await addKeywordsMatrix({
+        devices: ["desktop"],
+        keywords: ["Rank Tracker", "seo api"],
+        locations: [{ locationKey: "US" }],
+        projectId: "prj_a00000000000000000000000",
+        tags: [],
+        targetUrl: null,
+      }),
+    );
 
     expect(first).toMatchObject({ created: 2, persistedKeywordCount: 2, skippedDuplicates: 0 });
     expect(first.keywords).toEqual([
@@ -576,15 +581,17 @@ describe("addKeywordsMatrix", () => {
       }));
     mocks.prisma.keyword.findMany.mockResolvedValueOnce([existing]).mockResolvedValueOnce(inserted);
 
-    const result = await addKeywordsMatrix({
-      checkScheduleId: scheduleId,
-      devices: ["desktop", "mobile"],
-      keywords: ["rank tracker", "seo api"],
-      locations: [{ locationKey: "US" }, { locationKey: "PL" }],
-      projectId: "prj_a00000000000000000000000",
-      tags: [],
-      targetUrl: null,
-    });
+    const result = unwrapCapacityResult(
+      await addKeywordsMatrix({
+        checkScheduleId: scheduleId,
+        devices: ["desktop", "mobile"],
+        keywords: ["rank tracker", "seo api"],
+        locations: [{ locationKey: "US" }, { locationKey: "PL" }],
+        projectId: "prj_a00000000000000000000000",
+        tags: [],
+        targetUrl: null,
+      }),
+    );
 
     expect(inserted).toHaveLength(7);
     expect(result.created).toBe(7);
@@ -706,14 +713,16 @@ describe("addKeywordsMatrix", () => {
       },
     ]);
 
-    const result = await addKeywordsMatrix({
-      devices: ["desktop"],
-      keywords: ["rank tracker"],
-      locations: [{ locationKey: "US/Texas/Austin" }],
-      projectId: "prj_a00000000000000000000000",
-      tags: [],
-      targetUrl: null,
-    });
+    const result = unwrapCapacityResult(
+      await addKeywordsMatrix({
+        devices: ["desktop"],
+        keywords: ["rank tracker"],
+        locations: [{ locationKey: "US/Texas/Austin" }],
+        projectId: "prj_a00000000000000000000000",
+        tags: [],
+        targetUrl: null,
+      }),
+    );
 
     expect(result.warnings).toEqual(["Austin was not found; tracking United States instead."]);
   });

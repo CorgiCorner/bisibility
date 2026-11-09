@@ -7,7 +7,7 @@ import { semanticRequestedGeo } from "@/lib/rank-measurements/requested-geo";
 import { resolveMeasurements } from "@/lib/rank-measurements/resolve";
 import type { MeasurementPolicy, QualifiedMeasurement } from "@/lib/rank-measurements/types";
 import {
-  VISIBILITY_DEFINITION_VERSION_V1,
+  VISIBILITY_DEFINITION_VERSION_V2,
   VISIBILITY_HORIZON,
   VISIBILITY_METRIC_ID_V1,
   VISIBILITY_POSITION_WEIGHTS_V1,
@@ -53,6 +53,7 @@ export function visibilitySnapshotFor(
       asOf: options.asOf ?? new Date(),
       horizon: VISIBILITY_HORIZON,
       minimumRequestedDepth: VISIBILITY_HORIZON,
+      allowShallowPositive: true,
       requestedGeo: semanticRequestedGeo(
         policy,
         keyword.locationRef
@@ -90,7 +91,7 @@ export function summarizeVisibility(
     })),
     {
       metricId: VISIBILITY_METRIC_ID_V1,
-      definitionVersion: VISIBILITY_DEFINITION_VERSION_V1,
+      definitionVersion: VISIBILITY_DEFINITION_VERSION_V2,
       asOf: options.asOf ?? new Date(),
       curve: VISIBILITY_POSITION_WEIGHTS_V1,
       eligibleTotal: options.eligibleTotal,

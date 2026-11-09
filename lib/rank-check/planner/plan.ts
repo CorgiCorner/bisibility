@@ -6,6 +6,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { connectionFunding } from "@/lib/metering/project-funding-budgets";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { loadNativeRankRequestCosts } from "@/lib/provider-rates/native-rank-request";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
@@ -86,9 +87,12 @@ export async function scheduleAdmission(
     // provider bad, alters a connection, or spends budget.
     await assertOperationAccess(schedule.projectId);
   } catch (error) {
-    if (isOperationAccessDeniedError(error)) {
+    if (isOperationAccessDeniedError(error) || error instanceof WeeklyRequestCapError) {
       return {
-        blockedReason: "operation_unavailable" as const,
+        blockedReason:
+          error instanceof WeeklyRequestCapError
+            ? ("weekly_request_cap_reached" as const)
+            : ("operation_unavailable" as const),
         connection: null,
         estimatedCostCents: 0,
         itemCosts: schedule.keywords.map(() => null),

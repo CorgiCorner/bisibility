@@ -1,6 +1,7 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import type {
   ProviderCredentials,
   ProviderTestResult,
@@ -150,7 +151,9 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
   const sourceDecision = dataForSeoOrganicDecision(items, input.domain, payload.depth);
   // Convert only when a redirect row is what keeps the decision open.
   const resolution =
-    sourceDecision.outcome === "indeterminate" && items.some(isRedirectRow)
+    !input.allowIncompleteResults &&
+    sourceDecision.outcome === "indeterminate" &&
+    items.some(isRedirectRow)
       ? await resolveRedirectRows(
           items,
           dataForSeoRedirectTransport(
@@ -165,22 +168,26 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       ? sourceDecision
       : dataForSeoOrganicDecision(resolution.candidates, input.domain, payload.depth);
   if (
+    !input.allowIncompleteResults &&
     candidateDecision.outcome === "indeterminate" &&
     resolution.resolutions.some((row) => row.status === "unresolved")
   ) {
     throw new UnresolvedRedirectError(dataForSeoResponseCostCents(data));
   }
-  const decision = requireDeterminateOrganicResult("DataForSEO", candidateDecision);
+  const decision = input.allowIncompleteResults
+    ? candidateDecision
+    : requireDeterminateOrganicResult("DataForSEO", candidateDecision);
   const checkedAt = new Date();
 
   return {
     billingUnits: 1,
+    ...(input.captureProviderResponse ? { providerResponse: redactProviderResponse(data) } : {}),
     checkedAt,
     costCents: dataForSeoResponseCostCents(data),
     position: decision.position,
     rankingUrl: decision.rankingUrl,
     raw: {
-      ...dataForSeoRawPayload(resolution.candidates, decision),
+      ...dataForSeoRawPayload(resolution.candidates, decision, data),
       ...(resolution.resolutions.some((row) => row.status !== "not_redirect")
         ? { redirect_resolutions: resolution.resolutions }
         : {}),
@@ -191,7 +198,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       completeness:
         stopOnMatch && decision.outcome === "match"
           ? "truncated_by_stop_on_match"
-          : stopOnMatch || partial
+          : stopOnMatch || partial || decision.outcome === "indeterminate"
             ? "unknown"
             : "complete",
       configuredScope: {

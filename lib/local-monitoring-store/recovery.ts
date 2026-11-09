@@ -1,7 +1,11 @@
+import { queueLocalRunUsage } from "@/lib/analytics/local-run-usage";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
-import { applySubmissionEvent } from "@/lib/local-monitoring/submission-state";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import {
+  applySubmissionEvent,
+  submissionSettlementReceipt,
+} from "@/lib/local-monitoring/submission-state";
 import { executionTargetSchema } from "@/lib/local-monitoring/target-key";
 import {
   type LocalAcceptanceProofPort,
@@ -116,6 +120,16 @@ export async function reconcileLocalMeasurementItem(
     return { record, financialState: await localCanonicalFinancialState(tx, original.id) };
   });
   const record = settled.record;
+  try {
+    if (settled.financialState === "settled")
+      queueLocalRunUsage(
+        retained.scope.project.id,
+        retained.run.id,
+        submissionSettlementReceipt(record),
+      );
+  } catch {
+    // Analytics cannot change recovery.
+  }
   return {
     status: record.pendingReconciliationReason
       ? ("pending_reconciliation" as const)

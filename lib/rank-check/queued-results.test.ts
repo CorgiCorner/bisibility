@@ -116,6 +116,8 @@ const mocks = vi.hoisted(() => {
     makeTask("failure", "provider_failed", "one task was rejected"),
   ];
   const prisma = {
+    providerResponseCapture: { create: vi.fn(async () => ({})) },
+    providerConnection: { findFirst: vi.fn(async () => ({ projectId: "project_1" })) },
     $queryRaw: vi.fn(
       async (
         query: { strings?: string[]; values?: unknown[] } | TemplateStringsArray,
@@ -1014,6 +1016,10 @@ describe("queued result persistence", () => {
             costCents: 0.12,
             observation: { completeness: "unknown" },
             raw: {
+              provider_response: expect.objectContaining({
+                status_code: 20000,
+                tasks: expect.any(Array),
+              }),
               organic_results: expect.arrayContaining([
                 expect.objectContaining({ domain: "other.test" }),
               ]),

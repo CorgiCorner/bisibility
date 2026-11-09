@@ -43,11 +43,11 @@ type ConnectProviderInput = z.infer<typeof connectProviderActionSchema>;
 type ProviderSettingsInput = z.infer<typeof providerSettingsSchema>;
 type ProviderMutationContext = {
   actorId: string | null;
+  analyticsTrigger?: "manual" | "api";
   projectId: string;
   projectPublicId?: string;
 };
 type ProviderMutationClient = Prisma.TransactionClient;
-
 function wakeTrafficFirstSyncWorker() {
   void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
 }
@@ -69,15 +69,14 @@ function findConnection(
     where: { projectId_provider: { projectId, provider: providerId } },
   });
 }
-
 export async function connectProviderConnection(
   input: ConnectProviderInput,
   context: ProviderMutationContext,
   options: { restoreStoredCredentials?: boolean; activateStoredCredentials?: boolean } = {},
+  onCommitted?: () => void,
 ) {
   const item = providerCatalogItem(input.providerId);
   const stored = await findConnection(context.projectId, item.id);
-  // Only the explicit reactivation action may probe an inactive retained key.
   if (
     options.restoreStoredCredentials &&
     (stored?.credentialSource !== "hosted" ||
@@ -94,6 +93,7 @@ export async function connectProviderConnection(
   });
   const verification = await verifyProviderConnectionBeforeSave({
     credentials,
+    analytics: { actorId: context.actorId, trigger: context.analyticsTrigger ?? "manual" },
     hasStoredCredentials:
       stored?.credentialSource !== "hosted" && Boolean(stored?.credentialsEncrypted),
     projectId: context.projectId,
@@ -104,7 +104,6 @@ export async function connectProviderConnection(
       ? encryptSecret(JSON.stringify(credentials))
       : undefined;
   const cost = input.costPerCheck === undefined ? null : dollarsToCents(input.costPerCheck);
-
   const writeConnection = async (client: ProviderMutationClient) => {
     await lockProjectForProviderMutation(client, context.projectId);
     const before = await findConnection(context.projectId, item.id, client);
@@ -226,19 +225,23 @@ export async function connectProviderConnection(
       shouldWake: "firstSyncRequestedAt" in firstSyncIntent,
     };
   };
-
   const result = await prisma.$transaction(writeConnection);
+  onCommitted?.();
   if (result.shouldWake) wakeTrafficFirstSyncWorker();
   if (item.id === "ahrefs" && result.connection.enabled) {
-    // Saving a connection succeeds even if its separate initial measurement is unavailable.
-    await collectInitialDomainRating(context.projectId).catch(() => undefined);
+    await collectInitialDomainRating(
+      context.projectId,
+      new Date(),
+      context.actorId,
+      context.analyticsTrigger,
+    ).catch(() => undefined);
   }
   return result.connection;
 }
-
 export async function setProviderSettings(
   input: ProviderSettingsInput,
   context: ProviderMutationContext,
+  onCommitted?: () => void,
 ) {
   const item = providerCatalogItem(input.providerId);
   const result = await prisma.$transaction(async (tx) => {
@@ -290,8 +293,8 @@ export async function setProviderSettings(
       shouldWake: "firstSyncRequestedAt" in firstSyncIntent,
     };
   });
+  onCommitted?.();
   if (result.shouldWake) wakeTrafficFirstSyncWorker();
   return result.connection;
 }
-
 export { disconnectProviderConnection } from "@/lib/api/provider-disconnect";

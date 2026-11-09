@@ -1,3 +1,4 @@
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import type {
   KeywordMetrics,
   RankedKeywordsPage,
@@ -7,6 +8,7 @@ import type {
 import type { SerpDepth } from "@/lib/serp/constants";
 import {
   decideOrganicResult,
+  inspectOrganicCandidates,
   type OrganicResultDecision,
   organicResultNormalization,
 } from "./organic-result-decision";
@@ -227,7 +229,8 @@ export function dataForSeoOrganicDecision(
 
 export function dataForSeoRawPayload(
   items: readonly unknown[] = [],
-  decision: Exclude<OrganicResultDecision, { outcome: "indeterminate" }>,
+  decision: OrganicResultDecision,
+  providerResponse?: unknown,
 ): SerpRawPayload {
   const features = new Set<string>();
   for (const value of items) {
@@ -237,8 +240,21 @@ export function dataForSeoRawPayload(
     }
   }
   return {
-    normalization: organicResultNormalization(decision),
-    organic_results: decision.organicResults,
+    ...(providerResponse === undefined
+      ? {}
+      : { provider_response: redactProviderResponse(providerResponse) }),
+    ...(decision.outcome === "indeterminate"
+      ? {}
+      : { normalization: organicResultNormalization(decision) }),
+    organic_results:
+      decision.outcome === "indeterminate"
+        ? inspectOrganicCandidates(
+            items.flatMap((item) => {
+              const candidate = organicCandidate(item);
+              return candidate ? [candidate] : [];
+            }),
+          )
+        : decision.organicResults,
     ...(features.size ? { serp_features: [...features] } : {}),
   };
 }

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { LocalReportCard } from "./LocalReportCard";
 import { localStoryReport } from "./test-fixtures";
@@ -22,7 +22,9 @@ describe("Local report summary consumer", () => {
     expect(screen.getByText("50%")).toBeVisible();
     expect(screen.getByText("2")).toBeVisible();
     expect(container.querySelector("time")).toHaveAttribute("datetime", localStoryReport.asOf);
-    expect(screen.getByText("comparisonUnavailable")).toBeVisible();
+    expect(screen.queryByText("scopeHelp")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "details" }));
+    expect(screen.getByText("comparisonHelp")).toBeVisible();
   });
   it("preserves unknown and zero as different states", () => {
     render(
@@ -32,6 +34,7 @@ describe("Local report summary consumer", () => {
     );
     expect(screen.getByText("0%")).toBeVisible();
     expect(screen.getByText("unknown")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "details" }));
     expect(screen.getByText("freshnessUnknown")).toBeVisible();
   });
 });

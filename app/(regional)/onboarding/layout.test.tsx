@@ -56,7 +56,11 @@ vi.mock("@/components/i18n/FeatureMessagesProvider", () => ({
   FeatureMessagesProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { renderSupportWidget: mocks.supportWidget },
+  appExtensions: {
+    guardAccountSurface: vi.fn().mockResolvedValue(undefined),
+    renderAccountDeletionSlot: async (children: unknown) => children,
+    renderSupportWidget: mocks.supportWidget,
+  },
 }));
 vi.mock("@/lib/deployment/deployment", () => ({
   get isCloud() {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { recordUserActivity } from "@/lib/activity/record-extension";
 import { type ApiAuth, ApiAuthError, authenticateBearer } from "@/lib/api/auth";
 import { checkRateLimit, rateLimitExceeded } from "@/lib/api/ratelimit";
 import { errorResponse, methodNotAllowed } from "@/lib/api/responses";
@@ -65,18 +66,29 @@ async function authenticateMcpRequest(req: Request, signal: AbortSignal) {
     authorization = oauth.auth;
   }
 
+  const user = auth.kind === "personal_token" ? auth.user : null;
+  if (user)
+    recordUserActivity({
+      userId: user.id,
+      email: user.email,
+      channel: "mcp",
+      kind: "seen",
+      interactive: true,
+    });
   const identity =
     auth.kind === "personal_token"
-      ? ({ id: auth.token.id, kind: "personal-token" } as const)
-      : ({ id: auth.apiKey.id, kind: "api-key" } as const);
+      ? ({ id: auth.token.id, kind: "personal-token", ownerId: auth.user.id } as const)
+      : ({ id: auth.apiKey.id, kind: "api-key", ownerId: auth.project.ownerId } as const);
   setRequestFailureStage("rate_limit");
   const limit = await awaitWithSignal(() => checkRateLimit(req, identity), signal);
+  if (limit.accountScoped) authorization = auth;
   if (!limit.success) {
     return { response: rateLimitExceeded(limit) };
   }
 
   return {
     authorization,
+    user,
     oauthClientId: auth.kind === "personal_token" ? auth.oauthClientId : undefined,
   };
 }
@@ -110,6 +122,7 @@ export async function handleMcpHttpRequest(req: Request) {
           setRequestFailureStage("server_create");
           const server = createBisibilityMcpServer({
             authorization: auth.authorization,
+            activityUser: auth.user,
             clientHeader: req.headers.get("x-bisibility-client") ?? undefined,
           });
           const transport = new WebStandardStreamableHTTPServerTransport({

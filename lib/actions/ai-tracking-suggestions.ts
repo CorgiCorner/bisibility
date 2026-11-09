@@ -1,5 +1,6 @@
 "use server";
 import { paymentFailure } from "@/lib/action-payment/session";
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import type { TrackingGenerationActionResult } from "@/lib/ai-tracking/projections/generation-result";
 import {
   generateModelSuggestions,
@@ -101,6 +102,7 @@ export async function generateAiTrackingSuggestionsAction(
       { projectId: project.id, actorId: actor.id, origin: { source: "app" } },
       { ...(input as object), requirePayment: true },
       idempotencyKey,
+      () => recordAppAction(actor),
     );
     await auditTrackingGeneration(actor, project, result.generationId);
     return result;

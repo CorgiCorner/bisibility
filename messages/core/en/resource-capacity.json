@@ -1,0 +1,15 @@
+{
+  "resourceCapacity": {
+    "resource": "Resource",
+    "projects": "projects",
+    "scheduledKeywords": "scheduled keywords",
+    "scheduleFrequencies": "schedule frequency",
+    "trackedPrompts": "tracked prompts",
+    "promptSchedules": "prompt schedule frequency",
+    "competitorsPerProject": "competitors per project",
+    "alertRulesAndWebhooks": "alert rules and webhooks",
+    "usage": "{used} used of {limit}. Requested: {requested}.",
+    "crawlPagesPerCrawl": "pages per crawl",
+    "concurrentCrawls": "concurrent crawls"
+  }
+}

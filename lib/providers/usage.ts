@@ -2,6 +2,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { WeeklyRequestCapError } from "@/lib/operations/weekly-request-error";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
 import type { CapabilityScope, RecoveryAdmissionReason } from "./account-health/types";
 import { ProviderCostLimitError } from "./cost-limit";
@@ -67,6 +68,18 @@ export class ProviderRecoveryAdmissionError extends ProviderUsagePersistenceErro
   }
 }
 
+/** Typed admission refusals are retryable only after unsent work has been cancelled. */
+export function isProviderAdmissionRefusal(cause: unknown) {
+  return (
+    cause instanceof ProviderCostLimitError ||
+    cause instanceof WeeklyRequestCapError ||
+    cause instanceof ProviderRecoveryAdmissionError ||
+    cause instanceof DeploymentAdmissionExhaustedError ||
+    cause instanceof BudgetExhaustedError ||
+    cause instanceof ProviderAllocationExhaustedError
+  );
+}
+
 async function settleUsage(
   observer: ProviderUsageObserver | undefined,
   attemptId: string | undefined,
@@ -82,6 +95,7 @@ async function settleUsage(
 
 export async function readObservedResponse<T>(input: {
   observer?: ProviderUsageObserver;
+  captureResponse?: (status: number, body: unknown, url?: string) => Promise<void>;
   request: () => Promise<Response>;
   providerRequest?: ProviderRequest;
   dispatch?: (request: PricedRequest) => Promise<Response>;
@@ -117,6 +131,8 @@ export async function readObservedResponse<T>(input: {
   } catch (cause) {
     if (attemptId) {
       try {
+        if (cause instanceof WeeklyRequestCapError && !input.observer?.cancel)
+          throw new Error("Weekly refusal requires confirmed unsent cancellation");
         await input.observer?.cancel?.(attemptId);
       } catch (cancelCause) {
         throw new ProviderUsagePersistenceError({
@@ -126,14 +142,7 @@ export async function readObservedResponse<T>(input: {
         });
       }
     }
-    if (
-      cause instanceof ProviderCostLimitError ||
-      cause instanceof ProviderRecoveryAdmissionError ||
-      cause instanceof DeploymentAdmissionExhaustedError ||
-      cause instanceof BudgetExhaustedError ||
-      cause instanceof ProviderAllocationExhaustedError
-    )
-      throw cause;
+    if (isProviderAdmissionRefusal(cause)) throw cause;
     throw new ProviderUsagePersistenceError({
       cause,
       phase: "admission",
@@ -167,6 +176,8 @@ export async function readObservedResponse<T>(input: {
     }
     throw cause;
   }
+  const archiveCopy =
+    input.observer?.observeResponse || input.captureResponse ? response.clone() : null;
   let data: T | null = null;
   let bodyFailure: unknown;
   try {
@@ -174,12 +185,16 @@ export async function readObservedResponse<T>(input: {
   } catch (cause) {
     bodyFailure = cause;
   }
+  const nativeBody = bodyFailure && archiveCopy ? await archiveCopy.text().catch(() => null) : data;
   try {
-    await input.observer?.observeResponse?.(response.status, data, attemptId);
+    await input.observer?.observeResponse?.(response.status, nativeBody, attemptId);
   } catch (cause) {
     throw new ProviderUsagePersistenceError({ cause, phase: "settlement", attemptId });
   }
-  if (!attemptId && !input.requireMeasuredUsage) return { data, response };
+  if (!attemptId && !input.requireMeasuredUsage) {
+    await input.captureResponse?.(response.status, nativeBody, response.url);
+    return { data, response };
+  }
   let receipt: ProviderUsageReceipt;
   try {
     receipt = input.measure(data, response);
@@ -193,6 +208,8 @@ export async function readObservedResponse<T>(input: {
     throw new ProviderUsagePersistenceError({ cause, phase: "measurement", attemptId });
   }
   await settleUsage(input.observer, attemptId, receipt);
+  if (!input.observer?.observeResponse)
+    await input.captureResponse?.(response.status, nativeBody, response.url);
   if (
     (attemptId || input.requireMeasuredUsage) &&
     (receipt.costCents === null || receipt.quantity === null)

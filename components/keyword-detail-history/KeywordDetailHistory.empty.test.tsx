@@ -30,13 +30,13 @@ describe("empty recorded history", () => {
         timeZone="UTC"
       />,
     );
-    const observations = screen.getByRole("table", { name: "Recorded observations" });
+    const observations = screen.getByRole("table", { name: "Ranking history" });
     expect(
       within(observations).getByRole("heading", { name: "No observations in this period" }),
     ).toBeVisible();
     expect(within(observations).getAllByRole("row")[0]).not.toHaveClass("border-b-0");
-    fireEvent.click(screen.getByRole("radio", { name: "Attempts" }));
-    const attempts = screen.getByRole("table", { name: "Recorded logical attempts" });
+    fireEvent.click(screen.getByRole("radio", { name: "Check log" }));
+    const attempts = screen.getByRole("table", { name: "Check log" });
     expect(
       within(attempts).getByRole("heading", { name: "No check attempts in this period" }),
     ).toBeVisible();

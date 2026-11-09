@@ -96,6 +96,7 @@ function revalidateNotificationPreferenceViews() {
 export async function applyNotificationPreferences(
   actor: Actor,
   data: NotificationPreferencesForm,
+  onCommitted?: () => void,
 ) {
   data = notificationPreferencePatchSchema.parse(data);
   const project = await requireProjectScope(actor, "update", data.projectId, {
@@ -130,6 +131,7 @@ export async function applyNotificationPreferences(
     .catch((cause: unknown) => {
       throw new PreferenceWriteError(cause);
     });
+  onCommitted?.();
   try {
     revalidateNotificationPreferenceViews();
   } catch (cause) {

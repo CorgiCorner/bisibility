@@ -1,14 +1,14 @@
 "use server";
-
+import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { validateInspectionMode } from "@/lib/presence/budget-mode";
-import { projectInspectionBudgetSchema, projectSearchSyncSchema } from "@/lib/schemas/project";
-import { replanActiveGscBackfill } from "@/lib/search-insights/sync/backfill-plan";
+import { projectInspectionBudgetSchema } from "@/lib/schemas/project";
 import {
   projectDefaultsConfig,
   publicProjectDefaults,
 } from "@/lib/settings/project-defaults-config";
+import { saveSearchSyncSettings } from "@/lib/settings/search-sync-save";
 import {
   getActionActor,
   parseActionInput,
@@ -39,6 +39,7 @@ export async function updatePresenceInspectionBudget(input: unknown) {
     where: { projectId: project.id },
   });
 
+  recordAppAction(actor);
   await writeAudit({
     action: "settings.presence_inspection_budget.update",
     actorId: actor.id,
@@ -49,42 +50,12 @@ export async function updatePresenceInspectionBudget(input: unknown) {
     targetType: "project_defaults",
   });
   revalidateSettingsViews();
-  return publicProjectDefaults(defaults, project.publicId);
+  const actionResult = await publicProjectDefaults(defaults, project.publicId);
+
+  return actionResult;
 }
 
 export async function updateSearchSyncSettings(input: unknown) {
-  const data = parseActionInput(projectSearchSyncSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "project_defaults",
-  });
-  const before = await prisma.projectDefaults.findUnique({ where: { projectId: project.id } });
-  const defaults = await prisma.$transaction(async (tx) => {
-    // Lock and re-plan the import before touching project defaults. Initial planning uses the
-    // same import-to-defaults order, so concurrent saves cannot form a database lock cycle.
-    await replanActiveGscBackfill(
-      { projectId: project.id, retentionMonths: data.retentionMonths },
-      tx,
-    );
-    return tx.projectDefaults.upsert({
-      create: {
-        projectId: project.id,
-        searchSyncImportMonths: data.retentionMonths,
-        searchSyncPace: data.pace,
-      },
-      update: { searchSyncImportMonths: data.retentionMonths, searchSyncPace: data.pace },
-      where: { projectId: project.id },
-    });
-  });
-  await writeAudit({
-    action: "settings.search_data_sync.update",
-    actorId: actor.id,
-    after: projectDefaultsConfig(defaults),
-    before: before ? projectDefaultsConfig(before) : null,
-    projectId: project.id,
-    targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
-    targetType: "project_defaults",
-  });
-  revalidateSettingsViews();
-  return publicProjectDefaults(defaults, project.publicId);
+  const result = await saveSearchSyncSettings(input, (actor) => recordAppAction(actor));
+  return result.value;
 }

@@ -25,6 +25,7 @@ export default async function AppLayout({ children }: Readonly<AppLayoutProps>) 
   preload(FLAG_SPRITE_URL, { as: "image", type: "image/svg+xml" });
   await redirectToSetupIfFirstRun();
   const session = await requireSession();
+  await appExtensions.guardAccountSurface(session.user.id);
   const demo = readDemoConfig();
   const isDemo = demo.kind !== "disabled";
   const quizDecorated = isDemo

@@ -1,92 +1,97 @@
 "use client";
+import { AdminTableState, useAdminSelection } from "@/components/admin/AdminTableState";
+import { useRecoveryBatch } from "@/components/admin/pages/useRecoveryBatch";
 import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import {
-  commitRecoveryAction,
-  getRecoveryCommandAction,
-  loadRecoveryPageAction,
-  previewRecoveryAction,
-} from "@/lib/actions/metering-recovery";
+import { loadRecoveryPageAction } from "@/lib/actions/metering-recovery";
 import type {
-  RecoveryCase,
   RecoveryFilters,
   RecoveryPage,
-  RecoveryPreview,
   RecoveryUiError,
 } from "@/lib/metering/recovery/contract";
 import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useContext, useState, useTransition } from "react";
 import { RecoveryDetails } from "./RecoveryDetails";
+import { RecoveryLoadFallback } from "./RecoveryLoadFallback";
 import { RecoveryPartialEvidence } from "./RecoveryPartialEvidence";
 import { RecoveryPreviewDialog } from "./RecoveryPreviewDialog";
 import { RecoverySummary } from "./RecoverySummary";
 import { RecoveryTable } from "./RecoveryTable";
+import { type RecoveryConsoleProps, useRecoverySelection } from "./useRecoverySelection";
 
-export function AdminRecoveryConsole({ initial }: { initial: RecoveryPage | null }) {
+export function AdminRecoveryConsole({ initial, filters, onNavigate }: RecoveryConsoleProps) {
   const [client] = useState(() => new QueryClient());
   const [loaded, setLoaded] = useState(initial);
   const [loading, startLoad] = useTransition();
-  const t = useTranslations("instanceAdmin.recovery");
+  const available = initial ?? loaded;
   return (
     <QueryClientProvider client={client}>
-      {loaded ? (
-        <RecoveryConsole initial={loaded} />
+      {available ? (
+        <RecoveryConsole initial={available} initialFilters={filters} onNavigate={onNavigate} />
       ) : (
-        <div className="grid gap-3">
-          <p role="status">{t("unavailable")}</p>
-          <Button
-            disabled={loading}
-            onClick={() =>
-              startLoad(async () => {
-                const result = await loadRecoveryPageAction({});
-                if (result.ok) setLoaded(result.value);
-              })
-            }
-          >
-            {t("refresh")}
-          </Button>
-        </div>
+        <RecoveryLoadFallback
+          loading={loading}
+          onLoad={() =>
+            startLoad(async () => {
+              const result = await loadRecoveryPageAction({});
+              if (result.ok) setLoaded(result.value);
+            })
+          }
+        />
       )}
     </QueryClientProvider>
   );
 }
-function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
+function RecoveryConsole({
+  initial,
+  initialFilters,
+  onNavigate,
+}: {
+  initial: RecoveryPage;
+  initialFilters?: RecoveryFilters;
+  onNavigate?: RecoveryConsoleProps["onNavigate"];
+}) {
   const t = useTranslations("instanceAdmin.recovery"),
     [busy, start] = useTransition();
-  const [page, setPage] = useState(initial),
-    [filters, setFilters] = useState<RecoveryFilters>({ category: "all" });
-  const [selected, setSelected] = useState<string[]>([]),
-    [detail, setDetail] = useState<RecoveryCase | null>(null);
-  const [preview, setPreview] = useState<RecoveryPreview | null>(null),
-    [requestId, setRequestId] = useState<string | null>(null);
-  const [commandId, setCommandId] = useState<string | null>(null),
-    [error, setError] = useState<RecoveryUiError | null>(null);
-  const selectCase = useCallback((token: string, checked: boolean) => {
-    setSelected((previous) =>
-      checked
-        ? previous.includes(token) || previous.length >= MAX_RECOVERY_BATCH
-          ? previous
-          : [...previous, token]
-        : previous.filter((value) => value !== token),
-    );
-  }, []);
-  const command = useQuery({
-    queryKey: ["admin-recovery-command", commandId],
-    enabled: commandId !== null,
-    queryFn: () => getRecoveryCommandAction(commandId ?? ""),
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      return (data?.ok && ["completed", "failed"].includes(data.value.state)) ||
-        (data?.ok === false && (data.code === "forbidden" || query.state.dataUpdateCount >= 10))
-        ? false
-        : 3000;
+  const [localPage, setPage] = useState(initial),
+    [localFilters, setFilters] = useState<RecoveryFilters>(initialFilters ?? { category: "all" });
+  const page = onNavigate ? initial : localPage;
+  const filters = onNavigate ? (initialFilters ?? { category: "all" }) : localFilters;
+  const [selected, setSelected] = useAdminSelection();
+  const [detail, setDetail] = useRecoverySelection(page.rows);
+  const route = useContext(AdminTableState);
+  const batch = useRecoveryBatch(
+    route
+      ? {
+          batch: route.get("batch"),
+          command: route.get("command"),
+          update: route.update,
+        }
+      : undefined,
+  );
+  const { preview, command } = batch;
+  const [error, setError] = useState<RecoveryUiError | null>(null);
+  const selectCase = useCallback(
+    (token: string, checked: boolean) => {
+      setSelected((previous) =>
+        checked
+          ? previous.includes(token) || previous.length >= MAX_RECOVERY_BATCH
+            ? previous
+            : [...previous, token]
+          : previous.filter((value) => value !== token),
+      );
     },
-  });
+    [setSelected],
+  );
   function load(next: RecoveryFilters = filters) {
+    if (onNavigate) {
+      onNavigate(next);
+      return;
+    }
     start(async () => {
       const result = await loadRecoveryPageAction(next);
       if (result.ok) {
@@ -99,41 +104,15 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
     });
   }
   function plan() {
-    start(async () => {
-      const result = await previewRecoveryAction({ caseTokens: selected });
-      if (result.ok) {
-        setPreview(result.value);
-        setRequestId(crypto.randomUUID());
-        setError(null);
-      } else setError(result.code);
-    });
+    batch.onPreview(selected);
   }
   function commit() {
-    if (!preview || !requestId) return;
-    const token = preview.token,
-      id = requestId;
+    if (!preview) return;
     start(async () => {
-      try {
-        const result = await commitRecoveryAction({
-          previewToken: token,
-          commandId: id,
-        });
-        if (result.ok) {
-          setCommandId(id);
-          setPreview(null);
-          setSelected([]);
-          setError(null);
-        } else {
-          if (result.code === "unavailable") setCommandId(id);
-          else setPreview(null);
-          setError(result.code);
-        }
-      } catch {
-        setCommandId(id);
-        setError("unavailable");
-      }
+      if (await batch.onConfirm(preview)) setSelected([]);
     });
   }
+  const activeError = batch.batchErrorCode ?? error;
   return (
     <section className="grid min-w-0 gap-5" aria-label={t("heading")}>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -204,41 +183,34 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
           <InfoTooltip text={t("batchLimit", { count: MAX_RECOVERY_BATCH })} />
         </div>
       </div>
-      {error && !preview && (
+      {activeError && !preview && (
         <p role="alert" className="text-sm text-danger">
-          {t(`errors.${error}`)}
+          {t(`errors.${activeError}`)}
         </p>
       )}
-      {command.data?.ok === false && (
+      {batch.commandError && (
         <div className="grid gap-2">
           <p role="status" className="text-sm text-fg-muted">
-            {t(`errors.${command.data.code}`)}
+            {batch.commandError}
           </p>
-          <Button
-            variant="secondary"
-            disabled={command.isFetching}
-            onClick={() => void command.refetch()}
-          >
+          <Button variant="secondary" disabled={batch.busy} onClick={batch.onRetryCommand}>
             {t("refresh")}
           </Button>
         </div>
       )}
-      {command.data?.ok && (
+      {command && (
         <div role="status" className="rounded-xl border border-border p-4 text-sm">
-          <p>{t(`commandStates.${command.data.value.state}`)}</p>
+          <p>{t(`commandStates.${command.state}`)}</p>
           <p className="mt-1 text-fg-muted">
             {t("outcomes", {
-              queued: command.data.value.outcomes.filter((item) => item.status === "queued").length,
-              unchanged: command.data.value.outcomes.filter((item) => item.status === "unchanged")
-                .length,
-              recovered: command.data.value.outcomes.filter((item) => item.status === "recovered")
-                .length,
-              failed: command.data.value.outcomes.filter((item) => item.status === "failed").length,
-              skipped: command.data.value.outcomes.filter((item) => item.status === "skipped")
-                .length,
+              queued: command.outcomes.filter((item) => item.status === "queued").length,
+              unchanged: command.outcomes.filter((item) => item.status === "unchanged").length,
+              recovered: command.outcomes.filter((item) => item.status === "recovered").length,
+              failed: command.outcomes.filter((item) => item.status === "failed").length,
+              skipped: command.outcomes.filter((item) => item.status === "skipped").length,
             })}
           </p>
-          {["completed", "failed"].includes(command.data.value.state) && (
+          {["completed", "failed"].includes(command.state) && (
             <Button variant="secondary" onClick={() => load()}>
               {t("refresh")}
             </Button>
@@ -276,9 +248,9 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
       <RecoveryDetails row={detail} onClose={() => setDetail(null)} onSaved={() => load()} />
       <RecoveryPreviewDialog
         preview={preview}
-        error={error}
-        busy={busy}
-        onClose={() => setPreview(null)}
+        error={batch.batchErrorCode ?? error}
+        busy={busy || batch.busy}
+        onClose={batch.onClearPreview}
         onCommit={commit}
       />
     </section>

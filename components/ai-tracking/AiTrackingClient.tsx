@@ -1,4 +1,8 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const mutateAiTrackingAction = capacityActionClient(mutateAiTrackingActionCapacityAction);
+
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import {
   aiTrackingRunAction,
@@ -7,7 +11,7 @@ import {
   getAiTrackingSamplesAction,
   getAiTrackingTrendsAction,
   launchAiTrackingAction,
-  mutateAiTrackingAction,
+  mutateAiTrackingAction as mutateAiTrackingActionCapacityAction,
   previewAiTrackingAction,
   suggestAiTrackingPromptsAction,
 } from "@/lib/actions/ai-tracking";

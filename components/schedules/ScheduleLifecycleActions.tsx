@@ -1,8 +1,8 @@
 "use client";
-
 import { Button } from "@/components/ui/Button";
 import { RowActionsMenu } from "@/components/ui/RowActionsMenu";
 import { useToast } from "@/components/ui/toast-context";
+import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -20,6 +20,7 @@ export async function scheduleLifecycleRequest(
   });
   if (!response.ok) {
     const problem = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+    publishCapacityProblem(problem);
     if (typeof problem?.detail === "string") {
       throw new Error(problem.detail);
     }

@@ -26,6 +26,7 @@ export type CrawlBudget = {
   requests: number;
   origin: string;
   signal: AbortSignal;
+  maxRequests?: number;
   disallowed?: (url: URL) => boolean | Promise<boolean>;
 };
 
@@ -122,7 +123,8 @@ export async function fetchAuditPage(
       throw new AuditRobotsDisallowedError(current.href);
     if (now() >= budget.deadline || budget.signal.aborted)
       throw new Error("Audit time limit reached.");
-    if (budget.requests >= MAX_REQUESTS) throw new Error("Audit request limit reached.");
+    if (budget.requests >= (budget.maxRequests ?? MAX_REQUESTS))
+      throw new Error("Audit request limit reached.");
     // The timeout covers DNS and the pinned request. The audit never enables the webhook private-network escape hatch.
     const signal = AbortSignal.any([
       budget.signal,
@@ -163,7 +165,7 @@ export async function fetchAuditPage(
       if (
         response.status === 429 &&
         retries === 0 &&
-        budget.requests < MAX_REQUESTS &&
+        budget.requests < (budget.maxRequests ?? MAX_REQUESTS) &&
         delay < budget.deadline - now()
       ) {
         await response.body?.cancel();

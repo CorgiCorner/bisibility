@@ -17,6 +17,7 @@ vi.mock("@/lib/providers/crypto", () => ({
 }));
 
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { unwrapCapacityResult } from "@/lib/capacity/action";
 import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { completeProjectOnboarding, createProject, updateProjectDefaults } from "./project";
@@ -431,16 +432,18 @@ describe("project actions", () => {
       "alerts deeper than 20 will not fire. Affected alerts: Top 50.",
     );
 
-    const result = await updateProjectDefaults({
-      country: "DE",
-      cronExpression: null,
-      device: "mobile",
-      frequency: "weekly",
-      jitterMinutes: 30,
-      projectId: PROJECT_PUBLIC_ID,
-      serpDepth: 20,
-      timezone: "Europe/Berlin",
-    });
+    const result = unwrapCapacityResult(
+      await updateProjectDefaults({
+        country: "DE",
+        cronExpression: null,
+        device: "mobile",
+        frequency: "weekly",
+        jitterMinutes: 30,
+        projectId: PROJECT_PUBLIC_ID,
+        serpDepth: 20,
+        timezone: "Europe/Berlin",
+      }),
+    );
 
     if (result.kind !== "saved") throw new Error("Reviewed writer fixture must save.");
     expect(result.warning).toContain("Affected alerts: Top 50");

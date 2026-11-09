@@ -76,8 +76,8 @@
       "modeLabel": "Modo:",
       "countryAria": "País",
       "countryHelp": "Por defecto, el país en el que más haces seguimiento",
-      "clickstream": "Volúmenes de clickstream",
-      "clickstreamHelp": "Volúmenes corregidos con datos de navegación de usuarios reales, no solo con estimaciones de Google Ads. Cuesta cerca del doble por búsqueda.",
+      "clickstream": "Volumen de búsqueda ajustado con clickstream",
+      "clickstreamHelp": "Estima las búsquedas mensuales y separa variantes similares con datos de clickstream.",
       "pricing": "¿Cómo se calcula el precio?",
       "button": "{researching, select, true {Investigando} other {Investigar}}{cached, select, true { gratis, en caché} other {}}{cost, select, none {} other { {cost}}}",
       "seedHelp": "Pulsa Enter o coma después de cada palabra clave. Hasta 5 palabras clave."

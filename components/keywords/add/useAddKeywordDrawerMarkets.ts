@@ -1,8 +1,11 @@
 "use client";
+import { capacityActionClient } from "@/lib/capacity/action";
+
+const createProjectMarket = capacityActionClient(createProjectMarketAction);
 
 import type { NewMarketCreatorProps } from "@/components/markets/sheet/NewMarketCreator";
 import type { NewMarketScheduleOption } from "@/components/markets/sheet/NewMarketSchedule";
-import { createProjectMarket } from "@/lib/actions/project-market-create";
+import { createProjectMarket as createProjectMarketAction } from "@/lib/actions/project-market-create";
 import type { NewMarketCreateResult } from "@/lib/markets/create-input";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";

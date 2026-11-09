@@ -1,4 +1,4 @@
-import { AdminSectionLoading } from "@/components/admin/AdminSectionLoading";
+import { AdminPageLoading } from "@/components/admin/pages/AdminPageLoading";
 export default function Loading() {
-  return <AdminSectionLoading section="audit" />;
+  return <AdminPageLoading view="Audit" />;
 }

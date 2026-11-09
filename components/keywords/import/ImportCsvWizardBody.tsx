@@ -1,15 +1,12 @@
-import type {
-  importKeywordsFromCsv,
-  reviewKeywordImport,
-} from "@/lib/actions/keyword-import-export";
+import type { reviewKeywordImport } from "@/lib/actions/keyword-import-export";
 import type {
   KeywordImportColumnMapping,
   KeywordImportField,
   KeywordImportSourceColumn,
 } from "@/lib/keywords/import-csv-parser";
 import { DoneStep, MapStep, ReviewStep, TemplateStep, UploadStep } from "./ImportCsvWizardPanels";
+import type { ImportResult } from "./import-csv-wizard-model";
 
-type ImportResult = Awaited<ReturnType<typeof importKeywordsFromCsv>>;
 type ImportReview = Awaited<ReturnType<typeof reviewKeywordImport>>;
 
 type ImportCsvWizardBodyProps = {

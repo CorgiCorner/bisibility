@@ -40,6 +40,7 @@ export async function getQueryActorForSession(session: AuthSession): Promise<Act
 
   return {
     id: session.user.id,
+    email: session.user.email,
     memberships: user.memberships,
     role: user.role,
   };

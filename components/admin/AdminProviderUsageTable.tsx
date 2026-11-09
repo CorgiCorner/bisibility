@@ -5,17 +5,17 @@ import {
   adminProviderUsageRows,
 } from "@/components/admin/admin-provider-table-columns";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import type { InstanceAdminDashboard } from "@/lib/instance-admin/dashboard-types";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useAdminTableSort } from "./AdminTableState";
 
 export function AdminProviderUsageTable({
   usage,
 }: Readonly<{ usage: InstanceAdminDashboard["stats"]["providerUsage"] }>) {
   const format = useFormatter();
   const t = useTranslations("instanceAdmin.providerUsage");
-  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const [sorting, setSorting] = useAdminTableSort("referenceUsage");
   const rows = useMemo(() => adminProviderUsageRows(usage), [usage]);
   const columns = useMemo(() => adminProviderUsageColumns(t, format), [format, t]);
 

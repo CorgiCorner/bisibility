@@ -1,6 +1,6 @@
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { mergeSnapshotPage } from "@/lib/serp/snapshot-extension";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { RetrievedResultsLadder } from "./RetrievedResultsLadder";
 import { RetrievedResultsOneCheck } from "./RetrievedResultsOneCheck";
@@ -19,8 +19,10 @@ it("renders one rank per row and a missing slot inline, with a precise small-gap
     />,
   );
   expect(screen.getByText("#10 not returned by the provider")).toBeVisible();
-  expect(screen.getByRole("status")).toHaveTextContent("1 of 20 positions was not returned: #10");
-  expect(screen.getByRole("status")).not.toHaveTextContent("Missing competitors may still rank");
+  expect(
+    screen.getByRole("button", { name: /1 of 20 positions was not returned: #10/ }),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: /Missing competitors may still rank/ })).toBeNull();
   expect(within(screen.getByLabelText("Retrieved results")).queryByRole("list")).toHaveProperty(
     "tagName",
     "UL",
@@ -37,9 +39,9 @@ it("retains the stronger warning for a gap above the tracked result", () => {
       formatDate={(date) => date}
     />,
   );
-  expect(screen.getByRole("status")).toHaveTextContent(
-    "Missing competitors may still rank in the Top 20",
-  );
+  expect(
+    screen.getByRole("button", { name: /Missing competitors may still rank in the Top 20/ }),
+  ).toBeVisible();
 });
 it("reports an unloaded overview without blaming the provider", () => {
   const results = { ...fullResults({ aiOverview: true }), aiOverviewContentLoaded: false };
@@ -51,7 +53,10 @@ it("reports an unloaded overview without blaming the provider", () => {
       formatDate={(date) => date}
     />,
   );
-  expect(screen.getByText("AI overview present, content not loaded")).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "AI overview details" }));
+  expect(
+    screen.getByText("An AI overview was recorded, but its text was not saved."),
+  ).toBeVisible();
   expect(screen.queryByText(/provider does not report/)).toBeNull();
 });
 

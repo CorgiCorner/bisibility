@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  SectionChevron,
+  useSectionDisclosure,
+} from "@/components/keyword-detail-history/section-disclosure";
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
@@ -73,6 +77,7 @@ function SearchPerformanceCard({
   query,
   connected,
 }: Readonly<{ query: QueryTraffic; connected: boolean }>) {
+  const { open, toggle } = useSectionDisclosure("search-performance");
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const format = useFormatter();
   const stats: Stat[] = [
@@ -90,6 +95,9 @@ function SearchPerformanceCard({
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>{t("searchPerformance")}</SectionTitle>
         <AnalyticsProviderBadge provider={query.provider} connected={connected} />
+        <span className="ml-auto">
+          <SectionChevron open={open} toggle={toggle} title={t("searchPerformance")} />
+        </span>
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">
         {t("trailingDays", { days: query.windowDays })}
@@ -98,8 +106,12 @@ function SearchPerformanceCard({
           date: format.dateTime(query.date, { dateStyle: "medium", timeZone: "UTC" }),
         })}
       </p>
-      <StatGrid stats={stats} t={t} />
-      <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">{t("gscPositionNote")}</p>
+      <div hidden={!open}>
+        <StatGrid stats={stats} t={t} />
+        <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">
+          {t("gscPositionNote")}
+        </p>
+      </div>
     </Card>
   );
 }
@@ -108,15 +120,22 @@ function SearchPerformanceEmpty({
   connected,
   projectRef,
 }: Readonly<{ connected: boolean; projectRef: string }>) {
+  const { open, toggle } = useSectionDisclosure("search-performance");
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   return (
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>{t("searchPerformance")}</SectionTitle>
         <AnalyticsProviderBadge provider="gsc" connected={connected} />
+        <span className="ml-auto">
+          <SectionChevron open={open} toggle={toggle} title={t("searchPerformance")} />
+        </span>
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("trailingDays", { days: 28 })}</p>
-      <div className="mt-3 rounded-control border border-dashed border-border bg-transparent px-4 py-5">
+      <div
+        hidden={!open}
+        className="mt-3 rounded-control border border-dashed border-border bg-transparent px-4 py-5"
+      >
         {connected ? (
           <>
             <p className="m-0 text-[13.5px] font-medium text-fg">{t("awaitingSync")}</p>
@@ -170,37 +189,43 @@ function LandingPagePerformanceCard({
   pages,
   connectedProviders,
 }: Readonly<{ pages: PageTrafficSnapshotLike[]; connectedProviders: readonly string[] }>) {
+  const { open, toggle } = useSectionDisclosure("landing-performance");
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const format = useFormatter();
   const firstPath = pages[0]?.path ?? "/";
 
   return (
     <Card className="rounded-card" size="lg">
-      <SectionTitle>{t("landingPerformance")}</SectionTitle>
+      <div className="flex items-center justify-between gap-2">
+        <SectionTitle>{t("landingPerformance")}</SectionTitle>
+        <SectionChevron open={open} toggle={toggle} title={t("landingPerformance")} />
+      </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("allTraffic", { path: firstPath })}</p>
-      <div className="mt-3 grid gap-3">
-        {pages.map((page) => (
-          <section
-            className="rounded-control border border-border bg-bg-elev p-3"
-            key={`${page.provider}:${page.path}`}
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <AnalyticsProviderBadge
-                provider={page.provider}
-                connected={connectedProviders.includes(page.provider)}
-              />
-              <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
-              <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-                {t("lastDays", { days: page.windowDays })}
-                {" · "}
-                {t("dataThrough", {
-                  date: format.dateTime(page.date, { dateStyle: "medium", timeZone: "UTC" }),
-                })}
-              </span>
-            </div>
-            <StatGrid stats={optionalPageStats(page, format, t)} t={t} />
-          </section>
-        ))}
+      <div hidden={!open}>
+        <div className="mt-3 grid gap-3">
+          {pages.map((page) => (
+            <section
+              className="rounded-control border border-border bg-bg-elev p-3"
+              key={`${page.provider}:${page.path}`}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <AnalyticsProviderBadge
+                  provider={page.provider}
+                  connected={connectedProviders.includes(page.provider)}
+                />
+                <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
+                <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
+                  {t("lastDays", { days: page.windowDays })}
+                  {" · "}
+                  {t("dataThrough", {
+                    date: format.dateTime(page.date, { dateStyle: "medium", timeZone: "UTC" }),
+                  })}
+                </span>
+              </div>
+              <StatGrid stats={optionalPageStats(page, format, t)} t={t} />
+            </section>
+          ))}
+        </div>
       </div>
     </Card>
   );
@@ -220,6 +245,7 @@ export function KeywordTrafficCard({
   trafficState,
 }: Readonly<KeywordTrafficCardProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
+  const landingDisclosure = useSectionDisclosure("landing-performance");
   const state = trafficState ?? inferredTrafficState(traffic);
   const connectedProviders =
     traffic.connectedProviders ?? (traffic.hasSearchConsoleConnection ? ["gsc"] : []);
@@ -255,23 +281,32 @@ export function KeywordTrafficCard({
           ["ga4", "plausible"].includes(provider),
         ) ? (
         <Card className="rounded-card" size="lg">
-          <SectionTitle>{t("landingPerformance")}</SectionTitle>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {traffic.connectedProviders
-              .filter((provider) => provider !== "gsc")
-              .map((provider) => (
-                <AnalyticsProviderBadge
-                  key={provider}
-                  provider={provider}
-                  connected={connectedProviders.includes(provider)}
-                />
-              ))}
+          <div className="flex items-center justify-between gap-2">
+            <SectionTitle>{t("landingPerformance")}</SectionTitle>
+            <SectionChevron
+              open={landingDisclosure.open}
+              toggle={landingDisclosure.toggle}
+              title={t("landingPerformance")}
+            />
           </div>
-          <p className="mb-0 mt-3 text-[13px] leading-5 text-fg-muted">
-            {traffic.pagePaths?.length
-              ? t("landingEmpty", { path: traffic.pagePaths.join(", ") })
-              : t("landingNeedsUrl")}
-          </p>
+          <div hidden={!landingDisclosure.open}>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {traffic.connectedProviders
+                .filter((provider) => provider !== "gsc")
+                .map((provider) => (
+                  <AnalyticsProviderBadge
+                    key={provider}
+                    provider={provider}
+                    connected={connectedProviders.includes(provider)}
+                  />
+                ))}
+            </div>
+            <p className="mb-0 mt-3 text-[13px] leading-5 text-fg-muted">
+              {traffic.pagePaths?.length
+                ? t("landingEmpty", { path: traffic.pagePaths.join(", ") })
+                : t("landingNeedsUrl")}
+            </p>
+          </div>
         </Card>
       ) : null}
       {!searchFirst ? search : null}

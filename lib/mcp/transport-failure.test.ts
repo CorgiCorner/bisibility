@@ -60,8 +60,14 @@ describe("MCP awaited failure boundary", () => {
     vi.resetAllMocks();
     vi.stubEnv("DSH_PLUGIN_MIN_VERSION", "");
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    mocks.oauth.mockResolvedValue({ auth: { kind: "personal_token", token: { id: "test" } } });
-    mocks.authenticateBearer.mockResolvedValue({ kind: "project_key", apiKey: { id: "test" } });
+    mocks.oauth.mockResolvedValue({
+      auth: { kind: "personal_token", token: { id: "test" }, user: { id: "owner" } },
+    });
+    mocks.authenticateBearer.mockResolvedValue({
+      kind: "project_key",
+      apiKey: { id: "test" },
+      project: { ownerId: "owner" },
+    });
     mocks.limit.mockResolvedValue({ success: true });
     mocks.client.mockResolvedValue({ client: "unknown", inferred: false });
     mocks.createServer.mockReturnValue({ connect: mocks.connect });
@@ -307,4 +313,26 @@ describe("MCP awaited failure boundary", () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(mocks.createServer).not.toHaveBeenCalled();
   });
+  it.each([false, true])(
+    "reuses verified credentials only for the account limiter: %s",
+    async (accountScoped) => {
+      mocks.limit.mockResolvedValue({ success: true, accountScoped });
+      await handleMcpHttpRequest(request(undefined, "bsb_key_example"));
+      const authorization = mocks.createServer.mock.calls[0][0].authorization;
+      expect(authorization).toEqual(
+        accountScoped
+          ? {
+              kind: "project_key",
+              apiKey: { id: "test" },
+              project: { ownerId: "owner" },
+            }
+          : "bsb_key_example",
+      );
+      expect(mocks.limit).toHaveBeenCalledExactlyOnceWith(expect.any(Request), {
+        id: "test",
+        kind: "api-key",
+        ownerId: "owner",
+      });
+    },
+  );
 });

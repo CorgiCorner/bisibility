@@ -1,4 +1,5 @@
 import { handleApiRequest } from "@/lib/api/router";
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { AuditRateLimitError } from "@/lib/site-audit/errors";
 import seoFixture from "@/plugins/bisibility/skills/seo-audit/references/example-report.json";
 import {
@@ -6,6 +7,7 @@ import {
   validateReport,
 } from "@/plugins/bisibility/skills/seo-audit/scripts/validate-report.mjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { errorToolResult, restFailureToolError } from "./result";
 import { dispatchMcpTool } from "./tools";
 import type { JsonObject } from "./types";
 
@@ -23,7 +25,10 @@ const mocks = vi.hoisted(() => ({
   listAudits: vi.fn(),
   readAudit: vi.fn(),
   fetch: vi.fn(),
-  prisma: { project: { findFirst: vi.fn(), findUnique: vi.fn() } },
+  prisma: {
+    project: { findFirst: vi.fn(), findUnique: vi.fn() },
+    instanceSetting: { findUnique: vi.fn(async () => null) },
+  },
 }));
 vi.mock("@/lib/api/auth", () => ({
   ApiAuthError: class extends Error {},
@@ -503,6 +508,50 @@ describe("MCP dispatch through the REST router and research handlers", () => {
       now.mockRestore();
     }
   });
+  it.each(["crawlPagesPerCrawl", "concurrentCrawls"])(
+    "preserves the %s denial from REST through MCP",
+    async (dimension) => {
+      const error = new CapacityLimitError({
+        dimension,
+        limit: 1,
+        used: 1,
+        requested: 1,
+        scope: "account",
+        upgradeUrl: "/pricing",
+      });
+      mocks.runAudit.mockRejectedValue(error);
+      const response = await handleApiRequest(
+        new Request(`https://example.com/api/v1/projects/${projectId}/site-audits`, {
+          method: "POST",
+          body: JSON.stringify({ max_pages: 3 }),
+        }),
+        ["projects", projectId, "site-audits"],
+      );
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body).toMatchObject({ code: "plan_limit_reached", details: error.toJSON() });
+      const result = await dispatchMcpTool(
+        "run_site_audit",
+        { project_id: projectId, max_pages: 3 },
+        "bsb_key_test",
+      );
+      expect(result).toMatchObject({
+        ok: false,
+        status: 403,
+        payload: { code: body.code, details: body.details },
+      });
+      expect(errorToolResult(restFailureToolError(result.payload, result.status))).toMatchObject({
+        isError: true,
+        structuredContent: {
+          error: {
+            code: "plan_limit_reached",
+            message: expect.stringContaining("/pricing"),
+            payload: { details: body.details },
+          },
+        },
+      });
+    },
+  );
   it("keeps saved reports available in read-only mode", async () => {
     auth(["read"], "migration_hold");
     for (const name of ["get_agent_report", "get_site_audit"])

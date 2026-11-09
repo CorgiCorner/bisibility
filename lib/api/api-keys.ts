@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
+import { projectCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
@@ -8,6 +9,7 @@ import { hashApiKey } from "@/lib/providers/crypto";
 import { resolveApiKeyExpiry } from "./api-key-policy";
 import { apiKeyAuditResource } from "./audit-resources";
 import { type ApiContext, notFound } from "./context";
+import { ApiForbiddenError } from "./errors";
 import { scopesForTier } from "./key-scope";
 import { decodeCursor, encodeCursor, parseLimit, splitPage } from "./pagination";
 import { requireApiPublicId } from "./public-id";
@@ -57,6 +59,8 @@ export async function listApiKeys(ctx: ApiContext) {
 }
 
 export async function createApiKey(ctx: ApiContext) {
+  if (!(await projectCapabilityAvailable(ctx.auth.project.id, ctx.actorId)))
+    throw new ApiForbiddenError("Account access is required.");
   const body = await readJsonBody(ctx);
   const data = parseApiInput(apiKeyCreateSchema, objectBody(body));
   const raw = newRawApiKey();

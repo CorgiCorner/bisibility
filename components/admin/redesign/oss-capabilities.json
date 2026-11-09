@@ -1,0 +1,5331 @@
+[
+  {
+    "id": "S001",
+    "tab": "Overview",
+    "capability": "Return to app",
+    "story": "Overview",
+    "proof": {
+      "role": "link",
+      "name": "Back to app"
+    },
+    "status": "COVERED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S002",
+    "tab": "Overview",
+    "capability": "Refresh admin data",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Refresh data"
+    },
+    "status": "COVERED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S003",
+    "tab": "Overview",
+    "capability": "Operations navigation",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Operations"
+    },
+    "status": "COVERED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S004",
+    "tab": "Overview",
+    "capability": "Users navigation",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Users"
+    },
+    "status": "COVERED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S005",
+    "tab": "Overview",
+    "capability": "Audit navigation",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Audit"
+    },
+    "status": "COVERED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S008",
+    "tab": "Overview",
+    "capability": "Operations loading state",
+    "story": "OperationsLoading",
+    "proof": {
+      "role": "button",
+      "name": "Refreshing",
+      "busyContent": true
+    },
+    "status": "MOVED",
+    "subtab": "Status"
+  },
+  {
+    "id": "S009",
+    "tab": "Users",
+    "capability": "Administration loading state",
+    "story": "AdministrationLoading",
+    "proof": {
+      "role": "button",
+      "name": "Refreshing",
+      "busyContent": true
+    },
+    "status": "MOVED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "O001",
+    "tab": "Operations",
+    "capability": "Worker: Status",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Status",
+      "scope": "worker",
+      "fieldValue": "OK"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O002",
+    "tab": "Operations",
+    "capability": "Worker: Last heartbeat",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Last heartbeat",
+      "scope": "worker",
+      "fieldValue": "Jul 17, 2026"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O003",
+    "tab": "Operations",
+    "capability": "Worker: Release",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Release",
+      "scope": "worker",
+      "fieldValue": "worker-image-sha"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O004",
+    "tab": "Operations",
+    "capability": "Worker: Environment",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Environment",
+      "scope": "worker",
+      "fieldValue": "production"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O005",
+    "tab": "Operations",
+    "capability": "Worker: Scheduler driver",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Scheduler driver",
+      "scope": "worker",
+      "fieldValue": "temporal"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O006",
+    "tab": "Operations",
+    "capability": "Worker: Schema status",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Schema status",
+      "scope": "worker",
+      "fieldValue": "Worker behind"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O007",
+    "tab": "Operations",
+    "capability": "Worker: Bundled migration",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Bundled migration",
+      "scope": "worker",
+      "fieldValue": "20261002120000_bundled"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O008",
+    "tab": "Operations",
+    "capability": "Worker: Applied migration",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Applied migration",
+      "scope": "worker",
+      "fieldValue": "20260901120000_applied"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O009",
+    "tab": "Operations",
+    "capability": "Worker: Slack ops",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Slack ops",
+      "scope": "worker",
+      "fieldValue": "Configured"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O010",
+    "tab": "Operations",
+    "capability": "Worker unavailable state",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Worker diagnostics are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O011",
+    "tab": "Operations",
+    "capability": "Worker scheduling disabled state",
+    "story": "DisabledWorker",
+    "proof": {
+      "text": "Scheduled worker is disabled for this topology.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O012",
+    "tab": "Overview",
+    "capability": "Worker health pill",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Worker OK"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O013",
+    "tab": "Overview",
+    "capability": "Check failure-rate pill",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Checks:",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O014",
+    "tab": "Overview",
+    "capability": "Per-provider failure-rate pill",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Source B:",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O015",
+    "tab": "Overview",
+    "capability": "Undelivered event-count pill",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "2 undelivered"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O016",
+    "tab": "Overview",
+    "capability": "Unknown worker hint and scheduling documentation link",
+    "story": "UnknownWorker",
+    "proof": {
+      "role": "link",
+      "name": "How to run the worker"
+    },
+    "status": "MOVED",
+    "interaction": ["focus-worker"],
+    "subtab": "Status"
+  },
+  {
+    "id": "O017",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Scheduled",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Scheduled",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O018",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Succeeded",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Succeeded",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O019",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Failed",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Failed",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O020",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Deferred",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Deferred",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O021",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Stuck",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Stuck",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O022",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Lag p50",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Lag p50",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O023",
+    "tab": "Operations",
+    "capability": "Last 24 hours: Lag p95",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Lag p95",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 24 hours"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O024",
+    "tab": "Operations",
+    "capability": "Last 7 days: Scheduled",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Scheduled",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O025",
+    "tab": "Operations",
+    "capability": "Last 7 days: Succeeded",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Succeeded",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O026",
+    "tab": "Operations",
+    "capability": "Last 7 days: Failed",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Failed",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O027",
+    "tab": "Operations",
+    "capability": "Last 7 days: Deferred",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Deferred",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O028",
+    "tab": "Operations",
+    "capability": "Last 7 days: Stuck",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Stuck",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O029",
+    "tab": "Operations",
+    "capability": "Last 7 days: Lag p50",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Lag p50",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O030",
+    "tab": "Operations",
+    "capability": "Last 7 days: Lag p95",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Lag p95",
+      "within": {
+        "role": "region",
+        "name": "Rank checks"
+      },
+      "scopeHeading": "Last 7 days"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O031",
+    "tab": "Operations",
+    "capability": "Rank checks unavailable state",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Rank-check diagnostics are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O032",
+    "tab": "Operations",
+    "capability": "Failures empty state",
+    "story": "OverviewEmpty",
+    "proof": {
+      "text": "No failed rank checks in the last 24 hours."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O033",
+    "tab": "Operations",
+    "capability": "Failures: count",
+    "story": "Overview",
+    "proof": {
+      "text": "4",
+      "exact": true,
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O034",
+    "tab": "Operations",
+    "capability": "Failures: error summary",
+    "story": "Overview",
+    "proof": {
+      "text": "Failure example",
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O035",
+    "tab": "Operations",
+    "capability": "Failures: provider",
+    "story": "Overview",
+    "proof": {
+      "text": "Failure provider",
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O036",
+    "tab": "Operations",
+    "capability": "Failures: affected project count",
+    "story": "Overview",
+    "proof": {
+      "text": "1 project",
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O037",
+    "tab": "Operations",
+    "capability": "Failures: project ID copy",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Copy project ID",
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "interaction": ["copy-project"],
+    "subtab": "Checks"
+  },
+  {
+    "id": "O038",
+    "tab": "Operations",
+    "capability": "Failures: first seen",
+    "story": "Overview",
+    "proof": {
+      "text": "first seen 2h ago",
+      "exact": false,
+      "scope": "failure",
+      "dateTime": "2026-07-17T10:00:00Z"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O039",
+    "tab": "Operations",
+    "capability": "Failures: last seen",
+    "story": "Overview",
+    "proof": {
+      "text": "last seen 1h ago",
+      "exact": false,
+      "scope": "failure",
+      "dateTime": "2026-07-17T11:00:00Z"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O040",
+    "tab": "Operations",
+    "capability": "Failures: remaining classes",
+    "story": "Overview",
+    "proof": {
+      "text": "and 2 more classes",
+      "scope": "failure"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O041",
+    "tab": "Operations",
+    "capability": "Fallbacks empty state",
+    "story": "OverviewEmpty",
+    "proof": {
+      "text": "No fallback rank checks in the last 24 hours."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O042",
+    "tab": "Operations",
+    "capability": "Fallbacks: count",
+    "story": "Overview",
+    "proof": {
+      "text": "5",
+      "exact": true,
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O043",
+    "tab": "Operations",
+    "capability": "Fallbacks: error summary",
+    "story": "Overview",
+    "proof": {
+      "text": "Fallback example",
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O044",
+    "tab": "Operations",
+    "capability": "Fallbacks: provider",
+    "story": "Overview",
+    "proof": {
+      "text": "Fallback provider",
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O045",
+    "tab": "Operations",
+    "capability": "Fallbacks: affected project count",
+    "story": "Overview",
+    "proof": {
+      "text": "1 project",
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O046",
+    "tab": "Operations",
+    "capability": "Fallbacks: project ID copy",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Copy project ID",
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "interaction": ["copy-project"],
+    "subtab": "Checks"
+  },
+  {
+    "id": "O047",
+    "tab": "Operations",
+    "capability": "Fallbacks: first seen",
+    "story": "Overview",
+    "proof": {
+      "text": "first seen 2h ago",
+      "exact": false,
+      "scope": "fallback",
+      "dateTime": "2026-07-17T10:00:00Z"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O048",
+    "tab": "Operations",
+    "capability": "Fallbacks: last seen",
+    "story": "Overview",
+    "proof": {
+      "text": "last seen 1h ago",
+      "exact": false,
+      "scope": "fallback",
+      "dateTime": "2026-07-17T11:00:00Z"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O049",
+    "tab": "Operations",
+    "capability": "Fallbacks: remaining classes",
+    "story": "Overview",
+    "proof": {
+      "text": "and 3 more classes",
+      "scope": "fallback"
+    },
+    "status": "MOVED",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O050",
+    "tab": "Operations",
+    "capability": "Data-source health: provider",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Source B",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O051",
+    "tab": "Operations",
+    "capability": "Data-source health: ok",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "ok 80",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O052",
+    "tab": "Operations",
+    "capability": "Data-source health: stale",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "stale 11",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O053",
+    "tab": "Operations",
+    "capability": "Data-source health: failed",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "failed 7",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O054",
+    "tab": "Operations",
+    "capability": "Data-source health: notRun",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "not run 3",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O055",
+    "tab": "Operations",
+    "capability": "Data-source health: p95LastSuccess",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "p95 last success: 2 h",
+      "exact": false,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O056",
+    "tab": "Operations",
+    "capability": "Data-source health: failureRate",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "10.0% failed",
+      "exact": true,
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O057",
+    "tab": "Operations",
+    "capability": "Data-source health empty state",
+    "story": "OverviewEmpty",
+    "proof": {
+      "text": "No connected analytics sources."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O058",
+    "tab": "Operations",
+    "capability": "Data-source health unavailable state",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Data-source diagnostics are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O059",
+    "tab": "Operations",
+    "capability": "URL presence: Deferred URLs",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Deferred URLs"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O060",
+    "tab": "Operations",
+    "capability": "URL presence: Affected projects",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Affected projects"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O061",
+    "tab": "Operations",
+    "capability": "URL presence: Last budget exhaustion",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Last capacity exhaustion"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O062",
+    "tab": "Operations",
+    "capability": "URL presence unavailable state",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "URL-presence diagnostics are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Checks"
+  },
+  {
+    "id": "O063",
+    "tab": "Operations",
+    "capability": "Temporal: Schedules",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Schedules"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O064",
+    "tab": "Operations",
+    "capability": "Temporal: Recent actions",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Recent actions"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O065",
+    "tab": "Operations",
+    "capability": "Temporal: Missed starts",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Missed starts"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O066",
+    "tab": "Operations",
+    "capability": "Temporal: Skipped while busy",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Skipped while busy"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O067",
+    "tab": "Operations",
+    "capability": "Temporal: Inspection errors",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Inspection errors"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O068",
+    "tab": "Operations",
+    "capability": "Temporal: Next action",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "Next action"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O069",
+    "tab": "Operations",
+    "capability": "Temporal as-of time",
+    "story": "OverviewParity",
+    "proof": {
+      "text": "As of",
+      "exact": false,
+      "within": {
+        "role": "region",
+        "name": "Temporal"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O070",
+    "tab": "Operations",
+    "capability": "Temporal snapshotUnavailable",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Snapshot unavailable - worker has not published Temporal data. Values above are unknown, not zero."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O071",
+    "tab": "Operations",
+    "capability": "Temporal snapshotStale",
+    "story": "OverviewStale",
+    "proof": {
+      "text": "Temporal snapshot stale"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O072",
+    "tab": "Operations",
+    "capability": "Temporal disabled",
+    "story": "OverviewDisabled",
+    "proof": {
+      "text": "Temporal scheduling is disabled for this topology."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O073",
+    "tab": "Operations",
+    "capability": "Temporal empty schedule history",
+    "story": "OverviewEmpty",
+    "proof": {
+      "text": "No missed or overlapping starts recorded."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O074",
+    "tab": "Operations",
+    "capability": "Temporal column Task",
+    "story": "Overview",
+    "proof": {
+      "role": "columnheader",
+      "name": "Task",
+      "scope": "schedule"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O075",
+    "tab": "Operations",
+    "capability": "Temporal sort Task",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Task",
+      "scope": "schedule",
+      "exact": false
+    },
+    "status": "MOVED",
+    "interaction": ["sort"],
+    "subtab": "Worker"
+  },
+  {
+    "id": "O076",
+    "tab": "Operations",
+    "capability": "Temporal column Missed starts",
+    "story": "Overview",
+    "proof": {
+      "role": "columnheader",
+      "name": "Missed starts",
+      "scope": "schedule"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O077",
+    "tab": "Operations",
+    "capability": "Temporal sort Missed starts",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Missed starts",
+      "scope": "schedule",
+      "exact": false
+    },
+    "status": "MOVED",
+    "interaction": ["sort"],
+    "subtab": "Worker"
+  },
+  {
+    "id": "O078",
+    "tab": "Operations",
+    "capability": "Temporal column Skipped while busy",
+    "story": "Overview",
+    "proof": {
+      "role": "columnheader",
+      "name": "Skipped while busy",
+      "scope": "schedule"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O079",
+    "tab": "Operations",
+    "capability": "Temporal sort Skipped while busy",
+    "story": "Overview",
+    "proof": {
+      "role": "button",
+      "name": "Skipped while busy",
+      "scope": "schedule",
+      "exact": false
+    },
+    "status": "MOVED",
+    "interaction": ["sort"],
+    "subtab": "Worker"
+  },
+  {
+    "id": "O080",
+    "tab": "Operations",
+    "capability": "Temporal inspectionPartial",
+    "story": "Overview",
+    "proof": {
+      "text": "These totals may be incomplete.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O081",
+    "tab": "Operations",
+    "capability": "Temporal diagnostics",
+    "story": "Overview",
+    "proof": {
+      "text": "Inspection and startup diagnostics",
+      "exact": false
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O088",
+    "tab": "Operations",
+    "capability": "Ops events column Kind",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Kind",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O089",
+    "tab": "Operations",
+    "capability": "Ops events sort Kind",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Kind",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sort"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O090",
+    "tab": "Operations",
+    "capability": "Ops events column Severity",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Severity",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O091",
+    "tab": "Operations",
+    "capability": "Ops events sort Severity",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Severity",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sort"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O092",
+    "tab": "Operations",
+    "capability": "Ops events column Created",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Created",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O093",
+    "tab": "Operations",
+    "capability": "Ops events sort Created",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Created",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sort"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O094",
+    "tab": "Operations",
+    "capability": "Ops events column Delivery",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Delivery",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O095",
+    "tab": "Operations",
+    "capability": "Ops events sort Delivery",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Delivery",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sort"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O096",
+    "tab": "Operations",
+    "capability": "Ops events column Attempts",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Attempts",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O097",
+    "tab": "Operations",
+    "capability": "Ops events sort Attempts",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Attempts",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sort"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O098",
+    "tab": "Operations",
+    "capability": "Ops empty",
+    "story": "OverviewEmpty",
+    "proof": {
+      "text": "No operational events recorded."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O099",
+    "tab": "Operations",
+    "capability": "Ops deliveryUnavailable",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Delivery diagnostics are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O100",
+    "tab": "Operations",
+    "capability": "Ops historyUnavailable",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Operational event history is unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O101",
+    "tab": "Operations",
+    "capability": "Ops slackMissing",
+    "story": "OpsUnconfigured",
+    "proof": {
+      "text": "Slack is not configured. Set OPS_SLACK_WEBHOOK_URL to deliver operator events."
+    },
+    "status": "MOVED",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O102",
+    "tab": "Operations",
+    "capability": "Ops slackMissingLink",
+    "story": "OpsUnconfigured",
+    "proof": {
+      "role": "link",
+      "name": "Configure Slack notifications"
+    },
+    "status": "MOVED",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O103",
+    "tab": "Operations",
+    "capability": "Send test notification",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Send test notification",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O104",
+    "tab": "Operations",
+    "capability": "Run outbox sweep",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "button",
+      "name": "Run outbox sweep",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O105",
+    "tab": "Operations",
+    "capability": "Ops feedback: not configured",
+    "story": "OverviewOpsNotConfigured",
+    "proof": {
+      "role": "status",
+      "text": "Slack operator notifications are not configured.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-send"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O106",
+    "tab": "Operations",
+    "capability": "Ops feedback: rate limited",
+    "story": "OverviewOpsRateLimited",
+    "proof": {
+      "role": "status",
+      "text": "This admin action was rate limited. Try again shortly.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-send"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O107",
+    "tab": "Operations",
+    "capability": "Ops feedback: delivery failed",
+    "story": "OverviewOpsFailed",
+    "proof": {
+      "role": "status",
+      "text": "Slack test delivery failed.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-send"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O108",
+    "tab": "Operations",
+    "capability": "Ops feedback: forbidden",
+    "story": "OverviewOpsForbidden",
+    "proof": {
+      "role": "status",
+      "text": "This action is not available.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-send"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O109",
+    "tab": "Operations",
+    "capability": "Ops feedback: delivered",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "status",
+      "text": "Test notification delivered to Slack.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-send"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O110",
+    "tab": "Operations",
+    "capability": "Ops feedback: sweep result counts",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "status",
+      "text": "Outbox sweep completed: 2 of 3 delivered.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sweep"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O111",
+    "tab": "Operations",
+    "capability": "Ops controls disabled during request",
+    "story": "OpsPending",
+    "proof": {
+      "role": "button",
+      "name": "Sending...",
+      "disabled": true,
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-pending"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O112",
+    "tab": "Operations",
+    "capability": "Ops sweep failed and thrown-error feedback",
+    "story": "OverviewOpsFailed",
+    "proof": {
+      "role": "status",
+      "text": "Outbox sweep failed.",
+      "within": {
+        "role": "region",
+        "name": "Ops events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-sweep"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O113",
+    "tab": "Email",
+    "capability": "Bulk email: Reserved attempts",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Reserved attempts",
+      "scopeHeading": "Bulk email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O114",
+    "tab": "Email",
+    "capability": "Bulk email: Remaining",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Remaining",
+      "scopeHeading": "Bulk email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O115",
+    "tab": "Email",
+    "capability": "Bulk email: Daily limit",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Daily limit",
+      "scopeHeading": "Bulk email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O116",
+    "tab": "Email",
+    "capability": "Transactional email: Reserved attempts",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Reserved attempts",
+      "scopeHeading": "Transactional email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O117",
+    "tab": "Email",
+    "capability": "Transactional email: Remaining",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Remaining",
+      "scopeHeading": "Transactional email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O118",
+    "tab": "Email",
+    "capability": "Transactional email: Daily limit",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Daily limit",
+      "scopeHeading": "Transactional email"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O119",
+    "tab": "Email",
+    "capability": "Email allowance reset",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Resets ",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O120",
+    "tab": "Email",
+    "capability": "Email allowance asOf",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Read ",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O121",
+    "tab": "Email",
+    "capability": "Email allowance help",
+    "story": "EmailParity",
+    "proof": {
+      "text": "Each reserved recipient send counts toward this limit, including attempts that later fail. These are local application limits, not delivered-message totals or a provider account quota.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "interaction": ["email-help"],
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O122",
+    "tab": "Email",
+    "capability": "Email allowance notConfigured",
+    "story": "EmailNotConfigured",
+    "proof": {
+      "text": "Email sending is not configured for this installation."
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O123",
+    "tab": "Email",
+    "capability": "Email allowance setup",
+    "story": "EmailNotConfigured",
+    "proof": {
+      "role": "link",
+      "name": "Email setup"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O124",
+    "tab": "Email",
+    "capability": "Email allowance countsUnavailable",
+    "story": "EmailCountsUnavailable",
+    "proof": {
+      "text": "Email attempt counts are unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "O125",
+    "tab": "Email",
+    "capability": "Email allowance configurationUnavailable",
+    "story": "EmailConfigurationUnavailable",
+    "proof": {
+      "text": "Email settings could not be read.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Email allowance",
+    "subtab": "Sending today"
+  },
+  {
+    "id": "A032",
+    "tab": "Users",
+    "capability": "Exact email / user ID lookup",
+    "story": "Administration",
+    "proof": {
+      "role": "textbox",
+      "name": "Exact email or user ID"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A033",
+    "tab": "Users",
+    "capability": "Submit lookup and busy state",
+    "story": "AdministrationBusy",
+    "proof": {
+      "role": "button",
+      "name": "Looking up...",
+      "disabled": true
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A034",
+    "tab": "Users",
+    "capability": "Lookup validation",
+    "story": "Administration",
+    "proof": {
+      "role": "alert",
+      "text": "Enter an exact email or user ID."
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-invalid"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A035",
+    "tab": "Users",
+    "capability": "Lookup not-found state",
+    "story": "AdministrationNotFound",
+    "proof": {
+      "text": "No account found.",
+      "scope": "account"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-not-found"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A036",
+    "tab": "Users",
+    "capability": "Lookup audit notice",
+    "story": "Administration",
+    "proof": {
+      "text": "Lookups are recorded in the admin audit log."
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A037",
+    "tab": "Users",
+    "capability": "Account public ID",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "sample@example.com · user-1 · active",
+      "scope": "account"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A038",
+    "tab": "Users",
+    "capability": "Copy account public ID",
+    "story": "Administration",
+    "proof": {
+      "role": "button",
+      "name": "Copy ID"
+    },
+    "status": "COVERED",
+    "interaction": ["account-copy"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A039",
+    "tab": "Users",
+    "capability": "Account email",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "sample@example.com · user-1 · active",
+      "scope": "account"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A040",
+    "tab": "Users",
+    "capability": "Account active/deactivated status",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "sample@example.com · user-1 · active",
+      "scope": "account"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A041",
+    "tab": "Users",
+    "capability": "Account created date",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "1 Oct 2026",
+      "scope": "account-fact",
+      "scopeText": "Created"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A042",
+    "tab": "Users",
+    "capability": "Account last active session",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "29 Oct 2026",
+      "scope": "account-fact",
+      "scopeText": "Last active"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A043",
+    "tab": "Users",
+    "capability": "Account projects",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "2",
+      "scope": "account-fact",
+      "scopeText": "Projects"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A044",
+    "tab": "Users",
+    "capability": "Account keywords",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "14",
+      "scope": "account-fact",
+      "scopeText": "Keywords"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A046",
+    "tab": "Users",
+    "capability": "Account connections by kind",
+    "story": "AccountLookupParity",
+    "proof": {
+      "text": "SERP: 1",
+      "scope": "account-fact",
+      "scopeText": "Connections"
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-sample"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A047",
+    "tab": "Users",
+    "capability": "Lookup failed feedback",
+    "story": "AdministrationFailed",
+    "proof": {
+      "role": "alert",
+      "text": "Account lookup failed. Try again."
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A048",
+    "tab": "Users",
+    "capability": "Lookup forbidden feedback",
+    "story": "AccountLookupForbidden",
+    "proof": {
+      "role": "alert",
+      "text": "Administrator access is no longer available."
+    },
+    "status": "COVERED",
+    "interaction": ["lookup-forbidden"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A049",
+    "tab": "Users",
+    "capability": "Lookup rate-limit feedback",
+    "story": "LookupRateLimit",
+    "proof": {
+      "text": "Too many account lookups. Try again shortly."
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A050",
+    "tab": "Users",
+    "capability": "Deactivate action",
+    "story": "Administration",
+    "proof": {
+      "role": "button",
+      "name": "Deactivate account"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A051",
+    "tab": "Users",
+    "capability": "Deactivate confirmation and cancel",
+    "story": "Administration",
+    "proof": {
+      "role": "button",
+      "name": "Deactivate account",
+      "scope": "dialog"
+    },
+    "status": "COVERED",
+    "interaction": ["account-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A052",
+    "tab": "Users",
+    "capability": "Reactivate action",
+    "story": "ReactivateAccount",
+    "proof": {
+      "role": "button",
+      "name": "Reactivate account"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A053",
+    "tab": "Users",
+    "capability": "Reactivate confirmation and cancel",
+    "story": "ReactivateAccount",
+    "proof": {
+      "role": "button",
+      "name": "Reactivate account",
+      "scope": "dialog"
+    },
+    "status": "COVERED",
+    "interaction": ["account-reactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A054",
+    "tab": "Users",
+    "capability": "Reset rate limits action",
+    "story": "Administration",
+    "proof": {
+      "role": "button",
+      "name": "Reset rate limits"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A055",
+    "tab": "Users",
+    "capability": "Reset rate limits confirmation and cancel",
+    "story": "Administration",
+    "proof": {
+      "role": "button",
+      "name": "Reset rate limits",
+      "scope": "dialog"
+    },
+    "status": "COVERED",
+    "interaction": ["account-reset"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A056",
+    "tab": "Users",
+    "capability": "Account status 2FA notice",
+    "story": "AccountTwoFactorRequired",
+    "proof": {
+      "role": "note",
+      "scope": "account"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A057",
+    "tab": "Users",
+    "capability": "Account status security-enable link",
+    "story": "AccountTwoFactorRequired",
+    "proof": {
+      "role": "link",
+      "name": "Enable two-factor authentication",
+      "scope": "account",
+      "href": "/app/account/security?returnTo=%2Fapp%2Fadmin"
+    },
+    "status": "COVERED",
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A058",
+    "tab": "Users",
+    "capability": "Account result: deactivated",
+    "story": "AccountDeactivated",
+    "proof": {
+      "role": "status",
+      "text": "Account deactivated. Sessions and personal access tokens were revoked; scheduled checks pause on reconciliation."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A059",
+    "tab": "Users",
+    "capability": "Account result: reactivated",
+    "story": "AccountReactivated",
+    "proof": {
+      "role": "status",
+      "text": "Account reactivated. Scheduled checks will reconverge on reconciliation."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-reactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A060",
+    "tab": "Users",
+    "capability": "Account result: blocked",
+    "story": "AccountBlocked",
+    "proof": {
+      "role": "status",
+      "text": "Instance administrators cannot be deactivated."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A061",
+    "tab": "Users",
+    "capability": "Account result: forbidden",
+    "story": "AccountForbidden",
+    "proof": {
+      "role": "status",
+      "text": "This action is not available."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A062",
+    "tab": "Users",
+    "capability": "Account result: rateLimited",
+    "story": "AccountLimited",
+    "proof": {
+      "role": "status",
+      "text": "This account action was rate limited. Try again shortly."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A063",
+    "tab": "Users",
+    "capability": "Account result: failed",
+    "story": "AccountFailed",
+    "proof": {
+      "role": "status",
+      "text": "Account action failed."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A064",
+    "tab": "Users",
+    "capability": "Account result: limitsCompleted",
+    "story": "AccountLimitsCompleted",
+    "proof": {
+      "role": "status",
+      "text": "Rate limits reset."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-reset"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A065",
+    "tab": "Users",
+    "capability": "Account result: limitsFailed",
+    "story": "AccountLimitsFailed",
+    "proof": {
+      "role": "status",
+      "text": "Rate limits could not be reset."
+    },
+    "status": "COVERED",
+    "interaction": ["confirm-reset"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A066",
+    "tab": "Email",
+    "capability": "Mailer-unconfigured warning",
+    "story": "MailConfigured",
+    "proof": {
+      "text": "Email provider not configured"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A067",
+    "tab": "Email",
+    "capability": "Environment variables override saved mail settings",
+    "story": "MailConfigured",
+    "proof": {
+      "text": "Environment variables are set, so they override these saved settings."
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A068",
+    "tab": "Email",
+    "capability": "Email setup documentation link",
+    "story": "MailConfigured",
+    "proof": {
+      "role": "link",
+      "name": "Configure email delivery"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A069",
+    "tab": "Email",
+    "capability": "Existing provider/sender/credential configuration loads",
+    "story": "MailConfigured",
+    "proof": {
+      "role": "textbox",
+      "name": "Sender",
+      "value": "Admin <admin@example.com>"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-configured"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A070",
+    "tab": "Email",
+    "capability": "Mail provider selector",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "button",
+      "name": "Provider"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A071",
+    "tab": "Email",
+    "capability": "Mail provider option resend",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "menuitem",
+      "name": "Resend"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-provider-menu"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A072",
+    "tab": "Email",
+    "capability": "Mail provider option ses",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "menuitem",
+      "name": "Amazon SES"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-provider-menu"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A073",
+    "tab": "Email",
+    "capability": "Mail provider option smtp",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "menuitem",
+      "name": "SMTP"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-provider-menu"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A074",
+    "tab": "Email",
+    "capability": "Mail sender",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "textbox",
+      "name": "Sender"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A075",
+    "tab": "Email",
+    "capability": "Mail field API key (Resend)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "API key",
+      "scope": "mail",
+      "scopeText": "Resend"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A076",
+    "tab": "Email",
+    "capability": "Mail field Region (Amazon SES)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Region",
+      "scope": "mail",
+      "scopeText": "Amazon SES"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A077",
+    "tab": "Email",
+    "capability": "Mail field Access key ID (Amazon SES)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Access key ID",
+      "scope": "mail",
+      "scopeText": "Amazon SES"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A078",
+    "tab": "Email",
+    "capability": "Mail field Secret access key (Amazon SES)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Secret access key",
+      "scope": "mail",
+      "scopeText": "Amazon SES"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A079",
+    "tab": "Email",
+    "capability": "Mail field Host (SMTP)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Host",
+      "scope": "mail",
+      "scopeText": "SMTP"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A080",
+    "tab": "Email",
+    "capability": "Mail field Port (SMTP)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Port",
+      "scope": "mail",
+      "scopeText": "SMTP"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A081",
+    "tab": "Email",
+    "capability": "Mail field Username (SMTP)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Username",
+      "scope": "mail",
+      "scopeText": "SMTP"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A082",
+    "tab": "Email",
+    "capability": "Mail field Password (SMTP)",
+    "story": "EmailSettings",
+    "proof": {
+      "label": "Password",
+      "scope": "mail",
+      "scopeText": "SMTP"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A083",
+    "tab": "Email",
+    "capability": "SES default credential-chain hint",
+    "story": "EmailSettings",
+    "proof": {
+      "text": "Optional. Leave both empty to use the server's default credential chain.",
+      "scope": "mail",
+      "scopeText": "Amazon SES"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-select"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A084",
+    "tab": "Email",
+    "capability": "Mail form validation errors",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "alert",
+      "text": "Enter a value.",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-invalid-smtp"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A085",
+    "tab": "Email",
+    "capability": "Mail saved-credentials notice",
+    "story": "MailSaveParity",
+    "proof": {
+      "text": "Credentials are saved.",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save-new"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A086",
+    "tab": "Email",
+    "capability": "Replace saved mail credentials",
+    "story": "MailSaveParity",
+    "proof": {
+      "role": "button",
+      "name": "Replace credentials",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save-new"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A087",
+    "tab": "Email",
+    "capability": "Save mail settings",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "button",
+      "name": "Save mail settings"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A088",
+    "tab": "Email",
+    "capability": "Clear saved mail settings",
+    "story": "MailConfigured",
+    "proof": {
+      "role": "button",
+      "name": "Clear saved settings"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A089",
+    "tab": "Email",
+    "capability": "Mail 2FA notice",
+    "story": "MailTwoFactorRequired",
+    "proof": {
+      "role": "status",
+      "text": "Enable two-factor authentication to change mail settings."
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A090",
+    "tab": "Email",
+    "capability": "Mail 2FA security-enable link",
+    "story": "MailTwoFactorRequired",
+    "proof": {
+      "role": "link",
+      "name": "Enable two-factor authentication",
+      "scope": "mail",
+      "href": "/app/account/security?returnTo=%2Fapp%2Fadmin"
+    },
+    "status": "COVERED",
+    "subtab": "Settings"
+  },
+  {
+    "id": "A091",
+    "tab": "Email",
+    "capability": "Mail result: saved",
+    "story": "MailConfigured",
+    "proof": {
+      "role": "status",
+      "text": "Mail settings saved."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A092",
+    "tab": "Email",
+    "capability": "Mail result: cleared",
+    "story": "MailCleared",
+    "proof": {
+      "role": "status",
+      "text": "Saved mail settings cleared. Environment variables apply."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-clear"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A093",
+    "tab": "Email",
+    "capability": "Mail result: forbidden",
+    "story": "MailForbidden",
+    "proof": {
+      "role": "status",
+      "text": "This action is not available."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A094",
+    "tab": "Email",
+    "capability": "Mail result: rateLimited",
+    "story": "MailLimited",
+    "proof": {
+      "role": "status",
+      "text": "Too many attempts. Try again later."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A095",
+    "tab": "Email",
+    "capability": "Mail result: twoFactorRequired",
+    "story": "MailTwoFactor",
+    "proof": {
+      "role": "status",
+      "text": "Two-factor authentication must be enabled."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A096",
+    "tab": "Email",
+    "capability": "Mail result: unavailable",
+    "story": "MailUnavailable",
+    "proof": {
+      "role": "status",
+      "text": "Mail settings are temporarily unavailable."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A097",
+    "tab": "Email",
+    "capability": "Mail result: invalid",
+    "story": "MailInvalid",
+    "proof": {
+      "role": "status",
+      "text": "Check the form and try again."
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A098",
+    "tab": "Email",
+    "capability": "Mail save/clear pending labels",
+    "story": "MailPending",
+    "proof": {
+      "role": "button",
+      "name": "Saving...",
+      "disabled": true
+    },
+    "status": "COVERED",
+    "interaction": ["mail-save"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "T001",
+    "tab": "Audit",
+    "capability": "Audit filter all",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "all"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-filter"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T002",
+    "tab": "Audit",
+    "capability": "Audit filter account",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "account"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-filter"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T003",
+    "tab": "Audit",
+    "capability": "Audit filter ops",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "ops"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-filter"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T004",
+    "tab": "Audit",
+    "capability": "Audit filter setup",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "setup"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-filter"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T005",
+    "tab": "Audit",
+    "capability": "Audit column time",
+    "story": "AuditParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Time",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T006",
+    "tab": "Audit",
+    "capability": "Audit sort time",
+    "story": "Audit",
+    "proof": {
+      "role": "button",
+      "name": "Time",
+      "exact": false
+    },
+    "status": "COVERED",
+    "interaction": ["audit-sort"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T007",
+    "tab": "Audit",
+    "capability": "Audit column actor",
+    "story": "AuditParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Actor",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T008",
+    "tab": "Audit",
+    "capability": "Audit sort actor",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "Actor",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-column-sort"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T009",
+    "tab": "Audit",
+    "capability": "Audit column action",
+    "story": "AuditParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Action",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T010",
+    "tab": "Audit",
+    "capability": "Audit sort action",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "Action",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-column-sort"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T011",
+    "tab": "Audit",
+    "capability": "Audit column target",
+    "story": "AuditParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Target",
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T012",
+    "tab": "Audit",
+    "capability": "Audit sort target",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "Target",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-column-sort"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T013",
+    "tab": "Audit",
+    "capability": "Audit column result",
+    "story": "AuditParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Result",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T014",
+    "tab": "Audit",
+    "capability": "Audit sort result",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "Result",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-column-sort"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T015",
+    "tab": "Audit",
+    "capability": "Audit target type",
+    "story": "Audit",
+    "proof": {
+      "text": "user",
+      "exact": true,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-target-type"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T016",
+    "tab": "Audit",
+    "capability": "Copy audit target ID",
+    "story": "Audit",
+    "proof": {
+      "role": "button",
+      "name": "Copied!",
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["clipboard-success"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T017",
+    "tab": "Audit",
+    "capability": "Audit success result",
+    "story": "AuditParity",
+    "proof": {
+      "text": "OK",
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T018",
+    "tab": "Audit",
+    "capability": "Audit failed result",
+    "story": "AuditParity",
+    "proof": {
+      "text": "Failed",
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T019",
+    "tab": "Audit",
+    "capability": "Audit blocked result",
+    "story": "Audit",
+    "proof": {
+      "text": "Blocked"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "T020",
+    "tab": "Audit",
+    "capability": "Audit empty filter state",
+    "story": "Audit",
+    "proof": {
+      "text": "No activity in this filter."
+    },
+    "status": "COVERED",
+    "interaction": ["audit-empty"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T021",
+    "tab": "Audit",
+    "capability": "Audit older entries",
+    "story": "AuditParity",
+    "proof": {
+      "role": "button",
+      "name": "Older entries"
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "R001",
+    "tab": "Operations",
+    "capability": "Instance identifier",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Instance: https://app.example.com",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R002",
+    "tab": "Operations",
+    "capability": "Temporal namespace",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Temporal namespace:",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R003",
+    "tab": "Operations",
+    "capability": "Refresh cases",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Refresh cases"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R004",
+    "tab": "Operations",
+    "capability": "Category filter",
+    "story": "RecoveryFilters",
+    "proof": {
+      "role": "button",
+      "name": "Category"
+    },
+    "status": "COVERED",
+    "interaction": ["recovery-filter"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R005",
+    "tab": "Operations",
+    "capability": "Provider filter",
+    "story": "RecoveryFilters",
+    "proof": {
+      "role": "button",
+      "name": "Provider"
+    },
+    "status": "COVERED",
+    "interaction": ["recovery-filter"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R006",
+    "tab": "Operations",
+    "capability": "Category all",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "all"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R007",
+    "tab": "Operations",
+    "capability": "Category unfinished",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "unfinished"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R008",
+    "tab": "Operations",
+    "capability": "Category accounting",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "accounting"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R009",
+    "tab": "Operations",
+    "capability": "Category failed",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "failed"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R010",
+    "tab": "Operations",
+    "capability": "Category historical",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "historical"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R011",
+    "tab": "Operations",
+    "capability": "Category closed_unknown",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "menuitem",
+      "name": "closed unknown"
+    },
+    "status": "MOVED",
+    "disclosure": "Category menu",
+    "interaction": ["recovery-category"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R012",
+    "tab": "Operations",
+    "capability": "Review selected cases",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Review selected",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R013",
+    "tab": "Operations",
+    "capability": "Batch selection limit help",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Up to 25 cases per command"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R014",
+    "tab": "Operations",
+    "capability": "Operation error state",
+    "story": "RecoveryError",
+    "proof": {
+      "role": "alert",
+      "text": "Recovery could not be updated. Try again."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R015",
+    "tab": "Operations",
+    "capability": "Command retrieval error",
+    "story": "RecoveryCommandError",
+    "proof": {
+      "role": "status",
+      "text": "Command status is unavailable.",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R016",
+    "tab": "Operations",
+    "capability": "Retry command status",
+    "story": "RecoveryCommandError",
+    "proof": {
+      "role": "button",
+      "name": "Retry command status"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R017",
+    "tab": "Operations",
+    "capability": "Command state queued",
+    "story": "RecoveryQueued",
+    "proof": {
+      "text": "Command: queued"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R018",
+    "tab": "Operations",
+    "capability": "Command state completed",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "Command: completed"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R019",
+    "tab": "Operations",
+    "capability": "Command state running",
+    "story": "RecoveryRunning",
+    "proof": {
+      "text": "Command: running"
+    },
+    "status": "COVERED",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R020",
+    "tab": "Operations",
+    "capability": "Command state failed",
+    "story": "RecoveryFailed",
+    "proof": {
+      "text": "Command: failed"
+    },
+    "status": "COVERED",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R021",
+    "tab": "Operations",
+    "capability": "Command queued outcome count",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "queued: 1",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R022",
+    "tab": "Operations",
+    "capability": "Command unchanged outcome count",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "unchanged: 1",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R023",
+    "tab": "Operations",
+    "capability": "Command recovered outcome count",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "recovered: 1",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R024",
+    "tab": "Operations",
+    "capability": "Command failed outcome count",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "failed: 1",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R025",
+    "tab": "Operations",
+    "capability": "Command skipped outcome count",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "text": "skipped: 1",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R026",
+    "tab": "Operations",
+    "capability": "Refresh after command completion",
+    "story": "RecoveryCompleted",
+    "proof": {
+      "role": "button",
+      "name": "Refresh cases",
+      "within": {
+        "role": "status",
+        "name": ""
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R027",
+    "tab": "Operations",
+    "capability": "First case page",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "First page"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-next"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R028",
+    "tab": "Operations",
+    "capability": "Next case page",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Next page"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R029",
+    "tab": "Operations",
+    "capability": "Initial recovery unavailable state",
+    "story": "RecoveryUnavailable",
+    "proof": {
+      "text": "Recovery cases are temporarily unavailable. Refresh to try again."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R030",
+    "tab": "Operations",
+    "capability": "Retry unavailable recovery",
+    "story": "RecoveryUnavailable",
+    "proof": {
+      "role": "button",
+      "name": "Try again"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R031",
+    "tab": "Operations",
+    "capability": "Summary unfinished count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Unfinished work"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R032",
+    "tab": "Operations",
+    "capability": "Summary unconfirmed count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Unconfirmed accounting"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R033",
+    "tab": "Operations",
+    "capability": "Summary closedUnknown count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Closed, accounting unknown"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R034",
+    "tab": "Operations",
+    "capability": "Summary failed count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Failed recoveries"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R035",
+    "tab": "Operations",
+    "capability": "Summary historical count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Historical uncertainty"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R036",
+    "tab": "Operations",
+    "capability": "Summary retainedResults count",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Results ready to restore"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R037",
+    "tab": "Operations",
+    "capability": "Closed unknown explanation",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "These requests were closed by an operator. Accounting remains unknown. History is retained; the same requests will not trigger recovery or reminders again."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R038",
+    "tab": "Operations",
+    "capability": "Blocked project and connection scopes warning",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Recovery restricted by uncertainty:",
+      "exact": false
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R039",
+    "tab": "Operations",
+    "capability": "Summary lastActivityAt",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Worker last made progress"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R040",
+    "tab": "Operations",
+    "capability": "Summary lastCompletedAt",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Last complete scan"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R041",
+    "tab": "Operations",
+    "capability": "Summary lastCleanAt",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Last fully clean scan"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R042",
+    "tab": "Operations",
+    "capability": "Summary lastResultActivityAt",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Result recovery worker last made progress"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R043",
+    "tab": "Operations",
+    "capability": "Select eligible case with batch cap",
+    "story": "RecoverySelectionLimit",
+    "proof": {
+      "role": "checkbox",
+      "name": "Select project-limit-0, example-provider"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-selection-limit"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R044",
+    "tab": "Operations",
+    "capability": "Case column project",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Project",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R045",
+    "tab": "Operations",
+    "capability": "Case sort project",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Project",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R046",
+    "tab": "Operations",
+    "capability": "Case column provider",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Provider",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R047",
+    "tab": "Operations",
+    "capability": "Case sort provider",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Provider",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R048",
+    "tab": "Operations",
+    "capability": "Case column send",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Provider request",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R049",
+    "tab": "Operations",
+    "capability": "Case sort send",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Provider request",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R050",
+    "tab": "Operations",
+    "capability": "Case column work",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Result",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R051",
+    "tab": "Operations",
+    "capability": "Case sort work",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Result",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R054",
+    "tab": "Operations",
+    "capability": "Case column classification",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Evidence classification",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R055",
+    "tab": "Operations",
+    "capability": "Case sort classification",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Evidence classification",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R056",
+    "tab": "Operations",
+    "capability": "Case column acceptance",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Acceptance / recovery",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R057",
+    "tab": "Operations",
+    "capability": "Case sort acceptance",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Acceptance / recovery",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R058",
+    "tab": "Operations",
+    "capability": "Case column incident",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Incident",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R059",
+    "tab": "Operations",
+    "capability": "Case sort incident",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Incident",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R060",
+    "tab": "Operations",
+    "capability": "Case column lookup",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Lookup attempts",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R061",
+    "tab": "Operations",
+    "capability": "Case sort lookup",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Lookup attempts",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R062",
+    "tab": "Operations",
+    "capability": "Case column triage",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Follow-up",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R063",
+    "tab": "Operations",
+    "capability": "Case sort triage",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Follow-up",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R064",
+    "tab": "Operations",
+    "capability": "Open case details",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "dialog",
+      "name": "Case details"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R065",
+    "tab": "Operations",
+    "capability": "Group cases by project/cause/action",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Group this page"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-grouping"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R066",
+    "tab": "Operations",
+    "capability": "Grouping applies to loaded page explanation",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Grouping applies to this page. Filters and next page cover the full backlog."
+    },
+    "status": "MOVED",
+    "disclosure": "Grouping information tooltip",
+    "interaction": ["recovery-help"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R067",
+    "tab": "Operations",
+    "capability": "Empty cases state",
+    "story": "RecoveryEmpty",
+    "proof": {
+      "text": "No cases match these filters."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R068",
+    "tab": "Operations",
+    "capability": "Closed-unknown case state",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Closed, accounting unknown",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R069",
+    "tab": "Operations",
+    "capability": "Case created time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Created",
+      "scope": "dialog",
+      "fieldValue": "2026-08-01T10:00:00Z"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R070",
+    "tab": "Operations",
+    "capability": "Case connection",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Connection",
+      "scope": "dialog",
+      "fieldValue": "conn_example"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R072",
+    "tab": "Operations",
+    "capability": "Unknown dimensions",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Accounting state",
+      "scope": "dialog",
+      "fieldValue": "Unknown"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R073",
+    "tab": "Operations",
+    "capability": "Failure class",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Failure class",
+      "scope": "dialog",
+      "fieldValue": "Native request identity conflicts"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R074",
+    "tab": "Operations",
+    "capability": "Failure attempts",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Attempts",
+      "scope": "dialog",
+      "fieldValue": "4"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R075",
+    "tab": "Operations",
+    "capability": "First failure time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "First failure",
+      "scope": "dialog",
+      "fieldValue": "2026-10-13T08:00:00Z"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R076",
+    "tab": "Operations",
+    "capability": "Last failure time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Last failure",
+      "scope": "dialog",
+      "fieldValue": "2026-10-13T09:58:00Z"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R077",
+    "tab": "Operations",
+    "capability": "Recommended recovery action",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Recommended action",
+      "scope": "dialog",
+      "fieldValue": "Reconcile retained proof"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R078",
+    "tab": "Operations",
+    "capability": "Blocked-reason explanation",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Blocked reason",
+      "scope": "dialog",
+      "fieldValue": "Native provider evidence is still required."
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R079",
+    "tab": "Operations",
+    "capability": "Project spending block warning",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Project actions are restricted by unresolved accounting."
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R080",
+    "tab": "Operations",
+    "capability": "Connection spending block warning",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Connection actions are restricted by unresolved accounting."
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R081",
+    "tab": "Operations",
+    "capability": "New paid attempt requires project member authority explanation",
+    "story": "RecoveryDetail",
+    "proof": {
+      "text": "If there is no retained result and no positive proof that sending never began, ask a project member to create a new run through the normal preview and authorization checks."
+    },
+    "status": "MOVED",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R082",
+    "tab": "Operations",
+    "capability": "Closed-unknown details remain read-only",
+    "story": "RecoveryClosedUnknown",
+    "proof": {
+      "role": "button",
+      "name": "Save triage",
+      "absent": true
+    },
+    "status": "COVERED",
+    "interaction": ["closed-unknown"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R083",
+    "tab": "Operations",
+    "capability": "Triage status",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Triage status"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R084",
+    "tab": "Operations",
+    "capability": "Triage reason",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Triage reason"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R085",
+    "tab": "Operations",
+    "capability": "Triage due time",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Due time"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending", "recovery-waiting"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R086",
+    "tab": "Operations",
+    "capability": "Preserve existing triage due time",
+    "story": "RecoveryWaiting",
+    "proof": {
+      "role": "button",
+      "name": "Due time",
+      "text": "2026-12-01T12:00:00Z"
+    },
+    "status": "COVERED",
+    "interaction": ["save-deadline"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R087",
+    "tab": "Operations",
+    "capability": "Assign case to self",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "checkbox",
+      "name": "Assign to me"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R088",
+    "tab": "Operations",
+    "capability": "Save triage",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Save triage"
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R089",
+    "tab": "Operations",
+    "capability": "Triage non-financial effect explanation",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Follow-up status, assignment and waiting do not settle accounting or lift action restrictions. A changed case or expired waiting period reopens the case."
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-conflict"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R090",
+    "tab": "Operations",
+    "capability": "Triage error feedback",
+    "story": "RecoveryTriageError",
+    "proof": {
+      "role": "alert",
+      "text": "Triage could not be saved."
+    },
+    "status": "MOVED",
+    "disclosure": "Details",
+    "interaction": ["recovery-detail-pending"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R091",
+    "tab": "Operations",
+    "capability": "Batch eligible count",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Eligible cases: 6",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R092",
+    "tab": "Operations",
+    "capability": "Batch excluded count",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Skipped cases: 1",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R093",
+    "tab": "Operations",
+    "capability": "No-spend explanation",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Proof reconciliation and result restoration make no provider requests. Restoring a result does not settle an unknown accounting state.",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R094",
+    "tab": "Operations",
+    "capability": "Original-run spend warning",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Resume 3 original",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R095",
+    "tab": "Operations",
+    "capability": "Preview expiry",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Preview expires: 2026-11-03T10:00:00Z",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R097",
+    "tab": "Operations",
+    "capability": "Approved targets",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "1 targets",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R098",
+    "tab": "Operations",
+    "capability": "Approved attempts",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "1 attempt per target",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R099",
+    "tab": "Operations",
+    "capability": "Batch count recover_proof",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Reconcile retained proof: 1",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R100",
+    "tab": "Operations",
+    "capability": "Batch count restore_result",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Restore retained result: 2",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R101",
+    "tab": "Operations",
+    "capability": "Batch count resume_queued_run",
+    "story": "RecoveryPreview",
+    "proof": {
+      "text": "Resume original queued run: 3",
+      "exact": false,
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R102",
+    "tab": "Operations",
+    "capability": "Batch worker recheck / changed cases explanation",
+    "story": "RecoveryBatch",
+    "proof": {
+      "text": "Each case and administrator permission will be checked again by the worker. Changed cases are skipped."
+    },
+    "status": "MOVED",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R103",
+    "tab": "Operations",
+    "capability": "Confirm recovery batch",
+    "story": "RecoveryBatchPending",
+    "proof": {
+      "role": "button",
+      "name": "Starting recovery...",
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "interaction": ["recovery-confirm"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R104",
+    "tab": "Operations",
+    "capability": "Recovery batch 2FA security-enable link",
+    "story": "RecoveryStepUp",
+    "proof": {
+      "role": "link",
+      "name": "Enable two-factor authentication",
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R105",
+    "tab": "Operations",
+    "capability": "Batch error feedback",
+    "story": "RecoveryBatchError",
+    "proof": {
+      "role": "alert",
+      "text": "Recovery could not be started.",
+      "scope": "dialog"
+    },
+    "status": "MOVED",
+    "disclosure": "Preview recovery batch",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R106",
+    "tab": "Operations",
+    "capability": "Incident evidence link",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "link",
+      "name": "Incident",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R107",
+    "tab": "Operations",
+    "capability": "Incident opened time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Oct 13, 2026",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R108",
+    "tab": "Operations",
+    "capability": "Incident age",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "118 min open",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R109",
+    "tab": "Operations",
+    "capability": "Evidence result classification",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Result: Partial",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R111",
+    "tab": "Operations",
+    "capability": "Acceptance state",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Accepted",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R112",
+    "tab": "Operations",
+    "capability": "Recovery state",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Scheduled",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R113",
+    "tab": "Operations",
+    "capability": "Last lookup time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Last attempt (UTC)",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      },
+      "fieldValue": "9:00:00 AM"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R114",
+    "tab": "Operations",
+    "capability": "Next lookup time",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Next attempt (UTC)",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      },
+      "fieldValue": "11:00:00 AM"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R115",
+    "tab": "Operations",
+    "capability": "Lookup reason",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Awaiting evidence",
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R116",
+    "tab": "Operations",
+    "capability": "Partial evidence column project",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Project / check",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R117",
+    "tab": "Operations",
+    "capability": "Partial evidence sort project",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Project / check",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R118",
+    "tab": "Operations",
+    "capability": "Partial evidence column kind",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Result",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R119",
+    "tab": "Operations",
+    "capability": "Partial evidence sort kind",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Result",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R120",
+    "tab": "Operations",
+    "capability": "Partial evidence column depth",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Checked depth",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R121",
+    "tab": "Operations",
+    "capability": "Partial evidence sort depth",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Checked depth",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R122",
+    "tab": "Operations",
+    "capability": "Partial evidence column created",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "columnheader",
+      "name": "Retained at (UTC)",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R123",
+    "tab": "Operations",
+    "capability": "Partial evidence sort created",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "button",
+      "name": "Retained at (UTC)",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-sort"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R124",
+    "tab": "Operations",
+    "capability": "Partial evidence project result link",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "link",
+      "name": "prj_example_pending",
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      },
+      "href": "#sample-check"
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R125",
+    "tab": "Operations",
+    "capability": "Partial evidence empty state",
+    "story": "RecoveryEmpty",
+    "proof": {
+      "text": "No partial or unresolved evidence."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R126",
+    "tab": "Operations",
+    "capability": "Partial evidence bounded/restore limitation explanation",
+    "story": "RecoveryParity",
+    "proof": {
+      "text": "Latest 50 retained records. Incomplete evidence cannot be restored as a complete result."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "O126",
+    "tab": "Operations",
+    "capability": "Worker schema worker-behind",
+    "story": "WorkerBehind",
+    "proof": {
+      "text": "Worker behind",
+      "scope": "worker"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O127",
+    "tab": "Operations",
+    "capability": "Worker schema worker-ahead",
+    "story": "WorkerAhead",
+    "proof": {
+      "text": "Worker ahead",
+      "scope": "worker"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O128",
+    "tab": "Operations",
+    "capability": "Worker schema unknown",
+    "story": "WorkerSchemaUnknown",
+    "proof": {
+      "text": "Unknown",
+      "scope": "worker"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "O129",
+    "tab": "Overview",
+    "capability": "Unknown check failure rate",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Checks: unknown"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O130",
+    "tab": "Overview",
+    "capability": "Unknown operational delivery",
+    "story": "OverviewUnavailable",
+    "proof": {
+      "text": "Delivery: unknown"
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "subtab": "Status"
+  },
+  {
+    "id": "O131",
+    "tab": "Operations",
+    "capability": "Unknown provider failure rate",
+    "story": "Overview",
+    "proof": {
+      "text": "unknown",
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "O132",
+    "tab": "Operations",
+    "capability": "Unknown provider last-success age",
+    "story": "Overview",
+    "proof": {
+      "text": "p95 last success: unknown",
+      "scope": "provider"
+    },
+    "status": "MOVED",
+    "subtab": "Data sources"
+  },
+  {
+    "id": "A099",
+    "tab": "Users",
+    "capability": "deactivate confirmation consequences",
+    "story": "Administration",
+    "proof": {
+      "text": "Deactivation will block sign-in and revoke every session.",
+      "exact": false
+    },
+    "status": "COVERED",
+    "interaction": ["account-deactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A100",
+    "tab": "Users",
+    "capability": "reactivate confirmation consequences",
+    "story": "ReactivateAccount",
+    "proof": {
+      "text": "Previously revoked personal access tokens stay revoked and must be recreated.",
+      "exact": false
+    },
+    "status": "COVERED",
+    "interaction": ["account-reactivate"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A101",
+    "tab": "Users",
+    "capability": "reset confirmation consequences",
+    "story": "Administration",
+    "proof": {
+      "text": "Clear this account's rate-limit buckets.",
+      "exact": false
+    },
+    "status": "COVERED",
+    "interaction": ["account-reset"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "A102",
+    "tab": "Email",
+    "capability": "Sender address validation",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "alert",
+      "text": "Enter a sender as Name <address@example.com> or a plain address.",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-invalid-sender"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A103",
+    "tab": "Email",
+    "capability": "SMTP port validation",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "alert",
+      "text": "Enter a port from 1 to 65535.",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-invalid-port"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "A104",
+    "tab": "Email",
+    "capability": "SES credential-pair validation",
+    "story": "EmailSettings",
+    "proof": {
+      "role": "alert",
+      "text": "Enter both the access key ID and the secret access key, or leave both empty.",
+      "scope": "mail"
+    },
+    "status": "COVERED",
+    "interaction": ["mail-invalid-ses"],
+    "subtab": "Settings"
+  },
+  {
+    "id": "O133",
+    "tab": "Operations",
+    "capability": "Ops events resize columns (pointer/keyboard)",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-resize"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O134",
+    "tab": "Operations",
+    "capability": "Ops events reset column width",
+    "story": "OverviewParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize",
+      "exact": false,
+      "within": {
+        "role": "table",
+        "name": "Recent operational events"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Overview > Show instance details",
+    "interaction": ["ops-reset"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O135",
+    "tab": "Operations",
+    "capability": "Schedule history resize columns (pointer/keyboard)",
+    "story": "Overview",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Task column",
+      "scope": "schedule"
+    },
+    "status": "MOVED",
+    "interaction": ["resize"],
+    "subtab": "Worker"
+  },
+  {
+    "id": "O136",
+    "tab": "Operations",
+    "capability": "Schedule history reset column width",
+    "story": "Overview",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Task column",
+      "scope": "schedule"
+    },
+    "status": "MOVED",
+    "interaction": ["resize-reset"],
+    "subtab": "Worker"
+  },
+  {
+    "id": "T022",
+    "tab": "Audit",
+    "capability": "Audit resize columns (pointer/keyboard)",
+    "story": "Audit",
+    "proof": {
+      "role": "separator",
+      "name": "Resize",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-resize"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T023",
+    "tab": "Audit",
+    "capability": "Audit reset column width",
+    "story": "Audit",
+    "proof": {
+      "role": "separator",
+      "name": "Resize",
+      "exact": false,
+      "scope": "audit"
+    },
+    "status": "COVERED",
+    "interaction": ["audit-reset"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "R127",
+    "tab": "Operations",
+    "capability": "Recovery cases resize columns (pointer/keyboard)",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Project column",
+      "exact": true,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-resize"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R128",
+    "tab": "Operations",
+    "capability": "Recovery cases reset column width",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Project column",
+      "exact": true,
+      "within": {
+        "role": "table",
+        "name": "Task recovery"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["recovery-reset"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R129",
+    "tab": "Operations",
+    "capability": "Partial evidence resize columns (pointer/keyboard)",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Project / check column",
+      "exact": true,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-resize"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "R130",
+    "tab": "Operations",
+    "capability": "Partial evidence reset column width",
+    "story": "RecoveryParity",
+    "proof": {
+      "role": "separator",
+      "name": "Resize Project / check column",
+      "exact": true,
+      "within": {
+        "role": "table",
+        "name": "Partial and unresolved evidence"
+      }
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "interaction": ["evidence-reset"],
+    "subtab": "Tasks"
+  },
+  {
+    "id": "S011",
+    "tab": "Audit",
+    "capability": "ID copy success feedback",
+    "story": "Audit",
+    "proof": {
+      "role": "button",
+      "name": "Copied!"
+    },
+    "status": "COVERED",
+    "interaction": ["clipboard-success"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "S012",
+    "tab": "Audit",
+    "capability": "ID copy failure toast",
+    "story": "Audit",
+    "proof": {
+      "role": "status",
+      "text": "Copy failed"
+    },
+    "status": "MOVED",
+    "interaction": ["clipboard-failure"],
+    "subtab": "Audit"
+  },
+  {
+    "id": "T024",
+    "tab": "Audit",
+    "capability": "Audit initial loading state",
+    "story": "AuditLoading",
+    "proof": {
+      "role": "button",
+      "name": "Refreshing",
+      "busyContent": true,
+      "auditLoading": true
+    },
+    "status": "COVERED",
+    "subtab": "Audit"
+  },
+  {
+    "id": "R131",
+    "tab": "Operations",
+    "capability": "Recovery initial loading state",
+    "story": "RecoveryLoading",
+    "proof": {
+      "role": "status",
+      "text": "Loading recovery cases..."
+    },
+    "status": "MOVED",
+    "disclosure": "Data quality / Health",
+    "subtab": "Tasks"
+  },
+  {
+    "id": "O137",
+    "tab": "Operations",
+    "capability": "Ops sending loading state",
+    "story": "OpsPending",
+    "proof": {
+      "role": "button",
+      "name": "Sending..."
+    },
+    "status": "MOVED",
+    "interaction": ["send-pending"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O138",
+    "tab": "Operations",
+    "capability": "Ops running loading state",
+    "story": "OpsPending",
+    "proof": {
+      "role": "button",
+      "name": "Running..."
+    },
+    "status": "MOVED",
+    "interaction": ["sweep-pending"],
+    "subtab": "Notifications"
+  },
+  {
+    "id": "O139",
+    "tab": "Operations",
+    "capability": "Operational timestamp timezone indicator",
+    "story": "Overview",
+    "proof": {
+      "text": "Times in Europe/Warsaw"
+    },
+    "status": "MOVED",
+    "subtab": "Worker"
+  },
+  {
+    "id": "S013",
+    "tab": "Users",
+    "capability": "Configured admin locale in navigation and replacement controls",
+    "story": "Polish",
+    "proof": {
+      "role": "button",
+      "name": "Użytkownicy"
+    },
+    "status": "MOVED",
+    "interaction": ["polish"],
+    "subtab": "Accounts"
+  },
+  {
+    "id": "L001",
+    "capability": "Accounts total user count",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "heading",
+      "name": "Accounts (27)"
+    },
+    "interaction": []
+  },
+  {
+    "id": "L002",
+    "capability": "Accounts email search",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "text": "user27@example.com"
+    },
+    "interaction": ["accounts-email-search"]
+  },
+  {
+    "id": "L003",
+    "capability": "Accounts public ID search",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "text": "user27@example.com"
+    },
+    "interaction": ["accounts-id-search"]
+  },
+  {
+    "id": "L004",
+    "capability": "Accounts paging and filter page reset",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "text": "user01@example.com"
+    },
+    "interaction": ["accounts-paging"]
+  },
+  {
+    "id": "L005",
+    "capability": "Accounts row opens guarded details",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "scope": "dialog",
+      "role": "button",
+      "name": "Reactivate account"
+    },
+    "interaction": ["accounts-open"]
+  },
+  {
+    "id": "L006",
+    "capability": "Accounts sort Email in both directions",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "columnheader",
+      "name": "Email",
+      "exact": false
+    },
+    "interaction": ["accounts-sort"]
+  },
+  {
+    "id": "L007",
+    "capability": "Accounts sort Status in both directions",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "columnheader",
+      "name": "Status",
+      "exact": false
+    },
+    "interaction": ["accounts-sort"]
+  },
+  {
+    "id": "L008",
+    "capability": "Accounts sort Created in both directions",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "columnheader",
+      "name": "Created",
+      "exact": false
+    },
+    "interaction": ["accounts-sort"]
+  },
+  {
+    "id": "L009",
+    "capability": "Accounts sort Last active in both directions",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "columnheader",
+      "name": "Last active",
+      "exact": false
+    },
+    "interaction": ["accounts-sort"]
+  },
+  {
+    "id": "L010",
+    "capability": "Accounts sort Projects in both directions",
+    "story": "ManyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "columnheader",
+      "name": "Projects",
+      "exact": false
+    },
+    "interaction": ["accounts-sort"]
+  },
+  {
+    "id": "L011",
+    "capability": "Accounts EmptyAccounts state",
+    "story": "EmptyAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "status",
+      "text": "No accounts found."
+    }
+  },
+  {
+    "id": "L012",
+    "capability": "Accounts LoadingAccounts state",
+    "story": "LoadingAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "status",
+      "text": "Loading accounts..."
+    }
+  },
+  {
+    "id": "L013",
+    "capability": "Accounts UnavailableAccounts state",
+    "story": "UnavailableAccounts",
+    "tab": "Users",
+    "subtab": "Accounts",
+    "status": "COVERED",
+    "proof": {
+      "role": "status",
+      "text": "Accounts are unavailable."
+    }
+  }
+]

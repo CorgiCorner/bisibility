@@ -39,6 +39,7 @@ export async function retainHistoricalGotoResult(
   check: LoadedCheck,
   decided: {
     decision: Exclude<OrganicResultDecision, { outcome: "indeterminate" }>;
+    providerResponse?: unknown;
     resolution: RedirectRowsResolution<unknown>;
   },
   now: Date,
@@ -49,7 +50,11 @@ export async function retainHistoricalGotoResult(
   const depth = resolveSerpDepth(check.requestedDepth ?? undefined);
   const finishedAt = (check.preRecoveryFinishedAt ?? check.finishedAt ?? now).toISOString();
   const raw = {
-    ...dataForSeoRawPayload(decided.resolution.candidates, decided.decision),
+    ...dataForSeoRawPayload(
+      decided.resolution.candidates,
+      decided.decision,
+      decided.providerResponse,
+    ),
     ...(decided.resolution.resolutions.some((row) => row.status !== "not_redirect")
       ? { redirect_resolutions: decided.resolution.resolutions }
       : {}),

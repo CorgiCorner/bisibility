@@ -1196,3 +1196,19 @@ describe("SerpApi provider request journal", () => {
 vi.mock("@/lib/provider-usage/admission-extension", async () => ({
   ownAdmission: (await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
 }));
+
+it.each([false, true])(
+  "retains native pages for ordinary checks as well as inspection: %s",
+  async (capture) => {
+    const native = fullPage("native", {
+      1: { link: "https://example.com/", title: "Native item" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(native)));
+    const result = await serpApiProvider.fetchRank({
+      ...rankInput({ depth: 10 }),
+      captureProviderResponse: capture,
+    });
+    expect(result.providerResponse).toEqual(capture ? [native] : undefined);
+    expect(result.raw?.provider_response).toEqual([native]);
+  },
+);
