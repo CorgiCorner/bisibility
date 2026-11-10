@@ -1,4 +1,5 @@
 import { CountryFlag } from "@/components/ui/CountryFlag";
+import { compactLocationLabel } from "@/lib/i18n/location-label";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { countryNameForCode, type LocationSuggestion } from "./location-picker-data";
 
@@ -7,7 +8,10 @@ export const locationOptionDomId = (listId: string, index: number) => `${listId}
 
 function cityCaption(option: LocationSuggestion) {
   return [option.regionName, countryNameForCode(option.countryCode) ?? option.countryCode]
-    .filter(Boolean)
+    .filter(
+      (part) =>
+        part && part.trim().toLocaleLowerCase() !== option.cityName?.trim().toLocaleLowerCase(),
+    )
     .join(", ");
 }
 
@@ -141,7 +145,9 @@ function LocationGroup({
             )}
             <span className="min-w-0">
               <span className="block truncate text-[12.5px] font-semibold">
-                {option.kind === "city" ? option.cityName : option.displayName}
+                {option.kind === "city"
+                  ? option.cityName
+                  : compactLocationLabel(option.displayName)}
               </span>
               {option.kind !== "country" ? (
                 <span className="block truncate text-[11.5px] text-fg-muted">

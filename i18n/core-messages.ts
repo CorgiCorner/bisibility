@@ -40,6 +40,7 @@ import projectSettingsTracking from "@/messages/core/en/project-settings-trackin
 import projectSettingsUsage from "@/messages/core/en/project-settings-usage.json";
 import projectSiteAudit from "@/messages/core/en/project-site-audit.json";
 import projectTimeline from "@/messages/core/en/project-timeline.json";
+import resourceCapacity from "@/messages/core/en/resource-capacity.json";
 import setup from "@/messages/core/en/setup.json";
 import shared from "@/messages/core/en/shared.json";
 import shell from "@/messages/core/en/shell.json";
@@ -54,6 +55,7 @@ export type AppMessages = CoreMessages & HostedMessageExtensions;
 
 export const sharedMessages = shared as unknown as Pick<CoreMessages, "shared">;
 export const coreMessages = mergeMessageCatalogs(
+  resourceCapacity,
   shared,
   agentWorkspace,
   projectAiResearch,

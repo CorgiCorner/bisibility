@@ -106,18 +106,22 @@ describe("dataForSeoProvider", () => {
     },
   );
 
-  it("does not call the converter when the live decision is already determinate", async () => {
+  it("resolves remaining preview redirects without changing an already determinate match", async () => {
     const source = structuredClone(gotoSource);
     source.tasks[0].result[0].items = source.tasks[0].result[0].items.filter(
       (item) => item.url !== "https://google.com/goto?url=SYNTHGOTO001",
     );
-    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(source));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(source))
+      .mockResolvedValueOnce(jsonResponse(gotoConverter.response));
     vi.stubGlobal("fetch", fetchMock);
     const result = await dataForSeoProvider.fetchRank(
       rankInput({ domain: "site1.example.com", depth: 20 }),
     );
     expect(result).toMatchObject({ position: 2, rankingUrl: "https://site1.example.com/page-1" });
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1][0])).toContain("/appendix/goto_url_converter");
   });
 
   it("resolves a live result within the separate conversion phase", async () => {
@@ -1670,7 +1674,7 @@ it.each([false, true])(
   },
 );
 
-it("retains an incomplete SERP for inspection without making a ranking claim or paying for redirect resolution", async () => {
+it("retains an incomplete SERP after a free conversion without inventing missing positions", async () => {
   const items = Array.from({ length: 19 }, (_, index) => ({
     type: "organic",
     rank_group: index + 1,
@@ -1678,9 +1682,19 @@ it("retains an incomplete SERP for inspection without making a ranking claim or 
     domain: `site-${index}.example`,
     title: `Result ${index}`,
   }));
-  const fetch = vi.fn(async () =>
-    jsonResponse(serpEnvelope([...items, { type: "ai_overview", items: [] }])),
-  );
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(
+      jsonResponse(serpEnvelope([...items, { type: "ai_overview", items: [] }])),
+    )
+    .mockResolvedValueOnce(
+      jsonResponse({
+        status_code: 20000,
+        tasks: [
+          { status_code: 20000, result: [{ goto: items[0].url, url: "https://other.example/" }] },
+        ],
+      }),
+    );
   vi.stubGlobal("fetch", fetch);
   const result = await dataForSeoProvider.fetchRank({
     ...rankInput({ depth: 20, stopOnMatch: false }),
@@ -1690,5 +1704,7 @@ it("retains an incomplete SERP for inspection without making a ranking claim or 
   expect(result.raw?.organic_results).toHaveLength(19);
   expect(result.raw?.normalization).toBeUndefined();
   expect(result.raw?.serp_features).toContain("ai overview");
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(result.raw?.organic_results?.[0].url).toBe("https://other.example/");
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(String(fetch.mock.calls[1][0])).toContain("/appendix/goto_url_converter");
 });

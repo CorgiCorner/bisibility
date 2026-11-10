@@ -850,7 +850,10 @@
     "components/keywords/serp-playground/SerpPlaygroundResults.tsx",
     "components/keywords/serp-playground/useSerpPlayground.ts",
     "components/keywords/SerpCompetitorComparison.tsx",
+    "components/keywords/SerpFeatureIcon.tsx",
+    "components/keywords/ResolveSerpUrls.tsx",
     "components/keywords/SerpFeatureSummary.tsx",
+    "components/keywords/SerpRichFeatureDetails.tsx",
     "components/keywords/snapshot-export.ts",
     "components/keywords/SnapshotDownloads.tsx",
     "components/keywords/SnapshotExtensionControl.tsx",
@@ -1539,7 +1542,8 @@
     "components/ui/useLiveNow.ts",
     "components/ui/ZonedTime.tsx",
     "components/usagekit/provider-project-chain.tsx",
-    "components/usagekit/usage-table-format.ts"
+    "components/usagekit/usage-table-format.ts",
+    "components/keywords/FetchAiOverview.tsx"
   ],
   "locales": {
     "en": [
@@ -6808,6 +6812,71 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.checkAlertHealth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.collectSearchInsights",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.deliverAlerts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.dispatchChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.maintainRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.planChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.reconcileChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.reconcileUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.recoverChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.recoverImports",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.releaseMigrationHolds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.releaseReservations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.taskHelp.sendDigests",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.tasks.checkAlertHealth",
         "tags": []
       },
@@ -7308,6 +7377,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.opsActions.sweepFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.opsActions.sweepHelp",
         "tags": []
       },
       {
@@ -9607,6 +9681,11 @@
       {
         "arguments": [],
         "key": "invite.alreadyUsedBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "invite.capacityReached",
         "tags": []
       },
       {
@@ -32889,6 +32968,16 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.featureContentMissing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.featureContentMissingHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.featureDetails",
         "tags": []
       },
@@ -33271,7 +33360,122 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.openFeatureResult",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.openMap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.otherFeatures",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.absent",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.action",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.costHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.failed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.fresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.help",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.load",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.maximum",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.notLoaded",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.quantity",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.refetch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.running",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.overviewFetch.usage",
         "tags": []
       },
       {
@@ -33413,6 +33617,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.serpFeaturesTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.site",
         "tags": []
       },
@@ -33449,6 +33658,50 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.to",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.action",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "resolved",
+            1
+          ],
+          [
+            "unresolved",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.complete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.help",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.hint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.reload",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.urlRepair.running",
         "tags": []
       },
       {
@@ -40302,6 +40555,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.serpPlayground.confirmRepeat",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.serpPlayground.connect",
         "tags": []
       },
@@ -40492,6 +40750,16 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.serpPlayground.normalizedJsonHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.openSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.serpPlayground.previous",
         "tags": []
       },
@@ -40513,6 +40781,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.serpPlayground.providerJson",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.providerJsonHelp",
         "tags": []
       },
       {
@@ -40563,6 +40836,26 @@
       {
         "arguments": [],
         "key": "projectRankTracker.serpPlayground.refreshHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.repeatHelp",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.repeatNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.serpPlayground.repeatTitle",
         "tags": []
       },
       {
@@ -40627,6 +40920,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.serpPlayground.savedShown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.serpPlayground.saveMismatch",
         "tags": []
       },
@@ -40643,6 +40941,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.serpPlayground.search",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.serpPlayground.searchedAt",
         "tags": []
       },
       {
@@ -57961,6 +58269,11 @@
       {
         "arguments": [],
         "key": "resourceCapacity.scheduleFrequencies",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "resourceCapacity.teamMembers",
         "tags": []
       },
       {

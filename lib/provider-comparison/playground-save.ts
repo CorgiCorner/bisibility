@@ -138,6 +138,7 @@ export async function savePlaygroundResult(input: SaveInput, onCommitted?: () =>
             normalizationVersion: result.normalizationVersion,
             raw: {
               ...capture.raw,
+              ...(result._urlRepair ? { _urlRepair: result._urlRepair } : {}),
               playgroundSource: {
                 runId: row.id,
                 provider: input.provider,

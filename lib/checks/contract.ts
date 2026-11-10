@@ -131,6 +131,7 @@ export type RetrievedResults =
   | (RetrievedResultsBase & {
       tier: "full";
       extension?: SnapshotExtensionView;
+      urlRepair?: import("@/lib/serp-url-repair/model").UrlRepairView;
       storedData?: { normalization: unknown; observationItems: unknown[]; scope: unknown };
       featureSummary?: import("./serp-feature-presentation").SerpFeaturePresentation;
       aiOverviewContentLoaded?: boolean;

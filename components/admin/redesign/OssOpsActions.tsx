@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 export type PreviewOpsResult =
@@ -72,14 +73,16 @@ export function OssOpsActions({
         >
           {busy === "send" ? t("sending") : t("sendTestNotification")}
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={busy !== null || !slackConfigured}
-          onClick={() => void run("sweep", onRunSweep)}
-        >
-          {busy === "sweep" ? t("running") : t("runOutboxSweep")}
-        </Button>
+        <Tooltip content={messages("sweepHelp")} semantics="description">
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={busy !== null || !slackConfigured}
+            onClick={() => void run("sweep", onRunSweep)}
+          >
+            {busy === "sweep" ? t("running") : t("runOutboxSweep")}
+          </Button>
+        </Tooltip>
       </div>
       {(notice || !slackConfigured) && (
         <p role="status" className="mt-2 text-xs text-fg-muted">

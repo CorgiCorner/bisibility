@@ -1,3 +1,4 @@
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import "server-only";
 
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -36,7 +37,7 @@ export async function persistObservationItems(
       rawFragment:
         !retainRaw || item.rawFragment == null
           ? Prisma.JsonNull
-          : (item.rawFragment as Prisma.InputJsonValue),
+          : (redactProviderResponse(item.rawFragment) as Prisma.InputJsonValue),
     })),
   });
 }

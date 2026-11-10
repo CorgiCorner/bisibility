@@ -7,6 +7,7 @@ export const requestUuid = z.uuid();
 export const comparisonDepth = 20 as const;
 export const comparisonPreviewTtlMs = 5 * 60_000;
 type FrozenComparisonFields = {
+  aiOverview?: true;
   depth?: SerpDepth;
   trackedTarget?: {
     id: string;
@@ -47,6 +48,17 @@ export function comparisonKeyword(source: FrozenComparison) {
     locationLabel: source.locationLabel,
   };
 }
+export function comparisonSearch(snapshot: FrozenComparison) {
+  return snapshot.locationKey
+    ? {
+        locationKey: snapshot.locationKey,
+        locationKind: snapshot.locationKind ?? ("country" as const),
+        countryCode: snapshot.location.gl.toUpperCase(),
+        language: snapshot.location.hl,
+      }
+    : undefined;
+}
+
 export function parseComparisonSnapshot(value: unknown): FrozenComparison {
   // Snapshots are server-authored only; fail closed for unknown formats.
   const snapshot = value as FrozenComparison;
@@ -79,5 +91,14 @@ export function parseComparisonSnapshot(value: unknown): FrozenComparison {
     throw new Error("Playground snapshot is unavailable.");
   if (snapshot.depth !== undefined && !serpDepthValues.includes(snapshot.depth))
     throw new Error("Invalid comparison depth.");
+  if (
+    snapshot.aiOverview !== undefined &&
+    (snapshot.aiOverview !== true ||
+      snapshot.version !== 2 ||
+      snapshot.depth !== 10 ||
+      snapshot.connections.length !== 1 ||
+      snapshot.connections[0].provider !== "serpapi")
+  )
+    throw new Error("Invalid overview fetch scope.");
   return snapshot;
 }

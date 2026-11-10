@@ -84,7 +84,7 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
   return (
     <span
       className={cn(
-        "inline-flex max-w-full rounded-full px-2 py-1 text-xs font-medium leading-4 [overflow-wrap:anywhere]",
+        "inline-flex max-w-full items-center gap-1 rounded-full border border-border px-2 py-1 text-xs font-medium leading-4 [overflow-wrap:anywhere]",
         statusTone(status),
       )}
     >
@@ -105,9 +105,9 @@ export function Metric({
       <div
         className={cn(
           "mt-1 min-w-0 text-fg [overflow-wrap:anywhere]",
-          technical
-            ? "text-[13px] leading-5 tabular-nums"
-            : "text-xl font-semibold leading-7 tabular-nums",
+          !technical && typeof value === "number"
+            ? "text-xl font-semibold leading-7 tabular-nums"
+            : "text-[13px] font-normal leading-5 tabular-nums",
         )}
       >
         {typeof value === "number" ? format.number(value) : value}

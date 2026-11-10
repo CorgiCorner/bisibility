@@ -7,6 +7,7 @@ import type {
   ObservationRunInput,
   ObservationScope,
 } from "@/lib/observation/types";
+import { redactProviderResponse } from "@/lib/providers/provider-response";
 import { SERPAPI_OBSERVATION_ADAPTER_VERSION } from "./observation-adapter-versions";
 import { serpApiLocalPack } from "./serpapi-local-pack";
 import { localProofPolicy, type SentWebPage, serpApiEffectiveScope } from "./web-local-proof";
@@ -45,7 +46,7 @@ function aiOverviewItem(item: RecordValue): ObservationItemInput {
     rankAbsolute: null,
     rankGroup: null,
     rating: null,
-    rawFragment: item,
+    rawFragment: redactProviderResponse(item),
     resultKind: "ai_overview",
     title: firstTextBlockTitle(textBlocks),
     url: null,

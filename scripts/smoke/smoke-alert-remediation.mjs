@@ -91,6 +91,11 @@ try {
   const databaseUrl = `postgresql://bisibility:${postgresPassword}@127.0.0.1:${port}/bisibility?schema=public`;
   const env = {
     ALERTS_REMEDIATION_FIXTURE_PREFIX: prefix,
+    // The grouped-summary scenario replays one recomputation eight times in parallel to model
+    // separate workers. Each replay holds a connection while it waits on the per-key advisory
+    // lock, so the default pool of three made the later replays exceed the transaction wait
+    // limit (P2028) instead of exercising the lock.
+    DATABASE_POOL_MAX: "10",
     DATABASE_URL: databaseUrl,
     DEPLOYMENT_ENV: "test",
     DIRECT_URL: databaseUrl,

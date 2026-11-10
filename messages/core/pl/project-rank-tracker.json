@@ -461,7 +461,16 @@
       "connectProvider": "Podłącz {provider}",
       "depth": "Głębokość wyszukiwania",
       "depthOption": "Do {count} wyników",
-      "accessRequired": "Obecny dostęp projektu nie pozwala na nowe wyszukiwania. Sprawdź plan w Ustawieniach."
+      "accessRequired": "Obecny dostęp projektu nie pozwala na nowe wyszukiwania. Sprawdź plan w Ustawieniach.",
+      "normalizedJsonHelp": "Tekstowy zapis JSON z zapisanymi wynikami, uporządkowany w naszym wspólnym formacie do porównywania dostawców.",
+      "providerJsonHelp": "Zapisana odpowiedź JSON dostawcy, przed naszym ujednoliceniem danych. Klucze dostępu i tokeny są usunięte.",
+      "repeatTitle": "To wyszukiwanie już było",
+      "repeatHelp": "Otwórz zapisany wynik bez opłat albo uruchom nowe, płatne wyszukiwanie, aby mieć aktualne dane.",
+      "repeatNotice": "Ostatnio wyszukiwano {date} z tą samą lokalizacją, językiem, urządzeniem, głębokością i dostawcami.",
+      "openSaved": "Otwórz zapisany wynik",
+      "confirmRepeat": "Wyszukaj ponownie",
+      "savedShown": "Pokazano zapisany wynik. Uruchom nowe wyszukiwanie, aby mieć aktualne dane.",
+      "searchedAt": "Wyszukano {date}"
     }
   }
 }

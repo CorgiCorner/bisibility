@@ -10,6 +10,7 @@
     "alertRulesAndWebhooks": "reguły alertów i webhooki",
     "usage": "Wykorzystano {used} z {limit}. Żądane: {requested}.",
     "crawlPagesPerCrawl": "strony na skanowanie",
-    "concurrentCrawls": "równoczesne skanowania"
+    "concurrentCrawls": "równoczesne skanowania",
+    "teamMembers": "miejsca w zespole"
   }
 }

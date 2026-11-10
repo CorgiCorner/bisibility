@@ -1,4 +1,5 @@
 "use client";
+import { ResolveSerpUrls } from "@/components/keywords/ResolveSerpUrls";
 import { SerpFeatureSummary } from "@/components/keywords/SerpFeatureSummary";
 import { Card } from "@/components/ui/Card";
 import { CopyButton } from "@/components/ui/CopyButton";
@@ -8,6 +9,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { formatMeasuredPaymentAmount } from "@/lib/action-payment/format";
 import { centsToDollars } from "@/lib/format/currency";
 import type { ComparisonProvider, ComparisonRun } from "@/lib/provider-comparison/types";
+import { isResolvableRedirect } from "@/lib/providers/serp/google-redirect";
+import { featureUrls } from "@/lib/serp-url-repair/presentation";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { AddPlaygroundProvider } from "./AddPlaygroundProvider";
@@ -25,6 +28,7 @@ export function SerpPlaygroundResults({
   readyProviders = [],
   selectedProviders = [],
   onAddProvider,
+  onResolved,
 }: {
   providers: readonly ComparisonProvider[];
   run: ComparisonRun | null;
@@ -34,10 +38,18 @@ export function SerpPlaygroundResults({
   readyProviders?: readonly ComparisonProvider[];
   selectedProviders?: readonly ComparisonProvider[];
   onAddProvider?: (provider: ComparisonProvider) => void;
+  onResolved?: () => Promise<unknown>;
 }) {
   const t = useTranslations("projectRankTracker.serpPlayground");
   const format = useFormatter();
   const locale = useLocale();
+  const comparisonKinds = [
+    ...new Set(
+      run?.sides.flatMap(
+        (side) => side.result?.features?.richFeatures?.map((feature) => feature.kind) ?? [],
+      ) ?? [],
+    ),
+  ];
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-2" aria-live="polite">
       {providers.map((provider) => {
@@ -71,7 +83,29 @@ export function SerpPlaygroundResults({
               ) : null}
             </div>
             {view === "serp" && result?.features ? (
-              <SerpFeatureSummary features={result.features} />
+              <SerpFeatureSummary
+                features={result.features}
+                comparisonKinds={comparisonKinds}
+                aiFetchContext={
+                  provider === "serpapi" && projectRef && run
+                    ? { projectRef, target: { kind: "comparison", runId: run.id, provider } }
+                    : undefined
+                }
+              />
+            ) : null}
+            {view === "serp" &&
+            result &&
+            projectRef &&
+            run &&
+            [...result.results.map((row) => row.url), ...featureUrls(result.features)].some(
+              isResolvableRedirect,
+            ) ? (
+              <ResolveSerpUrls
+                key={`${run.id}:${provider}:repair`}
+                projectRef={projectRef}
+                target={{ kind: "comparison", runId: run.id, provider }}
+                onResolved={onResolved}
+              />
             ) : null}
             <div className="flex min-h-0 flex-1 flex-col">
               {pending && !result ? (
@@ -88,7 +122,7 @@ export function SerpPlaygroundResults({
                 <div className="grid flex-1 place-items-center">
                   <EmptyState
                     compact
-                    icon={<MagnifyingGlassIcon size={20} aria-hidden />}
+                    icon={<MagnifyingGlassIcon weight="regular" size={20} aria-hidden />}
                     title={
                       side?.status === "failed" ||
                       side?.status === "unknown" ||
@@ -174,7 +208,7 @@ export function SerpPlaygroundResults({
                   {side.result?.observedAt
                     ? format.dateTime(new Date(side.result.observedAt), {
                         dateStyle: "medium",
-                        timeStyle: "short",
+                        timeStyle: "medium",
                       })
                     : t("savedResult")}
                 </span>

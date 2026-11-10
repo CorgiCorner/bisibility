@@ -47,7 +47,13 @@ export async function quotePlaygroundComparison(
       measurementPolicyEpoch: true,
     },
   });
+  if (
+    input.aiOverview &&
+    (input.depth !== 10 || providers.length !== 1 || providers[0] !== "serpapi")
+  )
+    throw new Error("Invalid overview fetch scope.");
   return {
+    ...(input.aiOverview ? { aiOverview: true as const } : {}),
     ...(target
       ? {
           trackedTarget: {
@@ -77,7 +83,7 @@ export async function quotePlaygroundComparison(
       providers,
       now,
       db,
-      { allowDisabled: true, depth: input.depth },
+      { allowDisabled: true, depth: input.depth, aiOverview: input.aiOverview },
     ),
   };
 }

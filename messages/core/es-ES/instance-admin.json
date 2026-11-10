@@ -180,7 +180,22 @@
           "releaseMigrationHolds": "Liberar bloqueos de migración",
           "reconcileChecks": "Conciliar comprobaciones"
         },
-        "inspectionPartial": "{count, plural, one {No se pudo inspeccionar # programación.} other {No se pudieron inspeccionar # programaciones.}} Los totales pueden estar incompletos."
+        "inspectionPartial": "{count, plural, one {No se pudo inspeccionar # programación.} other {No se pudieron inspeccionar # programaciones.}} Los totales pueden estar incompletos.",
+        "taskHelp": {
+          "planChecks": "Crea las comprobaciones de posición cuando llega su hora.",
+          "deliverAlerts": "Envía las alertas de posición pendientes a sus destinatarios.",
+          "recoverImports": "Reanuda las importaciones que se interrumpieron.",
+          "recoverChecks": "Detecta comprobaciones interrumpidas y las reanuda o marca de forma segura.",
+          "releaseReservations": "Libera las reservas del trabajo finalizado.",
+          "dispatchChecks": "Envía las comprobaciones en cola a los trabajadores disponibles.",
+          "maintainRuns": "Cierra ejecuciones terminadas y recupera las detenidas.",
+          "reconcileUsage": "Confirma los resultados de las solicitudes con las pruebas guardadas.",
+          "sendDigests": "Envía las alertas agrupadas en el momento previsto.",
+          "collectSearchInsights": "Importa al proyecto los datos pendientes de Search Console.",
+          "checkAlertHealth": "Detecta problemas en el envío de alertas.",
+          "releaseMigrationHolds": "Reanuda el trabajo pausado por una migración cuando es seguro.",
+          "reconcileChecks": "Concilia los resultados guardados con el estado de su ejecución."
+        }
       },
       "ops": {
         "title": "Eventos de operaciones",
@@ -415,7 +430,8 @@
       "temporarilyUnavailable": "Las acciones de administración no están disponibles temporalmente.",
       "sweepFailed": "No se ha podido completar el barrido de la cola de salida.",
       "sweepCompleted": "Barrido de la cola de salida completado: {delivered, number} de {attempted, number} entregados.",
-      "failed": "No se ha podido completar la acción de operador."
+      "failed": "No se ha podido completar la acción de operador.",
+      "sweepHelp": "Reintenta las notificaciones pendientes listas para enviar. No crea alertas nuevas."
     },
     "audit": {
       "title": "Actividad de administración",
@@ -527,13 +543,13 @@
       "preview": "Revisar recuperación",
       "commit": "Iniciar recuperación",
       "previewCount": "Casos aptos: {count, number}",
-      "noSpend": "Conciliar pruebas conservadas y restaurar resultados no llama al proveedor ni crea intentos de pago adicionales. Restaurar un resultado no confirma un cargo desconocido.",
+      "noSpend": "Comprueba las pruebas guardadas y restaura resultados sin nuevas solicitudes al proveedor. El coste original puede seguir siendo desconocido.",
       "excluded": "Casos omitidos: {count, number}",
       "expires": "La vista previa caduca",
       "recheckNote": "El trabajador volverá a comprobar cada caso y los permisos del administrador. Los casos que hayan cambiado se omitirán.",
       "previewSelected": "Revisar selección ({count, number})",
       "batchLimit": "Hasta {count, number} casos por acción",
-      "safetyNote": "La falta de confirmación no significa que la solicitud no se enviara. Solo las pruebas positivas confirman la aceptación o la ausencia de envío. La incertidumbre histórica se muestra por separado del trabajo pendiente.",
+      "safetyNote": "La falta de confirmación no demuestra que una solicitud no se enviara.",
       "selectCase": "Seleccionar {project}, {provider}",
       "historical": "Contabilidad histórica",
       "empty": "No hay casos con estos filtros.",
@@ -715,16 +731,16 @@
         "taskLookupReason": "Siguen siendo necesarias las pruebas originales del proveedor."
       },
       "closedUnknown": "Cerradas, coste desconocido",
-      "closedUnknownNote": "Un operador cerró estas solicitudes. Su coste original sigue siendo desconocido. Se conserva el historial; estas mismas solicitudes no volverán a activar la recuperación ni los recordatorios.",
+      "closedUnknownNote": "Cerradas por un operador. El coste sigue sin conocerse; se conserva el historial y no se repetirá la recuperación.",
       "approvedScope": "{targets, number} objetivos, {attempts, number} intentos por objetivo.",
       "taskOnly": {
         "closedUnknown": "Cerrado, estado contable desconocido",
-        "closedUnknownNote": "Un operador cerró estas solicitudes. El estado contable sigue siendo desconocido. Se conserva el historial; estas solicitudes no volverán a activar la recuperación ni los recordatorios.",
+        "closedUnknownNote": "Cerradas por un operador. La contabilidad sigue sin confirmarse; se conserva el historial y no se repetirá la recuperación.",
         "blockedScopes": "Recuperación limitada por incertidumbre: {projects, number} proyectos, {connections, number} conexiones.",
         "newAttemptNote": "Si no hay un resultado conservado ni pruebas concluyentes de que el envío no llegó a iniciarse, pide a un miembro del proyecto que cree una nueva ejecución con la vista previa y las comprobaciones de autorización habituales.",
         "projectBlocked": "Las acciones del proyecto están limitadas por un estado contable sin resolver.",
         "connectionBlocked": "Las acciones de la conexión están limitadas por un estado contable sin resolver.",
-        "noSpend": "La conciliación de pruebas y la restauración de resultados no envían solicitudes a proveedores. Restaurar un resultado no resuelve un estado contable desconocido.",
+        "noSpend": "Restaura resultados guardados sin nuevas solicitudes al proveedor. La contabilidad puede seguir sin confirmarse.",
         "originalRun": "Reanuda {count, number} ejecuciones originales aún no iniciadas con la autorización conservada del propietario. Se siguen aplicando los controles habituales de admisión del proveedor. No se crea ninguna ejecución nueva ni intento duplicado.",
         "accountingState": "Estado contable",
         "unknown": "Desconocido",

@@ -121,7 +121,7 @@
     "proof": {
       "text": "Release",
       "scope": "worker",
-      "fieldValue": "worker-image-sha"
+      "title": "worker-image-sha"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
@@ -177,7 +177,7 @@
     "proof": {
       "text": "Bundled migration",
       "scope": "worker",
-      "fieldValue": "20261002120000_bundled"
+      "title": "20261002120000_bundled"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
@@ -191,7 +191,7 @@
     "proof": {
       "text": "Applied migration",
       "scope": "worker",
-      "fieldValue": "20260901120000_applied"
+      "title": "20260901120000_applied"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
@@ -242,7 +242,8 @@
     "capability": "Worker health pill",
     "story": "OverviewParity",
     "proof": {
-      "text": "Worker OK"
+      "role": "button",
+      "name": "Worker: OK"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
@@ -250,33 +251,31 @@
   },
   {
     "id": "O013",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Check failure-rate pill",
     "story": "OverviewParity",
     "proof": {
-      "text": "Checks:",
-      "exact": false
+      "text": "10.0% failed"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
-    "subtab": "Status"
+    "subtab": "Data sources"
   },
   {
     "id": "O014",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Per-provider failure-rate pill",
     "story": "OverviewParity",
     "proof": {
-      "text": "Source B:",
-      "exact": false
+      "text": "Source B"
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
-    "subtab": "Status"
+    "subtab": "Data sources"
   },
   {
     "id": "O015",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Undelivered event-count pill",
     "story": "OverviewParity",
     "proof": {
@@ -284,11 +283,11 @@
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
-    "subtab": "Status"
+    "subtab": "Notifications"
   },
   {
     "id": "O016",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Unknown worker hint and scheduling documentation link",
     "story": "UnknownWorker",
     "proof": {
@@ -296,8 +295,7 @@
       "name": "How to run the worker"
     },
     "status": "MOVED",
-    "interaction": ["focus-worker"],
-    "subtab": "Status"
+    "subtab": "Worker"
   },
   {
     "id": "O017",
@@ -3407,7 +3405,7 @@
     "capability": "Closed unknown explanation",
     "story": "RecoveryParity",
     "proof": {
-      "text": "These requests were closed by an operator. Accounting remains unknown. History is retained; the same requests will not trigger recovery or reminders again."
+      "text": "Closed by an operator. Accounting is still unknown; history is kept and recovery will not run again."
     },
     "status": "MOVED",
     "disclosure": "Data quality / Health",
@@ -4221,7 +4219,7 @@
     "capability": "No-spend explanation",
     "story": "RecoveryPreview",
     "proof": {
-      "text": "Proof reconciliation and result restoration make no provider requests. Restoring a result does not settle an unknown accounting state.",
+      "text": "Restores saved results without new provider requests. Accounting may remain unknown.",
       "exact": false,
       "scope": "dialog"
     },
@@ -4757,27 +4755,29 @@
   },
   {
     "id": "O129",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Unknown check failure rate",
     "story": "OverviewUnavailable",
     "proof": {
-      "text": "Checks: unknown"
+      "text": "Rank-check diagnostics are unavailable.",
+      "exact": false
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
-    "subtab": "Status"
+    "subtab": "Checks"
   },
   {
     "id": "O130",
-    "tab": "Overview",
+    "tab": "Operations",
     "capability": "Unknown operational delivery",
     "story": "OverviewUnavailable",
     "proof": {
-      "text": "Delivery: unknown"
+      "text": "Delivery diagnostics are unavailable.",
+      "exact": false
     },
     "status": "MOVED",
     "disclosure": "Overview > Show instance details",
-    "subtab": "Status"
+    "subtab": "Notifications"
   },
   {
     "id": "O131",
@@ -5141,7 +5141,8 @@
     "capability": "Operational timestamp timezone indicator",
     "story": "Overview",
     "proof": {
-      "text": "Times in Europe/Warsaw"
+      "text": "Times in Europe/Warsaw",
+      "exact": false
     },
     "status": "MOVED",
     "subtab": "Worker"

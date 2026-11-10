@@ -11,6 +11,7 @@ import {
   comparisonHash,
   comparisonKeyword,
   comparisonPreviewTtlMs,
+  comparisonSearch,
   parseComparisonSnapshot,
   requestUuid,
 } from "./model";
@@ -52,6 +53,7 @@ export async function previewPlaygroundComparison(input: {
         hash,
         expiresAt: expiresAt.toISOString(),
         keyword: comparisonKeyword(snapshot),
+        search: comparisonSearch(snapshot),
         depth: snapshot.depth ?? comparisonDepth,
         sides: snapshot.connections.map((side) => side.quote),
       };
@@ -110,6 +112,7 @@ export async function launchPlaygroundComparison(
         input.projectId,
         {
           depth: snapshot.depth,
+          ...(snapshot.aiOverview ? { aiOverview: true as const } : {}),
           query: snapshot.text,
           device: snapshot.device,
           locationId: snapshot.locationId,

@@ -35,8 +35,8 @@ describe("AdminProviderHealth", () => {
     expect(screen.getByText("p95 last success: unknown")).toBeInTheDocument();
     expect(screen.getByText("4.9% failed")).toHaveClass("text-green-text");
     expect(screen.getByText("28.0% failed")).toHaveClass("text-red-text");
-    expect(container.querySelector('[data-tone="ok"]')).toBeInTheDocument();
-    expect(container.querySelector('[data-tone="failed"]')).toBeInTheDocument();
+    expect(screen.getByText("4.9% failed")).toHaveClass("border", "rounded-full");
+    expect(screen.getByText("28.0% failed")).toHaveClass("border", "rounded-full");
     expect(container).not.toHaveTextContent("Project ID");
     expect(container).not.toHaveTextContent("Connection ID");
     expect(container).not.toHaveTextContent("project-sensitive-id");

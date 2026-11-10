@@ -136,8 +136,27 @@ describe("AppHeader", () => {
     const title = screen.getByTestId("header-title");
     const slot = screen.getByTestId("context-slot");
     expect(title.compareDocumentPosition(slot)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(title.parentElement).toContainElement(slot);
-    expect(title.parentElement).toHaveClass("col-span-3", "row-start-2", "flex-col", "sm:flex-row");
+    // Below `sm` only the context takes the second grid row, spanning all three columns.
+    expect(slot.parentElement).toHaveClass("col-span-3", "col-start-1", "row-start-2");
+  });
+
+  it("keeps the page title on the menu row below the small breakpoint", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        context={<div data-testid="context-slot">United States</div>}
+        projectRef="prj_example"
+        workspaces={[]}
+      />,
+    );
+
+    const cell = screen.getByTestId("header-title-cell");
+    expect(cell).toContainElement(screen.getByTestId("header-title"));
+    // The flexible middle column of row 1, between the menu button and the utilities.
+    expect(cell).toHaveClass("col-start-2", "row-start-1", "min-w-0");
+    expect(cell).not.toHaveClass("row-start-2");
+    expect(screen.getByRole("banner")).toContainElement(cell);
   });
 
   it("renders no context slot when the route matched none", () => {

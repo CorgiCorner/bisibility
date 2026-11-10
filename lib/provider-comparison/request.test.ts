@@ -111,3 +111,59 @@ it.each([10, 20, 50, 100] as const)(
     expect(result.position).toBe(depth);
   },
 );
+
+it("admits one overview follow-up only under explicit frozen consent", () => {
+  const base = comparisonFixture();
+  const overview = {
+    ...base,
+    version: 2 as const,
+    keywordId: null,
+    aiOverview: true as const,
+    depth: 10 as const,
+    connections: base.connections.filter((x) => x.provider === "serpapi"),
+  };
+  const native = {
+    method: "GET" as const,
+    url: "https://serpapi.com/search.json?engine=google_ai_overview&page_token=first-token",
+  };
+  expect(() => comparisonRequestKey("serpapi", base, native, "tag")).toThrow("not quoted");
+  const key = comparisonRequestKey("serpapi", overview, native, "tag");
+  expect(key).not.toContain("first-token");
+  expect(
+    comparisonRequestKey(
+      "serpapi",
+      overview,
+      { ...native, url: native.url.replace("first-token", "another-token") },
+      "tag",
+    ),
+  ).toBe(key);
+  expect(() =>
+    comparisonRequestKey(
+      "serpapi",
+      overview,
+      { ...native, url: native.url + "&q=another-query" },
+      "tag",
+    ),
+  ).toThrow("changed scope");
+});
+
+it("freezes cache bypass only for explicitly quoted overview requests", () => {
+  const base = comparisonFixture();
+  const overview = {
+    ...base,
+    version: 2 as const,
+    keywordId: null,
+    aiOverview: true as const,
+    depth: 10 as const,
+    connections: base.connections.filter((x) => x.provider === "serpapi"),
+  };
+  const request = serpApiRankRequest(comparisonRankInput(overview));
+  expect(new URL(request.url).searchParams.get("no_cache")).toBe("true");
+  expect(() => comparisonRequestKey("serpapi", overview, request, "tag")).not.toThrow();
+  const changed = new URL(request.url);
+  changed.searchParams.delete("no_cache");
+  expect(() =>
+    comparisonRequestKey("serpapi", overview, { ...request, url: changed.href }, "tag"),
+  ).toThrow("changed scope");
+  expect(() => comparisonRequestKey("serpapi", base, request, "tag")).toThrow("changed scope");
+});

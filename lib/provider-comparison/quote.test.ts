@@ -164,3 +164,35 @@ it("prices the selected depth and permits explicitly chosen connected fallback w
   );
   expect(s.connections.every((c) => !c.enabled)).toBe(true);
 });
+
+it("quotes at most two searches for an explicit overview fetch while keeping organic depth at ten", async () => {
+  const s = source("hosted");
+  const db = {
+    project: { findUnique: async () => ({ domain: "example.com" }) },
+    location: {
+      findUnique: async () => ({ id: "location", displayName: "Poland", ...s.location }),
+    },
+    providerConnection: { findMany: async () => s.connections },
+    keyword: { findFirst: async () => null },
+  };
+  mocks.hostQuote.mockResolvedValue({ prices: { "serp-playground": "4" } });
+  const result = await quotePlaygroundComparison(
+    "project",
+    {
+      aiOverview: true,
+      depth: 10,
+      query: "Coffee",
+      locationId: "location",
+      device: "desktop",
+      providers: ["serpapi"],
+    },
+    new Date(),
+    db as never,
+  );
+  expect(result).toMatchObject({ aiOverview: true, depth: 10 });
+  expect(result.connections[0].quote.nativeQuantity).toBe(2);
+  expect(mocks.hostQuote).toHaveBeenCalledWith(
+    db,
+    expect.objectContaining({ items: [expect.objectContaining({ estimatedQuantity: "2" })] }),
+  );
+});

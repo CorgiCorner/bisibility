@@ -22,7 +22,7 @@ export function AddPlaygroundProvider({
   const t = useTranslations("projectRankTracker.serpPlayground");
   return (
     <Card className="flex min-h-[280px] flex-col items-center justify-center gap-4 border-dashed p-6 text-center">
-      <PlusIcon size={28} aria-hidden className="text-fg-muted" />
+      <PlusIcon weight="regular" size={28} aria-hidden className="text-fg-muted" />
       <div className="space-y-2">
         <h2 className="m-0 text-ui-section">{t("compareProviderTitle")}</h2>
         <p className="m-0 max-w-xs text-sm text-fg-muted">{t("compareProviderHelp")}</p>

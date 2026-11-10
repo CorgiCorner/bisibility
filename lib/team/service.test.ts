@@ -1,14 +1,29 @@
-import { changeTeamMemberRole, removeTeamMember, revokeTeamInvite } from "@/lib/team/service";
+import {
+  changeTeamMemberRole,
+  inviteTeamMember,
+  removeTeamMember,
+  resendTeamInvite,
+  revokeTeamInvite,
+} from "@/lib/team/service";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invitePublicId = "inv_aaaaaaaaaaaaaaaaaaaaaaaa";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
-    invite: { delete: vi.fn(), findFirst: vi.fn() },
+    invite: {
+      delete: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
+    },
     membership: { delete: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(),
   },
+  capacityCheck: vi.fn(),
+  prepareCapacity: vi.fn(),
+  deliverInvite: vi.fn(),
   removeMembershipSideEffects: vi.fn(),
   requireProjectScope: vi.fn(),
   writeAudit: vi.fn(),
@@ -18,13 +33,16 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/actions/_shared", () => ({ requireProjectScope: mocks.requireProjectScope }));
 vi.mock("@/lib/actions/team-invite-delivery", () => ({
   assertInviteMailerReady: vi.fn(),
-  deliverInvite: vi.fn(),
+  deliverInvite: mocks.deliverInvite,
 }));
 vi.mock("@/lib/actions/team-rbac", () => ({
   assertAdminOrOwnerRemains: vi.fn(),
   assertOwnerForAdminTier: vi.fn(),
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
+vi.mock("@/lib/capacity/capacity-extension", () => ({
+  prepareResourceCapacity: mocks.prepareCapacity,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/team/membership-cleanup", () => ({
   removeMembershipSideEffects: mocks.removeMembershipSideEffects,
@@ -42,6 +60,8 @@ const context = {
 describe("team service public identifiers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.capacityCheck.mockResolvedValue(undefined);
+    mocks.prepareCapacity.mockResolvedValue({ enabled: true, check: mocks.capacityCheck });
     mocks.requireProjectScope.mockResolvedValue({ id: "project_1" });
     mocks.writeAudit.mockResolvedValue({});
     mocks.prisma.$transaction.mockImplementation((run: never) =>
@@ -139,4 +159,46 @@ describe("team service public identifiers", () => {
       userId: "user_2",
     });
   });
+  it.each(["invite", "resend", "promote"] as const)(
+    "checks %s capacity before delivery or committed callbacks",
+    async (operation) => {
+      const denied = new Error("No team seats left");
+      mocks.capacityCheck.mockRejectedValueOnce(denied);
+      mocks.prisma.invite.findUnique.mockResolvedValue(null);
+      mocks.prisma.invite.findFirst.mockResolvedValue({ id: "invite_db_1", role: "member" });
+      mocks.prisma.membership.findFirst.mockResolvedValue(
+        operation === "promote"
+          ? {
+              id: "member_db_1",
+              publicId: "mbr_aaaaaaaaaaaaaaaaaaaaaaaa",
+              role: "viewer",
+              userId: "person",
+            }
+          : null,
+      );
+      const committed = vi.fn();
+      const attempt =
+        operation === "invite"
+          ? inviteTeamMember(
+              { email: "person@example.com", projectId: "prj_1", role: "member" },
+              context,
+              committed,
+            )
+          : operation === "resend"
+            ? resendTeamInvite({ inviteId: invitePublicId, projectId: "prj_1" }, context, committed)
+            : changeTeamMemberRole(
+                { memberId: "mbr_aaaaaaaaaaaaaaaaaaaaaaaa", projectId: "prj_1", role: "member" },
+                context,
+              );
+      await expect(attempt).rejects.toBe(denied);
+      expect(mocks.prepareCapacity).toHaveBeenCalledWith(mocks.prisma, {
+        projectId: "project_1",
+        dimensions: ["teamMembers"],
+      });
+      expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+      expect(mocks.deliverInvite).not.toHaveBeenCalled();
+      expect(committed).not.toHaveBeenCalled();
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+    },
+  );
 });

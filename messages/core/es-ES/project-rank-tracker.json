@@ -461,7 +461,16 @@
       "connectProvider": "Conectar {provider}",
       "depth": "Profundidad de búsqueda",
       "depthOption": "Hasta {count} resultados",
-      "accessRequired": "El acceso actual del proyecto no permite nuevas búsquedas. Revisa tu plan en Ajustes."
+      "accessRequired": "El acceso actual del proyecto no permite nuevas búsquedas. Revisa tu plan en Ajustes.",
+      "normalizedJsonHelp": "Un registro de texto JSON de los resultados guardados, organizado en nuestro formato común para comparar proveedores.",
+      "providerJsonHelp": "La respuesta JSON guardada del proveedor, antes de nuestra normalización. Se eliminan las claves de acceso y los tokens.",
+      "repeatTitle": "Ya has hecho esta búsqueda",
+      "repeatHelp": "Abre el resultado guardado sin coste o ejecuta una nueva búsqueda de pago para obtener datos actuales.",
+      "repeatNotice": "Última búsqueda: {date}, con la misma ubicación, idioma, dispositivo, profundidad y proveedores.",
+      "openSaved": "Abrir resultado guardado",
+      "confirmRepeat": "Buscar de nuevo",
+      "savedShown": "Se muestra el resultado guardado. Ejecuta una nueva búsqueda para obtener datos actuales.",
+      "searchedAt": "Buscado el {date}"
     }
   }
 }

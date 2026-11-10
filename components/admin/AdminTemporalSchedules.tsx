@@ -2,6 +2,7 @@
 import { useAdminTableSort } from "@/components/admin/AdminTableState";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { TemporalScheduleIssue } from "@/lib/ops/heartbeat-temporal";
 import { useFormatter, useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -52,7 +53,10 @@ export function AdminTemporalSchedules({
           return (
             <div className="min-w-0 py-1 [overflow-wrap:anywhere]">
               {label ? (
-                <span className="block text-[13px] font-medium text-fg">{t(`tasks.${label}`)}</span>
+                <span className="inline-flex items-center gap-1 text-[13px] font-medium text-fg">
+                  {t(`tasks.${label}`)}
+                  <InfoTooltip text={t(`taskHelp.${label}`)} />
+                </span>
               ) : null}
               <span className="block text-xs leading-5 text-fg-muted">{scheduleId}</span>
             </div>

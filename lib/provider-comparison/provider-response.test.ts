@@ -40,3 +40,32 @@ it("stores the native response once while keeping the public result small", () =
   expect(retained._capture?.raw?.provider_response).toEqual({ value: 19, token: "[redacted]" });
   expect(publicComparisonResult(retained)).toEqual({ results: [] });
 });
+
+it("adds rich previews to older comparison captures without exposing native response or losing saved AI content", () => {
+  const value = {
+    results: [],
+    features: {
+      aiOverview: { present: true, paragraphs: ["Saved answer"], sources: [] },
+      localPack: { present: false, places: [] },
+    },
+    _capture: {
+      raw: {
+        provider_response: [
+          {
+            inline_images: [
+              { title: "Image", thumbnail: "https://example.com/image.jpg", secret: "private" },
+            ],
+          },
+        ],
+      },
+    },
+  };
+  const projected = publicComparisonResult(value);
+  expect(projected?.features?.aiOverview.paragraphs).toEqual(["Saved answer"]);
+  expect(projected?.features?.richFeatures?.[0]).toMatchObject({
+    kind: "images",
+    items: [{ title: "Image" }],
+  });
+  expect(JSON.stringify(projected)).not.toContain("private");
+  expect(projected).not.toHaveProperty("_capture");
+});

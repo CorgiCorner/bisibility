@@ -461,7 +461,16 @@
       "connectProvider": "{provider}を接続",
       "depth": "検索範囲",
       "depthOption": "最大{count}件",
-      "accessRequired": "現在のプロジェクトのアクセス権では新しい検索を実行できません。設定でプランを確認してください。"
+      "accessRequired": "現在のプロジェクトのアクセス権では新しい検索を実行できません。設定でプランを確認してください。",
+      "normalizedJsonHelp": "保存した結果を、プロバイダー間で比較できる共通形式に整理したJSONテキストです。",
+      "providerJsonHelp": "共通形式に変換する前の、保存されたプロバイダーのJSON応答です。アクセスキーとトークンは削除されています。",
+      "repeatTitle": "この検索は実行済みです",
+      "repeatHelp": "保存済みの結果を無料で開くか、最新データのために新しい有料検索を実行してください。",
+      "repeatNotice": "前回の検索: {date}（同じ地域、言語、デバイス、深さ、プロバイダー）。",
+      "openSaved": "保存済みの結果を開く",
+      "confirmRepeat": "新しく検索",
+      "savedShown": "保存済みの結果を表示しています。最新データが必要な場合は新しく検索してください。",
+      "searchedAt": "検索日時: {date}"
     }
   }
 }

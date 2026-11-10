@@ -99,6 +99,29 @@ describe("persistObservationRun", () => {
     ]);
   });
 
+  it("redacts access tokens at the storage boundary without changing the provider input", async () => {
+    const tx = transaction();
+    const input = observationInput();
+    const fragment = {
+      page_token: "ephemeral-token",
+      text: "Kept overview text",
+      api_key: "private-key",
+    };
+    input.items = [{ resultKind: "ai_overview", rawFragment: fragment }];
+    await persistObservationRun(tx as never, {
+      rankCheckId: "rank_check_1",
+      projectId: "project_1",
+      input,
+    });
+    const stored = tx.observationItem.createMany.mock.calls[0]?.[0].data[0].rawFragment;
+    expect(stored).toEqual({
+      page_token: "[redacted]",
+      text: "Kept overview text",
+      api_key: "[redacted]",
+    });
+    expect(fragment.page_token).toBe("ephemeral-token");
+  });
+
   it("persists completeness verbatim", async () => {
     const tx = transaction();
     const input = observationInput();

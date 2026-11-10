@@ -82,6 +82,9 @@ for (const group of groups) {
         await assertCapability(realCapability(item), entry.story, entry.interaction ?? [], result);
       expect(realPage.access).toHaveBeenCalled();
     },
-    group.some((entry) => entry.id === "R043") ? 30000 : 10000,
+    // R043 selects 25 rows one by one, and each click re-renders the whole page synchronously.
+    // Under coverage in public candidate CI that exceeded 30s (v0.48.0-rc.1), so it gets twice
+    // the old budget.
+    group.some((entry) => entry.id === "R043") ? 60000 : 10000,
   );
 }

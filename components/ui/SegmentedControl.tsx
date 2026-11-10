@@ -187,7 +187,11 @@ export function SegmentedControl<T extends string>({
           );
           return option.tooltip ? (
             <Fragment key={option.value}>
-              <Tooltip content={option.tooltip} semantics="description">
+              <Tooltip
+                content={option.tooltip}
+                semantics="description"
+                wrapperClassName={fitContent ? "shrink-0" : "min-w-0"}
+              >
                 {labelEl}
               </Tooltip>
               <span className="sr-only" id={descriptionId}>

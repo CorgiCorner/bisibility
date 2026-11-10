@@ -180,7 +180,22 @@
           "releaseMigrationHolds": "移行の保留を解除",
           "reconcileChecks": "順位チェックを照合"
         },
-        "inspectionPartial": "{count, plural, other {#件のスケジュールを確認できませんでした。}} 合計は不完全な可能性があります。"
+        "inspectionPartial": "{count, plural, other {#件のスケジュールを確認できませんでした。}} 合計は不完全な可能性があります。",
+        "taskHelp": {
+          "planChecks": "予定時刻になった順位チェックを作成します。",
+          "deliverAlerts": "保留中の順位アラートを受信者に送信します。",
+          "recoverImports": "途中で止まったインポートを再開します。",
+          "recoverChecks": "中断したチェックを検出し、安全に再開または記録します。",
+          "releaseReservations": "完了した処理で不要になった予約を解除します。",
+          "dispatchChecks": "待機中の順位チェックを利用可能なワーカーに送ります。",
+          "maintainRuns": "完了した実行を閉じ、停止した実行を復旧します。",
+          "reconcileUsage": "保存された記録でプロバイダーへのリクエスト結果を確認します。",
+          "sendDigests": "指定時刻にまとめたアラートを送信します。",
+          "collectSearchInsights": "待機中のSearch Consoleデータをプロジェクトに取り込みます。",
+          "checkAlertHealth": "アラート配信の停止や問題を検出します。",
+          "releaseMigrationHolds": "データベース移行で停止した処理を安全に再開します。",
+          "reconcileChecks": "保存された結果とチェック実行の状態を照合します。"
+        }
       },
       "ops": {
         "title": "運用イベント",
@@ -415,7 +430,8 @@
       "temporarilyUnavailable": "管理操作は一時的に利用できません。",
       "sweepFailed": "アウトボックスのスイープを実行できませんでした。",
       "sweepCompleted": "アウトボックスのスイープが完了しました。{attempted, number}件中{delivered, number}件を配信しました。",
-      "failed": "オペレーター操作を完了できませんでした。"
+      "failed": "オペレーター操作を完了できませんでした。",
+      "sweepHelp": "送信可能な保留通知を再送します。新しいアラートは作成しません。"
     },
     "audit": {
       "title": "管理者アクティビティ",
@@ -527,13 +543,13 @@
       "preview": "復旧内容を確認",
       "commit": "復旧を開始",
       "previewCount": "対応可能な案件: {count, number}",
-      "noSpend": "保持された証拠の照合と結果の復元はプロバイダーにリクエストを送らず、追加の有料試行を作成しません。結果の復元によって不明な請求が確定することはありません。",
+      "noSpend": "保存済みの記録を確認し、新たなリクエストなしで結果を復元します。元の費用は不明のままの場合があります。",
       "excluded": "対象外の案件: {count, number}",
       "expires": "プレビューの有効期限",
       "recheckNote": "ワーカーは各案件と管理者権限を再確認します。変更された案件はスキップされます。",
       "previewSelected": "選択内容を確認 ({count, number})",
       "batchLimit": "1 回の操作につき最大 {count, number} 件",
-      "safetyNote": "確認がないことは未送信を意味しません。受理または確実な未送信の判断には証拠が必要です。過去の会計不明分は未完了の作業と分けて表示します。",
+      "safetyNote": "確認がないことは、リクエストが送信されなかった証拠にはなりません。",
       "selectCase": "{project}、{provider} を選択",
       "historical": "過去の会計情報",
       "empty": "この条件に一致する案件はありません。",
@@ -715,16 +731,16 @@
         "taskLookupReason": "プロバイダーの元の証跡が引き続き必要です。"
       },
       "closedUnknown": "終了済み・費用不明",
-      "closedUnknownNote": "管理者がこれらのリクエストを終了しました。元の費用は不明のままです。履歴は保持され、同じリクエストに対する復旧処理や通知は繰り返されません。",
+      "closedUnknownNote": "担当者が終了しました。費用は不明のままで履歴を保持し、復旧は繰り返しません。",
       "approvedScope": "対象: {targets, number}、対象ごとの試行回数: {attempts, number}。",
       "taskOnly": {
         "closedUnknown": "終了済み、会計状態は不明",
-        "closedUnknownNote": "これらのリクエストは管理者が終了しました。会計状態は不明のままです。履歴は保持され、同じリクエストで復旧や通知が再び実行されることはありません。",
+        "closedUnknownNote": "担当者が終了しました。照合は不明のままで履歴を保持し、復旧は繰り返しません。",
         "blockedScopes": "不確実な状態により復旧が制限されています。プロジェクト: {projects, number}、接続: {connections, number}。",
         "newAttemptNote": "保存された結果がなく、送信が開始されていないという確実な証拠もない場合は、プロジェクトのメンバーに通常のプレビューと権限確認を経て新しい実行を作成するよう依頼してください。",
         "projectBlocked": "未解決の会計状態によりプロジェクトの操作が制限されています。",
         "connectionBlocked": "未解決の会計状態により接続の操作が制限されています。",
-        "noSpend": "証跡の照合と結果の復元ではプロバイダーにリクエストを送信しません。結果を復元しても不明な会計状態は解決されません。",
+        "noSpend": "保存した結果を新しいリクエストなしで復元します。照合状況は不明のままの場合があります。",
         "originalRun": "所有者の保存された承認に基づき、未開始の元の実行を {count, number} 件再開します。通常のプロバイダー利用条件が適用されます。新しい実行や重複した試行は作成されません。",
         "accountingState": "会計状態",
         "unknown": "不明",

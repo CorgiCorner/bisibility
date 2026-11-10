@@ -1,5 +1,6 @@
 import { aiOverviewPresentation } from "@/lib/checks/ai-overview-presentation";
 import { serpFeaturePresentation } from "@/lib/checks/serp-feature-presentation";
+import { repairedUrl, repairView } from "@/lib/serp-url-repair/model";
 import "server-only";
 import { providerLabel } from "@/lib/checks/attempts";
 import type { RetrievedResults, RetrievedRow, StoredResultsTier } from "@/lib/checks/contract";
@@ -9,6 +10,7 @@ import {
   storedOrganicDomainRanks,
 } from "@/lib/rank-check/organic-ranks";
 import { loadSnapshotExtensionView } from "@/lib/serp/snapshot-extension-view";
+import { repairedFeatures } from "@/lib/serp-url-repair/presentation";
 import { capturedStopOnMatch } from "./retrieved-results-provenance";
 
 type CheckRow = {
@@ -81,8 +83,16 @@ async function buildFullResult(
     .map((item): RetrievedRow | null => {
       const rank = typeof item.rank === "number" ? item.rank : Number(item.rank);
       if (!Number.isInteger(rank)) return null;
-      const domain = typeof item.domain === "string" ? item.domain : "";
-      const url = typeof item.url === "string" ? item.url : null;
+      const originalUrl = typeof item.url === "string" ? item.url : null;
+      const url = originalUrl
+        ? repairedUrl(originalUrl, isRecord(check.raw) ? check.raw._urlRepair : undefined)
+        : null;
+      const domain =
+        url && url !== originalUrl
+          ? new URL(url).hostname
+          : typeof item.domain === "string"
+            ? item.domain
+            : "";
       const title = typeof item.title === "string" ? item.title : null;
       const resolutions =
         isRecord(check.raw) && Array.isArray(check.raw.redirect_resolutions)
@@ -93,21 +103,24 @@ async function buildFullResult(
           url !== null &&
           isRecord(value) &&
           value.status !== "not_redirect" &&
-          (value.url === url || value.originalUrl === url),
+          (value.url === originalUrl || value.originalUrl === originalUrl),
       );
       return {
         domain,
-        resultType: isRecord(redirect)
-          ? "redirect"
-          : typeof item.type === "string"
-            ? item.type
-            : "organic",
+        resultType:
+          url !== originalUrl || isRecord(redirect)
+            ? "redirect"
+            : typeof item.type === "string"
+              ? item.type
+              : "organic",
         resolutionStatus:
-          isRecord(redirect) && typeof redirect.status === "string"
-            ? redirect.status
-            : typeof item.resolutionStatus === "string"
-              ? item.resolutionStatus
-              : null,
+          url !== originalUrl
+            ? "resolved"
+            : isRecord(redirect) && typeof redirect.status === "string"
+              ? redirect.status
+              : typeof item.resolutionStatus === "string"
+                ? item.resolutionStatus
+                : null,
         position: rank,
         title,
         tracked: check.position !== null && rank === check.position,
@@ -140,7 +153,15 @@ async function buildFullResult(
         : null,
     },
     observationCompleteness: observation?.completeness ?? null,
-    featureSummary: serpFeaturePresentation(observation?.items ?? [], features),
+    urlRepair: repairView(isRecord(check.raw) ? check.raw._urlRepair : undefined),
+    featureSummary: repairedFeatures(
+      serpFeaturePresentation(
+        observation?.items ?? [],
+        features,
+        isRecord(check.raw) ? check.raw.provider_response : undefined,
+      ),
+      isRecord(check.raw) ? check.raw._urlRepair : undefined,
+    ),
     aiOverviewContent: aiOverviewPresentation(overviewItems),
     aiOverviewContentLoaded: overviewItems.length
       ? overviewItems.some((item) => Boolean(item.title))

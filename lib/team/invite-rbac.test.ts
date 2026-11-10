@@ -4,6 +4,7 @@ import { inviteTeamMember, resendTeamInvite, revokeTeamInvite } from "./service"
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $transaction: vi.fn(),
     project: { findFirst: vi.fn() },
     membership: { findFirst: vi.fn() },
     invite: {
@@ -38,6 +39,7 @@ function context(role: "admin" | "owner" | "viewer") {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.prisma.$transaction.mockImplementation((run) => run(mocks.prisma));
   mocks.prisma.project.findFirst.mockResolvedValue({
     id: "project",
     publicId: projectId,

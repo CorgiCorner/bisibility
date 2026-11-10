@@ -43,7 +43,7 @@ export function SectionChevron({
       aria-expanded={open}
       onClick={toggle}
     >
-      <CaretDownIcon aria-hidden size={16} className={open ? "" : "-rotate-90"} />
+      <CaretDownIcon weight="regular" aria-hidden size={16} className={open ? "" : "-rotate-90"} />
     </IconButton>
   );
 }

@@ -2,6 +2,7 @@ export type ResourceDimension =
   | "projects"
   | "scheduledKeywords"
   | "trackedPrompts"
+  | "teamMembers"
   | "competitorsPerProject"
   | "alertRulesAndWebhooks";
 

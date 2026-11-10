@@ -116,3 +116,27 @@ it("links an imported original check without cloning it", async () => {
   expect(await savePlaygroundResult(input)).toMatchObject({ checkRef: "check_original" });
   expect(tx.rankCheck.create).not.toHaveBeenCalled();
 });
+
+it("carries URL enrichment into imported history while preserving the original raw response", async () => {
+  const url = "https://google.com/goto?url=one";
+  side.result._urlRepair = {
+    version: 1,
+    workflowId: "job",
+    runId: "run",
+    status: "completed",
+    updatedAt: "2026-11-09T10:00:00Z",
+    mappings: { [url]: "https://destination.test/" },
+    resolved: 1,
+    unresolved: 0,
+  };
+  side.result._capture.raw = {
+    organic_results: [{ rank: 3, url }],
+    provider_response: { native: true },
+  };
+  await savePlaygroundResult(input);
+  expect(tx.rankCheck.create.mock.calls[0][0].data.raw).toMatchObject({
+    organic_results: [{ rank: 3, url }],
+    provider_response: { native: true },
+    _urlRepair: side.result._urlRepair,
+  });
+});

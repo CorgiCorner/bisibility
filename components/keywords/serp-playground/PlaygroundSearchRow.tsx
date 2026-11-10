@@ -1,7 +1,7 @@
 "use client";
 import { KeywordCheckScope } from "@/components/keywords/KeywordCheckScope";
 import { useFormatter, useLocale } from "next-intl";
-import { type SearchScope, searchScopeKeyword } from "./search-scope";
+import { type SearchScope, searchScopeKeyword, searchTimeFormat } from "./search-scope";
 export function PlaygroundSearchRow({ run }: { run: SearchScope & { createdAt: string } }) {
   const locale = useLocale(),
     format = useFormatter();
@@ -15,7 +15,7 @@ export function PlaygroundSearchRow({ run }: { run: SearchScope & { createdAt: s
           locationLabel={searchScopeKeyword(run, locale).location.displayName}
         />
         <time dateTime={run.createdAt} className="text-xs text-fg-muted">
-          {format.dateTime(new Date(run.createdAt), { month: "short", day: "numeric" })}
+          {format.dateTime(new Date(run.createdAt), searchTimeFormat)}
         </time>
       </span>
     </span>

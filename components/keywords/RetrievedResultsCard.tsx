@@ -218,6 +218,14 @@ function LegacyRetrievedResultsCard({
             ) : null}
             {mode === "one" && current ? (
               <RetrievedResultsOneCheck
+                projectRef={projectRef}
+                onResolved={async () => {
+                  const fetched = await loadResults([current.checkId]);
+                  setLoaded((cache) => ({
+                    ...cache,
+                    ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
+                  }));
+                }}
                 competitors={competitors}
                 formatDate={format.date}
                 rankingUrl={current.rankingUrl ?? null}

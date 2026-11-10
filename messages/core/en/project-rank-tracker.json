@@ -461,7 +461,16 @@
       "connectProvider": "Connect {provider}",
       "depth": "Search depth",
       "depthOption": "Up to {count} results",
-      "accessRequired": "New searches are unavailable with this project’s current access. Review your plan in Settings."
+      "accessRequired": "New searches are unavailable with this project’s current access. Review your plan in Settings.",
+      "normalizedJsonHelp": "A JSON text record of the saved results, organized into our common format for comparing providers.",
+      "providerJsonHelp": "The saved JSON response from the provider, before our normalization. Access keys and tokens are removed.",
+      "repeatTitle": "You already searched this",
+      "repeatHelp": "Open the saved result for free, or run a new paid search for current data.",
+      "repeatNotice": "Last searched {date} with the same location, language, device, depth and providers.",
+      "openSaved": "Open saved result",
+      "confirmRepeat": "Run new search",
+      "savedShown": "Saved result shown. Run a fresh search for current data.",
+      "searchedAt": "Searched {date}"
     }
   }
 }

@@ -54,7 +54,7 @@ export async function AdminRouteFrame({
         context: t("shell.context"),
         back: t("shell.backToApp"),
         title: t("shell.title"),
-        description: t("pages.description"),
+        description: `${t("pages.description")} ${translate("instanceAdmin.dashboard.timeZone", { timeZone })}`,
         navigation: t("navigation.label"),
         views: translate("instanceAdmin.shell.viewNavigation", {
           tab: active.tabLabel ?? t(active.tabKey),

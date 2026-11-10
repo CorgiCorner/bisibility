@@ -25,6 +25,15 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/serp-playground": fileURLToPath(
+    new URL("./serp-playground-stubs.ts", import.meta.url),
+  ),
+  "@/lib/actions/serp-overview-fetch": fileURLToPath(
+    new URL("./serp-overview-fetch-stubs.ts", import.meta.url),
+  ),
+  "@/lib/actions/serp-url-repair": fileURLToPath(
+    new URL("./serp-url-repair-stubs.ts", import.meta.url),
+  ),
   "@/lib/actions/domain-verification": fileURLToPath(
     new URL("./domain-verification-action-stubs.ts", import.meta.url),
   ),

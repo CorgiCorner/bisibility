@@ -297,8 +297,17 @@ async function runGroupedNotificationScenario(fixture: AcceptanceFixture) {
         down: 0, up: ids.length, failed: 0, under_review: 0, unchanged: 0, new: 0,
       });
     }
-    const replays = await Promise.all(Array.from({ length: 8 }, () => recomputeCheckSummary(target, options)));
-    assert(replays.every((writes) => writes === 0), "parallel replays must be no-ops");
+    // Settle every replay before asserting: a rejected Promise.all left the others holding locks,
+    // which deadlocked the fixture cleanup and hid the original error.
+    const replays = await Promise.allSettled(
+      Array.from({ length: 8 }, () => recomputeCheckSummary(target, options)),
+    );
+    const failed = replays.find((replay) => replay.status === "rejected");
+    if (failed) throw failed.reason;
+    assert(
+      replays.every((replay) => replay.status === "fulfilled" && replay.value === 0),
+      "parallel replays must be no-ops",
+    );
     assert.deepEqual(await prisma.notification.findMany({
       where: { projectId: fixture.project.id, idempotencyKey: summaryKey(target) },
       orderBy: { id: "asc" }, select: { id: true, version: true },

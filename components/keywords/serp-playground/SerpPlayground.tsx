@@ -52,6 +52,8 @@ export function SerpPlayground({
     setReview,
     busy,
     error,
+    savedShown,
+    openPrevious,
     hasConnection,
     activeProviders,
     pendingRun,
@@ -94,7 +96,7 @@ export function SerpPlayground({
                 !data.canRun || !hasConnection || !providers.length || !query.trim() || busy
               }
               loading={busy && !pendingRun}
-              startIcon={<MagnifyingGlassIcon size={16} aria-hidden />}
+              startIcon={<MagnifyingGlassIcon weight="regular" size={16} aria-hidden />}
               size="input"
             >
               {t("search")}
@@ -203,8 +205,9 @@ export function SerpPlayground({
         busy={busy}
         selectRun={selectRun}
       />
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
         <SegmentedControl
+          className="shrink-0"
           ariaLabel={t("view")}
           fitContent
           size="xs"
@@ -212,14 +215,21 @@ export function SerpPlayground({
           onChange={setView}
           options={[
             { value: "serp", label: t("results") },
-            { value: "json", label: t("normalizedJson") },
-            { value: "provider", label: t("providerJson") },
+            { value: "json", label: t("normalizedJson"), tooltip: t("normalizedJsonHelp") },
+            { value: "provider", label: t("providerJson"), tooltip: t("providerJsonHelp") },
           ]}
         />
       </div>
       {run ? (
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <PlaygroundQueryScope run={run} />
+          <div className="grid min-w-0 gap-1.5">
+            <PlaygroundQueryScope run={run} />
+            {savedShown ? (
+              <p role="status" className="m-0 text-xs text-fg-muted">
+                {t("savedShown")}
+              </p>
+            ) : null}
+          </div>
           <Tooltip content={t("refreshHelp")} semantics="description">
             <Button variant="ghost" size="sm" disabled={busy} onClick={() => void refresh()}>
               {t("refresh")}
@@ -240,6 +250,7 @@ export function SerpPlayground({
         </div>
       ) : null}
       <SerpPlaygroundResults
+        onResolved={refresh}
         readyProviders={data.providers
           .filter((provider) => provider.ready)
           .map((provider) => provider.provider)}
@@ -262,6 +273,7 @@ export function SerpPlayground({
         busy={busy}
         onClose={() => setReview(null)}
         launch={() => void launch()}
+        openPrevious={openPrevious}
       />
     </div>
   );

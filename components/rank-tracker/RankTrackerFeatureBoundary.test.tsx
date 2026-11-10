@@ -6,26 +6,31 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RankTrackerFeatureBoundary } from "./RankTrackerFeatureBoundary";
 
-const mocks = vi.hoisted(() => ({ loadKeywordManagementMessages: vi.fn() }));
+const mocks = vi.hoisted(() => ({ loadCoreMessages: vi.fn(), resolveLocale: vi.fn() }));
 
-vi.mock("@/components/keywords/add/KeywordManagementMessagesBoundary", () => ({
-  loadKeywordManagementMessages: mocks.loadKeywordManagementMessages,
+vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
+vi.mock("@/i18n/document-locale.server", () => ({
+  resolveRegionalDocumentLocale: mocks.resolveLocale,
 }));
 
 describe("RankTrackerFeatureBoundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.loadKeywordManagementMessages.mockResolvedValue({
-      messages: { shared: {} },
-      runtime: { locale: "en", timeZone: "UTC" },
-    });
+    mocks.loadCoreMessages.mockResolvedValue({ shared: {} });
+    mocks.resolveLocale.mockResolvedValue({ locale: "en", timeZone: "UTC" });
   });
 
-  it("keeps the rank-tracker public boundary on the shared keyword-management catalog", async () => {
+  it("loads the rank-tracker and import catalogs in the document locale", async () => {
     const boundary = await RankTrackerFeatureBoundary({ children: <span>Tracked</span> });
 
     expect(renderToStaticMarkup(boundary)).toContain("Tracked");
-    expect(mocks.loadKeywordManagementMessages).toHaveBeenCalledOnce();
+    expect(mocks.loadCoreMessages).toHaveBeenCalledExactlyOnceWith("en", [
+      "shared",
+      "projectMarkets",
+      "projectRankTracker",
+      "projectRuns",
+      "projectDashboard",
+    ]);
   });
 
   // The CSV import wizard is rendered by KeywordImportProvider. Mounted at the document shell it

@@ -14,6 +14,7 @@ import {
   inspectOrganicCandidates,
   type OrganicResultCandidate,
 } from "./organic-result-decision";
+import { completeSerpApiOverview } from "./serpapi-overview";
 import { serpApiPageCoverage } from "./serpapi-page-coverage";
 import { rawPayload, requireSerpApiOrganicDecision, type SerpApiResponse } from "./serpapi-payload";
 import {
@@ -52,7 +53,10 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     depth: input.depth,
     location: input.location,
   });
+  if (input.fetchAiOverview && depth !== 10)
+    throw new Error("Overview lookup requires a quoted single search page.");
   const pages: SerpApiResponse[] = [];
+  const nativePages: SerpApiResponse[] = [];
   const sentPages: SentWebPage[] = [];
   const candidates: OrganicResultCandidate[] = [];
   const pageStarts = searchPageStarts(depth);
@@ -74,13 +78,26 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
         device: input.device,
       },
     };
-    const data = await requestJson(
+    let data = await requestJson(
       buildSearchUrl(input, apiKey, googleParams, start),
       credentials,
       SERP_API_SEARCH_TIMEOUT_MS,
     );
     const quantity = serpApiUsageReceipt(data, { ok: true }).quantity;
     billingUnits = billingUnits === null || quantity === null ? null : billingUnits + quantity;
+    nativePages.push(data);
+    if (start === 0 && input.fetchAiOverview) {
+      const followup = await completeSerpApiOverview(data, credentials, apiKey);
+      if (followup) {
+        nativePages.push(followup.native);
+        billingUnits =
+          billingUnits === null || followup.quantity === null
+            ? null
+            : billingUnits + followup.quantity;
+        if (followup.overview)
+          data = { ...data, ai_overview: followup.overview } as SerpApiResponse;
+      }
+    }
     const pageResults = data.organic_results;
 
     if (!Array.isArray(pageResults)) {
@@ -112,6 +129,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
 
   return {
     billingUnits,
+    nativePages,
     candidates,
     coveredPrefix,
     depth,
@@ -175,6 +193,7 @@ export const serpApiProvider: SerpProvider = {
     const credentials = input.credentials ?? {};
     const {
       billingUnits,
+      nativePages,
       candidates,
       coveredPrefix,
       depth,
@@ -202,13 +221,16 @@ export const serpApiProvider: SerpProvider = {
     const checkedAt = new Date();
     return {
       billingUnits,
-      ...(input.captureProviderResponse ? { providerResponse: redactProviderResponse(pages) } : {}),
+      ...(input.captureProviderResponse
+        ? { providerResponse: redactProviderResponse(nativePages) }
+        : {}),
       position: decision.position,
       rankingUrl: decision.rankingUrl,
       costCents: 0,
       checkedAt,
       raw: {
         ...rawPayload(pages, decision),
+        provider_response: redactProviderResponse(nativePages),
         ...(decision.outcome === "indeterminate"
           ? { organic_results: inspectOrganicCandidates(candidates) }
           : {}),

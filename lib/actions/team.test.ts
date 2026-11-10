@@ -317,7 +317,13 @@ describe("team actions", () => {
     );
     expect(mocks.prisma.invite.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ acceptedAt: null, id: "invite_1" }),
+        where: expect.objectContaining({
+          acceptedAt: null,
+          id: "invite_1",
+          token: expect.stringMatching(/^sha256:/),
+          role: "member",
+          email: "teammate@example.com",
+        }),
       }),
     );
   });
