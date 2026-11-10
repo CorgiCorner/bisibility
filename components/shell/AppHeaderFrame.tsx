@@ -85,12 +85,20 @@ export function AppHeaderFrame({
           version={version}
           workspaces={workspaces}
         />
-        <div className="col-span-3 col-start-1 row-start-2 flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
+        {/* Below `sm` the header is a three-column grid. The title shares row 1 with the menu
+          button and the utilities, and truncates in the flexible middle column; only the context
+          selectors take row 2. Placing the title on row 2 left the menu button alone on its own
+          row on every route. */}
+        <div className="contents sm:flex sm:min-w-0 sm:flex-row sm:items-center sm:gap-3">
+          <div className="col-start-2 row-start-1 min-w-0" data-testid="header-title-cell">
+            <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
+          </div>
           {/* The context group must be allowed to shrink: `flex-none` held the market and device
             selectors at their intrinsic width, so a locale with longer labels (es-ES at 390px)
             pushed the row past the viewport instead of truncating. */}
-          <div className="min-w-0 shrink empty:hidden">{context}</div>
+          <div className="col-span-3 col-start-1 row-start-2 min-w-0 shrink empty:hidden">
+            {context}
+          </div>
         </div>
       </div>
       {/* Right cluster: spend pill and account utilities share one rhythm. */}

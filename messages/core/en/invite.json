@@ -27,6 +27,7 @@
     "validEmail": "Enter a valid email address.",
     "verifyAndReturn": "Verify and return to invite",
     "verifyCode": "Enter the 6-digit code.",
-    "verifyFailed": "Something went wrong. Try again."
+    "verifyFailed": "Something went wrong. Try again.",
+    "capacityReached": "This account cannot add another team member. Ask the project owner to review their plan."
   }
 }

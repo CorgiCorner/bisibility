@@ -143,9 +143,11 @@ kbd {
   font-family: var(--font-mono);
 }
 
-/* HANDOFF-12: balanced wrapping on headings. */
+/* HANDOFF-12: balanced wrapping on headings. Use the style longhand: the `text-wrap`
+   shorthand also resets `text-wrap-mode` to `wrap`, and this unlayered rule then beat the
+   `truncate` utility's `nowrap`, so every truncated heading wrapped instead. */
 h1,
 h2,
 h3 {
-  text-wrap: balance;
+  text-wrap-style: balance;
 }

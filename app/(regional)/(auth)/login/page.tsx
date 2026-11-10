@@ -90,7 +90,10 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   const demoOAuthRequest =
     demo.kind === "editable" && firstParam(params?.client_id) && firstParam(params?.sig);
   if (!switchingAccount && !demoOAuthRequest && (await getSession())) {
-    return redirect(returnTo);
+    // Marketing trial links carry a new-project destination. Existing sessions enter their
+    // account instead; the app entry still starts setup when no completed project exists.
+    const destination = new URL(returnTo, "https://return-to.invalid");
+    return redirect(destination.pathname === "/onboarding" ? "/app" : returnTo);
   }
 
   const editableOwnerSignIn = demo.kind === "editable" && ownerSignIn;

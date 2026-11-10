@@ -6,9 +6,11 @@ import { assertInviteMailerReady, deliverInvite } from "@/lib/actions/team-invit
 import { assertAdminOrOwnerRemains, assertOwnerForAdminTier } from "@/lib/actions/team-rbac";
 import { writeAudit } from "@/lib/auth/audit";
 import { type Actor, getProjectRole } from "@/lib/auth/authorize";
+import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
+import type { Role } from "@/lib/generated/prisma/client";
 import { assertInviteCreateAllowed, assertInviteResendAllowed } from "./invite-rate-limit";
 import { removeMembershipSideEffects } from "./membership-cleanup";
 
@@ -19,7 +21,7 @@ const inviteDeliveryInclude = {
   project: { select: { name: true } },
 } as const;
 
-type MemberRow = { id: string; publicId: string | null; role: string; userId: string };
+type MemberRow = { id: string; publicId: string | null; role: Role; userId: string };
 type TeamMutationContext = { actor: Actor; auditActorId: string | null };
 
 const inviteExpiresAt = () => new Date(Date.now() + INVITE_DAYS * 86_400_000);
@@ -94,14 +96,22 @@ export async function inviteTeamMember(
     role: data.role,
     token: hashInviteToken(rawToken),
   };
-  const invite = await prisma.invite.upsert({
-    create: { ...inviteData, email, projectId: project.id, publicId: makePublicId("inv") },
-    include: inviteDeliveryInclude,
-    update: { ...inviteData, acceptedAt: null },
-    where: {
-      projectId_email: { email, projectId: project.id },
-      ...editableInviteFilter(context, project.id),
-    },
+  const invite = await prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: project.id,
+      dimensions: ["teamMembers"],
+    });
+    const invite = await tx.invite.upsert({
+      create: { ...inviteData, email, projectId: project.id, publicId: makePublicId("inv") },
+      include: inviteDeliveryInclude,
+      update: { ...inviteData, acceptedAt: null },
+      where: {
+        projectId_email: { email, projectId: project.id },
+        ...editableInviteFilter(context, project.id),
+      },
+    });
+    await capacity.check();
+    return invite;
   });
   onCommitted?.();
   const result = await deliverInvite(invite, rawToken);
@@ -154,10 +164,18 @@ export async function resendTeamInvite(
 
   const rawToken = newInviteToken();
   const expiresAt = inviteExpiresAt();
-  const invite = await prisma.invite.update({
-    data: { expiresAt, token: hashInviteToken(rawToken) },
-    include: inviteDeliveryInclude,
-    where: { id: before.id, role: before.role },
+  const invite = await prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: project.id,
+      dimensions: ["teamMembers"],
+    });
+    const invite = await tx.invite.update({
+      data: { expiresAt, token: hashInviteToken(rawToken) },
+      include: inviteDeliveryInclude,
+      where: { id: before.id, role: before.role },
+    });
+    await capacity.check();
+    return invite;
   });
   onCommitted?.();
   const result = await deliverInvite(invite, rawToken);
@@ -181,10 +199,18 @@ export async function changeTeamMemberRole(
   assertOwnerForAdminTier(context.actor, project.id, before.role, data.role);
   await assertAdminOrOwnerRemains(project.id, before.role, data.role);
 
-  const member = await prisma.membership.update({
-    data: { role: data.role },
-    select: memberSelect,
-    where: { id: before.id },
+  const member = await prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: project.id,
+      dimensions: ["teamMembers"],
+    });
+    const member = await tx.membership.update({
+      data: { role: data.role },
+      select: memberSelect,
+      where: { id: before.id, role: before.role },
+    });
+    await capacity.check();
+    return member;
   });
   await writeAudit({
     action: "team.member.role_change",

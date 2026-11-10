@@ -3925,6 +3925,16 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/pages/AdminAppLoading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/pages/AdminNavLabel.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/pages/AdminPageError.tsx",
       "status": "migrated"
     },
@@ -7454,7 +7464,22 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/SerpFeatureIcon.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/ResolveSerpUrls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/SerpFeatureSummary.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/SerpRichFeatureDetails.tsx",
       "status": "migrated"
     },
     {
@@ -11579,6 +11604,11 @@
       "kind": "render",
       "path": "components/usagekit/usage-table.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/FetchAiOverview.tsx",
+      "status": "migrated"
     }
   ]
 }

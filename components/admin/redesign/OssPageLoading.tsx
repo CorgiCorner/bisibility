@@ -14,6 +14,10 @@ const pagePanels: Record<string, number[]> = {
   Accounts: [5, 2],
   Settings: [2, 5],
   Audit: [5],
+  "Sending today": [4, 3],
+  Tasks: [4, 6],
+  Subscriptions: [4, 4],
+  "Analytics exclusions": [3, 3],
 };
 
 export function OssPageLoading({ view }: { view: string }) {
@@ -33,25 +37,52 @@ export function OssPageLoading({ view }: { view: string }) {
         className="grid min-w-0 gap-4 motion-safe:animate-pulse"
       >
         {view === "Status" ? (
-          <div className="grid gap-3">
-            {[0, 1].map((row) => (
-              <div key={row} className="flex flex-wrap gap-3">
-                {[0, 1, 2, 3].map((item) => (
-                  <Bar key={item} className="h-7 w-28 rounded-full" />
-                ))}
+          <>
+            <Card size="lg">
+              <Bar className="h-4 w-28" />
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <Bar className="h-10 w-20" />
+                <Bar className="h-10 w-20" />
               </div>
+            </Card>
+            <div className="flex flex-wrap gap-3">
+              {[0, 1, 2, 3].map((item) => (
+                <Bar key={item} className="h-8 w-32" />
+              ))}
+            </div>
+            <Bar className="mt-2 h-4 w-36" />
+            {[0, 1, 2].map((item) => (
+              <Card key={item} size="lg">
+                <Bar className="h-4 w-32" />
+                <div className="mt-4 grid grid-cols-2 gap-6 lg:grid-cols-4">
+                  {[0, 1, 2, 3].map((n) => (
+                    <div key={n}>
+                      <Bar className="w-28" />
+                      <Bar className="mt-3 h-6 w-20" />
+                    </div>
+                  ))}
+                </div>
+              </Card>
             ))}
-          </div>
+          </>
         ) : (
-          (pagePanels[view] ?? [4]).map((count, index) => (
+          (pagePanels[view] ?? [4, 6]).map((count, index) => (
             <Card key={index} size="lg" className="min-w-0">
               <Bar className="h-5 w-40" />
               <Bar className="mt-2 w-72" />
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div
+                className={`mt-4 grid gap-3 ${view === "Audit" || view === "Tasks" || view === "Data sources" ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}
+              >
                 {Array.from({ length: count }, (_, item) => (
                   <div key={item} className="grid gap-3 py-3">
                     <Bar className="w-20" />
-                    <Bar className="h-6 w-14" />
+                    <Bar
+                      className={
+                        view === "Audit" || view === "Tasks" || view === "Data sources"
+                          ? "h-6 w-full"
+                          : "h-6 w-14"
+                      }
+                    />
                   </div>
                 ))}
               </div>

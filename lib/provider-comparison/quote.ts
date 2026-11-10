@@ -50,9 +50,16 @@ export async function quoteComparisonConnections(
   providers: readonly (typeof comparisonProviders)[number][],
   now: Date,
   db: Prisma.TransactionClient,
-  options: { allowDisabled?: boolean; depth?: import("@/lib/serp/constants").SerpDepth } = {},
+  options: {
+    allowDisabled?: boolean;
+    depth?: import("@/lib/serp/constants").SerpDepth;
+    aiOverview?: true;
+  } = {},
 ): Promise<FrozenComparison["connections"]> {
   const depth = options.depth ?? comparisonDepth;
+  if (options.aiOverview && (depth !== 10 || providers.length !== 1 || providers[0] !== "serpapi"))
+    throw new Error("Invalid overview quote scope.");
+  const billedDepth = options.aiOverview ? 20 : depth;
   const sides: FrozenComparison["connections"] = [];
   for (const provider of providers) {
     const connection = connections.find((side) => side.provider === provider);
@@ -67,11 +74,11 @@ export async function quoteComparisonConnections(
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(connection.id, "rank_check", now, db);
     const providerCost =
-      (hosted ? await hostedRankCheckEstimatedCostCents(provider, depth) : null) ??
-      estimatedRankCheckCostCents(provider, depth, null, context);
+      (hosted ? await hostedRankCheckEstimatedCostCents(provider, billedDepth) : null) ??
+      estimatedRankCheckCostCents(provider, billedDepth, null, context);
     if (providerCost === null || !Number.isFinite(providerCost) || providerCost <= 0)
       throw new Error("Comparison quote is unavailable.");
-    const quantity = provider === "serpapi" ? Math.ceil(depth / 10) : 1;
+    const quantity = provider === "serpapi" ? Math.ceil(billedDepth / 10) : 1;
     const price = hosted
       ? await quoteDeploymentRankReservations(db, {
           projectId,

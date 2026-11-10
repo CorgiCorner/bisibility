@@ -10,6 +10,7 @@
     "alertRulesAndWebhooks": "reglas de alertas y webhooks",
     "usage": "{used} de {limit} utilizados. Solicitados: {requested}.",
     "crawlPagesPerCrawl": "páginas por rastreo",
-    "concurrentCrawls": "rastreos simultáneos"
+    "concurrentCrawls": "rastreos simultáneos",
+    "teamMembers": "miembros del equipo"
   }
 }

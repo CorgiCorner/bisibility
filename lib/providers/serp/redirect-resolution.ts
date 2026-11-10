@@ -1,5 +1,5 @@
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
-import { isGoogleRedirectUrl } from "./google-redirect";
+import { isGoogleRedirectUrl, isResolvableRedirect } from "./google-redirect";
 
 export type RedirectMapping = { goto?: unknown; url?: unknown };
 export type RedirectTransport = (urls: readonly string[]) => Promise<readonly RedirectMapping[]>;
@@ -16,26 +16,16 @@ export function isRedirectRow(value: unknown): value is RedirectRow & { url: str
   return row?.type === "organic" && typeof row.url === "string" && isGoogleRedirectUrl(row.url);
 }
 
-/** Absolute https google.com /goto links are the only form the converter accepts. */
-export function isResolvableRedirect(value: unknown): value is string {
-  if (typeof value !== "string" || !isGoogleRedirectUrl(value)) return false;
-  try {
-    const url = new URL(value);
-    return (
-      url.protocol === "https:" &&
-      (url.hostname === "google.com" || url.hostname === "www.google.com") &&
-      (url.pathname === "/goto" || url.pathname === "/goto/")
-    );
-  } catch {
-    return false;
-  }
-}
+export { isResolvableRedirect } from "./google-redirect";
 
 function destination(value: unknown): string | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== "string" || value.length > 4096) return null;
   try {
     const url = new URL(value);
-    return (url.protocol === "http:" || url.protocol === "https:") && !isGoogleRedirectUrl(value)
+    return (url.protocol === "http:" || url.protocol === "https:") &&
+      !url.username &&
+      !url.password &&
+      !isGoogleRedirectUrl(value)
       ? value
       : null;
   } catch {

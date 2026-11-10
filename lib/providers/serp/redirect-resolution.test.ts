@@ -38,6 +38,7 @@ describe("redirect resolution", () => {
     const transport = vi.fn(async (_urls: readonly string[]) => [
       { goto: "https://google.com/goto?url=foreign", url: "https://example.org" },
       { goto: first.url, url: "ftp://example.org" },
+      { goto: first.url, url: "https://user:pass@example.com" },
       { goto: first.url, url: null },
       { goto: next.url, url: "https://www.google.com/goto?url=x" },
       { goto: next.url, url: "https://google.com./goto?url=x" },

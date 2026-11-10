@@ -7,14 +7,19 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import { featureChips } from "@/lib/checks/retrieved-results-model";
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
+import { isResolvableRedirect } from "@/lib/providers/serp/google-redirect";
+import { featureUrls } from "@/lib/serp-url-repair/presentation";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
+import { ResolveSerpUrls } from "./ResolveSerpUrls";
 import { RetrievedAiOverview } from "./RetrievedAiOverview";
 import { RetrievedResultsLadder } from "./RetrievedResultsLadder";
 
 type Props = {
+  projectRef?: string;
+  onResolved?: () => Promise<unknown>;
   competitors?: readonly TrackedCompetitor[];
   rankingUrl: string | null;
   results: RetrievedResults;
@@ -81,7 +86,7 @@ function CompactState({
     return (
       <EmptyPanel
         compact
-        icon={<MagnifyingGlassIcon size={20} aria-hidden />}
+        icon={<MagnifyingGlassIcon weight="regular" size={20} aria-hidden />}
         title={t("fullResultsMissing")}
         description={t("fullResultsMissingHelp")}
       />
@@ -122,6 +127,8 @@ function RetainedUrl({ url }: Readonly<{ url: string | null }>) {
 }
 
 export function RetrievedResultsOneCheck({
+  projectRef,
+  onResolved,
   competitors = [],
   rankingUrl,
   results,
@@ -159,6 +166,18 @@ export function RetrievedResultsOneCheck({
     missing.some((rank) => results.trackedPosition !== null && rank < results.trackedPosition);
   return (
     <div>
+      {projectRef &&
+      [
+        ...results.rows.flatMap((row) => (row.url ? [row.url] : [])),
+        ...(results.featureSummary ? featureUrls(results.featureSummary) : []),
+      ].some(isResolvableRedirect) ? (
+        <ResolveSerpUrls
+          key={`${results.checkId}:repair`}
+          projectRef={projectRef}
+          target={{ kind: "check", checkId: results.checkId }}
+          onResolved={onResolved}
+        />
+      ) : null}
       <FeatureRow
         features={results.features.filter(
           (feature) =>
@@ -221,7 +240,7 @@ export function RetrievedResultsOneCheck({
           {t("aiUnknown")}
         </p>
       ) : null}
-      <RetrievedAiOverview results={results} />
+      <RetrievedAiOverview results={results} projectRef={projectRef} />
       <RetrievedResultsLadder competitors={competitors} results={results} trackedRef={trackedRef} />
       <p className="m-0 flex items-center gap-1.5 border-t border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5">
         {results.fullDetailUntil === null

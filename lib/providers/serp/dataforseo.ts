@@ -149,20 +149,17 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       ? task.result.flatMap((result) => result.items ?? [])
       : [null];
   const sourceDecision = dataForSeoOrganicDecision(items, input.domain, payload.depth);
-  // Convert only when a redirect row is what keeps the decision open.
-  const resolution =
-    !input.allowIncompleteResults &&
-    sourceDecision.outcome === "indeterminate" &&
-    items.some(isRedirectRow)
-      ? await resolveRedirectRows(
-          items,
-          dataForSeoRedirectTransport(
-            credentials,
-            LIVE_REDIRECT_TIMEOUT_MS,
-            AbortSignal.timeout(LIVE_REDIRECT_TIMEOUT_MS),
-          ),
-        )
-      : unresolvedRows(items);
+  // The free converter also improves partial previews and results found before a redirect.
+  const resolution = items.some(isRedirectRow)
+    ? await resolveRedirectRows(
+        items,
+        dataForSeoRedirectTransport(
+          credentials,
+          LIVE_REDIRECT_TIMEOUT_MS,
+          AbortSignal.timeout(LIVE_REDIRECT_TIMEOUT_MS),
+        ),
+      )
+    : unresolvedRows(items);
   const candidateDecision =
     resolution.candidates === items
       ? sourceDecision

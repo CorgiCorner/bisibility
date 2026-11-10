@@ -54,9 +54,7 @@ it("reports an unloaded overview without blaming the provider", () => {
     />,
   );
   fireEvent.click(screen.getByRole("button", { name: "AI overview details" }));
-  expect(
-    screen.getByText("An AI overview was recorded, but its text was not saved."),
-  ).toBeVisible();
+  expect(screen.getByText("This saved response contains no AI overview text.")).toBeVisible();
   expect(screen.queryByText(/provider does not report/)).toBeNull();
 });
 

@@ -4,7 +4,9 @@ import { serpFeaturePresentation } from "@/lib/checks/serp-feature-presentation"
 import { SerpFeatureSummary } from "./SerpFeatureSummary";
 export function RetrievedAiOverview({
   results,
+  projectRef,
 }: {
+  projectRef?: string;
   results: Extract<RetrievedResults, { tier: "full" }>;
 }) {
   const features = results.featureSummary ?? serpFeaturePresentation([], results.features);
@@ -15,5 +17,14 @@ export function RetrievedAiOverview({
       sources: results.aiOverviewContent?.sources ?? [],
     };
   }
-  return <SerpFeatureSummary features={features} />;
+  return (
+    <SerpFeatureSummary
+      features={features}
+      aiFetchContext={
+        projectRef && results.provider === "serpapi"
+          ? { projectRef, target: { kind: "check", checkId: results.checkId } }
+          : undefined
+      }
+    />
+  );
 }

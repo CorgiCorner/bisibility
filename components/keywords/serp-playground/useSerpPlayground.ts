@@ -39,7 +39,12 @@ export function useSerpPlayground(
   const [view, setView] = useState<"serp" | "json" | "provider">("serp");
   const [history, setHistory] = useState(data.history);
   const [run, setRun] = useState<ComparisonRun | null>(null);
-  const [review, setReview] = useState<{ preview: ComparisonPreview; key: string } | null>(null);
+  const [review, setReview] = useState<{
+    preview: ComparisonPreview;
+    key: string;
+    previous?: ComparisonRun;
+  } | null>(null);
+  const [savedShown, setSavedShown] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<
     "searchFailed" | "locationFailed" | "stillRunning" | "accessRequired" | null
@@ -61,6 +66,7 @@ export function useSerpPlayground(
   const pendingRun =
     run?.sides.some((side) => side.status === "queued" || side.status === "claimed") ?? false;
   function selectRun(selected: ComparisonRun) {
+    setSavedShown(null);
     setRun(selected);
     setDepth(selected.depth);
     setQuery(selected.keyword.text);
@@ -84,6 +90,7 @@ export function useSerpPlayground(
     inflight.current = true;
     setBusy(true);
     setError(null);
+    setSavedShown(null);
     try {
       const response = await service.preview({
         projectRef,
@@ -97,7 +104,13 @@ export function useSerpPlayground(
       if (!mounted.current) return;
       if (response.ok && "cached" in response && response.cached) {
         setRun(response.cached);
-      } else if (response.ok) setReview({ preview: response.preview, key: crypto.randomUUID() });
+        setSavedShown(response.cached.createdAt);
+      } else if (response.ok)
+        setReview({
+          preview: response.preview,
+          key: crypto.randomUUID(),
+          ...("previous" in response && response.previous ? { previous: response.previous } : {}),
+        });
       else
         setError(
           response.reason === "access"
@@ -112,6 +125,14 @@ export function useSerpPlayground(
       inflight.current = false;
       if (mounted.current) setBusy(false);
     }
+  }
+  /** Opens the saved run offered by the cost review instead of paying for a repeat. */
+  function openPrevious() {
+    const previous = review?.previous;
+    if (!previous || inflight.current) return;
+    setReview(null);
+    setRun(previous);
+    setSavedShown(previous.createdAt);
   }
   async function launch() {
     if (!review || inflight.current) return;
@@ -131,6 +152,7 @@ export function useSerpPlayground(
         return;
       }
       setReview(null);
+      setSavedShown(null);
       let current = response.run;
       setRun(current);
       setHistory((previous) =>
@@ -209,6 +231,8 @@ export function useSerpPlayground(
     setReview,
     busy,
     error,
+    savedShown,
+    openPrevious,
     hasConnection,
     activeProviders,
     pendingRun,

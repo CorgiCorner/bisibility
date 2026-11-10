@@ -105,6 +105,7 @@ async function executeComparisonSideImpl(input: {
                 input.projectId,
                 {
                   depth: snapshot.depth,
+                  ...(snapshot.aiOverview ? { aiOverview: true as const } : {}),
                   query: snapshot.text,
                   locationId: snapshot.locationId,
                   device: snapshot.device,
@@ -136,7 +137,9 @@ async function executeComparisonSideImpl(input: {
           tag: attribution.tag,
         });
         const estimatedQuantity =
-          connection.provider === "serpapi" ? String(Math.ceil((snapshot.depth ?? 20) / 10)) : "1";
+          connection.provider === "serpapi"
+            ? String(snapshot.aiOverview ? 2 : Math.ceil((snapshot.depth ?? 20) / 10))
+            : "1";
         if (connection.fundingSource === "hosted") {
           execution = await startDeploymentExecution({
             attribution,

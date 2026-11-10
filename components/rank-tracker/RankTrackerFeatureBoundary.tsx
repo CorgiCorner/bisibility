@@ -1,6 +1,7 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import { loadKeywordManagementMessages } from "@/components/keywords/add/KeywordManagementMessagesBoundary";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import type { ReactNode } from "react";
 
 export async function RankTrackerFeatureBoundary({
@@ -8,7 +9,14 @@ export async function RankTrackerFeatureBoundary({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const { messages, runtime } = await loadKeywordManagementMessages();
+  const runtime = await resolveRegionalDocumentLocale();
+  const messages = await loadCoreMessages(runtime.locale, [
+    "shared",
+    "projectMarkets",
+    "projectRankTracker",
+    "projectRuns",
+    "projectDashboard",
+  ]);
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}

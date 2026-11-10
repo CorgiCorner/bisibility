@@ -1,8 +1,6 @@
 "use client";
-import { AdminHealthPills } from "@/components/admin/AdminHealthPills";
-import { Badge } from "@/components/admin/AdminPrimitives";
+import { Badge, statusLabel } from "@/components/admin/AdminPrimitives";
 import { Button } from "@/components/ui/Button";
-import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import { useFormatter, useTranslations } from "next-intl";
 import { useContext } from "react";
 import type { OssAdminData } from "./OssAdminViews";
@@ -53,6 +51,7 @@ export function OverviewInstance({
         {items.map((item) => (
           <Button
             key={item.label}
+            aria-label={`${item.label}: ${item.value ?? statusLabel(item.status, t)}`}
             size="sm"
             variant="ghost"
             onClick={() => navigate(item.destination)}
@@ -62,15 +61,6 @@ export function OverviewInstance({
           </Button>
         ))}
       </div>
-      <AdminHealthPills
-        checkFailureRatePercent={
-          ready ? checkFailureRate(data.rank24h.failed, data.rank24h.succeeded) : null
-        }
-        providerHealth={data.availability.dataSources ? data.providerHealth : []}
-        undeliveredCount={data.availability.opsDelivery ? data.ops.undeliveredCount : null}
-        workerStatus={data.availability.worker ? data.worker.status : "unknown"}
-        onNavigate={navigate}
-      />
     </section>
   );
 }

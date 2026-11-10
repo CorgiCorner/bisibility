@@ -20,7 +20,7 @@ export function ShellHeaderLoading() {
     >
       <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3 sm:overflow-hidden">
         <Block className="size-9 flex-none lg:hidden" />
-        <div className="col-span-3 col-start-1 row-start-2 min-w-0 overflow-hidden">
+        <div className="col-start-2 row-start-1 min-w-0 overflow-hidden">
           <Block
             className={`h-[1lh] w-[180px] max-w-full leading-tight ${meta.headerVariant === "settings" ? "text-[21px]" : "text-lg sm:text-[21px]"}`}
           />

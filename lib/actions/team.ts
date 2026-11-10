@@ -41,6 +41,15 @@ const memberIdSchema = z.object({ memberId: id, projectId: id });
 type MemberRow = { id: string; publicId: string | null; role: string; userId: string };
 type InviteActionError = { message: string; status: "error" };
 
+async function withInviteCapacity(
+  run: () => Promise<{ inviteLink: string; status: "success" } | InviteActionError>,
+) {
+  const result = await withCapacityFailure(run);
+  return "capacityFailure" in result
+    ? { ...result, status: "error" as const, message: result.capacityFailure.message }
+    : result;
+}
+
 function inviteMailerActionError(error: InviteMailerNotConfiguredError): InviteActionError {
   return { message: error.message, status: "error" };
 }
@@ -70,23 +79,25 @@ function requiredPublicId(value: string | null, prefix: "mbr" | "usr", resource:
 }
 
 export async function inviteMember(input: unknown) {
-  const data = parseActionInput(inviteMemberSchema, input);
-  const actor = await getActionActor();
-  try {
-    const result = await inviteTeamMember(
-      data,
-      {
-        actor,
-        auditActorId: actor.id,
-      },
-      () => recordAppAction(actor),
-    );
-    revalidateSettingsViews();
-    return { ...result, status: "success" as const };
-  } catch (error) {
-    if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
-    throw error;
-  }
+  return withInviteCapacity(async () => {
+    const data = parseActionInput(inviteMemberSchema, input);
+    const actor = await getActionActor();
+    try {
+      const result = await inviteTeamMember(
+        data,
+        {
+          actor,
+          auditActorId: actor.id,
+        },
+        () => recordAppAction(actor),
+      );
+      revalidateSettingsViews();
+      return { ...result, status: "success" as const };
+    } catch (error) {
+      if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
+      throw error;
+    }
+  });
 }
 
 export async function acceptInvite(input: unknown) {
@@ -107,6 +118,10 @@ export async function acceptInvite(input: unknown) {
   if (!role.success) throw new Error("Invite is invalid or expired.");
 
   const membership = await prisma.$transaction(async (tx) => {
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId: invite.projectId,
+      dimensions: ["teamMembers"],
+    });
     const existing = await tx.membership.findFirst({
       select: memberSelect,
       where: { projectId: invite.projectId, userId: user.id },
@@ -125,9 +140,17 @@ export async function acceptInvite(input: unknown) {
     });
     const used = await tx.invite.updateMany({
       data: { acceptedAt: new Date() },
-      where: { acceptedAt: null, expiresAt: { gt: new Date() }, id: invite.id },
+      where: {
+        acceptedAt: null,
+        expiresAt: { gt: new Date() },
+        id: invite.id,
+        token: hashInviteToken(data.token),
+        role: role.data,
+        email: invite.email,
+      },
     });
     if (used.count !== 1) throw new Error("Invite is invalid or expired.");
+    await capacity.check();
     return member;
   });
   recordAppAction(session);
@@ -161,28 +184,32 @@ export async function revokeInvite(input: unknown) {
 }
 
 export async function resendInvite(input: unknown) {
-  const data = parseActionInput(inviteIdSchema, input);
-  const actor = await getActionActor();
-  try {
-    const result = await resendTeamInvite(data, { actor, auditActorId: actor.id }, () =>
-      recordAppAction(actor),
-    );
-    revalidateSettingsViews();
-    return { ...result, status: "success" as const };
-  } catch (error) {
-    if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
-    throw error;
-  }
+  return withInviteCapacity(async () => {
+    const data = parseActionInput(inviteIdSchema, input);
+    const actor = await getActionActor();
+    try {
+      const result = await resendTeamInvite(data, { actor, auditActorId: actor.id }, () =>
+        recordAppAction(actor),
+      );
+      revalidateSettingsViews();
+      return { ...result, status: "success" as const };
+    } catch (error) {
+      if (isInviteMailerNotConfiguredError(error)) return inviteMailerActionError(error);
+      throw error;
+    }
+  });
 }
 
 export async function changeMemberRole(input: unknown) {
-  const data = parseActionInput(changeMemberRoleSchema, input);
-  const actor = await getActionActor();
-  const result = await changeTeamMemberRole(data, { actor, auditActorId: actor.id });
-  recordAppAction(actor);
-  revalidateSettingsViews();
+  return withCapacityFailure(async () => {
+    const data = parseActionInput(changeMemberRoleSchema, input);
+    const actor = await getActionActor();
+    const result = await changeTeamMemberRole(data, { actor, auditActorId: actor.id });
+    recordAppAction(actor);
+    revalidateSettingsViews();
 
-  return result;
+    return result;
+  });
 }
 
 export async function removeMember(input: unknown) {
@@ -223,7 +250,13 @@ export async function transferOwnership(input: unknown) {
         throw new Error("Choose another project member to become owner.");
       const capacity = await prepareResourceCapacity(tx, {
         ownerId: currentTarget.userId,
-        dimensions: ["projects", "scheduledKeywords", "trackedPrompts", "alertRulesAndWebhooks"],
+        dimensions: [
+          "projects",
+          "scheduledKeywords",
+          "trackedPrompts",
+          "alertRulesAndWebhooks",
+          "teamMembers",
+        ],
       });
       await tx.membership.updateMany({
         data: { role: "admin" },

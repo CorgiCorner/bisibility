@@ -43,7 +43,8 @@ describe("KeywordInlineEdit location edge cases", () => {
     expect(updateKeywordAction.mock.calls[0][0]).not.toHaveProperty("location");
   });
 
-  it("uses the structured country code for city keywords", () => {
+  it("uses the structured country code for city keywords without rewriting their saved scope", async () => {
+    const updateKeywordAction = vi.fn();
     render(
       <KeywordInlineEdit
         keyword={keyword({
@@ -58,14 +59,17 @@ describe("KeywordInlineEdit location edge cases", () => {
           locationName: "Austin, Texas, United States",
         })}
         onSaved={vi.fn()}
-        updateKeywordAction={vi.fn()}
+        updateKeywordAction={updateKeywordAction}
       />,
     );
 
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveDisplayValue(
-      "Austin, Texas, United States",
+      "Austin, United States",
     );
     expect(screen.queryByText(/Cities need a supported country/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(updateKeywordAction).toHaveBeenCalledOnce());
+    expect(updateKeywordAction.mock.calls[0][0]).not.toHaveProperty("location");
   });
 
   it("surfaces degraded location warnings without closing the edit form", async () => {

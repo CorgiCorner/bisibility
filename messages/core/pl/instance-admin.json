@@ -180,7 +180,22 @@
           "releaseMigrationHolds": "Zwolnij blokady migracji",
           "reconcileChecks": "Uzgodnij pomiary pozycji"
         },
-        "inspectionPartial": "{count, plural, one {Nie udało się sprawdzić # harmonogramu.} few {Nie udało się sprawdzić # harmonogramów.} many {Nie udało się sprawdzić # harmonogramów.} other {Nie udało się sprawdzić # harmonogramu.}} Sumy mogą być niepełne."
+        "inspectionPartial": "{count, plural, one {Nie udało się sprawdzić # harmonogramu.} few {Nie udało się sprawdzić # harmonogramów.} many {Nie udało się sprawdzić # harmonogramów.} other {Nie udało się sprawdzić # harmonogramu.}} Sumy mogą być niepełne.",
+        "taskHelp": {
+          "planChecks": "Tworzy zaplanowane sprawdzenia pozycji, gdy nadejdzie ich termin.",
+          "deliverAlerts": "Wysyła oczekujące alerty o pozycjach do odbiorców.",
+          "recoverImports": "Wznawia importy przerwane przed zakończeniem.",
+          "recoverChecks": "Wykrywa przerwane sprawdzenia i bezpiecznie je wznawia lub oznacza.",
+          "releaseReservations": "Zwalnia rezerwacje po zakończonej pracy.",
+          "dispatchChecks": "Przekazuje oczekujące sprawdzenia pozycji dostępnym workerom.",
+          "maintainRuns": "Zamyka zakończone serie sprawdzeń i odzyskuje zatrzymane.",
+          "reconcileUsage": "Potwierdza wyniki zapytań do dostawcy na podstawie zapisanych dowodów.",
+          "sendDigests": "Wysyła zgrupowane alerty w wybranym terminie.",
+          "collectSearchInsights": "Importuje oczekujące dane Search Console do projektu.",
+          "checkAlertHealth": "Wykrywa problemy z dostarczaniem alertów.",
+          "releaseMigrationHolds": "Wznawia pracę wstrzymaną na czas migracji bazy, gdy jest to bezpieczne.",
+          "reconcileChecks": "Uzgadnia zapisane wyniki sprawdzeń ze statusem ich serii."
+        }
       },
       "ops": {
         "title": "Zdarzenia operacyjne",
@@ -415,7 +430,8 @@
       "temporarilyUnavailable": "Akcje administratora są chwilowo niedostępne.",
       "sweepFailed": "Nie udało się przetworzyć kolejki wysyłki.",
       "sweepCompleted": "Zakończono przetwarzanie kolejki wysyłki: dostarczono {delivered, number} z {attempted, number}.",
-      "failed": "Nie udało się ukończyć akcji operatora."
+      "failed": "Nie udało się ukończyć akcji operatora.",
+      "sweepHelp": "Ponawia wysyłkę oczekujących powiadomień. Nie tworzy nowych alertów."
     },
     "audit": {
       "title": "Aktywność administratorów",
@@ -527,13 +543,13 @@
       "preview": "Podgląd odzyskiwania",
       "commit": "Rozpocznij odzyskiwanie",
       "previewCount": "Sprawy możliwe do naprawy: {count, number}",
-      "noSpend": "Potwierdzanie z zachowanego dowodu i przywracanie wyniku nie wysyłają zapytań do dostawcy ani nie tworzą dodatkowych płatnych prób. Przywrócenie wyniku nie potwierdza nieznanego kosztu.",
+      "noSpend": "Sprawdza zapisane dowody i przywraca wyniki bez nowych zapytań do dostawcy. Pierwotny koszt może pozostać nieznany.",
       "excluded": "Pominięte sprawy: {count, number}",
       "expires": "Podgląd wygasa",
       "recheckNote": "Proces roboczy ponownie sprawdzi każdą sprawę i uprawnienia admina. Zmienione sprawy zostaną pominięte.",
       "previewSelected": "Sprawdź wybrane ({count, number})",
       "batchLimit": "Maksymalnie {count, number} spraw na akcję",
-      "safetyNote": "Brak potwierdzenia nie oznacza, że zapytania nie wysłano. Przyjęcie zapytania lub pewny brak wysyłki wymagają dowodu. Historyczne braki w rozliczeniu są pokazane osobno od niedokończonej pracy.",
+      "safetyNote": "Brak potwierdzenia nie dowodzi, że zapytania nie wysłano.",
       "selectCase": "Wybierz {project}, {provider}",
       "historical": "Historyczne rozliczenie",
       "empty": "Brak spraw dla tych filtrów.",
@@ -715,16 +731,16 @@
         "taskLookupReason": "Nadal wymagane są oryginalne dowody od dostawcy."
       },
       "closedUnknown": "Zamknięte, koszt nieznany",
-      "closedUnknownNote": "Operator zamknął te zgłoszenia. Pierwotny koszt pozostaje nieznany. Historia jest zachowana; te same zgłoszenia nie uruchomią ponownie odzyskiwania ani przypomnień.",
+      "closedUnknownNote": "Zamknięte przez operatora. Koszt nadal nieznany; historia zostaje, odzyskiwanie nie zostanie ponowione.",
       "approvedScope": "{targets, number} celów, {attempts, number} prób na cel.",
       "taskOnly": {
         "closedUnknown": "Zamknięte, stan rozliczeń nieznany",
-        "closedUnknownNote": "Te żądania zostały zamknięte przez operatora. Stan rozliczeń pozostaje nieznany. Historia jest zachowana; te same żądania nie wywołają ponownie odzyskiwania ani przypomnień.",
+        "closedUnknownNote": "Zamknięte przez operatora. Rozliczenie nadal nieznane; historia zostaje, odzyskiwanie nie zostanie ponowione.",
         "blockedScopes": "Odzyskiwanie ograniczone przez niepewność: projekty: {projects, number}, połączenia: {connections, number}.",
         "newAttemptNote": "Jeśli nie ma zachowanego wyniku ani jednoznacznego dowodu, że wysyłanie się nie rozpoczęło, poproś członka projektu o utworzenie nowego przebiegu ze standardowym podglądem i sprawdzeniem uprawnień.",
         "projectBlocked": "Działania w projekcie są ograniczone przez nierozstrzygnięty stan rozliczeń.",
         "connectionBlocked": "Działania połączenia są ograniczone przez nierozstrzygnięty stan rozliczeń.",
-        "noSpend": "Uzgadnianie dowodów i przywracanie wyników nie wysyła żądań do dostawców. Przywrócenie wyniku nie rozstrzyga nieznanego stanu rozliczeń.",
+        "noSpend": "Przywraca zapisane wyniki bez nowych zapytań do dostawcy. Rozliczenie może pozostać nieznane.",
         "originalRun": "Wznów {count, number} pierwotnych, nierozpoczętych przebiegów na podstawie zachowanego upoważnienia właściciela. Nadal obowiązują standardowe warunki dopuszczenia żądań do dostawcy. Nie powstanie nowy przebieg ani powtórna próba.",
         "accountingState": "Stan rozliczeń",
         "unknown": "Nieznany",

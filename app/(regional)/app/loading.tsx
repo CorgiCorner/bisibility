@@ -6,13 +6,18 @@
 //
 // Renders the shell SHAPE, not the shell: sidebar rail, header bar, content skeleton.
 
+import { AdminAppLoading } from "@/components/admin/pages/AdminAppLoading";
 import { OverviewSkeleton } from "@/components/overview/OverviewSkeleton";
 import { PageContent } from "@/components/shell/PageContent";
 import { ShellSkeleton } from "@/components/shell/ShellSkeleton";
+import { RETURN_TO_REQUEST_HEADER } from "@/lib/auth/return-to";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export default async function AppLoading() {
+  const path = (await headers()).get(RETURN_TO_REQUEST_HEADER)?.split("?")[0] ?? "";
+  if (path === "/app/admin" || path.startsWith("/app/admin/"))
+    return <AdminAppLoading path={path} />;
   // Same cookie the settled shell reads, so a collapsed rail does not expand and snap back.
   const collapsed = isSidebarCollapsed((await cookies()).get("sidebar-collapsed")?.value);
 

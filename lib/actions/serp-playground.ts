@@ -121,28 +121,28 @@ export async function previewSerpPlaygroundAction(input: unknown) {
         : { kind: "country", canonicalKey: key.canonicalKey };
     const resolved = await resolveKeywordLocation({ projectId: project.id, selection });
     if (resolved.degraded) return { ok: false as const, reason: "location" as const };
-    if (!value.fresh) {
-      const cached = await readPlaygroundCache(project.id, {
-        depth: value.depth,
-        query: value.query,
-        device: value.device,
-        locationId: resolved.location.id,
-        providers: value.providers,
+    const search = {
+      depth: value.depth,
+      query: value.query,
+      device: value.device,
+      locationId: resolved.location.id,
+      providers: value.providers,
+    };
+    // A repeated search still opens the cost review, so the user always gets
+    // feedback and chooses between the free saved result and a paid refresh.
+    const previous = value.fresh ? null : await readPlaygroundCache(project.id, search);
+    try {
+      const preview = await previewPlaygroundComparison({
+        projectId: project.id,
+        actorId: actor.id,
+        search,
       });
-      if (cached) return { ok: true as const, cached };
+      return { ok: true as const, preview, ...(previous ? { previous } : {}) };
+    } catch (error) {
+      // A saved result stays readable when a new paid search cannot be quoted.
+      if (previous) return { ok: true as const, cached: previous };
+      throw error;
     }
-    const preview = await previewPlaygroundComparison({
-      projectId: project.id,
-      actorId: actor.id,
-      search: {
-        depth: value.depth,
-        query: value.query,
-        device: value.device,
-        locationId: resolved.location.id,
-        providers: value.providers,
-      },
-    });
-    return { ok: true as const, preview };
   } catch (error) {
     return {
       ok: false as const,

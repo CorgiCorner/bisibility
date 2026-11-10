@@ -1123,6 +1123,21 @@ export type CoreMessages = {
         readonly snapshotStale: "Temporal snapshot stale";
         readonly snapshotUnavailable: "Snapshot unavailable - worker has not published Temporal data. Values above are unknown, not zero.";
         readonly tableLabel: "Recorded schedule counters";
+        readonly taskHelp: {
+          readonly checkAlertHealth: "Detects stalled alert delivery and reports problems.";
+          readonly collectSearchInsights: "Imports queued Search Console data into the project.";
+          readonly deliverAlerts: "Sends pending ranking alerts to their recipients.";
+          readonly dispatchChecks: "Sends queued rank checks to available workers.";
+          readonly maintainRuns: "Closes finished runs and recovers runs that stopped progressing.";
+          readonly planChecks: "Creates scheduled rank checks when they are due.";
+          readonly reconcileChecks: "Reconciles saved check results with their run status.";
+          readonly reconcileUsage: "Confirms provider request outcomes using existing evidence.";
+          readonly recoverChecks: "Finds interrupted checks and marks or resumes them safely.";
+          readonly recoverImports: "Resumes imports that stopped before completion.";
+          readonly releaseMigrationHolds: "Releases work paused for a database migration after it is safe to continue.";
+          readonly releaseReservations: "Releases reservations no longer needed by completed work.";
+          readonly sendDigests: "Sends grouped alerts when their delivery window arrives.";
+        };
         readonly tasks: {
           readonly checkAlertHealth: "Check alert delivery health";
           readonly collectSearchInsights: "Collect Search Insights imports";
@@ -1225,6 +1240,7 @@ export type CoreMessages = {
       readonly rateLimited: "This admin action was rate limited. Try again shortly.";
       readonly sweepCompleted: "Outbox sweep completed: {delivered, number} of {attempted, number} delivered.";
       readonly sweepFailed: "Outbox sweep failed.";
+      readonly sweepHelp: "Retries pending notifications that are ready to send. It does not create new alerts.";
       readonly temporarilyUnavailable: "Admin action is temporarily unavailable.";
     };
     readonly opsTable: {
@@ -1410,7 +1426,7 @@ export type CoreMessages = {
       };
       readonly category: "Show";
       readonly closedUnknown: "Closed, cost unknown";
-      readonly closedUnknownNote: "These requests were closed by an operator. Their original cost remains unknown. History is retained; the same requests will not trigger recovery or reminders again.";
+      readonly closedUnknownNote: "Closed by an operator. Cost is still unknown; history is kept and recovery will not run again.";
       readonly commandStates: {
         readonly completed: "Recovery command finished";
         readonly failed: "Recovery command stopped";
@@ -1544,7 +1560,7 @@ export type CoreMessages = {
       readonly newAttemptNote: "If there is no retained result and no positive proof that sending never began, ask a project member with spending authority to create a new run through the normal preview and budget checks. This may cost extra. The original charge still requires separate reconciliation.";
       readonly nextPage: "Next page";
       readonly noFailure: "No recovery failure";
-      readonly noSpend: "Proof reconciliation and result restoration make no provider requests and create no additional paid attempts. Restoring a result does not settle an unknown charge.";
+      readonly noSpend: "Checks saved evidence and restores results without new provider requests. Original costs may still be unknown.";
       readonly noSpendShort: "Recovery checks existing evidence before taking action.";
       readonly openIncidents: "Recovery cases";
       readonly originalRunSpend: "Resume {count, number} original, unstarted runs under the owner’s retained authorization. Normal provider admission may send paid requests and use the existing run budget. No new run or duplicate paid attempt is created.";
@@ -1568,7 +1584,7 @@ export type CoreMessages = {
       readonly recommended: "Recommended action";
       readonly refresh: "Refresh";
       readonly retainedScope: "Retained or deleted scope";
-      readonly safetyNote: "A missing confirmation does not mean the request was never sent. Only positive evidence can prove acceptance or a safe no-send state. Historical accounting uncertainty is shown separately from unfinished work.";
+      readonly safetyNote: "A missing confirmation does not prove a request was never sent.";
       readonly save: "Save follow-up";
       readonly select: "Select";
       readonly selectCase: "Select {project}, {provider}";
@@ -1590,10 +1606,10 @@ export type CoreMessages = {
         readonly authorizationRequired: "A new attempt requires project member authorization and normal admission.";
         readonly blockedScopes: "Recovery restricted by uncertainty: {projects, number} projects, {connections, number} connections.";
         readonly closedUnknown: "Closed, accounting unknown";
-        readonly closedUnknownNote: "These requests were closed by an operator. Accounting remains unknown. History is retained; the same requests will not trigger recovery or reminders again.";
+        readonly closedUnknownNote: "Closed by an operator. Accounting is still unknown; history is kept and recovery will not run again.";
         readonly connectionBlocked: "Connection actions are restricted by unresolved accounting.";
         readonly newAttemptNote: "If there is no retained result and no positive proof that sending never began, ask a project member to create a new run through the normal preview and authorization checks.";
-        readonly noSpend: "Proof reconciliation and result restoration make no provider requests. Restoring a result does not settle an unknown accounting state.";
+        readonly noSpend: "Restores saved results without new provider requests. Accounting may remain unknown.";
         readonly originalRun: "Resume {count, number} original, unstarted runs under the owner’s retained authorization. Normal provider admission still applies. No new run or duplicate attempt is created.";
         readonly projectBlocked: "Project actions are restricted by unresolved accounting.";
         readonly triageNote: "Follow-up status, assignment and waiting do not settle accounting or lift action restrictions. A changed case or expired waiting period reopens the case.";
@@ -1724,6 +1740,7 @@ export type CoreMessages = {
     readonly accept: "Accept invite";
     readonly alreadyUsed: "This invite was already used";
     readonly alreadyUsedBody: "The invite has already been accepted or replaced by a newer one.";
+    readonly capacityReached: "This account cannot add another team member. Ask the project owner to review their plan.";
     readonly expired: "This invite has expired";
     readonly expiredBody: "Ask a project admin to send a fresh invite.";
     readonly expires: "Expires";
@@ -5879,7 +5896,7 @@ export type CoreMessages = {
       };
       readonly results: {
         readonly aboveYou: "{count, number} above you";
-        readonly aiContentNotLoaded: "An AI overview was recorded, but its text was not saved.";
+        readonly aiContentNotLoaded: "This saved response contains no AI overview text.";
         readonly aiPresent: "Your position counts organic results only. An AI overview sat above them at this check.";
         readonly aiUnknown: "AI overview presence was not recorded for this check.";
         readonly belowYou: "{count, number} below you";
@@ -5943,6 +5960,8 @@ export type CoreMessages = {
           readonly unsupported: "This provider cannot extend a saved snapshot. Use Run check above to collect a deeper snapshot.";
           readonly window: "Available until {time}, within 15 minutes of the original fetch.";
         };
+        readonly featureContentMissing: "Details were not saved";
+        readonly featureContentMissingHelp: "The provider reported this feature, but this check has no saved preview.";
         readonly featureDetails: "Details";
         readonly featureDetailsLabel: "{feature} details";
         readonly featureNotRecorded: "Not recorded";
@@ -6042,7 +6061,28 @@ export type CoreMessages = {
         readonly notRetrieved: "{count, number} not retrieved";
         readonly oneCheck: "One check";
         readonly onPage: "On the page";
+        readonly openFeatureResult: "Open result";
         readonly openMap: "Open in Maps";
+        readonly otherFeatures: "Other features";
+        readonly overviewFetch: {
+          readonly absent: "Google did not return an AI overview for this search.";
+          readonly action: "Fetch AI overview";
+          readonly cancel: "Cancel";
+          readonly confirm: "Fetch overview";
+          readonly costHelp: "This runs one fresh Google search and, if needed, one AI overview request. Up to 2 SerpApi searches. Google may return no overview. Your saved check stays unchanged.";
+          readonly failed: "The overview could not be fetched. Check the request in search history before trying again.";
+          readonly fresh: "Fresh result from {date}.";
+          readonly help: "SerpApi may need an extra paid request for the overview. Review the cost before fetching.";
+          readonly load: "Load overview";
+          readonly maximum: "Maximum cost";
+          readonly notLoaded: "Detected, content not loaded";
+          readonly quantity: "{count, number} SerpApi searches";
+          readonly refetch: "Fetch a fresh overview";
+          readonly running: "Fetching the overview. You can leave this page.";
+          readonly saved: "Saved overview from {date}. Shown again at no cost.";
+          readonly title: "Fetch a fresh AI overview?";
+          readonly usage: "SerpApi searches used: {count, number}.";
+        };
         readonly overviewSources: "Sources";
         readonly partialCompetitors: "Partial snapshot. Missing competitors may still rank in the Top {depth, number}.";
         readonly pickerClosest: "Picks the closest comparable loaded check.";
@@ -6062,6 +6102,7 @@ export type CoreMessages = {
         readonly selectedAsFrom: "selected as From";
         readonly selectedAsTo: "selected as To";
         readonly selfHostedRetention: "Full detail is kept for as long as you keep the database.";
+        readonly serpFeaturesTitle: "SERP features";
         readonly site: "Site";
         readonly snapshot: "SERP snapshot";
         readonly snapshots: "SERP snapshots";
@@ -6070,6 +6111,15 @@ export type CoreMessages = {
         readonly storedChecks: "Stored checks";
         readonly titleTip: "Checks may stop at the first tracked-domain match when that project setting is enabled. This card shows what this check kept and which positions it did not retrieve.";
         readonly to: "To";
+        readonly urlRepair: {
+          readonly action: "Resolve URLs";
+          readonly complete: "{resolved} links resolved; {unresolved} still unavailable.";
+          readonly failed: "Could not resolve these links. Check your DataForSEO connection and try again.";
+          readonly help: "Some links still point to Google redirects.";
+          readonly hint: "Uses the free URL converter. Does not run a new search.";
+          readonly reload: "Show updated results";
+          readonly running: "Resolving saved links. You can leave this page.";
+        };
         readonly yourResult: "Your result";
         readonly yourResultAria: "Your result, position {position, number}, {target}";
         readonly yourSite: "Your site";
@@ -7266,6 +7316,7 @@ export type CoreMessages = {
       readonly compareProviderHelp: "Try the same search with another source. Review the cost before running it.";
       readonly compareProviderTitle: "Compare another provider";
       readonly confirm: "Run search";
+      readonly confirmRepeat: "Run new search";
       readonly connect: "Connect providers";
       readonly connectHelp: "Connect a search provider to try a query.";
       readonly connectProvider: "Connect {provider}";
@@ -7301,10 +7352,13 @@ export type CoreMessages = {
       readonly noResults: "No organic results";
       readonly noResultsHelp: "The provider returned no organic results for this search.";
       readonly normalizedJson: "Stored JSON";
+      readonly normalizedJsonHelp: "A JSON text record of the saved results, organized into our common format for comparing providers.";
+      readonly openSaved: "Open saved result";
       readonly previous: "Previous";
       readonly provider: "Provider";
       readonly providerAdded: "{provider} selected";
       readonly providerJson: "Provider response";
+      readonly providerJsonHelp: "The saved JSON response from the provider, before our normalization. Access keys and tokens are removed.";
       readonly providers: "Providers";
       readonly query: "Search query";
       readonly queryPlaceholder: "e.g. coffee shops in Austin";
@@ -7315,6 +7369,9 @@ export type CoreMessages = {
       readonly readOnly: "Project editors can run searches.";
       readonly refresh: "Refresh";
       readonly refreshHelp: "Reloads saved results and their status. Does not run a new search.";
+      readonly repeatHelp: "Open the saved result for free, or run a new paid search for current data.";
+      readonly repeatNotice: "Last searched {date} with the same location, language, device, depth and providers.";
+      readonly repeatTitle: "You already searched this";
       readonly resultCount: "Results: {count}";
       readonly resultFailed: "This provider could not return results";
       readonly resultFailedHelp: "You can try another search. Check Usage for the status of this request.";
@@ -7326,10 +7383,12 @@ export type CoreMessages = {
       readonly saved: "Saved";
       readonly saveDescription: "This adds the selected SERP to the matching keyword’s history. No new search is run.";
       readonly savedResult: "Saved result";
+      readonly savedShown: "Saved result shown. Run a fresh search for current data.";
       readonly saveMismatch: "No matching tracked keyword is available for this saved search and its settings.";
       readonly saveTitle: "Save this search result?";
       readonly scope: "Google Search · up to 20 organic results";
       readonly search: "Search";
+      readonly searchedAt: "Searched {date}";
       readonly searchFailed: "The search could not be started. Check your providers and try again.";
       readonly searchHistory: "Find a search";
       readonly stillRunning: "The search is still running. Its result will remain in Recent searches.";
@@ -10731,6 +10790,7 @@ export type CoreMessages = {
     readonly resource: "Resource";
     readonly scheduledKeywords: "scheduled keywords";
     readonly scheduleFrequencies: "schedule frequency";
+    readonly teamMembers: "team members";
     readonly trackedPrompts: "tracked prompts";
     readonly usage: "{used} used of {limit}. Requested: {requested}.";
   };

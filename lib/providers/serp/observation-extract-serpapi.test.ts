@@ -91,7 +91,7 @@ describe("serpApiObservationRun", () => {
         title: "First overview snippet",
       }),
     ]);
-    expect(run.items[0]?.rawFragment).toBe(overview);
+    expect(run.items[0]?.rawFragment).toEqual(overview);
   });
 
   it("preserves local and AI observations in page order", () => {

@@ -3,6 +3,7 @@ import { BrandLockup } from "@/components/ui/BrandLockup";
 import type { AdminRoute } from "@/lib/instance-admin/routes";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AdminNavLabel } from "./AdminNavLabel";
 import { AdminRouteRefresh } from "./AdminRouteRefresh";
 export type AdminChromeLabels = {
   context: string;
@@ -66,7 +67,7 @@ export function AdminRouteChrome({
               aria-current={active.tab === route.tab ? "page" : undefined}
               className={linkClass(active.tab === route.tab)}
             >
-              {labels.tabs[route.tab]}
+              <AdminNavLabel>{labels.tabs[route.tab]}</AdminNavLabel>
             </Link>
           ))}
         </AdminScrollNav>
@@ -79,7 +80,7 @@ export function AdminRouteChrome({
                 aria-current={route.href === active.href ? "page" : undefined}
                 className={linkClass(route.href === active.href, true)}
               >
-                {labels.subtabs[route.view]}
+                <AdminNavLabel>{labels.subtabs[route.view]}</AdminNavLabel>
               </Link>
             ))}
           </AdminScrollNav>

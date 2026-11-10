@@ -132,3 +132,16 @@ export const City: Story = {
     />
   ),
 };
+
+export const ProviderHierarchy: Story = {
+  render: () => (
+    <FieldHarness
+      initial={{
+        kind: "city",
+        canonicalKey: "PL/Masovian Voivodeship/Warsaw",
+        countryCode: "PL",
+        displayName: "Warsaw,Warsaw,Masovian Voivodeship,Poland",
+      }}
+    />
+  ),
+};

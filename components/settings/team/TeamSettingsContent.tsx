@@ -4,6 +4,7 @@ import { TeamMembersCard } from "@/components/settings/team/TeamMembersCard";
 import { TeamPendingInvitesCard } from "@/components/settings/team/TeamPendingInvitesCard";
 import { TeamRolesAccessCard } from "@/components/settings/team/TeamRolesAccessCard";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { capacityActionClient } from "@/lib/capacity/action";
 import type { TeamAccessView } from "@/lib/queries/team";
 
 type AssignableRole = "admin" | "member" | "viewer";
@@ -49,9 +50,9 @@ export function TeamSettingsContent({
       <TeamMembersCard
         canAssignAdmin={team.canAssignAdmin}
         canManageTeam={team.canManageTeam}
-        changeMemberRole={actions.changeMemberRole}
+        changeMemberRole={capacityActionClient(actions.changeMemberRole)}
         domain={domain}
-        inviteMember={actions.inviteMember}
+        inviteMember={capacityActionClient(actions.inviteMember)}
         members={team.members}
         projectId={projectId}
         readOnly={projectReadOnly}
@@ -64,7 +65,7 @@ export function TeamSettingsContent({
         now={team.now}
         projectId={projectId}
         readOnly={projectReadOnly}
-        resendInvite={actions.resendInvite}
+        resendInvite={capacityActionClient(actions.resendInvite)}
         revokeInvite={actions.revokeInvite}
       />
       <TeamRolesAccessCard />

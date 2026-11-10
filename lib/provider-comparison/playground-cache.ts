@@ -20,6 +20,7 @@ export async function readPlaygroundCache(projectId: string, input: PlaygroundSo
     const snapshot = parseComparisonSnapshot(row.snapshot);
     if (
       snapshot.version !== 2 ||
+      Boolean(snapshot.aiOverview) !== Boolean(input.aiOverview) ||
       snapshot.domain !== project.domain ||
       snapshot.text !== input.query ||
       snapshot.locationId !== input.locationId ||

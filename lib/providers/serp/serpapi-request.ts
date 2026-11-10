@@ -40,6 +40,16 @@ export function serpApiRankRequest(input: SerpRankInput): ProviderRequest {
   return { method: "GET", url: url.toString() };
 }
 
+/** The short-lived token stays in memory; responses and retained request keys are redacted or hashed. */
+export function serpApiOverviewRequest(pageToken: string, apiKey?: string): ProviderRequest {
+  if (!pageToken || pageToken.length > 32768) throw new Error("Overview token unavailable.");
+  const url = new URL(SEARCH_URL);
+  url.searchParams.set("engine", "google_ai_overview");
+  url.searchParams.set("page_token", pageToken);
+  if (apiKey) url.searchParams.set("api_key", apiKey);
+  return { method: "GET", url: url.href };
+}
+
 export class SerpApiError extends ProviderCallError {
   constructor(
     message: string,
@@ -212,6 +222,7 @@ export function buildSearchUrl(
     q: input.keyword,
     nfpr: "1",
   });
+  if (input.fetchAiOverview) params.set("no_cache", "true");
   if (start > 0) {
     params.set("start", String(start));
   }

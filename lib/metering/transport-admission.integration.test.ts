@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { beginProviderTaskset } from "@/lib/provider-usage/batch-request-journal";
@@ -26,6 +27,18 @@ async function transportFixture() {
   });
   await f.run(async (tx) => {
     await tx.$executeRaw`CREATE TABLE projects(id text primary key, "ownerId" text, "budgetCapCents" int)`;
+    const captureSchema = readFileSync(
+      new URL(
+        "../../prisma/migrations/20261109030000_provider_response_captures/migration.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    for (const statement of captureSchema
+      .split(";")
+      .map((sql) => sql.trim())
+      .filter(Boolean))
+      await tx.$executeRawUnsafe(statement);
     await tx.$executeRaw`CREATE TABLE provider_connections(id text primary key, "projectId" text, "publicId" text, provider text, "credentialSource" text, enabled boolean, status text, "credentialsEncrypted" text)`;
     await createRecoveryAdmissionFixture(tx);
     await tx.$executeRaw`CREATE TABLE keywords(id text primary key, "projectId" text)`;
@@ -132,6 +145,7 @@ test("public journal reserves, fences and settles without activation or legacy l
       }),
     });
     expect(sent).toBe(1);
+    expect(await f.db.providerResponseCapture.count()).toBe(1);
     expect(journal.costCents).toBe(2);
     const evidence = await f.db.meteringUsageEvidence.findFirstOrThrow();
     const operation = await f.store.getOperation({

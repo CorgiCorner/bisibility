@@ -59,3 +59,18 @@ function absoluteRedirect(value: string) {
     return false;
   }
 }
+
+/** Absolute https google.com /goto links are the only form the converter accepts. */
+export function isResolvableRedirect(value: unknown): value is string {
+  if (typeof value !== "string" || !isGoogleRedirectUrl(value)) return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      (url.hostname === "google.com" || url.hostname === "www.google.com") &&
+      (url.pathname === "/goto" || url.pathname === "/goto/")
+    );
+  } catch {
+    return false;
+  }
+}

@@ -27,7 +27,11 @@ export function comparisonResult(
     throw new Error("Invalid comparison position.");
   const completeThrough = evidence?.completeThrough.organic_result ?? null;
   return {
-    features: serpFeaturePresentation(observation?.items ?? [], result.raw?.serp_features),
+    features: serpFeaturePresentation(
+      observation?.items ?? [],
+      result.raw?.serp_features,
+      result.raw?.provider_response ?? result.providerResponse,
+    ),
     observedAt: evidence?.observedAt ?? null,
     recordedAt: recordedAt.toISOString(),
     position,

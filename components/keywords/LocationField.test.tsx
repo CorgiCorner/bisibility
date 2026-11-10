@@ -435,3 +435,22 @@ describe("LocationField", () => {
     ).toBeInTheDocument();
   });
 });
+
+it("shows a compact selected city without changing the stored request location", () => {
+  const value = {
+    kind: "city" as const,
+    canonicalKey: "PL/Masovian Voivodeship/Warsaw",
+    countryCode: "PL",
+    displayName: "Warsaw,Warsaw,Masovian Voivodeship,Poland",
+  };
+  const onChange = vi.fn();
+  render(<LocationField value={value} onChange={onChange} messages={locationMessages} />);
+  const input = screen.getByRole("combobox", { name: "Location" });
+  expect(input).toHaveValue("Warsaw, Poland");
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value: "Austin" } });
+  fireEvent.blur(input);
+  expect(input).toHaveValue("Warsaw, Poland");
+  expect(onChange).not.toHaveBeenCalled();
+  expect(value.displayName).toBe("Warsaw,Warsaw,Masovian Voivodeship,Poland");
+});

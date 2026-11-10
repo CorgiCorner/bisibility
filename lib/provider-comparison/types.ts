@@ -27,6 +27,7 @@ export type ComparisonQuote = {
 };
 /** IDs here are scoped request UUIDs, not public resource IDs or authorization tokens. */
 export type ComparisonPreview = {
+  search?: ComparisonRun["search"];
   id: string;
   hash: string;
   expiresAt: string;
@@ -35,6 +36,7 @@ export type ComparisonPreview = {
   sides: ComparisonQuote[];
 };
 export type ComparisonResult = {
+  urlRepair?: import("@/lib/serp-url-repair/model").UrlRepairView;
   features?: import("@/lib/checks/serp-feature-presentation").SerpFeaturePresentation;
   observedAt: string | null;
   recordedAt: string;

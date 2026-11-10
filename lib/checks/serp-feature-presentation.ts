@@ -1,6 +1,8 @@
 import { aiOverviewPresentation } from "./ai-overview-presentation";
+import { type RichSerpFeature, richSerpFeatures } from "./serp-rich-features";
 
 export type SerpFeaturePresentation = {
+  richFeatures?: RichSerpFeature[];
   aiOverview: {
     present: boolean;
     paragraphs: string[];
@@ -43,11 +45,14 @@ const safeUrl = (value: string | null | undefined) => {
 export function serpFeaturePresentation(
   items: readonly Item[],
   features: readonly string[] = [],
+  providerResponse?: unknown,
 ): SerpFeaturePresentation {
   const ai = items.filter((item) => item.resultKind === "ai_overview");
   const local = items.filter((item) => item.resultKind === "local_pack");
   const normalized = features.map((value) => value.toLowerCase().replaceAll("_", " "));
+  const richFeatures = richSerpFeatures(providerResponse, features);
   return {
+    ...(richFeatures.length ? { richFeatures } : {}),
     aiOverview: {
       present: ai.length > 0 || normalized.includes("ai overview"),
       ...aiOverviewPresentation(ai),

@@ -10,7 +10,7 @@ export function OnboardingPageHeading({
     <section className="mt-6">
       {backLink ? (
         <Button
-          className="mb-2 min-h-10 px-0"
+          className="mb-3 min-h-10"
           href={backLink.href}
           size="sm"
           startIcon={<ArrowLeftIcon weight="regular" aria-hidden size={15} />}

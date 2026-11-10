@@ -21,7 +21,7 @@ export function LocalPackDetails({ local }: { local: SerpFeaturePresentation["lo
             <h3 className="m-0 text-base font-semibold">{place.name}</h3>
             {place.rating !== undefined ? (
               <p className="m-0 flex items-center gap-2 text-sm">
-                <StarIcon size={16} aria-hidden />
+                <StarIcon weight="regular" size={16} aria-hidden />
                 {format.number(place.rating, { maximumFractionDigits: 1 })}
                 {place.reviewCount !== undefined ? (
                   <span className="text-fg-muted">({format.number(place.reviewCount)})</span>
@@ -39,7 +39,7 @@ export function LocalPackDetails({ local }: { local: SerpFeaturePresentation["lo
                   asChild
                   size="sm"
                   variant="outline"
-                  startIcon={<MapPinIcon size={16} aria-hidden />}
+                  startIcon={<MapPinIcon weight="regular" size={16} aria-hidden />}
                 >
                   <a href={place.url} target="_blank" rel="noreferrer noopener">
                     {t("openMap")}

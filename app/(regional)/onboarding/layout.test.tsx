@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
 }));
 
+vi.mock("@/components/shell/AccountNoticeExtension", () => ({
+  renderCapacityNoticeExtension: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
   renderAccountDataSourceExtension: mocks.accountDataSource,
 }));

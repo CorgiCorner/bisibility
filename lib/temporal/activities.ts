@@ -112,6 +112,7 @@ export {
 } from "./search-insights-activities";
 export type { SearchInsightsQueueReconciliationActivityResult } from "./search-insights-reconciliation-activity";
 export { reconcileQueuedSearchInsightsImportsActivity } from "./search-insights-reconciliation-activity";
+export { resolveSerpUrlsActivity } from "./serp-url-repair-activity";
 export { crawlSiteAuditBatchActivity, failSiteAuditActivity } from "./site-audit-activities";
 export type {
   FirstTrafficSyncWorkflowInput,

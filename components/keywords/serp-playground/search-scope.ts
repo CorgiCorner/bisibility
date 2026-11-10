@@ -25,3 +25,11 @@ export function searchScopeKeyword(run: SearchScope, locale: string) {
     },
   };
 }
+/** Several searches can share a day, so every search timestamp keeps its seconds. */
+export const searchTimeFormat = {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+} as const satisfies Intl.DateTimeFormatOptions;

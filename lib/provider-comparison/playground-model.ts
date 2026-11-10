@@ -18,6 +18,7 @@ export const playgroundInputSchema = z
   .strict();
 export type PlaygroundInput = z.infer<typeof playgroundInputSchema>;
 export type PlaygroundSource = {
+  aiOverview?: true;
   depth?: SerpDepth;
   query: string;
   locationId: string;

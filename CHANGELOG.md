@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.48.0] - 2026-11-10
+
+### Added
+
+- Added saved previews for search features, optional AI overview lookups with an upfront cost review, and background resolution of saved search redirects.
+
+### Changed
+
+- SERP Playground now confirms repeated searches and offers the saved result for free, shows times with seconds, explains saved JSON and simplifies location labels.
+
+### Fixed
+
+- Fixed narrow-screen titles wrapping below the menu and unresolved preview links; AI overviews without content load directly, and fetched ones are reused for free.
+
+## [0.47.1] - 2026-11-09
+
+### Fixed
+
+- Improved administrator status cards, forms and loading states.
+
+- Fixed trial links opening project setup for people who are already signed in.
+
+- Fixed invitation acceptance when its link or role changes during confirmation.
+
 ## [0.47.0] - 2026-11-09
 
 ### Added

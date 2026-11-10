@@ -86,6 +86,8 @@ export type ProviderTestResult = {
 };
 
 export type SerpRankInput = {
+  /** Explicitly quoted SerpApi follow-up; normal checks never spend this extra search. */
+  fetchAiOverview?: boolean;
   /** Optional top-level copy for inspection; native responses are always retained in raw. */
   captureProviderResponse?: boolean;
   /** Inspect returned SERP rows even when the tracked domain rank is not established. */

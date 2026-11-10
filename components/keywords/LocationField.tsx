@@ -16,7 +16,7 @@ import { AnchoredList as Popper } from "@/components/ui/AnchoredList";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
-import { regionDisplayName } from "@/lib/i18n/display-names";
+import { localizedLocationLabel } from "@/lib/i18n/location-label";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
@@ -78,8 +78,7 @@ export function LocationField({
   const places = suggestions.filter((suggestion) => suggestion.kind !== "country");
   const countries = suggestions.filter((suggestion) => suggestion.kind === "country");
   const options = [...countries, ...places];
-  // A persisted country label is the English display name; the viewer reads their own.
-  const selectedName = regionDisplayName(value.countryCode, value.displayName, locale);
+  const selectedName = localizedLocationLabel(value, locale);
   const currentInput = draft ?? selectedName;
   const hasOptions = options.length > 0;
   const listId = `${prefix}-location-list`;
