@@ -45,6 +45,7 @@ export const savedViewFiltersSchema = z.preprocess(
       volMax: z.number().min(0).max(50).default(50),
       volMin: z.number().min(0).max(50).default(0),
       wrongUrl: z.boolean().default(false),
+      aiOverviewShown: z.boolean().default(false),
     })
     .strict()
     .transform(

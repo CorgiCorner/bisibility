@@ -1,0 +1,30 @@
+[
+  {
+    "id": "XhUDXP7A67iHCD2kmbVu",
+    "begin": "2026-09-24T16:15:00+00:00",
+    "end": "2026-10-08T08:00:00+00:00",
+    "modified": "2026-10-08T08:37:28+00:00",
+    "external_desc": "September 2026 spam update",
+    "service_name": "Ranking",
+    "uri": "incidents/XhUDXP7A67iHCD2kmbVu",
+    "severity": "low"
+  },
+  {
+    "id": "LEubPCm2octf2uMqCFKE",
+    "begin": "2026-08-18T16:27:00+00:00",
+    "end": "2026-08-21T08:49:00+00:00",
+    "modified": "2026-08-21T08:50:34+00:00",
+    "external_desc": "August 2026 spam update",
+    "service_name": "Ranking",
+    "uri": "incidents/LEubPCm2octf2uMqCFKE"
+  },
+  {
+    "id": "YUX1peHev5a4fkxLDiUQ",
+    "begin": "2026-06-24T16:00:00+00:00",
+    "end": "2026-06-26T17:00:00+00:00",
+    "modified": "2026-06-26T17:58:18+00:00",
+    "external_desc": "June 2026 spam update",
+    "service_name": "Ranking",
+    "uri": "incidents/YUX1peHev5a4fkxLDiUQ"
+  }
+]

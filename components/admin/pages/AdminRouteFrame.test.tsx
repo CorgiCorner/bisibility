@@ -69,6 +69,7 @@ it("inserts deployment routes in the accepted order without importing their comp
     "Revenue",
     "Email",
     "Audit",
+    "Settings",
   ]);
 });
 it("fails closed before rendering navigation", async () => {

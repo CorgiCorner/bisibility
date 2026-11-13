@@ -138,6 +138,7 @@ export function MonitorPointEvidence({
           </ol>
           {historyQuery.hasNextPage ? (
             <Button
+              size="sm"
               variant="outline"
               disabled={historyQuery.isFetchingNextPage}
               onClick={() => void historyQuery.fetchNextPage()}

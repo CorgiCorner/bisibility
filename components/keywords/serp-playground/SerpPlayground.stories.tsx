@@ -1,10 +1,14 @@
 import { storyLocale } from "@/.storybook/story-locale";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import en from "@/messages/core/en/project-rank-tracker.json";
+import enHistory from "@/messages/core/en/research-history.json";
 import shared from "@/messages/core/en/shared.json";
 import es from "@/messages/core/es-ES/project-rank-tracker.json";
+import esHistory from "@/messages/core/es-ES/research-history.json";
 import ja from "@/messages/core/ja/project-rank-tracker.json";
+import jaHistory from "@/messages/core/ja/research-history.json";
 import pl from "@/messages/core/pl/project-rank-tracker.json";
+import plHistory from "@/messages/core/pl/research-history.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SerpPlayground } from "./SerpPlayground";
 
@@ -18,7 +22,11 @@ const meta = {
         <FeatureMessagesProvider
           locale={locale}
           timeZone="UTC"
-          messages={{ ...shared, ...{ en, pl, "es-ES": es, ja }[locale] }}
+          messages={{
+            ...shared,
+            ...{ en, pl, "es-ES": es, ja }[locale],
+            ...{ en: enHistory, pl: plHistory, "es-ES": esHistory, ja: jaHistory }[locale],
+          }}
         >
           <div className="mx-auto max-w-[1200px] p-5">
             <Story />

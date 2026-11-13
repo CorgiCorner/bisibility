@@ -2,6 +2,7 @@ import { makePublicId, type PublicIdPrefix, parsePublicId } from "./public-id-re
 
 const prefixByModel = {
   AgentReport: "agr",
+  AgentReportShareLink: "rsl",
   AlertRule: "alr",
   ApiKey: "key",
   AuditLog: "audit",
@@ -43,6 +44,7 @@ const nestedModels: Partial<
   MigrationToken: { importJobs: "CloudImportJob" },
   Project: {
     agentReports: "AgentReport",
+    reportShareLinks: "AgentReportShareLink",
     alertRules: "AlertRule",
     apiKeys: "ApiKey",
     cloudImportJobs: "CloudImportJob",

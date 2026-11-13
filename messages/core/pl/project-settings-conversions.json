@@ -1,0 +1,48 @@
+{
+  "projectSettingsConversions": {
+    "intro": "Konwersje definiuje się raz dla tego projektu. Każde podłączone źródło analityki trzyma własne dzienne liczby, a główne źródło jest widokiem domyślnym.",
+    "sources": {
+      "title": "Źródła",
+      "description": "Wybierz główne źródło widoku domyślnego. Zmiana zachowuje dane każdego źródła i dodaje notatkę na wykresie.",
+      "connected": "Podłączone",
+      "notConnected": "Niepodłączone",
+      "connect": "Podłącz",
+      "primary": "Główne",
+      "primaryFor": "Główne źródło: {source}",
+      "last28": "{count} w ostatnich 28 dniach",
+      "lastDay": "Ostatni dzień z danymi: {date}",
+      "noData": "Nie ma jeszcze danych o konwersjach",
+      "ga4Together": "GA4 raportuje wszystkie kluczowe zdarzenia razem.",
+      "plausibleOrganic": "Konwersje celów z wyszukiwania organicznego, jedna dzienna liczba na stronę docelową.",
+      "syncNow": "Synchronizuj teraz",
+      "syncing": "Synchronizowanie…",
+      "syncError": "Nie udało się zsynchronizować źródła.",
+      "confirmTitle": "Zmienić główne źródło konwersji?",
+      "confirmBody": "Wykresy użyją {source} jako widoku domyślnego. Dotychczasowe dane zostają, a notatka wyjaśnia skok.",
+      "confirmAction": "Zmień główne źródło",
+      "cancel": "Anuluj",
+      "error": "Nie udało się zapisać głównego źródła."
+    },
+    "comparison": {
+      "title": "Wszystkie źródła obok siebie",
+      "description": "Włączone konwersje z ostatnich 28 dni, jedna kolumna na podłączone źródło.",
+      "goal": "Konwersja",
+      "primary": "Główne",
+      "notReported": "Nie raportowana",
+      "empty": "Brak włączonych konwersji z ostatnich 28 dni.",
+      "tableLabel": "Konwersje według źródła"
+    },
+    "goals": {
+      "title": "Konwersje",
+      "description": "Zmień nazwę konwersji w tym projekcie albo wyłącz jej liczenie. Nazwa w narzędziu zostaje taka, jak raportuje źródło.",
+      "emptyTitle": "Nie ma jeszcze konwersji",
+      "emptyDescription": "Gdy podłączone źródło zaraportuje konwersję, pojawi się tutaj.",
+      "sourceName": "Nazwa w narzędziu",
+      "displayNameLabel": "Nazwa wyświetlana dla {name}",
+      "enabled": "Włączona",
+      "countsRevenue": "Liczy przychód",
+      "last28": "Ostatnie 28 dni",
+      "error": "Nie udało się zapisać konwersji."
+    }
+  }
+}

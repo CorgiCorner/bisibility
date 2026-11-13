@@ -94,8 +94,12 @@
           "keywords": "ドメイン 最初の結果 取得深度 費用"
         },
         "tagsAndSegments": {
-          "label": "タグとセグメント",
-          "keywords": "整理 キーワード ラベル"
+          "label": "タグ",
+          "keywords": "整理 ページ キーワード ラベル ルール 統合 セグメント"
+        },
+        "conversions": {
+          "label": "コンバージョン",
+          "keywords": "コンバージョン 目標 プライマリ ソース キーイベント 収益"
         },
         "urlInspectionLimit": {
           "label": "URL 検査の上限",
@@ -121,9 +125,11 @@
       "usage": "使用量",
       "competitors": "競合",
       "dataSources": "データソース",
+      "conversions": "コンバージョン",
       "developers": "開発者",
       "experimental": "実験的機能",
       "general": "一般",
+      "tags": "タグ",
       "notifications": "通知",
       "team": "チーム",
       "tracking": "追跡",

@@ -95,6 +95,7 @@ export function CompetitorSetTable({
       {showFinder ? (
         <div className="px-4 py-3">
           <Input
+            density="compact"
             aria-label={t("searchCompetitors")}
             className="max-w-45"
             onChange={(event) => setFilter(event.target.value)}

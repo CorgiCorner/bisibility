@@ -4,7 +4,6 @@ import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPay
 import { usePaymentAmountFormatter } from "@/components/action-payment/use-payment-amount-formatter";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { compactInputClassName } from "@/components/ui/input-styles";
 import { Kbd } from "@/components/ui/Kbd";
 import type { ActionPaymentOption } from "@/lib/action-payment/contract";
 import type { DomainOverviewScope } from "@/lib/domain-overview/types";
@@ -88,7 +87,7 @@ export function DomainOverviewAnalyzeCard({
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
           <div
             data-input-shell
-            className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-control border border-border-control px-3 focus-within:border-accent md:min-w-[320px]`}
+            className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-control border border-border-control focus-within:border-accent md:min-w-[320px]`}
           >
             <Globe weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={15} />
             <input
@@ -98,7 +97,7 @@ export function DomainOverviewAnalyzeCard({
               aria-label={t("targetAria")}
               autoCapitalize="none"
               autoCorrect="off"
-              className={`${compactInputClassName} h-full min-h-0 min-w-0 flex-1 bg-transparent text-fg outline-none`}
+              className="min-w-0 flex-1 bg-transparent p-0 text-ui-body leading-5 text-fg outline-none"
               disabled={submitting}
               onChange={(event) => {
                 targetField.onChange(event);
@@ -116,6 +115,7 @@ export function DomainOverviewAnalyzeCard({
           </div>
           <div className="md:w-[230px]">
             <ResearchScopePicker
+              size="input"
               ariaLabel={
                 researchScope
                   ? t("countryAria", { country: researchScope.countryName })
@@ -128,7 +128,7 @@ export function DomainOverviewAnalyzeCard({
               onChange={onResearchScopeChange}
               researchScope={researchScope}
               trackedScopes={trackedScopes}
-              triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
+              triggerClassName="bg-bg-elev disabled:opacity-55"
               triggerTitle={t("changeCountry")}
               triggerWrapperClassName="w-full"
             />
@@ -169,6 +169,7 @@ export function DomainOverviewAnalyzeCard({
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
             {onPaymentOptionChange ? (
               <ActionPaymentOptionPicker
+                size="input"
                 options={estimate.paymentOptions ?? []}
                 value={estimate.payment?.option.id ?? ""}
                 disabled={estimate.loading || submitting}
@@ -182,9 +183,9 @@ export function DomainOverviewAnalyzeCard({
               disabled={disabled || !valid || submitting}
               loading={submitting}
               loadingLabel={submitLabel(true)}
-              size="sm"
+              size="input"
               startIcon={<Globe aria-hidden size={14} weight="regular" />}
-              style={{ height: 37, minHeight: 37, minWidth: 200 }}
+              style={{ minWidth: 200 }}
               title={!valid ? t("needValid") : presented?.title}
               type="submit"
             >

@@ -4,7 +4,7 @@ import { cn } from "@/lib/ui/cn";
 import { type Cell, flexRender } from "@tanstack/react-table";
 import type { CSSProperties, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { dataTablePinnedBodyStyle, dataTablePinnedEdge } from "./data-table-pinning";
-import { dataTableColumnWidthVariable } from "./data-table-sizing";
+import { dataTableColumnBoxStyle, dataTableColumnWidthVariable } from "./data-table-sizing";
 import { dataTableCellClassName, dataTablePinnedEdgeClassName } from "./data-table-styles";
 import type { DataTableColumn, DataTableRowBase } from "./data-table-types";
 
@@ -26,9 +26,7 @@ export function DataTableCell<TRow extends DataTableRowBase>({
   const width = `var(${dataTableColumnWidthVariable(cell.column.id)})`;
   const style: CSSProperties = {
     ...dataTablePinnedBodyStyle(cell.column),
-    flexBasis: width,
-    maxWidth: width,
-    minWidth: width,
+    ...dataTableColumnBoxStyle(width, meta?.flex ?? 0),
   };
   return (
     // biome-ignore lint/a11y/useSemanticElements: Virtualized rows require div-based ARIA cells.

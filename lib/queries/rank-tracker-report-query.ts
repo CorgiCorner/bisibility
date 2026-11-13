@@ -27,6 +27,7 @@ const schema = z
         volMin: z.number().finite().min(0).max(50),
         wrongUrl: z.boolean(),
         urlChanged: z.boolean(),
+        aiOverviewShown: z.boolean(),
       })
       .strict()
       .refine((f) => f.volMin <= f.volMax, "Volume bounds are reversed"),

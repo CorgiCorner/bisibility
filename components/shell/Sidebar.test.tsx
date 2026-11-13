@@ -30,9 +30,9 @@ vi.mock("@/components/shell/WorkspaceSwitcher", () => ({
 
 vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
-// Nothing in the real rail carries the `new` tag yet, so its colour branch would otherwise be
-// dead code. The override map is empty unless a test fills it, so every other test in this file
-// still renders the real navigation data.
+// The override map paints Dashboard with `new` so the colour assertion stays on a known row.
+// AI Visibility carries the real `new` badge. The map is empty unless a test fills it, so every
+// other test in this file still renders the real navigation data.
 const navBadgeOverrides = vi.hoisted(() => ({}) as Record<string, NavBadge | undefined>);
 
 vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
@@ -108,6 +108,7 @@ describe("Sidebar", () => {
     );
 
     expect(disabled.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(disabled.getByRole("link", { name: "Annotations" })).toBeInTheDocument();
     expect(disabled.queryByRole("link", { name: "Competitors" })).not.toBeInTheDocument();
     disabled.unmount();
 
@@ -116,7 +117,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
+          enabledExperimentalModules={["competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -124,57 +125,51 @@ describe("Sidebar", () => {
     );
 
     expect(screen.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Annotations" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
   });
 
-  it.each([false, true])(
-    "keeps the exact desktop rail order with Playground enabled: %s",
-    (playgroundEnabled) => {
-      render(
-        <AppThemeRoot data-collapsed="false" defaultTheme="light">
-          <Sidebar
-            activeProjectId={mockWorkspaces[0].id}
-            canCreateWorkspace
-            enabledExperimentalModules={
-              playgroundEnabled
-                ? ["timeline", "competitors", "promptPlayground"]
-                : ["timeline", "competitors"]
-            }
-            projectRef={mockWorkspaces[0].publicId}
-            workspaces={mockWorkspaces}
-          />
-        </AppThemeRoot>,
-      );
+  it("keeps the exact desktop rail order", () => {
+    render(
+      <AppThemeRoot data-collapsed="false" defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          enabledExperimentalModules={["competitors"]}
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
 
-      expect(screen.queryByText("Activity")).toBeNull();
-      expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(
-        [
-          "dashboard",
-          "rank-tracker",
-          "serp-playground",
-          "keyword-research",
-          "domain-overview",
-          "backlinks",
-          "site-audit",
-          "competitors",
-          "prompt-tracker",
-          "prompt-research",
-          "brand-visibility",
-          ...(playgroundEnabled ? ["prompt-playground"] : []),
-          "search-console",
-          "agent-reports",
-          "markets",
-          "alerts",
-          "runs",
-          "schedules",
-          "providers",
-          "usage",
-          "install",
-          "settings",
-        ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
-      );
-    },
-  );
+    expect(screen.queryByText("Activity")).toBeNull();
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(
+      [
+        "dashboard",
+        "rank-tracker",
+        "serp-playground",
+        "keyword-research",
+        "domain-overview",
+        "backlinks",
+        "site-audit",
+        "competitors",
+        "ai-visibility",
+        "model-playground",
+        "pages",
+        "search-console",
+        "annotations",
+        "agent-reports",
+        "markets",
+        "alerts",
+        "runs",
+        "schedules",
+        "providers",
+        "usage",
+        "install",
+        "settings",
+      ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
+    );
+  });
 
   beforeEach(() => {
     // biome-ignore lint/suspicious/noDocumentCookie: jsdom cookie setup mirrors the browser contract.
@@ -265,7 +260,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
+          enabledExperimentalModules={["competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -343,7 +338,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
+          enabledExperimentalModules={["competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -410,8 +405,8 @@ describe("Sidebar", () => {
     expect(screen.queryByText("ACTIVITY")).toBeNull();
     for (const [tag, firstRow] of [
       ["SEO", "Rank Tracker"],
-      ["AI", "Prompt Tracker"],
-      ["DATA", "Search Console"],
+      ["AI", "AI Visibility"],
+      ["DATA", "Pages"],
       ["PROJECT", "Markets"],
     ] as const) {
       const tagNode = screen.getByText(tag);
@@ -580,98 +575,91 @@ describe("Sidebar", () => {
     expect(rankingIcon(collapsedIdle)).toHaveAttribute("data-weight", "regular");
   });
 
-  it.each([false, true])(
-    "keeps Dashboard above the purpose groups with Playground enabled: %s",
-    (playgroundEnabled) => {
-      function shell(collapsed: boolean) {
-        return (
-          <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
-            <Sidebar
-              activeProjectId={mockWorkspaces[0].id}
-              canCreateWorkspace
-              enabledExperimentalModules={playgroundEnabled ? ["promptPlayground"] : []}
-              projectRef={mockWorkspaces[0].publicId}
-              workspaces={mockWorkspaces}
-            />
-          </AppThemeRoot>
-        );
-      }
-
-      const expanded = render(shell(false));
-      const modules = expanded.getByText("SEO");
-      expect(expanded.queryByText("Activity")).toBeNull();
-      expect(expanded.getByText("SEO")).toBeInTheDocument();
-      expect(expanded.getByText("AI visibility")).toBeInTheDocument();
-      expect(expanded.getByText("Data & reports")).toBeInTheDocument();
-      expect(expanded.getByText("Project")).toBeInTheDocument();
-      expect(modules.closest("a")).toBeNull();
-      expect(modules).not.toHaveAttribute("tabindex");
-
-      // A heading is a caption, not a destination: a focusable or role-bearing element here would
-      // put three extra stops in the rail's tab order.
-      expect(modules.tagName).toBe("SPAN");
-      expect(modules).not.toHaveAttribute("role");
-      expect(modules).not.toHaveAttribute("href");
-      // 14 + 10 + 4 = the 28px box ShellSkeleton reserves. `leading-none` is what pins the line
-      // box to the font size - preflight is off, so a UA line-height would make it taller.
-      expect(modules).toHaveClass(
-        "block",
-        "px-[11px]",
-        "pt-3.5",
-        "pb-1",
-        "text-[10px]",
-        "leading-none",
+  it("keeps Dashboard above the purpose groups", () => {
+    function shell(collapsed: boolean) {
+      return (
+        <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
+          <Sidebar
+            activeProjectId={mockWorkspaces[0].id}
+            canCreateWorkspace
+            enabledExperimentalModules={[]}
+            projectRef={mockWorkspaces[0].publicId}
+            workspaces={mockWorkspaces}
+          />
+        </AppThemeRoot>
       );
-      // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
-      expect(modules.closest("[data-tooltip]")).toHaveAttribute(
-        "data-tooltip",
-        "Track rankings and research keywords, websites, backlinks and site health.",
-      );
-      expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
+    }
 
-      const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
-      expect(gcsInsights).toHaveTextContent("Search Console");
-      expect(expanded.queryByRole("link", { name: "Prompt Playground" }) !== null).toBe(
-        playgroundEnabled,
-      );
-      expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
-      expanded.unmount();
+    const expanded = render(shell(false));
+    const modules = expanded.getByText("SEO");
+    expect(expanded.queryByText("Activity")).toBeNull();
+    expect(expanded.getByText("SEO")).toBeInTheDocument();
+    expect(expanded.getByText("AI visibility")).toBeInTheDocument();
+    expect(expanded.getByText("Data & reports")).toBeInTheDocument();
+    expect(expanded.getByText("Project")).toBeInTheDocument();
+    expect(modules.closest("a")).toBeNull();
+    expect(modules).not.toHaveAttribute("tabindex");
 
-      const collapsed = render(shell(true));
-      expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-      expect(collapsed.getByText("SEO")).toBeInTheDocument();
-      expect(collapsed.getByText("AI")).toBeInTheDocument();
-      expect(collapsed.getByText("DATA")).toBeInTheDocument();
-      expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
-      expect(collapsed.queryByText("Activity")).toBeNull();
-      expect(collapsed.queryByText("beta")).toBeNull();
-      expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual(
-        [
-          "Dashboard",
-          "Rank Tracker",
-          "SERP Playground",
-          "Keyword Research",
-          "Domain Overview",
-          "Backlinks",
-          "Site Audit",
-          "Prompt Tracker",
-          "Prompt Research",
-          "Brand Visibility",
-          ...(playgroundEnabled ? ["Prompt Playground"] : []),
-          "Search Console",
-          "Agent Reports",
-          "Markets",
-          "Alerts",
-          "Runs",
-          "Schedules",
-          "Providers",
-          "Usage",
-          "Install",
-          "Settings",
-        ],
-      );
-    },
-  );
+    // A heading is a caption, not a destination: a focusable or role-bearing element here would
+    // put three extra stops in the rail's tab order.
+    expect(modules.tagName).toBe("SPAN");
+    expect(modules).not.toHaveAttribute("role");
+    expect(modules).not.toHaveAttribute("href");
+    // 14 + 10 + 4 = the 28px box ShellSkeleton reserves. `leading-none` is what pins the line
+    // box to the font size - preflight is off, so a UA line-height would make it taller.
+    expect(modules).toHaveClass(
+      "block",
+      "px-[11px]",
+      "pt-3.5",
+      "pb-1",
+      "text-[10px]",
+      "leading-none",
+    );
+    // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
+    expect(modules.closest("[data-tooltip]")).toHaveAttribute(
+      "data-tooltip",
+      "Track rankings and research keywords, websites, backlinks and site health.",
+    );
+    expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
+
+    const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
+    expect(gcsInsights).toHaveTextContent("Search Console");
+    expect(expanded.getByRole("link", { name: "Model Playground" })).toBeInTheDocument();
+    expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
+    expanded.unmount();
+
+    const collapsed = render(shell(true));
+    expect(collapsed.queryByText("ACTIVITY")).toBeNull();
+    expect(collapsed.getByText("SEO")).toBeInTheDocument();
+    expect(collapsed.getByText("AI")).toBeInTheDocument();
+    expect(collapsed.getByText("DATA")).toBeInTheDocument();
+    expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
+    expect(collapsed.queryByText("Activity")).toBeNull();
+    expect(collapsed.queryByText("beta")).toBeNull();
+    expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual([
+      "Dashboard",
+      "Rank Tracker",
+      "SERP Playground",
+      "Keyword Research",
+      "Domain Overview",
+      "Backlinks",
+      "Site Audit",
+      "AI Visibility",
+      "Model Playground",
+      "Pages",
+      "Search Console",
+      "Annotations",
+      "Reports",
+      "Markets",
+      "Alerts",
+      "Runs",
+      "Schedules",
+      "Providers",
+      "Usage",
+      "Install",
+      "Settings",
+    ]);
+  });
 
   it("renders Markets with the folded map and no count, subtitle or hairline", () => {
     render(
@@ -679,7 +667,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
+          enabledExperimentalModules={["competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -721,7 +709,7 @@ describe("Sidebar", () => {
     expect(dashboard.querySelector("svg")).toHaveAttribute("data-weight", "regular");
   });
 
-  it("renders the expanded Competitors experimental badge as a Flask tooltip trigger", () => {
+  it("does not mark experimental rows in the rail", () => {
     navBadgeOverrides.Dashboard = "new";
 
     render(
@@ -729,24 +717,17 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
-          enabledExperimentalModules={["timeline", "competitors"]}
+          enabledExperimentalModules={["competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
       </AppThemeRoot>,
     );
 
-    const competitors = screen.getByText("Competitors").closest("a");
-    expect(competitors).not.toBeNull();
-    expect(within(competitors as HTMLAnchorElement).queryByText("experimental")).toBeNull();
-
-    const experimentalTooltip = competitors?.querySelector('[data-tooltip="Experimental"]');
-    expect(experimentalTooltip).toBeInTheDocument();
-    const trigger = experimentalTooltip?.querySelector('[role="img"]');
-    expect(trigger).toHaveAttribute("aria-label", "Experimental");
-
-    const flask = trigger?.querySelector("[data-experimental-badge-flask]");
-    expect(flask).toHaveAttribute("data-weight", "regular");
+    const competitors = screen.getByRole("link", { name: "Competitors" });
+    expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeNull();
+    expect(competitors.querySelector('[data-tooltip="Experimental"]')).toBeNull();
+    expect(within(competitors).queryByText("experimental")).toBeNull();
 
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
     expect(within(gcsInsights).queryByText("beta")).not.toBeInTheDocument();

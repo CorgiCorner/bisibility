@@ -23,6 +23,8 @@ export const PUBLIC_ID_RESOURCE_REGISTRY = {
   asm: "aiTrackingSample",
   asg: "aiTrackingSuggestionGeneration",
   dpt: "devicePushToken",
+  cst: "costItem",
+  rsl: "reportShareLink",
 } as const;
 
 export type PublicIdPrefix = keyof typeof PUBLIC_ID_RESOURCE_REGISTRY;

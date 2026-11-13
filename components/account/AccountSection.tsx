@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 export type AccountSectionProps = {
   action?: ReactNode;
   badge?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   contentClassName?: string;
   description?: ReactNode;
   title: string;
@@ -40,13 +40,15 @@ export function AccountSection({
           <div className="ml-auto flex min-h-9 shrink-0 items-center gap-3">{action}</div>
         ) : null}
       </div>
-      <Card
-        className={cn("rounded-card p-5", tone === "danger" && "border-red", contentClassName)}
-        size="md"
-        style={tone === "danger" ? { borderColor: "var(--red)" } : undefined}
-      >
-        {children}
-      </Card>
+      {children ? (
+        <Card
+          className={cn("rounded-card p-5", tone === "danger" && "border-red", contentClassName)}
+          size="md"
+          style={tone === "danger" ? { borderColor: "var(--red)" } : undefined}
+        >
+          {children}
+        </Card>
+      ) : null}
     </section>
   );
 }

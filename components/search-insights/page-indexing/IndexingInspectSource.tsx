@@ -64,7 +64,7 @@ export function IndexingInspectSource({
         ariaLabel={t("inspectSource")}
         className="m-0 shrink-0"
         fitContent
-        size="toolbar"
+        size="field"
         value={mode}
         disabled={disabled}
         options={[

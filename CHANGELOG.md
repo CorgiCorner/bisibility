@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.49.0] - 2026-11-13
+
+### Added
+
+- Added an optional 30-day SEO challenge with daily check-ins and a completion badge, plus performance reports with shareable links, image cards, and custom reflection questions.
+- Added a Pages workspace with URL tags, repeatable baselines, group comparisons, indexing insights and Core Web Vitals. See conversions alongside SEO data.
+- Added AI Visibility for mentions, citations, prompts and sources, and Model Playground to compare answers across engines. Saved searches are easier to find and reuse.
+- Added page and chart annotations for SEO changes, plus project-level tracking for provider usage, subscriptions and one-off costs.
+
+### Fixed
+
+- Fixed admin recovery and rank check summary issues, and improved navigation, loading states, control alignment and layout on smaller screens.
+
 ## [0.48.0] - 2026-11-10
 
 ### Added

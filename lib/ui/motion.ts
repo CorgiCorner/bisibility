@@ -16,5 +16,12 @@ export const MOTION_MODAL_ENTER = 240;
 export const MOTION_MODAL_EXIT = 200;
 export const MOTION_DRAWER_ENTER = 340;
 export const MOTION_DRAWER_EXIT = 280;
+// Floating drawers pass these as the overlay duration. They are not CSS custom
+// properties: enter easing reuses --ease-out, and the edge-attached drawer
+// tokens above stay on the parity contract.
+/** Desktop floating panel: 16px offset plus opacity, 260ms ease-out. */
+export const MOTION_FLOATING_DRAWER_ENTER = 260;
+/** Mobile bottom sheet: full slide, 300ms ease-out. */
+export const MOTION_FLOATING_SHEET_ENTER = 300;
 export const MOTION_TOAST_ENTER = 200;
 export const MOTION_TOAST_EXIT = 150;

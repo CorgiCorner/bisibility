@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { type CapacityFailure, capacityActionClient } from "@/lib/capacity/action";
+import type { CoreWebVitalsCardModel, PageVitalsActionResult } from "@/lib/pagespeed/view";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedSiteAudit, SiteAuditInput, SiteAuditPage } from "@/lib/site-audit/schema";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
@@ -12,6 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
+import { CoreWebVitalsCard } from "./CoreWebVitalsCard";
 import { SiteAuditForm } from "./SiteAuditForm";
 import { SiteAuditResultsLoading } from "./SiteAuditLoading";
 import { SiteAuditResults } from "./SiteAuditResults";
@@ -36,6 +38,10 @@ export type SiteAuditWorkspaceProps = {
     offset: number;
     limit: number;
   }) => Promise<{ pages: SiteAuditPage[]; offset: number; nextOffset: number | null } | null>;
+  vitals?: {
+    checkAction: (input: { projectId: string }) => Promise<PageVitalsActionResult>;
+    model: CoreWebVitalsCardModel;
+  };
 };
 export function SiteAuditWorkspace(props: Readonly<SiteAuditWorkspaceProps>) {
   const [client] = useState(() => new QueryClient());
@@ -58,6 +64,7 @@ function Workspace({
   cancelAction,
   resumeAction,
   pagesAction,
+  vitals,
 }: Readonly<SiteAuditWorkspaceProps>) {
   const t = useTranslations("projectSiteAudit");
   const format = useFormatter();
@@ -270,6 +277,14 @@ function Workspace({
           bullets={[t("bullets.0"), t("bullets.1"), t("bullets.2")]}
         />
       )}
+      {vitals ? (
+        <CoreWebVitalsCard
+          canCheck={canRun}
+          checkAction={vitals.checkAction}
+          model={vitals.model}
+          projectId={projectId}
+        />
+      ) : null}
     </section>
   );
 }

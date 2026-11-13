@@ -3,8 +3,8 @@
 import type { ConnectFormValues, Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerCredentialFields } from "@/components/integrations/provider-auth";
 import { useProviderMetaCopy } from "@/components/integrations/provider-meta-copy";
-import { Button } from "@/components/ui/Button";
-import { inputClassName } from "@/components/ui/input-styles";
+import { Button, type ButtonProps } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import type { IntegrationProviderData, ProviderTestResult } from "@/lib/integrations/types";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
@@ -18,8 +18,6 @@ type FormProps = {
 };
 
 const labelClass = "flex flex-col gap-[7px] text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-
-const inputClass = `${inputClassName} rounded-control px-[13px] py-[11px] text-[13px] font-medium`;
 
 function localizedCredentialField(
   providerId: string,
@@ -98,17 +96,15 @@ export function CredentialFields({
               <PasswordInput
                 aria-describedby={field.description ? `${inputId}-description` : undefined}
                 aria-labelledby={`${inputId}-label`}
-                className={inputClass}
                 id={inputId}
                 placeholder={field.placeholder}
                 {...form.register(field.name)}
               />
             ) : (
-              <input
+              <Input
                 aria-describedby={field.description ? `${inputId}-description` : undefined}
                 aria-labelledby={`${inputId}-label`}
                 autoComplete="off"
-                className={inputClass}
                 id={inputId}
                 placeholder={field.placeholder}
                 type={field.type ?? "text"}
@@ -152,7 +148,10 @@ export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>
   );
 }
 
-export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
+export function ActionNotice({
+  notice,
+  size,
+}: Readonly<{ notice: Notice; size?: ButtonProps["size"] }>) {
   const t = useTranslations("projectIntegrations.drawer");
   let tone = notice.ok === false ? "var(--red)" : "var(--green)";
   if (notice.tone === "warning") tone = "var(--yellow)";
@@ -170,7 +169,7 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
         <Button
           className="mt-3"
           onClick={() => window.location.reload()}
-          size="sm"
+          size={size}
           type="button"
           variant="secondary"
         >

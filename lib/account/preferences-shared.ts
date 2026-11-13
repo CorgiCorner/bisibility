@@ -43,6 +43,10 @@ const LANDING_MIGRATIONS: Readonly<Record<string, LandingSegment>> = {
   keywords: "rank-tracker",
   "search-insights": "search-console",
   "search-console-insights": "search-console",
+  "prompt-tracker": "ai-visibility",
+  "prompt-research": "ai-visibility",
+  "brand-visibility": "ai-visibility",
+  timeline: "annotations",
 };
 
 const DEFAULT_LANDING: LandingSegment = "dashboard";

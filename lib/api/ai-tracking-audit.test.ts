@@ -7,6 +7,7 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit }));
 import {
   auditTrackingAcceptance,
   auditTrackingCatalog,
+  auditTrackingEngine,
   auditTrackingGeneration,
   auditTrackingRun,
 } from "./ai-tracking-audit";
@@ -54,8 +55,33 @@ describe("tracking append-only audit", () => {
       await auditTrackingRun(actor, project, operation, { publicId: "public" });
     await auditTrackingAcceptance(actor, project, 2);
     await auditTrackingGeneration(actor, project, "asg_public");
+    for (const enabled of [true, false]) {
+      await auditTrackingEngine(
+        actor,
+        project,
+        { enabled, engine: "gemini", source: "consumer_scrape" },
+        enabled ? null : { enabled: true, engine: "gemini", source: "consumer_scrape" },
+      );
+    }
     expect(new Set(writeAudit.mock.calls.map(([entry]) => entry.action))).toEqual(declared);
-    expect(declared.size).toBe(23);
+    expect(declared.size).toBe(25);
+  });
+  it("records an engine choice by engine and source, never a database id", async () => {
+    await auditTrackingEngine(
+      actor,
+      project,
+      { enabled: false, engine: "chat_gpt", source: "model_api" },
+      { enabled: true, engine: "chat_gpt", source: "model_api" },
+    );
+    expect(writeAudit).toHaveBeenLastCalledWith({
+      action: "ai_tracking.engine.disable",
+      actorId: "user",
+      after: { enabled: false, engine: "chat_gpt", source: "model_api" },
+      before: { enabled: true, engine: "chat_gpt", source: "model_api" },
+      projectId: "internal",
+      targetId: "chat_gpt:model_api",
+      targetType: "ai_project_engine",
+    });
   });
   it("records scoped lifecycle without prompttext or raw credentials", async () => {
     await auditTrackingCatalog(

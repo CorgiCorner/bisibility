@@ -1,0 +1,49 @@
+.bento {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.item {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md1 {
+    grid-column: span 1;
+  }
+
+  .md2 {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .lg3 {
+    grid-column: span 3;
+  }
+
+  .lg4 {
+    grid-column: span 4;
+  }
+
+  .lg6 {
+    grid-column: span 6;
+  }
+
+  .lg8 {
+    grid-column: span 8;
+  }
+
+  .lg12 {
+    grid-column: span 12;
+  }
+}

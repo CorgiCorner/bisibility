@@ -20,6 +20,8 @@ import type {
   SerializedQueuedDeadlineMaintenanceCursor,
   SweepRankCheckRawPurgeProgressActivityResult,
   SyncPresenceActivityResult,
+  SyncProjectPagesActivityResult,
+  SyncSearchEngineUpdatesActivityResult,
   SyncSitemapsActivityResult,
 } from "./maintenance-activities";
 
@@ -46,6 +48,8 @@ type MaintenanceActivities = {
   }): Promise<SendWeeklyReportDigestActivityResult>;
   sweepRankCheckRawPurgeProgressActivity(): Promise<SweepRankCheckRawPurgeProgressActivityResult>;
   syncPresenceActivity(): Promise<SyncPresenceActivityResult>;
+  syncProjectPagesActivity(): Promise<SyncProjectPagesActivityResult>;
+  syncSearchEngineUpdatesActivity(): Promise<SyncSearchEngineUpdatesActivityResult>;
   syncSitemapsActivity(): Promise<SyncSitemapsActivityResult>;
 };
 
@@ -68,7 +72,10 @@ type PurgeAndSweepActivities = Pick<
 
 type LongMaintenanceActivities = Pick<
   MaintenanceActivities,
-  "sendWeeklyReportDigestActivity" | "syncPresenceActivity" | "syncSitemapsActivity"
+  | "sendWeeklyReportDigestActivity"
+  | "syncPresenceActivity"
+  | "syncProjectPagesActivity"
+  | "syncSitemapsActivity"
 >;
 
 const {
@@ -112,17 +119,28 @@ const {
   >
 >(RANK_CHECK_RAW_PURGE_ACTIVITY_OPTIONS);
 
-const { sendWeeklyReportDigestActivity, syncPresenceActivity, syncSitemapsActivity } =
-  proxyActivities<LongMaintenanceActivities>({
-    retry: {
-      backoffCoefficient: 2,
-      initialInterval: "5 seconds",
-      maximumAttempts: 3,
-      maximumInterval: "30 seconds",
-    },
-    // These jobs fan out over all projects, so keep a wider activity window.
-    startToCloseTimeout: "30 minutes",
-  });
+const { syncSearchEngineUpdatesActivity } = proxyActivities<
+  Pick<MaintenanceActivities, "syncSearchEngineUpdatesActivity">
+>({
+  retry: { initialInterval: "5 seconds", maximumAttempts: 3 },
+  startToCloseTimeout: "1 minute",
+});
+
+const {
+  sendWeeklyReportDigestActivity,
+  syncPresenceActivity,
+  syncProjectPagesActivity,
+  syncSitemapsActivity,
+} = proxyActivities<LongMaintenanceActivities>({
+  retry: {
+    backoffCoefficient: 2,
+    initialInterval: "5 seconds",
+    maximumAttempts: 3,
+    maximumInterval: "30 seconds",
+  },
+  // These jobs fan out over all projects, so keep a wider activity window.
+  startToCloseTimeout: "30 minutes",
+});
 
 export type {
   AlertHealthActivityResult,
@@ -136,6 +154,7 @@ export type {
   SendWeeklyReportDigestActivityResult,
   SweepRankCheckRawPurgeProgressActivityResult,
   SyncPresenceActivityResult,
+  SyncProjectPagesActivityResult,
   SyncSitemapsActivityResult,
 };
 
@@ -298,6 +317,14 @@ export async function sendWeeklyReportDigestWorkflow(): Promise<SendWeeklyReport
 
 export async function syncSitemapsWorkflow(): Promise<SyncSitemapsActivityResult> {
   return syncSitemapsActivity();
+}
+
+export async function syncProjectPagesWorkflow(): Promise<SyncProjectPagesActivityResult> {
+  return syncProjectPagesActivity();
+}
+
+export async function syncSearchEngineUpdatesWorkflow(): Promise<SyncSearchEngineUpdatesActivityResult> {
+  return syncSearchEngineUpdatesActivity();
 }
 
 export async function syncPresenceWorkflow(): Promise<SyncPresenceActivityResult> {

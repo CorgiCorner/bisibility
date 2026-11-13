@@ -1,6 +1,7 @@
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import type { Meta, StoryObj } from "@storybook/react";
-import { FieldLabel } from "./FieldLabel";
+import { FieldLabel, FormField } from "./FieldLabel";
+import { Input } from "./Input";
 
 const meta = {
   title: "UI/FieldLabel",
@@ -24,4 +25,18 @@ export const Default: Story = {
     help: FIELD_HELP.frequency,
     label: "Frequency",
   },
+};
+
+export const AlignedFields: Story = {
+  args: { label: "Aligned fields" },
+  render: () => (
+    <div className="grid grid-cols-2 gap-4">
+      <FormField label="Language" caption="Answer language">
+        <Input />
+      </FormField>
+      <FormField label="Search" help="Search the web" caption="Search availability">
+        <Input />
+      </FormField>
+    </div>
+  ),
 };

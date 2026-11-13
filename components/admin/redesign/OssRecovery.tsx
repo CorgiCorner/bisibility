@@ -1,9 +1,10 @@
 "use client";
 
-import { AdminTableState, useAdminSelection } from "@/components/admin/AdminTableState";
+import { AdminTableState } from "@/components/admin/AdminTableState";
 import { RecoveryPartialEvidence } from "@/components/admin/recovery/RecoveryPartialEvidence";
 import { RecoverySummary } from "@/components/admin/recovery/RecoverySummary";
 import { RecoveryTable } from "@/components/admin/recovery/RecoveryTable";
+import { useRecoveryBatchSelection } from "@/components/admin/recovery/useRecoverySelection";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type {
@@ -13,10 +14,17 @@ import type {
   RecoveryPreview,
 } from "@/lib/metering/recovery/contract";
 import { useTranslations } from "next-intl";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { OssRecoveryBatchDialog } from "./OssRecoveryBatchDialog";
 import { OssRecoveryDetails, type RecoveryTriage } from "./OssRecoveryDetails";
 
+const triageFor = (row: RecoveryCase | null): RecoveryTriage => ({
+  status: row?.triage.status ?? "open",
+  reason: row?.triage.reason ?? "none",
+  due: "24",
+  snoozedUntil: row?.triage.snoozedUntil ?? null,
+  assign: row?.triage.assignedToMe ?? false,
+});
 export function OssRecovery({
   page,
   initialCategory = "all",
@@ -63,7 +71,7 @@ export function OssRecovery({
   initialDetail?: RecoveryCase | null;
   now?: number;
   onRefresh: () => void;
-  onPreview: (tokens: string[]) => void;
+  onPreview: (references: string[]) => void;
   onConfirm: (preview: RecoveryPreview) => boolean | undefined | Promise<boolean | undefined>;
   onSaveTriage: (row: RecoveryCase, triage: RecoveryTriage) => void;
   onRetryCommand: () => void;
@@ -74,24 +82,27 @@ export function OssRecovery({
   const p = useTranslations("instanceAdmin.pages");
   const [category, setCategory] = useState(initialCategory);
   const [provider, setProvider] = useState(initialProvider);
-  const [selected, setSelected] = useAdminSelection();
+  const selection = useRecoveryBatchSelection(page?.rows ?? []);
+  const { selected } = selection;
   const [selectedDetail, setDetail] = useState<RecoveryCase | null>(initialDetail);
   const route = useContext(AdminTableState);
   const detail = live
     ? (page?.rows.find(
-        (row) => row.token === (route ? route.get("case") : selectedDetail?.token),
+        (row) => row.reference === (route ? route.get("case") : selectedDetail?.reference),
       ) ?? null)
     : selectedDetail;
   const [dialog, setDialog] = useState(initialDialogOpen);
   const [older, setOlder] = useState(hasPrevious);
-  const triageFor = (row: RecoveryCase | null): RecoveryTriage => ({
-    status: row?.triage.status ?? "open",
-    reason: row?.triage.reason ?? "none",
-    due: "24",
-    snoozedUntil: row?.triage.snoozedUntil ?? null,
-    assign: row?.triage.assignedToMe ?? false,
-  });
   const [triage, setTriage] = useState<RecoveryTriage>(() => triageFor(detail));
+  // Stable, like the selection callback, so a checkbox does not rebuild the table columns.
+  const openDetails = useCallback(
+    (row: RecoveryCase) => {
+      setDetail(row);
+      route?.update({ case: row.reference });
+      setTriage(triageFor(row));
+    },
+    [route],
+  );
   if (!isAdmin) return <p role="status">{p("noAdmin")}</p>;
   if (!page)
     return (
@@ -144,7 +155,7 @@ export function OssRecovery({
           value={category}
           onChange={(value) => {
             setCategory(value);
-            setSelected([]);
+            selection.clear();
             setOlder(false);
             onFilterChange({ category: value, provider });
           }}
@@ -157,7 +168,7 @@ export function OssRecovery({
           value={provider}
           onChange={(value) => {
             setProvider(value);
-            setSelected([]);
+            selection.clear();
             setOlder(false);
             onFilterChange({ category, provider: value });
           }}
@@ -216,20 +227,8 @@ export function OssRecovery({
           showAccounting={false}
           selected={selected}
           busy={busy}
-          onDetails={(row) => {
-            setDetail(row);
-            route?.update({ case: row.token });
-            setTriage(triageFor(row));
-          }}
-          onSelect={(token, checked) =>
-            setSelected((current) =>
-              checked
-                ? current.length < 25
-                  ? [...current, token]
-                  : current
-                : current.filter((item) => item !== token),
-            )
-          }
+          onDetails={openDetails}
+          onSelect={selection.select}
         />
       </div>
       <RecoveryPartialEvidence rows={page.partialEvidence ?? []} />

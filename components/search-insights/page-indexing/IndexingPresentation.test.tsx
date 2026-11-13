@@ -170,6 +170,20 @@ it("omits an unknown count from the tab including its accessible name", () => {
   const link = screen.getByRole("link", { name: "Page indexing beta" });
   expect(within(link).getByText("beta")).toBeVisible();
   expect(link).not.toHaveAttribute("aria-label");
+  const strip = document.querySelector("[data-tab-strip]");
+  expect(strip?.className).toContain("min-w-0");
+  expect(strip?.className).toContain("overflow-x-auto");
+  const track = strip?.querySelector("[data-tab-track]");
+  expect(track?.parentElement).toBe(strip);
+  expect(track?.className).toContain("min-w-full");
+  expect(track?.className).toContain("border-b");
+  const nav = screen.getByRole("navigation", { name: "Search Console views" });
+  expect(nav.className).toContain("min-w-0");
+  expect(nav.className).not.toContain("border-b");
+  for (const tab of within(nav).getAllByRole("link")) {
+    expect(tab.className).toContain("whitespace-nowrap");
+    expect(tab.className).toContain("-mb-px");
+  }
 });
 it.each([
   ["en", en, "beta"],

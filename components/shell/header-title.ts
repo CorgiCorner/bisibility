@@ -87,6 +87,10 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return { title: "Dashboard" };
   }
 
+  if (matches(sectionPath, "/pages")) {
+    return sectionMeta("Pages", "Every URL of the project, one row each.");
+  }
+
   if (matches(sectionPath, "/search-console")) {
     return sectionMeta(
       "Search Console",
@@ -94,30 +98,29 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     );
   }
 
+  if (
+    matches(sectionPath, "/ai-visibility") ||
+    matches(sectionPath, "/prompt-tracker") ||
+    matches(sectionPath, "/prompt-research") ||
+    matches(sectionPath, "/brand-visibility")
+  ) {
+    return { title: "AI Visibility" };
+  }
+
   const researchSections = [
     [
-      "prompt-research",
-      "Prompt Research",
-      "Research dataset questions by keyword. ChatGPT · US English.",
-    ],
-    [
-      "prompt-tracker",
-      "Prompt Tracker",
-      "Monitor AI answers, brand mentions and cited sources over time.",
-    ],
-    [
-      "brand-visibility",
-      "Brand Visibility",
-      "Brand mentions and citations from available provider observations.",
+      "model-playground",
+      "Model Playground",
+      "One question, several models. Compare who they name and which pages they cite.",
     ],
     [
       "prompt-playground",
-      "Prompt Playground",
-      "Try one prompt on several models and compare their answers and citations.",
+      "Model Playground",
+      "One question, several models. Compare who they name and which pages they cite.",
     ],
     ["site-audit", "Site Audit", "Crawl your project site and inspect issues by URL."],
     ["context", "Project Context", "Business, audience, products and goals for your agents."],
-    ["agent-reports", "Agent Reports", "Saved analyses shared with members of this project."],
+    ["agent-reports", "Reports", "Saved analyses shared with members of this project."],
   ] as const;
   for (const [segment, title, subtitle] of researchSections) {
     if (matches(sectionPath, `/${segment}`)) return sectionMeta(title, subtitle);
@@ -178,8 +181,8 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return sectionMeta("Alerts", "Get notified when rankings change.");
   }
 
-  if (matches(sectionPath, "/timeline")) {
-    return sectionMeta("Timeline", "Project signals, page changes and notes over time.");
+  if (matches(sectionPath, "/annotations") || matches(sectionPath, "/timeline")) {
+    return { title: "Annotations" };
   }
 
   if (matches(sectionPath, "/settings/audit")) {
@@ -191,6 +194,14 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
       "Import from another instance",
       "Move data into this project with a one-time migration token.",
     );
+  }
+
+  if (matches(sectionPath, "/settings/tags")) {
+    return { headerVariant: "settings", title: "Settings" };
+  }
+
+  if (matches(sectionPath, "/settings/conversions")) {
+    return { headerVariant: "settings", title: "Settings" };
   }
 
   if (matches(sectionPath, "/settings")) {

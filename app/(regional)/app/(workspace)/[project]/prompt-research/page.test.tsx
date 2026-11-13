@@ -1,6 +1,7 @@
+import { PromptResearchPageContent } from "@/components/ai-tracking/PromptResearchPageContent";
 import { ProjectNotFoundError } from "@/lib/actions/_shared";
 import { AuthorizationError } from "@/lib/auth/authorize";
-import { notFound } from "@/tests/next-navigation";
+import { notFound, redirect } from "@/tests/next-navigation";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +21,16 @@ vi.mock("@/lib/auth/audit", () => ({ writeAuditFailure: vi.fn() }));
 vi.mock("@/lib/actions/prompt-research", () => ({
   getPromptResearchPage: mocks.getPromptResearchPage,
 }));
+vi.mock("@/lib/ai-research/research-tab-context", () => ({
+  loadResearchTabContext: vi.fn(async () => ({
+    competitors: [],
+    competitorsHref: "/app/prj_public/settings/competitors",
+    dailyUsdPerPrompt: null,
+    engines: [],
+    entities: [],
+    recent: [],
+  })),
+}));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: mocks.resolveRegionalDocumentLocale,
@@ -27,6 +38,7 @@ vi.mock("@/i18n/document-locale.server", () => ({
 vi.mock("@/components/i18n/FeatureMessagesProvider", () => ({
   FeatureMessagesProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
+vi.mock("@/components/ai-tracking/AiVisibilityTabs", () => ({ AiVisibilityTabs: () => null }));
 vi.mock("@/components/ai-tracking/PromptResearchClient", () => ({
   PromptResearchClient: ({ projectId }: { projectId: string }) => (
     <div data-project={projectId}>Prompt Research</div>
@@ -50,10 +62,17 @@ describe("PromptResearchPage", () => {
     });
   });
 
+  it("redirects to the research tab and keeps the keyword", async () => {
+    await PromptResearchPage(pageInput);
+    expect(redirect).toHaveBeenCalledWith("/app/prj_public/ai-visibility?tab=research&q=tools");
+  });
+
   it("renders the authorized project", async () => {
-    expect(renderToStaticMarkup(await PromptResearchPage(pageInput))).toContain(
-      'data-project="prj_public"',
-    );
+    expect(
+      renderToStaticMarkup(
+        await PromptResearchPageContent({ keyword: "tools", project: "prj_public" }),
+      ),
+    ).toContain('data-project="prj_public"');
     expect(mocks.getPromptResearchPage).toHaveBeenCalledWith("prj_public", "tools");
     expect(notFound).not.toHaveBeenCalled();
   });
@@ -64,7 +83,9 @@ describe("PromptResearchPage", () => {
   ])("renders not found for a %s project", async (_reason, error) => {
     mocks.getPromptResearchPage.mockRejectedValue(error);
 
-    await expect(PromptResearchPage(pageInput)).rejects.toBe(notFoundError);
+    await expect(
+      PromptResearchPageContent({ keyword: "tools", project: "prj_public" }),
+    ).rejects.toBe(notFoundError);
     expect(notFound).toHaveBeenCalledOnce();
   });
 
@@ -75,7 +96,9 @@ describe("PromptResearchPage", () => {
   ])("preserves %s failures", async (_reason, error) => {
     mocks.getPromptResearchPage.mockRejectedValue(error);
 
-    await expect(PromptResearchPage(pageInput)).rejects.toBe(error);
+    await expect(
+      PromptResearchPageContent({ keyword: "tools", project: "prj_public" }),
+    ).rejects.toBe(error);
     expect(notFound).not.toHaveBeenCalled();
   });
 
@@ -83,7 +106,9 @@ describe("PromptResearchPage", () => {
     const error = new AuthorizationError("forbidden");
     mocks.loadCoreMessages.mockRejectedValue(error);
 
-    await expect(PromptResearchPage(pageInput)).rejects.toBe(error);
+    await expect(
+      PromptResearchPageContent({ keyword: "tools", project: "prj_public" }),
+    ).rejects.toBe(error);
     expect(notFound).not.toHaveBeenCalled();
   });
 });

@@ -1,11 +1,6 @@
-import { RecentResearchSearches } from "@/components/research/RecentResearchSearches";
-import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
-import { fireEvent, screen } from "@testing-library/react";
-import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { researchLocation } from "./context";
-import { cacheTimeRemaining, parseRecentSearches } from "./recent-searches";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -215,52 +210,5 @@ describe("pre-R3 default behavior characterization", () => {
     ).resolves.toMatchObject({ key: "ES/ES-AN/Malaga", value: { gl: "es", hl: "es" } });
 
     expect(mocks.resolveLocation).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ["live", "2026-07-22T20:00:00.000Z", "cached, free for 10 hours"],
-    ["expired", "2026-07-22T09:00:00.000Z", "cache expired"],
-  ] as const)("keeps the %s legacy replay location key", (_state, cachedUntil, cacheLabel) => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-22T10:00:00.000Z"));
-    const [search] = parseRecentSearches(
-      JSON.stringify([
-        {
-          cachedUntil,
-          connectionId: "conn_a00000000000000000000000",
-          createdAt: "2026-07-22T08:00:00.000Z",
-          includeClickstream: false,
-          locationKey: "ES/ES-AN/Malaga",
-          market: "Malaga, Spain",
-          mode: "related",
-          resultLimit: 100,
-          seed: "standing desk",
-        },
-      ]),
-    );
-    if (!search) throw new Error("Expected the legacy replay to parse.");
-    const display = (search as Record<string, unknown>)[referenceBase ? "market" : "scopeLabel"];
-
-    expect(display).toBe(referenceBase ? "Malaga, Spain" : "Spain / Spanish");
-    expect(search).toMatchObject({ locationKey: "ES/ES-AN/Malaga", mode: "related" });
-    expect(cacheTimeRemaining(cachedUntil)).toBe(
-      cacheLabel === "cache expired" ? 0 : 10 * 60 * 60 * 1000,
-    );
-
-    const onOpen = vi.fn();
-    render(
-      createElement(RecentResearchSearches, {
-        onOpen,
-        onRemove: vi.fn(),
-        searches: [search] as never,
-      }),
-    );
-
-    expect(screen.getByText(String(display), { exact: false })).toBeInTheDocument();
-    expect(screen.getByText(referenceBase ? cacheLabel : "Saved search")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^standing desk/i }));
-    expect(onOpen).toHaveBeenCalledWith(
-      expect.objectContaining({ locationKey: "ES/ES-AN/Malaga" }),
-    );
   });
 });

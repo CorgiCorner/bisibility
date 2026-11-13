@@ -32,19 +32,19 @@ describe("BacklinksLoadingSkeletons", () => {
     expect(form).toHaveClass("grid", "gap-3");
     expect(firstRow).toHaveClass("flex", "flex-col", "gap-3", "md:flex-row", "md:items-start");
     expect(target).toHaveClass(
-      "min-h-9",
-      "sm:min-h-[34px]",
+      "min-h-10",
+      "max-sm:min-h-11",
       "flex-1",
       "rounded-control",
       "border",
       "border-border",
       "md:min-w-[240px]",
     );
-    expect(scope).toHaveClass("h-[34px]", "md:w-[196px]");
-    expect(limit).toHaveClass("min-h-[34px]", "lg:w-[132px]");
+    expect(scope).toHaveClass("h-10", "max-sm:h-11", "md:w-[196px]");
+    expect(limit).toHaveClass("min-h-10", "max-sm:min-h-11", "lg:w-36");
     expect(lowerRow).toHaveClass("flex", "flex-wrap", "items-center", "justify-between", "gap-3");
     expect(submitGroup).toHaveClass("flex", "items-center", "gap-4");
-    expect(submit).toHaveClass("min-w-[216px]");
+    expect(submit).toHaveClass("h-10", "max-sm:h-11", "min-w-[216px]");
   });
 
   it("uses real static idle guidance without exposing active controls during loading", () => {

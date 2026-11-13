@@ -147,4 +147,34 @@ describe("overview query", () => {
       expect.objectContaining({ where: { projectId: "project_1", status: "active" } }),
     );
   });
+
+  it("loads position-trend markers with the overview instead of a second request", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      frequency: "weekly",
+      timezone: "UTC",
+    });
+    mocks.prisma.signal.findMany.mockResolvedValue([
+      {
+        happenedAt: new Date("2026-06-20T10:00:00.000Z"),
+        payload: { note: "Title change" },
+        publicId: "sig_note",
+        source: "manual",
+        type: "note",
+        url: null,
+      },
+    ]);
+
+    const result = await getOverview("prj_1", { now });
+
+    expect(result.chartMarkers).toEqual([
+      expect.objectContaining({
+        dateKey: "2026-06-20",
+        id: "sig_note",
+        kind: "note",
+        title: "Title change",
+      }),
+    ]);
+    expect(mocks.prisma.signal.findMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.searchEngineUpdate.findMany).toHaveBeenCalledOnce();
+  });
 });

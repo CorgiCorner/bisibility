@@ -1,6 +1,15 @@
 {
   "instanceAdmin": {
+    "features": {
+      "title": "Funciones opcionales",
+      "challenge": "30 días de SEO",
+      "challengeDescription": "Permite a los miembros iniciar el reto SEO de 30 días desde Páginas. Al desactivarlo, se oculta el reto y dejan de registrarse los días. Se conservan las fechas y los días ya registrados.",
+      "saving": "Guardando…",
+      "saved": "Ajuste guardado.",
+      "failed": "No se pudo guardar el ajuste."
+    },
     "shell": {
+      "features": "Funciones",
       "status": "Estado",
       "accounts": "Cuentas",
       "viewNavigation": "Vistas: {tab}",
@@ -856,6 +865,7 @@
       "lastExhaustion": "Último agotamiento del límite",
       "presenceHelp": "Últimas URL aplazadas por la comprobación diaria de presencia. El límite se restablece automáticamente.",
       "questions": {
+        "features": "¿Qué funciones opcionales están disponibles en esta instancia?",
         "status": "¿La instancia funciona correctamente?",
         "worker": "¿Los procesos y horarios funcionan correctamente?",
         "checks": "¿Las comprobaciones de posición y presencia de URL funcionan correctamente?",

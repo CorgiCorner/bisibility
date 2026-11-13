@@ -1,10 +1,14 @@
 import { Card } from "@/components/ui/Card";
+import { ChallengeBento, ChallengeBentoItem } from "@/lib/challenge-report/bento";
+import { challengeBentoLayout } from "@/lib/challenge-report/bento-layout";
+import { CHALLENGE_TILE_IDS } from "@/lib/challenge-report/tile-state";
 import { cn } from "@/lib/ui/cn";
 import {
   AgentReportBack,
   AgentReportDetailFrame,
   AgentReportHeader,
 } from "./AgentReportDetailLayout";
+import { challengeReportBlocks, challengeReportLayoutClassName } from "./challenge-report-layout";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
   return (
@@ -42,48 +46,25 @@ export function AgentReportDetailLoading({
           </div>
         }
       />
-      <div aria-hidden className="grid gap-4">
-        <div className="flex items-center gap-[9px] rounded-control border border-border bg-bg-sunken px-3 py-2 text-[13px] leading-[1.5]">
-          <Bar className="size-3.5 bg-border" />
-          <div className="min-w-0 flex-1">
-            <TextBar className="w-2/3 max-w-160 bg-border" />
-            <span className="block sm:hidden">
-              <TextBar className="w-1/2 bg-border" />
-            </span>
-          </div>
-        </div>
-        <Card className="min-w-0 overflow-hidden p-0">
-          <div className="px-4 py-3 text-[14px] font-semibold">
-            <TextBar className="w-24" />
-          </div>
-          <div className="overflow-x-auto">
-            <div className="min-w-[820px]">
-              <div className="grid h-[42px] grid-cols-[2fr_0.5fr_0.6fr_1fr_2fr] items-center gap-4 border-y border-border px-3">
-                {["url", "http", "indexable", "links", "issues"].map((key) => (
-                  <Bar className="h-2.5 w-12" key={key} />
-                ))}
-              </div>
-              {["first", "second", "third", "fourth"].map((key) => (
-                <div
-                  className="grid h-[78px] grid-cols-[2fr_0.5fr_0.6fr_1fr_2fr] items-center gap-4 border-b border-border px-3 last:border-b-0"
-                  key={key}
-                >
-                  <div className="grid gap-2">
-                    <Bar className="h-3 w-4/5" />
-                    <Bar className="h-3 w-3/5" />
-                    <Bar className="h-3 w-16" />
-                  </div>
-                  <Bar className="h-3 w-7" />
-                  <Bar className="h-3 w-8" />
-                  <div className="grid gap-2">
-                    <Bar className="h-3 w-16" />
-                    <Bar className="h-3 w-14" />
-                  </div>
-                  <Bar className="h-3 w-3/4" />
-                </div>
-              ))}
-            </div>
-          </div>
+      <div
+        aria-hidden
+        className={challengeReportLayoutClassName}
+        data-challenge-blocks={challengeReportBlocks.join(" ")}
+      >
+        <Bar className="h-5 w-64 max-w-full" />
+        <ChallengeBento>
+          {challengeBentoLayout([...CHALLENGE_TILE_IDS]).map((span) => (
+            <ChallengeBentoItem key={span.id} span={span}>
+              <Card className="min-h-40">
+                <Bar className="h-4 w-24" />
+                <Bar className="mt-3 h-8 w-16" />
+              </Card>
+            </ChallengeBentoItem>
+          ))}
+        </ChallengeBento>
+        <Card className="grid gap-2">
+          <Bar className="h-5 w-32" />
+          <Bar className="h-4 w-full" />
         </Card>
       </div>
     </AgentReportDetailFrame>

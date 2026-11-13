@@ -4,9 +4,53 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import type { BadgeKind } from "./progress";
 
+type BadgeImageKind = BadgeKind | "thirty_days";
 let bitmapSource: Promise<string> | undefined;
 const rendered = new Map<string, Promise<ArrayBuffer>>();
-async function renderBadge(kind: BadgeKind, earnedDay: string) {
+function renderThirtyDayBadge(earnedDay: string) {
+  const response = new ImageResponse(
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        background: "#13251e",
+        color: "#f6f5ee",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          width: 144,
+          height: 144,
+          border: "4px dashed #acc6b8",
+          borderRadius: 28,
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#acc6b8",
+          fontSize: 64,
+          fontWeight: 700,
+        }}
+      >
+        30
+      </div>
+      <div style={{ display: "flex", fontSize: 34, fontWeight: 700, marginTop: 28 }}>
+        30 days of SEO
+      </div>
+      <div style={{ display: "flex", fontSize: 20, marginTop: 16, color: "#acc6b8" }}>
+        bisibility · {earnedDay}
+      </div>
+    </div>,
+    { width: 1200, height: 630 },
+  );
+  return response.arrayBuffer();
+}
+async function renderBadge(kind: BadgeImageKind, earnedDay: string) {
+  if (kind === "thirty_days") return renderThirtyDayBadge(earnedDay);
   bitmapSource ??= readFile(join(process.cwd(), "public/achievements/badge-characters-clean.png"))
     .then((bytes) => `data:image/png;base64,${bytes.toString("base64")}`)
     .catch((error) => {
@@ -66,7 +110,7 @@ async function renderBadge(kind: BadgeKind, earnedDay: string) {
   return response.arrayBuffer();
 }
 
-export async function badgeImage(kind: BadgeKind, earnedDay: string, download = false) {
+export async function badgeImage(kind: BadgeImageKind, earnedDay: string, download = false) {
   const key = `${kind}:${earnedDay}`;
   let bytes = rendered.get(key);
   if (!bytes) {

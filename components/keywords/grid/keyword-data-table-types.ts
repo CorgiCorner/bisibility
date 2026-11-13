@@ -8,6 +8,7 @@ import type { MarketGridViewRow } from "@/lib/keywords/market-grid-model";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import type { RankTrackerAiOverviewPresentation } from "@/lib/queries/rank-tracker-ai-overview-model";
 import type { RankTrackerLocalPresentation } from "@/lib/queries/rank-tracker-local-model";
 import type { ReportSummaryPresentation } from "@/lib/rank-reports/presentation";
 import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
@@ -47,6 +48,7 @@ export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAc
     projectMarkets?: ProjectMarketsView;
     rankTrackerPath?: string;
     local?: RankTrackerLocalPresentation;
+    aiOverview?: RankTrackerAiOverviewPresentation;
     report?: ReportSummaryPresentation;
     rows: MarketGridViewRow[];
     viewDevices?: readonly import("@/lib/keywords/view-devices").KeywordViewDevice[];

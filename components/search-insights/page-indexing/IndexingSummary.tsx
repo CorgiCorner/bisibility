@@ -60,7 +60,7 @@ export function IndexingSummary({ report }: Readonly<{ report: IndexingReport }>
               {t(`groups.${group.group}`)}
             </dt>
             <dd className="m-0 flex flex-wrap items-baseline gap-x-2 tabular-nums">
-              <span className="text-ui-h2 font-semibold">{format.number(group.total)}</span>
+              <span className="text-ui-section font-semibold">{format.number(group.total)}</span>
               {hasUrls ? (
                 <>
                   {" "}

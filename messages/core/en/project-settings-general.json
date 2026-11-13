@@ -34,20 +34,6 @@
       "domainTooLong": "Domains can be at most 253 characters.",
       "invalidDomain": "Enter a domain such as example.com."
     },
-    "tags": {
-      "cancel": "Cancel",
-      "description": "Use tags to group keywords and filter saved views.",
-      "duplicate": "{name} already exists.",
-      "remove": "Remove tag",
-      "removeError": "Tag could not be removed.",
-      "removeTitle": "Remove {name}?",
-      "title": "Tags",
-      "usageBothManyKeywords": "{keywordCount, number} keywords and {segmentCount, plural, one {# segment use it.} other {# segments use it.}}",
-      "usageBothOneKeyword": "{segmentCount, plural, one {1 keyword and # segment use it.} other {1 keyword and # segments use it.}}",
-      "usageKeywordOnly": "{count, plural, one {# keyword uses it.} other {# keywords use it.}}",
-      "usageSegmentOnly": "{count, plural, one {# segment uses it.} other {# segments use it.}}",
-      "writeError": "Tag could not be added."
-    },
     "dataCache": {
       "title": "Data cache",
       "help": "Shared across this project’s modules. Shorter lifetimes also limit existing results; longer lifetimes apply to newly fetched results. Saved reports, measurement history and payment receipts are kept.",
@@ -86,7 +72,7 @@
         "keywords": "Keywords",
         "pages": "Pages",
         "ai_visibility": "Brand visibility",
-        "prompt_explorer": "Prompt Playground",
+        "prompt_explorer": "Model Playground",
         "prompt_research": "Prompt research",
         "site_audit": "Site audit"
       },
@@ -98,7 +84,7 @@
         "backlinks": "Backlinks",
         "domain_overview": "Domain overview",
         "ai_visibility": "Brand visibility",
-        "prompt_explorer": "Prompt Playground",
+        "prompt_explorer": "Model Playground",
         "prompt_research": "Prompt research",
         "site_audit": "Site audit"
       }

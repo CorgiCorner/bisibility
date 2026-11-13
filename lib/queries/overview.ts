@@ -1,6 +1,9 @@
 import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
+import { shiftAnnotationDayKey } from "@/lib/annotations/chart-markers";
+import type { ChartMarker } from "@/lib/annotations/marker-style";
+import { annotationDayKey } from "@/lib/annotations/ruler";
 import type { ProjectionId } from "@/lib/dashboard-layout/types";
 import type { LocalReport } from "@/lib/dashboard-local/model";
 import { localOverviewKeywordWhere } from "@/lib/dashboard-local/overview-scope";
@@ -19,6 +22,7 @@ import {
 import { asProjectRef } from "@/lib/routing/app-path";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
+import { readChartAnnotations } from "./chart-annotations";
 import {
   buildDistribution,
   buildHighlights,
@@ -27,6 +31,7 @@ import {
   snapshotFor,
 } from "./overview-builders";
 import { overviewContributors } from "./overview-contributors";
+import { loadDashboardConversions } from "./overview-conversions";
 import { loadOverviewMetricData } from "./overview-data";
 import {
   normalizeOverviewFilters,
@@ -37,9 +42,20 @@ import { buildOverviewMarkets } from "./overview-markets";
 import { overviewRankedPositions } from "./overview-metrics";
 import { readOverviewMonthlyCost } from "./overview-monthly-cost";
 import { buildOverviewReportHistory } from "./overview-report-history";
+import { loadDashboardSeoCost } from "./overview-seo-cost";
 import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
 import { createSessionRankTrackerReportOptions } from "./rank-tracker-session-report";
+import { getRequestProjectDefaults } from "./workspace-request-data";
 import { deriveWorkspaceState } from "./workspace-state";
+
+async function overviewChartMarkers(projectId: string, now: Date, range: OverviewFilters["range"]) {
+  const defaults = await getRequestProjectDefaults(projectId);
+  const timeZone = defaults?.timezone;
+  if (!timeZone) return [];
+  const toKey = annotationDayKey(now, timeZone);
+  const fromKey = shiftAnnotationDayKey(toKey, 1 - overviewComparisonDays(range));
+  return readChartAnnotations(projectId, { fromKey, toKey });
+}
 
 export type { OverviewFilters } from "./overview-filters";
 export { parseOverviewFilters } from "./overview-filters";
@@ -52,6 +68,7 @@ export type DataSourceStatus =
   | "notConnected";
 
 type OverviewOptions = {
+  conversionSource?: string | null;
   filters?: Partial<OverviewFilters>;
   now?: Date;
   projections?: readonly ProjectionId[];
@@ -109,6 +126,7 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
   db: Prisma.TransactionClient, localReport: LocalReport | null = null, report?: RankTrackerReportOptions) {
   const now = options.now ?? new Date();
   const needs = (projection: ProjectionId) => options.projections === undefined || options.projections.includes(projection);
+  const wants = (projection: ProjectionId) => options.projections?.includes(projection) === true;
   const filters = normalizeOverviewFilters(options.filters);
   const keywordIds = localReport?.rows.map((row) => row.keywordId);
   const where = localOverviewKeywordWhere(project.id, filters, keywordIds);
@@ -120,9 +138,15 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
   const providerRead = () => db.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { credentialSource: true, credentialsEncrypted: true, enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } });
   const costRead = () => readOverviewMonthlyCost(project.id, where, now, db, Boolean(localReport));
   const tagRead = () => db.tag.findMany({ orderBy: { name: "asc" }, select: { name: true }, where: { projectId: project.id } });
+  const markerRead = () =>
+    needs("position_history") || wants("organic_conversions")
+      ? overviewChartMarkers(project.id, now, filters.range)
+      : Promise.resolve([] as ChartMarker[]);
+  const chartMarkersPromise = markerRead();
   const [metricData, unfilteredKeywordCount, providerConnections, monthlyCost, tags] = localReport
     ? [await metricRead(), await countRead(), await providerRead(), await costRead(), await tagRead()] as const
     : await Promise.all([metricRead(), countRead(), providerRead(), costRead(), tagRead()]);
+  const chartMarkers = await chartMarkersPromise;
   const {
     addedThisMonth,
     filteredKeywordCount,
@@ -159,6 +183,18 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
     : false;
   const hasAnalyticsSource = providerConnections.some((connection) => connection.kind === "analytics");
   const state = totalKeywordCount === 0 ? "empty" : deriveWorkspaceState({ hasEverChecked, keywordCount: Math.max(1, keywords.length) });
+  const [organicConversions, seoCost] = await Promise.all([
+    wants("organic_conversions")
+      ? loadDashboardConversions(
+          project.publicId,
+          filters.range,
+          now,
+          options.conversionSource,
+          projectDefaults?.timezone ?? "UTC",
+        )
+      : Promise.resolve(null),
+    wants("seo_cost") ? loadDashboardSeoCost(project.publicId) : Promise.resolve(null),
+  ]);
   const { checksThisMonth, providerCostCents } = monthlyCost;
   const providerStatus: DataSourceStatus = projectReadOnly
     ? "migrationHold"
@@ -232,6 +268,9 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
     qualityReport: overviewMetrics.qualityReport,
     reportHistory,
     contributors: needs("contributions") ? overviewContributors(keywords, overviewMetrics.qualityReport) : [],
+    chartMarkers,
+    organicConversions,
+    seoCost,
     trend: needs("position_history") ? reportHistory.days.map((day) => ({
       comparisonKey: day.comparisonKey,
       dateKey: day.id,

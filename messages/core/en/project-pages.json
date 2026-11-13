@@ -1,0 +1,350 @@
+{
+  "projectPages": {
+    "bulk": {
+      "add": "Tag selected",
+      "choose": "Tag",
+      "check": "Check Core Web Vitals",
+      "clear": "Clear",
+      "remove": "Remove tag",
+      "selected": "{count, plural, one {# selected} other {# selected}}"
+    },
+    "byTag": {
+      "addToPages": "Add to pages",
+      "cancel": "Cancel",
+      "columns": {
+        "actions": "Actions",
+        "existing": "Existing",
+        "keywords": "Keywords",
+        "new": "New",
+        "removed": "Removed",
+        "pages": "Pages",
+        "rule": "Rule",
+        "tag": "Tag",
+        "type": "Type"
+      },
+      "edit": "Edit rule",
+      "empty": "No tags are on pages yet.",
+      "hide": "Hide",
+      "keywordOnly": "{count, plural, one {# more tag is on keywords only: {names}} other {# more tags are on keywords only: {names}}}",
+      "kind": {
+        "manual": "By hand",
+        "path_pattern": "Path pattern",
+        "sitemap": "Sitemap",
+        "url_list": "URL list"
+      },
+      "lead": "One set of tags for the whole project: the same tag can sit on pages and on keywords.",
+      "manage": "Manage tags in Settings",
+      "remove": "Remove from pages",
+      "removeBody": "The tag stays on keywords. Page links and the page rule are removed.",
+      "removeConfirm": "Remove from pages",
+      "removeTitle": "Remove {name} from pages",
+      "ruleHand": "added by hand",
+      "ruleUrls": "{count, plural, one {# URL} other {# URLs}}",
+      "show": "Show",
+      "tableLabel": "Tags on pages"
+    },
+    "columns": {
+      "aiCitations": "AI cites",
+      "clicks": "Clicks",
+      "conversions": "Conv.",
+      "conversionsConnect": "Connect analytics",
+      "conversionsEmpty": "No conversions for this page in the period.",
+      "conversionsSource": "{source}",
+      "cwv": "CWV",
+      "impressions": "Impr.",
+      "index": "Index",
+      "keywords": "Keywords",
+      "openUrl": "Open {path}",
+      "page": "Page",
+      "position": "Pos.",
+      "sessions": "Sessions",
+      "sitemap": "Sitemap",
+      "status": "Status",
+      "tags": "Tags",
+      "tagsMore": "+{count, number}"
+    },
+    "compare": {
+      "addNote": "Add a note",
+      "annotationLabel": "Moment of change",
+      "annotationOption": "Annotation · {date} · {title}",
+      "caveat": "This shows a direction, not proof. Other events, such as Google updates, affect both groups. See the G markers.",
+      "changed": "Changed",
+      "chartLabel": "Indexed change",
+      "chooseAnnotation": "Choose an annotation",
+      "dayOf": "Day {day, number} of 28. Percent change in {metric} compared with {day, plural, one {the day} other {the # days}} before the change.",
+      "differenceLabel": "Difference",
+      "emptyAnnotations": "No annotations yet.",
+      "emptyAnnotationsAction": "Add a note",
+      "emptyOverlap": "These tags cover the same pages, so there is no unchanged group.",
+      "emptyTags": "No page tags yet.",
+      "emptyTagsAction": "Tag pages",
+      "finished": "Finished",
+      "forecastLabel": "Expected by now",
+      "forecastUnavailable": "Forecast is not available in this version",
+      "groupDetail": "{count, plural, one {# page} other {# pages}}, {metric} vs before",
+      "madeToday": "The change was made today. Results start tomorrow.",
+      "metric": {
+        "clicks": "Clicks",
+        "impressions": "Impressions",
+        "sessions": "Sessions"
+      },
+      "metricLabel": "Metric",
+      "metricOption": "{metric} · {source}",
+      "monitoring": "Monitoring",
+      "notEnough": "Not enough data",
+      "notEnoughClicks": "Not enough data for clicks, try impressions",
+      "overlap": "{count, plural, one {# page is in both tags and is left out of both groups.} other {# pages are in both tags and are left out of both groups.}}",
+      "percent": "{direction, select, positive {+{percent, number}%} negative {{percent, number}%} other {0%}}",
+      "points": "{direction, select, positive {+{points, number} pts vs unchanged pages} negative {{points, number} pts vs unchanged pages} other {0 pts vs unchanged pages}}",
+      "seriesChanged": "Changed pages",
+      "seriesUnchanged": "Unchanged pages",
+      "source": {
+        "analytics": "primary analytics",
+        "search_console": "Search Console"
+      },
+      "tagOption": "Tag: {name} · {pages, plural, one {# page} other {# pages}}",
+      "unchanged": "Unchanged",
+      "unconnected": "Connect {source} to use this metric",
+      "waiting": "Waiting"
+    },
+    "cwv": {
+      "checked": "Checked {count, number} pages.",
+      "error": {
+        "invalid_key": "The PageSpeed Insights API key was rejected.",
+        "no_sample": "Select pages that belong to this project.",
+        "not_connected": "Connect PageSpeed Insights before checking.",
+        "quota": "PageSpeed Insights quota was reached. Try again later."
+      },
+      "milliseconds": "{value} ms",
+      "needsWork": "Needs work",
+      "none": "-",
+      "pass": "Pass",
+      "poor": "Poor",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Field data from real users",
+        "lab": "Lab estimate",
+        "origin": "Origin-level field data"
+      },
+      "tooltip": "LCP {lcp}, INP {inp}, CLS {cls}. {source}"
+    },
+    "drawer": {
+      "autoJoin": "Pages added later join automatically",
+      "cancel": "Cancel",
+      "errors": {
+        "exclude_invalid": "Enter an exclude pattern that starts with /.",
+        "invalid_url": "Enter a path or URL on this site.",
+        "must_start_with_slash": "A pattern must start with /.",
+        "required": "Enter a pattern.",
+        "sitemap_required": "Choose a sitemap.",
+        "tag_required": "Enter a tag name.",
+        "too_long": "That pattern is too long.",
+        "too_many_urls": "A rule can list at most 2,000 URLs.",
+        "too_many_wildcards": "A pattern can use at most 16 wildcards."
+      },
+      "exclude": "Exclude",
+      "excludeAdd": "Add",
+      "excludePlaceholder": "/draft/*",
+      "excludeRemove": "Remove {pattern}",
+      "handNote": "No rule matches pages. Add this tag to pages by hand.",
+      "keywordHint": "{name} is already on {count, plural, one {# keyword} other {# keywords}}",
+      "pattern": "Pattern",
+      "patternHint": "'{slug}' = one path segment. * = anything.",
+      "preview": "Matches {count, plural, one {# page} other {# pages}}",
+      "previewFailed": "The preview could not be loaded.",
+      "previewMore": "and {count, number} more",
+      "rule": "Rule",
+      "save": "Save tag",
+      "saveFailed": "The tag could not be saved.",
+      "sitemap": "Sitemap",
+      "sitemapChoose": "Choose a sitemap",
+      "sitemapEmpty": "No sitemap URL is known yet.",
+      "tag": "Tag",
+      "tagHint": "Pick an existing tag or type a new one.",
+      "tagKeywords": "Also tag keywords that target these pages",
+      "titleEdit": "Edit {name}",
+      "titleNew": "New tag",
+      "urls": "URL list",
+      "urlsPlaceholder": "/docs"
+    },
+    "empty": {
+      "description": "A page appears here when a source sees its URL. These sources can feed pages.",
+      "filtered": "No pages match these filters.",
+      "title": "No pages yet"
+    },
+    "existing": {
+      "allTags": "All tags",
+      "columns": {
+        "existing": "Existing",
+        "existingMetric": "Existing {metric}",
+        "fresh": "New",
+        "freshMetric": "New {metric}",
+        "share": "Share from new",
+        "tag": "Tag"
+      },
+      "disabled": "{source} is not connected",
+      "disabledConversions": "Connect analytics to chart conversions",
+      "emptyBody": "A snapshot is the date and the list of URLs that existed that day. Metrics stay with each source, so any metric can be split into pages that existed on the snapshot day and pages added later.",
+      "emptyTitle": "No page snapshot yet",
+      "metric": {
+        "ai_cites": "AI cites",
+        "clicks": "Clicks",
+        "conversions": "Conversions",
+        "option": "{metric} · {source}",
+        "sessions": "Sessions"
+      },
+      "metricLabel": "Metric",
+      "noSource": "Connect Search Console, analytics, or AI visibility to compare pages that existed on the snapshot day with pages added later.",
+      "rolling": "Sessions use the latest rolling 28-day window, not a daily total.",
+      "series": {
+        "existing": "Existing pages",
+        "fresh": "New pages",
+        "removed": "Removed pages"
+      },
+      "share": "{share, number}%",
+      "span": {
+        "28": "Last 28 days",
+        "since": "Since snapshot"
+      },
+      "spanLabel": "Period",
+      "summaryExisting": "Existing pages {total, number} · {pages, number} of {snapshot, number} pages",
+      "summaryFresh": "New pages {total, number} · {pages, number} pages added after the snapshot",
+      "summaryRemoved": "Removed {total, number} · {pages, number} pages left the sitemap",
+      "tableLabel": "Existing and new pages by tag",
+      "title": "{metric} added up since the snapshot"
+    },
+    "filters": {
+      "any": "Any",
+      "clear": "Clear filters",
+      "index": "Index",
+      "label": "Filters",
+      "sitemap": "Sitemap",
+      "source": "Source",
+      "title": "Filters",
+      "coverage": "Coverage state",
+      "cwv": "Core Web Vitals",
+      "cwvValue": {
+        "missing": "Not checked",
+        "needs_work": "Needs work",
+        "pass": "Pass",
+        "poor": "Poor"
+      },
+      "clearCoverage": "Clear coverage state {reason}"
+    },
+    "indexGroup": {
+      "indexed": "Indexed",
+      "inspection_failed": "Inspection failed",
+      "not_checked": "Not checked",
+      "not_indexed": "Not indexed"
+    },
+    "columnNotConnected": "{source} is not connected",
+    "keywordsLink": "Keywords for {path}",
+    "loadFailed": "The page list could not be loaded.",
+    "missing": "No {source} data for this page.",
+    "paste": {
+      "added": "{count, number} added",
+      "cancel": "Cancel",
+      "description": "One URL or path per line, up to 500 lines.",
+      "existing": "{count, number} already listed",
+      "label": "URLs",
+      "line": "Line {line, number}: {value} - {reason}",
+      "placeholder": "/docs",
+      "rejected": "Rejected lines",
+      "submit": "Add pages",
+      "title": "Paste URLs"
+    },
+    "plausibleWindow": "Plausible keeps a rolling 28-day window.",
+    "providers": {
+      "ga4": "GA4",
+      "plausible": "Plausible"
+    },
+    "reasons": {
+      "foreign": "This URL is on another site.",
+      "invalid": "Enter a URL or a path on this site.",
+      "missingDomain": "This project has no site domain.",
+      "tooMany": "Only 50,000 URLs can be added in one update.",
+      "tooManyLines": "Paste at most 500 lines."
+    },
+    "refresh": {
+      "done": "Pages refreshed ({count, number}).",
+      "failed": "Pages could not be refreshed."
+    },
+    "search": {
+      "label": "Search by path",
+      "placeholder": "/docs"
+    },
+    "segments": {
+      "all": "All",
+      "inSnapshot": "In snapshot",
+      "listed": "In sitemap",
+      "new": "New",
+      "notListed": "Not in sitemap",
+      "removed": "Removed"
+    },
+    "snapshot": {
+      "bannerCount": "{count, number} pages",
+      "bannerRegistry": "This project had no sitemap, so the snapshot lists every page in the registry. Metrics are not copied. Each source keeps its own daily history.",
+      "bannerSitemap": "Metrics are not copied. Each source keeps its own daily history, so any metric can be split into pages that existed on this day and pages added later.",
+      "bannerTitle": "{label} snapshot · {date}",
+      "button": "Save page snapshot",
+      "cancel": "Cancel",
+      "confirmBody": "The new snapshot becomes the comparison baseline. The current one is archived, not deleted.",
+      "confirmTitle": "Save a new page snapshot?",
+      "dateLabel": "Baseline {date}",
+      "failed": "The snapshot could not be saved.",
+      "openAnnotations": "Open in Annotations",
+      "replace": "Save new snapshot",
+      "taken": "Page snapshot saved ({count, number} pages).",
+      "results": "See results since this snapshot"
+    },
+    "status": {
+      "gone": "Gone · Day {day, number}",
+      "in_snapshot": "In snapshot",
+      "new": "New · Day {day, number}",
+      "redirected": "Redirected · Day {day, number}",
+      "removed": "Removed · Day {day, number}"
+    },
+    "sitemapState": {
+      "listed": "Listed",
+      "notListed": "Not listed"
+    },
+    "sourceKind": {
+      "ai_citation": "AI cites",
+      "ai_visibility": "AI visibility",
+      "analytics": "Analytics",
+      "analyticsConversions": "Analytics / Conversions",
+      "manual": "Manual",
+      "page_indexing": "Index",
+      "pagespeed": "PageSpeed",
+      "rank_tracker": "Rank Tracker",
+      "search_console": "Search Console",
+      "sitemap": "Sitemap"
+    },
+    "sourcesLine": {
+      "add": "Add source",
+      "connect": "Connect",
+      "hint": "Primary source for Sessions and Conv. Click to change.",
+      "label": "Columns from",
+      "paste": "Paste URLs",
+      "refresh": "Refresh now",
+      "refreshing": "Refreshing",
+      "state": {
+        "beta": "Beta",
+        "connected": "Connected",
+        "not_connected": "Not connected"
+      }
+    },
+    "tableLabel": "Project pages",
+    "tabs": {
+      "all": "All pages",
+      "byTag": "By tag",
+      "compare": "Compare",
+      "existingVsNew": "Existing vs new",
+      "navigation": "Page views"
+    },
+    "tags": {
+      "all": "All tags",
+      "new": "New tag"
+    }
+  }
+}

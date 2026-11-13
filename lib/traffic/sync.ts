@@ -1,6 +1,7 @@
 import "server-only";
 
 import { queueAnalyticsDataSynced } from "@/lib/analytics/analytics-data-synced";
+import { syncPlausibleConversions } from "@/lib/conversions/plausible-sync";
 import { prisma } from "@/lib/db/prisma";
 import { notifyProviderNeedsReauth } from "@/lib/notifications/provider-events";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
@@ -190,6 +191,12 @@ export async function syncTrafficForProject(
               provider: connection.provider,
               trigger: options.analyticsTrigger ?? (scheduledFor ? "scheduled" : "unknown"),
               rowsStored: metrics.rowsUpserted,
+            });
+          }
+          if (connection.provider === "plausible") {
+            await syncPlausibleConversions(projectId, {
+              now,
+              scheduled: options.analyticsTrigger === "scheduled",
             });
           }
         }

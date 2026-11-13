@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   prisma: { searchAnalyticsImport: { update: vi.fn() } },
   readConnection: vi.fn(),
   recordImportFailure: vi.fn(),
+  projectGa4: vi.fn(),
   syncRange: vi.fn(),
 }));
 
@@ -16,6 +17,7 @@ vi.mock("./import-state", () => ({
 }));
 vi.mock("./sessions-credentials", () => ({ readOrganicSessionsConnection: mocks.readConnection }));
 vi.mock("./partitions", () => ({ countCappedDays: mocks.countCappedDays }));
+vi.mock("@/lib/conversions/ga4", () => ({ projectGa4KeyEvents: mocks.projectGa4 }));
 vi.mock("./sessions-partitions", () => ({
   ORGANIC_SESSIONS_SETTLING_LAG_DAYS: 1,
   syncOrganicSessionsRange: mocks.syncRange,
@@ -69,6 +71,10 @@ describe("runOrganicSessionsBackfillBatch", () => {
       }),
       where: { id: "imp_1" },
     });
+    expect(mocks.projectGa4).toHaveBeenCalledWith("project_1", {
+      from: new Date("2026-07-07T00:00:00.000Z"),
+      to: new Date("2026-07-08T00:00:00.000Z"),
+    });
   });
 
   it("keeps its cursor when a batch is aborted before the first range", async () => {
@@ -83,5 +89,6 @@ describe("runOrganicSessionsBackfillBatch", () => {
     ).resolves.toEqual({ blocked: false, daysProcessed: 0, done: false, nextCursor: "2026-07-08" });
 
     expect(mocks.syncRange).not.toHaveBeenCalled();
+    expect(mocks.projectGa4).not.toHaveBeenCalled();
   });
 });

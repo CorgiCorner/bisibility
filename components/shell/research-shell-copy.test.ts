@@ -32,8 +32,8 @@ const sections = [
   },
   {
     key: "promptExplorer",
-    title: "Prompt Playground",
-    subtitle: "Try one prompt on several models and compare their answers and citations.",
+    title: "Model Playground",
+    subtitle: "One question, several models. Compare who they name and which pages they cite.",
   },
   {
     key: "siteAudit",
@@ -47,7 +47,7 @@ const sections = [
   },
   {
     key: "agentReports",
-    title: "Agent Reports",
+    title: "Reports",
     subtitle: "Saved analyses shared with members of this project.",
   },
 ] as const;
@@ -83,7 +83,24 @@ describe.each(locales)("research shell copy in $locale", ({ locale, messages }) 
       namespace: "shell.navigation",
     }) as Parameters<typeof commandPaletteCopy>[1];
     const copy = commandPaletteCopy(translator, navigation);
-    for (const section of sections)
+    for (const section of sections) {
+      if (section.title === "Brand Visibility") continue;
       expect(copy.navigation[section.title]).toBe(messages.shell.navigation.items[section.key]);
+    }
+    expect(copy.navigation["Brand Visibility"]).toBeUndefined();
+    expect(copy.navigation["AI Visibility"]).toBe(
+      messages.shell.navigation.items.aiVisibilityModule,
+    );
+    expect(copy.navigationKeywords?.["AI Visibility"]).toEqual([
+      messages.shell.navigation.keywords.aiVisibilityModule.geo,
+      messages.shell.navigation.keywords.aiVisibilityModule.aeo,
+      messages.shell.navigation.keywords.aiVisibilityModule.llm,
+      messages.shell.navigation.keywords.aiVisibilityModule.llmo,
+      messages.shell.navigation.keywords.aiVisibilityModule.chatgpt,
+      messages.shell.navigation.keywords.aiVisibilityModule.aiSearch,
+      messages.shell.navigation.keywords.aiVisibilityModule.promptTracker,
+      messages.shell.navigation.keywords.aiVisibilityModule.promptResearch,
+      messages.shell.navigation.keywords.aiVisibilityModule.brandVisibility,
+    ]);
   });
 });

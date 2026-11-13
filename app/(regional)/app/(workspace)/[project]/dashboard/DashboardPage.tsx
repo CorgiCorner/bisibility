@@ -34,6 +34,7 @@ type OverviewPageProps = {
 };
 
 async function OverviewData({
+  conversionSource,
   filters,
   isSample,
   projectRef,
@@ -42,6 +43,7 @@ async function OverviewData({
   explicitComparison,
   scopeParams,
 }: Readonly<{
+  conversionSource?: string | null;
   filters: ReturnType<typeof parseOverviewFilters>;
   isSample: boolean;
   projectRef: import("@/lib/routing/app-path").ProjectRef;
@@ -77,6 +79,7 @@ async function OverviewData({
   }
   const result = await Promise.all([
     getOverview(projectRef, {
+      conversionSource,
       filters,
       now,
       projections: personal?.composition.projections.all,
@@ -211,6 +214,7 @@ export default async function DashboardPage({
           }
         >
           <OverviewData
+            conversionSource={Array.isArray(search?.conv) ? search.conv[0] : search?.conv}
             filters={filters}
             isSample={isSample}
             projectRef={publicId}

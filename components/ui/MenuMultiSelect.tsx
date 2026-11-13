@@ -8,6 +8,7 @@ import { useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
   MenuSearchField,
   type MenuSelectOption,
+  menuSelectInputClass,
   menuSelectPaperStyle,
   menuSelectTriggerClass,
   selectedSummary,
@@ -33,6 +34,7 @@ export type MenuMultiSelectProps = {
   placeholder?: string;
   searchPlaceholder?: string;
   searchable?: boolean;
+  size?: "input" | "toolbar";
   summary?: (selected: readonly MenuSelectOption[]) => string;
   summaryClassName?: string;
   trailingIcon?: ReactNode;
@@ -53,6 +55,7 @@ export function MenuMultiSelect({
   placeholder = ariaLabel,
   searchPlaceholder,
   searchable = false,
+  size = "toolbar",
   summary,
   summaryClassName,
   trailingIcon,
@@ -114,7 +117,10 @@ export function MenuMultiSelect({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={ariaLabel}
-        className={cn(menuSelectTriggerClass, triggerClassName)}
+        className={cn(
+          size === "input" ? menuSelectInputClass : menuSelectTriggerClass,
+          triggerClassName,
+        )}
         data-state={open ? "open" : "closed"}
         onClick={(event) => openMenuWithWidth(event.currentTarget)}
         style={open && menuWidth ? { width: menuWidth } : undefined}

@@ -1,7 +1,19 @@
 "use client";
 
 import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
-import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
+import { cn } from "@/lib/ui/cn";
+import {
+  FLOATING_DRAWER_DESKTOP_QUERY,
+  FLOATING_DRAWER_FRAME_CLASS,
+  FLOATING_DRAWER_PANEL_CLASS,
+  FLOATING_DRAWER_SHEET_CLASS,
+  FLOATING_DRAWER_WIDTH,
+  type FloatingDrawerPlacement,
+  floatingDrawerDuration,
+  floatingDrawerPlacement,
+} from "@/lib/ui/floating-drawer";
+import { FloatingDrawerGrab } from "@/lib/ui/floating-drawer-grab";
+import { useFloatingDrawerSwipe } from "@/lib/ui/use-floating-drawer-swipe";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
@@ -32,11 +44,6 @@ const sheetHeights: Record<SheetHeightVariant, string> = {
   form: "96vh",
 };
 
-const sheetWidths: Record<SheetWidthVariant, number> = {
-  filters: 440,
-  form: 560,
-};
-
 export function Sheet({
   backAction,
   children,
@@ -51,50 +58,53 @@ export function Sheet({
   widthVariant,
 }: Readonly<SheetProps>) {
   const t = useTranslations("shared.controls.sheet");
-  const isDesktop = useMediaQuery("(min-width:1024px)");
+  const isDesktop = useMediaQuery(FLOATING_DRAWER_DESKTOP_QUERY);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const titleId = useId();
-  const anchor = isDesktop ? "right" : "bottom";
+  const placement: FloatingDrawerPlacement = floatingDrawerPlacement(isDesktop);
+  const sheet = placement === "sheet";
   const dataMode = heightVariant === "filters" ? "filters-drawer" : "form-sheet";
-  const paperSlotProps: ComponentProps<"div"> & { "data-m": string; "data-open": string } = {
+  const swipe = useFloatingDrawerSwipe({ enabled: sheet, onClose, reducedMotion });
+  const paperSlotProps: ComponentProps<"div"> & {
+    "data-m": string;
+    "data-open": string;
+    "data-placement": FloatingDrawerPlacement;
+  } = {
     "aria-labelledby": titleId,
+    className: cn(
+      FLOATING_DRAWER_FRAME_CLASS,
+      sheet ? FLOATING_DRAWER_SHEET_CLASS : FLOATING_DRAWER_PANEL_CLASS,
+    ),
     "data-m": dataMode,
     "data-open": open ? "true" : "false",
+    "data-placement": placement,
     role: "dialog",
     style: {
-      backgroundColor: "var(--bg-elev)",
-      borderColor: "var(--border)",
-      borderLeft: isDesktop ? "1px solid var(--border)" : "none",
-      borderRadius: isDesktop ? 0 : "18px 18px 0 0",
-      borderTop: isDesktop ? "none" : "1px solid var(--border)",
-      boxShadow: "none",
-      color: "var(--fg)",
-      display: "flex",
-      flexDirection: "column",
-      height: isDesktop ? "100%" : sheetHeights[heightVariant],
-      maxHeight: isDesktop ? "100%" : sheetHeights[heightVariant],
-      maxWidth: isDesktop ? "94vw" : "100%",
-      overflow: "hidden",
-      width: isDesktop ? sheetWidths[widthVariant ?? heightVariant] : "100%",
-      willChange: "transform",
+      height: sheet ? sheetHeights[heightVariant] : "auto",
+      maxHeight: sheet ? sheetHeights[heightVariant] : "none",
+      width: sheet ? "auto" : FLOATING_DRAWER_WIDTH[widthVariant ?? heightVariant],
     },
   };
 
   return (
     <Drawer
-      side={anchor}
+      side={sheet ? "bottom" : "right"}
       onClose={onClose}
       open={open}
       backdropProps={{ style: { backgroundColor: "rgba(20,16,8,.42)" } }}
       contentProps={paperSlotProps}
       onExited={onExited}
-      duration={{
-        enter: reducedMotion ? 0 : MOTION_DRAWER_ENTER,
-        exit: reducedMotion ? 0 : MOTION_DRAWER_EXIT,
-      }}
+      duration={floatingDrawerDuration(placement, reducedMotion)}
     >
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-bg-elev px-6 py-5">
+        {sheet ? <FloatingDrawerGrab {...swipe} /> : null}
+        <header
+          className={cn(
+            "sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-bg-elev px-6 py-5",
+            sheet && "touch-none",
+          )}
+          {...(sheet ? swipe : undefined)}
+        >
           <div className="flex min-w-0 items-center gap-2">
             {backAction ? <DrawerBackButton {...backAction} /> : null}
             <h2

@@ -1,10 +1,13 @@
 export const settingsShellGridClassName =
   "grid min-w-0 gap-6 lg:grid-cols-[200px_minmax(0,760px)] lg:gap-10";
 
-export const settingsContentColumnClassName = "min-w-0 w-full max-w-[760px]";
+/** Full content width below lg. From lg, the 200px nav and 760px column stay put. */
+export const settingsShellFrameClassName = "mx-auto w-full lg:max-w-[1040px]";
+
+export const settingsContentColumnClassName = "min-w-0 w-full lg:max-w-[760px]";
 
 export const settingsCardNaturalFrameClassName =
-  "w-full max-w-[760px] rounded-card border border-border bg-bg-elev p-5";
+  "w-full lg:max-w-[760px] rounded-card border border-border bg-bg-elev p-5";
 
 export const settingsCardFrameClassName = `min-h-[184px] ${settingsCardNaturalFrameClassName}`;
 

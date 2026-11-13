@@ -41,6 +41,7 @@ export function Ga4PropertyManualEntry({
   if (!manualEntry) {
     return hasOptions ? (
       <Button
+        size="input"
         onClick={() => {
           onManualEntryChange(true);
           onPropertyChange("");
@@ -102,6 +103,8 @@ export function Ga4PropertyManualEntry({
         </p>
       ) : null}
       <Button
+        size="input"
+        className="self-start"
         disabled={!normalized?.ok || Boolean(propertyError) || readOnly}
         loading={pending}
         loadingLabel={t("connecting")}

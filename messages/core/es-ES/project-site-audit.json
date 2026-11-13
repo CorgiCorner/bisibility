@@ -2,8 +2,10 @@
   "projectSiteAudit": {
     "heading": "Auditoría del sitio",
     "description": "Comprueba HTTP, metadatos, encabezados, indexabilidad, enlaces y texto alternativo de imágenes de {domain}.",
-    "pageLimit": "Límite de páginas",
-    "pageLimitError": "Elige entre 1 y {limit, number} páginas.",
+    "budgetEmpty": "Ahora mismo no hay páginas disponibles para una auditoría.",
+    "maxAction": "Máx.",
+    "pageLimit": "Páginas a comprobar",
+    "pageLimitError": "Ahora puedes comprobar hasta {limit, number} páginas por auditoría.",
     "run": "Iniciar auditoría",
     "running": "Rastreando sitio",
     "cost": "Hasta 15 segundos · Sin créditos del proveedor · Los resultados se reutilizan según la configuración de caché del proyecto",
@@ -103,6 +105,44 @@
       "cancelled": "Cancelada",
       "unknown": "Desconocido"
     },
-    "availableLimit": "Disponible ahora: hasta {limit, number} páginas por auditoría."
+    "vitals": {
+      "check": "Comprobar métricas web principales",
+      "columns": {
+        "cls": "CLS",
+        "inp": "INP",
+        "lcp": "LCP",
+        "page": "Página",
+        "status": "Estado"
+      },
+      "connect": "Conectar PageSpeed Insights",
+      "connectBody": "Conecta PageSpeed Insights para ver datos de campo de las páginas de esta auditoría.",
+      "desktop": "Escritorio",
+      "error": {
+        "invalid_key": "La clave de API de PageSpeed Insights fue rechazada.",
+        "no_sample": "Ejecuta una auditoría del sitio para elegir las páginas.",
+        "not_connected": "Conecta PageSpeed Insights antes de comprobar.",
+        "quota": "Se alcanzó la cuota de PageSpeed Insights. Inténtalo más tarde."
+      },
+      "goodHint": "Bueno: LCP por debajo de 2,5 s, INP por debajo de 200 ms, CLS por debajo de 0,1",
+      "milliseconds": "{value} ms",
+      "mobile": "Móvil",
+      "noSample": "Ejecuta una auditoría del sitio para elegir las páginas.",
+      "notChecked": "Aún no se ha comprobado.",
+      "passCount": "{pass, number} de {sample, number} páginas cumplen en {strategy}",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Datos de campo de usuarios reales",
+        "lab": "Estimación de laboratorio",
+        "origin": "Datos de campo del origen"
+      },
+      "status": {
+        "good": "Bueno",
+        "needs_improvement": "Necesita mejorar",
+        "poor": "Deficiente",
+        "unknown": "Desconocido"
+      },
+      "strategy": "Estrategia",
+      "title": "Métricas web principales"
+    }
   }
 }

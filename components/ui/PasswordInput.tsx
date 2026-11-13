@@ -20,7 +20,12 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       <span className={cn("relative block", wrapperClassName)}>
         <input
           autoComplete="off"
-          className={cn(inputClassName, inputControlSizeClassName, "w-full pr-12", className)}
+          className={cn(
+            inputClassName,
+            inputControlSizeClassName,
+            "w-full rounded-control font-medium normal-case tracking-normal pr-12",
+            className,
+          )}
           disabled={disabled}
           ref={ref}
           type={showValue ? "text" : "password"}

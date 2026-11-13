@@ -171,14 +171,19 @@ describe("workspace REST boundaries", () => {
     expect((await result.json()).detail).toContain("320 KiB");
     expect(mocks.create).not.toHaveBeenCalled();
   });
-  it.each(["site_audit", "ai_visibility", "prompt_explorer", "SITE_AUDIT"])(
-    "does not let external reports forge producer kind %s",
-    async (kind) => {
-      const ctx = context("POST", JSON.stringify({ kind, title: "Forged result", body: {} }));
-      expect((await response(ctx, () => agentReportsRoute(ctx, projectId))).status).toBe(400);
-      expect(mocks.create).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    "site_audit",
+    "ai_visibility",
+    "prompt_explorer",
+    "prompt_research",
+    "challenge_report",
+    "SITE_AUDIT",
+    "CHALLENGE_REPORT",
+  ])("does not let external reports forge producer kind %s", async (kind) => {
+    const ctx = context("POST", JSON.stringify({ kind, title: "Forged result", body: {} }));
+    expect((await response(ctx, () => agentReportsRoute(ctx, projectId))).status).toBe(400);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
   it("does not read foreign project reports or accept internal report IDs", async () => {
     const ctx = context();
     expect((await agentReportRoute(ctx, "prj_bcdefghijklmnopqrstuvwxy", reportId)).status).toBe(

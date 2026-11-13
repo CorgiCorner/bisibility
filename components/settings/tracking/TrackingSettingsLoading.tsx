@@ -25,7 +25,7 @@ function Frame({
 
 export function TrackingSettingsLoading() {
   return (
-    <div aria-hidden className="max-w-[760px] space-y-5" data-tracking-settings-loading="">
+    <div aria-hidden className="space-y-5 lg:max-w-[760px]" data-tracking-settings-loading="">
       <Frame name="checkDefaults">
         <div className="flex items-start justify-between gap-4">
           <div className="w-full space-y-2">
@@ -66,7 +66,7 @@ export function TrackingSettingsLoading() {
 export function TrackingSettingsRouteLoading() {
   return (
     <SettingsRouteLoading activeSection="tracking">
-      <div className="max-w-[760px] space-y-5">
+      <div className="space-y-5 lg:max-w-[760px]">
         <MeasurementConfigurationLoading />
         <TrackingSettingsLoading />
       </div>

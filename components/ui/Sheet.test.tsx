@@ -2,7 +2,11 @@ import {
   renderWithFeatureMessages,
   sharedControlTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
+import {
+  MOTION_DRAWER_EXIT,
+  MOTION_FLOATING_DRAWER_ENTER,
+  MOTION_FLOATING_SHEET_ENTER,
+} from "@/lib/ui/motion";
 import { act, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sheet } from "./Sheet";
@@ -22,7 +26,7 @@ vi.mock("@/components/ui/DialogSurface", () => ({
 
 function setMediaQueries(desktop: boolean, reduced: boolean) {
   const queries: Record<string, boolean> = {
-    "(min-width:1024px)": desktop,
+    "(min-width: 640px)": desktop,
     "(prefers-reduced-motion: reduce)": reduced,
   };
   const listeners = new Map<string, Set<(e: { matches: boolean }) => void>>();
@@ -88,13 +92,25 @@ describe("Sheet rendering", () => {
     );
   });
 
-  it("does not render a mobile drag handle", () => {
+  it("hides the grab handle on a floating panel", () => {
     render(
       <Sheet onClose={vi.fn()} open title="Test sheet">
         <button type="button">content</button>
       </Sheet>,
     );
-    expect(document.querySelector(".lg\\:hidden")).toBeNull();
+    expect(document.querySelector("[data-drawer-grab]")).toBeNull();
+  });
+
+  it("renders a decorative grab handle on the bottom sheet", () => {
+    setMediaQueries(false, false);
+    render(
+      <Sheet onClose={vi.fn()} open title="Test sheet">
+        <button type="button">content</button>
+      </Sheet>,
+    );
+    const grab = document.querySelector("[data-drawer-grab]");
+    expect(grab).not.toBeNull();
+    expect(grab).toHaveAttribute("aria-hidden", "true");
   });
 
   it("renders an h2 title", () => {
@@ -145,7 +161,7 @@ describe("Sheet transition props", () => {
       </Sheet>,
     );
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
@@ -159,7 +175,7 @@ describe("Sheet transition props", () => {
     );
     let _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
 
@@ -192,7 +208,7 @@ describe("Sheet transition props", () => {
     );
     const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
@@ -233,17 +249,28 @@ describe("Sheet anchors", () => {
     lastDrawerProps = {};
   });
 
-  it("uses a right anchor on desktop (>= 1024px)", () => {
+  it("floats a right panel from sm (640px) up", () => {
     setMediaQueries(true, false);
     render(
-      <Sheet onClose={vi.fn()} open title="Desktop">
+      <Sheet onClose={vi.fn()} open title="Desktop" widthVariant="filters">
         <button type="button">content</button>
       </Sheet>,
     );
     expect(lastDrawerProps.side).toBe("right");
+    const paper = lastDrawerProps.contentProps as {
+      className: string;
+      "data-placement": string;
+      style: { width: number };
+    };
+    expect(paper["data-placement"]).toBe("panel");
+    expect(paper.className).toContain("inset-y-3");
+    expect(paper.className).toContain("right-3");
+    expect(paper.className).toContain("rounded-2xl");
+    expect(paper.className).toContain("shadow-2xl");
+    expect(paper.style.width).toBe(440);
   });
 
-  it("uses a bottom anchor on mobile (< 1024px)", () => {
+  it("uses a bottom sheet below 640px and keeps the form height", () => {
     setMediaQueries(false, false);
     render(
       <Sheet onClose={vi.fn()} open title="Mobile">
@@ -251,5 +278,19 @@ describe("Sheet anchors", () => {
       </Sheet>,
     );
     expect(lastDrawerProps.side).toBe("bottom");
+    const paper = lastDrawerProps.contentProps as {
+      className: string;
+      "data-placement": string;
+      style: { height: string; width: string };
+    };
+    expect(paper["data-placement"]).toBe("sheet");
+    expect(paper.className).toContain("inset-x-2");
+    expect(paper.className).toContain("bottom-2");
+    expect(paper.className).toContain("rounded-3xl");
+    expect(paper.style).toMatchObject({ height: "96vh", width: "auto" });
+    expect(lastDrawerProps.duration).toEqual({
+      enter: MOTION_FLOATING_SHEET_ENTER,
+      exit: MOTION_DRAWER_EXIT,
+    });
   });
 });

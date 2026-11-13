@@ -5,9 +5,11 @@ import type {
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
+import type { OpenedKeywordResearch } from "@/lib/keyword-research/opened-research";
 import { isKeywordResearchEstimate, type KeywordResearchMode } from "@/lib/keyword-research/types";
 import {
   type ResearchScope,
+  researchScopeForLocation,
   researchScopeForLocationKey,
   researchScopeKey,
 } from "@/lib/research/scope";
@@ -28,7 +30,6 @@ import {
   researchScopeLocationKey,
   type UiResearchOutcome,
 } from "./research-workspace-model";
-import type { useRecentSearches } from "./useRecentSearches";
 
 type UseResearchRunsInput = {
   addSpend: (costCents: number) => void;
@@ -38,7 +39,6 @@ type UseResearchRunsInput = {
   scope: ResearchScope;
   mode: KeywordResearchMode;
   projectId: string;
-  recent: Pick<ReturnType<typeof useRecentSearches>, "add">;
   researchAction: ResearchKeywordsAction;
   resultLimit: 100 | 300 | 500;
 };
@@ -51,7 +51,6 @@ export function useResearchRuns({
   scope,
   mode,
   projectId,
-  recent,
   researchAction,
   resultLimit,
 }: UseResearchRunsInput) {
@@ -142,20 +141,7 @@ export function useResearchRuns({
           setBudgetMissing(outcome.budgetReason === "budget_missing");
           setUsageUnresolved(outcome.budgetReason === "usage_reconciliation_required");
         }
-        if (outcome.ok) {
-          addSpend(actualResearchCostCents(outcome));
-          recent.add({
-            cachedUntil: outcome.cachedUntil,
-            payment: outcome.payment,
-            connectionId: runConnectionId,
-            includeClickstream: runClickstream,
-            locationKey: researchScopeLocationKey(runScope),
-            scopeLabel: `${runScope.countryName} / ${runScope.languageLabel}`,
-            mode: runMode,
-            resultLimit: requestedLimit,
-            seed,
-          });
-        }
+        if (outcome.ok) addSpend(actualResearchCostCents(outcome));
         nextTabs.push({
           connectionId: runConnectionId,
           paymentOptionId: runInput.paymentOptionId,
@@ -182,6 +168,36 @@ export function useResearchRuns({
     } finally {
       setResearching(false);
     }
+  }
+
+  function openStored(stored: OpenedKeywordResearch) {
+    const scopeForStored = researchScopeForLocation({
+      countryCode: stored.countryCode,
+      languageCode: stored.languageCode,
+      languageLabel: stored.languageCode,
+    });
+    const tab: ResearchTab = {
+      id: stored.requestKey,
+      includeClickstream: stored.includeClickstream,
+      mode: stored.mode,
+      outcome: {
+        cached: true,
+        cachedUntil: stored.freshUntil,
+        connections: [],
+        costCents: 0,
+        fetchedAt: stored.fetchedAt,
+        ok: true,
+        provider: stored.provider,
+        rows: stored.rows,
+        sources: stored.sources,
+        ...(stored.payment ? { payment: stored.payment } : {}),
+      },
+      requestedLimit: stored.resultLimit,
+      scope: scopeForStored,
+      seed: stored.seed,
+    };
+    setTabs((current) => mergeResearchTabs(current, [tab]));
+    setActiveTabId(tab.id);
   }
 
   function closeTab(id: string) {
@@ -220,6 +236,7 @@ export function useResearchRuns({
     closeTab,
     markAdded,
     markSaved,
+    openStored,
     researching,
     runResearch,
     setActiveTabId,

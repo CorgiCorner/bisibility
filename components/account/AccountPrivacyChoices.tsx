@@ -8,8 +8,10 @@ export function AccountPrivacyChoices() {
   const t = useTranslations("account.privacy");
 
   return (
-    <AccountSection description={t("description")} title={t("title")}>
-      <PrivacyChoicesLink label={t("action")} />
-    </AccountSection>
+    <AccountSection
+      description={t("description")}
+      title={t("title")}
+      action={<PrivacyChoicesLink label={t("action")} size="md" variant="secondary" />}
+    />
   );
 }

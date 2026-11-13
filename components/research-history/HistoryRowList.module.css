@@ -1,0 +1,16 @@
+/* biome-ignore lint/correctness/noUnknownPseudoClass: attribute selectors stay global so the row classes stay string literals. */
+:global([data-history-grid]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+/* biome-ignore lint/correctness/noUnknownPseudoClass: attribute selectors stay global so the row classes stay string literals. */
+:global([data-history-row]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.625rem;
+  row-gap: 0.25rem;
+}

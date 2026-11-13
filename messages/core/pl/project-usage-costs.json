@@ -1,0 +1,100 @@
+{
+  "projectUsageCosts": {
+    "lead": "Plan, budżety dostawców i łączny koszt SEO.",
+    "lifetimeHint": "Kwota dożywotnia jest rozkładana równo na 36 miesięcy kalendarzowych, licząc od miesiąca rozpoczęcia. Niepełny pierwszy lub ostatni miesiąc jest rozliczany dniami, a potem kwota wynosi zero.",
+    "dash": "-",
+    "tiles": {
+      "seo": "Koszt SEO w tym miesiącu",
+      "seoHint": "Udział tego projektu",
+      "provider": "Operacje dostawców",
+      "providerHint": "Sprawdzenia pozycji, badania i uruchomienia AI",
+      "subscriptions": "Subskrypcje",
+      "subscriptionsHint": "Narzędzia cykliczne",
+      "custom": "Pozycje własne",
+      "customHint": "Pozycje jednorazowe",
+      "empty": "Brak danych w tym miesiącu."
+    },
+    "card": {
+      "title": "Subskrypcje",
+      "description": "Kwoty, które płacisz, a nie cennik dostawcy.",
+      "add": "Dodaj koszt",
+      "emptyTitle": "Zapisuj, ile kosztuje Cię SEO",
+      "emptyDescription": "Dodaj narzędzia, za które płacisz, żeby raporty pokazywały koszt obok wyników. Zużycie połączonych dostawców jest liczone automatycznie.",
+      "menu": "Działania dla {name}",
+      "edit": "Edytuj",
+      "end": "Zakończ",
+      "delete": "Usuń",
+      "deleteTitle": "Usunąć ten koszt?",
+      "deleteBody": "To usuwa {name} z kosztów SEO.",
+      "cancel": "Anuluj",
+      "columns": {
+        "item": "Pozycja",
+        "type": "Typ",
+        "plan": "Plan",
+        "perMonth": "Koszt miesięczny",
+        "actions": "Akcje",
+        "project": "Udział tego projektu"
+      },
+      "deleteShared": "Z tego kosztu korzysta też {count, plural, one {# inny projekt} few {# inne projekty} many {# innych projektów} other {# innego projektu}}. Usunięcie obejmie wszystkie projekty."
+    },
+    "kinds": {
+      "seo_tool": "Narzędzie SEO",
+      "ai": "AI",
+      "analytics": "Analityka",
+      "custom": "Własne"
+    },
+    "billing": {
+      "monthly": "Miesięcznie",
+      "yearly": "Rocznie",
+      "lifetime": "Dożywotnio",
+      "one_off": "Jednorazowo"
+    },
+    "notes": {
+      "trialUntil": "okres próbny do {date}",
+      "discountUntil": "-{percent, number}% do {date}"
+    },
+    "drawer": {
+      "addTitle": "Dodaj koszt",
+      "editTitle": "Edytuj koszt",
+      "tool": "Narzędzie",
+      "name": "Nazwa",
+      "suggest": "Nie ma na liście? Zaproponuj",
+      "plan": "Plan",
+      "planHint": "Wpisz nazwę planu albo wybierz typową.",
+      "billing": "Rozliczenie",
+      "amount": "Kwota, którą płacisz",
+      "currency": "Waluta",
+      "priceChanges": "Zmiany ceny",
+      "trialUntil": "Bezpłatny okres próbny do",
+      "discount": "Rabat",
+      "percent": "Procent",
+      "money": "Kwota",
+      "forMonths": "Przez miesiące",
+      "untilDate": "Do daty",
+      "months": "Miesiące",
+      "none": "Brak",
+      "partial": "Tylko część tego kosztu należy do tego projektu",
+      "partialHint": "Użyj tego, gdy to samo narzędzie obsługuje też inne strony. W koszcie tego projektu liczy się tylko ta część.",
+      "lands": "{amount} miesięcznie trafia do tego projektu",
+      "landsOnce": "{amount} trafia do tego projektu",
+      "started": "Data rozpoczęcia",
+      "footnote": "Kwota, którą płacisz, a nie cennik dostawcy",
+      "cancel": "Anuluj",
+      "submit": "Dodaj koszt",
+      "save": "Zapisz",
+      "then": "potem",
+      "until": "do",
+      "aMonth": "miesięcznie",
+      "saveError": "Nie udało się zapisać tego kosztu.",
+      "errors": {
+        "amount": "Wpisz kwotę.",
+        "name": "Wpisz nazwę.",
+        "projects": "Uwzględnij ten projekt.",
+        "percent": "Wpisz procent od 0 do 100, z maksymalnie dwoma miejscami po przecinku.",
+        "trial": "Okres próbny musi kończyć się w dniu rozpoczęcia lub później.",
+        "discount": "Podaj rabat i termin jego końca.",
+        "date": "Podaj prawdziwą datę."
+      }
+    }
+  }
+}

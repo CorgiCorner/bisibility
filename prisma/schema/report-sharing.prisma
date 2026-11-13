@@ -1,0 +1,47 @@
+/// Public link for a challenge report. The token itself is never stored:
+/// `tokenHash` is the sha256 of a 32-byte base64url secret, matching badge links.
+model AgentReportShareLink {
+  id          String    @id @default(cuid())
+  publicId    String    @unique
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  settings    Json
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  viewCount   Int       @default(0)
+  createdById String?
+  createdBy   User?     @relation("ReportShareLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  reports     AgentReportShareLinkReport[]
+  days        AgentReportShareLinkDay[]
+
+  @@index([projectId, createdAt])
+  @@map("agent_report_share_links")
+}
+
+model AgentReportShareLinkReport {
+  id          String               @id @default(cuid())
+  shareLinkId String
+  shareLink   AgentReportShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+  reportId    String
+  report      AgentReport          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  addedAt     DateTime             @default(now())
+
+  @@unique([shareLinkId, reportId])
+  @@index([reportId])
+  @@map("agent_report_share_link_reports")
+}
+
+/// Daily view totals only. No address, agent, or referrer is stored.
+model AgentReportShareLinkDay {
+  id          String               @id @default(cuid())
+  shareLinkId String
+  shareLink   AgentReportShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+  day         DateTime             @db.Date
+  views       Int                  @default(0)
+
+  @@unique([shareLinkId, day])
+  @@map("agent_report_share_link_days")
+}

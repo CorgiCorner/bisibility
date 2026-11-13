@@ -14,7 +14,13 @@ function deviceLabel(device: LensDevice, t: GridTranslations) {
   );
 }
 
-const rankDataFilterKeys = new Set(["change", "position", "urlChanged", "wrongUrl"]);
+const rankDataFilterKeys = new Set([
+  "aiOverviewShown",
+  "change",
+  "position",
+  "urlChanged",
+  "wrongUrl",
+]);
 
 export function hasActiveKeywordScope(lens: ActiveLens) {
   return Boolean(lens.locationId) || lens.device !== "all";

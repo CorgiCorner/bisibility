@@ -25,7 +25,7 @@ export function TrackingSettingsContent({
   updateDefaults,
 }: Readonly<TrackingSettingsContentProps>) {
   return (
-    <div className="max-w-[760px] space-y-5" data-tracking-settings-content="">
+    <div className="space-y-5 lg:max-w-[760px]" data-tracking-settings-content="">
       <div data-tracking-settled-frame="checkDefaults" id="check-defaults" tabIndex={-1}>
         <TrackingDefaultsCard
           canEdit={canEdit}

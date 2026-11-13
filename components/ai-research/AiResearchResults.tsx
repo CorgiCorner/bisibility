@@ -53,7 +53,7 @@ export function AiResearchResults({
             citations: result.rows.filter((row) => row.domainCited).length,
           })}
         </span>
-        <span className="text-ui-xs tabular-nums">{costMessage}</span>
+        <span className="text-ui-caption tabular-nums">{costMessage}</span>
       </Card>
       {result.truncated ? (
         <p className="text-ui-body text-fg-muted">
@@ -69,17 +69,17 @@ export function AiResearchResults({
         {result.rows.map((row, index) => (
           <Card key={`${row.model}:${index}`} className="grid min-w-0 content-start gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono text-ui-xs text-fg-muted">
+              <span className="font-mono text-ui-caption text-fg-muted">
                 {row.engine ? `${aiEngineLabel(row.engine)} · ` : ""}
                 {row.actualModel === null ? t("unknownModel") : row.model}
               </span>
-              <span className="text-ui-xs text-fg-muted">
+              <span className="text-ui-caption text-fg-muted">
                 {row.brandMentioned ? t("brandMentioned") : t("noBrandMention")} ·{" "}
                 {row.domainCited ? t("domainCited") : t("noDomainCitation")}
               </span>
             </div>
             {row.requestedModel ? (
-              <div className="grid gap-1 break-words text-ui-xs text-fg-muted">
+              <div className="grid gap-1 break-words text-ui-caption text-fg-muted">
                 <span>
                   {t("requestedModel")}: {row.requestedModel}
                 </span>
@@ -90,20 +90,22 @@ export function AiResearchResults({
             ) : null}
             <h2 className="text-ui-body font-semibold">{row.prompt}</h2>
             {row.contentTruncated ? (
-              <p className="text-ui-xs text-fg-muted">{t("contentTruncated")}</p>
+              <p className="text-ui-caption text-fg-muted">{t("contentTruncated")}</p>
             ) : null}
             <p className="whitespace-pre-wrap break-words text-ui-body leading-relaxed">
               {row.answer || t("noAnswer")}
             </p>
             {row.observedAt ? (
-              <p className="text-ui-xs tabular-nums text-fg-muted">
+              <p className="text-ui-caption tabular-nums text-fg-muted">
                 {t(result.evidence === "synthetic_prompt_test" ? "generatedAt" : "observedAt", {
                   date: row.observedAt,
                 })}
               </p>
             ) : null}
             <div className="grid gap-1 border-t border-border pt-3">
-              <span className="text-ui-xs uppercase text-fg-muted">{t("citedPages")}</span>
+              <span className="text-ui-micro uppercase tracking-wide text-fg-muted">
+                {t("citedPages")}
+              </span>
               {row.citations.length ? (
                 row.citations.map((citation) => (
                   <a

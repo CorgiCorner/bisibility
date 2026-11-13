@@ -16,13 +16,14 @@ import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/ssr/Bin
 import { BookOpenTextIcon as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
-import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
+import { FilesIcon as Files } from "@phosphor-icons/react/dist/ssr/Files";
 import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
 import { GearSixIcon as GearSix } from "@phosphor-icons/react/dist/ssr/GearSix";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/ssr/Globe";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/ssr/Link";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { MapTrifoldIcon as MapTrifold } from "@phosphor-icons/react/dist/ssr/MapTrifold";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil";
 import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/ssr/PlayCircle";
 import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
 import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
@@ -32,13 +33,16 @@ import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { Icon } from "@phosphor-icons/react/lib";
+import { landingNavEntries, landingSegments, type PrimaryNavEntry } from "./landing-nav";
 import {
   agentReportsNavEntry,
   aiSearchNavEntries,
-  aiTrackingNavEntry,
-  promptResearchNavEntry,
+  aiVisibilityNavEntry,
   researchModuleNavEntries,
 } from "./research-nav";
+
+export type { LandingSegment } from "./landing-nav";
+export { landingSegments } from "./landing-nav";
 
 /** One icon size for every sidebar rail tile, so the collapsed column stays one width. */
 export const RAIL_ICON_SIZE = 18;
@@ -67,6 +71,8 @@ export type NavItem = {
   scope: NavScope;
   badge?: NavBadge;
   activeHrefs?: readonly string[];
+  /** Extra command-palette search terms. The catalog owns the translated list. */
+  keywords?: readonly string[];
   external?: boolean;
 };
 
@@ -75,40 +81,6 @@ export type NavItem = {
  * scope. Giving these a group would invite a renderer to put them in the rail.
  */
 export type AuxNavItem = Omit<NavItem, "group" | "scope">;
-
-/**
- * Route segments eligible for the account "default landing page" preference. This stays
- * narrower than the rail: project configuration surfaces are navigable but are not landing pages.
- */
-export const landingSegments = [
-  "dashboard",
-  SEARCH_CONSOLE_SEGMENT,
-  "keyword-research",
-  "domain-overview",
-  "rank-tracker",
-  "backlinks",
-  "competitors",
-  "timeline",
-] as const;
-
-export type LandingSegment = (typeof landingSegments)[number];
-
-type PrimaryNavEntry = {
-  label: string;
-  segment: LandingSegment;
-  icon: Icon;
-};
-
-const landingNavEntries = {
-  dashboard: { icon: SquaresFour, label: "Dashboard" },
-  "search-console": { icon: ChartLineUp, label: "Search Console" },
-  "keyword-research": { icon: Binoculars, label: "Keyword Research" },
-  "domain-overview": { icon: Globe, label: "Domain Overview" },
-  "rank-tracker": { icon: Ranking, label: "Rank Tracker" },
-  backlinks: { icon: Link, label: "Backlinks" },
-  competitors: { icon: UsersThree, label: "Competitors" },
-  timeline: { icon: ClockCounterClockwise, label: "Timeline" },
-} as const satisfies Record<LandingSegment, Omit<PrimaryNavEntry, "segment">>;
 
 export type NavItemGroupDescriptor = {
   id: NavItemGroup;
@@ -159,7 +131,7 @@ export type NavContext = {
 };
 
 const MARKET_FOLLOWING_SCOPES: ReadonlySet<NavScope> = new Set<NavScope>(["level", "market"]);
-const GLOBAL_FEED_SEGMENTS = new Set(["alerts", "timeline"]);
+const GLOBAL_FEED_SEGMENTS = new Set(["alerts"]);
 
 /** Derives the rail context from the URL, never from a cookie or stored preference. */
 export function navContextFromPathname(pathname: string): NavContext | undefined {
@@ -233,15 +205,30 @@ const railNavEntries = [
     badge: "experimental",
     experimentalModule: "competitors",
   },
-  aiTrackingNavEntry,
-  promptResearchNavEntry,
+  aiVisibilityNavEntry,
   ...aiSearchNavEntries,
+  {
+    group: "reports",
+    label: "Pages",
+    scope: "own-axis",
+    segment: "pages",
+    icon: Files,
+    badge: "new",
+  },
   {
     group: "reports",
     label: "Search Console",
     scope: "own-axis",
     segment: SEARCH_CONSOLE_SEGMENT,
     icon: ChartLineUp,
+  },
+  {
+    group: "reports",
+    label: "Annotations",
+    scope: "own-axis",
+    segment: "annotations",
+    icon: NotePencil,
+    badge: "new",
   },
   agentReportsNavEntry,
   { group: "project", label: "Markets", scope: "project", segment: "markets", icon: MapTrifold },

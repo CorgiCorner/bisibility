@@ -363,10 +363,10 @@
         "transferProjectOwnershipDangerLabel": "所有権を移譲",
         "transferProjectOwnershipTitle": "プロジェクトの所有権を移譲",
         "transferProjectOwnershipToastMessage": "プロジェクトの所有権を移譲しました",
-        "deleteTimelineNoteBody": "このタイムラインノートを削除しますか？この操作は取り消せません。",
+        "deleteTimelineNoteBody": "このメモを削除しますか？この操作は取り消せません。",
         "deleteTimelineNoteDangerLabel": "ノートを削除",
-        "deleteTimelineNoteTitle": "タイムラインノートを削除しますか？",
-        "deleteTimelineNoteToastMessage": "タイムラインノートを削除しました。",
+        "deleteTimelineNoteTitle": "このメモを削除しますか？",
+        "deleteTimelineNoteToastMessage": "メモを削除しました。",
         "removeProviderKeyTitle": "保存済みのキーを削除しますか？",
         "removeProviderKeyBody": "保存済みのキーを削除し、このプロバイダーを切断します。引き続き使用するには、別のソースを選択してください。",
         "removeProviderKeyDangerLabel": "キーを削除",
@@ -585,6 +585,12 @@
       "emptyDescription": "競合ページで比較を設定して保存すると、ここで使用できます。",
       "configureComparison": "比較を設定"
     },
+    "conversions": {
+      "connect": "アナリティクスを接続",
+      "primary": "メイン",
+      "primaryOption": "{label} · {mark}",
+      "switchLabel": "コンバージョンのソース"
+    },
     "dashboardLayout": {
       "title": "ダッシュボードをカスタマイズ",
       "presentationOnly": "個人の表示設定のみです。スケジュールや有料の確認処理は変わりません。",
@@ -662,6 +668,14 @@
         "domain_rating": {
           "label": "Domain Rating",
           "description": "プロジェクトドメインの被リンク評価の推移。表示設定はデータ収集に影響しません。"
+        },
+        "organic_conversions": {
+          "label": "オーガニックコンバージョン",
+          "description": "ダッシュボード期間のコンバージョン。日次の推移と上位ページを含みます。"
+        },
+        "seo_cost": {
+          "label": "SEO コスト",
+          "description": "今月のプロジェクト分。プロバイダ操作、サブスクリプション、単発費用に分けます。"
         }
       },
       "reasons": {
@@ -1980,7 +1994,10 @@
       "title": "{count, plural, one {# 件のキーワードでスケジュールの確認が必要です} few {# 件のキーワードでスケジュールの確認が必要です} many {# 件のキーワードでスケジュールの確認が必要です} other {# 件のキーワードでスケジュールの確認が必要です}}",
       "detail": "これらのキーワードの自動チェックは停止しています。「スケジュール」で割り当てを選択してください。他のキーワードは設定どおりに動作します。",
       "review": "対象のキーワードを表示",
-      "schedules": "スケジュールを開く"
+      "schedules": "スケジュールを開く",
+      "affected": "対象のキーワード",
+      "detailShort": "スケジュールを選択するまで、自動チェックは停止しています。",
+      "reviewShort": "キーワードを表示"
     },
     "setupVideo": {
       "fallback": "お使いのブラウザーは動画に対応していません。",
@@ -2193,6 +2210,39 @@
       "history": "測定履歴",
       "date": "日付",
       "rating": "評価"
+    },
+    "chartMarkers": {
+      "note": "メモ",
+      "deploy": "デプロイ",
+      "content": "コンテンツ",
+      "sitemap": "サイトマップ",
+      "searchEngine": "Google の更新",
+      "fromAnnotations": "マーカーは注釈から表示しています。",
+      "openAnnotations": "注釈を開く",
+      "hideMarkers": "マーカーを隠す",
+      "showMarkers": "マーカーを表示",
+      "legendAria": "注釈マーカー",
+      "markers": "マーカー",
+      "pinLabel": "{type}、{date}",
+      "pinClusterLabel": "{count, number} 件の注釈、{date}",
+      "tooltipHeading": "{type} · {date}",
+      "clusterHeading": "{date} · 注釈{count, number}件",
+      "clusterMore": "他 {count, number} 件",
+      "sourceLine": "{type} · {source}",
+      "pinName": "{title}、{date}",
+      "pinClusterName": "{count, number} 件の注釈、{date}。{titles}",
+      "tooltipItem": "{letter} {title}",
+      "contentFallback": "コンテンツを更新",
+      "deindexedTitle": "インデックスから外れた URL",
+      "deployFallback": "デプロイ",
+      "noteFallback": "メモ",
+      "sitemapTitle": "サイトマップ: {added, number} 件追加、{removed, number} 件削除",
+      "primaryConversion": "主なコンバージョンのソースが{from}から{to}に変わりました",
+      "conversionSource": {
+        "none": "なし",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      }
     }
   }
 }

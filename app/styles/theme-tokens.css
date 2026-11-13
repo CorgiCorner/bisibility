@@ -126,7 +126,8 @@
   --yellow-text: #eec069;
   --red-text: #ef8a7b;
   --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23BABABA'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
-  --code-bg: #101010;
+  /* One step below the card (--bg-inset), with the code hairline drawn on the block. */
+  --code-bg: #1c1c1c;
   --code-fg: #eeeeee;
   --code-faint: #aaaaaa;
   --code-border: #404040;

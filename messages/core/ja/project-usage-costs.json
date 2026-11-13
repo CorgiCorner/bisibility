@@ -1,0 +1,100 @@
+{
+  "projectUsageCosts": {
+    "lead": "プラン、プロバイダーの予算、そしてSEOの合計費用です。",
+    "lifetimeHint": "買い切りの金額は、開始月を含む36の暦月に均等に配分します。最初または最後の月が途中なら日割りし、その後はゼロです。",
+    "dash": "-",
+    "tiles": {
+      "seo": "今月のSEO費用",
+      "seoHint": "このプロジェクトの分",
+      "provider": "プロバイダーの操作",
+      "providerHint": "順位チェック、調査、AIの実行",
+      "subscriptions": "サブスクリプション",
+      "subscriptionsHint": "継続のツール",
+      "custom": "独自の項目",
+      "customHint": "単発の項目",
+      "empty": "今月の記録はありません。"
+    },
+    "card": {
+      "title": "サブスクリプション",
+      "description": "支払う金額であり、ベンダーの価格表ではありません。",
+      "add": "費用を追加",
+      "emptyTitle": "SEOの費用を記録する",
+      "emptyDescription": "支払っているツールを追加すると、レポートで結果の横に費用を表示できます。接続したプロバイダーの使用量は自動で記録されます。",
+      "menu": "{name} の操作",
+      "edit": "編集",
+      "end": "終了",
+      "delete": "削除",
+      "deleteTitle": "この費用を削除しますか？",
+      "deleteBody": "{name} をSEO費用から削除します。",
+      "cancel": "キャンセル",
+      "columns": {
+        "item": "項目",
+        "type": "種類",
+        "plan": "プラン",
+        "perMonth": "月額",
+        "actions": "操作",
+        "project": "このプロジェクトの分"
+      },
+      "deleteShared": "この項目は{count, plural, other {他の#件のプロジェクト}}でも使用されています。削除するとすべてのプロジェクトから削除されます。"
+    },
+    "kinds": {
+      "seo_tool": "SEOツール",
+      "ai": "AI",
+      "analytics": "アナリティクス",
+      "custom": "カスタム"
+    },
+    "billing": {
+      "monthly": "月額",
+      "yearly": "年額",
+      "lifetime": "買い切り",
+      "one_off": "単発"
+    },
+    "notes": {
+      "trialUntil": "{date}まで試用",
+      "discountUntil": "{date}まで -{percent, number}%"
+    },
+    "drawer": {
+      "addTitle": "費用を追加",
+      "editTitle": "費用を編集",
+      "tool": "ツール",
+      "name": "名前",
+      "suggest": "一覧にない場合は提案",
+      "plan": "プラン",
+      "planHint": "プラン名を入力するか、一般的な名前を選びます。",
+      "billing": "課金",
+      "amount": "支払う金額",
+      "currency": "通貨",
+      "priceChanges": "価格の変更",
+      "trialUntil": "無料試用の終了日",
+      "discount": "割引",
+      "percent": "パーセント",
+      "money": "金額",
+      "forMonths": "月数",
+      "untilDate": "日付まで",
+      "months": "月",
+      "none": "なし",
+      "partial": "この費用の一部だけがこのプロジェクトに属する",
+      "partialHint": "同じツールを他のサイトでも使うときに使います。このプロジェクトの費用にはこの分だけが入ります。",
+      "lands": "このプロジェクトには月 {amount} が入ります",
+      "landsOnce": "このプロジェクトには {amount} が入ります",
+      "started": "開始日",
+      "footnote": "支払う金額であり、ベンダーの価格ではありません",
+      "cancel": "キャンセル",
+      "submit": "費用を追加",
+      "save": "保存",
+      "then": "その後",
+      "until": "まで",
+      "aMonth": "月額",
+      "saveError": "この費用を保存できませんでした。",
+      "errors": {
+        "amount": "金額を入力してください。",
+        "name": "名前を入力してください。",
+        "projects": "このプロジェクトを含めてください。",
+        "percent": "0から100までの割合を小数点以下2桁以内で入力してください。",
+        "trial": "試用の終了は開始日以降にしてください。",
+        "discount": "割引とその終了を入力してください。",
+        "date": "実在する日付を使ってください。"
+      }
+    }
+  }
+}

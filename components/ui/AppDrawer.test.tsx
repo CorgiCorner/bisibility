@@ -2,7 +2,7 @@ import {
   renderWithFeatureMessages,
   sharedControlTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
+import { MOTION_DRAWER_EXIT, MOTION_FLOATING_DRAWER_ENTER } from "@/lib/ui/motion";
 import { act, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppDrawer } from "./AppDrawer";
@@ -22,7 +22,7 @@ vi.mock("@/components/ui/DialogSurface", () => ({
 
 function setMediaQuery(reduced: boolean, narrow = false) {
   const queries: Record<string, boolean> = {
-    "(max-width:640px)": narrow,
+    "(min-width: 640px)": !narrow,
     "(prefers-reduced-motion: reduce)": reduced,
   };
   const listeners = new Map<string, Set<(e: { matches: boolean }) => void>>();
@@ -158,7 +158,7 @@ describe("AppDrawer motion", () => {
       </AppDrawer>,
     );
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
@@ -171,7 +171,7 @@ describe("AppDrawer motion", () => {
     );
     const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
@@ -185,7 +185,7 @@ describe("AppDrawer motion", () => {
     );
     let _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
     expect(lastDrawerProps.duration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
+      enter: MOTION_FLOATING_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
 
@@ -306,11 +306,27 @@ describe("AppDrawer stacked panels", () => {
     );
 
     expect(lastDrawerProps.side).toBe("bottom");
-    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.contentProps.style).toMatchObject({ maxHeight: "88vh", width: "100%" });
+    const slotProps = lastDrawerProps as {
+      contentProps: { className: string; "data-placement": string; style: object };
+    };
+    expect(slotProps.contentProps["data-placement"]).toBe("sheet");
+    expect(slotProps.contentProps.className).toContain("inset-x-2");
+    expect(slotProps.contentProps.className).toContain("rounded-3xl");
+    expect(slotProps.contentProps.style).toMatchObject({ maxHeight: "88vh", width: "auto" });
+    expect(document.querySelector("[data-drawer-grab]")).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("stays a side panel on a wide screen", () => {
+  it("uses the bottom sheet below 640px even when the caller omits sheetOnMobile", () => {
+    setMediaQuery(false, true);
+    render(
+      <AppDrawer onClose={vi.fn()} open title="Phone">
+        <button type="button">content</button>
+      </AppDrawer>,
+    );
+    expect(lastDrawerProps.side).toBe("bottom");
+  });
+
+  it("stays a floating side panel on a wide screen", () => {
     render(
       <AppDrawer onClose={vi.fn()} open sheetOnMobile title="Panel">
         <button type="button">content</button>
@@ -318,7 +334,12 @@ describe("AppDrawer stacked panels", () => {
     );
 
     expect(lastDrawerProps.side).toBe("right");
-    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    const slotProps = lastDrawerProps as {
+      contentProps: { className: string; "data-placement": string; style: object };
+    };
+    expect(slotProps.contentProps["data-placement"]).toBe("panel");
+    expect(slotProps.contentProps.className).toContain("inset-y-3");
+    expect(slotProps.contentProps.className).toContain("rounded-2xl");
     expect(slotProps.contentProps.style).toMatchObject({ width: 560 });
   });
 });

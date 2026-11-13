@@ -167,10 +167,20 @@ export function MonitorRunResults({
             </>
           ) : null}
           <div className="flex gap-2">
-            <Button variant="outline" disabled={pending} onClick={() => void download("csv")}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() => void download("csv")}
+            >
               {t("results.exportCsv")}
             </Button>
-            <Button variant="outline" disabled={pending} onClick={() => void download("json")}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() => void download("json")}
+            >
               {t("results.exportJson")}
             </Button>
           </div>

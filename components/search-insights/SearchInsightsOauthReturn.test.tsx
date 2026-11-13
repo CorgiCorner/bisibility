@@ -65,7 +65,7 @@ describe("SearchInsightsOauthReturn", () => {
     ).toBeVisible();
     expect(screen.getByText("Select a verified property")).toBeVisible();
     const propertyTrigger = screen.getByRole("button", { name: "Search Console property" });
-    expect(propertyTrigger).toHaveClass("min-h-[42px]", "px-[11px]");
+    expect(propertyTrigger).toHaveClass("min-h-10", "max-sm:min-h-11", "px-[13px]", "py-[9px]");
     expect(propertyTrigger).not.toHaveClass("min-h-[52px]", "px-4");
     expect(screen.getByText("Owner · Domain property")).toBeVisible();
     const importInfo = screen.getByText(

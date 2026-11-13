@@ -1,5 +1,6 @@
 "use server";
 import { recordAppAction } from "@/lib/activity/app-mutation";
+import { aiVisibilityPath } from "@/lib/ai-tracking/ai-visibility-paths";
 import { trackingSampleProjection } from "@/lib/ai-tracking/projections/evidence";
 import { trackingPromptOperationProjection } from "@/lib/ai-tracking/projections/operations";
 import {
@@ -13,6 +14,7 @@ import {
   trackingScheduleListItems,
 } from "@/lib/ai-tracking/projections/schedule-list";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
+import { loadProjectEngineChoice } from "@/lib/ai-tracking/queries/project-engines";
 import { getTrackingPromptOperations } from "@/lib/ai-tracking/queries/prompt-operations";
 import { auditTrackingCatalog, auditTrackingRun } from "@/lib/api/ai-tracking-audit";
 import {
@@ -33,11 +35,12 @@ import { trackingActionResult } from "./tracking-action-result";
 export async function getAiTrackingPage(projectId: string): Promise<TrackingWorkspaceData> {
   const actor = await getActionActor();
   const project = await trackingScope(actor, projectId);
-  const [topics, prompts, schedules, runs] = await Promise.all([
+  const [topics, prompts, schedules, runs, engines] = await Promise.all([
     trackingCatalog(project.id, "topics"),
     trackingCatalog(project.id, "prompts"),
     trackingCatalog(project.id, "schedules"),
     trackingRuns(project.id, { limit: 20 }),
+    loadProjectEngineChoice(project.id),
   ]);
   const operationBatches = [];
   for (let offset = 0; offset < prompts.length; offset += 100)
@@ -101,6 +104,8 @@ export async function getAiTrackingPage(projectId: string): Promise<TrackingWork
       createdAt: run.createdAt.toISOString(),
       sampleCount: run._count?.samples ?? 0,
     })),
+    enabledEngines: engines.enabledEngines,
+    engineDefault: engines.engineDefault,
   };
 }
 /**
@@ -117,10 +122,11 @@ export async function getAiTrackingScheduleList(
     throw error;
   });
   if (!project) return null;
-  const [topics, prompts, schedules] = await Promise.all([
+  const [topics, prompts, schedules, engines] = await Promise.all([
     trackingCatalog(project.id, "topics"),
     trackingCatalog(project.id, "prompts"),
     trackingCatalog(project.id, "schedules"),
+    loadProjectEngineChoice(project.id),
   ]);
   return {
     canWrite: canWriteAiTracking(getProjectRole(actor, project.id), project.writeMode),
@@ -132,6 +138,7 @@ export async function getAiTrackingScheduleList(
       prompts,
       status === "archived" ? "archived" : "current",
     ),
+    engineDefault: engines.engineDefault,
   };
 }
 export async function mutateAiTrackingAction(
@@ -161,7 +168,7 @@ export async function mutateAiTrackingAction(
     const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
     if (!("replayed" in result && result.replayed)) recordAppAction(actor);
     await auditTrackingCatalog(actor, project, resource, method, value, result);
-    revalidatePath(`/app/${projectId}/prompt-tracker`);
+    revalidatePath(aiVisibilityPath(projectId));
     if (resource === "schedules") {
       revalidatePath(`/app/${projectId}/schedules`);
       revalidatePath(`/app/${projectId}/runs/schedules`);
@@ -199,7 +206,7 @@ export async function launchAiTrackingAction(projectId: string, input: unknown) 
     );
     if (!("replayed" in result && result.replayed)) recordAppAction(actor);
     await auditTrackingRun(actor, project, "launch", result);
-    revalidatePath(`/app/${projectId}/prompt-tracker`);
+    revalidatePath(aiVisibilityPath(projectId));
 
     const { replayed: _replayed, ...value } = result;
     return value;
@@ -245,7 +252,7 @@ export async function aiTrackingRunAction(
   });
   if (!("replayed" in result && result.replayed)) recordAppAction(actor);
   await auditTrackingRun(actor, project, operation, result);
-  revalidatePath(`/app/${projectId}/prompt-tracker`);
+  revalidatePath(aiVisibilityPath(projectId));
 
   const { replayed: _replayed, ...value } = result;
   return value;

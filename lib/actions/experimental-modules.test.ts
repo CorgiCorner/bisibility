@@ -54,7 +54,7 @@ describe("setExperimentalModules", () => {
       action: "settings.experimental_modules.update",
       actorId: "user_1",
       after: { enabledExperimentalModules: ["competitors"] },
-      before: { enabledExperimentalModules: ["timeline"] },
+      before: { enabledExperimentalModules: [] },
       projectId: "project_1",
       targetId: projectId,
       targetType: "project_defaults",
@@ -62,15 +62,18 @@ describe("setExperimentalModules", () => {
     expect(mocks.revalidateExperimentalModuleViews).toHaveBeenCalledOnce();
   });
 
-  it("persists and revalidates an explicit Prompt Playground activation", async () => {
+  it("drops a retired Prompt Playground key and keeps the current modules", async () => {
     mocks.prisma.projectDefaults.upsert.mockResolvedValue({
-      enabledExperimentalModules: ["promptPlayground"],
+      enabledExperimentalModules: ["promptPlayground", "competitors"],
     });
     await expect(
-      setExperimentalModules({ enabledExperimentalModules: ["promptPlayground"], projectId }),
-    ).resolves.toEqual({ enabledExperimentalModules: ["promptPlayground"] });
+      setExperimentalModules({
+        enabledExperimentalModules: ["promptPlayground", "competitors"],
+        projectId,
+      }),
+    ).resolves.toEqual({ enabledExperimentalModules: ["competitors"] });
     expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { enabledExperimentalModules: ["promptPlayground"] } }),
+      expect.objectContaining({ update: { enabledExperimentalModules: ["competitors"] } }),
     );
     expect(mocks.revalidateExperimentalModuleViews).toHaveBeenCalledOnce();
   });

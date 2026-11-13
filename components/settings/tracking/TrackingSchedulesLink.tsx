@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 export function TrackingSchedulesLink({ projectId }: Readonly<{ projectId: string }>) {
   const t = useTranslations("projectSettingsTracking.schedules");
   return (
-    <p className="m-0 max-w-[760px] text-[13px] leading-5 text-fg-muted">
+    <p className="m-0 text-[13px] leading-5 text-fg-muted lg:max-w-[760px]">
       {t("description")}{" "}
       <Link
         className="text-accent-foreground underline underline-offset-4"

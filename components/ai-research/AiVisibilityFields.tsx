@@ -158,7 +158,7 @@ export function AiVisibilityFields({
           </div>
         )}
       />
-      <p className="m-0 text-ui-xs text-fg-muted sm:col-span-2">
+      <p className="m-0 text-ui-caption text-fg-muted sm:col-span-2">
         {catalog ? t("marketCoverageHint") : t("legacyVisibilityPreset")}
       </p>
     </>

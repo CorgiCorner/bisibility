@@ -76,7 +76,7 @@ export function PromptResearchMobile({
               </div>
               <PromptResearchText prompt={prompt} />
               <PromptResearchExpand prompt={prompt} expanded={open} onToggle={() => onToggle(id)} />
-              <div className="col-start-2 col-span-2 text-ui-xs text-fg-muted">
+              <div className="col-start-2 col-span-2 text-ui-caption text-fg-muted">
                 <PromptResearchSourceCount prompt={prompt} />
               </div>
               {open ? (

@@ -363,10 +363,10 @@
         "transferProjectOwnershipDangerLabel": "Transfer ownership",
         "transferProjectOwnershipTitle": "Transfer project ownership",
         "transferProjectOwnershipToastMessage": "Project ownership transferred",
-        "deleteTimelineNoteBody": "Delete this timeline note? This cannot be undone.",
+        "deleteTimelineNoteBody": "Delete this note? This cannot be undone.",
         "deleteTimelineNoteDangerLabel": "Delete note",
-        "deleteTimelineNoteTitle": "Delete timeline note?",
-        "deleteTimelineNoteToastMessage": "Timeline note deleted.",
+        "deleteTimelineNoteTitle": "Delete this note?",
+        "deleteTimelineNoteToastMessage": "Note deleted.",
         "removeProviderKeyTitle": "Remove saved key?",
         "removeProviderKeyBody": "This removes the saved key and disconnects this provider. Choose another source to keep using it.",
         "removeProviderKeyDangerLabel": "Remove key",
@@ -585,6 +585,12 @@
       "emptyDescription": "Set up and save a comparison on the Competitors page to use it here.",
       "configureComparison": "Set up comparison"
     },
+    "conversions": {
+      "connect": "Connect analytics",
+      "primary": "Primary",
+      "primaryOption": "{label} · {mark}",
+      "switchLabel": "Conversion source"
+    },
     "dashboardLayout": {
       "title": "Customize dashboard",
       "presentationOnly": "Personal display only. Schedules and paid checks do not change.",
@@ -662,6 +668,14 @@
         "domain_rating": {
           "label": "Domain Rating",
           "description": "Daily backlink authority history for the project domain. Display settings do not change collection."
+        },
+        "organic_conversions": {
+          "label": "Organic conversions",
+          "description": "Conversions for the dashboard period, with the daily trend and the top pages."
+        },
+        "seo_cost": {
+          "label": "SEO cost",
+          "description": "This month's project share of provider operations, subscriptions, and one-off costs."
         }
       },
       "reasons": {
@@ -1980,7 +1994,10 @@
       "title": "{count, plural, one {# keyword needs schedule review} few {# keywords need schedule review} many {# keywords need schedule review} other {# keywords need schedule review}}",
       "detail": "Automatic checks are paused for these keywords. Choose a schedule for them in Schedules. Other keywords continue as configured.",
       "review": "Show affected keywords",
-      "schedules": "Open Schedules"
+      "schedules": "Open Schedules",
+      "affected": "Affected keywords",
+      "detailShort": "Automatic checks are paused until you choose a schedule.",
+      "reviewShort": "Show keywords"
     },
     "setupVideo": {
       "fallback": "Your browser does not support video.",
@@ -2193,6 +2210,39 @@
       "history": "Measurement history",
       "date": "Date",
       "rating": "Rating"
+    },
+    "chartMarkers": {
+      "note": "Note",
+      "deploy": "Deploy",
+      "content": "Content",
+      "sitemap": "Sitemap",
+      "searchEngine": "Google update",
+      "fromAnnotations": "Markers come from Annotations.",
+      "openAnnotations": "Open Annotations",
+      "hideMarkers": "Hide markers",
+      "showMarkers": "Show markers",
+      "legendAria": "Annotation markers",
+      "markers": "Markers",
+      "pinLabel": "{type}, {date}",
+      "pinClusterLabel": "{count, number} annotations, {date}",
+      "tooltipHeading": "{type} · {date}",
+      "clusterHeading": "{date} · {count, number} annotations",
+      "clusterMore": "+{count, number} more",
+      "sourceLine": "{type} · {source}",
+      "pinName": "{title}, {date}",
+      "pinClusterName": "{count, number} annotations, {date}. {titles}",
+      "tooltipItem": "{letter} {title}",
+      "contentFallback": "Content updated",
+      "deindexedTitle": "URL removed from the index",
+      "deployFallback": "Deploy",
+      "noteFallback": "Note",
+      "sitemapTitle": "Sitemap: {added, number} added, {removed, number} removed",
+      "primaryConversion": "Primary conversion source changed from {from} to {to}",
+      "conversionSource": {
+        "none": "none",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      }
     }
   }
 }

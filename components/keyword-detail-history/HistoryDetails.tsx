@@ -8,7 +8,7 @@ export function HistoryDetails({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button size="xs" variant="ghost" onClick={() => setOpen(true)}>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>
         {t("detailToggle")}
       </Button>
       <Modal open={open} onClose={() => setOpen(false)} title={t("detailToggle")}>

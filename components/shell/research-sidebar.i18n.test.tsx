@@ -13,16 +13,9 @@ vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 const sections = [
   {
-    key: "promptResearch",
-    title: "Prompt Research",
-    segment: "prompt-research",
-    group: "ai",
-    scope: "own-axis",
-  },
-  {
-    key: "aiTracking",
-    title: "Prompt Tracker",
-    segment: "prompt-tracker",
+    key: "aiVisibilityModule",
+    title: "AI Visibility",
+    segment: "ai-visibility",
     group: "ai",
     scope: "own-axis",
   },
@@ -35,8 +28,8 @@ const sections = [
   },
   {
     key: "promptExplorer",
-    title: "Prompt Playground",
-    segment: "prompt-playground",
+    title: "Model Playground",
+    segment: "model-playground",
     group: "ai",
     scope: "own-axis",
   },
@@ -49,7 +42,7 @@ const sections = [
   },
   {
     key: "agentReports",
-    title: "Agent Reports",
+    title: "Reports",
     segment: "agent-reports",
     group: "reports",
     scope: "project",
@@ -75,7 +68,7 @@ describe.each(locales)("research sidebar in $locale", ({ locale, messages }) => 
     renderWithFeatureMessages(
       <SidebarRailGroups
         collapsed={collapsed}
-        currentHref={`${items.find((item) => item.label === "Agent Reports")?.href}/agr_abcdefghijklmnopqrstuvwx`}
+        currentHref={`${items.find((item) => item.label === "Reports")?.href}/agr_abcdefghijklmnopqrstuvwx`}
         items={items}
       />,
       { locale, messages },

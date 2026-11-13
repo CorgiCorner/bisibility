@@ -167,6 +167,16 @@ describe("independent recovery facts", () => {
       id: "original",
     });
   });
+  it("identifies a case by the same reference on every read", () => {
+    const first = classifyRecoveryRecord(record(), scope, now);
+    const second = classifyRecoveryRecord(record(), scope, now);
+    expect(second.token).not.toBe(first.token);
+    expect(second.reference).toBe(first.reference);
+    expect(classifyRecoveryRecord(record({ id: "another" }), scope, now).reference).not.toBe(
+      first.reference,
+    );
+    expect(first.reference).not.toContain("original");
+  });
   it("does not reopen acknowledgement for the same automatic failure repeating", () => {
     const row = record({
       error: {

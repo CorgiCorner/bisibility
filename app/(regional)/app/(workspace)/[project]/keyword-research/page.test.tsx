@@ -165,6 +165,7 @@ describe("ResearchPage", () => {
       "projectRankTracker",
       "projectResearch",
       "projectRuns",
+      "researchHistory",
     ]);
     expect(mocks.loadCoreMessages).toHaveBeenCalledOnce();
   });

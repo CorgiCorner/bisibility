@@ -38,8 +38,8 @@ export function AchievementsLoading() {
               <AccountLoadingBar key={i} className="h-10 w-full" />
             ))}
           </div>
-          <AccountLoadingBar className="h-10 w-full max-w-md" />
-          <AccountLoadingBar className="h-9 w-20" />
+          <AccountLoadingBar className="h-10 max-sm:h-11 w-full max-w-md" />
+          <AccountLoadingBar className="h-10 max-sm:h-11 w-20" />
         </Card>
       </div>
     </AccountShellLoading>

@@ -1,0 +1,31 @@
+{
+  "researchHistory": {
+    "aiOverview": "AI Overview",
+    "all": "All",
+    "cached": "cached",
+    "checks": "{count, plural, one {# check} other {# checks}}",
+    "close": "Close history",
+    "desktop": "Desktop",
+    "emptyChecks": "Checks you run in this project show up here.",
+    "emptyRuns": "Runs you start in this project show up here.",
+    "emptyTitle": "No history yet",
+    "error": "History could not be loaded.",
+    "loadOlderChecks": "Load older checks",
+    "loadOlderRuns": "Load older runs",
+    "loading": "Loading history",
+    "mobile": "Mobile",
+    "openAllRuns": "Open all runs as a table",
+    "pin": "Pin {title}",
+    "pinned": "Pinned {count}",
+    "retry": "Try again",
+    "runs": "{count, plural, one {# run} other {# runs}}",
+    "searchKeywords": "Search keywords",
+    "searchLabel": "Search history",
+    "searchPrompts": "Search prompts",
+    "suggestions": "Recent",
+    "title": "History",
+    "today": "Today",
+    "unpin": "Unpin {title}",
+    "yesterday": "Yesterday"
+  }
+}

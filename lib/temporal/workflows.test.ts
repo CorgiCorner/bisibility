@@ -14,6 +14,8 @@ import {
   rankCheckWorkflow,
   sendWeeklyReportDigestWorkflow,
   syncPresenceWorkflow,
+  syncProjectPagesWorkflow,
+  syncSearchEngineUpdatesWorkflow,
   syncSitemapsWorkflow,
 } from "./workflows";
 
@@ -44,6 +46,8 @@ const mocks = vi.hoisted(() => {
     sendWeeklyReportDigestActivity: vi.fn(),
     sweepRankCheckRawPurgeProgressActivity: vi.fn(),
     syncPresenceActivity: vi.fn(),
+    syncProjectPagesActivity: vi.fn(),
+    syncSearchEngineUpdatesActivity: vi.fn(),
     syncSitemapsActivity: vi.fn(),
   };
 
@@ -127,6 +131,12 @@ describe("maintenance workflows", () => {
       workflow: sendWeeklyReportDigestWorkflow,
     },
     {
+      activity: mocks.activities.syncSearchEngineUpdatesActivity,
+      expected: { status: "ok", upserted: 3 },
+      name: "search engine updates",
+      workflow: syncSearchEngineUpdatesWorkflow,
+    },
+    {
       activity: mocks.activities.syncSitemapsActivity,
       expected: {
         baselined: 1,
@@ -139,6 +149,12 @@ describe("maintenance workflows", () => {
       },
       name: "sitemap sync",
       workflow: syncSitemapsWorkflow,
+    },
+    {
+      activity: mocks.activities.syncProjectPagesActivity,
+      expected: { failed: 0, pages: 4, projects: 2, truncated: 0 },
+      name: "project pages sync",
+      workflow: syncProjectPagesWorkflow,
     },
     {
       activity: mocks.activities.syncPresenceActivity,

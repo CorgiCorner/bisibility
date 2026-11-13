@@ -12,7 +12,7 @@ const frames = [
 
 export function UsageCardsLoading({ planOnly = false }: { planOnly?: boolean }) {
   return (
-    <div className="flex w-full max-w-[760px] flex-col gap-3.5">
+    <div className="flex w-full flex-col gap-3.5 lg:max-w-[760px]">
       {frames
         .filter((frame) => !planOnly || frame.id === "plan")
         .map((frame) => (

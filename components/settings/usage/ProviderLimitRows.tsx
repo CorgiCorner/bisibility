@@ -148,9 +148,9 @@ function LimitRow({
       {onEdit && surface && (
         <div className="col-start-2 row-start-1 justify-self-end sm:col-start-3">
           <Button
-            size="xs"
+            size="sm"
             variant="ghost"
-            className={unset ? undefined : "min-w-0 px-1.5"}
+            className={unset ? undefined : "min-w-0"}
             aria-label={text.t(unset ? "setLimitFor" : "editLimitFor", {
               surface: label,
               provider: entry.label,

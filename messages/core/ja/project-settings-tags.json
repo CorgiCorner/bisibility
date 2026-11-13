@@ -1,0 +1,76 @@
+{
+  "projectSettingsTags": {
+    "columns": {
+      "keywords": "キーワード",
+      "pages": "ページ",
+      "rule": "ルール",
+      "tag": "タグ",
+      "actions": "操作",
+      "usedIn": "使用先"
+    },
+    "delete": {
+      "cancel": "キャンセル",
+      "confirm": "タグを削除",
+      "error": "タグを削除できませんでした。",
+      "title": "{name} を削除しますか？",
+      "usageBothManyKeywords": "{keywordCount, number}件のキーワードと{segmentCount, plural, other {#件のセグメントで使用されています。}}",
+      "usageBothOneKeyword": "{segmentCount, plural, other {1件のキーワードと#件のセグメントで使用されています。}}",
+      "usageKeywordOnly": "{count, plural, other {#件のキーワードで使用されています。}}",
+      "usageSegmentOnly": "{count, plural, other {#件のセグメントで使用されています。}}"
+    },
+    "empty": "タグはまだありません。",
+    "lead": "プロジェクト全体でタグは一つです。ページとキーワードの両方で使います。",
+    "menu": "{name} のその他の操作",
+    "menuDelete": "削除",
+    "menuEdit": "ルールを編集",
+    "menuMerge": "統合先...",
+    "menuRename": "名前を変更",
+    "merge": {
+      "alerts": "{count, plural, other {#件のアラート}}",
+      "cancel": "キャンセル",
+      "choose": "タグ",
+      "confirm": "統合",
+      "error": "タグを統合できませんでした。",
+      "keywordSegments": "{count, plural, other {#件のキーワードセグメント}}",
+      "keywords": "{count, plural, other {#件のキーワード}}",
+      "none": "このタグは他では使われていません。削除されます。",
+      "pages": "{count, plural, other {#件のページ}}",
+      "rule": "ページのルールは、{target} にルールがないため移動します。",
+      "savedViews": "{count, plural, other {#件の保存済みビュー}}",
+      "summary": "{counts} が {target} に移ります。",
+      "title": "{name} の統合先"
+    },
+    "new": "新しいタグ",
+    "rename": {
+      "cancel": "キャンセル",
+      "confirm": "名前を変更",
+      "error": "タグの名前を変更できませんでした。",
+      "exists": "{name} はすでにあります。統合してください。",
+      "label": "新しい名前",
+      "required": "タグ名を入力してください。",
+      "title": "{name} の名前を変更",
+      "tooLong": "タグ名は48文字までです。"
+    },
+    "rule": {
+      "hand": "手動",
+      "none": "-",
+      "sitemap": "サイトマップ",
+      "urls": "{count, plural, other {#件のURL}}"
+    },
+    "ruleLead": "ルールは、あとから追加されたページも含め、一致するページにタグを付けたままにします。",
+    "tableLabel": "プロジェクトのタグ",
+    "usage": {
+      "alert": "{count, plural, other {#件のアラート}}",
+      "keywordSegment": "{count, plural, other {#件のキーワードセグメント}}",
+      "none": "まだ使われていません",
+      "savedView": "{count, plural, other {#件の保存済みビュー}}",
+      "tooltipAlerts": "アラート: {names}",
+      "tooltipKeywordSegments": "キーワードセグメント: {names}",
+      "tooltipSavedViews": "保存済みビュー: {names}"
+    },
+    "where": {
+      "body": "ページのフィルタ、タグ別、比較。Rank Tracker のフィルタと保存済みビュー。アラートの対象。ダッシュボードのすべてのタグ。",
+      "title": "タグが使われる場所"
+    }
+  }
+}

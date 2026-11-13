@@ -1,10 +1,16 @@
 "use client";
 import { KeywordCheckScope } from "@/components/keywords/KeywordCheckScope";
-import { useFormatter, useLocale } from "next-intl";
+import { PillBadge } from "@/components/ui/Pill";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type SearchScope, searchScopeKeyword, searchTimeFormat } from "./search-scope";
-export function PlaygroundSearchRow({ run }: { run: SearchScope & { createdAt: string } }) {
+export function PlaygroundSearchRow({
+  run,
+}: {
+  run: SearchScope & { createdAt: string; overviewFetched?: true };
+}) {
   const locale = useLocale(),
     format = useFormatter();
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
   return (
     <span className="grid min-w-0 flex-1 gap-2">
       <span className="block truncate text-sm font-medium">{run.keyword.text}</span>
@@ -17,6 +23,7 @@ export function PlaygroundSearchRow({ run }: { run: SearchScope & { createdAt: s
         <time dateTime={run.createdAt} className="text-xs text-fg-muted">
           {format.dateTime(new Date(run.createdAt), searchTimeFormat)}
         </time>
+        {run.overviewFetched && <PillBadge size="xs">{t("features.aiOverview.label")}</PillBadge>}
       </span>
     </span>
   );

@@ -36,7 +36,7 @@ export type PreferencesFormProps = {
 };
 
 const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+  "justify-between rounded-control border-border-control bg-transparent font-medium normal-case tracking-normal";
 
 function themeIcon(value: UserPreferences["theme"]) {
   if (value === "light") {
@@ -146,9 +146,11 @@ export function PreferencesForm({
     dashboard: t("landing.dashboard"),
     "domain-overview": t("landing.domain-overview"),
     "keyword-research": t("landing.keyword-research"),
+    "ai-visibility": t("landing.ai-visibility"),
     "rank-tracker": t("landing.rank-tracker"),
     "search-console": t("landing.search-console"),
-    timeline: t("landing.timeline"),
+    pages: t("landing.pages"),
+    annotations: t("landing.annotations"),
   } satisfies Record<UserPreferences["landing"], string>;
   const landingOptions = primaryNavEntries.map((entry) => ({
     label: landingLabels[entry.segment],
@@ -217,7 +219,8 @@ export function PreferencesForm({
               name="theme"
               onChange={(value) => persist("theme", value)}
               options={themeSegments(themeLabels)}
-              size="xs"
+              optionClassName="flex-row gap-1.5"
+              size="field"
               value={theme}
             />
           </div>
@@ -278,7 +281,8 @@ export function PreferencesForm({
               name="density"
               onChange={(value) => persist("density", value)}
               options={densitySegments(densityLabels)}
-              size="xs"
+              optionClassName="flex-row gap-1.5"
+              size="field"
               value={density}
             />
           </div>

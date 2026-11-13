@@ -1,16 +1,9 @@
 import type { SourceConfiguration } from "@/lib/ai-tracking/contract";
 import type { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
+import { trackingEngines } from "@/lib/ai-tracking/tracking-engines";
 import type { z } from "zod";
 
-export function trackingEngines(
-  source: SourceConfiguration["source"],
-): SourceConfiguration["engine"][] {
-  return source === "google_aio"
-    ? ["google"]
-    : source === "consumer_scrape"
-      ? ["chat_gpt", "gemini"]
-      : ["chat_gpt"];
-}
+export { trackingEngines };
 export function trackingRunConfigurations(
   values: z.infer<typeof trackingConfigurationForm>,
 ): SourceConfiguration[] {

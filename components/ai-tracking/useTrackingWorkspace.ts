@@ -13,13 +13,20 @@ export function useTrackingWorkspace(
   initialSamples: TrackingSampleRow[],
   initialTab: "prompts" | "runs",
   actions: TrackingWorkspaceActions,
+  initialDrawer: "prompt" | "run" | null = null,
 ) {
   const t = useTranslations("projectAiTracking");
   const [data, setData] = useState(initialData);
+  const [serverData, setServerData] = useState(initialData);
+  // A new server projection supersedes local mutation results without resetting drawers or selection.
+  if (serverData !== initialData) {
+    setServerData(initialData);
+    setData(initialData);
+  }
   const [tab, setTab] = useState(initialTab);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [topic, setTopic] = useState("all");
-  const [drawer, setDrawer] = useState<"prompt" | "topic" | "run" | null>(null);
+  const [drawer, setDrawer] = useState<"prompt" | "topic" | "run" | null>(initialDrawer);
   const [editingTopic, setEditingTopic] = useState<
     TrackingWorkspaceData["topics"][number] | undefined
   >();

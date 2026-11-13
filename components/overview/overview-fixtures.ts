@@ -166,6 +166,8 @@ export const overviewFixture = {
     rangeValue: "28d",
     tagValue: null,
   },
+  organicConversions: null,
+  seoCost: null,
   trackedKeywordCount: 248,
   trend: [
     {

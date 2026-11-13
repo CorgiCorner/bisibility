@@ -13,10 +13,11 @@ import { appPath } from "@/lib/routing/app-path";
 import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { PlaygroundProviders } from "./PlaygroundProviders";
 import { PlaygroundQueryScope } from "./PlaygroundQueryScope";
 import { PlaygroundReview } from "./PlaygroundReview";
-import { RecentPlaygroundQueries } from "./RecentPlaygroundQueries";
+import { SerpPlaygroundHistoryButton, SerpPlaygroundSuggestions } from "./SerpPlaygroundHistory";
 import { SerpPlaygroundResults } from "./SerpPlaygroundResults";
 import { playgroundActions, useSerpPlayground } from "./useSerpPlayground";
 
@@ -61,6 +62,7 @@ export function SerpPlayground({
     launch,
     refresh,
   } = useSerpPlayground(projectRef, data, service);
+  const [queryFocused, setQueryFocused] = useState(false);
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
       <div>
@@ -75,7 +77,7 @@ export function SerpPlayground({
           }}
         >
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-            <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="relative flex min-w-0 flex-col gap-1.5">
               <FieldLabel
                 htmlFor="serp-query"
                 label={t("query")}
@@ -84,23 +86,34 @@ export function SerpPlayground({
               <Input
                 id="serp-query"
                 value={query}
+                onBlur={() => setQueryFocused(false)}
                 onChange={(event) => setQuery(event.target.value)}
+                onFocus={() => setQueryFocused(true)}
                 placeholder={t("queryPlaceholder")}
                 maxLength={500}
                 disabled={busy}
               />
+              <SerpPlaygroundSuggestions
+                focused={queryFocused}
+                projectRef={projectRef}
+                query={query}
+                selectRun={selectRun}
+              />
             </div>
-            <Button
-              type="submit"
-              disabled={
-                !data.canRun || !hasConnection || !providers.length || !query.trim() || busy
-              }
-              loading={busy && !pendingRun}
-              startIcon={<MagnifyingGlassIcon weight="regular" size={16} aria-hidden />}
-              size="input"
-            >
-              {t("search")}
-            </Button>
+            <div className="flex items-end gap-2">
+              <SerpPlaygroundHistoryButton projectRef={projectRef} selectRun={selectRun} />
+              <Button
+                type="submit"
+                disabled={
+                  !data.canRun || !hasConnection || !providers.length || !query.trim() || busy
+                }
+                loading={busy && !pendingRun}
+                startIcon={<MagnifyingGlassIcon weight="regular" size={16} aria-hidden />}
+                size="input"
+              >
+                {t("search")}
+              </Button>
+            </div>
           </div>
           <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <LocationField
@@ -172,6 +185,8 @@ export function SerpPlayground({
             />
             <MenuSelect
               ariaLabel={t("depth")}
+              size="input"
+              triggerClassName="w-auto"
               value={String(depth)}
               onChange={(value) =>
                 setDepth(Number(value) as import("@/lib/serp/constants").SerpDepth)
@@ -187,7 +202,7 @@ export function SerpPlayground({
         {!data.providers.some((item) => item.ready) ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-bg-sunken p-3">
             <p className="m-0 text-xs text-fg-muted">{t("connectHelp")}</p>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="input">
               <a href={appPath(projectRef, "providers")}>{t("connect")}</a>
             </Button>
           </div>
@@ -199,12 +214,6 @@ export function SerpPlayground({
           </p>
         ) : null}
       </Card>
-      <RecentPlaygroundQueries
-        projectRef={projectRef}
-        history={history}
-        busy={busy}
-        selectRun={selectRun}
-      />
       <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
         <SegmentedControl
           className="shrink-0"

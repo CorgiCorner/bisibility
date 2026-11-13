@@ -10,10 +10,6 @@ import type {
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
 import { formatDateTime } from "@/lib/dates/format";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import {
-  cacheTimeRemaining,
-  type RecentKeywordResearch,
-} from "@/lib/keyword-research/recent-searches";
 import type { KeywordResearchMode, KeywordResearchSuccess } from "@/lib/keyword-research/types";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import type { CheckHealth } from "@/lib/queries/check-health";
@@ -189,31 +185,6 @@ export function markTabsSaved(
 
 export function researchKeywordIdentity(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
-export function recentSearchReplay(
-  search: RecentKeywordResearch,
-  selectedConnectionId: string,
-  eligibleConnectionIds: readonly string[],
-  now = new Date(),
-) {
-  const eligible = new Set(eligibleConnectionIds);
-  const connectionId = eligible.has(search.connectionId ?? "")
-    ? search.connectionId
-    : eligible.has(selectedConnectionId)
-      ? selectedConnectionId
-      : eligibleConnectionIds[0];
-  return {
-    cached: cacheTimeRemaining(search.cachedUntil, now) > 0,
-    connectionId,
-    overrides: {
-      connectionId,
-      fresh: false,
-      includeClickstream: search.includeClickstream,
-      mode: search.mode,
-      resultLimit: search.resultLimit,
-    } satisfies Partial<ResearchKeywordsActionInput>,
-  };
 }
 
 export type ResearchAddDraft = TrackingConfigurationValue & {

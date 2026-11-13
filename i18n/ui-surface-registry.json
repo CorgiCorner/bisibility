@@ -1394,6 +1394,14 @@
     },
     {
       "anchor": "function:headerMetaFor",
+      "fingerprint": "40e0627c48d8d8c629a9aed08f348d11c70fefe7e926c32779d37973aa5bc8bf",
+      "kind": "ui-property",
+      "path": "components/shell/header-title.ts",
+      "reason": "headerMetaFor supplies raw route metadata to AppHeaderTitle. localizedHeaderMeta in header-copy.ts maps that metadata through shell.header catalog keys before the header renders; the literal is not a catalog key itself.",
+      "text": "AI Visibility"
+    },
+    {
+      "anchor": "function:headerMetaFor",
       "fingerprint": "29711f3b4d3f118f9cecbc50bd25bd330863b12ae1eac8c8ac76cfc4fb99ddbb",
       "kind": "ui-property",
       "path": "components/shell/header-title.ts",
@@ -1900,6 +1908,14 @@
       "path": "components/shell/header-title.ts",
       "kind": "ui-property",
       "anchor": "function:headerMetaFor",
+      "text": "Annotations",
+      "fingerprint": "17f11b38c75967eb132d7bd9f7600c059e67f04994044b19ac526b8f0b1f350c",
+      "reason": "Route metadata is translated by localizedHeaderMeta through the shell.header.titles catalog before rendering."
+    },
+    {
+      "path": "components/shell/header-title.ts",
+      "kind": "ui-property",
+      "anchor": "function:headerMetaFor",
       "text": "Schedules",
       "fingerprint": "917cd51ef900776dbdee53087d7abc55aced45858372665bd6bb028ab4afd8f7",
       "reason": "Route metadata is translated by localizedHeaderMeta through the shell.header.titles catalog before rendering."
@@ -1981,11 +1997,18 @@
       "components/admin/redesign/OssPreviewData.ts",
       "components/admin/redesign/PreviewNavigationContext.ts",
       "components/admin/redesign/require-fixture.ts",
+      "components/agent-reports/challenge-report-layout.ts",
       "components/ai-research/ai-research-failure-copy.ts",
       "components/ai-research/ai-research-presets.ts",
+      "components/ai-research/model-playground-layout.ts",
       "components/ai-research/useAiResearchCatalogRefresh.ts",
       "components/ai-research/useAiResearchSubmission.ts",
+      "components/ai-tracking/ai-visibility-column-layout.ts",
+      "components/ai-tracking/overview-labels.ts",
+      "components/ai-tracking/prompt-writes.ts",
+      "components/ai-tracking/source-copy.ts",
       "components/ai-tracking/tracking-run-configuration.ts",
+      "components/ai-tracking/use-research-lookup.ts",
       "components/ai-tracking/useTrackingHistory.ts",
       "components/ai-tracking/useTrackingWorkspace.ts",
       "components/alerts/alert-feed-facet-labels.ts",
@@ -2000,6 +2023,7 @@
       "components/analytics/use-account-consent-sync.ts",
       "components/analytics/use-analytics-provider-sync.ts",
       "components/analytics/use-onboarding-entry-analytics.ts",
+      "components/annotations/annotations-layout.ts",
       "components/audit/audit-export.ts",
       "components/audit/audit-filtering.ts",
       "components/audit/audit-presentation.ts",
@@ -2020,6 +2044,10 @@
       "components/business-locations/presentation.ts",
       "components/business-locations/prompt-form.ts",
       "components/business-locations/use-business-command.ts",
+      "components/challenge-report/use-public-report-motion.ts",
+      "components/charts/chart-marker-layout.ts",
+      "components/charts/chart-marker-preference.ts",
+      "components/charts/chart-marker-title.ts",
       "components/checks/runs/check-runs-format.ts",
       "components/checks/runs/use-auto-load-more.ts",
       "components/checks/runs/use-run-table-width.ts",
@@ -2120,6 +2148,7 @@
       "components/keywords/grid/use-flat-rank-tracker-navigation.ts",
       "components/keywords/grid/use-keywords-grid-view-state.ts",
       "components/keywords/grid/use-personal-keyword-layout.ts",
+      "components/keywords/grid/use-rank-tracker-view-columns.ts",
       "components/keywords/import/import-csv-wizard-model.ts",
       "components/keywords/import/import-csv-wizard-schema.ts",
       "components/keywords/import/keyword-suggestion-cost.ts",
@@ -2187,6 +2216,8 @@
       "components/onboarding/use-onboarding-sources.ts",
       "components/onboarding/use-reviewed-onboarding-defaults.ts",
       "components/overview/data-source-status.ts",
+      "components/pages/page-tag-form.ts",
+      "components/pages/project-pages-layout.ts",
       "components/project-runs/project-runs-actions.ts",
       "components/project-runs/project-runs-presentation.ts",
       "components/project-runs/project-runs-status-menu.ts",
@@ -2205,15 +2236,14 @@
       "components/rank-runs/useRunPageItems.ts",
       "components/rank-tracker/useProjectKeywordImportMessages.ts",
       "components/realtime/useHeldRows.ts",
+      "components/research-history/toggle-history-pin.ts",
       "components/research/research-money.ts",
       "components/research/research-payment-estimates.ts",
-      "components/research/research-relative-time.ts",
       "components/research/research-results-table-state.ts",
       "components/research/research-scope-capability.ts",
       "components/research/research-tab-identity.ts",
       "components/research/research-tracking-cost.ts",
       "components/research/research-workspace-model.ts",
-      "components/research/useRecentSearches.ts",
       "components/research/useResearchEstimate.ts",
       "components/research/useResearchPaymentReview.ts",
       "components/research/useResearchRequestInput.ts",
@@ -2238,6 +2268,7 @@
       "components/search-insights/drawers/useTrackFocus.ts",
       "components/search-insights/drawers/useVisitedMarks.ts",
       "components/search-insights/page-indexing/history-presentation.ts",
+      "components/search-insights/page-indexing/indexing-view-model.ts",
       "components/search-insights/page-indexing/inspection-label.ts",
       "components/search-insights/page-indexing/use-indexing-date.ts",
       "components/search-insights/page-indexing/use-indexing-urls.ts",
@@ -2258,6 +2289,7 @@
       "components/settings/advanced/advanced-settings-layout.ts",
       "components/settings/advanced/recent-audit-presentation.ts",
       "components/settings/api-keys/api-key-model.ts",
+      "components/settings/conversions/conversions-settings-layout.ts",
       "components/settings/developers/developer-settings-layout.ts",
       "components/settings/developers/useDeveloperActionError.ts",
       "components/settings/general/general-settings-layout.ts",
@@ -2271,6 +2303,7 @@
       "components/settings/shell/settings-layout.ts",
       "components/settings/shell/settings-search-index.ts",
       "components/settings/shell/settings-sections.ts",
+      "components/settings/tags/settings-tags-layout.ts",
       "components/settings/team/team-card-layout.ts",
       "components/settings/team/useTeamActionError.ts",
       "components/settings/tracking/search-sync-presentation.ts",
@@ -2300,6 +2333,7 @@
       "components/site-audit/site-audit-table-layout.ts",
       "components/site-audit/useSiteAuditProgress.ts",
       "components/timeline/timeline-note-form-schema.ts",
+      "components/tracking-loading/ai-visibility-layout.ts",
       "components/ui/confirm-copy.ts",
       "components/ui/data-link-styles.ts",
       "components/ui/data-table/data-table-column-order.ts",
@@ -2314,7 +2348,6 @@
       "components/ui/data-table/data-table-story-fixtures.ts",
       "components/ui/data-table/data-table-styles.ts",
       "components/ui/data-table/use-data-table.ts",
-      "components/ui/domain-icon-url.ts",
       "components/ui/filter-chip-styles.ts",
       "components/ui/header-icon-button-styles.ts",
       "components/ui/icon-well-styles.ts",
@@ -2332,6 +2365,7 @@
       "components/ui/toggle-control-styles.ts",
       "components/ui/toolbar-control-styles.ts",
       "components/ui/useLiveNow.ts",
+      "components/usage/usage-page-layout.ts",
       "components/usagekit/figure-sorting.ts",
       "components/usagekit/provider-rate-labels.ts",
       "components/usagekit/usage-table-format.ts"
@@ -2420,6 +2454,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/agent-reports/example/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/agent-reports/layout.tsx",
       "status": "pending"
     },
@@ -2435,12 +2474,32 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/ai-visibility/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/ai-visibility/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/alerts/loading.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/alerts/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/annotations/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/annotations/page.tsx",
       "status": "migrated"
     },
     {
@@ -2595,6 +2654,16 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/model-playground/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/model-playground/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/not-found.tsx",
       "status": "migrated"
     },
@@ -2610,13 +2679,13 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/prompt-playground/loading.tsx",
-      "status": "pending"
+      "path": "app/(regional)/app/(workspace)/[project]/pages/loading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "app/(regional)/app/(workspace)/[project]/prompt-playground/page.tsx",
-      "status": "pending"
+      "path": "app/(regional)/app/(workspace)/[project]/pages/page.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -2855,6 +2924,16 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/conversions/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/conversions/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/data-sources/loading.tsx",
       "status": "migrated"
     },
@@ -2921,6 +3000,16 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/notifications/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/tags/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/tags/page.tsx",
       "status": "migrated"
     },
     {
@@ -3255,6 +3344,21 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/admin/settings/features/error.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/settings/features/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/settings/features/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/admin/users/accounts/error.tsx",
       "status": "migrated"
     },
@@ -3401,6 +3505,16 @@
     {
       "kind": "ui-data",
       "path": "app/(regional)/onboarding/update-project.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/r/[token]/not-found.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/r/[token]/page.tsx",
       "status": "migrated"
     },
     {
@@ -3705,6 +3819,21 @@
     },
     {
       "kind": "render",
+      "path": "components/achievements/ThirtyDayCalendar.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/achievements/ThirtyDayCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/achievements/ThirtyDayMark.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/achievements/UnsubscribeAchievement.tsx",
       "status": "pending"
     },
@@ -3907,6 +4036,11 @@
       "kind": "ui-data",
       "path": "components/admin/instance-usage-test-fixture.ts",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/InstanceFeatures.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4205,6 +4339,11 @@
     },
     {
       "kind": "render",
+      "path": "components/agent-reports/AgentReportKindFilter.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/agent-reports/AgentReportsLayout.tsx",
       "status": "pending"
     },
@@ -4222,6 +4361,11 @@
       "kind": "render",
       "path": "components/agent-reports/AgentWorkspaceLoading.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/agent-reports/challenge-report-layout.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4330,6 +4474,51 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/ai-research/model-playground-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlayground.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundComposer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundMatrix.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundResults.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundSources.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/ai-research/useAiResearchCatalogRefresh.ts",
       "status": "migrated"
     },
@@ -4337,6 +4526,11 @@
       "kind": "ui-data",
       "path": "components/ai-research/useAiResearchSubmission.ts",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/ai-visibility-column-layout.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4350,8 +4544,178 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-tracking/AiTrackingPageContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-tracking/AiTrackingWorkspace.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityAddPromptDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityAnswerText.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityEnginesCells.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityEnginesContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityEnginesView.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewBrands.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewEngines.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewFilters.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewInsight.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewSpellings.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewStats.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewTrend.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityOverviewView.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptAnswer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptsDrawers.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptsShell.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptsTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityPromptsView.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourceActions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySources.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourcesContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourcesPlan.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourcesTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourcesTiles.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilitySourcesView.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiVisibilityTabs.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/BrandNamesDrawer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/BrandNameTokens.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/overview-labels.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/prompt-writes.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4380,6 +4744,11 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-tracking/PromptResearchPageContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-tracking/PromptResearchReview.tsx",
       "status": "migrated"
     },
@@ -4396,6 +4765,56 @@
     {
       "kind": "render",
       "path": "components/ai-tracking/PromptResearchTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchAnswerPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchBrandLookup.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchBrandLookupNav.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchLookupControls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchPaymentDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchQuestionColumns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchQuestionFilters.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchQuestionTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/ResearchRecentLookups.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/source-copy.ts",
       "status": "migrated"
     },
     {
@@ -4487,6 +4906,11 @@
       "kind": "render",
       "path": "components/ai-tracking/TrackingWorkspaceDrawers.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/use-research-lookup.ts",
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -4711,6 +5135,46 @@
     {
       "kind": "ui-data",
       "path": "components/analytics/use-onboarding-entry-analytics.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationDetail.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationLegendChip.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationMarkerBadge.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationNoteForm.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/annotations/annotations-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationsBoard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationsLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/annotations/AnnotationsRuler.tsx",
       "status": "migrated"
     },
     {
@@ -5094,12 +5558,127 @@
     },
     {
       "kind": "render",
+      "path": "components/challenge-report/ChallengeCalendar.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeDayOne.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeIntroSteps.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportLessonsForm.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportLists.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportMeters.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportScreen.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportTiles.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ChallengeReportView.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ProjectChallengeCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ProjectChallengeOpened.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/ProjectChallengeVisit.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/challenge-report/report-figures.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/challenge-report/use-public-report-motion.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/charts/chart-marker-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/charts/chart-marker-preference.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/charts/chart-marker-title.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/charts/ChartMarkerGuides.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/charts/ChartMarkerLegend.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/charts/ChartMarkerPins.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/charts/SeriesTooltipContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/charts/Sparkline.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "components/charts/TimeSeriesChart.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/charts/TimeSeriesTooltips.tsx",
       "status": "migrated"
     },
     {
@@ -5410,6 +5989,11 @@
     {
       "kind": "render",
       "path": "components/competitors/ShareOfVoiceCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/conversions/ConversionSourceSwitch.tsx",
       "status": "migrated"
     },
     {
@@ -6534,6 +7118,11 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/FetchAiOverview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/filters/DimensionSwitcher.tsx",
       "status": "migrated"
     },
@@ -6666,6 +7255,11 @@
       "kind": "ui-data",
       "path": "components/keywords/grid/keyword-scope-summary.ts",
       "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordAiOverviewColumns.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -6955,6 +7549,11 @@
     {
       "kind": "ui-data",
       "path": "components/keywords/grid/use-personal-keyword-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/grid/use-rank-tracker-view-columns.ts",
       "status": "migrated"
     },
     {
@@ -7288,6 +7887,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/keywords/ResolveSerpUrls.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/keywords/retrieved-results-picker-model.ts",
       "status": "migrated"
@@ -7394,11 +7998,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/serp-playground/PlaygroundHistoryDialog.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/serp-playground/PlaygroundProviders.tsx",
       "status": "pending"
     },
@@ -7429,11 +8028,6 @@
     },
     {
       "kind": "render",
-      "path": "components/keywords/serp-playground/RecentPlaygroundQueries.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/keywords/serp-playground/SavePlaygroundResult.tsx",
       "status": "migrated"
     },
@@ -7445,6 +8039,11 @@
     {
       "kind": "render",
       "path": "components/keywords/serp-playground/SerpPlayground.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/serp-playground/SerpPlaygroundHistory.tsx",
       "status": "migrated"
     },
     {
@@ -7465,11 +8064,6 @@
     {
       "kind": "render",
       "path": "components/keywords/SerpFeatureIcon.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/ResolveSerpUrls.tsx",
       "status": "migrated"
     },
     {
@@ -8356,6 +8950,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/overview/DashboardWidgetLink.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/overview/data-source-status.ts",
       "status": "migrated"
@@ -8393,6 +8992,11 @@
     {
       "kind": "render",
       "path": "components/overview/KpiCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/overview/OrganicConversionsCard.tsx",
       "status": "migrated"
     },
     {
@@ -8508,6 +9112,151 @@
     {
       "kind": "render",
       "path": "components/overview/ProjectDashboardMessages.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/overview/SeoCostCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/pages/page-tag-form.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesByTagPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesCompareChart.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesComparePanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesExistingPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesSnapshotBanner.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PagesSnapshotBaseline.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PageTagDrawer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/PageTagRuleFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/project-pages-columns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/project-pages-conversions-column.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/project-pages-cwv-column.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/pages/project-pages-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/project-pages-status-column.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesAllPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesBody.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesEmpty.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesFilters.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesOverlays.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesPasteDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesScreen.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesSnapshotButton.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesSources.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesTabs.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPagesToolbar.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/pages/ProjectPageTagsCell.tsx",
       "status": "migrated"
     },
     {
@@ -8862,7 +9611,82 @@
     },
     {
       "kind": "render",
-      "path": "components/research/RecentResearchSearches.tsx",
+      "path": "components/report-sharing/PublicReportScreen.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/PublicReportShare.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportCardDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportCardPreview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportExampleThumbnail.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportResultCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportShareButton.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportShareDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/report-sharing/ReportSharePanels.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research-history/HistoryDrawer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research-history/HistoryMeta.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research-history/HistoryRowList.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research-history/HistorySuggestions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research-history/ResearchHistoryButton.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/research-history/toggle-history-pin.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research/KeywordResearchHistory.tsx",
       "status": "migrated"
     },
     {
@@ -8878,11 +9702,6 @@
     {
       "kind": "ui-data",
       "path": "components/research/research-payment-estimates.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/research/research-relative-time.ts",
       "status": "migrated"
     },
     {
@@ -9023,11 +9842,6 @@
     {
       "kind": "render",
       "path": "components/research/ResearchWorkspaceOutcome.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/research/useRecentSearches.ts",
       "status": "migrated"
     },
     {
@@ -9341,9 +10155,24 @@
       "status": "pending"
     },
     {
+      "kind": "ui-data",
+      "path": "components/search-insights/page-indexing/indexing-view-model.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/search-insights/page-indexing/IndexingDrawer.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingDrops.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingGroupTiles.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -9364,6 +10193,16 @@
       "kind": "render",
       "path": "components/search-insights/page-indexing/IndexingOverview.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingProgressCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/IndexingReasonList.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -9424,6 +10263,11 @@
       "kind": "render",
       "path": "components/search-insights/page-indexing/PageIndexingTab.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/page-indexing/SearchConsoleSitemapsTab.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -9542,7 +10386,17 @@
     },
     {
       "kind": "render",
+      "path": "components/search-insights/SearchInsightsClicksChart.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/search-insights/SearchInsightsContextCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/search-insights/SearchInsightsConversionsCard.tsx",
       "status": "migrated"
     },
     {
@@ -9772,6 +10626,36 @@
     },
     {
       "kind": "render",
+      "path": "components/settings/conversions/ConversionComparisonCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/conversions/ConversionGoalsCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/settings/conversions/conversions-settings-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/conversions/ConversionSourcesCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/conversions/ConversionsSettings.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/conversions/ConversionsSettingsLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/settings/data-sources/DataSourcesSettingsContent.tsx",
       "status": "migrated"
     },
@@ -9878,11 +10762,6 @@
     {
       "kind": "render",
       "path": "components/settings/general/ProjectDetailsCard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/general/TagsSegmentsCard.tsx",
       "status": "migrated"
     },
     {
@@ -10043,6 +10922,31 @@
     {
       "kind": "render",
       "path": "components/settings/shell/SettingsSubnav.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/settings/tags/settings-tags-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/tags/SettingsTagsDialogs.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/tags/SettingsTagsLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/tags/SettingsTagsSection.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/tags/SettingsTagsTable.tsx",
       "status": "migrated"
     },
     {
@@ -10581,6 +11485,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/site-audit/CoreWebVitalsCard.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/site-audit/site-audit-table-layout.ts",
       "status": "pending"
@@ -10646,6 +11555,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/tracking-loading/ai-visibility-layout.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/tracking-loading/AiTrackingLoading.tsx",
       "status": "migrated"
@@ -10653,6 +11567,11 @@
     {
       "kind": "render",
       "path": "components/tracking-loading/AiVisibilityLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/tracking-loading/AiVisibilityRouteLoading.tsx",
       "status": "migrated"
     },
     {
@@ -10946,11 +11865,6 @@
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/ui/domain-icon-url.ts",
-      "status": "migrated"
-    },
-    {
       "kind": "render",
       "path": "components/ui/DomainIconLayer.tsx",
       "status": "migrated"
@@ -11063,6 +11977,11 @@
     {
       "kind": "render",
       "path": "components/ui/Input.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/IntroductionExplainer.tsx",
       "status": "migrated"
     },
     {
@@ -11251,6 +12170,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/ui/StatTile.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/ui/status-chip-mapping.ts",
       "status": "excluded"
@@ -11408,6 +12332,51 @@
     {
       "kind": "render",
       "path": "components/ui/ZonedTime.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/cost-money.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/CostDrawer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/CostDrawerFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/CostLiveSummary.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/CostSubscriptions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/CostTiles.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/usage/usage-page-layout.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/UsageCosts.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usage/UsagePageLoading.tsx",
       "status": "migrated"
     },
     {
@@ -11604,11 +12573,6 @@
       "kind": "render",
       "path": "components/usagekit/usage-table.tsx",
       "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/FetchAiOverview.tsx",
-      "status": "migrated"
     }
   ]
 }

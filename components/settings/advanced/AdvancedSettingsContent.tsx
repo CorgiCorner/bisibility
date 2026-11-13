@@ -52,7 +52,7 @@ export function AdvancedSettingsContent({
   project,
 }: Readonly<AdvancedSettingsContentProps>) {
   return (
-    <div className="flex max-w-[760px] flex-col gap-3.5" data-advanced-settings="">
+    <div className="flex flex-col gap-3.5 lg:max-w-[760px]" data-advanced-settings="">
       {auditEntries ? (
         <RecentAuditCard entries={auditEntries} projectId={project.projectId} />
       ) : null}

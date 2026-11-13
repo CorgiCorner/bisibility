@@ -1,7 +1,7 @@
 export function ActionPaymentLoading({ label }: Readonly<{ label: string }>) {
   return (
     <div role="status" aria-live="polite" className="grid gap-3">
-      <p className="m-0 text-ui-xs text-fg-muted">{label}</p>
+      <p className="m-0 text-ui-caption text-fg-muted">{label}</p>
       <div
         aria-hidden
         data-payment-skeleton

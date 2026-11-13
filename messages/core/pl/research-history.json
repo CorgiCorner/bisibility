@@ -1,0 +1,31 @@
+{
+  "researchHistory": {
+    "aiOverview": "Przegląd AI",
+    "all": "Wszystkie",
+    "cached": "z pamięci",
+    "checks": "{count, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}}",
+    "close": "Zamknij historię",
+    "desktop": "Komputer",
+    "emptyChecks": "Sprawdzenia z tego projektu pojawią się tutaj.",
+    "emptyRuns": "Uruchomienia z tego projektu pojawią się tutaj.",
+    "emptyTitle": "Brak historii",
+    "error": "Nie udało się wczytać historii.",
+    "loadOlderChecks": "Wczytaj starsze sprawdzenia",
+    "loadOlderRuns": "Wczytaj starsze uruchomienia",
+    "loading": "Wczytywanie historii",
+    "mobile": "Telefon",
+    "openAllRuns": "Otwórz wszystkie uruchomienia jako tabelę",
+    "pin": "Przypnij {title}",
+    "pinned": "Przypięte {count}",
+    "retry": "Spróbuj ponownie",
+    "runs": "{count, plural, one {# uruchomienie} few {# uruchomienia} many {# uruchomień} other {# uruchomienia}}",
+    "searchKeywords": "Szukaj słów kluczowych",
+    "searchLabel": "Szukaj w historii",
+    "searchPrompts": "Szukaj promptów",
+    "suggestions": "Ostatnie",
+    "title": "Historia",
+    "today": "Dzisiaj",
+    "unpin": "Odepnij {title}",
+    "yesterday": "Wczoraj"
+  }
+}

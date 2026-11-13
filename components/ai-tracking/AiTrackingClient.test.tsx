@@ -1,6 +1,7 @@
 import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithFeatureMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
+import { EMPTY_TRACKING_ENGINE_PRICES } from "@/lib/ai-tracking/tracking-engines";
 import en from "@/messages/core/en/shared.json";
 import es from "@/messages/core/es-ES/shared.json";
 import ja from "@/messages/core/ja/shared.json";
@@ -48,7 +49,11 @@ it.each(locales.flatMap(([locale, messages]) => paths.map((path) => ({ locale, m
   "budget regression: localizes $path failures in $locale",
   async ({ locale, messages, path }) => {
     renderWithFeatureMessages(
-      <AiTrackingClient projectId="prj_fixture" data={trackingWorkspaceFixture} />,
+      <AiTrackingClient
+        data={trackingWorkspaceFixture}
+        enginePrices={EMPTY_TRACKING_ENGINE_PRICES}
+        projectId="prj_fixture"
+      />,
       { locale, messages },
     );
     const { actions } = mocks.workspace.mock.calls[0][0] as { actions: TrackingWorkspaceActions };
@@ -67,10 +72,19 @@ it.each(locales.flatMap(([locale, messages]) => paths.map((path) => ({ locale, m
 
 it("points AI schedules at the common project Schedules page", () => {
   renderWithFeatureMessages(
-    <AiTrackingClient projectId="prj_fixture" data={trackingWorkspaceFixture} />,
+    <AiTrackingClient
+      data={trackingWorkspaceFixture}
+      enginePrices={EMPTY_TRACKING_ENGINE_PRICES}
+      projectId="prj_fixture"
+    />,
     { messages: en },
   );
-  expect(mocks.workspace.mock.calls[0][0]).toMatchObject({
+  const props = mocks.workspace.mock.calls[0][0];
+  expect(props).toMatchObject({
+    initialDrawer: null,
+    initialTab: "prompts",
+    researchHref: "/app/prj_fixture/ai-visibility?tab=research",
     schedulesHref: "/app/prj_fixture/schedules",
   });
+  expect(props.headerExtra).toBeUndefined();
 });

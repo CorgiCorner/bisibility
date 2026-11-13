@@ -1,5 +1,6 @@
 import {
   clicksToSessionsKpi,
+  conversionsKpi,
   searchInsightsKpis,
   windowTotals,
 } from "@/lib/search-insights/queries/kpis-model";
@@ -60,6 +61,22 @@ export const ClicksToSessionsNoBaseline: Story = {
 const zeroClicksTotals = {
   current: windowTotals({ clicks: 0, impressions: 152_480, positionWeight: 2_653_152 }),
   previous: reconciliationTotals.previous,
+};
+
+export const WithConversions: Story = {
+  args: {
+    conversions: {
+      kind: "value",
+      kpi: conversionsKpi({
+        current: 18,
+        goalCount: 2,
+        previous: 12,
+        source: "plausible",
+      }),
+    },
+    extra: clicksToSessionsKpi(reconciliationTotals, reconciliationSessions),
+    kpis: reconciliationKpis,
+  },
 };
 
 export const ClicksToSessionsHidden: Story = {

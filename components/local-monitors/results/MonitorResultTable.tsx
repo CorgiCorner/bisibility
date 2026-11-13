@@ -17,7 +17,7 @@ export function MonitorResultTable({
       id: "point",
       header: t("point"),
       cell: ({ row }) => (
-        <Button variant="ghost" onClick={() => onPoint(row.original.id)}>
+        <Button size="sm" variant="ghost" onClick={() => onPoint(row.original.id)}>
           {row.original.ordinal + 1}
         </Button>
       ),

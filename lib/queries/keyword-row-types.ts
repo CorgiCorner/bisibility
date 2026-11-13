@@ -91,6 +91,8 @@ export type KeywordRow = {
   dataProvider: string | null;
   ctr: number | null;
   device: string;
+  /** Set when the list query already proved an AI Overview block on the latest check. */
+  aiOverviewShown?: boolean;
   difficulty: number;
   difficultyKnown?: boolean;
   engine: string;

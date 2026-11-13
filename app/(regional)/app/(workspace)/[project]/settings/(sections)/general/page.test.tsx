@@ -41,19 +41,10 @@ vi.mock("@/components/settings/general/DataCacheSettings", () => ({
   ),
 }));
 vi.mock("@/components/settings/general/GeneralSettingsSection", () => ({
-  GeneralSettingsSection: (props: {
-    canCreateTags: boolean;
-    canDeleteTags: boolean;
-    canEditProject: boolean;
-    project: { name: string };
-    tags: { label: string }[];
-  }) => (
+  GeneralSettingsSection: (props: { canEditProject: boolean; project: { name: string } }) => (
     <div
-      data-can-create-tags={props.canCreateTags}
-      data-can-delete-tags={props.canDeleteTags}
       data-can-edit-project={props.canEditProject}
       data-general-project-name={props.project.name}
-      data-general-tag-count={props.tags.length}
     />
   ),
 }));
@@ -174,7 +165,6 @@ describe("GeneralSettingsPage", () => {
 
     const section = document.querySelector("[data-general-project-name]");
     expect(section).toHaveAttribute("data-general-project-name", "Example");
-    expect(section).toHaveAttribute("data-general-tag-count", "1");
     expect(section).toHaveAttribute("data-can-edit-project", "true");
   });
 
@@ -187,8 +177,6 @@ describe("GeneralSettingsPage", () => {
     );
     const section = document.querySelector("[data-general-project-name]");
     expect(section).toHaveAttribute("data-can-edit-project", "true");
-    expect(section).toHaveAttribute("data-can-create-tags", "true");
-    expect(section).toHaveAttribute("data-can-delete-tags", "false");
   });
 
   it("does not grant General edits from a stronger global role", async () => {
@@ -204,12 +192,10 @@ describe("GeneralSettingsPage", () => {
 
     const section = document.querySelector("[data-general-project-name]");
     expect(section).toHaveAttribute("data-can-edit-project", "false");
-    expect(section).toHaveAttribute("data-can-create-tags", "false");
-    expect(section).toHaveAttribute("data-can-delete-tags", "false");
   });
 
   it.each(["migration_hold", "migrated"])(
-    "keeps General project and tag mutations read-only while the project is %s",
+    "keeps General project edits read-only while the project is %s",
     async (writeMode) => {
       mocks.getSettings.mockResolvedValue({
         project: {
@@ -225,8 +211,6 @@ describe("GeneralSettingsPage", () => {
 
       const section = document.querySelector("[data-general-project-name]");
       expect(section).toHaveAttribute("data-can-edit-project", "false");
-      expect(section).toHaveAttribute("data-can-create-tags", "false");
-      expect(section).toHaveAttribute("data-can-delete-tags", "false");
     },
   );
 

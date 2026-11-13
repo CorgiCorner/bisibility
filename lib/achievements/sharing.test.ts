@@ -55,4 +55,27 @@ describe("explicit achievement sharing", () => {
     });
     expect(await readPublicAchievement("a".repeat(43))).toBeNull();
   });
+  it("publishes the 30-day badge on its definition version and resolves that public kind", async () => {
+    mock.updateMany.mockResolvedValue({ count: 1 });
+    expect(
+      await setAchievementSharing("owner-a", { kind: "thirty_days", published: true }),
+    ).toMatchObject({
+      kind: "saved",
+    });
+    expect(mock.updateMany.mock.calls[0][0].where).toMatchObject({
+      userId: "owner-a",
+      kind: "thirty_days",
+      definitionVersion: 1,
+    });
+    mock.findUnique.mockResolvedValue({
+      kind: "thirty_days",
+      earnedDay: "2026-12-29",
+      definitionVersion: 1,
+      user: { deactivatedAt: null },
+    });
+    expect(await readPublicAchievement("b".repeat(43))).toEqual({
+      kind: "thirty_days",
+      earnedDay: "2026-12-29",
+    });
+  });
 });

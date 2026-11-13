@@ -8,6 +8,7 @@ export const providerIdSchema = z.enum([
   "serpapi",
   "local-sequence",
   "gsc",
+  "pagespeed",
   "ga4",
   "plausible",
 ]);

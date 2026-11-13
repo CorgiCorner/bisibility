@@ -65,6 +65,7 @@ export function onboardingSteps(
 export const totalOnboardingSteps = 4;
 
 export type OnboardingFlowState = {
+  challenge?: boolean;
   devices?: readonly SerpDevice[];
   locations?: readonly string[];
   projectId?: string | null;
@@ -90,6 +91,8 @@ export const onboardingDefaults = {
 
 export function buildOnboardingStepHref(step: OnboardingStepNumber, state?: OnboardingFlowState) {
   const params = new URLSearchParams({ step: String(step) });
+
+  if (state?.challenge) params.set("challenge", "1");
 
   if (state?.projectId) {
     params.set("projectId", state.projectId);

@@ -308,6 +308,8 @@
       "view": "Widok",
       "general": "Ogólne wyniki organiczne",
       "local": "Lokalne wyniki Google",
+      "ai_overviews": "Przeglądy AI",
+      "new": "Nowość",
       "subject": "Firma",
       "chooseSubject": "Wybierz przypisaną firmę",
       "setupBusiness": "Zarządzaj firmami i przypisaniami",
@@ -317,8 +319,9 @@
       "applyTime": "Zastosuj czas",
       "latest": "Najnowsze",
       "invalidTime": "Wybierz prawidłowy czas UTC nie późniejszy niż teraz.",
-      "unsupportedFilters": "Filtry zmiany pozycji organicznej, URL i funkcji SERP są niedostępne w widoku lokalnym. Wyczyść je, aby zobaczyć targety lokalne.",
+      "unsupportedFilters": "Filtry zmiany pozycji organicznej, URL, funkcji SERP i przeglądów AI są niedostępne w widoku lokalnym. Wyczyść je, aby zobaczyć targety lokalne.",
       "localScope": "Wyniki lokalne dotyczą wybranej firmy. Porównanie i eksport lokalny nie są jeszcze dostępne.",
+      "aiOverviewScope": "Ten widok czyta ostatnie zapisane sprawdzenie. Nie porównuje pozycji.",
       "membership": "Tabela korzysta z obecnej listy fraz. Data zmienia okres wyników, ale nie przywraca dawnej listy fraz.",
       "snapshot": "Odczyt: {date} UTC",
       "state": {
@@ -332,6 +335,20 @@
       "minute": "Minuta",
       "comparisonLabel": "Porównaj",
       "comparisonHelp": "Porównuje wynik dla wybranej daty z pomiarem co najmniej {days} dni wcześniejszym. To nie jest średnia. Bez odpowiedniego starszego pomiaru nie ma porównania."
+    },
+    "aiOverviewList": {
+      "overview": "Przegląd AI",
+      "yourDomain": "Twoja domena",
+      "citedPage": "Cytowana strona",
+      "shown": "Widoczny",
+      "notShown": "Niewidoczny",
+      "notChecked": "Niesprawdzone",
+      "citedAt": "Cytowana · #{position}",
+      "notCited": "Niecytowana",
+      "notAvailable": "brak danych",
+      "none": "brak",
+      "viewOverview": "Pokaż przegląd",
+      "incompleteHint": "Zapisany przegląd nie zawiera listy źródeł, więc cytowania nie da się potwierdzić. Niecytowana oznacza tylko, że domeny nie było wśród zwróconych źródeł."
     },
     "localList": {
       "expandTargets": "Rozwiń targety: {count}",

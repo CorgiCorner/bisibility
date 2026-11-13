@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 export const Editable: Story = {
   args: {
     canEdit: true,
-    enabledExperimentalModules: ["timeline"],
+    enabledExperimentalModules: ["competitors"],
     projectId: "prj_story",
     updateExperimentalModules: async ({ enabledExperimentalModules }) => ({
       enabledExperimentalModules,
@@ -37,7 +37,7 @@ export const Editable: Story = {
 export const ReadOnly: Story = {
   args: {
     canEdit: false,
-    enabledExperimentalModules: ["timeline"],
+    enabledExperimentalModules: ["competitors"],
     projectId: "prj_story",
     updateExperimentalModules: async ({ enabledExperimentalModules }) => ({
       enabledExperimentalModules,

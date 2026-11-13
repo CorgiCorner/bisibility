@@ -1,0 +1,350 @@
+{
+  "projectPages": {
+    "bulk": {
+      "add": "Otaguj zaznaczone",
+      "choose": "Tag",
+      "check": "Sprawdź podstawowe wskaźniki",
+      "clear": "Wyczyść",
+      "remove": "Usuń tag",
+      "selected": "{count, plural, one {# zaznaczony} few {# zaznaczone} many {# zaznaczonych} other {# zaznaczonego}}"
+    },
+    "byTag": {
+      "addToPages": "Dodaj do stron",
+      "cancel": "Anuluj",
+      "columns": {
+        "actions": "Akcje",
+        "existing": "Istniejące",
+        "keywords": "Słowa kluczowe",
+        "new": "Nowe",
+        "removed": "Usunięte",
+        "pages": "Strony",
+        "rule": "Reguła",
+        "tag": "Tag",
+        "type": "Typ"
+      },
+      "edit": "Edytuj regułę",
+      "empty": "Na stronach nie ma jeszcze tagów.",
+      "hide": "Ukryj",
+      "keywordOnly": "{count, plural, one {jeszcze # tag jest tylko na słowach kluczowych: {names}} few {jeszcze # tagi są tylko na słowach kluczowych: {names}} many {jeszcze # tagów jest tylko na słowach kluczowych: {names}} other {jeszcze # tagu jest tylko na słowach kluczowych: {names}}}",
+      "kind": {
+        "manual": "Ręcznie",
+        "path_pattern": "Wzorzec ścieżki",
+        "sitemap": "Mapa witryny",
+        "url_list": "Lista adresów"
+      },
+      "lead": "Jeden zestaw tagów dla całego projektu: ten sam tag może być na stronach i na słowach kluczowych.",
+      "manage": "Zarządzaj tagami w Ustawieniach",
+      "remove": "Usuń ze stron",
+      "removeBody": "Tag zostaje na słowach kluczowych. Powiązania ze stronami i reguła znikają.",
+      "removeConfirm": "Usuń ze stron",
+      "removeTitle": "Usuń {name} ze stron",
+      "ruleHand": "dodany ręcznie",
+      "ruleUrls": "{count, plural, one {# adres} few {# adresy} many {# adresów} other {# adresu}}",
+      "show": "Pokaż",
+      "tableLabel": "Tagi na stronach"
+    },
+    "columns": {
+      "aiCitations": "Cytowania AI",
+      "clicks": "Kliknięcia",
+      "conversions": "Konw.",
+      "conversionsConnect": "Podłącz analitykę",
+      "conversionsEmpty": "Ta strona nie ma konwersji w tym okresie.",
+      "conversionsSource": "{source}",
+      "cwv": "CWV",
+      "impressions": "Wyśw.",
+      "index": "Indeks",
+      "keywords": "Słowa kluczowe",
+      "openUrl": "Otwórz {path}",
+      "page": "Strona",
+      "position": "Poz.",
+      "sessions": "Sesje",
+      "sitemap": "Mapa witryny",
+      "status": "Status",
+      "tags": "Tagi",
+      "tagsMore": "+{count, number}"
+    },
+    "compare": {
+      "addNote": "Dodaj notatkę",
+      "annotationLabel": "Moment zmiany",
+      "annotationOption": "Adnotacja · {date} · {title}",
+      "caveat": "To pokazuje kierunek, nie dowód. Inne zdarzenia, takie jak aktualizacje Google, wpływają na obie grupy. Zobacz znaczniki G.",
+      "changed": "Zmienione",
+      "chartLabel": "Zmiana zindeksowana",
+      "chooseAnnotation": "Wybierz adnotację",
+      "dayOf": "Dzień {day, number} z 28. Procentowa zmiana {metric} wobec {day, plural, one {# dnia} few {# dni} many {# dni} other {# dni}} przed zmianą.",
+      "differenceLabel": "Różnica",
+      "emptyAnnotations": "Nie ma jeszcze adnotacji.",
+      "emptyAnnotationsAction": "Dodaj notatkę",
+      "emptyOverlap": "Te tagi obejmują te same strony, więc nie ma grupy bez zmiany.",
+      "emptyTags": "Nie ma jeszcze tagów na stronach.",
+      "emptyTagsAction": "Otaguj strony",
+      "finished": "Zakończone",
+      "forecastLabel": "Oczekiwane do tej pory",
+      "forecastUnavailable": "Prognoza nie jest dostępna w tej wersji",
+      "madeToday": "Zmiana została wprowadzona dzisiaj. Wyniki zaczynają się jutro.",
+      "groupDetail": "{count, plural, one {# strona} few {# strony} many {# stron} other {# strony}}, {metric} wobec okresu przed zmianą",
+      "metric": {
+        "clicks": "Kliknięcia",
+        "impressions": "Wyświetlenia",
+        "sessions": "Sesje"
+      },
+      "metricLabel": "Metryka",
+      "metricOption": "{metric} · {source}",
+      "monitoring": "Obserwacja",
+      "notEnough": "Za mało danych",
+      "notEnoughClicks": "Za mało danych o kliknięciach, spróbuj wyświetleń",
+      "overlap": "{count, plural, one {# strona jest w obu tagach i nie wchodzi do żadnej grupy.} few {# strony są w obu tagach i nie wchodzą do żadnej grupy.} many {# stron jest w obu tagach i nie wchodzi do żadnej grupy.} other {# strony jest w obu tagach i nie wchodzi do żadnej grupy.}}",
+      "percent": "{direction, select, positive {+{percent, number}%} negative {{percent, number}%} other {0%}}",
+      "points": "{direction, select, positive {+{points, number} pkt wobec stron bez zmiany} negative {{points, number} pkt wobec stron bez zmiany} other {0 pkt wobec stron bez zmiany}}",
+      "seriesChanged": "Zmienione strony",
+      "seriesUnchanged": "Strony bez zmiany",
+      "source": {
+        "analytics": "główna analityka",
+        "search_console": "Search Console"
+      },
+      "tagOption": "Tag: {name} · {pages, plural, one {# strona} few {# strony} many {# stron} other {# strony}}",
+      "unchanged": "Bez zmiany",
+      "unconnected": "Połącz {source}, aby użyć tej metryki",
+      "waiting": "Oczekiwanie"
+    },
+    "cwv": {
+      "checked": "Sprawdzono {count, number} stron.",
+      "error": {
+        "invalid_key": "Klucz API PageSpeed Insights został odrzucony.",
+        "no_sample": "Wybierz strony należące do tego projektu.",
+        "not_connected": "Połącz PageSpeed Insights przed sprawdzeniem.",
+        "quota": "Wyczerpano limit PageSpeed Insights. Spróbuj ponownie później."
+      },
+      "milliseconds": "{value} ms",
+      "needsWork": "Do poprawy",
+      "none": "-",
+      "pass": "Zaliczone",
+      "poor": "Słabe",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Dane terenowe od prawdziwych użytkowników",
+        "lab": "Szacunek laboratoryjny",
+        "origin": "Dane terenowe domeny"
+      },
+      "tooltip": "LCP {lcp}, INP {inp}, CLS {cls}. {source}"
+    },
+    "drawer": {
+      "autoJoin": "Strony dodane później dołączają automatycznie",
+      "cancel": "Anuluj",
+      "errors": {
+        "exclude_invalid": "Wpisz wzorzec wykluczenia zaczynający się od /.",
+        "invalid_url": "Wpisz ścieżkę albo adres tej witryny.",
+        "must_start_with_slash": "Wzorzec musi zaczynać się od /.",
+        "required": "Wpisz wzorzec.",
+        "sitemap_required": "Wybierz mapę witryny.",
+        "tag_required": "Wpisz nazwę tagu.",
+        "too_long": "Ten wzorzec jest za długi.",
+        "too_many_urls": "Reguła może zawierać najwyżej 2 000 adresów.",
+        "too_many_wildcards": "Wzorzec może zawierać najwyżej 16 symboli wieloznacznych."
+      },
+      "exclude": "Wyklucz",
+      "excludeAdd": "Dodaj",
+      "excludePlaceholder": "/draft/*",
+      "excludeRemove": "Usuń {pattern}",
+      "handNote": "Żadna reguła nie wybiera stron. Dodaj ten tag do stron ręcznie.",
+      "keywordHint": "{name} jest już na {count, plural, one {# słowie kluczowym} few {# słowach kluczowych} many {# słowach kluczowych} other {# słowa kluczowego}}",
+      "pattern": "Wzorzec",
+      "patternHint": "'{slug}' = jeden segment ścieżki. * = cokolwiek.",
+      "preview": "Pasuje do {count, plural, one {# strony} few {# stron} many {# stron} other {# strony}}",
+      "previewFailed": "Nie udało się wczytać podglądu.",
+      "previewMore": "i jeszcze {count, number}",
+      "rule": "Reguła",
+      "save": "Zapisz tag",
+      "saveFailed": "Nie udało się zapisać tagu.",
+      "sitemap": "Mapa witryny",
+      "sitemapChoose": "Wybierz mapę witryny",
+      "sitemapEmpty": "Nie znamy jeszcze adresu mapy witryny.",
+      "tag": "Tag",
+      "tagHint": "Wybierz istniejący tag albo wpisz nowy.",
+      "tagKeywords": "Otaguj też słowa kluczowe, które celują w te strony",
+      "titleEdit": "Edytuj {name}",
+      "titleNew": "Nowy tag",
+      "urls": "Lista adresów",
+      "urlsPlaceholder": "/docs"
+    },
+    "empty": {
+      "description": "Strona pojawia się tutaj, gdy źródło zobaczy jej adres. Te źródła mogą dostarczać strony.",
+      "filtered": "Żadna strona nie pasuje do tych filtrów.",
+      "title": "Nie ma jeszcze stron"
+    },
+    "existing": {
+      "allTags": "Wszystkie tagi",
+      "columns": {
+        "existing": "Istniejące",
+        "existingMetric": "Istniejące {metric}",
+        "fresh": "Nowe",
+        "freshMetric": "Nowe {metric}",
+        "share": "Udział nowych",
+        "tag": "Tag"
+      },
+      "disabled": "{source} nie jest połączone",
+      "disabledConversions": "Podłącz analitykę, aby pokazać konwersje na wykresie",
+      "emptyBody": "Migawka to data i lista adresów, które istniały tego dnia. Metryki zostają przy każdym źródle, więc każdą można podzielić na strony z dnia migawki i strony dodane później.",
+      "emptyTitle": "Nie ma jeszcze migawki stron",
+      "metric": {
+        "ai_cites": "Cytowania AI",
+        "clicks": "Kliknięcia",
+        "conversions": "Konwersje",
+        "option": "{metric} · {source}",
+        "sessions": "Sesje"
+      },
+      "metricLabel": "Metryka",
+      "noSource": "Połącz Search Console, analitykę albo widoczność AI, aby porównać strony z dnia migawki ze stronami dodanymi później.",
+      "rolling": "Sesje używają ostatniego okna 28 dni, a nie sumy dziennej.",
+      "series": {
+        "existing": "Istniejące strony",
+        "fresh": "Nowe strony",
+        "removed": "Usunięte strony"
+      },
+      "share": "{share, number}%",
+      "span": {
+        "28": "Ostatnie 28 dni",
+        "since": "Od migawki"
+      },
+      "spanLabel": "Okres",
+      "summaryExisting": "Istniejące strony {total, number} · {pages, number} z {snapshot, number} stron",
+      "summaryFresh": "Nowe strony {total, number} · {pages, number} stron dodanych po migawce",
+      "summaryRemoved": "Usunięte {total, number} · {pages, number} stron zniknęło z mapy witryny",
+      "tableLabel": "Istniejące i nowe strony według tagu",
+      "title": "{metric} narastająco od migawki"
+    },
+    "filters": {
+      "any": "Dowolny",
+      "clear": "Wyczyść filtry",
+      "index": "Indeks",
+      "label": "Filtry",
+      "sitemap": "Mapa witryny",
+      "source": "Źródło",
+      "title": "Filtry",
+      "coverage": "Stan pokrycia",
+      "cwv": "Podstawowe wskaźniki internetowe",
+      "cwvValue": {
+        "missing": "Niesprawdzone",
+        "needs_work": "Do poprawy",
+        "pass": "Zaliczone",
+        "poor": "Słabe"
+      },
+      "clearCoverage": "Wyczyść stan pokrycia {reason}"
+    },
+    "indexGroup": {
+      "indexed": "W indeksie",
+      "inspection_failed": "Inspekcja nieudana",
+      "not_checked": "Niesprawdzona",
+      "not_indexed": "Poza indeksem"
+    },
+    "columnNotConnected": "Brak połączenia: {source}",
+    "keywordsLink": "Słowa kluczowe dla {path}",
+    "loadFailed": "Nie udało się wczytać listy stron.",
+    "missing": "Brak danych {source} dla tej strony.",
+    "paste": {
+      "added": "Dodano {count, number}",
+      "cancel": "Anuluj",
+      "description": "Jeden adres URL lub ścieżka w wierszu, do 500 wierszy.",
+      "existing": "{count, number} już na liście",
+      "label": "Adresy URL",
+      "line": "Wiersz {line, number}: {value} - {reason}",
+      "placeholder": "/docs",
+      "rejected": "Odrzucone wiersze",
+      "submit": "Dodaj strony",
+      "title": "Wklej adresy URL"
+    },
+    "plausibleWindow": "Plausible trzyma ruchome okno 28 dni.",
+    "providers": {
+      "ga4": "GA4",
+      "plausible": "Plausible"
+    },
+    "reasons": {
+      "foreign": "Ten adres jest na innej witrynie.",
+      "invalid": "Podaj adres URL albo ścieżkę na tej witrynie.",
+      "missingDomain": "Ten projekt nie ma domeny witryny.",
+      "tooMany": "W jednej aktualizacji można dodać tylko 50 000 adresów.",
+      "tooManyLines": "Wklej najwyżej 500 wierszy."
+    },
+    "refresh": {
+      "done": "Odświeżono strony ({count, number}).",
+      "failed": "Nie udało się odświeżyć stron."
+    },
+    "search": {
+      "label": "Szukaj po ścieżce",
+      "placeholder": "/docs"
+    },
+    "segments": {
+      "all": "Wszystkie",
+      "inSnapshot": "W migawce",
+      "listed": "W mapie witryny",
+      "new": "Nowe",
+      "notListed": "Poza mapą witryny",
+      "removed": "Usunięte"
+    },
+    "snapshot": {
+      "bannerCount": "{count, number} stron",
+      "bannerRegistry": "Projekt nie miał mapy witryny, więc migawka obejmuje każdą stronę w rejestrze. Metryki nie są kopiowane. Każde źródło trzyma własną historię dzienną.",
+      "bannerSitemap": "Metryki nie są kopiowane. Każde źródło trzyma własną historię dzienną, więc każdą metrykę można podzielić na strony z tego dnia i strony dodane później.",
+      "bannerTitle": "Migawka {label} · {date}",
+      "button": "Zapisz migawkę stron",
+      "cancel": "Anuluj",
+      "confirmBody": "Nowa migawka stanie się punktem odniesienia porównania. Obecna zostanie zarchiwizowana, nie usunięta.",
+      "confirmTitle": "Zapisać nową migawkę stron?",
+      "dateLabel": "Punkt odniesienia {date}",
+      "failed": "Nie udało się zapisać migawki.",
+      "openAnnotations": "Otwórz w adnotacjach",
+      "replace": "Zapisz nową migawkę",
+      "taken": "Zapisano migawkę stron ({count, number} stron).",
+      "results": "Zobacz wyniki od tej migawki"
+    },
+    "status": {
+      "gone": "Zniknęła · dzień {day, number}",
+      "in_snapshot": "W migawce",
+      "new": "Nowa · dzień {day, number}",
+      "redirected": "Przekierowana · dzień {day, number}",
+      "removed": "Usunięta · dzień {day, number}"
+    },
+    "sitemapState": {
+      "listed": "Na liście",
+      "notListed": "Poza listą"
+    },
+    "sourceKind": {
+      "ai_citation": "Cytowania AI",
+      "ai_visibility": "Widoczność AI",
+      "analytics": "Analityka",
+      "analyticsConversions": "Analityka / Konwersje",
+      "manual": "Ręcznie",
+      "page_indexing": "Indeks",
+      "pagespeed": "PageSpeed",
+      "rank_tracker": "Rank Tracker",
+      "search_console": "Search Console",
+      "sitemap": "Mapa witryny"
+    },
+    "sourcesLine": {
+      "add": "Dodaj źródło",
+      "connect": "Połącz",
+      "hint": "Główne źródło sesji i konwersji. Kliknij, aby zmienić.",
+      "label": "Kolumny z",
+      "paste": "Wklej adresy URL",
+      "refresh": "Odśwież teraz",
+      "refreshing": "Odświeżanie",
+      "state": {
+        "beta": "Beta",
+        "connected": "Połączone",
+        "not_connected": "Niepołączone"
+      }
+    },
+    "tableLabel": "Strony projektu",
+    "tabs": {
+      "all": "Wszystkie strony",
+      "byTag": "Według tagu",
+      "compare": "Porównanie",
+      "existingVsNew": "Istniejące a nowe",
+      "navigation": "Widoki stron"
+    },
+    "tags": {
+      "all": "Wszystkie tagi",
+      "new": "Nowy tag"
+    }
+  }
+}

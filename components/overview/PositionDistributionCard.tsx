@@ -9,6 +9,7 @@ import { useState } from "react";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   ResponsiveContainer,
   useXAxisScale,
@@ -46,6 +47,14 @@ function bucketMax(buckets: DistributionBucket[]) {
   return Math.ceil(max * 1.2);
 }
 
+function bandCenter(
+  scale: (value: string, options?: { position?: "middle" }) => number | undefined,
+  label: string,
+) {
+  const center = scale(label, { position: "middle" });
+  return typeof center === "number" && !Number.isNaN(center) ? center : null;
+}
+
 function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
   const format = useFormatter();
   const xScale = useXAxisScale();
@@ -54,15 +63,17 @@ function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
   return (
     <g data-chart-counts aria-hidden>
       {buckets.map((bucket) => {
-        const x = xScale(bucket.label);
+        const x = bandCenter(xScale, bucket.label);
         const y = yScale(bucket.count);
-        return bucket.count === 0 || x === undefined || y === undefined ? null : (
+        if (x === null || y === undefined) return null;
+        const zero = bucket.count === 0;
+        return (
           <text
             key={bucket.label}
             x={x}
             y={y - 8}
             textAnchor="middle"
-            fill="var(--fg-muted)"
+            fill={zero ? "var(--fg-muted)" : "var(--fg)"}
             fontSize={11}
           >
             {format.number(bucket.count)}
@@ -113,11 +124,13 @@ function BarInteractionLayer({
             {isHovered ? (
               <span className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center gap-px whitespace-nowrap rounded-control bg-code-bg px-[9px] py-1.5 text-code-fg">
                 <span className="font-sans tabular-nums text-[11px] font-semibold">
-                  {t("keywordCount", { count: bucket.count })}
+                  {t("keywordShare", {
+                    count: bucket.count,
+                    percent: total <= 0 ? 0 : (bucket.count / total) * 100,
+                  })}
                 </span>
                 <span className="font-sans tabular-nums text-[9.5px] text-code-faint">
-                  {rangeLabel} ·{" "}
-                  {t("ofTotal", { percent: total <= 0 ? 0 : (bucket.count / total) * 100 })}
+                  {rangeLabel}
                 </span>
               </span>
             ) : null}
@@ -136,6 +149,7 @@ export function PositionDistributionCard({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const max = bucketMax(buckets);
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
+  const gridTicks = [0, max / 3, (max * 2) / 3, max];
 
   return (
     <Card
@@ -150,66 +164,85 @@ export function PositionDistributionCard({
           <ChartNoDataOverlay icon={ChartBar} />
         </div>
       ) : (
-        <div className="relative mt-3 min-w-0 pt-1.5">
-          <ChartRegion
-            className="relative h-[244px]"
-            label={t("chartAriaLabel", {
-              summary: buckets
-                .map((bucket) => {
-                  const range = bucketRange(bucket.label);
-                  return t("summaryItem", {
-                    count: bucket.count,
-                    range: range ? t("positionRange", range) : bucket.label,
-                  });
-                })
-                .join("; "),
-            })}
-          >
-            <ResponsiveContainer
-              width="100%"
-              height={244}
-              initialDimension={{ width: 600, height: 244 }}
-              minWidth={0}
+        <div
+          className="relative mt-3 flex min-w-0 flex-1 flex-col pt-1.5"
+          data-distribution-plot=""
+        >
+          <div className="relative min-h-0 flex-1">
+            <div aria-hidden className="h-[244px]" />
+            <ChartRegion
+              className="absolute inset-0"
+              label={t("chartAriaLabel", {
+                summary: buckets
+                  .map((bucket) => {
+                    const range = bucketRange(bucket.label);
+                    return t("summaryItem", {
+                      count: bucket.count,
+                      range: range ? t("positionRange", range) : bucket.label,
+                    });
+                  })
+                  .join("; "),
+              })}
             >
-              <BarChart
-                data={buckets}
-                margin={{ top: 22, right: 8, bottom: 0, left: 8 }}
-                barCategoryGap="25%"
-                accessibilityLayer={false}
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                initialDimension={{ width: 600, height: 244 }}
+                minWidth={0}
               >
-                <XAxis
-                  dataKey="label"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={axisTextStyle}
-                  height={36}
-                  tickMargin={10}
-                  interval={0}
-                />
-                <YAxis domain={[0, max]} hide />
-                <Bar dataKey="count" radius={5} isAnimationActive={false}>
-                  {buckets.map((bucket, index) => (
-                    <Cell
-                      key={bucket.label}
-                      fill={bucketFill(index)}
-                      style={{
-                        filter: hoveredIndex === index ? "brightness(1.15) saturate(1.12)" : "none",
-                        transition: "filter 140ms ease",
-                      }}
-                    />
-                  ))}
-                </Bar>
-                <DistributionLabels buckets={buckets} />
-              </BarChart>
-            </ResponsiveContainer>
-            <BarInteractionLayer
-              buckets={buckets}
-              hoveredIndex={hoveredIndex}
-              onHover={setHoveredIndex}
-              total={total}
-            />
-          </ChartRegion>
+                <BarChart
+                  data={buckets}
+                  margin={{ top: 22, right: 8, bottom: 0, left: 8 }}
+                  barCategoryGap="25%"
+                  accessibilityLayer={false}
+                >
+                  <CartesianGrid
+                    horizontal
+                    vertical={false}
+                    stroke="var(--border)"
+                    strokeOpacity={0.45}
+                  />
+                  <XAxis
+                    dataKey="label"
+                    type="category"
+                    axisLine={{ stroke: "var(--border)" }}
+                    tickLine={false}
+                    tick={axisTextStyle}
+                    height={36}
+                    tickMargin={10}
+                    interval={0}
+                  />
+                  <YAxis domain={[0, max]} hide ticks={gridTicks} />
+                  <Bar
+                    dataKey="count"
+                    maxBarSize={48}
+                    minPointSize={2}
+                    radius={5}
+                    isAnimationActive={false}
+                  >
+                    {buckets.map((bucket, index) => (
+                      <Cell
+                        key={bucket.label}
+                        fill={bucketFill(index)}
+                        style={{
+                          filter:
+                            hoveredIndex === index ? "brightness(1.15) saturate(1.12)" : "none",
+                          transition: "filter 140ms ease",
+                        }}
+                      />
+                    ))}
+                  </Bar>
+                  <DistributionLabels buckets={buckets} />
+                </BarChart>
+              </ResponsiveContainer>
+              <BarInteractionLayer
+                buckets={buckets}
+                hoveredIndex={hoveredIndex}
+                onHover={setHoveredIndex}
+                total={total}
+              />
+            </ChartRegion>
+          </div>
         </div>
       )}
     </Card>

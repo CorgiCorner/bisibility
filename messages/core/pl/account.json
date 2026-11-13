@@ -85,7 +85,7 @@
       "verified": "Zweryfikowany kodem jednorazowym"
     },
     "privacy": {
-      "action": "Wybory prywatności",
+      "action": "Sprawdź wybory",
       "description": "Sprawdź lub zmień opcjonalne zgody na analitykę i nagrania konfiguracji zapisane w tej przeglądarce.",
       "title": "Wybory prywatności"
     },
@@ -287,6 +287,7 @@
       "description": "Ustawienia osobiste, <emphasis>stosowane na każdym urządzeniu, z którego się logujesz.</emphasis>",
       "landing": {
         "ariaLabel": "Domyślna strona startowa",
+        "ai-visibility": "Widoczność w AI",
         "backlinks": "Linki zwrotne",
         "competitors": "Konkurenci",
         "dashboard": "Pulpit",
@@ -294,8 +295,9 @@
         "keyword-research": "Analiza słów kluczowych",
         "label": "Domyślna strona startowa",
         "rank-tracker": "Monitor pozycji",
+        "pages": "Strony",
         "search-console": "Search Console",
-        "timeline": "Oś czasu"
+        "annotations": "Adnotacje"
       },
       "language": {
         "description": "Kolejne języki są w przygotowaniu. Teraz aktywny jest angielski.",
@@ -364,7 +366,37 @@
       "emptyDay": "Brak aktywności",
       "calendarLabel": "Twoje ostatnie siedem dni",
       "shareError": "Nie udało się zapisać udostępniania. Spróbuj ponownie.",
-      "badgeOptions": "Opcje odznaki"
+      "badgeOptions": "Opcje odznaki",
+      "thirtyTitle": "30 dni SEO",
+      "thirtyDescription": "Codzienny nawyk i odznaka, którą możesz opublikować. Dołącz w dowolnym dniu.",
+      "thirtyStart": "Zacznij moje 30 dni",
+      "thirtyDayLabel": "Dzień {day, number}",
+      "thirtyStarted": "z {goal, number} · start {date}",
+      "thirtyPause": "Opuszczony dzień? Seria robi pauzę i nie zeruje się.",
+      "thirtyHow": "Jak to działa",
+      "thirtyStep1Title": "Zacznij dowolnego dnia",
+      "thirtyStep1Body": "Twój dzień 1 to dzień dołączenia. Otwórz zrzut dnia 1 dla wybranego projektu. To punkt odniesienia na później.",
+      "thirtyStep2Title": "Liczą się dni praktyki",
+      "thirtyStep2Body": "Seria liczy to, co robisz, a nie ruch, więc możesz ją ukończyć, zanim pojawią się wyniki.",
+      "thirtyStep3Title": "Efekty przychodzą później",
+      "thirtyStep3Body": "SEO jest powolne. Opuszczony dzień wstrzymuje licznik. Odznakę zdobywasz 30. dnia praktyki.",
+      "thirtySnapshotLabel": "Projekt dla zrzutu dnia 1",
+      "thirtySnapshotOpen": "Otwórz strony",
+      "thirtySnapshotEmpty": "Utwórz projekt, aby zapisać zrzut dnia 1 na stronach.",
+      "thirtyLeave": "Opuść 30 dni",
+      "thirtyLeaveTitle": "Opuścić 30 dni?",
+      "thirtyLeaveBody": "Licznik robi pauzę. Ukończone dni zostają. Możesz dołączyć ponownie bez zaczynania od zera.",
+      "thirtyLeaveConfirm": "Opuść",
+      "thirtyCancel": "Anuluj",
+      "thirtyLeft": "Wstrzymane od {date}. Ukończone dni zostają. Ponowne dołączenie kontynuuje to wyzwanie.",
+      "thirtyOverflow": "{count, plural, one {# wcześniejszy dzień nie jest pokazany} few {# wcześniejsze dni nie są pokazane} many {# wcześniejszych dni nie jest pokazanych} other {# wcześniejszego dnia nie jest pokazane}}",
+      "thirtyCalendarLabel": "30 dni SEO",
+      "thirtySlotDone": "Ukończony",
+      "thirtySlotSkipped": "Pominięty",
+      "thirtySlotToday": "Dzisiaj",
+      "thirtySlotUpcoming": "Przed nami",
+      "thirtyError": "Nie udało się zaktualizować wyzwania 30 dni. Spróbuj ponownie.",
+      "thirtyTrackingOff": "Włącz „Zapisuj moją aktywność”, aby dołączyć."
     }
   }
 }

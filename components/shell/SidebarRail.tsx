@@ -10,7 +10,6 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { trackModuleNavigation } from "@/lib/analytics/product-interactions";
 import type { NavItem, NavItemGroupDescriptor } from "@/lib/nav/nav-items";
 import { navItemGroups, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
-import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -41,10 +40,8 @@ export function SidebarRailRow({
       <Link
         aria-current={active ? "page" : undefined}
         // Collapsed drops the visible label, and a closed tooltip contributes no name, so
-        // without this a screen reader announces a bare "link" for every tile. Expanded, an
-        // experimental row still needs it: the Flask trigger inside the row would otherwise
-        // append "Experimental" to the row's own accessible name.
-        aria-label={collapsed || item.badge === "experimental" ? item.label : undefined}
+        // without this a screen reader announces a bare "link" for every tile.
+        aria-label={collapsed ? item.label : undefined}
         className={[
           "relative flex items-center rounded-control text-[13.5px] font-medium transition-colors duration-150",
           // The rows are full-bleed in a narrow column, so an outset ring is clipped against
@@ -115,28 +112,7 @@ function SidebarRailBadge({
   badge,
   label,
 }: Readonly<{ badge?: NavItem["badge"]; label?: string }>) {
-  if (badge === "experimental") {
-    return (
-      <Tooltip content={label ?? ""} placement="top" semantics="description">
-        <span
-          aria-label={label}
-          className="grid h-[30px] w-[30px] shrink-0 place-items-center text-fg-muted transition-colors hover:text-fg"
-          role="img"
-        >
-          <Flask
-            aria-hidden
-            className="shrink-0 text-current"
-            data-experimental-badge-flask
-            data-weight="regular"
-            size={14}
-            weight="regular"
-          />
-        </span>
-      </Tooltip>
-    );
-  }
-
-  if (!badge) return null;
+  if (badge === "experimental" || !badge) return null;
 
   return (
     <span
@@ -192,12 +168,14 @@ type LocalizedNavItem = NavItem & { badgeLabel?: string };
 
 const navigationItemKeys = {
   "Brand Visibility": "items.aiVisibility",
+  "AI Visibility": "items.aiVisibilityModule",
   "Prompt Research": "items.promptResearch",
   "Prompt Tracker": "items.aiTracking",
-  "Prompt Playground": "items.promptExplorer",
+  "Model Playground": "items.promptExplorer",
   "Site Audit": "items.siteAudit",
   "Project Context": "items.projectContext",
-  "Agent Reports": "items.agentReports",
+  Reports: "items.agentReports",
+  Annotations: "items.annotations",
   Alerts: "items.alerts",
   Backlinks: "items.backlinks",
   Competitors: "items.competitors",
@@ -213,6 +191,7 @@ const navigationItemKeys = {
   Schedules: "items.schedules",
   Usage: "items.usage",
   "Search Console": "items.searchConsole",
+  Pages: "items.pages",
   Settings: "items.settings",
 } as const;
 

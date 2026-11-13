@@ -1,4 +1,8 @@
-import type { SourceConfiguration } from "@/lib/ai-tracking/contract";
+import type {
+  SourceConfiguration,
+  TrackingEngine,
+  TrackingSource,
+} from "@/lib/ai-tracking/contract";
 import { publicTrackingSchedule } from "@/lib/ai-tracking/projections/public";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
@@ -21,6 +25,7 @@ export type TrackingScheduleList = {
   canWrite: boolean;
   activePromptIds: string[];
   schedules: TrackingScheduleListItem[];
+  engineDefault?: { engine: TrackingEngine; source: TrackingSource };
 };
 
 /** The single AI tracking write rule, shared by the AI workspace and the Schedules page. */

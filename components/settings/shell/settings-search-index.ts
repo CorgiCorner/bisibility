@@ -82,15 +82,14 @@ export const settingsSearchEntries = [
     }),
     { anchor: "general-project-domain" },
   ),
-  searchEntry(
-    "general",
-    "settings/general",
-    (t) => ({
-      label: t("search.entries.tagsAndSegments.label"),
-      keywords: t("search.entries.tagsAndSegments.keywords"),
-    }),
-    { anchor: "tags-segments" },
-  ),
+  searchEntry("tags", "settings/tags", (t) => ({
+    label: t("search.entries.tagsAndSegments.label"),
+    keywords: t("search.entries.tagsAndSegments.keywords"),
+  })),
+  searchEntry("conversions", "settings/conversions", (t) => ({
+    label: t("search.entries.conversions.label"),
+    keywords: t("search.entries.conversions.keywords"),
+  })),
   searchEntry(
     "data-sources",
     "settings/data-sources",

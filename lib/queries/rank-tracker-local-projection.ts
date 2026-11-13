@@ -43,7 +43,10 @@ export function filterRankTrackerLocalRows(
 ) {
   const byId = new Map(report.rows.map((row) => [row.keywordId, row]));
   const unsupportedFilters =
-    query.filters.wrongUrl || query.filters.urlChanged || query.filters.serp.length > 0;
+    query.filters.wrongUrl ||
+    query.filters.urlChanged ||
+    query.filters.serp.length > 0 ||
+    query.filters.aiOverviewShown;
   const rows = metadata.flatMap((row) => {
     const local = byId.get(row.id);
     if (!local) return [];

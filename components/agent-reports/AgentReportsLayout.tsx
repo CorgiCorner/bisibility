@@ -21,15 +21,15 @@ export function AgentReportsLayout({
 export function AgentReportsToolbar({
   description,
   action,
-}: Readonly<{ description: string; action?: ReactNode }>) {
+  filter,
+}: Readonly<{ description: string; action?: ReactNode; filter?: ReactNode }>) {
   return (
-    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="m-0 min-w-0 max-w-2xl text-[13px] leading-normal text-fg-muted">
-        {description}
-      </p>
-      {action ? (
-        <div className="self-end sm:ml-auto sm:shrink-0 sm:self-center">{action}</div>
-      ) : null}
+    <div className="flex min-w-0 flex-col gap-3">
+      <p className="m-0 min-w-0 max-w-2xl text-ui-body text-fg-muted">{description}</p>
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
+        {filter}
+        {action ? <div className="ml-auto flex shrink-0 items-center gap-2">{action}</div> : null}
+      </div>
     </div>
   );
 }

@@ -5,10 +5,14 @@ import type { RecoveryCase } from "@/lib/metering/recovery/contract";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { type RecoveryRoute, useRecoveryBatch } from "./useRecoveryBatch";
-export function useTaskActions(refresh: () => void, route?: RecoveryRoute) {
+export function useTaskActions(
+  refresh: () => void,
+  route?: RecoveryRoute,
+  cases: readonly Pick<RecoveryCase, "reference" | "token">[] = [],
+) {
   const t = useTranslations("instanceAdmin.recovery");
   const messages = useTranslations("instanceAdmin.pages");
-  const batch = useRecoveryBatch(route);
+  const batch = useRecoveryBatch(route, cases);
   const [busy, start] = useTransition();
   const [triageError, setTriageError] = useState<string>();
   const [triageNotice, setTriageNotice] = useState<string>();

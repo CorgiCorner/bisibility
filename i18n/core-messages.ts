@@ -2,6 +2,7 @@ import account from "@/messages/core/en/account.json";
 import accountPreferences from "@/messages/core/en/account-preferences.json";
 import agentWorkspace from "@/messages/core/en/agent-workspace.json";
 import auth from "@/messages/core/en/auth.json";
+import challengeReport from "@/messages/core/en/challenge-report.json";
 import cloudImport from "@/messages/core/en/cloud-import.json";
 import emailPreferences from "@/messages/core/en/email-preferences.json";
 import instanceAdmin from "@/messages/core/en/instance-admin.json";
@@ -20,6 +21,7 @@ import projectGettingStarted from "@/messages/core/en/project-getting-started.js
 import projectInstall from "@/messages/core/en/project-install.json";
 import projectIntegrations from "@/messages/core/en/project-integrations.json";
 import projectMarkets from "@/messages/core/en/project-markets.json";
+import projectPages from "@/messages/core/en/project-pages.json";
 import projectRankTracker from "@/messages/core/en/project-rank-tracker.json";
 import projectRankTrackerKeywordDetail from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
 import projectRankTrackerKeywordImport from "@/messages/core/en/project-rank-tracker-keyword-import.json";
@@ -29,12 +31,14 @@ import projectRunsRankRuns from "@/messages/core/en/project-runs-rank-runs.json"
 import projectRunsSchedules from "@/messages/core/en/project-runs-schedules.json";
 import projectSearchInsights from "@/messages/core/en/project-search-insights.json";
 import projectSettingsAdvanced from "@/messages/core/en/project-settings-advanced.json";
+import projectSettingsConversions from "@/messages/core/en/project-settings-conversions.json";
 import projectSettingsDevelopers from "@/messages/core/en/project-settings-developers.json";
 import projectSettingsExperimental from "@/messages/core/en/project-settings-experimental.json";
 import projectSettingsGeneral from "@/messages/core/en/project-settings-general.json";
 import projectSettingsMigration from "@/messages/core/en/project-settings-migration.json";
 import projectSettingsNotifications from "@/messages/core/en/project-settings-notifications.json";
 import projectSettingsShell from "@/messages/core/en/project-settings-shell.json";
+import projectSettingsTags from "@/messages/core/en/project-settings-tags.json";
 import projectSettingsTeam from "@/messages/core/en/project-settings-team.json";
 import projectSettingsTracking from "@/messages/core/en/project-settings-tracking.json";
 import projectSettingsUsage from "@/messages/core/en/project-settings-usage.json";
@@ -58,6 +62,7 @@ export const coreMessages = mergeMessageCatalogs(
   resourceCapacity,
   shared,
   agentWorkspace,
+  challengeReport,
   projectAiResearch,
   projectSiteAudit,
   auth,
@@ -80,6 +85,7 @@ export const coreMessages = mergeMessageCatalogs(
   projectInstall,
   projectIntegrations,
   projectMarkets,
+  projectPages,
   projectRankTracker,
   projectRankTrackerKeywordImport,
   projectRankTrackerKeywordDetail,
@@ -89,12 +95,14 @@ export const coreMessages = mergeMessageCatalogs(
   projectRunsSchedules,
   projectSearchInsights,
   projectSettingsAdvanced,
+  projectSettingsConversions,
   projectSettingsDevelopers,
   projectSettingsExperimental,
   projectSettingsGeneral,
   projectSettingsMigration,
   projectSettingsNotifications,
   projectSettingsShell,
+  projectSettingsTags,
   projectSettingsTeam,
   projectSettingsTracking,
   projectSettingsUsage,

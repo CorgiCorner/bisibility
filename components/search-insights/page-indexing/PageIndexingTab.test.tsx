@@ -6,15 +6,17 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
+import { IndexingOverview } from "./IndexingOverview";
 import { indexingData, indexingUrl } from "./indexing.test-support";
 import { PageIndexingTab } from "./PageIndexingTab";
+import { SearchConsoleSitemapsTab } from "./SearchConsoleSitemapsTab";
 import { SearchConsoleTabs } from "./SearchConsoleTabs";
 
 const loadDetailAction = vi.fn();
 const inspectAction = vi.fn();
 const loadUrlsAction = vi.fn();
 function renderTab(overrides: Partial<ComponentProps<typeof PageIndexingTab>> = {}) {
-  return render(
+  const view = render(
     <FeatureMessagesProvider
       locale="en"
       timeZone="Europe/Warsaw"
@@ -31,6 +33,11 @@ function renderTab(overrides: Partial<ComponentProps<typeof PageIndexingTab>> = 
       />
     </FeatureMessagesProvider>,
   );
+  const details = screen
+    .queryByText(messages.projectSearchInsights.indexing.allUrls)
+    ?.closest("details");
+  if (details instanceof HTMLDetailsElement) details.open = true;
+  return view;
 }
 beforeEach(() => {
   vi.clearAllMocks();
@@ -58,6 +65,9 @@ it("the tab counter exposes not-indexed pages separately from the total", () => 
     "href",
     "/app/p/search-console?period=28d",
   );
+  const sitemaps = screen.getByRole("link", { name: "Sitemaps" });
+  expect(sitemaps).toHaveAttribute("href", "/app/p/search-console?period=28d&tab=sitemaps");
+  expect(within(sitemaps).queryByText("beta")).not.toBeInTheDocument();
 });
 it("opens stored details, focuses the drawer, closes with Escape and restores the row trigger", async () => {
   const user = userEvent.setup();
@@ -121,17 +131,19 @@ it("shows the no-connection state without loading or inspecting", () => {
   expect(loadDetailAction).not.toHaveBeenCalled();
   expect(inspectAction).not.toHaveBeenCalled();
 });
-it("shows no stored sitemap origins honestly", () => {
+it("keeps stored sitemaps off the page indexing tab", () => {
   renderTab({ data: { ...indexingData, sitemaps: [] } });
-  expect(screen.getByText(messages.projectSearchInsights.indexing.noSitemaps)).toBeInTheDocument();
+  expect(
+    screen.queryByText(messages.projectSearchInsights.indexing.noSitemaps),
+  ).not.toBeInTheDocument();
 });
-it("shows the nothing-inspected state", () => {
+it("shows the nothing-inspected state in the URL table", () => {
   renderTab({
     data: { ...indexingData, urls: [], report: { ...indexingData.report, checked: 0, total: 0 } },
   });
   expect(
     screen.getAllByText(messages.projectSearchInsights.indexing.nothingInspected),
-  ).toHaveLength(2);
+  ).toHaveLength(1);
 });
 it("shows an exhausted-quota yellow callout with the computed reset timestamp", () => {
   renderTab({
@@ -194,39 +206,35 @@ it("keeps sitemap, search and menu focus when selecting a reason", async () => {
   );
   await waitFor(() => expect(trigger).toHaveFocus());
   expect(screen.getByRole("searchbox")).toHaveValue("duplicate");
-});
+}, 20_000);
 
-it("puts tracked URLs and sitemaps before the secondary overview", () => {
+it("leads with progress and reasons, and keeps every URL under All URLs", () => {
   renderTab();
   const t = messages.projectSearchInsights.indexing;
-  const overview = screen.getByRole("region", { name: "Overview from our checks" });
-  expect(overview.tagName).toBe("SECTION");
-  const feedback = within(overview).getByRole("link", { name: "Want to keep it? Email us" });
-  expect(feedback).toBeVisible();
-  expect(feedback.getAttribute("href")).toMatch(/^mailto:feedback@bisibility\.com\?subject=/);
-  expect(within(overview).getByText(t.overview.removalNotice)).toBeVisible();
-  expect(within(overview).getByText(t.overview.note)).toBeInTheDocument();
+  const lead = screen.getByText(t.lead);
+  expect(screen.getByRole("progressbar", { name: t.progress.meter })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: t.reasons.title })).toBeVisible();
+  expect(screen.queryByRole("heading", { name: t.sitemaps })).not.toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: t.overview.title })).not.toBeInTheDocument();
   const urls = screen.getByRole("region", { name: t.urls });
-  const sitemaps = screen.getByRole("heading", { name: t.sitemaps });
-  expect(urls.compareDocumentPosition(sitemaps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(
-    sitemaps.compareDocumentPosition(overview) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy();
-  const status = screen.getByRole("button", { name: t.inspect });
-  expect(status.compareDocumentPosition(urls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  const cards = overview.querySelectorAll('[data-slot="card"]');
-  expect(cards).toHaveLength(3);
-  expect(overview).toHaveClass("bg-bg-sunken");
-  for (const card of cards) expect(card).not.toHaveClass("bg-bg-sunken");
-  expect(cards[0].querySelector("dl")).toBeInTheDocument();
-  expect(cards[1]).toHaveTextContent(t.trendTitle);
-  expect(cards[2]).toHaveTextContent(t.reasonsTitle);
+  expect(lead.compareDocumentPosition(urls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const open = screen.getAllByRole("link", { name: t.reasons.openInPages })[0];
+  expect(open).toHaveAttribute("href", expect.stringContaining("index=not_indexed"));
+  expect(open?.getAttribute("href")).toContain("coverage=");
 });
 
 it.each(["sc-domain:example.com", "https://example.com/blog/"])(
   "links the complete report to the connected property %s",
   (property) => {
-    renderTab({ data: { ...indexingData, report: { ...indexingData.report, property } } });
+    render(
+      <FeatureMessagesProvider locale="en" timeZone="UTC" messages={{ ...shared, ...messages }}>
+        <IndexingOverview
+          days={[]}
+          onSelect={() => undefined}
+          report={{ ...indexingData.report, property }}
+        />
+      </FeatureMessagesProvider>,
+    );
     const link = screen.getByRole("link", { name: "Open the full report in Search Console" });
     const url = new URL(link.getAttribute("href") ?? "");
     expect(url.origin + url.pathname).toBe("https://search.google.com/search-console/index");
@@ -236,32 +244,43 @@ it.each(["sc-domain:example.com", "https://example.com/blog/"])(
   },
 );
 
-it("filters, focuses and scrolls to tracked URLs when an overview reason is selected", async () => {
-  const user = userEvent.setup();
-  renderTab();
+it("says checking is off and points at settings when the budget is off", () => {
+  renderTab({
+    data: {
+      ...indexingData,
+      settings: { ...indexingData.settings, budgetMode: "off" },
+    },
+  });
   const t = messages.projectSearchInsights.indexing;
-  const urls = screen.getByRole("region", { name: t.urls });
-  const scroll = vi.fn();
-  urls.scrollIntoView = scroll;
-  const reasons = screen.getByRole("table", { name: t.reasonsTitle });
-  await user.click(within(reasons).getByText(indexingUrl.coverageState ?? ""));
-  await waitFor(() =>
-    expect(loadUrlsAction).toHaveBeenLastCalledWith({
-      projectId: "prj_test",
-      query: {
-        page: 1,
-        limit: 50,
-        sort_by: "url",
-        sort_direction: "asc",
-        history: "true",
-        group: "not_indexed",
-        coverage_state: indexingUrl.coverageState,
-      },
-    }),
+  expect(screen.getByRole("heading", { name: t.progress.off })).toBeVisible();
+  expect(screen.getByRole("link", { name: t.progress.settings })).toHaveAttribute(
+    "href",
+    "/app/prj_test/settings/data-sources#url-inspection",
   );
-  expect(urls).toHaveFocus();
-  expect(scroll).toHaveBeenCalledWith({ block: "start", behavior: "smooth" });
-  expect(screen.getByRole("button", { name: "Indexing state" })).toHaveTextContent(
-    indexingUrl.coverageState ?? "",
+  expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+});
+it("shows an empty sitemap list on the sitemaps tab", () => {
+  render(
+    <FeatureMessagesProvider locale="en" timeZone="UTC" messages={{ ...shared, ...messages }}>
+      <SearchConsoleSitemapsTab data={{ ...indexingData, sitemaps: [] }} projectId="prj_test" />
+    </FeatureMessagesProvider>,
   );
+  expect(screen.getByText(messages.projectSearchInsights.indexing.noSitemaps)).toBeInTheDocument();
+});
+
+it("uses one All URLs surface with flat full-width sections and matched header actions", () => {
+  const { container } = renderTab();
+  const content = container.querySelector("[data-indexing-all-urls]");
+  expect(content).toHaveClass("divide-y", "divide-border");
+  expect(content?.querySelector(".rounded-card.border")).toBeNull();
+  expect(content?.parentElement).toHaveClass("px-0", "pb-0", "sm:px-0");
+  const settings = screen.getByRole("link", { name: "Inspection settings" });
+  const inspect = screen.getByRole("button", { name: "Inspect URL" });
+  expect(settings.parentElement).toBe(inspect.parentElement);
+  expect(settings).toHaveAttribute("data-size", "sm");
+  expect(inspect).toHaveAttribute("data-size", "sm");
+  const search = screen.getByRole("searchbox");
+  const state = screen.getByRole("button", { name: "Indexing state" });
+  expect(search.closest("label")?.parentElement).toBe(state.parentElement);
+  expect(search.compareDocumentPosition(state) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

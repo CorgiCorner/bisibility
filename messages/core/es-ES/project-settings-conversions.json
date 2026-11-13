@@ -1,0 +1,48 @@
+{
+  "projectSettingsConversions": {
+    "intro": "Las conversiones se definen una vez para este proyecto. Cada fuente de analítica conectada guarda sus propios recuentos diarios, y la fuente principal es la vista predeterminada.",
+    "sources": {
+      "title": "Fuentes",
+      "description": "Elige la fuente principal para la vista predeterminada. Cambiarla conserva los datos de cada fuente y añade una nota en el gráfico.",
+      "connected": "Conectada",
+      "notConnected": "No conectada",
+      "connect": "Conectar",
+      "primary": "Principal",
+      "primaryFor": "Fuente principal: {source}",
+      "last28": "{count} en los últimos 28 días",
+      "lastDay": "Último día con datos: {date}",
+      "noData": "Aún no hay datos de conversión",
+      "ga4Together": "GA4 informa todos los eventos clave juntos.",
+      "plausibleOrganic": "Conversiones de objetivos de búsqueda orgánica, un recuento diario por página de destino.",
+      "syncNow": "Sincronizar ahora",
+      "syncing": "Sincronizando…",
+      "syncError": "No se ha podido sincronizar la fuente.",
+      "confirmTitle": "¿Cambiar la fuente principal de conversiones?",
+      "confirmBody": "Los gráficos usarán {source} como vista predeterminada. Los datos existentes se conservan y se añade una nota para explicar un salto.",
+      "confirmAction": "Cambiar fuente principal",
+      "cancel": "Cancelar",
+      "error": "No se pudo guardar la fuente principal."
+    },
+    "comparison": {
+      "title": "Todas las fuentes en paralelo",
+      "description": "Conversiones activadas en los últimos 28 días, una columna por fuente conectada.",
+      "goal": "Conversión",
+      "primary": "Principal",
+      "notReported": "No informada",
+      "empty": "No hay conversiones activadas en los últimos 28 días.",
+      "tableLabel": "Conversiones por fuente"
+    },
+    "goals": {
+      "title": "Conversiones",
+      "description": "Cambia el nombre de una conversión para este proyecto, o deja de contarla. El nombre en la herramienta sigue siendo el que informa la fuente.",
+      "emptyTitle": "Aún no hay conversiones",
+      "emptyDescription": "Cuando una fuente conectada informe una conversión, aparecerá aquí.",
+      "sourceName": "Nombre en la herramienta",
+      "displayNameLabel": "Nombre visible de {name}",
+      "enabled": "Activada",
+      "countsRevenue": "Cuenta ingresos",
+      "last28": "Últimos 28 días",
+      "error": "No se pudo guardar la conversión."
+    }
+  }
+}

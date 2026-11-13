@@ -45,6 +45,16 @@ const BASE_PROVIDER_CATALOG = [
     logoDomain: "google.com",
   },
   {
+    id: "pagespeed",
+    allocation: PROVIDER_ALLOCATION_METADATA.pagespeed,
+    label: "PageSpeed Insights",
+    kind: "analytics",
+    defaultStatus: "optional",
+    requiredCredentials: ["apiKey"],
+    credentialLabels: { apiKey: "API key" },
+    logoDomain: "pagespeed.web.dev",
+  },
+  {
     id: "ga4",
     allocation: PROVIDER_ALLOCATION_METADATA.ga4,
     label: "Google Analytics 4",

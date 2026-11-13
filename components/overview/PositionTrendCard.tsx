@@ -1,10 +1,11 @@
 "use client";
 
+import { ChartMarkerLegend } from "@/components/charts/ChartMarkerLegend";
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
+import type { ChartMarker } from "@/lib/annotations/marker-style";
 import { observationSeries } from "@/lib/checks/position-observations";
-import { cn } from "@/lib/ui/cn";
 import { useTranslations } from "next-intl";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import { OverviewChartHeader } from "./OverviewChartHeader";
@@ -14,6 +15,8 @@ import type { TrendPoint, TrendTakeaway } from "./types";
 export type PositionTrendCardProps = {
   data: TrendPoint[];
   empty?: boolean;
+  markers?: readonly ChartMarker[];
+  projectRef?: string;
   seriesLabel?: string;
   takeaway?: TrendTakeaway;
   takeawayLoading?: boolean;
@@ -60,6 +63,8 @@ function takeawayCopy(
 export function PositionTrendCard({
   data,
   empty = false,
+  markers = [],
+  projectRef,
   seriesLabel,
   takeaway,
   takeawayLoading = false,
@@ -84,18 +89,6 @@ export function PositionTrendCard({
         captionLoading={renderedTakeawayLoading}
         definition={t("definition")}
         title={t("title")}
-        trailing={
-          <span
-            aria-hidden={empty || insufficient ? true : undefined}
-            className={cn(
-              "inline-flex flex-none items-center gap-1.5 font-sans tabular-nums text-[11px] text-fg-muted",
-              (empty || insufficient) && "invisible",
-            )}
-          >
-            <span className="h-[9px] w-[9px] rounded-control bg-accent" aria-hidden />
-            {renderedSeriesLabel}
-          </span>
-        }
       />
       {empty || insufficient ? (
         <div className="relative mt-3 min-w-0 flex-1">
@@ -103,41 +96,63 @@ export function PositionTrendCard({
           <ChartNoDataOverlay description={t("noDataDescription")} title={t("noDataTitle")} />
         </div>
       ) : (
-        <ChartRegion
-          className="relative mt-3 h-[250px]"
-          label={t("chartAriaLabel", {
-            hasTakeaway: renderedTakeaway ? "true" : "false",
-            takeaway: renderedTakeaway ?? "",
-          })}
-        >
-          <TimeSeriesChart
-            height={250}
-            dateKeys={dateKeys}
-            labels={data.map((point) => point.label ?? t("now"))}
-            series={observationSeries(
-              data.map((point) => ({ comparisonKey: point.comparisonKey, position: point.value })),
-            ).map((values) => ({
-              label: renderedSeriesLabel,
-              values,
-              color: "var(--accent)",
-              fill: true,
-              baseline: maxPosition,
-              dots: true,
-            }))}
-            min={1}
-            max={maxPosition}
-            reversed
-            yWidth={yAxisWidth}
-            renderTooltip={(index) => {
-              const point = data[index];
-              return point ? <PositionTrendTooltip point={point} /> : null;
-            }}
-            areaOpacity={0.09}
-            xTickIndexes={[0, 3, 7, data.length - 1].filter((index) => index < data.length)}
-            margin={{ top: 12, right: 16, bottom: 0, left: 16 }}
-          />
-        </ChartRegion>
+        <div className="relative mt-3 min-w-0 flex-1">
+          <div aria-hidden className="h-[250px]" />
+          <ChartRegion
+            className="absolute inset-0"
+            label={t("chartAriaLabel", {
+              hasTakeaway: renderedTakeaway ? "true" : "false",
+              takeaway: renderedTakeaway ?? "",
+            })}
+          >
+            <TimeSeriesChart
+              fill
+              height={250}
+              dateKeys={dateKeys}
+              labels={data.map((point) => point.label ?? t("now"))}
+              series={observationSeries(
+                data.map((point) => ({
+                  comparisonKey: point.comparisonKey,
+                  position: point.value,
+                })),
+              ).map((values) => ({
+                label: renderedSeriesLabel,
+                values,
+                color: "var(--accent)",
+                fill: true,
+                baseline: maxPosition,
+                dots: true,
+              }))}
+              min={1}
+              max={maxPosition}
+              reversed
+              yWidth={yAxisWidth}
+              markerProjectRef={projectRef}
+              markers={markers}
+              renderTooltip={(index) => {
+                const point = data[index];
+                if (!point || point.value === null) return null;
+                return <PositionTrendTooltip point={point} />;
+              }}
+              areaOpacity={0.09}
+              xTickIndexes={[0, 3, 7, data.length - 1].filter((index) => index < data.length)}
+              margin={{ top: 12, right: 16, bottom: 0, left: 16 }}
+            />
+          </ChartRegion>
+        </div>
       )}
+      {!empty && !insufficient ? (
+        <ChartMarkerLegend
+          markers={markers}
+          projectRef={projectRef}
+          series={
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-ui-caption text-fg-muted">
+              <span className="size-2 rounded-full bg-accent" aria-hidden />
+              {renderedSeriesLabel}
+            </span>
+          }
+        />
+      ) : null}
     </Card>
   );
 }

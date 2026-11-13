@@ -77,15 +77,19 @@ describe("plugin saved-report fixture contracts", () => {
     validateFixture(readFixture(path), report);
   });
 
-  it.each(["site_audit", "ai_visibility", "prompt_explorer", "AI_VISIBILITY"])(
-    "rejects reserved fixture kind %s",
-    (kind) => {
-      const fixture = fixtures[0];
-      expect(() => validateFixture({ ...readFixture(fixture.path), kind }, fixture.report)).toThrow(
-        "This report kind is reserved",
-      );
-    },
-  );
+  it.each([
+    "site_audit",
+    "ai_visibility",
+    "prompt_explorer",
+    "prompt_research",
+    "challenge_report",
+    "AI_VISIBILITY",
+  ])("rejects reserved fixture kind %s", (kind) => {
+    const fixture = fixtures[0];
+    expect(() => validateFixture({ ...readFixture(fixture.path), kind }, fixture.report)).toThrow(
+      "This report kind is reserved",
+    );
+  });
 
   it("rejects a fixture kind that disagrees with its report.md", () => {
     const fixture = fixtures[0];

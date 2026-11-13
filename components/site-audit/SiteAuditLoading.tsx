@@ -27,26 +27,38 @@ export function SiteAuditPageLoading() {
             <p className="m-0 text-[13px] text-fg-muted opacity-40 motion-safe:animate-pulse">
               {t("description", { domain: "…" })}
             </p>
-            <div className="mt-4 flex flex-wrap items-end gap-3">
-              <div className="grid w-32 gap-2">
-                <FieldLabel className="text-ui-body font-medium" label={t("pageLimit")} />
-                <Input
+            <div className="mt-4 grid gap-2">
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="grid w-32 gap-1.5">
+                  <FieldLabel className="text-ui-body font-medium" label={t("pageLimit")} />
+                  <Input
+                    disabled
+                    tabIndex={-1}
+                    aria-hidden
+                    className="bg-bg-sunken motion-safe:animate-pulse"
+                  />
+                </div>
+                <Button
+                  disabled
+                  size="input"
+                  tabIndex={-1}
+                  type="button"
+                  variant="secondary"
+                  className="opacity-40 motion-safe:animate-pulse"
+                >
+                  {t("maxAction")}
+                </Button>
+                <Button
+                  size="input"
                   disabled
                   tabIndex={-1}
-                  aria-hidden
-                  className="bg-bg-sunken motion-safe:animate-pulse"
-                />
+                  startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
+                  className="opacity-40 motion-safe:animate-pulse"
+                >
+                  {t("run")}
+                </Button>
               </div>
-              <Button
-                size="input"
-                disabled
-                tabIndex={-1}
-                startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
-                className="opacity-40 motion-safe:animate-pulse"
-              >
-                {t("run")}
-              </Button>
-              <p className="m-0 pb-2 text-[11px] text-fg-muted">{t("cost")}</p>
+              <p className="m-0 text-ui-caption text-fg-muted">{t("cost")}</p>
             </div>
           </Card>
         </div>

@@ -28,9 +28,9 @@ function AnalyzeCardLoading() {
     >
       <div className="grid gap-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <Bar className="min-h-9 flex-1 sm:min-h-[34px] rounded-control border border-border md:min-w-[240px]" />
-          <Bar className="h-[34px] md:w-[196px]" />
-          <Bar className="min-h-[34px] lg:w-[132px]" />
+          <Bar className="min-h-10 max-sm:min-h-11 flex-1 rounded-control border border-border md:min-w-[240px]" />
+          <Bar className="h-10 max-sm:h-11 md:w-[196px]" />
+          <Bar className="min-h-10 max-sm:min-h-11 lg:w-36" />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -40,7 +40,7 @@ function AnalyzeCardLoading() {
           </div>
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
             <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
-            <Bar className="h-9 min-w-[216px]" />
+            <Bar className="h-10 max-sm:h-11 min-w-[216px]" />
           </div>
         </div>
       </div>

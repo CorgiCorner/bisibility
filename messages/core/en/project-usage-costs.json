@@ -1,0 +1,100 @@
+{
+  "projectUsageCosts": {
+    "lead": "Plan, provider budgets and what SEO costs you in total.",
+    "lifetimeHint": "A lifetime amount is spread evenly over the 36 calendar months that start with the start month. A partial first or last month is prorated by day, then the amount is zero.",
+    "dash": "-",
+    "tiles": {
+      "seo": "SEO cost this month",
+      "seoHint": "This project's share",
+      "provider": "Provider operations",
+      "providerHint": "Rank checks, research and AI runs",
+      "subscriptions": "Subscriptions",
+      "subscriptionsHint": "Recurring tools",
+      "custom": "Custom items",
+      "customHint": "One-off items",
+      "empty": "Nothing recorded for this month."
+    },
+    "card": {
+      "title": "Subscriptions",
+      "description": "Amounts you pay, not vendor pricing.",
+      "add": "Add a cost",
+      "emptyTitle": "Track what SEO costs you",
+      "emptyDescription": "Add the tools you pay for, so reports can show cost next to results. Usage from connected providers is tracked automatically.",
+      "menu": "Actions for {name}",
+      "edit": "Edit",
+      "end": "End",
+      "delete": "Delete",
+      "deleteTitle": "Delete this cost?",
+      "deleteBody": "This removes {name} from your SEO costs.",
+      "cancel": "Cancel",
+      "columns": {
+        "item": "Item",
+        "type": "Type",
+        "plan": "Plan",
+        "perMonth": "Monthly cost",
+        "actions": "Actions",
+        "project": "This project's share"
+      },
+      "deleteShared": "This item is also used by {count, plural, one {# other project} other {# other projects}}. Deleting it removes it from every project."
+    },
+    "kinds": {
+      "seo_tool": "SEO tool",
+      "ai": "AI",
+      "analytics": "Analytics",
+      "custom": "Custom"
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "lifetime": "Lifetime",
+      "one_off": "One-off"
+    },
+    "notes": {
+      "trialUntil": "trial until {date}",
+      "discountUntil": "-{percent, number}% until {date}"
+    },
+    "drawer": {
+      "addTitle": "Add cost",
+      "editTitle": "Edit cost",
+      "tool": "Tool",
+      "name": "Name",
+      "suggest": "Not listed? Suggest it",
+      "plan": "Plan",
+      "planHint": "Type a plan name, or pick a typical one.",
+      "billing": "Billing",
+      "amount": "Amount you pay",
+      "currency": "Currency",
+      "priceChanges": "Price changes",
+      "trialUntil": "Free trial until",
+      "discount": "Discount",
+      "percent": "Percent",
+      "money": "Amount",
+      "forMonths": "For months",
+      "untilDate": "Until date",
+      "months": "Months",
+      "none": "None",
+      "partial": "Only part of this cost belongs to this project",
+      "partialHint": "Use this when the same tool also serves other sites. Only this part is counted in this project's cost.",
+      "lands": "{amount} a month lands in this project",
+      "landsOnce": "{amount} lands in this project",
+      "started": "Started",
+      "footnote": "Amount you pay, not vendor pricing",
+      "cancel": "Cancel",
+      "submit": "Add cost",
+      "save": "Save",
+      "then": "then",
+      "until": "until",
+      "aMonth": "a month",
+      "saveError": "Could not save this cost.",
+      "errors": {
+        "amount": "Enter an amount.",
+        "name": "Enter a name.",
+        "projects": "Include this project.",
+        "percent": "Enter a percent from 0 to 100, with up to two decimal places.",
+        "trial": "The trial must end on or after the start date.",
+        "discount": "Enter a discount and when it ends.",
+        "date": "Use a real date."
+      }
+    }
+  }
+}

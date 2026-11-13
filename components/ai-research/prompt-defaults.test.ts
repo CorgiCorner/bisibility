@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { researchDefaults } from "./AiEngineFields";
 import { aiResearchCatalogFixture } from "./ai-research-fixtures";
@@ -57,4 +58,9 @@ it("keeps the calibrated Credits engine route independent of model defaults", ()
       catalog,
     ),
   ).toMatchObject({ engines: ["chat_gpt"], cost_policy: "hard_cap" });
+});
+
+it("bounds the payment policy control like the other composer fields", () => {
+  const source = readFileSync("components/ai-research/AiCostPolicyFields.tsx", "utf8");
+  expect(source).toContain('className="grid w-full max-w-sm gap-2 text-ui-body sm:col-span-2"');
 });

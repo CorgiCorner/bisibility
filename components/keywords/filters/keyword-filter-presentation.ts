@@ -173,6 +173,9 @@ export function getLocalizedKeywordFilterChips(
     if (chip.key === "wrongUrl") {
       return { ...chip, label: t("filterChipWrongUrl") };
     }
+    if (chip.key === "aiOverviewShown") {
+      return { ...chip, label: t("filterChipAiOverviewShown") };
+    }
     return { ...chip, label: t("filterChipUrlChanged") };
   });
 }

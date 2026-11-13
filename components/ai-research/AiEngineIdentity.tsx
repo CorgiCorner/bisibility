@@ -15,7 +15,10 @@ const domains: Readonly<Record<string, string>> = {
 export function AiEngineIdentity({ engine }: Readonly<{ engine: string }>) {
   const label = aiEngineLabel(engine);
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 text-ui-xs" data-ai-engine={engine}>
+    <span
+      className="inline-flex min-w-0 items-center gap-1.5 text-ui-caption"
+      data-ai-engine={engine}
+    >
       <span aria-hidden>
         <ProviderLogo
           alt={label}

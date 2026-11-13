@@ -235,6 +235,12 @@
       "trackToastPaused": "順位トラッカーに一時停止で追加しました。",
       "trackToastScheduled": "順位トラッカーで{frequency}の追跡を開始しました。",
       "tablesFootnote": "カバー率は、Google がクエリテキストを開示しているクリック数と表示回数の割合です。残りは Google が非開示にしたクエリの実際のトラフィックのため、2つのテーブルの合計が KPI 行と一致することはありません。",
+      "clicksPerDay": "1日のクリック数",
+      "clicksPerDayChartAria": "1日のクリック数",
+      "clicksSeries": "クリック数",
+      "clicksPerDayEmptyTitle": "この期間にクリックはありません",
+      "clicksPerDayEmptyDescription": "この期間の確定日について、Google はこのプロパティのクリックを報告していません。",
+      "clicksPerDayLoading": "1日のクリック数を読み込み中",
       "signalBandSub": "表示回数は獲得済み、上位3位には未到達",
       "signalFailed": "集計できません",
       "signalOverlapSub": "同じクエリで2件以上のページが順位を獲得",
@@ -322,6 +328,17 @@
       "deltaPositionBetter": "{value}上昇",
       "deltaPositionWorse": "{value}下降",
       "sourceGa4": "GA4",
+      "metricConversions": "コンバージョン",
+      "sourcePlausible": "Plausible",
+      "conversionSourceGoals": "{source} · {count, plural, other {# 件の目標}}",
+      "conversionsByPage": "ページ別コンバージョン",
+      "conversionsColumnPage": "ページ",
+      "conversionsColumnSessions": "セッション",
+      "conversionsColumnConversions": "コンバージョン",
+      "conversionsColumnRate": "割合",
+      "conversionsEmpty": "この期間のコンバージョンはありません。",
+      "conversionsConnect": "アナリティクスを接続",
+      "openInPages": "ページで開く",
       "pendingStatusComplete": "完了",
       "pendingStatusNeedsReauth": "要再接続",
       "pendingStatusNeedsRetry": "要再試行",
@@ -594,7 +611,129 @@
       "inspectSitemapHint": "未確認のURLを優先し、保存済みURLを最大10件読み込みます。検査前にリストを編集できます。",
       "inspectSitemapEmpty": "このサイトマップのURLは保存されていません。サイトマップを再読み込みしてください。",
       "inspectNoSitemaps": "まずサイトマップを読み込むと、URLを選択できます。",
-      "inspectSitemapLoading": "URLを読み込み中..."
+      "inspectSitemapLoading": "URLを読み込み中...",
+      "lead": "Google がページをインデックスしているか、していないときはその理由です。",
+      "allUrls": "すべての URL",
+      "progress": {
+        "checked": "{total, number} URL のうち {checked, number} を確認済み",
+        "perDay": "1 日 {count, number} URL。次のバッチは {time}。",
+        "perDayNoTime": "1 日 {count, number} URL。次のバッチ時刻はわかりません。",
+        "off": "確認はオフです。",
+        "limitZero": "1 日の上限が 0 のため、何も確認しません。",
+        "availableQuota": "Google が残しているクォータを使います。",
+        "sources": "サイトマップ {sitemap, number} · ランクトラッカーの対象 {targets, number} · 手入力 {manual, number}",
+        "daysLeft": "あと約 {days, plural, one {# 日} other {# 日}}",
+        "settings": "インデックス登録の設定",
+        "tooltip": "確認には URL 検査 API を使います。1 日のクォータは Search Console プロパティ全体で共有され、太平洋時間の深夜にリセットされます。",
+        "meter": "確認済みの URL"
+      },
+      "tiles": {
+        "names": {
+          "indexed": "インデックス済み",
+          "not_indexed": "未インデックス",
+          "inspection_failed": "検査に失敗",
+          "not_checked": "未確認"
+        },
+        "indexedShare": "確認済みの {percent}",
+        "reasonCount": "{count, plural, one {# 件の理由} other {# 件の理由}}",
+        "retriedTomorrow": "明日再試行",
+        "notScheduled": "予定なし",
+        "queued": "待ち行列",
+        "noChecked": "まだ確認なし"
+      },
+      "reasons": {
+        "title": "未インデックス、理由別",
+        "caption": "Google のカバレッジ状態を、Google の文言のまま表示します。",
+        "export": "CSV を書き出す",
+        "exportFailed": "書き出しを作成できませんでした。",
+        "exportTruncated": "書き出しには先頭 {rows, number} URL が含まれます。",
+        "columnReason": "理由",
+        "columnUrls": "URL",
+        "columnChange": "最近の変化",
+        "openInPages": "ページで開く",
+        "changeNew": "新規",
+        "changeNone": "変化なし",
+        "changeUp": "{date} から +{count, number}",
+        "changeDown": "{date} から -{count, number}",
+        "changeUnavailable": "保存された履歴から 7 日間の変化を算出できません。",
+        "empty": "カバレッジ状態のある未インデックス URL はありません。",
+        "docs": "この状態の Google ドキュメント",
+        "genericDocs": "Google のインデックス登録ドキュメント"
+      },
+      "explanations": {
+        "crawledNotIndexed": {
+          "meaning": "Google はこの URL をクロールし、インデックスしないことを選びました。",
+          "step1": "独自の内容、内部リンク、はっきりした目的で、索引する価値があるページにします。",
+          "step2": "正規 URL がこのページであることを確認します。",
+          "step3": "役立つページになってからインデックスを依頼します。判断は Google がします。"
+        },
+        "discoveredNotIndexed": {
+          "meaning": "Google はこの URL を知っていますが、まだクロールしていません。",
+          "step1": "すでにクロールされているページからリンクします。",
+          "step2": "インデックスしたいならサイトマップに残します。",
+          "step3": "次のクロールを待ちます。依頼しても保証されません。"
+        },
+        "duplicateCanonical": {
+          "meaning": "Google はこの URL を重複とみなし、別の正規 URL を選びました。",
+          "step1": "順位を取る URL を一つに決めます。",
+          "step2": "canonical と内部リンクをその URL に向けます。",
+          "step3": "インデックスしない重複はサイトマップから外します。"
+        },
+        "alternateCanonical": {
+          "meaning": "この URL は別の正規ページを正しく指しています。",
+          "step1": "正規の行き先がインデックスしたいページか確認します。",
+          "step2": "実際の別版なら、代替 URL はそのまま残します。",
+          "step3": "この URL 自体がインデックスに出ることは期待しません。"
+        },
+        "pageWithRedirect": {
+          "meaning": "この URL はリダイレクトするため、Google は行き先をインデックスします。",
+          "step1": "リダイレクト先が正しいページか確認します。",
+          "step2": "内部リンクとサイトマップを最終 URL に更新します。",
+          "step3": "古い URL を解決し続けるなら、リダイレクトは残します。"
+        },
+        "notFound": {
+          "meaning": "Google がこの URL を要求し、サーバーは 404 を返しました。",
+          "step1": "残すべきページなら復元し、そうでなければ代替へリダイレクトします。",
+          "step2": "サイトマップから外します。",
+          "step3": "ここを指す内部リンクを直します。"
+        },
+        "soft404": {
+          "meaning": "サーバーはページがあると返しましたが、Google は空またはエラーと読んでいます。",
+          "step1": "なくなったページには本当の 404 か 410 を返します。",
+          "step2": "残すページなら、十分な内容を置きます。",
+          "step3": "200 を返す薄い未検出テンプレートは避けます。"
+        },
+        "noindex": {
+          "meaning": "ページが noindex のタグまたはヘッダーで、インデックスしないよう求めています。",
+          "step1": "インデックスするなら noindex を外します。",
+          "step2": "robots メタと X-Robots-Tag が一致するか確認します。",
+          "step3": "タグを外したあと、Google の再クロールを待ちます。"
+        },
+        "robots": {
+          "meaning": "robots.txt が Google によるこの URL のクロールを止めています。",
+          "step1": "クロールするなら robots.txt で URL を許可します。",
+          "step2": "ブロックされた URL はインデックスの外に残ることがあります。",
+          "step3": "ルールを変えたらサイトマップを再送信します。"
+        },
+        "serverError": {
+          "meaning": "Google はこの URL でサーバーエラー (5xx) を見ました。",
+          "step1": "エラーを直し、ページが 200 を返すことを確認します。",
+          "step2": "検査時刻の前後で、この URL のログを確認します。",
+          "step3": "5xx が続くとページはインデックスに入りません。"
+        }
+      },
+      "drops": {
+        "title": "インデックスから外れたページ",
+        "caption": "過去 90 日で、判定がインデックス済みから未インデックスに変わりました。",
+        "page": "ページ",
+        "since": "以降",
+        "reason": "理由",
+        "reasonMissing": "記録なし",
+        "annotations": "注釈",
+        "inAnnotations": "注釈で見る",
+        "notInAnnotations": "注釈の項目なし",
+        "viewInPages": "ページで見る"
+      }
     }
   }
 }

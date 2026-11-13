@@ -34,20 +34,6 @@
       "domainTooLong": "ドメインは253文字までです。",
       "invalidDomain": "example.com のようなドメインを入力してください。"
     },
-    "tags": {
-      "cancel": "キャンセル",
-      "description": "タグでキーワードを整理し、保存済みビューを絞り込めます。",
-      "duplicate": "{name} はすでに存在します。",
-      "remove": "タグを削除",
-      "removeError": "タグを削除できませんでした。",
-      "removeTitle": "{name} を削除しますか？",
-      "title": "タグ",
-      "usageBothManyKeywords": "{keywordCount, number}件のキーワードと{segmentCount, plural, other {#件のセグメントで使用されています。}}",
-      "usageBothOneKeyword": "{segmentCount, plural, other {1件のキーワードと#件のセグメントで使用されています。}}",
-      "usageKeywordOnly": "{count, plural, other {#件のキーワードで使用されています。}}",
-      "usageSegmentOnly": "{count, plural, other {#件のセグメントで使用されています。}}",
-      "writeError": "タグを追加できませんでした。"
-    },
     "dataCache": {
       "title": "データキャッシュ",
       "help": "プロジェクトの各モジュールで共有します。短縮は既存の結果にも、延長は新しく取得した結果に適用されます。レポート、計測履歴、決済記録は保持されます。",
@@ -86,7 +72,7 @@
         "keywords": "キーワード",
         "pages": "ページ",
         "ai_visibility": "ブランド可視性",
-        "prompt_explorer": "プロンプトプレイグラウンド",
+        "prompt_explorer": "モデル比較",
         "prompt_research": "質問リサーチ",
         "site_audit": "サイト監査"
       },
@@ -98,7 +84,7 @@
         "backlinks": "被リンク",
         "domain_overview": "ドメイン概要",
         "ai_visibility": "ブランド可視性",
-        "prompt_explorer": "プロンプトプレイグラウンド",
+        "prompt_explorer": "モデル比較",
         "prompt_research": "質問リサーチ",
         "site_audit": "サイト監査"
       }

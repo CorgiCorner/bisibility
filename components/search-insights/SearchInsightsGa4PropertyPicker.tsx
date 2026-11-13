@@ -103,6 +103,7 @@ export function SearchInsightsGa4PropertyPicker({
             <>
               <FieldLabel label={t("ga4PickerProperty")} />
               <MenuSelect
+                size="input"
                 ariaDescribedBy={promiseId}
                 ariaLabel={t("ga4PropertyAriaLabel")}
                 onChange={(value) => {
@@ -114,7 +115,7 @@ export function SearchInsightsGa4PropertyPicker({
                   label: option.label,
                   value: option.value,
                 }))}
-                triggerClassName="mt-1.5 min-h-[42px] w-full justify-between"
+                triggerClassName="mt-1.5 w-full justify-between"
                 value={property}
               />
               <button className={`${MODE_LINK} mt-1.5`} onClick={openManual} type="button">
@@ -156,7 +157,7 @@ export function SearchInsightsGa4PropertyPicker({
         </div>
       </div>
       <div className="flex items-center justify-end gap-3 border-t border-border px-4 py-3">
-        <Button loading={cancelling} onClick={onCancel} type="button" variant="ghost">
+        <Button size="input" loading={cancelling} onClick={onCancel} type="button" variant="ghost">
           {t("notNow")}
         </Button>
         {onRetry ? (
@@ -164,7 +165,7 @@ export function SearchInsightsGa4PropertyPicker({
             loading={retrying}
             loadingLabel={t("retrying")}
             onClick={onRetry}
-            size="xs"
+            size="input"
             type="button"
             variant="secondary"
           >
@@ -173,6 +174,7 @@ export function SearchInsightsGa4PropertyPicker({
         ) : null}
         {showSelect ? (
           <Button
+            size="input"
             className="w-auto"
             disabled={!property}
             loading={pending}

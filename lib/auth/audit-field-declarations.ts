@@ -1,5 +1,8 @@
 import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
-import { registerAiTrackingAuditDeclarations } from "@/lib/auth/audit-field-declarations-ai-tracking";
+import {
+  registerAiSourceAuditDeclarations,
+  registerAiTrackingAuditDeclarations,
+} from "@/lib/auth/audit-field-declarations-ai-tracking";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerDomainVerificationAuditDeclarations } from "@/lib/auth/audit-field-declarations-domain-verification";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
@@ -161,6 +164,18 @@ declare(["settings.budget_updated"], {
   after: { ...f.numbers("capCents"), ...strings("funding") },
   before: f.numbers("capCents"),
 });
+const costItem = {
+  ...f.numbers("amountMinor"),
+  ...strings("billing", "currency", "endedOn", "id", "kind", "name", "split", "startedOn"),
+  projectIds: list("string"),
+};
+declare(["cost_item.create"], { after: costItem });
+declare(["cost_item.update"], { after: costItem, before: costItem });
+declare(["cost_item.end"], {
+  after: strings("endedOn", "id"),
+  before: strings("endedOn", "id"),
+});
+declare(["cost_item.delete"], { before: strings("id", "name") });
 declare(["settings.experimental_modules.update"], {
   after: { enabledExperimentalModules: list("string") },
   before: { enabledExperimentalModules: list("string") },
@@ -281,6 +296,7 @@ registerAdditionalAuditDeclarations(declare, {
 registerAccountAuditDeclarations(declare, { projectCounts });
 registerRankCheckRunAuditDeclarations(declare);
 registerAiTrackingAuditDeclarations(declare);
+registerAiSourceAuditDeclarations(declare);
 registerRecoveryAuditDeclarations(declare);
 registerDomainVerificationAuditDeclarations(declare);
 

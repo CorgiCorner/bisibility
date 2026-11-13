@@ -31,11 +31,30 @@
       "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): poz. {position, number, ::.#}",
       "tooltipMore": "+{count, number} więcej"
     },
+    "organicConversions": {
+      "conversions": "Konwersje",
+      "deltaNew": "nowe",
+      "deltaUnchanged": "bez zmian",
+      "deltaVersus": "{value} wobec poprzednich {days, number} {days, plural, one {dnia} few {dni} many {dni} other {dnia}}",
+      "openSearchConsole": "Otwórz Search Console",
+      "topPages": "Najważniejsze strony",
+      "title": "Konwersje organiczne",
+      "unavailable": "Nie udało się odczytać konwersji."
+    },
+    "seoCost": {
+      "empty": "W tym miesiącu nie zapisano kosztu.",
+      "openUsage": "Otwórz Użycie",
+      "split": "operacje {operations} · subskrypcje {subscriptions} · jednorazowe {oneOff}",
+      "title": "Koszt SEO",
+      "total": "Razem {value}",
+      "unavailable": "Nie udało się odczytać kosztu."
+    },
     "distribution": {
       "bucketAriaLabel": "Pozycje od {start, number} do {end, number}: {count, number} {count, plural, one {słowo kluczowe} few {słowa kluczowe} many {słów kluczowych} other {słowa kluczowego}}",
       "chartAriaLabel": "Wykres rozkładu pozycji. {summary}",
       "definition": "Słowa kluczowe obecne w wynikach, pogrupowane według bieżącej pozycji. Słowa kluczowe poza Top 100 nie są pokazywane.",
       "keywordCount": "{count, number} {count, plural, one {słowo kluczowe} few {słowa kluczowe} many {słów kluczowych} other {słowa kluczowego}}",
+      "keywordShare": "{count, number} {count, plural, one {słowo kluczowe} few {słowa kluczowe} many {słów kluczowych} other {słowa kluczowego}} · {percent, number}%",
       "ofTotal": "{percent, number}% całości",
       "positionRange": "Pozycje od {start, number} do {end, number}",
       "summaryItem": "{range}: {count, number} {count, plural, one {słowo kluczowe} few {słowa kluczowe} many {słów kluczowych} other {słowa kluczowego}}",

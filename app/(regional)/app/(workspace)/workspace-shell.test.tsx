@@ -273,7 +273,7 @@ describe("workspace layout", () => {
   });
 
   it("supplies the same enabled experimental modules to the rail and palette", async () => {
-    mocks.experimentalModules.mockResolvedValue(["timeline", "competitors"]);
+    mocks.experimentalModules.mockResolvedValue(["competitors"]);
 
     renderToStaticMarkup(
       await WorkspaceShell({
@@ -284,10 +284,10 @@ describe("workspace layout", () => {
     );
 
     expect(mocks.sidebarProps).toHaveBeenCalledWith(
-      expect.objectContaining({ enabledExperimentalModules: ["timeline", "competitors"] }),
+      expect.objectContaining({ enabledExperimentalModules: ["competitors"] }),
     );
     expect(mocks.paletteProps).toHaveBeenCalledWith(
-      expect.objectContaining({ enabledExperimentalModules: ["timeline", "competitors"] }),
+      expect.objectContaining({ enabledExperimentalModules: ["competitors"] }),
     );
   });
 

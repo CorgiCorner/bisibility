@@ -126,7 +126,7 @@ describe("app entry page", () => {
         publicId: "prj_complete",
       },
     ]);
-    mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "timeline" }));
+    mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "competitors" }));
 
     await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/dashboard");
 
@@ -141,12 +141,26 @@ describe("app entry page", () => {
         publicId: "prj_complete",
       },
     ]);
+    mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "competitors" }));
+    mocks.getExperimentalModules.mockResolvedValue(["competitors"]);
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/competitors");
+
+    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/competitors");
+  });
+
+  it("resolves a stored timeline landing to annotations without an experimental flag", async () => {
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_complete",
+      },
+    ]);
     mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "timeline" }));
-    mocks.getExperimentalModules.mockResolvedValue(["timeline"]);
 
-    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/timeline");
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/annotations");
 
-    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/timeline");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/annotations");
   });
 
   it("migrates the legacy overview landing cookie to dashboard", async () => {

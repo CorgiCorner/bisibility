@@ -88,7 +88,7 @@ export function DomainOverviewPerformanceChart({
           fitContent
           onChange={setRange}
           options={rangeOptions}
-          size="xs"
+          size="toolbar"
           value={range}
         />
       </div>
@@ -98,7 +98,7 @@ export function DomainOverviewPerformanceChart({
           fitContent
           onChange={setMetric}
           options={metricOptions}
-          size="xs"
+          size="toolbar"
           value={metric}
         />
       </div>

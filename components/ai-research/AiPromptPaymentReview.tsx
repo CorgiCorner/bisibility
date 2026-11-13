@@ -61,7 +61,7 @@ export function AiPromptPaymentReview({
       onOptionChange={(_key, id) => submit(true, id)}
     >
       {!pending && !failure && !estimateCurrent ? (
-        <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
+        <p className="m-0 text-ui-caption text-fg-muted">{t("estimateRequired")}</p>
       ) : null}
       {!pending && estimateCurrent && !estimateAffordable ? (
         <p role="alert" className="m-0 text-ui-body text-red-text">
@@ -70,11 +70,11 @@ export function AiPromptPaymentReview({
       ) : null}
       {actual ? (
         <>
-          <p className="m-0 text-ui-xs text-fg-muted">
+          <p className="m-0 text-ui-caption text-fg-muted">
             {paymentT("forecast")}: {t("actualCostRisk")}
           </p>
           <Disclosure title={t("estimateCalculation")} variant="inline">
-            <p className="text-ui-xs text-fg-muted">{t("forecastDetails")}</p>
+            <p className="text-ui-caption text-fg-muted">{t("forecastDetails")}</p>
           </Disclosure>
         </>
       ) : null}

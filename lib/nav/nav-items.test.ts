@@ -17,12 +17,11 @@ describe("navItems", () => {
 
     expect(disabled.map((item) => item.label)).not.toContain("Timeline");
     expect(disabled.map((item) => item.label)).not.toContain("Competitors");
-    expect(disabled.map((item) => item.label)).not.toContain("Prompt Playground");
-    expect(
-      navItems("prj_example", undefined, ["promptPlayground"]).find(
-        (item) => item.label === "Prompt Playground",
-      ),
-    ).toMatchObject({ badge: "experimental" });
+    expect(disabled.find((item) => item.label === "Model Playground")).toMatchObject({
+      badge: "new",
+      href: "/app/prj_example/model-playground",
+      keywords: ["prompt playground", "compare models", "llm"],
+    });
     expect(
       navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
     ).not.toContain("Timeline");
@@ -46,12 +45,12 @@ describe("navItems", () => {
       "Backlinks",
       "Site Audit",
       "Competitors",
-      "Prompt Tracker",
-      "Prompt Research",
-      "Brand Visibility",
-      "Prompt Playground",
+      "AI Visibility",
+      "Model Playground",
+      "Pages",
       "Search Console",
-      "Agent Reports",
+      "Annotations",
+      "Reports",
       "Markets",
       "Alerts",
       "Runs",
@@ -84,14 +83,14 @@ describe("navItems", () => {
       "Competitors",
     ]);
     expect(items.filter((item) => item.group === "ai").map((item) => item.label)).toEqual([
-      "Prompt Tracker",
-      "Prompt Research",
-      "Brand Visibility",
-      "Prompt Playground",
+      "AI Visibility",
+      "Model Playground",
     ]);
     expect(items.filter((item) => item.group === "reports").map((item) => item.label)).toEqual([
+      "Pages",
       "Search Console",
-      "Agent Reports",
+      "Annotations",
+      "Reports",
     ]);
     expect(items.filter((item) => item.group === "project").map((item) => item.label)).toEqual([
       "Markets",
@@ -155,12 +154,17 @@ describe("navItems", () => {
     );
   });
 
-  it("keeps Timeline available as a landing preference without placing it in the rail", () => {
-    expect(primaryNavEntries.find((item) => item.segment === "timeline")?.icon.displayName).toBe(
-      "ClockCounterClockwiseIcon",
-    );
-    expect(navItems("prj_example", undefined, allExperimentalModules)).not.toContainEqual(
-      expect.objectContaining({ label: "Timeline" }),
+  it("places Annotations in the rail and as a landing preference", () => {
+    const annotations = navItems("prj_example").find((item) => item.label === "Annotations");
+    expect(annotations).toMatchObject({
+      badge: "new",
+      group: "reports",
+      href: "/app/prj_example/annotations",
+      scope: "own-axis",
+    });
+    expect(annotations?.icon.displayName).toBe("NotePencilIcon");
+    expect(primaryNavEntries.find((item) => item.segment === "annotations")?.label).toBe(
+      "Annotations",
     );
   });
 
@@ -204,10 +208,30 @@ describe("navItems", () => {
 
     expect(items.filter((item) => item.badge).map((item) => [item.label, item.badge])).toEqual([
       ["Competitors", "experimental"],
-      ["Prompt Playground", "experimental"],
+      ["AI Visibility", "new"],
+      ["Model Playground", "new"],
+      ["Pages", "new"],
+      ["Annotations", "new"],
     ]);
     expect(items.find((item) => item.label === "Search Console")?.badge).toBeUndefined();
     expect(items.find((item) => item.label === "Alerts")?.badge).toBeUndefined();
+    expect(items.find((item) => item.label === "AI Visibility")).toMatchObject({
+      href: "/app/prj_example/ai-visibility",
+      keywords: [
+        "geo",
+        "aeo",
+        "llm",
+        "llmo",
+        "chatgpt",
+        "ai search",
+        "prompt tracker",
+        "prompt research",
+        "brand visibility",
+      ],
+    });
+    expect(items.find((item) => item.label === "AI Visibility")?.icon.displayName).toBe(
+      "SparkleIcon",
+    );
   });
 
   it("carries no count on any rail row", () => {
@@ -224,6 +248,7 @@ describe("navItems", () => {
       "group",
       "href",
       "icon",
+      "keywords",
       "label",
       "scope",
     ]);
@@ -239,12 +264,10 @@ describe("navItems", () => {
       ),
     ).toEqual({
       Dashboard: "level",
-      "Brand Visibility": "own-axis",
-      "Prompt Playground": "own-axis",
-      "Prompt Research": "own-axis",
-      "Prompt Tracker": "own-axis",
+      "AI Visibility": "own-axis",
+      "Model Playground": "own-axis",
       "Site Audit": "own-axis",
-      "Agent Reports": "project",
+      Reports: "project",
       Alerts: "project",
       "Rank Tracker": "market",
       "SERP Playground": "own-axis",
@@ -252,7 +275,9 @@ describe("navItems", () => {
       "Keyword Research": "own-axis",
       "Domain Overview": "own-axis",
       Backlinks: "own-axis",
+      Pages: "own-axis",
       "Search Console": "own-axis",
+      Annotations: "own-axis",
       Markets: "project",
       Runs: "project",
       Schedules: "project",
@@ -303,16 +328,18 @@ describe("navItems", () => {
     ).toBe("/app/prj_example/competitors");
   });
 
-  it("keeps landing preferences to their original eight route segments", () => {
+  it("keeps landing preferences to the primary route segments", () => {
     expect(landingSegments).toEqual([
       "dashboard",
+      "pages",
       "search-console",
       "keyword-research",
       "domain-overview",
       "rank-tracker",
       "backlinks",
       "competitors",
-      "timeline",
+      "ai-visibility",
+      "annotations",
     ]);
     expect(landingSegments).not.toContain("install");
     expect(landingSegments).not.toContain("integrations");
@@ -321,10 +348,13 @@ describe("navItems", () => {
 
   it("keeps landing preferences independent from rail entries", () => {
     expect(primaryNavEntries.map((entry) => entry.segment)).toEqual([...landingSegments]);
-    expect(primaryNavEntries.find((entry) => entry.segment === "timeline")?.label).toBe("Timeline");
-    expect(
-      navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
-    ).not.toContain("Timeline");
+    expect(primaryNavEntries.find((entry) => entry.segment === "annotations")?.label).toBe(
+      "Annotations",
+    );
+    expect(primaryNavEntries.find((entry) => entry.segment === "ai-visibility")).toMatchObject({
+      label: "AI Visibility",
+    });
+    expect(navItems("prj_example").map((item) => item.label)).toContain("Annotations");
     for (const entry of primaryNavEntries) {
       expect(entry.label.length).toBeGreaterThan(0);
       expect(entry.icon).toBeDefined();

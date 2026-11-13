@@ -20,7 +20,23 @@ vi.mock("./_auth", () => ({
   }),
 }));
 vi.mock("@/lib/agent-reports/service", () => ({ listAgentReports: mocks.reports }));
+vi.mock("@/lib/challenge-report/build", () => ({
+  readChallengeReportDefaults: async () => ({
+    defaultStart: "2026-01-01",
+    domain: "example.com",
+  }),
+}));
+vi.mock("@/lib/challenge-report/project-challenge", () => ({
+  readProjectChallenge: async () => null,
+}));
+vi.mock("@/lib/challenge-report/drafts", () => ({
+  challengeReportDraftIds: async () => new Set<string>(),
+}));
 vi.mock("@/lib/project-context/service", () => ({ getProjectContext: mocks.context }));
+vi.mock("@/lib/report-sharing/read", () => ({
+  readReportShareSummary: async () => null,
+  reportAudiences: async () => new Map(),
+}));
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.reports.mockResolvedValue([]);
@@ -42,7 +58,13 @@ it.each([
       canCreate: allowed,
       canEdit: allowed,
     });
-    expect(await getAgentReportsPage(projectId)).toEqual({ reports: [], canCreate: allowed });
+    expect(await getAgentReportsPage(projectId)).toEqual({
+      canCreate: allowed,
+      challenge: { defaultStart: "2026-01-01", domain: "example.com" },
+      journey: null,
+      workAvailable: false,
+      reports: [],
+    });
     expect(await getProjectContextPage(projectId)).toEqual({
       context: emptyProjectContext,
       canEdit: allowed,

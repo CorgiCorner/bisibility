@@ -105,7 +105,7 @@ export function OverrideCell({
           searchable={availableMarkets.length > 6}
           searchPlaceholder={t("searchMarkets")}
           summary={() => label}
-          triggerClassName="h-8 w-full min-w-36 max-w-56 text-[12px]"
+          triggerClassName="w-full min-w-36 max-w-56 text-[12px]"
           values={includedMarkets.map((market) => market.id)}
         />
       ) : (

@@ -79,6 +79,7 @@ export function TrackingWorkspaceDrawers({
           setDrawer(null);
           setTab("runs");
         }}
+        engineDefault={data.engineDefault}
       />
       <TrackingEvidenceDrawer sample={selectedSample} onClose={() => setSelectedSample(null)} />
     </>

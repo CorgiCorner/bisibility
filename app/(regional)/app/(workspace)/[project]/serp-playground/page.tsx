@@ -14,7 +14,7 @@ export default async function SerpPlaygroundPage({
   const [{ project }, runtime] = await Promise.all([params, resolveRegionalDocumentLocale()]);
   const [data, messages] = await Promise.all([
     getSerpPlaygroundPage(project),
-    loadCoreMessages(runtime.locale, ["shared", "projectRankTracker"]),
+    loadCoreMessages(runtime.locale, ["shared", "projectRankTracker", "researchHistory"]),
   ]);
   return (
     <FeatureMessagesProvider

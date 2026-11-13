@@ -1,0 +1,76 @@
+{
+  "projectSettingsTags": {
+    "columns": {
+      "keywords": "Palabras clave",
+      "pages": "Páginas",
+      "rule": "Regla",
+      "tag": "Etiqueta",
+      "actions": "Acciones",
+      "usedIn": "Se usa en"
+    },
+    "delete": {
+      "cancel": "Cancelar",
+      "confirm": "Quitar etiqueta",
+      "error": "No se ha podido quitar la etiqueta.",
+      "title": "¿Quitar {name}?",
+      "usageBothManyKeywords": "{keywordCount, number} palabras clave y {segmentCount, plural, one {# segmento la usan.} other {# segmentos la usan.}}",
+      "usageBothOneKeyword": "{segmentCount, plural, one {1 palabra clave y # segmento la usan.} other {1 palabra clave y # segmentos la usan.}}",
+      "usageKeywordOnly": "{count, plural, one {# palabra clave la usa.} other {# palabras clave la usan.}}",
+      "usageSegmentOnly": "{count, plural, one {# segmento la usa.} other {# segmentos la usan.}}"
+    },
+    "empty": "Todavía no hay etiquetas.",
+    "lead": "Un mismo conjunto de etiquetas para todo el proyecto, usado en páginas y en palabras clave.",
+    "menu": "Más acciones para {name}",
+    "menuDelete": "Eliminar",
+    "menuEdit": "Editar regla",
+    "menuMerge": "Fusionar en...",
+    "menuRename": "Cambiar nombre",
+    "merge": {
+      "alerts": "{count, plural, one {# alerta} other {# alertas}}",
+      "cancel": "Cancelar",
+      "choose": "Etiqueta",
+      "confirm": "Fusionar",
+      "error": "No se ha podido fusionar la etiqueta.",
+      "keywordSegments": "{count, plural, one {# segmento de palabras clave} other {# segmentos de palabras clave}}",
+      "keywords": "{count, plural, one {# palabra clave} other {# palabras clave}}",
+      "none": "Nada más usa esta etiqueta. Se eliminará.",
+      "pages": "{count, plural, one {# página} other {# páginas}}",
+      "rule": "La regla de páginas se mueve porque {target} no tiene ninguna.",
+      "savedViews": "{count, plural, one {# vista guardada} other {# vistas guardadas}}",
+      "summary": "{counts} pasan a {target}.",
+      "title": "Fusionar {name} en"
+    },
+    "new": "Nueva etiqueta",
+    "rename": {
+      "cancel": "Cancelar",
+      "confirm": "Cambiar nombre",
+      "error": "No se ha podido cambiar el nombre de la etiqueta.",
+      "exists": "{name} ya existe. Fusiónala en su lugar.",
+      "label": "Nombre nuevo",
+      "required": "Escribe un nombre de etiqueta.",
+      "title": "Cambiar el nombre de {name}",
+      "tooLong": "El nombre de una etiqueta puede tener como máximo 48 caracteres."
+    },
+    "rule": {
+      "hand": "a mano",
+      "none": "-",
+      "sitemap": "sitemap",
+      "urls": "{count, plural, one {# URL} other {# URL}}"
+    },
+    "ruleLead": "Una regla mantiene la etiqueta en las páginas que coinciden, también en las que se añadan después.",
+    "tableLabel": "Etiquetas del proyecto",
+    "usage": {
+      "alert": "{count, plural, one {# alerta} other {# alertas}}",
+      "keywordSegment": "{count, plural, one {# segmento de palabras clave} other {# segmentos de palabras clave}}",
+      "none": "aún no se usa",
+      "savedView": "{count, plural, one {# vista guardada} other {# vistas guardadas}}",
+      "tooltipAlerts": "Alertas: {names}",
+      "tooltipKeywordSegments": "Segmentos de palabras clave: {names}",
+      "tooltipSavedViews": "Vistas guardadas: {names}"
+    },
+    "where": {
+      "body": "Filtro de páginas, Por etiqueta y Comparar. Filtro y vistas guardadas del Rank Tracker. Objetivo de una regla de alertas. Filtro Todas las etiquetas del panel.",
+      "title": "Dónde funcionan las etiquetas"
+    }
+  }
+}

@@ -96,7 +96,7 @@ describe("AccountShell", () => {
     const shell = container.querySelector("[data-account-shell]");
     expect(shell).toHaveClass("mx-auto", "w-full", "max-w-[1040px]");
     expect(settingsShellGridClassName).toContain("lg:grid-cols-[200px_minmax(0,760px)]");
-    expect(settingsContentColumnClassName).toBe("min-w-0 w-full max-w-[760px]");
+    expect(settingsContentColumnClassName).toBe("min-w-0 w-full lg:max-w-[760px]");
 
     const subnav = container.querySelector("[data-account-subnav]");
     expect(subnav).toHaveClass(
@@ -161,7 +161,7 @@ describe("AccountShell", () => {
     const { container } = render(<Shell activeSection="preferences" />);
 
     const column = container.querySelector("[data-account-shell] > div > div.min-w-0");
-    expect(column).toHaveClass("max-w-[760px]");
+    expect(column).toHaveClass("lg:max-w-[760px]");
     expect(column?.querySelector('[aria-label="Account section"]')).toBeTruthy();
     expect(container.querySelector("[data-account-shell] > .mb-5")).toBeNull();
   });
@@ -179,7 +179,7 @@ describe("AccountShell", () => {
       expect(boundary?.firstElementChild).toHaveAttribute("data-account-loading-grid", "");
 
       const contentColumn = boundary?.querySelector("[data-account-loading-grid] > div.min-w-0");
-      expect(contentColumn).toHaveClass("max-w-[760px]");
+      expect(contentColumn).toHaveClass("lg:max-w-[760px]");
       expect(contentColumn?.querySelector("[data-account-loading-mobile-menu]")).toBeTruthy();
 
       const subnav = boundary?.querySelector("[data-account-loading-subnav]");

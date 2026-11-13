@@ -1,0 +1,76 @@
+{
+  "projectSettingsTags": {
+    "columns": {
+      "keywords": "Słowa kluczowe",
+      "pages": "Strony",
+      "rule": "Reguła",
+      "tag": "Tag",
+      "actions": "Akcje",
+      "usedIn": "Użyty w"
+    },
+    "delete": {
+      "cancel": "Anuluj",
+      "confirm": "Usuń tag",
+      "error": "Nie udało się usunąć tagu.",
+      "title": "Usunąć tag {name}?",
+      "usageBothManyKeywords": "Używany przez słowa kluczowe ({keywordCount, number}) i {segmentCount, plural, one {# segment} few {# segmenty} many {# segmentów} other {# segmentu}}.",
+      "usageBothOneKeyword": "{segmentCount, plural, one {Używany przez 1 słowo kluczowe i # segment.} few {Używany przez 1 słowo kluczowe i # segmenty.} many {Używany przez 1 słowo kluczowe i # segmentów.} other {Używany przez 1 słowo kluczowe i # segmentu.}}",
+      "usageKeywordOnly": "{count, plural, one {Używany przez # słowo kluczowe.} few {Używany przez # słowa kluczowe.} many {Używany przez # słów kluczowych.} other {Używany przez # słowa kluczowego.}}",
+      "usageSegmentOnly": "{count, plural, one {Używany przez # segment.} few {Używany przez # segmenty.} many {Używany przez # segmentów.} other {Używany przez # segmentu.}}"
+    },
+    "empty": "Nie ma jeszcze tagów.",
+    "lead": "Jeden zestaw tagów dla całego projektu, używany na stronach i przy słowach kluczowych.",
+    "menu": "Więcej działań dla {name}",
+    "menuDelete": "Usuń",
+    "menuEdit": "Edytuj regułę",
+    "menuMerge": "Scal z...",
+    "menuRename": "Zmień nazwę",
+    "merge": {
+      "alerts": "{count, plural, one {# alert} few {# alerty} many {# alertów} other {# alertu}}",
+      "cancel": "Anuluj",
+      "choose": "Tag",
+      "confirm": "Scal",
+      "error": "Nie udało się scalić tagu.",
+      "keywordSegments": "{count, plural, one {# segment słów kluczowych} few {# segmenty słów kluczowych} many {# segmentów słów kluczowych} other {# segmentu słów kluczowych}}",
+      "keywords": "{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+      "none": "Nic innego nie używa tego tagu. Zostanie usunięty.",
+      "pages": "{count, plural, one {# strona} few {# strony} many {# stron} other {# strony}}",
+      "rule": "Reguła stron przechodzi, bo {target} nie ma własnej.",
+      "savedViews": "{count, plural, one {# zapisany widok} few {# zapisane widoki} many {# zapisanych widoków} other {# zapisanego widoku}}",
+      "summary": "{counts} przechodzą do tagu {target}.",
+      "title": "Scal tag {name} z"
+    },
+    "new": "Nowy tag",
+    "rename": {
+      "cancel": "Anuluj",
+      "confirm": "Zmień nazwę",
+      "error": "Nie udało się zmienić nazwy tagu.",
+      "exists": "Tag {name} już istnieje. Scal z nim.",
+      "label": "Nowa nazwa",
+      "required": "Wpisz nazwę tagu.",
+      "title": "Zmień nazwę tagu {name}",
+      "tooLong": "Nazwa tagu może mieć najwyżej 48 znaków."
+    },
+    "rule": {
+      "hand": "ręcznie",
+      "none": "-",
+      "sitemap": "mapa witryny",
+      "urls": "{count, plural, one {# adres URL} few {# adresy URL} many {# adresów URL} other {# adresu URL}}"
+    },
+    "ruleLead": "Reguła utrzymuje tag na pasujących stronach, także na stronach dodanych później.",
+    "tableLabel": "Tagi projektu",
+    "usage": {
+      "alert": "{count, plural, one {# alert} few {# alerty} many {# alertów} other {# alertu}}",
+      "keywordSegment": "{count, plural, one {# segment słów kluczowych} few {# segmenty słów kluczowych} many {# segmentów słów kluczowych} other {# segmentu słów kluczowych}}",
+      "none": "jeszcze nieużywany",
+      "savedView": "{count, plural, one {# zapisany widok} few {# zapisane widoki} many {# zapisanych widoków} other {# zapisanego widoku}}",
+      "tooltipAlerts": "Alerty: {names}",
+      "tooltipKeywordSegments": "Segmenty słów kluczowych: {names}",
+      "tooltipSavedViews": "Zapisane widoki: {names}"
+    },
+    "where": {
+      "body": "Filtr stron, Według tagu i Porównanie. Filtr i zapisane widoki Rank Trackera. Cel reguły alertu. Filtr Wszystkie tagi na pulpicie.",
+      "title": "Gdzie działają tagi"
+    }
+  }
+}

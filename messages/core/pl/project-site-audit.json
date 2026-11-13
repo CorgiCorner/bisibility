@@ -2,8 +2,10 @@
   "projectSiteAudit": {
     "heading": "Audyt witryny",
     "description": "Sprawdź HTTP, metadane, nagłówki, indeksowalność, linki i tekst alternatywny obrazów dla {domain}.",
-    "pageLimit": "Limit stron",
-    "pageLimitError": "Wybierz od 1 do {limit, number} stron.",
+    "budgetEmpty": "W tej chwili nie ma stron dostępnych do audytu.",
+    "maxAction": "Maks.",
+    "pageLimit": "Strony do sprawdzenia",
+    "pageLimitError": "Teraz możesz sprawdzić do {limit, number} stron w jednym audycie.",
     "run": "Uruchom audyt",
     "running": "Skanowanie witryny",
     "cost": "Do 15 sekund · Bez kredytów dostawcy · Wyniki wykorzystywane ponownie zgodnie z ustawieniami pamięci podręcznej projektu",
@@ -103,6 +105,44 @@
       "cancelled": "Anulowany",
       "unknown": "Nieznany"
     },
-    "availableLimit": "Obecnie dostępne: do {limit, number} stron na audyt."
+    "vitals": {
+      "check": "Sprawdź podstawowe wskaźniki",
+      "columns": {
+        "cls": "CLS",
+        "inp": "INP",
+        "lcp": "LCP",
+        "page": "Strona",
+        "status": "Status"
+      },
+      "connect": "Połącz PageSpeed Insights",
+      "connectBody": "Połącz PageSpeed Insights, aby zobaczyć dane terenowe stron z tego audytu.",
+      "desktop": "Komputer",
+      "error": {
+        "invalid_key": "Klucz API PageSpeed Insights został odrzucony.",
+        "no_sample": "Uruchom audyt witryny, aby wybrać strony do sprawdzenia.",
+        "not_connected": "Połącz PageSpeed Insights przed sprawdzeniem.",
+        "quota": "Wyczerpano limit PageSpeed Insights. Spróbuj ponownie później."
+      },
+      "goodHint": "Dobrze: LCP poniżej 2,5 s, INP poniżej 200 ms, CLS poniżej 0,1",
+      "milliseconds": "{value} ms",
+      "mobile": "Telefon",
+      "noSample": "Uruchom audyt witryny, aby wybrać strony do sprawdzenia.",
+      "notChecked": "Jeszcze nie sprawdzono.",
+      "passCount": "{pass, number} z {sample, number} stron spełnia próg na {strategy}",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Dane terenowe od prawdziwych użytkowników",
+        "lab": "Szacunek laboratoryjny",
+        "origin": "Dane terenowe domeny"
+      },
+      "status": {
+        "good": "Dobrze",
+        "needs_improvement": "Do poprawy",
+        "poor": "Słabo",
+        "unknown": "Nieznany"
+      },
+      "strategy": "Strategia",
+      "title": "Podstawowe wskaźniki internetowe"
+    }
   }
 }

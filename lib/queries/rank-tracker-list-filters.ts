@@ -1,6 +1,7 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import type { KeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import type { ActiveLens } from "@/lib/keywords/lens-model";
+import { aiOverviewShownExistsSql } from "./rank-tracker-ai-overview-sql";
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
 const positionRanges = {
@@ -36,7 +37,7 @@ export function lensPredicate(lens: ActiveLens, strictLocation = false) {
 export function contentPredicate(
   filters: KeywordFilters,
   search: string,
-  options: { deferExactRowPredicates?: boolean } = {},
+  options: { asOf?: Date | null; deferExactRowPredicates?: boolean } = {},
 ) {
   const contains = escapeLike(filters.contains.trim());
   const query = options.deferExactRowPredicates ? "" : escapeLike(search.trim());
@@ -54,6 +55,7 @@ export function contentPredicate(
     AND ${lastCheckPredicate(filters.lastCheck)}
     AND true
     AND ${!options.deferExactRowPredicates && filters.urlChanged ? Prisma.sql`d."rankingPages" > 1` : Prisma.sql`true`}
+    AND ${filters.aiOverviewShown ? aiOverviewShownExistsSql(Prisma.sql`k.id`, options.asOf ?? null) : Prisma.sql`true`}
     AND ${query ? Prisma.sql`${searchFields} ILIKE ${`%${query}%`} ESCAPE '\\'` : Prisma.sql`true`}`;
 }
 

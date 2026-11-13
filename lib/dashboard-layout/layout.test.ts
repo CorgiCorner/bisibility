@@ -24,6 +24,8 @@ describe("dashboard layout and projection planning", () => {
       "by_market",
       "movers",
       "domain_rating",
+      "organic_conversions",
+      "seo_cost",
     ]);
     expect(result.composition.projections.all).not.toContain("local_business_observations");
     expect(result.composition.projections.all).not.toContain("competitor_comparison");

@@ -15,7 +15,8 @@ function Widget({ id }: Readonly<{ id?: WidgetId }>) {
         ))}
       </div>
     );
-  const chart = id === "position_trend" || id === "position_distribution";
+  const chart =
+    id === "position_trend" || id === "position_distribution" || id === "organic_conversions";
   return (
     <Panel className={chart ? "px-5 py-4.5" : undefined}>
       <Bar className="h-4 w-40 max-w-full" />

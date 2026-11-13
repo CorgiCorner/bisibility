@@ -4,7 +4,6 @@ import {
   mapWithConcurrency,
   markTabsSaved,
   nextBudgetResetAt,
-  recentSearchReplay,
   researchFailureState,
   researchRetryPresentation,
   researchSaveInput,
@@ -33,36 +32,6 @@ describe("research workspace model", () => {
         languageLabel: "English",
       }),
     ).toBe("ES@en");
-  });
-
-  it("falls back from a stale recent connection and detects expired cache entries", () => {
-    const replay = recentSearchReplay(
-      {
-        cachedUntil: "2026-07-22T10:00:00.000Z",
-        connectionId: "deleted",
-        createdAt: "2026-07-22T08:00:00.000Z",
-        includeClickstream: true,
-        locationKey: "DE",
-        scopeLabel: "Germany / German",
-        mode: "ideas",
-        resultLimit: 300,
-        seed: "seo",
-      },
-      "conn_b00000000000000000000000",
-      ["conn_a00000000000000000000000", "conn_b00000000000000000000000"],
-      new Date("2026-07-22T10:01:00.000Z"),
-    );
-
-    expect(replay).toMatchObject({
-      cached: false,
-      connectionId: "conn_b00000000000000000000000",
-      overrides: {
-        connectionId: "conn_b00000000000000000000000",
-        includeClickstream: true,
-        mode: "ideas",
-        resultLimit: 300,
-      },
-    });
   });
 
   it("rebuilds retry input from the failed tab instead of form state", () => {

@@ -1,0 +1,31 @@
+{
+  "researchHistory": {
+    "aiOverview": "Resumen de IA",
+    "all": "Todas",
+    "cached": "en caché",
+    "checks": "{count, plural, one {# comprobación} other {# comprobaciones}}",
+    "close": "Cerrar historial",
+    "desktop": "Escritorio",
+    "emptyChecks": "Las comprobaciones de este proyecto aparecen aquí.",
+    "emptyRuns": "Las ejecuciones de este proyecto aparecen aquí.",
+    "emptyTitle": "Aún no hay historial",
+    "error": "No se pudo cargar el historial.",
+    "loadOlderChecks": "Cargar comprobaciones anteriores",
+    "loadOlderRuns": "Cargar ejecuciones anteriores",
+    "loading": "Cargando historial",
+    "mobile": "Móvil",
+    "openAllRuns": "Abrir todas las ejecuciones como tabla",
+    "pin": "Fijar {title}",
+    "pinned": "Fijadas {count}",
+    "retry": "Reintentar",
+    "runs": "{count, plural, one {# ejecución} other {# ejecuciones}}",
+    "searchKeywords": "Buscar palabras clave",
+    "searchLabel": "Buscar en el historial",
+    "searchPrompts": "Buscar prompts",
+    "suggestions": "Recientes",
+    "title": "Historial",
+    "today": "Hoy",
+    "unpin": "Quitar la fijación de {title}",
+    "yesterday": "Ayer"
+  }
+}

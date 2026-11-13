@@ -195,6 +195,8 @@ describe("DataTable", () => {
     const rendersBeforeResize = renderCell.mock.calls.length;
 
     expect(root.style.getPropertyValue("--dt-table-width")).toBe("500px");
+    const flexible = root.querySelector<HTMLElement>('[data-column-id="second"]');
+    expect(flexible).toHaveStyle({ flexGrow: "1" });
     expect(root.style.getPropertyValue("--dt-pin-first")).toBe("0px");
     expect(root.style.getPropertyValue("--dt-pin-second")).toBe("80px");
     expect(root.style.getPropertyValue("--dt-pin-actions")).toBe("0px");

@@ -50,7 +50,7 @@ describe("TrackingSettingsLoading", () => {
       "[data-tracking-settings-loading]",
     ]) {
       const column = container.querySelector(selector);
-      expect(column).toHaveClass("max-w-[760px]");
+      expect(column).toHaveClass("lg:max-w-[760px]");
       expect(column).not.toHaveClass("max-w-[640px]");
     }
   });

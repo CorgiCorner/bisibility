@@ -30,6 +30,7 @@ const resolvedFields: readonly RankTrackerQueryField[] = [
   "tags",
   "topics",
   "urlChanged",
+  "aiOverviewShown",
   "volMax",
   "volMin",
   "wrongUrl",

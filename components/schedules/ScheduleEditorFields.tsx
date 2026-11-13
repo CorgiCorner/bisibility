@@ -127,7 +127,7 @@ export function ScheduleEditorFields({
             { label: t("frequencyMonthly"), value: "monthly" },
             { label: t("editor.customCron"), value: "custom_cron" },
           ]}
-          size="toolbar"
+          size="field"
           value={frequency}
         />
       </div>

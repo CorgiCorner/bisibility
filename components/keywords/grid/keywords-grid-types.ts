@@ -18,6 +18,7 @@ import type {
 } from "@/lib/keywords/saved-view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import type { RankTrackerAiOverviewPresentation } from "@/lib/queries/rank-tracker-ai-overview-model";
 import type { RankTrackerLocalPresentation } from "@/lib/queries/rank-tracker-local-model";
 import type { ReportSummaryPresentation } from "@/lib/rank-reports/presentation";
 import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
@@ -73,6 +74,7 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   projectMarkets?: ProjectMarketsView;
   query: RankTrackerQueryState;
   local?: RankTrackerLocalPresentation;
+  aiOverview?: RankTrackerAiOverviewPresentation;
   report?: ReportSummaryPresentation;
   rows: MarketGridViewRow[];
   viewDevices?: readonly import("@/lib/keywords/view-devices").KeywordViewDevice[];

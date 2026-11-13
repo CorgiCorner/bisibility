@@ -44,6 +44,7 @@ const flatQuery: RankTrackerQueryState = {
     volMax: 50,
     volMin: 0,
     wrongUrl: false,
+    aiOverviewShown: false,
   },
   grouped: false,
   lens: { device: "all", locationId: null },

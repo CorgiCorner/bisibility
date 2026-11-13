@@ -145,6 +145,8 @@ export {
   releaseExpiredMigrationHoldsWorkflow,
   sendWeeklyReportDigestWorkflow,
   syncPresenceWorkflow,
+  syncProjectPagesWorkflow,
+  syncSearchEngineUpdatesWorkflow,
   syncSitemapsWorkflow,
 } from "./maintenance-workflows";
 export { maintainMeteringReservationsWorkflow } from "./metering-maintenance-workflow";

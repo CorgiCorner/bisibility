@@ -2,12 +2,23 @@
 
 import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import { IconButton } from "@/components/ui/IconButton";
-import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
+import { cn } from "@/lib/ui/cn";
+import {
+  FLOATING_DRAWER_DESKTOP_QUERY,
+  FLOATING_DRAWER_FRAME_CLASS,
+  FLOATING_DRAWER_PANEL_CLASS,
+  FLOATING_DRAWER_SHEET_CLASS,
+  FLOATING_DRAWER_WIDTH,
+  type FloatingDrawerPlacement,
+  floatingDrawerDuration,
+  floatingDrawerPlacement,
+} from "@/lib/ui/floating-drawer";
+import { FloatingDrawerGrab } from "@/lib/ui/floating-drawer-grab";
+import { useFloatingDrawerSwipe } from "@/lib/ui/use-floating-drawer-swipe";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
-import type { ReactNode, Ref } from "react";
+import type { ComponentProps, ReactNode, Ref } from "react";
 import { useId } from "react";
 import { type DrawerBackAction, DrawerBackButton } from "./DrawerBackButton";
 
@@ -31,13 +42,14 @@ export type AppDrawerProps = {
   footer?: ReactNode;
   /** Above the title: a kicker, or the way back out of a stack of panels. */
   headerLeading?: ReactNode;
-  /** On a phone the side panel becomes a bottom sheet, which is where a thumb reaches. */
+  /**
+   * Accepted for existing callers. Placement follows the shared 640px rule for every drawer:
+   * a floating panel from `sm` up, a bottom sheet below.
+   */
   sheetOnMobile?: boolean;
   /** Puts the caret on the close button when the panel opens, for a panel opened from a row. */
   autoFocusClose?: boolean;
 };
-
-const panelBorder = "1px solid var(--border)";
 
 export function AppDrawer({
   backAction,
@@ -52,13 +64,29 @@ export function AppDrawer({
   children,
   footer,
   headerLeading,
-  sheetOnMobile = false,
 }: Readonly<AppDrawerProps>) {
   const t = useTranslations("shared.controls.drawer");
   const titleId = useId();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const narrow = useMediaQuery("(max-width:640px)");
-  const sheet = sheetOnMobile && narrow;
+  const isDesktop = useMediaQuery(FLOATING_DRAWER_DESKTOP_QUERY);
+  const placement: FloatingDrawerPlacement = floatingDrawerPlacement(isDesktop);
+  const sheet = placement === "sheet";
+  const swipe = useFloatingDrawerSwipe({
+    enabled: sheet,
+    onClose: () => onClose(),
+    reducedMotion,
+  });
+  const contentProps: ComponentProps<"div"> & { "data-placement": FloatingDrawerPlacement } = {
+    "aria-labelledby": titleId,
+    "aria-modal": true,
+    className: cn(
+      FLOATING_DRAWER_FRAME_CLASS,
+      sheet ? FLOATING_DRAWER_SHEET_CLASS : FLOATING_DRAWER_PANEL_CLASS,
+    ),
+    "data-placement": placement,
+    role: "dialog",
+    style: sheet ? { maxHeight: "88vh", width: "auto" } : { width: FLOATING_DRAWER_WIDTH.form },
+  };
 
   return (
     <Drawer
@@ -66,33 +94,18 @@ export function AppDrawer({
       open={open}
       onClose={(_event, reason) => onClose(reason)}
       onExited={onExited}
-      duration={{
-        enter: reducedMotion ? 0 : MOTION_DRAWER_ENTER,
-        exit: reducedMotion ? 0 : MOTION_DRAWER_EXIT,
-      }}
-      contentProps={{
-        "aria-labelledby": titleId,
-        "aria-modal": true,
-        role: "dialog",
-        style: {
-          backgroundColor: "var(--bg-elev)",
-          boxShadow: "none",
-          color: "var(--fg)",
-          ...(sheet
-            ? {
-                borderTop: panelBorder,
-                borderTopLeftRadius: UI_RADIUS_ROLES.card,
-                borderTopRightRadius: UI_RADIUS_ROLES.card,
-                maxHeight: "88vh",
-                maxWidth: "100%",
-                width: "100%",
-              }
-            : { borderLeft: panelBorder, maxWidth: "94vw", width: 560 }),
-        },
-      }}
+      duration={floatingDrawerDuration(placement, reducedMotion)}
+      contentProps={contentProps}
     >
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+        {sheet ? <FloatingDrawerGrab {...swipe} /> : null}
+        <header
+          className={cn(
+            "flex items-start justify-between gap-4 border-b border-border px-5 py-4",
+            sheet && "touch-none",
+          )}
+          {...(sheet ? swipe : undefined)}
+        >
           <div className="min-w-0 flex-1">
             {headerLeading ? <div className="mb-1.25">{headerLeading}</div> : null}
             <div className="flex min-w-0 items-center gap-1.5">

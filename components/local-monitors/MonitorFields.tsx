@@ -35,7 +35,7 @@ export function MonitorFields({
       <div className="grid gap-1.5 sm:col-span-2">
         <label
           htmlFor={`${id}-name`}
-          className="flex min-h-6 items-center text-ui-xs text-fg-muted"
+          className="flex min-h-6 items-center text-ui-caption text-fg-muted"
         >
           {t("fields.name")}
         </label>
@@ -62,7 +62,7 @@ export function MonitorFields({
       <div>
         <label
           htmlFor={`${id}-spacing`}
-          className="mb-1.5 flex min-h-6 items-center text-ui-xs text-fg-muted"
+          className="mb-1.5 flex min-h-6 items-center text-ui-caption text-fg-muted"
         >
           {t("fields.spacing")}
         </label>
@@ -77,7 +77,7 @@ export function MonitorFields({
       <div>
         <label
           htmlFor={`${id}-cutoff`}
-          className="mb-1.5 flex min-h-6 items-center text-ui-xs text-fg-muted"
+          className="mb-1.5 flex min-h-6 items-center text-ui-caption text-fg-muted"
         >
           {t("fields.cutoff")}
         </label>

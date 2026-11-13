@@ -19,6 +19,8 @@ export const PRODUCT_MODULES = [
   "integrations",
   "settings",
   "install",
+  "annotations",
+  "pages",
   "timeline",
 ] as const;
 
@@ -29,6 +31,7 @@ export type NavigationClickSource = "sidebar" | "command_palette" | "getting_sta
 export function productModuleForPath(path: string): ProductModule | null {
   const section = /^\/app\/[^/?#]+\/(?:m\/[^/?#]+\/)?([^/?#]+)(?:[/?#]|$)/.exec(path)?.[1];
   if (section === "providers") return "integrations";
-  if (section === "prompt-playground") return "prompt-explorer";
+  if (section === "prompt-playground" || section === "model-playground") return "prompt-explorer";
+  if (section === "timeline" || section === "annotations") return "annotations";
   return PRODUCT_MODULES.find((module) => module === section) ?? null;
 }

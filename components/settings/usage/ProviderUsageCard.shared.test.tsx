@@ -317,3 +317,21 @@ it("opens the editor for the surface of the edited row", () => {
   fireEvent.click(screen.getByRole("button", { name: "Edit API and agents limit for DataForSEO" }));
   expect(screen.getByText("Open budget editor conn_example programmatic")).toBeVisible();
 });
+
+it("restores the budget deep link on soft navigation and browser history", () => {
+  const props = {
+    projectName: "Example",
+    projectId: "p",
+    projectRef: "prj_p",
+    canEditBudget: true,
+    data: projectUsageFixture(),
+  };
+  const { rerender } = render(<ProviderUsageCard {...props} initialBudgetEditOpen={false} />);
+  expect(screen.queryByText("Open budget editor", { exact: false })).not.toBeInTheDocument();
+  rerender(<ProviderUsageCard {...props} initialBudgetEditOpen />);
+  expect(screen.getByText("Open budget editor", { exact: false })).toBeInTheDocument();
+  rerender(<ProviderUsageCard {...props} initialBudgetEditOpen={false} />);
+  expect(screen.queryByText("Open budget editor", { exact: false })).not.toBeInTheDocument();
+  rerender(<ProviderUsageCard {...props} initialBudgetEditOpen />);
+  expect(screen.getByText("Open budget editor", { exact: false })).toBeInTheDocument();
+});

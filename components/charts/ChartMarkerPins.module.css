@@ -1,0 +1,8 @@
+@layer theme, base, components, utilities;
+@layer components {
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules keeps this selector global so the pin classes are statically inspectable. */
+  :global(.annotation-pin-control) {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+}

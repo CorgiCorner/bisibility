@@ -235,6 +235,12 @@
       "trackToastPaused": "Añadida en pausa a Seguimiento de posiciones.",
       "trackToastScheduled": "Añadida a Seguimiento de posiciones con la frecuencia {frequency}.",
       "tablesFootnote": "La cobertura es la proporción de clics e impresiones cuyo texto de consulta nombra Google. El resto es tráfico real de consultas que Google oculta, así que las dos tablas nunca suman lo mismo que la fila de KPI.",
+      "clicksPerDay": "Clics por día",
+      "clicksPerDayChartAria": "Clics por día",
+      "clicksSeries": "Clics",
+      "clicksPerDayEmptyTitle": "Sin clics en esta ventana",
+      "clicksPerDayEmptyDescription": "Google no informó clics para esta propiedad en los días consolidados de esta ventana.",
+      "clicksPerDayLoading": "Cargando clics por día",
       "signalBandSub": "Ya consiguen impresiones, pero ninguna está en los tres primeros puestos",
       "signalFailed": "No se ha podido contar",
       "signalOverlapSub": "2 o más de tus páginas posicionadas para la misma consulta",
@@ -322,6 +328,17 @@
       "deltaPositionBetter": "{value} de mejora",
       "deltaPositionWorse": "{value} de caída",
       "sourceGa4": "GA4",
+      "metricConversions": "Conversiones",
+      "sourcePlausible": "Plausible",
+      "conversionSourceGoals": "{source} · {count, plural, one {# objetivo} other {# objetivos}}",
+      "conversionsByPage": "Conversiones por página",
+      "conversionsColumnPage": "Página",
+      "conversionsColumnSessions": "Sesiones",
+      "conversionsColumnConversions": "Conversiones",
+      "conversionsColumnRate": "Tasa",
+      "conversionsEmpty": "No hay conversiones en este periodo.",
+      "conversionsConnect": "Conectar analítica",
+      "openInPages": "Abrir en Páginas",
       "pendingStatusComplete": "Completado",
       "pendingStatusNeedsReauth": "Requiere reconexión",
       "pendingStatusNeedsRetry": "Requiere reintento",
@@ -594,7 +611,129 @@
       "inspectSitemapHint": "Carga hasta 10 URL guardadas, empezando por las que aún no se han comprobado. Puedes editar la lista antes de inspeccionarla.",
       "inspectSitemapEmpty": "No hay URL guardadas de este sitemap. Vuelve a cargar los sitemaps e inténtalo de nuevo.",
       "inspectNoSitemaps": "Primero carga los sitemaps para elegir sus URL.",
-      "inspectSitemapLoading": "Cargando URL..."
+      "inspectSitemapLoading": "Cargando URL...",
+      "lead": "Si Google tiene tus páginas en su índice, y por qué no cuando no las tiene.",
+      "allUrls": "Todas las URL",
+      "progress": {
+        "checked": "Comprobadas {checked, number} de {total, number} URL",
+        "perDay": "{count, number} URL al día. Siguiente lote a las {time}.",
+        "perDayNoTime": "{count, number} URL al día. La hora del siguiente lote no está disponible.",
+        "off": "La comprobación está desactivada.",
+        "limitZero": "El límite diario es 0, así que no se comprueba nada.",
+        "availableQuota": "Usa la cuota que Google deja disponible.",
+        "sources": "Sitemap {sitemap, number} · Objetivos del Rank Tracker {targets, number} · Añadidas a mano {manual, number}",
+        "daysLeft": "Quedan unos {days, plural, one {# día} other {# días}}",
+        "settings": "Configuración de indexación",
+        "tooltip": "Las comprobaciones usan la API de inspección de URL. La cuota diaria la comparte toda la propiedad de Search Console y se reinicia a medianoche, hora del Pacífico.",
+        "meter": "URL comprobadas"
+      },
+      "tiles": {
+        "names": {
+          "indexed": "Indexadas",
+          "not_indexed": "No indexadas",
+          "inspection_failed": "Inspección fallida",
+          "not_checked": "Sin comprobar"
+        },
+        "indexedShare": "{percent} de las comprobadas",
+        "reasonCount": "{count, plural, one {# motivo} other {# motivos}}",
+        "retriedTomorrow": "se reintenta mañana",
+        "notScheduled": "no programada",
+        "queued": "en cola",
+        "noChecked": "ninguna comprobada"
+      },
+      "reasons": {
+        "title": "No indexadas, por motivo",
+        "caption": "El estado de cobertura de Google, con las palabras de Google.",
+        "export": "Exportar CSV",
+        "exportFailed": "No se pudo crear la exportación.",
+        "exportTruncated": "La exportación incluye las primeras {rows, number} URL.",
+        "columnReason": "Motivo",
+        "columnUrls": "URL",
+        "columnChange": "Último cambio",
+        "openInPages": "Abrir en Páginas",
+        "changeNew": "nuevo",
+        "changeNone": "sin cambio",
+        "changeUp": "+{count, number} desde {date}",
+        "changeDown": "-{count, number} desde {date}",
+        "changeUnavailable": "No se puede calcular el cambio de 7 días con el historial guardado.",
+        "empty": "No hay URL no indexadas con un estado de cobertura.",
+        "docs": "Documentación de Google para este estado",
+        "genericDocs": "Documentación de indexación de Google"
+      },
+      "explanations": {
+        "crawledNotIndexed": {
+          "meaning": "Google rastreó esta URL y decidió no indexarla.",
+          "step1": "Haz que merezca indexarse: contenido único, enlaces internos y un propósito claro.",
+          "step2": "Confirma que la URL canónica es esta página.",
+          "step3": "Pide la indexación solo cuando la página sea útil. Google decide."
+        },
+        "discoveredNotIndexed": {
+          "meaning": "Google conoce esta URL y todavía no la ha rastreado.",
+          "step1": "Enlázala desde páginas que Google ya rastrea.",
+          "step2": "Déjala en el sitemap si quieres que se indexe.",
+          "step3": "Espera al siguiente rastreo. Pedirlo no lo garantiza."
+        },
+        "duplicateCanonical": {
+          "meaning": "Google trata esta URL como un duplicado y eligió otra canónica.",
+          "step1": "Elige la única URL que debe posicionar.",
+          "step2": "Apunta la etiqueta canónica y los enlaces internos a esa URL.",
+          "step3": "Saca el duplicado del sitemap si no debe indexarse."
+        },
+        "alternateCanonical": {
+          "meaning": "Esta URL apunta correctamente a otra página canónica.",
+          "step1": "Confirma que el destino canónico es la página que quieres indexar.",
+          "step2": "Conserva la URL alternativa si sirve a una variante real.",
+          "step3": "No esperes que esta URL aparezca en el índice."
+        },
+        "pageWithRedirect": {
+          "meaning": "Esta URL redirige, así que Google indexa el destino.",
+          "step1": "Confirma que la redirección va a la página correcta.",
+          "step2": "Actualiza los enlaces internos y el sitemap a la URL final.",
+          "step3": "Conserva la redirección si la URL antigua debe seguir resolviendo."
+        },
+        "notFound": {
+          "meaning": "Google pidió esta URL y el servidor respondió 404.",
+          "step1": "Restaura la página si debe existir, o redirígela a un reemplazo.",
+          "step2": "Quítala del sitemap.",
+          "step3": "Corrige los enlaces internos que todavía apuntan aquí."
+        },
+        "soft404": {
+          "meaning": "El servidor dijo que la página existe, pero Google la lee como vacía o de error.",
+          "step1": "Devuelve un 404 o 410 real para las páginas que ya no existen.",
+          "step2": "Si la página debe existir, dale contenido sustancial.",
+          "step3": "Evita plantillas de no encontrado que siguen devolviendo 200."
+        },
+        "noindex": {
+          "meaning": "La página pide a Google que no la indexe, con una etiqueta o cabecera noindex.",
+          "step1": "Quita noindex si la página debe indexarse.",
+          "step2": "Confirma que la meta robots y la cabecera X-Robots-Tag coinciden.",
+          "step3": "Deja que Google vuelva a rastrear cuando la etiqueta ya no esté."
+        },
+        "robots": {
+          "meaning": "robots.txt impide que Google rastree esta URL.",
+          "step1": "Permite la URL en robots.txt si debe rastrearse.",
+          "step2": "Una URL bloqueada puede quedarse fuera del índice.",
+          "step3": "Vuelve a enviar el sitemap cuando cambie la regla."
+        },
+        "serverError": {
+          "meaning": "Google vio un error de servidor (5xx) en esta URL.",
+          "step1": "Corrige el error y confirma que la página devuelve 200.",
+          "step2": "Revisa los registros de esta URL cerca del momento de la inspección.",
+          "step3": "Un 5xx que se mantiene deja la página fuera del índice."
+        }
+      },
+      "drops": {
+        "title": "Salieron del índice",
+        "caption": "El veredicto pasó de indexada a no indexada en los últimos 90 días.",
+        "page": "Página",
+        "since": "Desde",
+        "reason": "Motivo",
+        "reasonMissing": "no registrado",
+        "annotations": "Anotaciones",
+        "inAnnotations": "en Anotaciones",
+        "notInAnnotations": "Sin entrada de anotación",
+        "viewInPages": "Ver en Páginas"
+      }
     }
   }
 }

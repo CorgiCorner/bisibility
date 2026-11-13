@@ -31,6 +31,8 @@ describe("runtime public ID resource extensions", () => {
       asm: "aiTrackingSample",
       asg: "aiTrackingSuggestionGeneration",
       dpt: "devicePushToken",
+      cst: "costItem",
+      rsl: "reportShareLink",
     });
     expect(core.PUBLIC_ID_RESOURCE_REGISTRY).not.toHaveProperty("agr");
     for (const prefix of Object.keys(core.PUBLIC_ID_RESOURCE_REGISTRY) as core.PublicIdPrefix[]) {
@@ -72,6 +74,8 @@ describe("runtime public ID resource extensions", () => {
     "lmn",
     "lmj",
     "dpt",
+    "cst",
+    "rsl",
   ] as const)("generates strict tracking resource IDs: %s", (prefix) => {
     const id = makePublicId(prefix);
     expect(parsePublicId(id)?.prefix).toBe(prefix);

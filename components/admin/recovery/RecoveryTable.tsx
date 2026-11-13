@@ -36,7 +36,7 @@ export function RecoveryTable({
   showAccounting?: boolean;
   selected: string[];
   busy: boolean;
-  onSelect: (token: string, checked: boolean) => void;
+  onSelect: (reference: string, checked: boolean) => void;
   onDetails: (row: RecoveryCase) => void;
 }) {
   const t = useTranslations("instanceAdmin.recovery");
@@ -50,9 +50,9 @@ export function RecoveryTable({
     return "";
   }
   function leaf(value: RecoveryCase): Row {
-    const checked = selected.includes(value.token);
+    const checked = selected.includes(value.reference);
     return {
-      id: value.token,
+      id: value.reference,
       value,
       selected: checked,
       selectionDisabled:
@@ -93,7 +93,7 @@ export function RecoveryTable({
                 })}
                 checked={row.original.selected ?? false}
                 disabled={row.original.selectionDisabled}
-                onChange={(event) => onSelect(value.token, event.target.checked)}
+                onChange={(event) => onSelect(value.reference, event.target.checked)}
               />
             )
           );

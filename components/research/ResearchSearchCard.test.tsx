@@ -107,15 +107,15 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
   });
 
-  it("names the country without its language in the compact research control", () => {
+  it("names the country without its language in the research form control", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
     const scope = screen.getByRole("button", { name: "Country" });
     expect(scope).toHaveTextContent("United States");
     expect(scope).not.toHaveTextContent("English");
     expect(scope.querySelector("[data-country-flag='US']")).toBeInTheDocument();
-    expect(scope).toHaveClass("min-h-[34px]", "text-[13px]", "bg-bg-elev");
-    expect(scope).not.toHaveClass("h-10", "min-h-10", "text-[12px]");
+    expect(scope).toHaveClass("min-h-10", "max-sm:min-h-11", "text-ui-body", "bg-bg-elev");
+    expect(scope).not.toHaveClass("min-h-[34px]", "px-3", "text-[12px]");
   });
 
   it("disables provider work for an unsupported pair but keeps the scope editable", () => {
@@ -131,29 +131,36 @@ describe("ResearchSearchCard", () => {
     expect(screen.queryByRole("button", { name: "Data provider connection" })).toBeNull();
   });
 
-  it("pins the compact mode caret after its left content cluster", () => {
+  it("pins the form mode caret after its left content cluster", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
     const trigger = screen.getByRole("button", { name: "Research mode" });
-    expect(trigger).toHaveClass("text-[12px]", "leading-4");
+    expect(trigger).toHaveClass("min-h-10", "max-sm:min-h-11", "text-ui-body", "leading-5");
     expect(trigger.querySelector("[data-menu-select-content]")).toHaveClass("min-w-0");
     expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
     expect(screen.getByRole("button", { name: "Results limit" })).toHaveClass("justify-between");
   });
 
-  it("keeps the embedded seed wrapper at compact control height", () => {
+  it("uses the form control size for the embedded seed wrapper and actions", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
     const seed = screen.getByRole("textbox", { name: "Seed keyword" });
-    expect(seed.parentElement).toHaveClass("min-h-[34px]", "py-0.5");
+    expect(seed.parentElement).toHaveClass("min-h-10", "max-sm:min-h-11");
     expect(seed).toHaveClass(
-      "compact-text-12",
-      "text-[12px]",
-      "leading-4",
-      "placeholder:text-[12px]",
+      "text-ui-body",
+      "leading-5",
+      "placeholder:text-ui-caption",
       "placeholder:leading-4",
     );
     expect(seed).not.toHaveClass("min-h-[34px]", "py-1");
+    expect(screen.getByRole("button", { name: "Research ≈ $0.03" })).toHaveAttribute(
+      "data-size",
+      "input",
+    );
+    expect(screen.getByRole("button", { name: "Results limit" })).toHaveClass(
+      "min-h-10",
+      "max-sm:min-h-11",
+    );
   });
 
   it.each([null, 999])(

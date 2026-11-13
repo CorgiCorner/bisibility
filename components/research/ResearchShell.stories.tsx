@@ -164,7 +164,7 @@ export const Visibility: Story = {
 };
 export const PromptPlayground: Story = {
   args: { module: "prompt" },
-  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/prompt-playground` } } },
+  parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/model-playground` } } },
 };
 export const PromptPlaygroundEngines: Story = {
   args: {

@@ -13,6 +13,8 @@ type OpaqueAuditTargetPolicy = {
 export type AuditTargetPolicy = OpaqueAuditTargetPolicy | PublicAuditTargetPolicy;
 
 export const AUDIT_TARGET_POLICIES = {
+  ai_project_engine: { mode: "opaque" },
+  ai_source: { mode: "opaque" },
   alert_rule: { mode: "public", prefix: "alr", resource: "Alert rule" },
   api_key: { mode: "public", prefix: "key", resource: "API key" },
   authentication: { mode: "opaque" },
@@ -23,6 +25,7 @@ export const AUDIT_TARGET_POLICIES = {
   check_schedule: { mode: "public", prefix: "sch", resource: "Check schedule" },
   cloud_import_job: { mode: "public", prefix: "imp", resource: "Instance import job" },
   competitor: { mode: "public", prefix: "cmp", resource: "Competitor" },
+  cost_item: { mode: "public", prefix: "cst", resource: "Cost item" },
   ingest_hook: { mode: "public", prefix: "dwh", resource: "Ingest hook" },
   instance_ops: { mode: "opaque" },
   invite: { mode: "public", prefix: "inv", resource: "Invite" },

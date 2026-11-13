@@ -192,7 +192,7 @@ export function RankedKeywordSuggestionDrawer({
             onClick={() =>
               setSelected(new Set(selectable.slice(0, remaining).map((row) => row.id)))
             }
-            size="xs"
+            size="sm"
             type="button"
             variant="secondary"
           >
@@ -202,14 +202,14 @@ export function RankedKeywordSuggestionDrawer({
         {active.length > 0 ? (
           <Button
             onClick={() => setSelected(new Set())}
-            size="xs"
+            size="sm"
             type="button"
             variant="secondary"
           >
             {messages.clear}
           </Button>
         ) : null}
-        <Button onClick={selectTop} size="xs" type="button" variant="secondary">
+        <Button onClick={selectTop} size="sm" type="button" variant="secondary">
           {messages.top}
         </Button>
         <span className="self-center text-[11px] text-fg-muted tabular-nums">
@@ -244,6 +244,7 @@ export function RankedKeywordSuggestionDrawer({
       {canLoad ? (
         <Button
           className="mt-4"
+          size="sm"
           loading={pending}
           onClick={onLoadMore}
           type="button"

@@ -77,7 +77,6 @@ const interactiveBoundarySourcePaths = [
   "components/marketing/calculator/EstimateBreakdown.tsx",
   "components/marketing/calculator/PlanLadder.tsx",
   "components/markets/blocks/MarketDefinition.tsx",
-  "components/research/RecentResearchSearches.tsx",
   "components/research/ResearchDetailSaveAction.tsx",
   "components/research/ResearchSearchCard.tsx",
   "components/shell/CommandPalette.tsx",
@@ -511,6 +510,25 @@ describe("theme contrast contract", () => {
       expect(failures).toEqual([]);
     },
   );
+
+  it("keeps code text readable on the code surface", () => {
+    expect(colorSchemes.dark["code-bg"]).toBe(colorSchemes.dark["bg-inset"]);
+    expect(colorSchemes.light["code-bg"]).toBe("#1A1A1A");
+    const css = readFileSync("app/styles/theme-tokens.css", "utf8");
+    expect(css).toContain("--code-bg: #1c1c1c;");
+    expect(css).toContain("--code-bg: #1a1a1a;");
+    for (const scheme of ["light", "dark"] as const) {
+      for (const foreground of ["code-fg", "code-faint", "blue"] as const) {
+        expect(
+          contrast(token(scheme, foreground), token(scheme, "code-bg")),
+          `${scheme}: --${foreground} on --code-bg`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+    const utilities = readFileSync("app/styles/app-utilities.css", "utf8");
+    expect(utilities).toContain('[data-theme="dark"] .bg-code-bg:not([class*="border"])');
+    expect(utilities).toContain("box-shadow: inset 0 0 0 1px var(--code-border)");
+  });
 
   it("detects an inaccessible static colored surface pairing", () => {
     const failures = sourcePairFailures("fixture.tsx", '<span className="bg-red text-red" />');

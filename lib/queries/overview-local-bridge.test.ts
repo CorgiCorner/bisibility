@@ -16,9 +16,17 @@ const mocks = vi.hoisted(() => ({
   metrics: vi.fn(),
   options: vi.fn(),
   ledger: vi.fn(),
+  defaults: vi.fn(async () => null),
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    $transaction: mocks.transaction,
+    projectDefaults: { findUnique: mocks.defaults },
+    searchEngineUpdate: { findMany: vi.fn(async () => []) },
+    signal: { findMany: vi.fn(async () => []) },
+  },
+}));
 vi.mock("@/lib/dashboard-local/read", () => ({ readLocalReportInTransaction: mocks.local }));
 vi.mock("./overview-data", () => ({ loadOverviewMetricData: mocks.metrics }));
 vi.mock("./rank-tracker-session-report", () => ({

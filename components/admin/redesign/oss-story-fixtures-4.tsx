@@ -34,6 +34,7 @@ export const RecoverySelectionLimit = recoveryScenario({
     rows: Array.from({ length: 26 }, (_, i) => ({
       ...recoveryPage.rows[1],
       token: `case-limit-${i}`,
+      reference: `ref-limit-${i}`,
       project: `project-limit-${i}`,
     })),
   },

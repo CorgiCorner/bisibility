@@ -220,6 +220,7 @@ describe("combined keyword filters", () => {
       volMin: 10,
       wrongUrl: true,
       urlChanged: true,
+      aiOverviewShown: true,
     };
     expect(getFilterChips(filters).map((chip) => chip.key)).toEqual(
       expect.arrayContaining([
@@ -231,12 +232,24 @@ describe("combined keyword filters", () => {
         "serp:custom",
         "wrongUrl",
         "urlChanged",
+        "aiOverviewShown",
       ]),
     );
     expect(removeFilterChip(filters, "serp:custom").serp).toEqual([]);
     expect(removeFilterChip(filters, "volume")).toMatchObject({ volMin: 0, volMax: 50 });
     expect(removeFilterChip(filters, "urlChanged").urlChanged).toBe(false);
+    expect(removeFilterChip(filters, "aiOverviewShown").aiOverviewShown).toBe(false);
     expect(removeFilterChip(filters, "unknown")).toBe(filters);
+  });
+
+  it("keeps only rows the query already marked as showing an AI Overview", () => {
+    const shown = row({ id: "shown", aiOverviewShown: true });
+    const hidden = row({ id: "hidden", aiOverviewShown: false });
+    const unmarked = row({ id: "unmarked" });
+    const filters = { ...emptyKeywordFilters, aiOverviewShown: true };
+    expect(applyKeywordFilters([shown, hidden, unmarked], filters).map((item) => item.id)).toEqual([
+      "shown",
+    ]);
   });
 });
 
@@ -256,6 +269,7 @@ describe("savedViewFiltersSchema backward compatibility", () => {
     expect(parsed.intents).toEqual([]);
     expect(parsed.lastCheck).toBe("any");
     expect(parsed.urlChanged).toBe(false);
+    expect(parsed.aiOverviewShown).toBe(false);
   });
 
   it("round-trips topic and intent refinements", () => {

@@ -193,9 +193,14 @@ const nextConfig: NextConfig = {
         source: "/changelog",
       },
       {
-        destination: "/app/:project/prompt-playground",
+        destination: "/app/:project/model-playground",
         permanent: true,
         source: "/app/:project/prompt-explorer",
+      },
+      {
+        destination: "/app/:project/model-playground",
+        permanent: true,
+        source: "/app/:project/prompt-playground",
       },
       {
         destination: "/app/:project/keyword-research",
@@ -230,16 +235,6 @@ const nextConfig: NextConfig = {
       {
         destination: "/ja/features/prompt-tracker",
         source: "/ja/features/ai-tracking",
-        statusCode: 301,
-      },
-      {
-        destination: "/app/:project/brand-visibility",
-        source: "/app/:project/ai-visibility",
-        statusCode: 301,
-      },
-      {
-        destination: "/app/:project/brand-visibility/:path*",
-        source: "/app/:project/ai-visibility/:path*",
         statusCode: 301,
       },
       {

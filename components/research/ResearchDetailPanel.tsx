@@ -232,6 +232,7 @@ export function ResearchDetailPanel({
               </div>
               <ResearchTrackingCostLine fact={management.line} />
               <Button
+                size="input"
                 onClick={() =>
                   management.onAdd({
                     device,
@@ -241,7 +242,6 @@ export function ResearchDetailPanel({
                   })
                 }
                 startIcon={<Plus weight="regular" size={14} />}
-                style={{ width: "100%" }}
               >
                 {t("tracking")}
               </Button>

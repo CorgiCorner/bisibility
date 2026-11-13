@@ -44,6 +44,7 @@ export type DataTableLayoutControlProps = {
 export type DataTableProps<TRow extends DataTableRowBase> = DataTableLayoutControlProps & {
   ariaLabel: string;
   bordered?: boolean;
+  className?: string;
   columnPinning?: DataTableColumnPinning;
   columns: readonly DataTableColumn<TRow>[];
   defaultExpanded?: "none" | "all";

@@ -1,0 +1,18 @@
+/// Engines a project has chosen for AI Visibility. A project with no rows keeps the
+/// historical run-drawer default (consumer scrape, ChatGPT).
+model AiProjectEngine {
+  id          String           @id @default(cuid())
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  engine      AiTrackingEngine
+  source      AiTrackingSource
+  enabled     Boolean          @default(true)
+  updatedById String?
+  updatedBy   User?            @relation("AiProjectEngineUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([projectId, engine, source])
+  @@index([updatedById])
+  @@map("ai_project_engines")
+}

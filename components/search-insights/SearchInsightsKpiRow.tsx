@@ -1,59 +1,51 @@
 "use client";
 
+import { StatTile } from "@/components/ui/StatTile";
 import type {
   ClicksToSessionsKpi,
   SearchInsightsKpi,
 } from "@/lib/search-insights/queries/kpis-model";
 import type { OrganicSessionsPendingPresentation } from "@/lib/search-insights/queries/sessions-context";
 import { cn } from "@/lib/ui/cn";
-import { ArrowDownRightIcon as ArrowDownRight } from "@phosphor-icons/react/dist/csr/ArrowDownRight";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { useFormatter, useTranslations } from "next-intl";
 
+export type ConversionsKpiSlot =
+  | { href: string; kind: "connect" }
+  | { kind: "value"; kpi: SearchInsightsKpi };
+
 export type SearchInsightsKpiRowProps = {
+  /** Conversions for the same period, or a connect card when no source is connected. */
+  conversions?: ConversionsKpiSlot | null;
   /** Optional fifth card, so a second source can join the row without a second layout. */
   extra?: ClicksToSessionsKpi | OrganicSessionsPendingPresentation | null;
   kpis: readonly SearchInsightsKpi[];
 };
 
-// A flat window gets no arrow: pointing one anywhere would assert a direction the word denies.
-const DELTA_ARROW = { down: ArrowDownRight, flat: null, up: ArrowUpRight } as const;
-
 function KpiCard({ kpi }: Readonly<{ kpi: SearchInsightsKpi }>) {
   const format = useFormatter();
   const t = useTranslations("projectSearchInsights.copy");
-  const up = kpi.dir === "up";
-  const Arrow = DELTA_ARROW[kpi.dir];
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-card border border-border bg-bg-elev px-4 pb-4 pt-3.5">
-      <span className="flex min-w-0 items-center gap-2">
-        <span className="min-w-0 truncate font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted">
-          {metricLabel(kpi.metric, t)}
-        </span>
-        {/* Which system produced the number, on the number itself: two sources share this row. */}
-        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-sans tabular-nums text-ui-micro tracking-wide text-fg-muted">
-          {t("sourceGsc")}
-        </span>
-      </span>
-      <span className="font-sans tabular-nums text-ui-h1">{kpiValue(kpi, format)}</span>
-      <span
-        className={cn(
-          "inline-flex items-center gap-1.5 whitespace-nowrap font-sans tabular-nums text-ui-caption",
-          // Improvement is the only thing that earns colour; everything else stays so a
-          // normal week does not read as an alarm.
-          up ? "text-green-text" : "text-fg-muted",
-        )}
-      >
-        {Arrow ? <Arrow aria-hidden className="shrink-0" size={12} weight="regular" /> : null}
-        {deltaLabel(kpi, format, t)}
-      </span>
-      <span className="whitespace-nowrap font-sans tabular-nums text-ui-micro text-fg-muted">
-        {t("fromPrevious", {
-          value: kpi.previous === null ? t("deltaNoData") : kpiValue(kpi, format, kpi.previous),
-        })}
-      </span>
-    </div>
+    <StatTile
+      caption={t("fromPrevious", {
+        value: kpi.previous === null ? t("deltaNoData") : kpiValue(kpi, format, kpi.previous),
+      })}
+      delta={{ direction: kpi.dir, label: deltaLabel(kpi, format, t) }}
+      label={metricLabel(kpi.metric, t)}
+      source={sourceChip(kpi, t)}
+      value={kpiValue(kpi, format)}
+    />
   );
+}
+
+function sourceChip(
+  kpi: SearchInsightsKpi,
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+) {
+  if (kpi.metric !== "conversions") return t("sourceGsc");
+  const source = kpi.source === "plausible" ? t("sourcePlausible") : t("sourceGa4");
+  return (kpi.goalCount ?? 0) > 0
+    ? t("conversionSourceGoals", { count: kpi.goalCount ?? 0, source })
+    : source;
 }
 
 function metricLabel(
@@ -71,6 +63,8 @@ function metricLabel(
       return t("metricPosition");
     case "clicks_to_sessions":
       return t("metricClicksToSessions");
+    case "conversions":
+      return t("metricConversions");
   }
 }
 
@@ -129,26 +123,22 @@ function deltaLabel(
 function PendingKpiCard({ pending }: Readonly<{ pending: OrganicSessionsPendingPresentation }>) {
   const t = useTranslations("projectSearchInsights.copy");
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-card border border-border bg-bg-elev px-4 pb-4 pt-3.5">
-      <span className="flex min-w-0 items-center gap-2">
-        <span className="min-w-0 truncate font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted">
-          {t("ga4Sessions")}
-        </span>
-        <span className="shrink-0 rounded-full bg-bg-sunken px-1.5 py-px font-sans tabular-nums text-ui-micro tracking-wide text-fg-muted">
-          {t("sourceGa4")}
-        </span>
-      </span>
-      <span className="font-sans tabular-nums text-ui-h1">{t("pending")}</span>
-      <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
-        {pendingStatus(pending.status, t)}
-      </span>
-      <span className="text-ui-micro text-fg-muted">{pendingReason(pending.reason, t)}</span>
-      {pending.readyInMinutes ? (
-        <span className="font-sans tabular-nums text-ui-micro text-fg-muted">
-          {t("readyIn", { duration: pendingDuration(pending.readyInMinutes, t) })}
-        </span>
-      ) : null}
-    </div>
+    <StatTile
+      caption={
+        <>
+          <span className="block">{pendingStatus(pending.status, t)}</span>
+          <span className="block">{pendingReason(pending.reason, t)}</span>
+          {pending.readyInMinutes ? (
+            <span className="block">
+              {t("readyIn", { duration: pendingDuration(pending.readyInMinutes, t) })}
+            </span>
+          ) : null}
+        </>
+      }
+      label={t("ga4Sessions")}
+      source={t("sourceGa4")}
+      value={t("pending")}
+    />
   );
 }
 
@@ -213,28 +203,56 @@ function pendingDuration(
     : t("pendingDurationHours", { hours: Math.ceil(minutes / 60) });
 }
 
-export function SearchInsightsKpiRow({ extra, kpis }: Readonly<SearchInsightsKpiRowProps>) {
+function ConversionsConnectCard({ href }: Readonly<{ href: string }>) {
+  const t = useTranslations("projectSearchInsights.copy");
+  return (
+    <StatTile
+      label={t("metricConversions")}
+      value={t("conversionsConnect")}
+      valueNode={
+        <a
+          className="font-sans text-ui-caption text-accent-text no-underline hover:underline"
+          href={href}
+        >
+          {t("conversionsConnect")}
+        </a>
+      }
+    />
+  );
+}
+
+export function SearchInsightsKpiRow({
+  conversions = null,
+  extra,
+  kpis,
+}: Readonly<SearchInsightsKpiRowProps>) {
   const cards =
     extra?.kind === "visible"
       ? [...kpis, extra.kpi]
       : extra?.kind === "pending"
         ? [...kpis, extra]
         : [...kpis];
+  const withConversions = conversions?.kind === "value" ? [...cards, conversions.kpi] : cards;
   return (
     <>
       <div
         className={cn(
           "grid grid-cols-2 gap-2.5",
-          cards.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4",
+          withConversions.length + (conversions?.kind === "connect" ? 1 : 0) > 4
+            ? "md:grid-cols-3"
+            : "lg:grid-cols-4",
         )}
       >
-        {cards.map((kpi) =>
+        {withConversions.map((kpi) =>
           "kind" in kpi ? (
             <PendingKpiCard key="pending-ga4-sessions" pending={kpi} />
           ) : (
             <KpiCard key={kpi.metric} kpi={kpi} />
           ),
         )}
+        {conversions?.kind === "connect" ? (
+          <ConversionsConnectCard href={conversions.href} />
+        ) : null}
       </div>
       {extra?.kind === "hidden" ? (
         <p className="m-0 px-0.5 text-ui-caption text-fg-muted">

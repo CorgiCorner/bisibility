@@ -53,7 +53,7 @@ export async function IntegrationUsagePanel({
       timeZone={runtime.timeZone}
     >
       <ProviderUiProvider projectId={projectRef}>
-        <div className="flex max-w-[760px] flex-col gap-4">
+        <div className="flex min-w-0 w-full flex-col gap-4">
           <ProviderBillingCard
             connections={
               budgetExtension

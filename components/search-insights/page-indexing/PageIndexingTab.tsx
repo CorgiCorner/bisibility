@@ -1,22 +1,26 @@
 "use client";
 
 import { SearchInsightsRowsCard } from "@/components/search-insights/SearchInsightsRowsCard";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { InlineCallout } from "@/components/ui/InlineCallout";
 import type {
+  ExportNotIndexedAction,
   IndexingData,
   IndexingUrl,
   InspectAction,
   LoadDetailAction,
   LoadUrlsAction,
-  ReadSitemapsAction,
 } from "@/lib/search-index/ui-model";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { IndexingDrawer } from "./IndexingDrawer";
+import { IndexingDrops } from "./IndexingDrops";
+import { IndexingGroupTiles } from "./IndexingGroupTiles";
 import { IndexingInspect } from "./IndexingInspect";
-import { IndexingOverview } from "./IndexingOverview";
-import { IndexingSitemaps } from "./IndexingSitemaps";
+import { IndexingProgressCard } from "./IndexingProgressCard";
+import { IndexingReasonList } from "./IndexingReasonList";
 import { IndexingStatus } from "./IndexingStatus";
+import { IndexingTrend } from "./IndexingTrend";
 import { IndexingUrls } from "./IndexingUrls";
 import { useIndexingUrls } from "./use-indexing-urls";
 
@@ -27,7 +31,7 @@ export function PageIndexingTab({
   inspectAction,
   loadUrlsAction,
   loadDetailAction,
-  readSitemapsAction,
+  exportAction,
 }: Readonly<{
   data: IndexingData | null;
   projectId: string;
@@ -35,7 +39,7 @@ export function PageIndexingTab({
   inspectAction: InspectAction;
   loadUrlsAction: LoadUrlsAction;
   loadDetailAction: LoadDetailAction;
-  readSitemapsAction?: ReadSitemapsAction;
+  exportAction?: ExportNotIndexedAction;
 }>) {
   const t = useTranslations("projectSearchInsights.indexing");
   const list = useIndexingUrls(data, projectId, loadUrlsAction);
@@ -74,39 +78,41 @@ export function PageIndexingTab({
   };
   return (
     <section className="flex min-w-0 flex-col gap-3" aria-busy={loadingDetail}>
-      <IndexingStatus
-        data={data}
-        projectId={projectId}
-        canInspect={canInspect}
-        onInspect={() => setInspecting(true)}
-      />
-      {detailError ? (
-        <InlineCallout tint="yellow" role="alert">
-          {t("loadFailed")}
-        </InlineCallout>
-      ) : null}
-      <section ref={urlsRegion} aria-label={t("urls")} tabIndex={-1}>
-        <IndexingUrls
-          data={data}
-          list={list}
-          onOpen={(row: IndexingUrl, button) => open(row.url, button)}
-        />
-      </section>
-      <IndexingSitemaps
-        rows={data.sitemaps}
-        snapshot={data.sitemapSnapshot}
-        backgroundRun={data.backgroundRun}
-        onRead={readSitemapsAction ? () => readSitemapsAction({ projectId }) : undefined}
-      />
-      <IndexingOverview
-        report={data.report}
-        days={data.days}
-        onSelect={(filters) => {
-          list.change(filters);
-          urlsRegion.current?.focus({ preventScroll: true });
-          urlsRegion.current?.scrollIntoView?.({ block: "start", behavior: "smooth" });
-        }}
-      />
+      <p className="m-0 text-ui-body text-fg">{t("lead")}</p>
+      <IndexingProgressCard data={data} projectId={projectId} />
+      <IndexingGroupTiles data={data} projectId={projectId} />
+      <IndexingReasonList data={data} exportAction={exportAction} projectId={projectId} />
+      <IndexingDrops data={data} projectId={projectId} />
+      <Disclosure
+        headingLevel="h2"
+        title={t("allUrls")}
+        titleClassName="text-ui-body-relaxed font-semibold leading-snug"
+        variant="panel"
+        contentClassName="px-0 pb-0 sm:px-0"
+        summaryClassName="px-4 py-4 sm:px-4"
+      >
+        <div className="flex min-w-0 flex-col divide-y divide-border" data-indexing-all-urls="">
+          <IndexingStatus
+            canInspect={canInspect}
+            data={data}
+            onInspect={() => setInspecting(true)}
+            projectId={projectId}
+          />
+          {detailError ? (
+            <InlineCallout role="alert" tint="yellow">
+              {t("loadFailed")}
+            </InlineCallout>
+          ) : null}
+          <section aria-label={t("urls")} ref={urlsRegion} tabIndex={-1}>
+            <IndexingUrls
+              data={data}
+              list={list}
+              onOpen={(row: IndexingUrl, button) => open(row.url, button)}
+            />
+          </section>
+          <IndexingTrend complete={data.report.complete} days={data.days} embedded />
+        </div>
+      </Disclosure>
       {detail ? (
         <IndexingDrawer
           onExited={() => {

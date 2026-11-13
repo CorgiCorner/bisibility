@@ -110,7 +110,7 @@ export function InviteModal({
     <Modal
       footer={
         <>
-          <Button onClick={handleClose} size="sm" type="button" variant="ghost">
+          <Button onClick={handleClose} size="md" type="button" variant="ghost">
             {sent ? t("invite.done") : t("invite.cancel")}
           </Button>
           {sent ? null : (

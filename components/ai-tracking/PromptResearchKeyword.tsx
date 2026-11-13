@@ -164,7 +164,7 @@ function PromptResearchKeywordContent({
             setOutcome(undefined);
           }}
         >
-          <p className="m-0 text-ui-xs text-fg-muted">{t("scopeHint")}</p>
+          <p className="m-0 text-ui-caption text-fg-muted">{t("scopeHint")}</p>
           {!estimate.isFetching && failure && failure !== "no_source" ? (
             <p role="alert" className="m-0 text-ui-body text-red-text">
               {presentBudgetDenial(failure, errors, t("requestFailure"))}

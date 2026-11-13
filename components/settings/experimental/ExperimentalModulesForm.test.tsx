@@ -10,7 +10,7 @@ describe("ExperimentalModulesForm", () => {
   it("starts disabled modules unchecked and saves the complete enabled set after a toggle", async () => {
     const user = userEvent.setup();
     const updateExperimentalModules = vi.fn().mockResolvedValue({
-      enabledExperimentalModules: ["timeline"],
+      enabledExperimentalModules: ["competitors"],
     });
 
     render(
@@ -22,47 +22,21 @@ describe("ExperimentalModulesForm", () => {
       />,
     );
 
-    const timeline = screen.getByRole("switch", { name: "Timeline" });
+    expect(screen.queryByRole("switch", { name: "Prompt Playground" })).not.toBeInTheDocument();
     const competitors = screen.getByRole("switch", { name: "Competitors" });
-    expect(timeline).not.toBeChecked();
     expect(competitors).not.toBeChecked();
-
-    await user.click(timeline);
+    await user.click(competitors);
 
     await waitFor(() =>
       expect(updateExperimentalModules).toHaveBeenCalledWith({
-        enabledExperimentalModules: ["timeline"],
+        enabledExperimentalModules: ["competitors"],
         projectId: "prj_abcdefghijklmnopqrstuvwx",
       }),
     );
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 
-  it("requires explicit activation of Prompt Playground and persists it", async () => {
-    const user = userEvent.setup();
-    const updateExperimentalModules = vi
-      .fn()
-      .mockResolvedValue({ enabledExperimentalModules: ["promptPlayground"] });
-    render(
-      <ExperimentalModulesForm
-        canEdit
-        enabledExperimentalModules={[]}
-        projectId="prj_1"
-        updateExperimentalModules={updateExperimentalModules}
-      />,
-    );
-    const playground = screen.getByRole("switch", { name: "Prompt Playground" });
-    expect(playground).not.toBeChecked();
-    await user.click(playground);
-    await waitFor(() =>
-      expect(updateExperimentalModules).toHaveBeenCalledWith({
-        projectId: "prj_1",
-        enabledExperimentalModules: ["promptPlayground"],
-      }),
-    );
-  });
-
-  it("persists both changes when the first rapid toggle saves slowly", async () => {
+  it("persists the later toggle when the first save is still in flight", async () => {
     const user = userEvent.setup();
     const firstSave = deferred<void>();
     const firstPersisted = deferred<void>();
@@ -74,7 +48,6 @@ describe("ExperimentalModulesForm", () => {
         persistedModules.splice(0, persistedModules.length, ...savedModules);
         return { enabledExperimentalModules: savedModules };
       };
-
       if (saveCount++ === 0) {
         return firstSave.promise.then(() => {
           const result = persist();
@@ -82,7 +55,6 @@ describe("ExperimentalModulesForm", () => {
           return result;
         });
       }
-
       return Promise.resolve(persist());
     });
 
@@ -95,14 +67,16 @@ describe("ExperimentalModulesForm", () => {
       />,
     );
 
-    await user.click(screen.getByRole("switch", { name: "Timeline" }));
+    const competitors = screen.getByRole("switch", { name: "Competitors" });
+    await user.click(competitors);
     await waitFor(() => expect(updateExperimentalModules).toHaveBeenCalledOnce());
-    await user.click(screen.getByRole("switch", { name: "Competitors" }));
+    await user.click(competitors);
     await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     firstSave.resolve();
     await firstPersisted.promise;
 
-    await waitFor(() => expect(persistedModules).toEqual(["timeline", "competitors"]));
+    await waitFor(() => expect(persistedModules).toEqual([]));
+    expect(competitors).not.toBeChecked();
   });
 
   it("restores the confirmed modules after a queued save fails and retries from them", async () => {
@@ -111,10 +85,10 @@ describe("ExperimentalModulesForm", () => {
     const updateExperimentalModules = vi
       .fn()
       .mockImplementationOnce(() =>
-        firstSave.promise.then(() => ({ enabledExperimentalModules: ["timeline"] })),
+        firstSave.promise.then(() => ({ enabledExperimentalModules: ["competitors"] })),
       )
       .mockRejectedValueOnce(new Error("The second save failed."))
-      .mockResolvedValueOnce({ enabledExperimentalModules: ["timeline", "competitors"] });
+      .mockResolvedValueOnce({ enabledExperimentalModules: [] });
 
     render(
       <ExperimentalModulesForm
@@ -125,16 +99,14 @@ describe("ExperimentalModulesForm", () => {
       />,
     );
 
-    const timeline = screen.getByRole("switch", { name: "Timeline" });
     const competitors = screen.getByRole("switch", { name: "Competitors" });
-    await user.click(timeline);
+    await user.click(competitors);
     await waitFor(() => expect(updateExperimentalModules).toHaveBeenCalledOnce());
     await user.click(competitors);
     firstSave.resolve();
 
     await waitFor(() => {
-      expect(timeline).toBeChecked();
-      expect(competitors).not.toBeChecked();
+      expect(competitors).toBeChecked();
       expect(screen.getByText("The second save failed.")).toBeInTheDocument();
     });
 
@@ -142,7 +114,7 @@ describe("ExperimentalModulesForm", () => {
 
     await waitFor(() =>
       expect(updateExperimentalModules).toHaveBeenLastCalledWith({
-        enabledExperimentalModules: ["timeline", "competitors"],
+        enabledExperimentalModules: [],
         projectId: "prj_abcdefghijklmnopqrstuvwx",
       }),
     );
@@ -151,14 +123,11 @@ describe("ExperimentalModulesForm", () => {
   it("drops queued saves after a failure and restores the confirmed modules", async () => {
     const user = userEvent.setup();
     const firstSave = deferred<void>();
-    const updateExperimentalModules = vi
-      .fn()
-      .mockImplementationOnce(() =>
-        firstSave.promise.then(() => {
-          throw new Error("The first save failed.");
-        }),
-      )
-      .mockResolvedValueOnce({ enabledExperimentalModules: ["competitors"] });
+    const updateExperimentalModules = vi.fn().mockImplementationOnce(() =>
+      firstSave.promise.then(() => {
+        throw new Error("The first save failed.");
+      }),
+    );
 
     render(
       <ExperimentalModulesForm
@@ -169,41 +138,30 @@ describe("ExperimentalModulesForm", () => {
       />,
     );
 
-    const timeline = screen.getByRole("switch", { name: "Timeline" });
     const competitors = screen.getByRole("switch", { name: "Competitors" });
-    await user.click(timeline);
+    await user.click(competitors);
     await waitFor(() => expect(updateExperimentalModules).toHaveBeenCalledOnce());
     await user.click(competitors);
     firstSave.resolve();
 
     await waitFor(() => {
-      expect(timeline).not.toBeChecked();
       expect(competitors).not.toBeChecked();
       expect(screen.getByText("The first save failed.")).toBeInTheDocument();
     });
     expect(updateExperimentalModules).toHaveBeenCalledOnce();
-
-    await user.click(competitors);
-
-    await waitFor(() =>
-      expect(updateExperimentalModules).toHaveBeenLastCalledWith({
-        enabledExperimentalModules: ["competitors"],
-        projectId: "prj_abcdefghijklmnopqrstuvwx",
-      }),
-    );
   });
 
-  it("disables both module switches for read-only projects", () => {
+  it("disables the module switch for read-only projects", () => {
     render(
       <ExperimentalModulesForm
         canEdit={false}
-        enabledExperimentalModules={["timeline"]}
+        enabledExperimentalModules={["competitors"]}
         projectId="prj_abcdefghijklmnopqrstuvwx"
         updateExperimentalModules={vi.fn()}
       />,
     );
 
-    expect(screen.getByRole("switch", { name: "Timeline" })).toBeDisabled();
+    expect(screen.queryByRole("switch", { name: "Prompt Playground" })).not.toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Competitors" })).toBeDisabled();
   });
 });

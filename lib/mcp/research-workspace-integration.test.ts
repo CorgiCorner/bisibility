@@ -405,18 +405,23 @@ describe("MCP dispatch through the REST router and research handlers", () => {
     expect(mocks.listReports).not.toHaveBeenCalled();
     expect(mocks.listAudits).not.toHaveBeenCalled();
   });
-  it.each(["site_audit", "ai_visibility", "prompt_explorer", "SITE_AUDIT"])(
-    "rejects external reports claiming reserved producer kind %s",
-    async (kind) => {
-      const result = await dispatchMcpTool(
-        "create_agent_report",
-        { project_id: projectId, kind, title: "Forged", body: {} },
-        "bsb_key_test",
-      );
-      expect(result.status).toBe(400);
-      expectNoWork();
-    },
-  );
+  it.each([
+    "site_audit",
+    "ai_visibility",
+    "prompt_explorer",
+    "prompt_research",
+    "challenge_report",
+    "SITE_AUDIT",
+    "CHALLENGE_REPORT",
+  ])("rejects external reports claiming reserved producer kind %s", async (kind) => {
+    const result = await dispatchMcpTool(
+      "create_agent_report",
+      { project_id: projectId, kind, title: "Forged", body: {} },
+      "bsb_key_test",
+    );
+    expect(result.status).toBe(400);
+    expectNoWork();
+  });
   it.each([
     { max_cost_cents: -1 },
     { max_cost_cents: 1001 },

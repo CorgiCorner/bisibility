@@ -22,7 +22,7 @@ describe("WebhookSecretField", () => {
 
   it("preserves manual entry", () => {
     const onChange = vi.fn();
-    render(<WebhookSecretField fieldClassName="" labelClassName="" onChange={onChange} value="" />);
+    render(<WebhookSecretField labelClassName="" onChange={onChange} value="" />);
 
     fireEvent.change(screen.getByLabelText("HMAC secret"), {
       target: { value: "manual-secret-123456" },
@@ -38,17 +38,10 @@ describe("WebhookSecretField", () => {
     let value = "";
     const onChange = vi.fn((next: string) => {
       value = next;
-      rerender(
-        <WebhookSecretField
-          fieldClassName=""
-          labelClassName=""
-          onChange={onChange}
-          value={value}
-        />,
-      );
+      rerender(<WebhookSecretField labelClassName="" onChange={onChange} value={value} />);
     });
     const { rerender } = render(
-      <WebhookSecretField fieldClassName="" labelClassName="" onChange={onChange} value={value} />,
+      <WebhookSecretField labelClassName="" onChange={onChange} value={value} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
@@ -63,9 +56,7 @@ describe("WebhookSecretField", () => {
     });
 
     value = "";
-    rerender(
-      <WebhookSecretField fieldClassName="" labelClassName="" onChange={onChange} value={value} />,
-    );
+    rerender(<WebhookSecretField labelClassName="" onChange={onChange} value={value} />);
     expect(screen.queryByRole("button", { name: "Copied" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("HMAC secret")).not.toHaveAttribute("readonly");
   });

@@ -75,6 +75,24 @@ export const Open: Story = {
   ),
 };
 
+/** Bottom sheet below `sm` (640px): grab handle, 8px inset, equal footer actions. */
+export const Mobile: Story = {
+  ...Open,
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    const dialog = await page.findByRole("dialog", { name: "Add keywords" });
+    if (dialog.getAttribute("data-placement") !== "sheet") return;
+    const cancel = page.getByRole("button", { name: "Cancel" });
+    const save = page.getByRole("button", { name: "Save changes" });
+    const cancelBox = cancel.getBoundingClientRect();
+    const saveBox = save.getBoundingClientRect();
+    expect(Math.abs(cancelBox.width - saveBox.width)).toBeLessThan(1);
+    expect(Math.abs(cancelBox.top - saveBox.top)).toBeLessThan(1);
+    expect(save.scrollWidth).toBeLessThanOrEqual(save.clientWidth + 1);
+  },
+};
+
 export const FiltersOpen: Story = {
   args: {
     children: (

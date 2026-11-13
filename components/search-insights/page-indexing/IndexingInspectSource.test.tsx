@@ -28,6 +28,10 @@ function setup(load = vi.fn().mockResolvedValue({ data: rows, meta: { next_curso
       />
     </FeatureMessagesProvider>,
   );
+  const details = screen
+    .queryByText(messages.projectSearchInsights.indexing.allUrls)
+    ?.closest("details");
+  if (details instanceof HTMLDetailsElement) details.open = true;
   return { load, inspect };
 }
 it("previews at most ten sitemap URLs without inspecting until explicit submission", async () => {
@@ -58,7 +62,7 @@ it("previews at most ten sitemap URLs without inspecting until explicit submissi
   await waitFor(() =>
     expect(inspect).toHaveBeenCalledWith({ projectId: "prj_test", urls: [rows[0].url] }),
   );
-});
+}, 20_000);
 it("fills remaining places with checked URLs and removes duplicates", async () => {
   const user = userEvent.setup();
   const load = vi

@@ -1,6 +1,15 @@
 {
   "instanceAdmin": {
+    "features": {
+      "title": "Funkcje opcjonalne",
+      "challenge": "30 dni SEO",
+      "challengeDescription": "Pozwól członkom projektów rozpocząć 30-dniowe wyzwanie SEO w sekcji Strony. Wyłączenie ukrywa wyzwanie i wstrzymuje odhaczanie dni. Daty wyzwania i zapisane dni zostają zachowane.",
+      "saving": "Zapisywanie…",
+      "saved": "Zapisano ustawienie.",
+      "failed": "Nie udało się zapisać ustawienia."
+    },
     "shell": {
+      "features": "Funkcje",
       "status": "Status",
       "accounts": "Konta",
       "viewNavigation": "Widoki: {tab}",
@@ -856,6 +865,7 @@
       "lastExhaustion": "Ostatnie wyczerpanie limitu",
       "presenceHelp": "Ostatnie odroczone adresy URL z codziennego sprawdzania obecności. Limit resetuje się automatycznie.",
       "questions": {
+        "features": "Które opcjonalne funkcje są dostępne w tej instancji?",
         "status": "Czy instancja działa poprawnie?",
         "worker": "Czy procesy robocze i harmonogramy działają poprawnie?",
         "checks": "Czy sprawdzanie pozycji i obecności URL działa poprawnie?",

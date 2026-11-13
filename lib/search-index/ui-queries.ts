@@ -4,6 +4,7 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { getInspectionBudget } from "@/lib/presence/inspection-budget";
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
 import { requireReadableProject } from "@/lib/queries/_auth";
+import { loadIndexingOverview } from "./indexing-overview";
 import { getPageIndexingReport } from "./report";
 import { connectionForProject, SearchIndexConnectionError } from "./service";
 import { getPageIndexingSettings } from "./settings";
@@ -29,7 +30,8 @@ export async function loadPageIndexing(projectRef: string) {
     project.writeMode === "active";
   try {
     const report = await getPageIndexingReport(project.id);
-    const [settings, urls, sitemaps, { limit, used, remaining }, days, sitemapSnapshot] =
+    const now = new Date();
+    const [settings, urls, sitemaps, { limit, used, remaining }, days, sitemapSnapshot, overview] =
       await Promise.all([
         getPageIndexingSettings(project.id),
         listPageIndexingUrls(
@@ -38,9 +40,10 @@ export async function loadPageIndexing(projectRef: string) {
           { page: 1, sort_by: "url", sort_direction: "asc" },
         ),
         storedIndexingSitemaps(project.id, report.property),
-        getInspectionBudget(project.id, new Date()),
+        getInspectionBudget(project.id, now),
         storedIndexingDays(project.id, report.property),
         storedSitemapSnapshot(project.id, report.property),
+        loadIndexingOverview(project.id, report.property, now),
       ]);
     return {
       canInspect,
@@ -58,6 +61,8 @@ export async function loadPageIndexing(projectRef: string) {
         sitemaps,
         days,
         sitemapSnapshot,
+        overview,
+        now,
       },
     };
   } catch (error) {

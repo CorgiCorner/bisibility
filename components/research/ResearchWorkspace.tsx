@@ -3,14 +3,16 @@ import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
+import type { OpenedKeywordResearch } from "@/lib/keyword-research/opened-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import {
+  researchScopeForLocation,
   researchScopeForStoredLocationKey,
   researchScopeOptionsForProject,
 } from "@/lib/research/scope";
 import { appPath } from "@/lib/routing/app-path";
 import { useState } from "react";
-import { RecentResearchSearches } from "./RecentResearchSearches";
+import { KeywordResearchHistoryButton, KeywordResearchSuggestions } from "./KeywordResearchHistory";
 import { ResearchPaymentReview } from "./ResearchPaymentReview";
 import { ResearchResults } from "./ResearchResults";
 import { ResearchSearchCard } from "./ResearchSearchCard";
@@ -22,12 +24,10 @@ import { researchScopeMetricsAvailable } from "./research-scope-capability";
 import {
   type ResearchAddDraft,
   type ResearchWorkspaceProps,
-  recentSearchReplay,
   researchScopeLocationKey,
   researchScopeTrackingLocation,
   researchTabRequest,
 } from "./research-workspace-model";
-import { useRecentSearches } from "./useRecentSearches";
 import { useResearchEstimate } from "./useResearchEstimate";
 import { useResearchPaymentReview } from "./useResearchPaymentReview";
 import { useResearchRequestInput } from "./useResearchRequestInput";
@@ -49,7 +49,6 @@ export function ResearchWorkspace({
 }: Readonly<ResearchWorkspaceProps>) {
   const { addSpend } = useSessionSpend();
   const copy = useResearchWorkspaceCopy(costContext.timezone ?? "UTC");
-  const recent = useRecentSearches(context.project.id);
   const scopeOptions = researchScopeOptionsForProject([
     context.defaultScope,
     ...(projectMarkets?.markets ?? []),
@@ -81,7 +80,6 @@ export function ResearchWorkspace({
     scope,
     mode,
     projectId: context.project.id,
-    recent,
     researchAction,
     resultLimit,
   });
@@ -91,6 +89,7 @@ export function ResearchWorkspace({
     closeTab,
     markAdded,
     markSaved,
+    openStored,
     researching,
     runResearch,
     setActiveTabId,
@@ -115,6 +114,20 @@ export function ResearchWorkspace({
     removeSavedKeywordsAction,
     saveKeywordsAction,
   });
+  function openStoredSearch(stored: OpenedKeywordResearch) {
+    setMode(stored.mode);
+    setResultLimit(stored.resultLimit);
+    setIncludeClickstream(stored.includeClickstream);
+    setSeeds([stored.seed]);
+    setScope(
+      researchScopeForLocation({
+        countryCode: stored.countryCode,
+        languageCode: stored.languageCode,
+        languageLabel: stored.languageCode,
+      }),
+    );
+    openStored(stored);
+  }
   function updateSeeds(next: string[]) {
     setSeeds(next);
     scheduleEstimate(researchAvailable ? next : []);
@@ -122,48 +135,20 @@ export function ResearchWorkspace({
   const hasProvider = context.connections.length > 0;
   const hasResults = Boolean(activeTab?.outcome.ok && activeTab.outcome.rows.length);
   const connectionOptions = context.connections.map(({ label, id: value }) => ({ label, value }));
-  function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
-    const replay = recentSearchReplay(
-      search,
-      connectionId,
-      context.connections.map((connection) => connection.id),
-    );
-    if (!replay.connectionId) return;
-    const searchScope = search.locationKey
-      ? researchScopeForStoredLocationKey(search.locationKey, context.defaultScope)
-      : context.defaultScope;
-    setMode(search.mode);
-    setResultLimit(search.resultLimit);
-    setIncludeClickstream(search.includeClickstream);
-    setConnectionId(replay.connectionId);
-    setScope(searchScope);
-    if (!researchScopeMetricsAvailable(searchScope)) {
-      setSeeds([search.seed]);
-      scheduleEstimate([]);
-      return;
-    }
-    if (replay.cached) {
-      void reviewRun([search.seed], replay.overrides, searchScope);
-      return;
-    }
-    setSeeds([search.seed]);
-    scheduleEstimate([search.seed], {
-      ...replay.overrides,
-      locationKey: researchScopeLocationKey(searchScope),
-    });
-  }
-
   const runDeeper = () =>
     activeTab && hasProvider && void reviewDeeperResearch(activeTab, reviewRun, setResultLimit);
   return (
     <section className="grid min-w-0 grid-cols-1 gap-4">
+      <div className="flex justify-end">
+        <KeywordResearchHistoryButton onStored={openStoredSearch} projectId={context.project.id} />
+      </div>
       <ProviderAccessGate
         blocked={!hasProvider}
         showNotice={hasResults}
         href={appPath(context.project.id, "providers")}
         providers={context.supportingProviders}
       >
-        <div className="w-full">
+        <div className="grid w-full gap-2">
           <ResearchSearchCard
             connectionId={connectionId}
             connectionOptions={connectionOptions}
@@ -213,18 +198,19 @@ export function ResearchWorkspace({
             }
             researching={researching}
             resultLimit={resultLimit}
+            seedSuggestions={(draft, focused) => (
+              <KeywordResearchSuggestions
+                draft={draft}
+                focused={focused}
+                onStored={openStoredSearch}
+                projectId={context.project.id}
+              />
+            )}
             seeds={seeds}
           />
         </div>
       </ProviderAccessGate>
       <ResearchPaymentReview review={paymentReview} />
-      <RecentResearchSearches
-        disabled={!hasProvider}
-        disabledHint={copy.recentDisabledHint}
-        onOpen={openRecentSearch}
-        onRemove={recent.remove}
-        searches={recent.searches}
-      />
       {!hasProvider && !hasResults ? (
         <ProviderAccessEmptyState
           href={appPath(context.project.id, "providers")}

@@ -1,0 +1,64 @@
+/// Joinable challenge progress. The 7-day badges stay on AchievementState.
+model AchievementEnrollment {
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind              String
+  definitionVersion Int       @default(1)
+  joinedOn          String
+  leftAt            DateTime?
+  timeZone          String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@id([userId, kind, definitionVersion])
+  @@map("achievement_enrollments")
+}
+
+/// A 30-calendar-day project challenge for one member. `snapshotId` is its own Day 1 baseline.
+model ProjectSeoChallenge {
+  id               String                       @id @default(cuid())
+  userId           String
+  user             User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshotId       String
+  snapshot         PageSnapshot                 @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  joinedOn         String
+  joinedAt         DateTime                     @default(now())
+  timeZone         String
+  /// Legacy: manual pause was removed. Kept for existing rows and ignored.
+  pausedAt         DateTime?
+  baselineClicks   Int?
+  cardDownloadedAt DateTime?
+  /// Verified project work. Feeds "Days with work" in reports.
+  days             ProjectSeoChallengeDay[]
+  /// Days checked in by a visit, the start or a manual mark. Not verified work.
+  checkIns         ProjectSeoChallengeCheckIn[]
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@index([snapshotId])
+  @@map("project_seo_challenges")
+}
+
+model ProjectSeoChallengeDay {
+  challengeId String
+  challenge   ProjectSeoChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  localDay    String
+
+  @@id([challengeId, localDay])
+  @@map("project_seo_challenge_days")
+}
+
+/// One row per challenge and local day, whatever marked it first.
+model ProjectSeoChallengeCheckIn {
+  challengeId String
+  challenge   ProjectSeoChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  localDay    String
+  /// visit, start or manual
+  source      String
+  createdAt   DateTime            @default(now())
+
+  @@id([challengeId, localDay])
+  @@map("project_seo_challenge_check_ins")
+}

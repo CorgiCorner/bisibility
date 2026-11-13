@@ -1,0 +1,350 @@
+{
+  "projectPages": {
+    "bulk": {
+      "add": "選択にタグを付ける",
+      "choose": "タグ",
+      "check": "コアウェブバイタルを確認",
+      "clear": "クリア",
+      "remove": "タグを外す",
+      "selected": "{count, plural, other {# 件を選択中}}"
+    },
+    "byTag": {
+      "addToPages": "ページに追加",
+      "cancel": "キャンセル",
+      "columns": {
+        "actions": "操作",
+        "existing": "既存",
+        "keywords": "キーワード",
+        "new": "新規",
+        "removed": "削除",
+        "pages": "ページ",
+        "rule": "ルール",
+        "tag": "タグ",
+        "type": "種類"
+      },
+      "edit": "ルールを編集",
+      "empty": "ページに付いているタグはまだありません。",
+      "hide": "隠す",
+      "keywordOnly": "{count, plural, other {キーワードにだけ付いているタグがあと # 件: {names}}}",
+      "kind": {
+        "manual": "手動",
+        "path_pattern": "パスのパターン",
+        "sitemap": "サイトマップ",
+        "url_list": "URL 一覧"
+      },
+      "lead": "プロジェクト全体でタグは一つです。同じタグをページとキーワードの両方に付けられます。",
+      "manage": "設定でタグを管理",
+      "remove": "ページから外す",
+      "removeBody": "タグはキーワードに残ります。ページとの紐づけとルールは削除されます。",
+      "removeConfirm": "ページから外す",
+      "removeTitle": "{name} をページから外す",
+      "ruleHand": "手動で追加",
+      "ruleUrls": "{count, plural, other {# 件の URL}}",
+      "show": "表示",
+      "tableLabel": "ページのタグ"
+    },
+    "columns": {
+      "aiCitations": "AI 引用",
+      "clicks": "クリック",
+      "conversions": "Conv.",
+      "conversionsConnect": "アナリティクスを接続",
+      "conversionsEmpty": "この期間、このページのコンバージョンはありません。",
+      "conversionsSource": "{source}",
+      "cwv": "CWV",
+      "impressions": "表示",
+      "index": "インデックス",
+      "keywords": "キーワード",
+      "openUrl": "{path} を開く",
+      "page": "ページ",
+      "position": "順位",
+      "sessions": "セッション",
+      "sitemap": "サイトマップ",
+      "status": "状態",
+      "tags": "タグ",
+      "tagsMore": "+{count, number}"
+    },
+    "compare": {
+      "addNote": "メモを追加",
+      "annotationLabel": "変更の時点",
+      "annotationOption": "注釈 · {date} · {title}",
+      "caveat": "これは方向を示すもので、証明ではありません。Google のアップデートなど、ほかの出来事は両方のグループに影響します。G の印を見てください。",
+      "changed": "変更あり",
+      "chartLabel": "指数化した変化",
+      "chooseAnnotation": "注釈を選ぶ",
+      "dayOf": "28日中 {day, number}日目。変更前の{day, plural, one {#日} other {#日間}}と比べた{metric}の変化率。",
+      "differenceLabel": "差",
+      "emptyAnnotations": "注釈はまだありません。",
+      "emptyAnnotationsAction": "メモを追加",
+      "emptyOverlap": "これらのタグは同じページを含むため、変更していないグループがありません。",
+      "emptyTags": "ページのタグはまだありません。",
+      "emptyTagsAction": "ページにタグを付ける",
+      "finished": "完了",
+      "forecastLabel": "現時点の予想",
+      "forecastUnavailable": "このバージョンでは予測を利用できません",
+      "madeToday": "変更は本日行われました。結果は明日から始まります。",
+      "groupDetail": "{count, plural, other {# ページ}}、変更前と比べた{metric}",
+      "metric": {
+        "clicks": "クリック",
+        "impressions": "表示回数",
+        "sessions": "セッション"
+      },
+      "metricLabel": "指標",
+      "metricOption": "{metric} · {source}",
+      "monitoring": "観測中",
+      "notEnough": "データが足りません",
+      "notEnoughClicks": "クリックのデータが足りません。表示回数を試してください",
+      "overlap": "{count, plural, other {# ページは両方のタグに含まれるため、どちらのグループからも除いています。}}",
+      "percent": "{direction, select, positive {+{percent, number}%} negative {{percent, number}%} other {0%}}",
+      "points": "{direction, select, positive {変更していないページと比べて +{points, number} ポイント} negative {変更していないページと比べて {points, number} ポイント} other {変更していないページと比べて 0 ポイント}}",
+      "seriesChanged": "変更したページ",
+      "seriesUnchanged": "変更していないページ",
+      "source": {
+        "analytics": "メインのアナリティクス",
+        "search_console": "Search Console"
+      },
+      "tagOption": "タグ: {name} · {pages, plural, other {# ページ}}",
+      "unchanged": "変更なし",
+      "unconnected": "この指標を使うには{source}を接続してください",
+      "waiting": "待機中"
+    },
+    "cwv": {
+      "checked": "{count, number} ページを確認しました。",
+      "error": {
+        "invalid_key": "PageSpeed Insights の API キーが拒否されました。",
+        "no_sample": "このプロジェクトのページを選択してください。",
+        "not_connected": "確認する前に PageSpeed Insights を接続してください。",
+        "quota": "PageSpeed Insights の割り当てに達しました。後でもう一度お試しください。"
+      },
+      "milliseconds": "{value} ms",
+      "needsWork": "改善が必要",
+      "none": "-",
+      "pass": "合格",
+      "poor": "不良",
+      "seconds": "{value} 秒",
+      "source": {
+        "field": "実ユーザーのフィールドデータ",
+        "lab": "ラボ推定",
+        "origin": "オリジンのフィールドデータ"
+      },
+      "tooltip": "LCP {lcp}、INP {inp}、CLS {cls}。{source}"
+    },
+    "drawer": {
+      "autoJoin": "あとから増えたページも自動で加える",
+      "cancel": "キャンセル",
+      "errors": {
+        "exclude_invalid": "除外パターンは / から始めてください。",
+        "invalid_url": "このサイトのパスか URL を入力してください。",
+        "must_start_with_slash": "パターンは / から始める必要があります。",
+        "required": "パターンを入力してください。",
+        "sitemap_required": "サイトマップを選んでください。",
+        "tag_required": "タグ名を入力してください。",
+        "too_long": "パターンが長すぎます。",
+        "too_many_urls": "ルールに入れられる URL は 2,000 件までです。",
+        "too_many_wildcards": "パターンに使えるワイルドカードは16個までです。"
+      },
+      "exclude": "除外",
+      "excludeAdd": "追加",
+      "excludePlaceholder": "/draft/*",
+      "excludeRemove": "{pattern} を外す",
+      "handNote": "ルールではページを選びません。このタグは手でページに付けます。",
+      "keywordHint": "{name} はすでに {count, plural, other {# 件のキーワード}}に付いています",
+      "pattern": "パターン",
+      "patternHint": "'{slug}' = パスの 1 区切り。* = 何でも。",
+      "preview": "{count, plural, other {# ページに一致}}",
+      "previewFailed": "プレビューを読み込めませんでした。",
+      "previewMore": "ほか {count, number} 件",
+      "rule": "ルール",
+      "save": "タグを保存",
+      "saveFailed": "タグを保存できませんでした。",
+      "sitemap": "サイトマップ",
+      "sitemapChoose": "サイトマップを選ぶ",
+      "sitemapEmpty": "わかっているサイトマップの URL はまだありません。",
+      "tag": "タグ",
+      "tagHint": "既存のタグを選ぶか、新しい名前を入力します。",
+      "tagKeywords": "これらのページを目標にするキーワードにもタグを付ける",
+      "titleEdit": "{name} を編集",
+      "titleNew": "新しいタグ",
+      "urls": "URL 一覧",
+      "urlsPlaceholder": "/docs"
+    },
+    "empty": {
+      "description": "ソースが URL を見つけたページがここに並びます。次のソースからページを取り込めます。",
+      "filtered": "この条件に一致するページはありません。",
+      "title": "ページはまだありません"
+    },
+    "existing": {
+      "allTags": "すべてのタグ",
+      "columns": {
+        "existing": "既存",
+        "existingMetric": "既存の{metric}",
+        "fresh": "新規",
+        "freshMetric": "新規の{metric}",
+        "share": "新規の割合",
+        "tag": "タグ"
+      },
+      "disabled": "{source} は接続されていません",
+      "disabledConversions": "コンバージョンをグラフにするにはアナリティクスを接続してください",
+      "emptyBody": "スナップショットはその日と、その日に存在した URL の一覧です。指標は各ソースに残り、スナップショットの日に存在したページと、その後追加されたページに分けられます。",
+      "emptyTitle": "ページのスナップショットはまだありません",
+      "metric": {
+        "ai_cites": "AI 引用",
+        "clicks": "クリック",
+        "conversions": "コンバージョン",
+        "option": "{metric} · {source}",
+        "sessions": "セッション"
+      },
+      "metricLabel": "指標",
+      "noSource": "Search Console、アナリティクス、または AI 可視性を接続すると、スナップショットの日のページとその後のページを比べられます。",
+      "rolling": "セッションは日次の合計ではなく、直近の 28 日ウィンドウです。",
+      "series": {
+        "existing": "既存のページ",
+        "fresh": "新規のページ",
+        "removed": "削除されたページ"
+      },
+      "share": "{share, number}%",
+      "span": {
+        "28": "過去 28 日",
+        "since": "スナップショット以降"
+      },
+      "spanLabel": "期間",
+      "summaryExisting": "既存のページ {total, number} · {snapshot, number} ページ中 {pages, number}",
+      "summaryFresh": "新規のページ {total, number} · スナップショット後に追加された {pages, number} ページ",
+      "summaryRemoved": "削除 {total, number} · サイトマップから外れた {pages, number} ページ",
+      "tableLabel": "タグ別の既存ページと新規ページ",
+      "title": "スナップショット以降の{metric}の累計"
+    },
+    "filters": {
+      "any": "指定なし",
+      "clear": "フィルタをクリア",
+      "index": "インデックス",
+      "label": "フィルタ",
+      "sitemap": "サイトマップ",
+      "source": "ソース",
+      "title": "フィルタ",
+      "coverage": "カバレッジ状態",
+      "cwv": "コアウェブバイタル",
+      "cwvValue": {
+        "missing": "未確認",
+        "needs_work": "改善が必要",
+        "pass": "合格",
+        "poor": "不良"
+      },
+      "clearCoverage": "カバレッジ状態 {reason} をクリア"
+    },
+    "indexGroup": {
+      "indexed": "インデックス済み",
+      "inspection_failed": "検査に失敗",
+      "not_checked": "未確認",
+      "not_indexed": "未インデックス"
+    },
+    "columnNotConnected": "{source}は接続されていません",
+    "keywordsLink": "{path} のキーワード",
+    "loadFailed": "ページ一覧を読み込めませんでした。",
+    "missing": "このページには {source} のデータがありません。",
+    "paste": {
+      "added": "{count, number} 件を追加",
+      "cancel": "キャンセル",
+      "description": "1 行に 1 つの URL またはパス。最大 500 行。",
+      "existing": "{count, number} 件は登録済み",
+      "label": "URL",
+      "line": "{line, number} 行目: {value} - {reason}",
+      "placeholder": "/docs",
+      "rejected": "拒否した行",
+      "submit": "ページを追加",
+      "title": "URL を貼り付け"
+    },
+    "plausibleWindow": "Plausible は直近 28 日の窓です。",
+    "providers": {
+      "ga4": "GA4",
+      "plausible": "Plausible"
+    },
+    "reasons": {
+      "foreign": "この URL は別のサイトです。",
+      "invalid": "このサイトの URL またはパスを入力してください。",
+      "missingDomain": "このプロジェクトにサイトのドメインがありません。",
+      "tooMany": "1 回の更新で追加できる URL は 50,000 件までです。",
+      "tooManyLines": "貼り付けは 500 行までです。"
+    },
+    "refresh": {
+      "done": "ページを更新しました ({count, number})。",
+      "failed": "ページを更新できませんでした。"
+    },
+    "search": {
+      "label": "パスで検索",
+      "placeholder": "/docs"
+    },
+    "segments": {
+      "all": "すべて",
+      "inSnapshot": "スナップショット内",
+      "listed": "サイトマップ内",
+      "new": "新規",
+      "notListed": "サイトマップ外",
+      "removed": "削除"
+    },
+    "snapshot": {
+      "bannerCount": "{count, number} ページ",
+      "bannerRegistry": "サイトマップがなかったため、スナップショットは登録済みのすべてのページです。指標はコピーしません。各ソースが日次の履歴を保持します。",
+      "bannerSitemap": "指標はコピーしません。各ソースが日次の履歴を保持するので、その日に存在したページとその後追加されたページに分けられます。",
+      "bannerTitle": "{label} のスナップショット · {date}",
+      "button": "ページのスナップショットを保存",
+      "cancel": "キャンセル",
+      "confirmBody": "新しいスナップショットが比較の基準になります。現在のものは削除されず、アーカイブされます。",
+      "confirmTitle": "新しいページのスナップショットを保存しますか?",
+      "dateLabel": "基準日 {date}",
+      "failed": "スナップショットを保存できませんでした。",
+      "openAnnotations": "注釈で開く",
+      "replace": "新しいスナップショットを保存",
+      "taken": "ページのスナップショットを保存しました ({count, number} ページ)。",
+      "results": "このスナップショット以降の結果を見る"
+    },
+    "status": {
+      "gone": "消失 · {day, number}日目",
+      "in_snapshot": "スナップショット内",
+      "new": "新規 · {day, number}日目",
+      "redirected": "リダイレクト · {day, number}日目",
+      "removed": "削除 · {day, number}日目"
+    },
+    "sitemapState": {
+      "listed": "掲載",
+      "notListed": "未掲載"
+    },
+    "sourceKind": {
+      "ai_citation": "AI 引用",
+      "ai_visibility": "AI 可視性",
+      "analytics": "アナリティクス",
+      "analyticsConversions": "アナリティクス / コンバージョン",
+      "manual": "手動",
+      "page_indexing": "インデックス",
+      "pagespeed": "PageSpeed",
+      "rank_tracker": "Rank Tracker",
+      "search_console": "Search Console",
+      "sitemap": "サイトマップ"
+    },
+    "sourcesLine": {
+      "add": "ソースを追加",
+      "connect": "接続",
+      "hint": "セッションと Conv. のメインソース。クリックして変更します。",
+      "label": "列の出典",
+      "paste": "URL を貼り付け",
+      "refresh": "今すぐ更新",
+      "refreshing": "更新中",
+      "state": {
+        "beta": "ベータ",
+        "connected": "接続済み",
+        "not_connected": "未接続"
+      }
+    },
+    "tableLabel": "プロジェクトのページ",
+    "tabs": {
+      "all": "すべてのページ",
+      "byTag": "タグ別",
+      "compare": "比較",
+      "existingVsNew": "既存と新規",
+      "navigation": "ページのビュー"
+    },
+    "tags": {
+      "all": "すべてのタグ",
+      "new": "新しいタグ"
+    }
+  }
+}

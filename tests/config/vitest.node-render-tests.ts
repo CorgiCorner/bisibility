@@ -24,6 +24,7 @@ export const nodeRenderTests = [
   "app/(regional)/app/(workspace)/[project]/prompt-research/page.test.tsx",
   "app/(regional)/app/(workspace)/[project]/settings/(sections)/markets/page.test.tsx",
   "app/(regional)/app/(workspace)/[project]/settings/page.test.tsx",
+  "app/(regional)/app/(workspace)/[project]/annotations/page.test.tsx",
   "app/(regional)/app/(workspace)/[project]/timeline/page.test.tsx",
   "app/(regional)/app/(workspace)/account/layout.test.tsx",
   "app/(regional)/app/(workspace)/workspace-shell.test.tsx",

@@ -173,7 +173,7 @@ export function MonitorRecurringSchedule({
             />
           ) : null}
           {canWrite && state.mode === "scheduled" ? (
-            <Button variant="outline" disabled={pending} onClick={() => void pause()}>
+            <Button size="input" variant="outline" disabled={pending} onClick={() => void pause()}>
               {t("pause")}
             </Button>
           ) : null}
@@ -183,10 +183,15 @@ export function MonitorRecurringSchedule({
         <div className="space-y-2 border-t border-border pt-3">
           <MonitorRecurringReview command={preview.command} />
           <div className="flex gap-2">
-            <Button disabled={pending} onClick={() => void approve()}>
+            <Button size="input" disabled={pending} onClick={() => void approve()}>
               {t("approve")}
             </Button>
-            <Button variant="ghost" disabled={pending} onClick={() => setPreview(null)}>
+            <Button
+              size="input"
+              variant="ghost"
+              disabled={pending}
+              onClick={() => setPreview(null)}
+            >
               {t("cancel")}
             </Button>
           </div>

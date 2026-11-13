@@ -40,6 +40,7 @@ describe("rank tracker list SQL", () => {
         volMax: 20,
         volMin: 10,
         wrongUrl: true,
+        aiOverviewShown: false,
       },
       lens: { device: "mobile", locationId: "US:en" },
       search: "docs%_\\",

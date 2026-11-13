@@ -16,7 +16,13 @@ describe("PasswordInput", () => {
 
     const input = screen.getByLabelText("API password") as HTMLInputElement;
     expect(input.type).toBe("password");
-    expect(input).toHaveClass("pr-12");
+    expect(input).toHaveClass(
+      "pr-12",
+      "rounded-control",
+      "font-medium",
+      "normal-case",
+      "tracking-normal",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Show password" }));
     expect(input.type).toBe("text");

@@ -96,9 +96,80 @@
       "validationUrl": "Usa una URL válida."
     },
     "remove": {
-      "confirm": "¿Eliminar esta nota de la cronología?",
-      "aria": "Eliminar la nota de la cronología",
+      "confirm": "¿Eliminar esta nota?",
+      "aria": "Quitar esta nota",
       "error": "No se ha podido eliminar la nota."
+    },
+    "annotations": {
+      "lead": "Tus notas, más las actualizaciones de Google, los despliegues y los cambios de contenido y del mapa del sitio. Cada una aparece en los gráficos.",
+      "rulerTitle": "Últimos 90 días",
+      "rulerHint": "Los pines son momentos. Una barra es un despliegue de Google.",
+      "rulerAria": "Anotaciones, últimos 90 días",
+      "legend": {
+        "note": "Notas",
+        "google": "Actualizaciones de Google",
+        "deploy": "Despliegues",
+        "content": "Contenido",
+        "sitemap": "Mapa del sitio"
+      },
+      "addAria": "Añadir una nota",
+      "placeholder": "¿Qué has cambiado? p. ej. Preguntas frecuentes en 20 páginas",
+      "today": "Hoy",
+      "dateAria": "Fecha de la nota",
+      "wholeProject": "Todo el proyecto",
+      "scopeAria": "Dónde se aplica la nota",
+      "scopeSearch": "Buscar páginas",
+      "scopeEmpty": "Ninguna página coincide.",
+      "addNote": "Añadir nota",
+      "filterAria": "Filtrar anotaciones",
+      "filter": {
+        "all": "Todas",
+        "note": "Notas",
+        "google": "Actualizaciones de Google",
+        "deploy": "Despliegues",
+        "content": "Contenido",
+        "sitemap": "Mapa del sitio"
+      },
+      "hideAutomatic": "Ocultar automáticas",
+      "showAutomatic": "Mostrar automáticas",
+      "empty": "Nada aquí para este filtro.",
+      "byActor": "por {actor}",
+      "contentFallback": "Contenido actualizado",
+      "deindexedTitle": "URL retirada del índice",
+      "deployFallback": "Despliegue",
+      "detailContent": "Desde una señal de CMS o de contenido.",
+      "detailDeindexed": "Esta URL ya no está indexada.",
+      "detailDeploy": "Desde un webhook de despliegue. Se conservan el proveedor, el entorno y el id cuando se envían.",
+      "detailGoogle": "Importada del panel de estado de la Búsqueda de Google. Un despliegue con inicio y fin es una banda, no un solo día.",
+      "detailNote": "Nota manual.",
+      "detailSitemap": "Desde el monitor del mapa del sitio. Las URL añadidas y retiradas pasan a ser anotaciones.",
+      "noteFallback": "Nota",
+      "sitemapTitle": "Mapa del sitio: {added, number} añadidas, {removed, number} retiradas",
+      "primaryConversion": "La fuente de conversión principal pasó de {from} a {to}",
+      "conversionSource": {
+        "none": "ninguna",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      },
+      "source": {
+        "note": "Nota",
+        "google": "Actualización de Google",
+        "deploy": "Despliegue",
+        "content": "Contenido",
+        "sitemap": "Mapa del sitio"
+      },
+      "rolloutRange": "{start} a {end} · {status}",
+      "rolloutComplete": "despliegue completado",
+      "rolloutOpen": "Despliegue en curso",
+      "sourcesTitle": "Fuentes automáticas",
+      "googleSourceDetail": "Panel de estado de la Búsqueda · gratis",
+      "statusOn": "Activo",
+      "sitemapSource": "Cambios del mapa del sitio",
+      "sitemapSourceDetail": "Monitor del mapa del sitio · ya en marcha",
+      "deploySourceDetail": "Webhook: Vercel, Netlify, GitHub",
+      "connect": "Conectar",
+      "contentSource": "Contenido (CMS)",
+      "contentSourceDetail": "Webhook o API · fuente de señal cms"
     }
   }
 }

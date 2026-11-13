@@ -222,6 +222,8 @@ model User {
   achievementDays AchievementDay[]
   achievementAwards AchievementAward[]
   achievementMails AchievementMail[]
+  achievementEnrollments AchievementEnrollment[]
+  projectSeoChallenges ProjectSeoChallenge[]
   analyticsConsent             UserAnalyticsConsent?
   providerComparisonPreviews ProviderComparisonPreview[]
   providerComparisonRuns ProviderComparisonRun[]
@@ -243,6 +245,7 @@ model User {
   /// Project opened first at sign-in. The entry page ignores it without a membership.
   defaultProjectId             String?
   defaultProject               Project?                 @relation("UserDefaultProject", fields: [defaultProjectId], references: [id], onDelete: SetNull)
+  researchHistoryPins          ResearchHistoryPin[]
   welcomeFollowupRequestedAt   DateTime?
   welcomeFollowupStartedAt     DateTime?
   welcomeFollowupFinishedAt    DateTime?
@@ -259,8 +262,14 @@ model User {
   oauthAccessTokens            OauthAccessToken[]
   oauthConsents                OauthConsent[]
   projects                     Project[]                @relation("ProjectOwner")
+  costItemsOwned               CostItem[]               @relation("CostItemOwner")
+  costItemsCreated             CostItem[]               @relation("CostItemCreator")
   memberships                  Membership[]
   auditLogs                    AuditLog[]               @relation("AuditActor")
+  tagPageRulesUpdated          TagPageRule[]            @relation("TagPageRuleUpdatedBy")
+  aiSourceTypesSet             AiSourceTypeOverride[]   @relation("AiSourceTypeSetBy")
+  aiSourcePlanItemsAdded       AiSourcePlanItem[]       @relation("AiSourcePlanAddedBy")
+  aiProjectEnginesUpdated      AiProjectEngine[]        @relation("AiProjectEngineUpdatedBy")
   notifications                Notification[]
   notificationPreferences      NotificationPreference[]
   weeklyDigestSends            WeeklyDigestSend[]
@@ -278,7 +287,9 @@ model User {
   devicePushTokens             DevicePushToken[]
   writeModeChangedProjects     Project[]                @relation("ProjectWriteModeChangedBy")
   signalsCreated               Signal[]                 @relation("SignalCreator")
+  pageSnapshotsCreated         PageSnapshot[]           @relation("PageSnapshotCreator")
   createdIngestHooks           IngestHook[]
+  createdReportShareLinks      AgentReportShareLink[]   @relation("ReportShareLinkCreator")
   onboardingQuizResponses      OnboardingQuizResponse[]
   requestedRankCheckRuns       RankCheckRun[]           @relation("RankCheckRunRequestedBy")
   createdAt                    DateTime                 @default(now())
@@ -570,6 +581,7 @@ model WaitlistInterest {
 }
 
 model Project {
+  seoChallenges ProjectSeoChallenge[]
   providerResponseCaptures ProviderResponseCapture[]
   domainVerifications ProjectDomainVerification[]
   providerComparisonPreviews ProviderComparisonPreview[]
@@ -588,6 +600,8 @@ model Project {
   name                             String
   // Optional: a workspace exists before the user says which domain to track.
   domain                           String?
+  brandAliases                     String[]                         @default([])
+  brandExcludedNames               String[]                         @default([])
   domainRatingEnabled              Boolean @default(true)
   domainRatingChecks               DomainRatingCheck[]
   isSample                         Boolean                          @default(false)
@@ -604,6 +618,7 @@ model Project {
   ownerId                          String
   owner                            User                             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members                          Membership[]
+  costItemProjects                 CostItemProject[]
   keywords                         Keyword[]
   markets                          ProjectMarket[]
   savedKeywords                    SavedKeyword[]
@@ -620,13 +635,18 @@ model Project {
   aiTrackingSchedules              AiTrackingSchedule[]
   aiTrackingRuns                   AiTrackingRun[]
   aiTrackingSamples                AiTrackingSample[]
+  aiProjectEngines                 AiProjectEngine[]
+  aiSourceTypeOverrides            AiSourceTypeOverride[]
+  aiSourcePlanItems                AiSourcePlanItem[]
   rankCheckRuns                    RankCheckRun[]
   checkSchedules                   CheckSchedule[]
   backlinkSnapshots                BacklinkSnapshot[]
   domainOverviewSnapshots          DomainOverviewSnapshot[]
   keywordResearchSnapshots         KeywordResearchSnapshot[]
+  researchHistoryPins              ResearchHistoryPin[]
   context                          ProjectContext?
   agentReports                     AgentReport[]
+  reportShareLinks                 AgentReportShareLink[]
   siteAuditRuns                    SiteAuditRun[]
   pageTrafficSnapshots             PageTrafficSnapshot[]
   searchAnalyticsDaily             SearchAnalyticsDaily[]
@@ -641,6 +661,8 @@ model Project {
   searchInsightsWindowFacts        SearchInsightsWindowFacts[]
   organicSessionsDaily             OrganicSessionsDaily[]
   organicSessionsPageDaily         OrganicSessionsPageDaily[]
+  conversionDaily                  ConversionDaily[]
+  conversionGoals                  ConversionGoal[]
   apiKeys                          ApiKey[]
   ingestHooks                      IngestHook[]
   auditLogs                        AuditLog[]
@@ -648,6 +670,9 @@ model Project {
   signals                          Signal[]
   sitemapMonitoringEnabled         Boolean                          @default(true)
   sitemapSnapshots                 SitemapSnapshot[]
+  pages                            ProjectPage[]
+  pageVitals                       PageVitals[]
+  pageSnapshots                    PageSnapshot[]
   indexingDays                     PageIndexingDay[]
   indexingSitemaps                 PageIndexingSitemap[]
   urlPresenceChanges               UrlPresenceChange[]
@@ -742,6 +767,8 @@ model ProjectDefaults {
   indexingDiscoveryComplete  Boolean              @default(false)
   searchSyncImportMonths     Int?
   searchSyncPace             String?
+  /// Default analytics source for conversion views. Null until a project chooses one.
+  primaryConversionSource    ConversionSource?
   enabledExperimentalModules String[]             @default([])
   lastCheckedAt              DateTime?
   nextCheckAt                DateTime?
@@ -891,6 +918,8 @@ model Tag {
   color        String?
   project      Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   keywords     KeywordTag[]
+  pageLinks    PageTag[]
+  pageRule     TagPageRule?
   alertTargets AlertRuleTarget[]
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -908,6 +937,7 @@ model Competitor {
   domain          String
   label           String?
   aliases         String[]                   @default([])
+  excludedNames   String[]                   @default([])
   source          CompetitorSource           @default(manual)
   evidence        Json?
   scopePolicy     CompetitorScopePolicy      @default(all_markets)
@@ -1754,6 +1784,7 @@ model Signal {
   happenedAt  DateTime       @default(now())
   createdById String?
   createdBy   User?          @relation("SignalCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  pageSnapshot PageSnapshot?
   createdAt   DateTime       @default(now())
 
   @@index([projectId, happenedAt(sort: Desc)])
@@ -2839,6 +2870,7 @@ model ProjectContext {
 
 model AgentReport {
   siteAuditRun SiteAuditRun?
+  shareLinkReports AgentReportShareLinkReport[]
   cacheReuseUntil DateTime?
   id          String   @id @default(cuid())
   publicId    String   @unique

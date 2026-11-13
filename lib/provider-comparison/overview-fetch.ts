@@ -4,6 +4,8 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import type { UrlRepairTarget } from "@/lib/serp-url-repair/model";
 import { assertComparisonAccess } from "./access";
 import { parseComparisonSnapshot } from "./model";
+import { playgroundSearchKey } from "./playground-history-group";
+import { fetchedOverviewWhere } from "./playground-history-search";
 import { previewPlaygroundComparison } from "./playground-service";
 import { comparisonRunView } from "./read";
 
@@ -76,7 +78,7 @@ export async function readSavedOverviewFetch(input: OverviewInput) {
     await assertComparisonAccess(tx, input.projectId, input.actorId, false);
     const search = await overviewSearch(tx, input);
     const rows = await tx.providerComparisonRun.findMany({
-      where: { projectId: input.projectId, keywordId: null },
+      where: fetchedOverviewWhere(input.projectId, [{ ...search, text: search.query }]),
       include: { sides: true },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -90,9 +92,7 @@ export async function readSavedOverviewFetch(input: OverviewInput) {
       }
       if (
         snapshot.aiOverview !== true ||
-        snapshot.text !== search.query ||
-        snapshot.device !== search.device ||
-        snapshot.locationId !== search.locationId
+        playgroundSearchKey(snapshot) !== playgroundSearchKey({ ...search, text: search.query })
       )
         continue;
       const side = row.sides.find((item) => item.provider === "serpapi");

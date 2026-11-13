@@ -1,0 +1,41 @@
+enum PageSnapshotSource {
+  sitemap
+  registry
+}
+
+/// One day's list of pages that existed. Metrics stay in each source.
+/// Replaced rows keep `archivedAt`. The partial unique index
+/// `page_snapshots_one_active_per_project` allows one active row per project.
+model PageSnapshot {
+  id            String             @id @default(cuid())
+  projectId     String
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  takenOn       DateTime           @db.Date
+  label         String             @default("Day 1")
+  pageCount     Int
+  source        PageSnapshotSource
+  createdById   String?
+  createdBy     User?              @relation("PageSnapshotCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  signalId      String?            @unique
+  signal        Signal?            @relation(fields: [signalId], references: [id], onDelete: SetNull)
+  archivedAt    DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  pages         PageSnapshotPage[]
+  seoChallenges ProjectSeoChallenge[]
+
+  @@index([projectId, archivedAt])
+  @@map("page_snapshots")
+}
+
+model PageSnapshotPage {
+  id         String       @id @default(cuid())
+  snapshotId String
+  snapshot   PageSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  pageId     String
+  page       ProjectPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, pageId])
+  @@index([pageId])
+  @@map("page_snapshot_pages")
+}

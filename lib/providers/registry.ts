@@ -6,6 +6,7 @@ import { dataForSeoRankRequest } from "@/lib/providers/serp/dataforseo-rank-requ
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
 import { gscQueryDimensions } from "./analytics/gsc-query-pagination";
+import { pageSpeedAnalyticsProvider } from "./analytics/pagespeed";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
 import { developmentSerpProvider } from "./development-serp";
 import { syntheticProviderResult } from "./fake-request-receipts";
@@ -54,6 +55,7 @@ const serpProviders: Record<string, SerpProvider> = {
 
 const analyticsProviders: Record<string, AnalyticsProvider> = {
   gsc: gscAnalyticsProvider,
+  pagespeed: pageSpeedAnalyticsProvider,
   ga4: ga4AnalyticsProvider,
   plausible: plausibleAnalyticsProvider,
 };

@@ -45,10 +45,10 @@
     right: 0;
   }
   .panel[data-state="open"] {
-    animation: panel-enter var(--enter-duration) var(--ease-drawer);
+    animation: panel-enter var(--enter-duration) var(--panel-ease, var(--ease-drawer));
   }
   .panel[data-state="closed"] {
-    animation: panel-exit var(--exit-duration) var(--ease-drawer);
+    animation: panel-exit var(--exit-duration) var(--panel-ease, var(--ease-drawer));
   }
   .panel[data-side="right"] {
     --panel-offset: translateX(100%);
@@ -61,6 +61,42 @@
   }
   .panel[data-side="center"] {
     --panel-offset: scale(0.97);
+  }
+  /* Floating drawers only. Left navigation keeps the full off-canvas slide. */
+  .panel[data-placement="panel"] {
+    --panel-ease: var(--ease-out);
+    --panel-offset: translateX(1rem);
+  }
+  .panel[data-placement="sheet"] {
+    --panel-ease: var(--ease-out);
+  }
+  /*
+   * Sheet actions share one row. flex-basis auto with width 100% sizes from the
+   * label, so a short button sticks at its 64px minimum and the label wraps.
+   * One wrapper is part of the action row. A deeper row sits beside a note and
+   * keeps the caller's layout.
+   */
+  .panel[data-placement="sheet"] footer:not(:has(> :not(button))):has(> button) {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel[data-placement="sheet"] footer > button,
+  .panel[data-placement="sheet"] footer > :not(:has(> :not(button))):has(> button) > button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .panel[data-placement="sheet"] footer > button:only-child {
+    width: 100%;
+  }
+  .panel[data-placement="sheet"] footer > :not(:has(> :not(button))):has(> button) {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
   }
   .backdrop[data-state="open"] {
     animation: backdrop-enter var(--motion-modal-enter) ease-out;

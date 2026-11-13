@@ -137,6 +137,7 @@ beforeEach(() => {
   mocks.prisma.project.updateMany.mockResolvedValue({ count: 1 });
   mocks.prisma.$queryRaw.mockResolvedValue([]);
   mocks.prisma.competitorSuggestionDismissal.createMany.mockResolvedValue({});
+  mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
   mocks.writeAudit.mockResolvedValue({});
 });
 
@@ -620,6 +621,49 @@ describe("competitor-set actions", () => {
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("stores excluded names with aliases and rejects overlaps or the fixed domain", async () => {
+    mocks.prisma.competitor.update.mockResolvedValue(
+      competitor({ aliases: ["Primary"], excludedNames: ["Other brand"] }),
+    );
+    await updateCompetitorAliases({
+      aliases: ["Primary"],
+      competitorId: competitorPublicId,
+      excludedNames: ["Other brand"],
+      projectId: projectPublicId,
+    });
+    expect(mocks.prisma.competitor.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { aliases: ["Primary"], excludedNames: ["Other brand"] },
+      }),
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "competitor.aliases.update",
+        after: expect.objectContaining({ excludedNames: ["Other brand"] }),
+      }),
+      mocks.prisma,
+    );
+
+    mocks.prisma.competitor.update.mockClear();
+    await expect(
+      updateCompetitorAliases({
+        aliases: ["Primary"],
+        competitorId: competitorPublicId,
+        excludedNames: ["primary"],
+        projectId: projectPublicId,
+      }),
+    ).rejects.toThrow(/both an alias and an excluded name/);
+    await expect(
+      updateCompetitorAliases({
+        aliases: ["Primary"],
+        competitorId: competitorPublicId,
+        excludedNames: ["competitor.example.com"],
+        projectId: projectPublicId,
+      }),
+    ).rejects.toThrow(/cannot be excluded/);
+    expect(mocks.prisma.competitor.update).not.toHaveBeenCalled();
   });
 });
 

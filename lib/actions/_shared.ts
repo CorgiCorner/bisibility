@@ -200,7 +200,7 @@ export function revalidateKeywordViews(keywordId?: string | null) {
     marketPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("dashboard"),
-    projectPage("timeline"),
+    projectPage("annotations"),
     projectPage("runs"),
     projectPage("schedules"),
     projectPage("schedules", "[publicId]"),
@@ -218,7 +218,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
     projectPage("rank-tracker"),
     marketPage("rank-tracker"),
     keywordDetailTarget(keywordId),
-    projectPage("timeline"),
+    projectPage("annotations"),
     projectPage("alerts"),
     projectPage("competitors"),
     projectPage("settings", "audit"),
@@ -250,11 +250,12 @@ export function revalidateCompetitorViews() {
     projectPage("competitors"),
     projectPage("dashboard"),
     projectPage("settings", "audit"),
+    projectPage("ai-visibility"),
   ]);
 }
 
 export function revalidateTimelineViews() {
-  revalidateTargets([projectPage("timeline"), projectPage("settings", "audit")]);
+  revalidateTargets([projectPage("annotations"), projectPage("settings", "audit")]);
 }
 
 export function revalidateBudgetViews() {
@@ -281,7 +282,7 @@ export function revalidateExperimentalModuleViews() {
   revalidateTargets([
     { path: appRootPath(), type: "layout" },
     projectPage("settings", "experimental"),
-    projectPage("timeline"),
+    projectPage("annotations"),
     projectPage("competitors"),
   ]);
 }

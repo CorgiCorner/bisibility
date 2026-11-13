@@ -1,28 +1,20 @@
+import {
+  aliasesSchema,
+  BRAND_NAME_OVERLAP_MESSAGE,
+  brandNameDraftSchema,
+  excludedNamesSchema,
+} from "@/lib/ai-tracking/brand-name-schema";
 import { addManagedCompetitorSchema } from "@/lib/competitors/types";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { z } from "zod";
+
+export { aliasesSchema, brandNameDraftSchema, excludedNamesSchema };
 
 const referenceSchema = <Prefix extends "cmp" | "pmkt" | "prj">(prefix: Prefix) =>
   z
     .string()
     .trim()
     .refine((value) => isPublicIdOfType(value, prefix), `Use a ${prefix}_ reference.`);
-
-const aliasSchema = z.string().trim().min(1, "Aliases cannot be empty.").max(120);
-
-const aliasesSchema = z
-  .array(aliasSchema)
-  .max(50)
-  .superRefine((aliases, context) => {
-    const seen = new Set<string>();
-    for (const [index, alias] of aliases.entries()) {
-      const key = alias.toLowerCase();
-      if (seen.has(key)) {
-        context.addIssue({ code: "custom", message: "Aliases must be unique.", path: [index] });
-      }
-      seen.add(key);
-    }
-  });
 
 const existingDomainSchema = addManagedCompetitorSchema.pick({ domain: true, projectId: true });
 
@@ -52,11 +44,29 @@ export const addManualCompetitorSchema = addManagedCompetitorSchema
   .pick({ domain: true, label: true })
   .extend({ aliases: aliasesSchema, projectId: projectIdSchema });
 
-export const updateCompetitorAliasesSchema = z.object({
-  aliases: aliasesSchema,
-  competitorId: referenceSchema("cmp"),
-  projectId: projectIdSchema,
-});
+export const updateCompetitorAliasesSchema = z
+  .object({
+    aliases: aliasesSchema,
+    competitorId: referenceSchema("cmp"),
+    excludedNames: excludedNamesSchema.optional(),
+    projectId: projectIdSchema,
+  })
+  .superRefine((value, context) => {
+    if (!value.excludedNames) return;
+    const parsed = brandNameDraftSchema.safeParse({
+      aliases: value.aliases,
+      excludedNames: value.excludedNames,
+    });
+    if (parsed.success) return;
+    for (const issue of parsed.error.issues) {
+      if (issue.message !== BRAND_NAME_OVERLAP_MESSAGE) continue;
+      context.addIssue({
+        code: "custom",
+        message: issue.message,
+        path: issue.path,
+      });
+    }
+  });
 
 export const replaceCompetitorMarketsSchema = z.object({
   competitorId: referenceSchema("cmp"),

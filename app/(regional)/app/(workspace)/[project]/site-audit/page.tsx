@@ -3,6 +3,7 @@ import { PageContent } from "@/components/shell/PageContent";
 import { SiteAuditWorkspace } from "@/components/site-audit/SiteAuditWorkspace";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { checkSiteAuditVitalsAction } from "@/lib/actions/page-vitals";
 import {
   cancelSiteAuditAction,
   listSiteAuditPagesAction,
@@ -13,6 +14,7 @@ import {
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
+import { readCoreWebVitalsCard } from "@/lib/pagespeed/read";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { readSiteAuditPageLimit } from "@/lib/site-audit/budget-extension";
@@ -35,6 +37,11 @@ export default async function SiteAuditPage({
     canProjectAction(getProjectRole(actor, project.id), "create", "project") &&
     !isProjectReadOnly(project.writeMode) &&
     trackedProjectDomain(project.domain) !== null;
+  const vitals = await readCoreWebVitalsCard({
+    domain: project.domain ?? "",
+    pages: initial?.result.pages ?? [],
+    projectId: project.id,
+  });
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}
@@ -55,6 +62,7 @@ export default async function SiteAuditPage({
           cancelAction={cancelSiteAuditAction}
           resumeAction={resumeSiteAuditAction}
           pagesAction={listSiteAuditPagesAction}
+          vitals={{ checkAction: checkSiteAuditVitalsAction, model: vitals }}
         />
       </PageContent>
     </FeatureMessagesProvider>

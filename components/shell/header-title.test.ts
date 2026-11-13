@@ -35,22 +35,27 @@ const routeCases = [
   {
     path: appPath("prj_1", "prompt-research"),
     pattern: appPath("[project]", "prompt-research"),
-    title: "Prompt Research",
+    title: "AI Visibility",
   },
   {
     path: appPath("prj_1", "prompt-tracker"),
     pattern: appPath("[project]", "prompt-tracker"),
-    title: "Prompt Tracker",
+    title: "AI Visibility",
+  },
+  {
+    path: appPath("prj_1", "ai-visibility"),
+    pattern: appPath("[project]", "ai-visibility"),
+    title: "AI Visibility",
   },
   {
     path: appPath("prj_1", "brand-visibility"),
     pattern: appPath("[project]", "brand-visibility"),
-    title: "Brand Visibility",
+    title: "AI Visibility",
   },
   {
-    path: appPath("prj_1", "prompt-playground"),
-    pattern: appPath("[project]", "prompt-playground"),
-    title: "Prompt Playground",
+    path: appPath("prj_1", "model-playground"),
+    pattern: appPath("[project]", "model-playground"),
+    title: "Model Playground",
   },
   {
     path: appPath("prj_1", "site-audit"),
@@ -65,12 +70,12 @@ const routeCases = [
   {
     path: appPath("prj_1", "agent-reports"),
     pattern: appPath("[project]", "agent-reports"),
-    title: "Agent Reports",
+    title: "Reports",
   },
   {
     path: appPath("prj_1", "agent-reports", "agr_test"),
     pattern: appPath("[project]", "agent-reports", "[reportId]"),
-    title: "Agent Reports",
+    title: "Reports",
   },
 
   { path: appRootPath(), pattern: `${appRootPath()}/`, title: "Overview" },
@@ -157,6 +162,11 @@ const routeCases = [
     path: appPath("prj_1", "runs", "rank-checks", "rcr_test"),
     pattern: appPath("[project]", "runs", "rank-checks", "[id]"),
     title: "Run",
+  },
+  {
+    path: appPath("prj_1", "pages"),
+    pattern: appPath("[project]", "pages"),
+    title: "Pages",
   },
   {
     path: appPath("prj_1", "search-console"),
@@ -274,6 +284,11 @@ const routeCases = [
     title: "Settings",
   },
   {
+    path: appPath("prj_1", "settings", "conversions"),
+    pattern: appPath("[project]", "settings", "conversions"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "settings", "developers"),
     pattern: appPath("[project]", "settings", "developers"),
     title: "Settings",
@@ -309,9 +324,19 @@ const routeCases = [
     title: "Settings",
   },
   {
+    path: appPath("prj_1", "settings", "tags"),
+    pattern: appPath("[project]", "settings", "tags"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "timeline"),
     pattern: appPath("[project]", "timeline"),
-    title: "Timeline",
+    title: "Annotations",
+  },
+  {
+    path: appPath("prj_1", "annotations"),
+    pattern: appPath("[project]", "annotations"),
+    title: "Annotations",
   },
   {
     path: appPath("prj_1", "markets"),
@@ -372,11 +397,27 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "dashboard"))).toEqual({ title: "Dashboard" });
   });
 
+  it("titles AI Visibility without a subtitle", () => {
+    for (const segment of [
+      "ai-visibility",
+      "prompt-tracker",
+      "prompt-research",
+      "brand-visibility",
+    ]) {
+      expect(headerMetaFor(appPath("prj_1", segment))).toEqual({ title: "AI Visibility" });
+    }
+  });
+
   it("does not advertise removed timezone preferences", () => {
     expect(headerMetaFor("/app/account/preferences")).toEqual({
       subtitle: "Theme and personal defaults.",
       title: "Preferences",
     });
+  });
+
+  it("omits the Annotations subtitle", () => {
+    expect(headerMetaFor(appPath("prj_1", "annotations"))).toEqual({ title: "Annotations" });
+    expect(headerMetaFor(appPath("prj_1", "timeline"))).toEqual({ title: "Annotations" });
   });
 
   it("omits the Rank Tracker subtitle", () => {

@@ -32,6 +32,13 @@ vi.mock("@/lib/presence/inspection-budget", () => ({ getInspectionBudget: mocks.
 vi.mock("./report", () => ({ getPageIndexingReport: mocks.report }));
 vi.mock("./settings", () => ({ getPageIndexingSettings: mocks.settings }));
 vi.mock("./urls", () => ({ listPageIndexingUrls: mocks.list }));
+vi.mock("./indexing-overview", () => ({
+  loadIndexingOverview: vi.fn(async () => ({
+    drops: [],
+    reasons: { asOf: "2026-10-16T00:00:00.000Z", derived: false, rows: [] },
+    sources: { keyword_target: 0, manual: 0, sitemap: 0 },
+  })),
+}));
 
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
 import { SearchIndexConnectionError } from "./service";

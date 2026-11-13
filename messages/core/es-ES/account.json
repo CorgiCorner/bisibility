@@ -85,7 +85,7 @@
       "verified": "Verificado con código de un solo uso"
     },
     "privacy": {
-      "action": "Opciones de privacidad",
+      "action": "Revisar preferencias",
       "description": "Revisa o cambia en este navegador tus preferencias opcionales de analítica y de grabaciones de la configuración inicial.",
       "title": "Opciones de privacidad"
     },
@@ -287,6 +287,7 @@
       "description": "Son tuyas y <emphasis>se aplican en todos los dispositivos desde los que inicias sesión.</emphasis>",
       "landing": {
         "ariaLabel": "Página de inicio predeterminada",
+        "ai-visibility": "Visibilidad en IA",
         "backlinks": "Backlinks",
         "competitors": "Competidores",
         "dashboard": "Panel",
@@ -294,8 +295,9 @@
         "keyword-research": "Investigación de palabras clave",
         "label": "Página de inicio predeterminada",
         "rank-tracker": "Seguimiento de posiciones",
+        "pages": "Páginas",
         "search-console": "Search Console",
-        "timeline": "Cronología"
+        "annotations": "Anotaciones"
       },
       "language": {
         "description": "Estamos preparando más idiomas. Ahora está activo el inglés.",
@@ -364,7 +366,37 @@
       "emptyDay": "Sin actividad registrada",
       "calendarLabel": "Tus últimos siete días",
       "shareError": "No se pudo guardar el cambio. Inténtalo de nuevo.",
-      "badgeOptions": "Opciones de la insignia"
+      "badgeOptions": "Opciones de la insignia",
+      "thirtyTitle": "30 días de SEO",
+      "thirtyDescription": "Un hábito diario con una insignia que puedes publicar. Únete cuando quieras.",
+      "thirtyStart": "Empezar mis 30 días",
+      "thirtyDayLabel": "Día {day, number}",
+      "thirtyStarted": "de {goal, number} · empezó el {date}",
+      "thirtyPause": "¿Faltó un día? La racha se pausa, no se reinicia.",
+      "thirtyHow": "Cómo funciona",
+      "thirtyStep1Title": "Empieza cualquier día",
+      "thirtyStep1Body": "Tu día 1 es el día en que te unes. Abre la instantánea del día 1 del proyecto que elijas. Es la referencia para más adelante.",
+      "thirtyStep2Title": "Cuentan los días de práctica",
+      "thirtyStep2Body": "La racha cuenta lo que haces, no el tráfico, así que puedes terminarla antes de que se vean los resultados.",
+      "thirtyStep3Title": "Los resultados llegan después",
+      "thirtyStep3Body": "El SEO es lento. Un día perdido pausa el conteo. La insignia se obtiene el día 30 de práctica.",
+      "thirtySnapshotLabel": "Proyecto para la instantánea del día 1",
+      "thirtySnapshotOpen": "Abrir páginas",
+      "thirtySnapshotEmpty": "Crea un proyecto para guardar la instantánea del día 1 en Páginas.",
+      "thirtyLeave": "Abandonar los 30 días",
+      "thirtyLeaveTitle": "¿Abandonar los 30 días?",
+      "thirtyLeaveBody": "El conteo se pausa. Los días completados se conservan. Puedes unirte de nuevo sin empezar de cero.",
+      "thirtyLeaveConfirm": "Abandonar",
+      "thirtyCancel": "Cancelar",
+      "thirtyLeft": "En pausa desde el {date}. Los días completados se conservan. Unirte de nuevo continúa el mismo reto.",
+      "thirtyOverflow": "{count, plural, one {# día anterior no se muestra} other {# días anteriores no se muestran}}",
+      "thirtyCalendarLabel": "30 días de SEO",
+      "thirtySlotDone": "Hecho",
+      "thirtySlotSkipped": "Omitido",
+      "thirtySlotToday": "Hoy",
+      "thirtySlotUpcoming": "Próximo",
+      "thirtyError": "No se pudo actualizar el reto de 30 días. Inténtalo de nuevo.",
+      "thirtyTrackingOff": "Activa «Registrar mi actividad» para unirte."
     }
   }
 }

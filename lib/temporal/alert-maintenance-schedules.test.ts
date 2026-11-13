@@ -5,10 +5,14 @@ import {
   ensureAlertDigestFlushSchedule,
   ensureAlertHealthSchedule,
   ensurePresenceSyncSchedule,
+  ensureProjectPagesSyncSchedule,
+  ensureSearchEngineUpdatesSchedule,
   ensureSitemapSyncSchedule,
   isPresenceSyncEnabled,
   isSitemapSyncEnabled,
   PRESENCE_SYNC_SCHEDULE_ID,
+  PROJECT_PAGES_SYNC_SCHEDULE_ID,
+  SEARCH_ENGINE_UPDATES_SCHEDULE_ID,
   SITEMAP_SYNC_SCHEDULE_ID,
 } from "./maintenance-schedule-bootstrap";
 
@@ -93,6 +97,46 @@ describe("alert and optional sync schedules", () => {
         spec: { intervals: [{ every: "1 hour" }] },
       }),
     );
+  });
+
+  it("creates the daily search engine update schedule when maintenance is enabled", async () => {
+    const client = clientMock();
+    await ensureSearchEngineUpdatesSchedule(client);
+    expect(client.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scheduleId: SEARCH_ENGINE_UPDATES_SCHEDULE_ID,
+        spec: { calendars: [{ hour: 5, minute: 15 }] },
+      }),
+    );
+  });
+
+  it("disables the search engine update schedule when maintenance is off", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
+    const client = clientMock();
+    await expect(ensureSearchEngineUpdatesSchedule(client)).resolves.toEqual({
+      scheduleId: SEARCH_ENGINE_UPDATES_SCHEDULE_ID,
+      status: "disabled",
+    });
+  });
+
+  it("creates the daily project pages sync after the sitemap slot", async () => {
+    const client = clientMock();
+    await ensureProjectPagesSyncSchedule(client);
+    expect(client.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scheduleId: PROJECT_PAGES_SYNC_SCHEDULE_ID,
+        spec: { calendars: [{ hour: 5, minute: 0 }] },
+      }),
+    );
+  });
+
+  it("disables project pages sync when scheduled maintenance is off", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
+    const client = clientMock();
+    await expect(ensureProjectPagesSyncSchedule(client)).resolves.toEqual({
+      scheduleId: PROJECT_PAGES_SYNC_SCHEDULE_ID,
+      status: "disabled",
+    });
   });
 
   it("creates the daily sitemap sync schedule with a calendar spec", async () => {

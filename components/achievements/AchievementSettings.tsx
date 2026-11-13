@@ -120,7 +120,7 @@ export function AchievementSettings({
           />
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" size="sm" loading={pending}>
+          <Button type="submit" size="input" loading={pending}>
             {t("save")}
           </Button>
           {message ? (

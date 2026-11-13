@@ -235,6 +235,12 @@
       "trackToastPaused": "Dodano jako wstrzymane w monitorze pozycji",
       "trackToastScheduled": "Dodano do monitora pozycji – harmonogram: {frequency}",
       "tablesFootnote": "Pokrycie to udział kliknięć i wyświetleń, dla których Google podaje treść zapytania. Reszta to rzeczywisty ruch na zapytaniach, które Google ukrywa, więc obie tabele nigdy nie sumują się do wiersza KPI.",
+      "clicksPerDay": "Kliknięcia dziennie",
+      "clicksPerDayChartAria": "Kliknięcia dziennie",
+      "clicksSeries": "Kliknięcia",
+      "clicksPerDayEmptyTitle": "Brak kliknięć w tym oknie",
+      "clicksPerDayEmptyDescription": "Google nie zgłosiło kliknięć tej usługi w zamkniętych dniach tego okna.",
+      "clicksPerDayLoading": "Wczytywanie kliknięć dziennie",
       "signalBandSub": "Już zbierają wyświetlenia, ale żadne nie jest w Top 3",
       "signalFailed": "Nie udało się policzyć",
       "signalOverlapSub": "Co najmniej 2 Twoje strony na to samo zapytanie",
@@ -322,6 +328,17 @@
       "deltaPositionBetter": "lepiej o {value}",
       "deltaPositionWorse": "gorzej o {value}",
       "sourceGa4": "GA4",
+      "metricConversions": "Konwersje",
+      "sourcePlausible": "Plausible",
+      "conversionSourceGoals": "{source} · {count, plural, one {# cel} few {# cele} many {# celów} other {# celu}}",
+      "conversionsByPage": "Konwersje według strony",
+      "conversionsColumnPage": "Strona",
+      "conversionsColumnSessions": "Sesje",
+      "conversionsColumnConversions": "Konwersje",
+      "conversionsColumnRate": "Wskaźnik",
+      "conversionsEmpty": "Brak konwersji w tym okresie.",
+      "conversionsConnect": "Podłącz analitykę",
+      "openInPages": "Otwórz w Stronach",
       "pendingStatusComplete": "Zakończono",
       "pendingStatusNeedsReauth": "Wymagane ponowne połączenie",
       "pendingStatusNeedsRetry": "Wymagane ponowienie",
@@ -594,7 +611,129 @@
       "inspectSitemapHint": "Wczytuje do 10 zapisanych adresów, zaczynając od jeszcze niesprawdzonych. Możesz zmienić listę przed inspekcją.",
       "inspectSitemapEmpty": "Brak zapisanych adresów w tej sitemapie. Wczytaj sitemapy ponownie i spróbuj jeszcze raz.",
       "inspectNoSitemaps": "Najpierw wczytaj sitemapy, aby wybrać z nich adresy.",
-      "inspectSitemapLoading": "Wczytywanie adresów..."
+      "inspectSitemapLoading": "Wczytywanie adresów...",
+      "lead": "Czy Google ma Twoje strony w indeksie i dlaczego nie, gdy ich nie ma.",
+      "allUrls": "Wszystkie adresy URL",
+      "progress": {
+        "checked": "Sprawdzono {checked, number} z {total, number} adresów URL",
+        "perDay": "{count, number} adresów URL dziennie. Następna partia o {time}.",
+        "perDayNoTime": "{count, number} adresów URL dziennie. Godzina następnej partii jest niedostępna.",
+        "off": "Sprawdzanie jest wyłączone.",
+        "limitZero": "Dzienny limit wynosi 0, więc nic nie jest sprawdzane.",
+        "availableQuota": "Używa limitu, który Google zostawia dostępny.",
+        "sources": "Mapa witryny {sitemap, number} · Cele Rank Trackera {targets, number} · Dodane ręcznie {manual, number}",
+        "daysLeft": "Zostało około {days, plural, one {# dnia} other {# dni}}",
+        "settings": "Ustawienia indeksowania",
+        "tooltip": "Sprawdzenia używają interfejsu inspekcji adresów URL. Dzienny limit jest wspólny dla całej usługi Search Console i zeruje się o północy czasu pacyficznego.",
+        "meter": "Sprawdzone adresy URL"
+      },
+      "tiles": {
+        "names": {
+          "indexed": "W indeksie",
+          "not_indexed": "Poza indeksem",
+          "inspection_failed": "Inspekcja nieudana",
+          "not_checked": "Niesprawdzone"
+        },
+        "indexedShare": "{percent} sprawdzonych",
+        "reasonCount": "{count, plural, one {# powód} other {# powodów}}",
+        "retriedTomorrow": "ponowienie jutro",
+        "notScheduled": "bez harmonogramu",
+        "queued": "w kolejce",
+        "noChecked": "jeszcze nic nie sprawdzono"
+      },
+      "reasons": {
+        "title": "Poza indeksem, według powodu",
+        "caption": "Stan pokrycia Google, słowami Google.",
+        "export": "Eksportuj CSV",
+        "exportFailed": "Nie udało się utworzyć eksportu.",
+        "exportTruncated": "Eksport zawiera pierwsze {rows, number} adresów URL.",
+        "columnReason": "Powód",
+        "columnUrls": "Adresy URL",
+        "columnChange": "Ostatnia zmiana",
+        "openInPages": "Otwórz na Stronach",
+        "changeNew": "nowy",
+        "changeNone": "bez zmiany",
+        "changeUp": "+{count, number} od {date}",
+        "changeDown": "-{count, number} od {date}",
+        "changeUnavailable": "Zmiany z 7 dni nie da się wyliczyć z zapisanej historii.",
+        "empty": "Brak adresów poza indeksem ze stanem pokrycia.",
+        "docs": "Dokumentacja Google dla tego stanu",
+        "genericDocs": "Dokumentacja indeksowania Google"
+      },
+      "explanations": {
+        "crawledNotIndexed": {
+          "meaning": "Google odwiedziło ten adres i zdecydowało, że go nie indeksuje.",
+          "step1": "Spraw, by strona była warta indeksu: unikalna treść, linki wewnętrzne i jasny cel.",
+          "step2": "Potwierdź, że kanoniczny adres to ta strona.",
+          "step3": "Proś o indeksowanie dopiero gdy strona jest użyteczna. Decyzja należy do Google."
+        },
+        "discoveredNotIndexed": {
+          "meaning": "Google zna ten adres i jeszcze go nie odwiedziło.",
+          "step1": "Podlinkuj go ze stron, które Google już odwiedza.",
+          "step2": "Zostaw go w mapie witryny, jeśli ma trafić do indeksu.",
+          "step3": "Poczekaj na kolejny crawl. Prośba go nie gwarantuje."
+        },
+        "duplicateCanonical": {
+          "meaning": "Google traktuje ten adres jako duplikat i wybrało inny adres kanoniczny.",
+          "step1": "Wybierz jeden adres, który ma się pozycjonować.",
+          "step2": "Skieruj znacznik kanoniczny i linki wewnętrzne na ten adres.",
+          "step3": "Usuń duplikat z mapy witryny, jeśli nie ma być w indeksie."
+        },
+        "alternateCanonical": {
+          "meaning": "Ten adres poprawnie wskazuje inną stronę kanoniczną.",
+          "step1": "Potwierdź, że cel kanoniczny to strona, którą chcesz w indeksie.",
+          "step2": "Zostaw adres alternatywny, jeśli służy realnemu wariantowi.",
+          "step3": "Nie oczekuj, że sam ten adres pojawi się w indeksie."
+        },
+        "pageWithRedirect": {
+          "meaning": "Ten adres przekierowuje, więc Google indeksuje cel.",
+          "step1": "Potwierdź, że przekierowanie prowadzi na właściwą stronę.",
+          "step2": "Zaktualizuj linki wewnętrzne i mapę witryny do adresu końcowego.",
+          "step3": "Zostaw przekierowanie, jeśli stary adres ma nadal działać."
+        },
+        "notFound": {
+          "meaning": "Google poprosiło o ten adres, a serwer zwrócił 404.",
+          "step1": "Przywróć stronę, jeśli ma istnieć, albo przekieruj ją na zamiennik.",
+          "step2": "Usuń ją z mapy witryny.",
+          "step3": "Popraw linki wewnętrzne, które nadal tu prowadzą."
+        },
+        "soft404": {
+          "meaning": "Serwer powiedział, że strona istnieje, ale Google czyta ją jako pustą lub błędną.",
+          "step1": "Zwracaj prawdziwe 404 albo 410 dla stron, których już nie ma.",
+          "step2": "Jeśli strona ma istnieć, daj jej realną treść.",
+          "step3": "Unikaj cienkich szablonów „nie znaleziono”, które nadal zwracają 200."
+        },
+        "noindex": {
+          "meaning": "Strona prosi Google, by jej nie indeksować, znacznikiem lub nagłówkiem noindex.",
+          "step1": "Usuń noindex, jeśli strona ma być w indeksie.",
+          "step2": "Potwierdź, że meta robots i nagłówek X-Robots-Tag mówią to samo.",
+          "step3": "Pozwól Google ponownie zindeksować stronę po usunięciu znacznika."
+        },
+        "robots": {
+          "meaning": "robots.txt blokuje Google przed crawlowaniem tego adresu.",
+          "step1": "Zezwól na adres w robots.txt, jeśli ma być crawlowany.",
+          "step2": "Zablokowany adres może zostać poza indeksem.",
+          "step3": "Wyślij mapę witryny ponownie po zmianie reguły."
+        },
+        "serverError": {
+          "meaning": "Google zobaczyło błąd serwera (5xx) pod tym adresem.",
+          "step1": "Napraw błąd i potwierdź, że strona zwraca 200.",
+          "step2": "Sprawdź logi tego adresu w okolicy czasu inspekcji.",
+          "step3": "Trwały 5xx zostawia stronę poza indeksem."
+        }
+      },
+      "drops": {
+        "title": "Wypadły z indeksu",
+        "caption": "Werdykt zmienił się z zaindeksowanego na niezaindeksowany w ostatnich 90 dniach.",
+        "page": "Strona",
+        "since": "Od",
+        "reason": "Powód",
+        "reasonMissing": "nie zapisano",
+        "annotations": "Adnotacje",
+        "inAnnotations": "w Adnotacjach",
+        "notInAnnotations": "Brak wpisu adnotacji",
+        "viewInPages": "Zobacz na Stronach"
+      }
     }
   }
 }

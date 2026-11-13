@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Calendar } from "@/components/ui/Calendar";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Popup } from "@/components/ui/Popup";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { rankTrackerAsOfFormSchema } from "@/lib/keywords/rank-tracker-as-of-input";
@@ -101,9 +102,17 @@ export function RankTrackerReportScopeControl({
           options={[
             { value: "general", label: t("general") },
             { value: "local", label: t("local") },
+            {
+              value: "ai_overviews",
+              label: t("ai_overviews"),
+              trailing: (
+                <StatusChip dot={false} label={t("new")} size="sm" tone="info" variant="solid" />
+              ),
+            },
           ]}
           onChange={(view) => {
-            if (view === "general" || view === "local") go({ view }, ["reportView"]);
+            if (view === "general" || view === "local" || view === "ai_overviews")
+              go({ view }, ["reportView"]);
           }}
         />
         {scope.view === "local" ? (
@@ -127,23 +136,29 @@ export function RankTrackerReportScopeControl({
             }}
           />
         ) : null}
-        <MenuSelect
-          ariaLabel={t("period")}
-          triggerTitle={t("comparisonHelp", { days: format.number(scope.comparisonDays) })}
-          leadingLabel={t("comparisonLabel")}
-          value={String(scope.comparisonDays)}
-          options={rankTrackerComparisonDays.map((days) => ({
-            value: String(days),
-            label: t("days", { days: format.number(days) }),
-          }))}
-          onChange={(value) => {
-            const days = rankTrackerComparisonDays.find((days) => String(days) === value);
-            if (days) go({ comparisonDays: days }, ["comparisonDays"]);
-          }}
-        />
+        {scope.view === "ai_overviews" ? null : (
+          <MenuSelect
+            ariaLabel={t("period")}
+            triggerTitle={t("comparisonHelp", { days: format.number(scope.comparisonDays) })}
+            leadingLabel={t("comparisonLabel")}
+            value={String(scope.comparisonDays)}
+            options={rankTrackerComparisonDays.map((days) => ({
+              value: String(days),
+              label: t("days", { days: format.number(days) }),
+            }))}
+            onChange={(value) => {
+              const days = rankTrackerComparisonDays.find((days) => String(days) === value);
+              if (days) go({ comparisonDays: days }, ["comparisonDays"]);
+            }}
+          />
+        )}
         <Tooltip
           content={
-            scope.view === "local" ? `${t("membership")} ${t("localScope")}` : t("membership")
+            scope.view === "local"
+              ? `${t("membership")} ${t("localScope")}`
+              : scope.view === "ai_overviews"
+                ? `${t("membership")} ${t("aiOverviewScope")}`
+                : t("membership")
           }
           semantics="description"
           placement="top"

@@ -60,7 +60,7 @@ export default async function BillingSettingsPage({
       >
         <div
           className={
-            billingAccount ? "min-w-0 max-w-[1100px] scroll-mt-6" : "max-w-[760px] scroll-mt-6"
+            billingAccount ? "min-w-0 max-w-[1100px] scroll-mt-6" : "scroll-mt-6 lg:max-w-[760px]"
           }
           data-settings-section-slot="billing"
           id="plan"

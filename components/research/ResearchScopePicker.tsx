@@ -52,11 +52,12 @@ export function ResearchScopePicker({
   return (
     <CountrySelect
       ariaLabel={t("countryAria")}
+      size="input"
       countries={countries}
       disabled={disabled}
       onChange={handleChange}
       trackedCodes={trackedCodes}
-      triggerClassName="min-h-[34px] w-full justify-between bg-bg-elev px-3 text-[13px]"
+      triggerClassName="justify-between bg-bg-elev"
       triggerTitle={t("countryHelp")}
       triggerWrapperClassName="w-full"
       value={value.countryCode}

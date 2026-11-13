@@ -1,0 +1,49 @@
+enum AiSourceType {
+  directory
+  reviews
+  community
+  editorial
+  other
+}
+
+enum AiSourcePlanState {
+  todo
+  done
+  dismissed
+}
+
+/// Manual type for one registrable domain. Subdomains use this row.
+model AiSourceTypeOverride {
+  id        String       @id @default(cuid())
+  projectId String
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  domain    String
+  type      AiSourceType
+  setById   String?
+  setBy     User?        @relation("AiSourceTypeSetBy", fields: [setById], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([projectId, domain])
+  @@index([setById])
+  @@map("ai_source_type_overrides")
+}
+
+/// A place the project wants to get listed. Listing status is not detected.
+model AiSourcePlanItem {
+  id        String            @id @default(cuid())
+  projectId String
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  domain    String
+  url       String?
+  state     AiSourcePlanState @default(todo)
+  note      String?
+  addedById String?
+  addedBy   User?             @relation("AiSourcePlanAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([projectId, domain])
+  @@index([addedById])
+  @@map("ai_source_plan_items")
+}

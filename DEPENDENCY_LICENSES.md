@@ -5,12 +5,13 @@ This report includes root production dependencies and installed transitive runti
 Optional dependencies that are not installed on this platform are skipped.
 
 Root production dependencies: 63
-Installed packages listed: 655
+Installed packages listed: 657
 
 | Package | Version | Scope | License | Source |
 | --- | --- | --- | --- | --- |
+| `@aws-sdk/checksums` | 3.1002.3 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/client-sesv2` | 3.1092.0 | direct | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
-| `@aws-sdk/core` | 3.976.0 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
+| `@aws-sdk/core` | 3.980.1 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/credential-provider-env` | 3.972.60 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/credential-provider-http` | 3.972.62 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/credential-provider-ini` | 3.973.5 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
@@ -19,11 +20,12 @@ Installed packages listed: 655
 | `@aws-sdk/credential-provider-process` | 3.972.60 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/credential-provider-sso` | 3.973.4 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/credential-provider-web-identity` | 3.972.66 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
+| `@aws-sdk/middleware-sdk-s3` | 3.972.87 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/nested-clients` | 3.997.34 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
-| `@aws-sdk/signature-v4-multi-region` | 3.996.41 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
+| `@aws-sdk/signature-v4-multi-region` | 3.996.51 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws-sdk/token-providers` | 3.1092.0 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
-| `@aws-sdk/types` | 3.974.2 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
-| `@aws-sdk/xml-builder` | 3.972.36 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
+| `@aws-sdk/types` | 3.975.0 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
+| `@aws-sdk/xml-builder` | 3.972.42 | transitive | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3.git |
 | `@aws/lambda-invoke-store` | 0.3.0 | transitive | Apache-2.0 | git+https://github.com/awslabs/aws-lambda-invoke-store.git |
 | `@babel/code-frame` | 7.29.7 | transitive | MIT | https://github.com/babel/babel.git |
 | `@babel/compat-data` | 7.29.7 | transitive | MIT | https://github.com/babel/babel.git |
@@ -203,12 +205,12 @@ Installed packages listed: 655
 | `@sentry/server-utils` | 10.76.2 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
 | `@sentry/vercel-edge` | 10.76.2 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
 | `@sentry/webpack-plugin` | 5.4.1 | transitive | MIT | git://github.com/getsentry/sentry-javascript-bundler-plugins.git |
-| `@smithy/core` | 3.29.7 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
+| `@smithy/core` | 3.39.0 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
 | `@smithy/credential-provider-imds` | 4.4.12 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
 | `@smithy/fetch-http-handler` | 5.6.9 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
 | `@smithy/node-http-handler` | 4.9.9 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
-| `@smithy/signature-v4` | 5.6.8 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
-| `@smithy/types` | 4.16.1 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
+| `@smithy/signature-v4` | 5.7.5 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
+| `@smithy/types` | 4.20.0 | transitive | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript.git |
 | `@standard-schema/spec` | 1.1.0 | transitive | MIT | https://github.com/standard-schema/standard-schema |
 | `@standard-schema/utils` | 0.3.0 | transitive | MIT | https://github.com/standard-schema/standard-schema |
 | `@swc/core` | 1.16.2 | transitive | Apache-2.0 | git+https://github.com/swc-project/swc.git |
@@ -246,13 +248,13 @@ Installed packages listed: 655
 | `@types/pg` | 8.23.1 | transitive | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped.git |
 | `@types/trusted-types` | 2.0.7 | transitive | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped.git |
 | `@types/use-sync-external-store` | 0.0.6 | transitive | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped.git |
-| `@usagekit/core` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/meter` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/providers` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/react` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/store` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/store-postgres` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
-| `@usagekit/views` | 0.9.1 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/core` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/meter` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/providers` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/react` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/store` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/store-postgres` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
+| `@usagekit/views` | 0.11.0 | direct | Apache-2.0 | git+https://github.com/usagekit/usagekit.git |
 | `@webassemblyjs/ast` | 1.14.1 | transitive | MIT | https://github.com/xtuc/webassemblyjs.git |
 | `@webassemblyjs/floating-point-hex-parser` | 1.13.2 | transitive | MIT | https://github.com/xtuc/webassemblyjs.git |
 | `@webassemblyjs/helper-api-error` | 1.13.2 | transitive | MIT | https://github.com/xtuc/webassemblyjs.git |

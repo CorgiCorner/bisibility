@@ -23,12 +23,46 @@ export function SiteAuditForm({
   run: (input: SiteAuditInput) => Promise<void>;
 }>) {
   const t = useTranslations("projectSiteAudit");
-  const limit = Math.max(1, maxPages);
+  if (maxPages <= 0) {
+    return (
+      <p className="m-0 mt-4 text-ui-caption text-fg-muted" role="status">
+        {t("budgetEmpty")}
+      </p>
+    );
+  }
+  return (
+    <AuditFields
+      busy={busy}
+      canRun={canRun}
+      limit={maxPages}
+      run={run}
+      workerEnabled={workerEnabled}
+    />
+  );
+}
+
+function AuditFields({
+  busy,
+  canRun,
+  limit,
+  run,
+  workerEnabled,
+}: Readonly<{
+  busy: boolean;
+  canRun: boolean;
+  limit: number;
+  run: (input: SiteAuditInput) => Promise<void>;
+  workerEnabled: boolean;
+}>) {
+  const t = useTranslations("projectSiteAudit");
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+    formState: { isSubmitting },
   } = useForm({
+    mode: "onChange",
     resolver: zodResolver(
       siteAuditWorkerSchema.extend({
         maxPages: siteAuditWorkerSchema.shape.maxPages.unwrap().max(limit).default(10),
@@ -36,9 +70,13 @@ export function SiteAuditForm({
     ),
     defaultValues: { maxPages: Math.min(10, limit) },
   });
+  const pages = register("maxPages", { valueAsNumber: true });
+  const value = watch("maxPages");
+  const outOfRange = !Number.isInteger(value) || value < 1 || value > limit;
+  const disabled = !canRun || busy;
   return (
     <form className="mt-4 grid gap-2" onSubmit={handleSubmit(run)}>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-2">
         <div className="grid w-32 gap-1.5">
           <FieldLabel
             className="text-ui-body font-medium"
@@ -46,35 +84,52 @@ export function SiteAuditForm({
             label={t("pageLimit")}
           />
           <Input
-            aria-invalid={Boolean(errors.maxPages)}
-            aria-describedby={errors.maxPages ? "audit-pages-error" : undefined}
+            aria-describedby={outOfRange ? "audit-pages-error" : "audit-pages-help"}
+            aria-invalid={outOfRange}
             id="audit-pages"
-            type="number"
-            min={1}
             max={limit}
-            {...register("maxPages", { valueAsNumber: true })}
+            min={1}
+            step={1}
+            type="number"
+            {...pages}
+            onBlur={(event) => {
+              pages.onBlur(event);
+              const next = event.currentTarget.valueAsNumber;
+              const clamped = Number.isFinite(next)
+                ? Math.min(limit, Math.max(1, Math.trunc(next)))
+                : 1;
+              if (clamped !== next) setValue("maxPages", clamped, { shouldValidate: true });
+            }}
           />
         </div>
         <Button
+          disabled={disabled}
+          onClick={() => setValue("maxPages", limit, { shouldValidate: true })}
           size="input"
-          type="submit"
-          startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
+          type="button"
+          variant="secondary"
+        >
+          {t("maxAction")}
+        </Button>
+        <Button
+          disabled={disabled}
           loading={isSubmitting}
           loadingLabel={t("running")}
-          disabled={!canRun || maxPages === 0 || busy}
+          size="input"
+          startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
+          type="submit"
         >
           {t("run")}
         </Button>
-        <p className="m-0 pb-2 text-[11px] text-fg-muted">
-          {t(workerEnabled ? "workerCost" : "cost")}
-        </p>
       </div>
-      <p className="m-0 text-xs text-fg-muted">{t("availableLimit", { limit })}</p>
-      {errors.maxPages ? (
-        <p id="audit-pages-error" className="m-0 text-ui-xs text-red-text" role="alert">
+      {outOfRange ? (
+        <p className="m-0 text-ui-caption text-red-text" id="audit-pages-error" role="alert">
           {t("pageLimitError", { limit })}
         </p>
       ) : null}
+      <p className="m-0 text-ui-caption text-fg-muted" id="audit-pages-help">
+        {t(workerEnabled ? "workerCost" : "cost")}
+      </p>
     </form>
   );
 }

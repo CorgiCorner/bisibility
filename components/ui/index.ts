@@ -1,3 +1,9 @@
+export {
+  buildDomainIconUrl,
+  buildPublicDomainIconUrl,
+  type DomainIconUrlInput,
+  domainIconHost,
+} from "@/lib/ui/domain-icon-url";
 export { AccentCtaLink, type AccentCtaLinkProps, accentCtaLinkClassName } from "./AccentCtaLink";
 export { AlertBanner, type AlertBannerAction, type AlertBannerProps } from "./AlertBanner";
 export { AlertBannerStack, type AlertBannerStackProps } from "./AlertBannerStack";
@@ -64,12 +70,6 @@ export type {
   DataTableSort,
   DataTableSortDirection,
 } from "./data-table/data-table-types";
-export {
-  buildDomainIconUrl,
-  buildPublicDomainIconUrl,
-  type DomainIconUrlInput,
-  domainIconHost,
-} from "./domain-icon-url";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export {
   ExpandableCard,

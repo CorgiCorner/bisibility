@@ -56,6 +56,9 @@ export const menuSelectPaperStyle = {
   padding: "6px",
 } as const;
 
+export const menuSelectHeaderClass =
+  "inline-flex h-8 min-h-8 min-w-0 max-w-full flex-none items-center gap-1.5 rounded-control border border-transparent bg-transparent px-2.5 text-ui-caption font-medium text-fg outline-none transition-colors hover:bg-bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid";
+
 export const menuSelectTriggerClass = cn(
   toolbarControlClassName,
   "inline-flex items-center gap-1.5 px-[11px] outline-none transition-colors hover:border-accent focus-visible:border-accent focus-visible:outline-none",

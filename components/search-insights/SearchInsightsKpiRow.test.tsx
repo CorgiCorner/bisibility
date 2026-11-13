@@ -84,9 +84,12 @@ describe("SearchInsightsKpiRow", () => {
       />,
     );
 
-    expect(screen.getByText("Clicks to sessions")).toBeInTheDocument();
+    const label = screen.getByText("Clicks to sessions");
+    expect(label).toBeInTheDocument();
+    expect(label).not.toHaveClass("truncate");
     expect(screen.getByText("+4.00 pp")).toBeInTheDocument();
-    expect(container.firstChild).toHaveClass("lg:grid-cols-5");
+    expect(container.firstChild).toHaveClass("grid-cols-2", "md:grid-cols-3");
+    expect(container.firstChild).not.toHaveClass("lg:grid-cols-5", "lg:grid-cols-6");
   });
 
   it("renders the uncovered-baseline affordance for a visible click-to-session KPI", () => {

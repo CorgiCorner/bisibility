@@ -308,6 +308,8 @@
       "view": "表示",
       "general": "通常のオーガニック検索結果",
       "local": "Googleのローカル検索結果",
+      "ai_overviews": "AI オーバービュー",
+      "new": "新着",
       "subject": "ビジネス",
       "chooseSubject": "割り当て済みのビジネスを選択",
       "setupBusiness": "ビジネスと割り当てを管理",
@@ -317,8 +319,9 @@
       "applyTime": "日時を適用",
       "latest": "最新",
       "invalidTime": "現在以前の有効なUTC日時を選択してください。",
-      "unsupportedFilters": "ローカル表示ではオーガニック順位変動、URL、SERP機能のフィルターを使用できません。解除するとローカルの対象を表示できます。",
+      "unsupportedFilters": "ローカル表示ではオーガニック順位変動、URL、SERP機能、AI オーバービューのフィルターを使用できません。解除するとローカルの対象を表示できます。",
       "localScope": "ローカル結果には選択した店舗を表示します。比較とローカルデータのエクスポートはまだ利用できません。",
+      "aiOverviewScope": "このビューは保存済みの最新チェックを読みます。順位の比較はしません。",
       "membership": "表には現在のキーワード一覧を使用します。日付を変えると過去の結果が表示されますが、過去の一覧は復元されません。",
       "snapshot": "参照: {date} UTC",
       "state": {
@@ -332,6 +335,20 @@
       "minute": "分",
       "comparisonLabel": "比較",
       "comparisonHelp": "選択した日付の結果と、少なくとも{days}日前の結果を比較します。平均値ではありません。適切な過去の結果がなければ比較は表示されません。"
+    },
+    "aiOverviewList": {
+      "overview": "AI オーバービュー",
+      "yourDomain": "あなたのドメイン",
+      "citedPage": "引用ページ",
+      "shown": "表示あり",
+      "notShown": "表示なし",
+      "notChecked": "未チェック",
+      "citedAt": "引用 · #{position}",
+      "notCited": "引用なし",
+      "notAvailable": "該当なし",
+      "none": "なし",
+      "viewOverview": "概要を見る",
+      "incompleteHint": "保存された概要に出典リストがないため、引用を確定できません。引用なしは、返された出典にドメインがなかったという意味だけです。"
     },
     "localList": {
       "expandTargets": "{count}件の対象を展開",

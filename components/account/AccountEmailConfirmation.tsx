@@ -35,7 +35,7 @@ export function AccountEmailConfirmation({
           disabled={!canConfirm}
           loading={sendingCode}
           onClick={onSendCode}
-          size="sm"
+          size="input"
           type="button"
           variant="secondary"
         >

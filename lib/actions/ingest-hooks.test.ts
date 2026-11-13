@@ -234,10 +234,10 @@ describe("ingest hook actions", () => {
     });
     expect(result).toEqual({
       signalHref:
-        "/app/prj_a00000000000000000000000/timeline?filter=deploys&q=sig_a00000000000000000000000#signal-sig_a00000000000000000000000",
+        "/app/prj_a00000000000000000000000/annotations?filter=deploys&q=sig_a00000000000000000000000#signal-sig_a00000000000000000000000",
       signalId: "sig_a00000000000000000000000",
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "timeline"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "annotations"), "page");
   });
 
   it("deletes a hook and writes an audit entry", async () => {

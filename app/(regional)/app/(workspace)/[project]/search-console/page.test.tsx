@@ -6,7 +6,9 @@ import SearchInsightsPage from "./page";
 vi.mock("@/lib/capacity/client-actions", () => ({ addKeywordsMatrix: mocks.addKeywords }));
 vi.mock("./PageIndexingSection", () => ({
   SearchConsoleNavigation: () => <nav data-testid="search-console-tabs" />,
-  PageIndexingView: () => <div data-testid="page-indexing" />,
+  PageIndexingView: ({ tab }: { tab?: string }) => (
+    <div data-testid={tab === "sitemaps" ? "search-console-sitemaps" : "page-indexing"} />
+  ),
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -20,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   costContext: vi.fn(),
   compareIdentity: vi.fn(),
   createTranslator: vi.fn(),
+  dailyClicks: vi.fn(),
   defaultMarket: vi.fn(),
   deploymentConfig: vi.fn(),
   disconnectConnection: vi.fn(),
@@ -88,6 +91,7 @@ vi.mock("@/components/shell/PageContent", () => ({
   PageContent: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock("./SearchInsightsSections", () => ({
+  SearchInsightsClicksChartSection: () => <div data-testid="clicks-chart-section" />,
   SearchInsightsBodySection: (props: unknown) => {
     mocks.bodySection(props);
     return (
@@ -158,11 +162,22 @@ vi.mock("@/lib/search-insights/queries/first-view", () => ({
   getSearchInsightsFirstView: mocks.firstView,
   getSearchInsightsFirstViewSignals: mocks.signals,
 }));
+vi.mock("@/lib/search-insights/queries/daily-clicks", () => ({
+  getSearchInsightsDailyClicks: mocks.dailyClicks,
+}));
 vi.mock("@/lib/search-insights/queries/oauth-return", () => ({
   resolveSearchInsightsOauthReturn: mocks.oauth,
 }));
 
-const scope = { period: { id: "28" }, projectId: "internal_1", property: "sc-domain:example.com" };
+const scope = {
+  period: { id: "28" },
+  projectId: "internal_1",
+  property: "sc-domain:example.com",
+  window: {
+    current: { end: "2026-07-08", start: "2026-06-11" },
+    previous: { end: "2026-06-10", start: "2026-05-14" },
+  },
+};
 
 const connected = {
   connection: {
@@ -236,6 +251,7 @@ describe("SearchInsightsPage", () => {
     mocks.scope.mockResolvedValue(scope);
     mocks.context.mockResolvedValue(connected);
     mocks.oauth.mockResolvedValue({ error: null, provider: null, setup: null });
+    mocks.dailyClicks.mockReturnValue(Promise.resolve({ markers: [], points: [] }));
     mocks.firstView.mockReturnValue(Promise.resolve({}));
     mocks.signals.mockReturnValue(Promise.resolve({ bandCount: 34, overlapCount: 12 }));
     mocks.readable.mockResolvedValue({ actor: { memberships: [] }, project: { id: "internal_1" } });
@@ -264,9 +280,19 @@ describe("SearchInsightsPage", () => {
     await renderPage({ tab: "page-indexing", period: "90" });
     expect(screen.getByTestId("page-indexing")).toBeInTheDocument();
     expect(mocks.scope).not.toHaveBeenCalled();
+    expect(mocks.dailyClicks).not.toHaveBeenCalled();
     expect(mocks.firstView).not.toHaveBeenCalled();
     expect(mocks.signals).not.toHaveBeenCalled();
     expect(mocks.syncPlan).not.toHaveBeenCalled();
+  });
+
+  it("loads the Sitemaps boundary without starting Performance reads", async () => {
+    await renderPage({ tab: "sitemaps", period: "90" });
+    expect(screen.getByTestId("search-console-sitemaps")).toBeInTheDocument();
+    expect(screen.queryByTestId("page-indexing")).not.toBeInTheDocument();
+    expect(mocks.scope).not.toHaveBeenCalled();
+    expect(mocks.dailyClicks).not.toHaveBeenCalled();
+    expect(mocks.firstView).not.toHaveBeenCalled();
   });
 
   it.each([undefined, "unknown"])("keeps Performance as the default for %s", async (tab) => {
@@ -434,6 +460,12 @@ describe("SearchInsightsPage", () => {
     expect(mocks.firstView).toHaveBeenCalledTimes(1);
     expect(mocks.signals).toHaveBeenCalledTimes(1);
     expect(mocks.signals).toHaveBeenCalledWith(scope);
+    expect(mocks.dailyClicks).toHaveBeenCalledTimes(1);
+    expect(mocks.dailyClicks).toHaveBeenCalledWith({
+      projectId: "internal_1",
+      property: "sc-domain:example.com",
+      window: scope.window,
+    });
     // One view promise for both consumers and one signals promise for its only consumer.
     const view = mocks.firstView.mock.results[0]?.value;
     const signals = mocks.signals.mock.results[0]?.value;

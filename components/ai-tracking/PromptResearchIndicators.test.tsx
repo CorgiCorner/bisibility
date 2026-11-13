@@ -32,7 +32,7 @@ it.each([
       const indicator = screen.queryByText(label);
       if (present) {
         expect(indicator).toBeVisible();
-        expect(indicator).toHaveClass("text-green-text", "text-ui-xs");
+        expect(indicator).toHaveClass("text-green-text", "text-ui-caption");
         expect(indicator?.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
       } else expect(indicator).not.toBeInTheDocument();
     }

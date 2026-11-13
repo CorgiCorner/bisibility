@@ -7,18 +7,22 @@ import { CrosshairIcon as Crosshair } from "@phosphor-icons/react/dist/ssr/Cross
 import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/ssr/Database";
 import { FlagIcon as Flag } from "@phosphor-icons/react/dist/ssr/Flag";
 import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
+import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/ssr/Funnel";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/ssr/PaperPlaneTilt";
 import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
 import { SlidersHorizontalIcon as SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
+import { TagIcon as Tag } from "@phosphor-icons/react/dist/ssr/Tag";
 import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr/Target";
 import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus";
 import type { useTranslations } from "next-intl";
 
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general" },
+  { icon: Tag, id: "tags" },
   { icon: Target, id: "context" },
   { icon: Target, id: "business-locations" },
   { icon: Database, id: "data-sources" },
+  { icon: Funnel, id: "conversions" },
   { icon: Crosshair, id: "tracking" },
   { icon: Flag, id: "competitors" },
   { icon: PaperPlaneTilt, id: "notifications" },
@@ -37,8 +41,8 @@ export type SettingsSection = (typeof settingsSections)[number];
 export type SettingsShellTranslations = ReturnType<typeof useTranslations<"projectSettingsShell">>;
 
 export const settingsSectionGroups = [
-  { id: "project", sections: ["general", "context", "business-locations"] },
-  { id: "measurement", sections: ["data-sources", "tracking", "competitors"] },
+  { id: "project", sections: ["general", "tags", "context", "business-locations"] },
+  { id: "measurement", sections: ["data-sources", "conversions", "tracking", "competitors"] },
   { id: "team", sections: ["notifications", "team", "billing", "usage"] },
   { id: "administration", sections: ["developers", "experimental", "advanced"] },
 ] as const satisfies ReadonlyArray<{ id: string; sections: readonly SettingsSectionId[] }>;
@@ -53,6 +57,8 @@ export function settingsSectionLabel(t: SettingsShellTranslations, section: Sett
       return t("sections.businessLocations");
     case "competitors":
       return t("sections.competitors");
+    case "conversions":
+      return t("sections.conversions");
     case "context":
       return t("sections.context");
     case "data-sources":
@@ -65,6 +71,8 @@ export function settingsSectionLabel(t: SettingsShellTranslations, section: Sett
       return t("sections.general");
     case "notifications":
       return t("sections.notifications");
+    case "tags":
+      return t("sections.tags");
     case "team":
       return t("sections.team");
     case "tracking":

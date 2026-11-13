@@ -9,6 +9,8 @@ import {
   resolveRankTrackerReportTime,
 } from "@/lib/keywords/rank-tracker-report-scope";
 import { keywordViewLegacyScope } from "@/lib/keywords/saved-view-v2-model";
+import { loadRankTrackerAiOverviewList } from "@/lib/queries/rank-tracker-ai-overview-list";
+import type { RankTrackerAiOverviewPresentation } from "@/lib/queries/rank-tracker-ai-overview-model";
 import { getRankTrackerGroupedList } from "@/lib/queries/rank-tracker-grouped-list";
 import { getRankTrackerKeywordList } from "@/lib/queries/rank-tracker-list";
 import { loadRankTrackerLocalList } from "@/lib/queries/rank-tracker-local-list";
@@ -22,12 +24,14 @@ export type RankTrackerPageList =
       mode: "flat-server";
       query: RankTrackerQueryState;
       local?: RankTrackerLocalPresentation;
+      aiOverview?: RankTrackerAiOverviewPresentation;
     })
   | (RankTrackerGroupedListResult & {
       groups: MarketGridGroupRow[];
       mode: "grouped-server";
       query: RankTrackerQueryState;
       local?: RankTrackerLocalPresentation;
+      aiOverview?: RankTrackerAiOverviewPresentation;
     });
 
 export async function resolveRankTrackerPageQuery(projectRef: string, params: NextSearchParams) {
@@ -78,6 +82,8 @@ export async function loadRankTrackerPageList(
     options.report ?? (await createSessionRankTrackerReportOptions(time.asOf, time.comparisonDays));
   if (rankTrackerScope(effectiveQuery).view === "local")
     return loadRankTrackerLocalList(projectRef, effectiveQuery, report);
+  if (rankTrackerScope(effectiveQuery).view === "ai_overviews")
+    return loadRankTrackerAiOverviewList(projectRef, effectiveQuery, report);
   if (effectiveQuery.grouped) {
     const result = await getRankTrackerGroupedList({ projectRef, query: effectiveQuery }, report);
     return {

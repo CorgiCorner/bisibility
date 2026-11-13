@@ -100,7 +100,7 @@ describe("KeywordsFilterBar", () => {
     expect(container.querySelector("[data-keywords-toolbar-context]")).not.toBeInTheDocument();
   });
 
-  it("keeps scope and saved views in one flex row from sm", () => {
+  it("keeps one saved view beside actions on tablet and scope on desktop", () => {
     const { container } = render(
       <KeywordsFilterBar
         {...baseProps}
@@ -110,9 +110,10 @@ describe("KeywordsFilterBar", () => {
     );
 
     const row = container.querySelector("[data-keywords-toolbar-context]");
-    expect(row).toHaveClass("order-2", "flex-row", "flex-wrap", "items-center", "lg:order-1");
-    expect(row).not.toHaveClass("contents");
-    expect(row).not.toHaveClass("flex-nowrap");
+    expect(row).toHaveClass("contents", "lg:flex", "lg:items-center");
+    expect(screen.getByText("All locations").parentElement).toHaveClass("hidden", "lg:flex");
+    expect(screen.getByText("All keywords").parentElement).not.toHaveClass("hidden");
+    expect(screen.getAllByText("All keywords")).toHaveLength(1);
   });
 
   it("refreshes the table from the action row", () => {
@@ -126,7 +127,7 @@ describe("KeywordsFilterBar", () => {
     );
 
     const refresh = screen.getByRole("button", { name: "Refresh table" });
-    expect(refresh.querySelector(".xl\\:inline")).toHaveTextContent("Refresh table");
+    expect(refresh).toHaveClass("size-8.5", "min-w-0");
     expect(refresh.querySelector("svg")).toHaveClass("text-fg-muted");
     expect(refresh.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
       "data-tooltip-label",
@@ -150,13 +151,16 @@ describe("KeywordsFilterBar", () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it("keeps search and actions on separate rows until wide desktop", () => {
-    render(<KeywordsFilterBar {...baseProps} />);
-
+  it("uses a full mobile search and bounded flexible desktop search with one wrapping action group", () => {
+    const { container } = render(<KeywordsFilterBar {...baseProps} />);
     const label = screen.getByRole("searchbox", { name: "Search keywords" }).closest("label");
-    const grid = label?.parentElement;
-    expect(grid).toHaveClass("grid-cols-1");
-    expect(grid).toHaveClass("2xl:grid-cols-[minmax(220px,1fr)_auto]");
+    expect(label).toHaveClass("basis-full", "lg:basis-32", "lg:max-w-sm", "lg:flex-1");
+    expect(label?.parentElement).toHaveClass("flex", "flex-wrap");
+    expect(container.querySelector("[data-keywords-toolbar-actions]")).toHaveClass(
+      "contents",
+      "lg:flex",
+      "lg:flex-nowrap",
+    );
   });
 
   it("renders filter chips and clear-all, and calls onClearFilters", () => {

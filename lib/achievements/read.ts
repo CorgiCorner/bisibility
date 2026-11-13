@@ -3,7 +3,12 @@ import { prisma } from "@/lib/db/prisma";
 import { calendarDay, shiftDay } from "./calendar";
 import { achievementsEnabled } from "./config";
 import { achievementMailAvailable } from "./mail-availability";
-import type { AchievementView } from "./schema";
+import { type AchievementView, isShareableBadgeKind } from "./schema";
+import {
+  progressForThirtyDays,
+  THIRTY_DAYS_DEFINITION_VERSION,
+  THIRTY_DAYS_KIND,
+} from "./thirty-days";
 
 const empty = () => ({ current: 0, longest: 0, days: [] as string[] });
 export async function readAchievements(userId: string): Promise<AchievementView | null> {
@@ -12,13 +17,47 @@ export async function readAchievements(userId: string): Promise<AchievementView 
   const state = await prisma.achievementState.findUnique({ where: { userId } });
   const timeZone = state?.timeZone ?? "UTC",
     today = calendarDay(now, timeZone);
-  const [days, awards] = await Promise.all([
+  const epoch = state?.epoch ?? 1;
+  const [days, awards, enrollment, memberships] = await Promise.all([
     prisma.achievementDay.findMany({
-      where: { userId, epoch: state?.epoch ?? 1, localDay: { gte: shiftDay(today, -6) } },
+      where: { userId, epoch, localDay: { gte: shiftDay(today, -6) } },
       select: { kind: true, localDay: true },
     }),
     prisma.achievementAward.findMany({ where: { userId }, orderBy: { earnedAt: "asc" } }),
+    prisma.achievementEnrollment.findUnique({
+      where: {
+        userId_kind_definitionVersion: {
+          userId,
+          kind: THIRTY_DAYS_KIND,
+          definitionVersion: THIRTY_DAYS_DEFINITION_VERSION,
+        },
+      },
+    }),
+    prisma.membership.findMany({
+      where: { userId },
+      select: { project: { select: { publicId: true, name: true } } },
+      orderBy: { project: { name: "asc" } },
+    }),
   ]);
+  const practiceSinceJoin = enrollment
+    ? await prisma.achievementDay.findMany({
+        where: {
+          userId,
+          epoch,
+          kind: "practice",
+          localDay: { gte: enrollment.joinedOn },
+        },
+        select: { localDay: true },
+      })
+    : [];
+  const thirty = enrollment
+    ? progressForThirtyDays({
+        joinedOn: enrollment.joinedOn,
+        leftOn: enrollment.leftAt ? calendarDay(enrollment.leftAt, enrollment.timeZone) : null,
+        practiceDays: practiceSinceJoin.map((day) => day.localDay),
+        today,
+      })
+    : null;
   const live = (last: string | null, value: number) =>
     last && last >= shiftDay(today, -1) ? value : 0;
   return {
@@ -45,14 +84,38 @@ export async function readAchievements(userId: string): Promise<AchievementView 
           days: days.filter((d) => d.kind === "practice").map((d) => d.localDay),
         }
       : empty(),
-    awards: awards
-      .filter((a) => a.kind === "presence" || a.kind === "practice")
-      .map((a) => ({
-        kind: a.kind as "presence" | "practice",
-        earnedAt: a.earnedAt.toISOString(),
-        earnedDay: a.earnedDay,
-        published: !!a.shareTokenHash,
-      })),
+    awards: awards.flatMap((award) =>
+      isShareableBadgeKind(award.kind)
+        ? [
+            {
+              kind: award.kind,
+              earnedAt: award.earnedAt.toISOString(),
+              earnedDay: award.earnedDay,
+              published: !!award.shareTokenHash,
+            },
+          ]
+        : [],
+    ),
+    thirtyDays: thirty
+      ? {
+          joinedOn: thirty.joinedOn,
+          leftOn: thirty.leftOn,
+          dayNumber: thirty.dayNumber,
+          earned: thirty.earned,
+          paused: thirty.paused,
+          overflowDays: thirty.overflowDays,
+          slots: thirty.slots,
+        }
+      : {
+          joinedOn: null,
+          leftOn: null,
+          dayNumber: 0,
+          earned: false,
+          paused: false,
+          overflowDays: 0,
+          slots: [],
+        },
+    snapshotProjects: memberships.map((membership) => membership.project),
   };
 }
 

@@ -99,7 +99,6 @@ export function ExactRangeControl({
             <label htmlFor={`${inputId}-${key}`} key={key} className="grid gap-1 text-ui-caption">
               {t(key)}
               <Input
-                density="compact"
                 id={`${inputId}-${key}`}
                 {...form.register(key)}
                 aria-label={t(key)}
@@ -129,7 +128,7 @@ export function ExactRangeControl({
               {t("invalidRange")}
             </p>
           ) : null}
-          <Button size="sm" type="submit">
+          <Button size="input" type="submit" className="justify-self-start">
             {t("apply")}
           </Button>
         </form>

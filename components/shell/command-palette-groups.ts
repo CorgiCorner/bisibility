@@ -21,6 +21,7 @@ import type { Icon } from "@phosphor-icons/react/lib";
 export type CommandItem = {
   icon?: Icon;
   id?: string;
+  keywords?: readonly string[];
   label: string;
   hint: string;
   run: () => void | Promise<void>;
@@ -53,6 +54,8 @@ export type CommandPaletteCopy = {
   };
   marketNavigation: (section: string, market: string) => string;
   navigation: Record<string, string>;
+  /** Translated search terms keyed by the English nav label. */
+  navigationKeywords?: Readonly<Record<string, readonly string[]>>;
 };
 
 /**
@@ -75,6 +78,8 @@ export function commandGroups(
   const navigate = [...navItems(projectRef, context, enabledExperimentalModules), docsNavItem].map(
     (item) => ({
       icon: item.icon,
+      keywords:
+        copy.navigationKeywords?.[item.label] ?? ("keywords" in item ? item.keywords : undefined),
       label: navigationLabel(copy, item.label),
       hint: copy.hints.goTo,
       run: item.external
@@ -117,7 +122,11 @@ export function filterGroups(groups: CommandGroup[], query: string): CommandGrou
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.label.toLowerCase().includes(normalized)),
+      items: group.items.filter((item) =>
+        [item.label, ...(item.keywords ?? [])].some((value) =>
+          value.toLowerCase().includes(normalized),
+        ),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 }

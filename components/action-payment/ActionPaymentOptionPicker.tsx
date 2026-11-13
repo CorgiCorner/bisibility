@@ -9,17 +9,21 @@ export function ActionPaymentOptionPicker({
   value,
   disabled,
   onChange,
+  size = "toolbar",
 }: {
   options: ActionPaymentOption[];
   value: string;
   disabled?: boolean;
   onChange: (id: string) => void;
+  size?: "input" | "toolbar";
 }) {
   const t = useTranslations("shared.actionPayment");
   if (options.length < 2) return null;
   return (
     <MenuSelect
       ariaLabel={t("payer")}
+      size={size}
+      triggerClassName="w-auto"
       disabled={disabled}
       value={value}
       onChange={onChange}

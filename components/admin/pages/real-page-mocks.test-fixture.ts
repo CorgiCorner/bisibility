@@ -76,6 +76,12 @@ vi.mock("@/lib/actions/instance-admin-account-actions", () => ({
   resetInstanceAdminAccountLimits: realPage.reset,
 }));
 vi.mock("@/lib/actions/instance-admin-pages", () => ({ lookupOssAdminAccount: realPage.lookup }));
+vi.mock("@/lib/challenge-report/feature", () => ({
+  projectSeoChallengeEnabled: async () => false,
+}));
+vi.mock("@/lib/actions/instance-features", () => ({
+  setProjectSeoChallengeEnabled: vi.fn(),
+}));
 vi.mock("@/lib/actions/instance-mail-settings", () => ({
   saveInstanceMailSettings: realPage.save,
   clearInstanceMailSettings: realPage.clear,

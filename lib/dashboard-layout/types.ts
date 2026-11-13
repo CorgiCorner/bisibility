@@ -12,6 +12,8 @@ export const widgetIds = [
   "contributors",
   "quality_history",
   "domain_rating",
+  "organic_conversions",
+  "seo_cost",
 ] as const;
 export type WidgetId = (typeof widgetIds)[number];
 export type DashboardPreset = "general" | "local" | "competitors";
@@ -37,7 +39,9 @@ export type ProjectionId =
   | "competitor_comparison"
   | "visibility_history"
   | "contributions"
-  | "quality_history";
+  | "quality_history"
+  | "organic_conversions"
+  | "seo_cost";
 export type CapabilityId =
   | "organic_reports"
   | "position_history"
@@ -48,7 +52,9 @@ export type CapabilityId =
   | "competitor_reports"
   | "visibility_history"
   | "contributions"
-  | "quality_history";
+  | "quality_history"
+  | "organic_conversions"
+  | "seo_cost";
 export type WidgetDefinition = Readonly<{
   id: WidgetId;
   labelKey: `widgets.${WidgetId}.label`;

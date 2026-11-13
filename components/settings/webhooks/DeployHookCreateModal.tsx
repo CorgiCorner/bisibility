@@ -75,7 +75,7 @@ export function DeployHookCreateModal({
         issuedHook ? (
           <Button
             onClick={handleClose}
-            size="sm"
+            size="md"
             startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
@@ -83,7 +83,7 @@ export function DeployHookCreateModal({
           </Button>
         ) : (
           <>
-            <Button onClick={handleClose} size="sm" type="button" variant="ghost">
+            <Button onClick={handleClose} size="md" type="button" variant="ghost">
               {t("cancel")}
             </Button>
             <Button

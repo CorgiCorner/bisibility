@@ -64,6 +64,7 @@ export function ProjectContextLoading() {
           <ProjectContextFooter>
             {canEdit ? (
               <Button
+                size="input"
                 disabled
                 tabIndex={-1}
                 className="text-transparent bg-bg-sunken motion-safe:animate-pulse"

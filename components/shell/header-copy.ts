@@ -5,12 +5,13 @@ type HeaderTranslations = ReturnType<typeof useTranslations<"shell.header">>;
 
 const titleKeys = {
   "Brand Visibility": "titles.aiVisibility",
+  "AI Visibility": "titles.aiVisibilityModule",
   "Prompt Research": "titles.promptResearch",
   "Prompt Tracker": "titles.aiTracking",
-  "Prompt Playground": "titles.promptExplorer",
+  "Model Playground": "titles.promptExplorer",
   "Site Audit": "titles.siteAudit",
   "Project Context": "titles.projectContext",
-  "Agent Reports": "titles.agentReports",
+  Reports: "titles.agentReports",
   "Account settings": "titles.account",
   Alerts: "titles.alerts",
   "Audit log": "titles.audit",
@@ -34,9 +35,10 @@ const titleKeys = {
   Schedules: "titles.schedules",
   Usage: "titles.usage",
   "Search Console": "titles.searchConsole",
+  Pages: "titles.pages",
   Security: "titles.security",
   Settings: "titles.settings",
-  Timeline: "titles.timeline",
+  Annotations: "titles.annotations",
   "Import from another instance": "titles.importFromAnotherInstance",
   "Instance administration": "titles.instanceAdministration",
 } as const;
@@ -45,7 +47,7 @@ const subtitleKeys = {
   "Research dataset questions by keyword. ChatGPT · US English.": "subtitles.promptResearch",
   "Monitor AI answers, brand mentions and cited sources over time.": "subtitles.aiTracking",
   "Brand mentions and citations from available provider observations.": "subtitles.aiVisibility",
-  "Try one prompt on several models and compare their answers and citations.":
+  "One question, several models. Compare who they name and which pages they cite.":
     "subtitles.promptExplorer",
   "Crawl your project site and inspect issues by URL.": "subtitles.siteAudit",
   "Business, audience, products and goals for your agents.": "subtitles.projectContext",
@@ -68,8 +70,9 @@ const subtitleKeys = {
   "Theme and personal defaults.": "subtitles.preferences",
   "Rank checks and Search Console imports for this project.": "subtitles.runs",
   "What Google reported, what it withheld, and what you keep.": "subtitles.searchConsole",
+  "Every URL of the project, one row each.": "subtitles.pages",
   "Password, sessions and account protection.": "subtitles.security",
-  "Project signals, page changes and notes over time.": "subtitles.timeline",
+  "Your notes plus Google updates, deploys, content and sitemap changes.": "subtitles.annotations",
   "Move data into this project with a one-time migration token.":
     "subtitles.importFromAnotherInstance",
 } as const;

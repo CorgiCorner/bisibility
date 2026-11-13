@@ -69,7 +69,8 @@ export function IndexingTrendTooltip({
 export function IndexingTrend({
   days = [],
   complete = true,
-}: Readonly<{ days?: readonly IndexingDay[]; complete?: boolean }>) {
+  embedded = false,
+}: Readonly<{ days?: readonly IndexingDay[]; complete?: boolean; embedded?: boolean }>) {
   const t = useTranslations("projectSearchInsights.indexing");
   const format = useFormatter();
   const date = useIndexingDate();
@@ -81,7 +82,12 @@ export function IndexingTrend({
   );
   const pauses = pausedRanges(plotted);
   return (
-    <ExpandableCard title={t("trendTitle")} caption={t("trendCaption")} expandable={false}>
+    <ExpandableCard
+      className={embedded ? "rounded-none border-0" : ""}
+      title={t("trendTitle")}
+      caption={t("trendCaption")}
+      expandable={false}
+    >
       <div className="min-w-0 px-4 pb-3">
         {!latest ? (
           <p className="text-ui-caption text-fg-muted">{t("trendEmpty")}</p>

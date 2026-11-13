@@ -3,7 +3,7 @@ import { Button as HostButton, type ButtonProps as HostButtonProps } from "@/com
 
 type Props = Omit<HostButtonProps, "variant" | "size"> & {
   variant?: "default" | "secondary" | "outline" | "ghost" | "destructive";
-  size?: "default" | "sm" | "lg";
+  size?: "default" | "sm" | "lg" | "input";
 };
 export function Button({ variant = "default", size = "default", ...props }: Props) {
   const hostVariant =

@@ -2,6 +2,7 @@
 import { withAchievementUse } from "@/lib/achievements/record-use";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { withCapacityFailure } from "@/lib/capacity/action";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import {
   cancelSiteAuditRun,
@@ -24,7 +25,10 @@ export async function runSiteAuditAction(input: unknown) {
     const result = await withAchievementUse(actor.id, "runSiteAudit", false, () =>
       runSiteAudit({ actor, actorId: actor.id, project }, options),
     );
-    if (!result.cached) recordAppAction(actor);
+    if (!result.cached) {
+      recordAppAction(actor);
+      captureProjectWork(actor.id, project.id);
+    }
     return result;
   });
 }

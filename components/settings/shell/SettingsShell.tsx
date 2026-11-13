@@ -3,12 +3,14 @@ import { SettingsMobileMenu } from "@/components/settings/shell/SettingsMobileMe
 import { SettingsSubnav } from "@/components/settings/shell/SettingsSubnav";
 import {
   settingsContentColumnClassName,
+  settingsShellFrameClassName,
   settingsShellGridClassName,
 } from "@/components/settings/shell/settings-layout";
 import type { SettingsSectionId } from "@/components/settings/shell/settings-sections";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { ReactNode } from "react";
+import "./SettingsShell.module.css";
 
 type SettingsShellProps = {
   activeSection: SettingsSectionId;
@@ -40,14 +42,14 @@ export function SettingsShellFrame({
   showUsage,
 }: Readonly<SettingsShellProps & { showUsage: boolean }>) {
   return (
-    <div className="mx-auto w-full max-w-[1040px]" data-settings-shell="">
+    <div className={settingsShellFrameClassName} data-settings-shell="">
       <div className={settingsShellGridClassName}>
         <SettingsSubnav
           activeSection={activeSection}
           projectRef={projectRef}
           showUsage={showUsage}
         />
-        <div className={settingsContentColumnClassName}>
+        <div className={settingsContentColumnClassName} data-settings-content="">
           <SettingsMobileMenu
             activeSection={activeSection}
             projectRef={projectRef}

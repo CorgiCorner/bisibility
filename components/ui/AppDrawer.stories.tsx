@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/ui/AppDrawer";
 import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useRef, useState } from "react";
+import { expect, within } from "storybook/test";
 
 const meta = {
   title: "UI/AppDrawer",
@@ -128,6 +129,36 @@ function StackedHarness() {
     </div>
   );
 }
+
+/** Bottom sheet below `sm` (640px), including the grab handle and equal footer actions. */
+export const Mobile: Story = {
+  args: {
+    children: content,
+    description: "The same drawer, inset from the screen edges.",
+    footer,
+    onClose: () => undefined,
+    open: true,
+    title: "Add cost",
+  },
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  render: (args) => (
+    <div className="min-h-screen bg-bg text-fg">
+      <AppDrawer {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    const dialog = await page.findByRole("dialog", { name: "Add cost" });
+    if (dialog.getAttribute("data-placement") !== "sheet") return;
+    const cancel = page.getByRole("button", { name: "Cancel" });
+    const save = page.getByRole("button", { name: "Save" });
+    const cancelBox = cancel.getBoundingClientRect();
+    const saveBox = save.getBoundingClientRect();
+    expect(Math.abs(cancelBox.width - saveBox.width)).toBeLessThan(1);
+    expect(Math.abs(cancelBox.top - saveBox.top)).toBeLessThan(1);
+    expect(save.scrollWidth).toBeLessThanOrEqual(save.clientWidth + 1);
+  },
+};
 
 /** The stacked shape: a back control above the title, a bottom sheet under 640px. */
 export const Stacked: Story = {

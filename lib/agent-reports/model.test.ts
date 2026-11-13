@@ -45,5 +45,9 @@ it("reserves keyword research evidence for trusted application producers", () =>
   expect(externalAgentReportSchema.safeParse({ ...valid, kind: "prompt_research" }).success).toBe(
     false,
   );
+  expect(externalAgentReportSchema.safeParse({ ...valid, kind: "challenge_report" }).success).toBe(
+    false,
+  );
   expect(agentReportSchema.safeParse({ ...valid, kind: "prompt_research" }).success).toBe(true);
+  expect(agentReportSchema.safeParse({ ...valid, kind: "challenge_report" }).success).toBe(true);
 });

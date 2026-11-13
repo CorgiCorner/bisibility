@@ -1,11 +1,18 @@
 "use server";
 import { recordAppAction } from "@/lib/activity/app-mutation";
+import { annotationNoteHappenedAt } from "@/lib/annotations/note-day";
 import { writeAudit } from "@/lib/auth/audit";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { emitSignal } from "@/lib/signals/emit";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
-import { createSignalNoteSchema, removeSignalNoteSchema } from "@/lib/timeline/types";
+import {
+  createSignalNoteSchema,
+  removeSignalNoteSchema,
+  searchAnnotationPagesSchema,
+} from "@/lib/timeline/types";
 import {
   getActionActor,
   parseActionInput,
@@ -50,9 +57,20 @@ export async function addSignalNote(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "signal" });
   const keyword = await findScopedKeyword(project.id, data.keywordId);
+  let happenedAt: Date | undefined;
+  if (data.happenedOn) {
+    const defaults = await getRequestProjectDefaults(project.id);
+    happenedAt =
+      annotationNoteHappenedAt(data.happenedOn, new Date(), defaults?.timezone ?? "UTC") ??
+      undefined;
+    if (!happenedAt) {
+      throw new Error("Choose a day in the chart window, not a future day.");
+    }
+  }
 
   const signal = await emitSignal({
     createdById: actor.id,
+    ...(happenedAt ? { happenedAt } : {}),
     keywordId: keyword?.id,
     payload: { note: data.note },
     projectId: project.id,
@@ -63,6 +81,7 @@ export async function addSignalNote(input: unknown) {
   });
 
   recordAppAction(actor);
+  captureProjectWork(actor.id, project.id);
   await writeAudit({
     action: "signal.note_added",
     actorId: actor.id,
@@ -74,6 +93,34 @@ export async function addSignalNote(input: unknown) {
   revalidateTimelineViews();
 
   return { id: signal.publicId };
+}
+
+function annotationPageUrl(domain: string | null, path: string) {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  if (!domain) return normalized;
+  const host = domain.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+  return `https://${host}${normalized}`;
+}
+
+export async function searchAnnotationPages(input: unknown) {
+  const data = parseActionInput(searchAnnotationPagesSchema, input);
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "read", data.projectId, { type: "signal" });
+  const pages = await prisma.projectPage.findMany({
+    orderBy: { path: "asc" },
+    select: { path: true },
+    take: 8,
+    where: {
+      projectId: project.id,
+      ...(data.query ? { path: { contains: data.query, mode: "insensitive" } } : {}),
+    },
+  });
+  return {
+    pages: pages.map((page) => ({
+      path: page.path,
+      url: annotationPageUrl(project.domain, page.path),
+    })),
+  };
 }
 
 export async function removeSignalNote(input: unknown) {

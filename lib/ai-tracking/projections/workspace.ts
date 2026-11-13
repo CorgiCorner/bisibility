@@ -8,6 +8,7 @@ import type {
   MeasurementState,
   RunState,
   SourceConfiguration,
+  TrackingEngine,
   TrackingSource,
 } from "@/lib/ai-tracking/contract";
 export interface TrackingPromptRow {
@@ -74,6 +75,8 @@ export interface TrackingWorkspaceData {
     configurations?: SourceConfiguration[];
     nextRunAt?: string | null;
   }[];
+  enabledEngines?: { engine: TrackingEngine; source: TrackingSource }[];
+  engineDefault?: { engine: TrackingEngine; source: TrackingSource };
   canWrite: boolean;
   domain: string;
 }

@@ -18,9 +18,9 @@ export async function runRealStep(step: string, entry: Entry) {
     expect(within(table()).getAllByRole("checkbox")).toHaveLength(26);
     for (let index = 0; index < 25; index++) {
       const name = `Select project-limit-${index}, example-provider`;
-      await waitFor(() => expect(within(table()).getByRole("checkbox", { name })).toBeEnabled());
       fireEvent.click(within(table()).getByRole("checkbox", { name }));
-      await waitFor(() => expect(within(table()).getByRole("checkbox", { name })).toBeChecked());
+      // No waiting: a selection is local state and settles within the click.
+      expect(within(table()).getByRole("checkbox", { name })).toBeChecked();
     }
     expect(
       within(table()).getByRole("checkbox", { name: "Select project-limit-25, example-provider" }),

@@ -70,43 +70,41 @@ describe("AnalyzeCard", () => {
     expect(onProviderChange).toHaveBeenCalledWith("fixture_b");
     expect(baseProps.onSubmit).not.toHaveBeenCalled();
   });
-  it("keeps the first control row at an exact 34px height", () => {
+  it("uses the form size across both rows without height overrides", () => {
     render(<AnalyzeCard {...baseProps} />);
 
     expect(screen.getByPlaceholderText("Enter a domain or URL").parentElement).toHaveClass(
-      "h-[34px]",
+      "min-h-10",
+      "max-sm:min-h-11",
+      "leading-5",
     );
     expect(screen.getByRole("button", { name: "Backlinks limit" })).toHaveClass(
-      "h-[34px]",
-      "min-h-0",
+      "min-h-10",
+      "max-sm:min-h-11",
+      "leading-5",
     );
+    const targetShell = screen.getByPlaceholderText("Enter a domain or URL").parentElement;
+    expect(targetShell).not.toHaveClass("h-[34px]");
+    expect(targetShell).not.toHaveClass("min-h-0");
+    expect(screen.getByRole("button", { name: "Backlinks limit" })).not.toHaveClass("h-[34px]");
+    const analyze = screen.getByRole("button", { name: "Analyze" });
+    expect(analyze).toHaveAttribute("data-size", "input");
+    expect(analyze.style.height).toBe("");
+    expect(analyze.style.minHeight).toBe("");
     const scopeGroup = screen.getByRole("group", { name: "Backlinks target scope" });
     const wholeSite = screen.getByRole("radio", { name: "Whole site" });
-
     expect(scopeGroup).toHaveClass("shrink-0");
-    expect(scopeGroup).not.toHaveClass("[&>div]:!h-[34px]", "[&>div]:!min-h-[34px]");
-    expect(wholeSite.parentElement?.parentElement).toHaveClass(
-      "min-h-[34px]",
-      "bg-transparent",
-      "text-[12.5px]",
-    );
-    expect(wholeSite.nextElementSibling).toHaveClass("h-[26px]", "min-w-[92px]");
+    expect(scopeGroup.className).not.toContain("!");
+    expect(wholeSite.parentElement?.parentElement).toHaveClass("min-h-10", "max-sm:min-h-11");
+    expect(wholeSite.nextElementSibling).toHaveClass("min-h-8", "min-w-[92px]");
     expect(wholeSite.nextElementSibling?.className).not.toContain("!");
   });
 
-  it("uses shared compact typography for its target input", () => {
+  it("lets the compound field shell own the target geometry", () => {
     render(<AnalyzeCard {...baseProps} />);
-
-    expect(screen.getByRole("textbox", { name: "Backlinks target" })).toHaveClass(
-      "h-full",
-      "min-h-0",
-      "py-1",
-      "compact-text-12",
-      "text-[12px]",
-      "leading-4",
-      "placeholder:text-[12px]",
-      "placeholder:leading-4",
-    );
+    const target = screen.getByRole("textbox", { name: "Backlinks target" });
+    expect(target).toHaveClass("p-0", "text-ui-body", "leading-5");
+    expect(target).not.toHaveClass("h-full", "min-h-0", "py-1");
   });
 
   it("keeps Analyze disabled until the estimate path validates a target, then shows price", () => {
@@ -130,14 +128,14 @@ describe("AnalyzeCard", () => {
     expect(screen.getByRole("button", { name: "Analyze ≈ 4 tokens" })).toBeEnabled();
   });
 
-  it("sizes a chosen domain as a quiet chip inside the 34px field", () => {
+  it("sizes a chosen domain as a quiet chip inside the form field", () => {
     render(<ScopeHarness />);
     const remove = screen.getByRole("button", { name: "Remove example.com" });
     expect(remove).toHaveClass("h-4", "w-4");
     expect(remove.parentElement).toHaveClass("h-[22px]", "gap-1", "px-[9px]", "text-xs");
     expect(remove.parentElement).not.toHaveClass("py-1");
     expect(remove.parentElement).not.toHaveClass("rounded-control");
-    expect(remove.parentElement?.parentElement).toHaveClass("h-[34px]");
+    expect(remove.parentElement?.parentElement).toHaveClass("min-h-10", "max-sm:min-h-11");
   });
 
   it("keeps the supplied quote unit while delegating scope changes", () => {

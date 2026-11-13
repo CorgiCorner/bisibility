@@ -260,7 +260,7 @@ export function ConnectDrawer({
           ) : (
             <>
               <CredentialFields errors={errors} form={form} provider={provider} />
-              {notice ? <ActionNotice notice={notice} /> : null}
+              {notice ? <ActionNotice notice={notice} size="input" /> : null}
             </>
           )}
           {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
@@ -282,7 +282,7 @@ export function ConnectDrawer({
           />
         ) : null}
         {provider.kind === "serp" ? <ActivityList provider={provider} /> : null}
-        {authMode === "oauth" && notice ? <ActionNotice notice={notice} /> : null}
+        {authMode === "oauth" && notice ? <ActionNotice notice={notice} size="input" /> : null}
       </div>
     </Sheet>
   );

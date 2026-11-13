@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   award: vi.fn(),
   mail: vi.fn(),
   pending: vi.fn(),
+  enrollment: vi.fn(),
   emailEnabled: true,
 }));
 vi.mock("./config", () => ({
@@ -47,12 +48,14 @@ describe("durable daily achievement processing", () => {
         })),
       ]);
     m.award.mockResolvedValue({ count: 1 });
+    m.enrollment.mockResolvedValue(null);
     m.transaction.mockImplementation(async (run) =>
       run({
         achievementState: { update: m.stateUpdate },
         achievementDay: { findMany: m.daysRead, updateMany: m.daysUpdate },
         achievementAward: { createMany: m.award },
         achievementMail: { upsert: m.mail },
+        achievementEnrollment: { findUnique: m.enrollment },
       }),
     );
   });
@@ -94,6 +97,52 @@ describe("durable daily achievement processing", () => {
     await processAchievementUser("a", new Date("2026-10-16T20:00:00Z"));
     expect(m.award).toHaveBeenCalled();
     expect(m.mail).not.toHaveBeenCalled();
+  });
+  it("awards thirty practice days once, including skips, and does not send the 7-day mail", async () => {
+    const practice = Array.from({ length: 30 }, (_, index) => ({
+      kind: "practice",
+      localDay: shiftDay("2026-11-01", index * 2),
+    }));
+    m.daysRead.mockReset();
+    m.daysRead
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(practice)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(practice);
+    m.enrollment.mockResolvedValue({
+      joinedOn: "2026-11-01",
+      leftAt: null,
+      timeZone: "Europe/Warsaw",
+    });
+    m.award.mockReset();
+    m.award.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+    const now = new Date("2026-12-30T12:00:00Z");
+    await processAchievementUser("a", now);
+    await processAchievementUser("a", now);
+    expect(m.award).toHaveBeenCalledTimes(2);
+    for (const call of m.award.mock.calls)
+      expect(call[0]).toMatchObject({
+        skipDuplicates: true,
+        data: [
+          expect.objectContaining({
+            kind: "thirty_days",
+            definitionVersion: 1,
+            earnedDay: practice[29].localDay,
+          }),
+        ],
+      });
+    expect(m.mail).not.toHaveBeenCalled();
+  });
+  it("does not award thirty days when activity tracking is off", async () => {
+    m.stateUpdate.mockResolvedValue({ enabled: false, user: { deactivatedAt: null } });
+    m.enrollment.mockResolvedValue({
+      joinedOn: "2026-11-01",
+      leftAt: null,
+      timeZone: "UTC",
+    });
+    await processAchievementUser("a", new Date("2026-12-30T12:00:00Z"));
+    expect(m.award).not.toHaveBeenCalled();
+    expect(m.enrollment).not.toHaveBeenCalled();
   });
   it("continues after a failing user rather than starving later facts", async () => {
     m.pending.mockResolvedValue([{ userId: "a" }, { userId: "b" }]);

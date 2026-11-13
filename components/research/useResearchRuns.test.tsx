@@ -11,7 +11,6 @@ describe("research account restriction recovery", () => {
     const outcome = { ok: false as const, reason: "account_restricted" as const, costCents: 0 };
     const researchAction = vi.fn().mockResolvedValue(outcome);
     const addSpend = vi.fn();
-    const recent = { add: vi.fn() };
     const { result } = renderHook(() =>
       useResearchRuns({
         addSpend,
@@ -21,7 +20,6 @@ describe("research account restriction recovery", () => {
         scope: researchScopeForLocationKey("US"),
         mode: "related",
         projectId: "prj_fixture",
-        recent,
         researchAction: researchAction as ResearchKeywordsAction,
         resultLimit: 100,
       }),
@@ -31,7 +29,6 @@ describe("research account restriction recovery", () => {
     expect(researchFailureState(outcome)).toBe("account_restricted");
     expect(result.current.researching).toBe(false);
     expect(addSpend).not.toHaveBeenCalled();
-    expect(recent.add).not.toHaveBeenCalled();
     expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1);
   });
 });
@@ -51,7 +48,6 @@ it("budget regression: blocks research with the missing-budget state", async () 
       scope: researchScopeForLocationKey("US"),
       mode: "related",
       projectId: "prj_fixture",
-      recent: { add: vi.fn() },
       researchAction: vi.fn().mockResolvedValue(outcome),
       resultLimit: 100,
     }),
@@ -65,7 +61,6 @@ it("budget regression: blocks research with the missing-budget state", async () 
 it("blocks wallet-denied research without presenting a project budget denial", async () => {
   const outcome = { ok: false as const, reason: "wallet_budget_exhausted" as const, costCents: 0 };
   const addSpend = vi.fn();
-  const recent = { add: vi.fn() };
   const { result } = renderHook(() =>
     useResearchRuns({
       addSpend,
@@ -75,7 +70,6 @@ it("blocks wallet-denied research without presenting a project budget denial", a
       scope: researchScopeForLocationKey("US"),
       mode: "related",
       projectId: "prj_fixture",
-      recent,
       researchAction: vi.fn().mockResolvedValue(outcome),
       resultLimit: 100,
     }),
@@ -85,7 +79,6 @@ it("blocks wallet-denied research without presenting a project budget denial", a
   expect(result.current.budgetBlocked).toBe(true);
   expect(result.current.budgetState).toBe("wallet_budget_exhausted");
   expect(addSpend).not.toHaveBeenCalled();
-  expect(recent.add).not.toHaveBeenCalled();
 });
 
 it("does not submit duplicate normalized seeds or create duplicate tabs in one run", async () => {
@@ -101,7 +94,6 @@ it("does not submit duplicate normalized seeds or create duplicate tabs in one r
       scope: researchScopeForLocationKey("US"),
       mode: "related",
       projectId: "prj_fixture",
-      recent: { add: vi.fn() },
       researchAction,
       resultLimit: 100,
     }),
@@ -113,7 +105,7 @@ it("does not submit duplicate normalized seeds or create duplicate tabs in one r
   expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1);
 });
 
-it("retains the approved route in dispatch, follow-up quotes, tabs and recent receipt", async () => {
+it("retains the approved route in dispatch, follow-up quotes and the tab receipt", async () => {
   const quote = paymentQuote();
   const payment = {
     actionId: "executed",
@@ -137,7 +129,6 @@ it("retains the approved route in dispatch, follow-up quotes, tabs and recent re
   const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
     input.estimateOnly ? { ...success, estimate: true, payment: quote } : success,
   );
-  const recent = { add: vi.fn() };
   const { result } = renderHook(() =>
     useResearchRuns({
       addSpend: vi.fn(),
@@ -147,7 +138,6 @@ it("retains the approved route in dispatch, follow-up quotes, tabs and recent re
       scope: researchScopeForLocationKey("US"),
       mode: "auto",
       projectId: "prj_fixture",
-      recent,
       researchAction: researchAction as unknown as ResearchKeywordsAction,
       resultLimit: 500,
     }),
@@ -189,7 +179,5 @@ it("retains the approved route in dispatch, follow-up quotes, tabs and recent re
     mode: "related",
     includeClickstream: false,
   });
-  expect(recent.add).toHaveBeenCalledWith(
-    expect.objectContaining({ connectionId: "conn_selected", payment }),
-  );
+  expect(result.current.activeTab?.outcome).toMatchObject({ ok: true, payment });
 });

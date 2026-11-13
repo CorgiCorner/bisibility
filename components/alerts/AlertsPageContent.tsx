@@ -198,10 +198,10 @@ export function AlertsPageContent({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <SegmentedControl
+                  size="toolbar"
                   ariaLabel={t("filterAria")}
                   className="min-w-[220px]"
                   onChange={setFilter}
-                  optionClassName="min-h-7 flex-row gap-1.5 px-2.5 py-1 text-[11.5px]"
                   options={filters.map((item) => ({
                     label: (
                       <>

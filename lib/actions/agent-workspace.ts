@@ -38,15 +38,26 @@ export async function createAgentReportAction(input: unknown) {
 
 const manualReportActionSchema = manualReportSchema.extend({
   projectId: z.string().trim().min(1).max(120),
+  requestId: z.uuid().optional(),
 });
 
 export async function saveManualAgentReportAction(input: unknown) {
-  const { projectId, title, analysis } = parseActionInput(manualReportActionSchema, input);
-  return createAgentReportAction({
-    projectId,
+  const { projectId, title, analysis, requestId } = parseActionInput(
+    manualReportActionSchema,
+    input,
+  );
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "create", projectId, { type: "project" });
+  const report = await createAgentReport({
+    actorId: actor.id,
+    projectId: project.id,
+    requestId,
     title,
     kind: "manual_analysis",
     body: { analysis },
     provenance: { source: "project_member" },
   });
+  recordAppAction(actor);
+  revalidatePath(appPath(asProjectRef(project.publicId), "agent-reports"));
+  return report;
 }

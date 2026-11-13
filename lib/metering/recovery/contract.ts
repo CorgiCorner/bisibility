@@ -20,7 +20,10 @@ export type RecoveryUiError =
 export type RecoveryCaseKind = "operation" | "evidence" | "run" | "result" | "check";
 export type RecoveryCase = {
   evidence?: RecoveryEvidenceView;
+  /** Authorizes commands for this case; sealed anew on every read. */
   token: string;
+  /** Identifies the case on every read; interface state follows this, never the token. */
+  reference: string;
   version: string;
   kind: RecoveryCaseKind;
   provider: string;

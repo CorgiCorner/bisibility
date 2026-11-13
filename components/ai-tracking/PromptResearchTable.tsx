@@ -11,8 +11,8 @@ import {
   questionGroupKey,
   type ResearchedPrompt,
 } from "@/lib/ai-research/prompt-research-projection";
+import { aiVisibilityTabHref } from "@/lib/ai-tracking/ai-visibility-paths";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
-import { appPath } from "@/lib/routing/app-path";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
@@ -115,7 +115,7 @@ export function PromptResearchTable({
     <>
       {added > 0 ? (
         <p role="status" className="m-0 text-ui-body">
-          <Button href={appPath(projectId, "prompt-tracker")} size="sm" variant="ghost">
+          <Button href={aiVisibilityTabHref(projectId, "prompts")} size="sm" variant="ghost">
             {t("added", { count: String(added) })}
           </Button>
         </p>
@@ -128,7 +128,7 @@ export function PromptResearchTable({
           <h2 id="research-results" className="m-0 min-w-0 break-words text-[15px] font-semibold">
             {t("resultsTitle", { keyword })}
           </h2>
-          <div className="flex flex-wrap justify-start gap-x-3 sm:ml-auto sm:justify-end text-ui-xs text-fg-muted">
+          <div className="flex flex-wrap justify-start gap-x-3 sm:ml-auto sm:justify-end text-ui-caption text-fg-muted">
             {cached ? <span>{t("cached")}</span> : null}
             <span>{t("promptCount", { count: prompts.length })}</span>
           </div>

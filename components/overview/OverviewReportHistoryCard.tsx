@@ -158,9 +158,11 @@ export function OverviewReportHistoryCard({
       {!hasData ? (
         <DashboardEmptyBody title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : view === "chart" ? (
-        <div className="px-4 pb-4">
-          <ChartRegion className="h-[290px]" label={title}>
+        <div className="relative mx-4 mb-4 min-h-0 flex-1">
+          <div aria-hidden className="h-[290px]" />
+          <ChartRegion className="absolute inset-0" label={title}>
             <TimeSeriesChart
+              fill
               height={290}
               min={0}
               max={100}

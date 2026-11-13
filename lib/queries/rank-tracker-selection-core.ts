@@ -73,6 +73,12 @@ function requiresExactFlatRows(query: RankTrackerQueryState) {
   return requiresExactRows(query) || flatExactSortFields.has(query.sort.field);
 }
 
+/** The SQL predicate already kept only shown overviews; the in-memory pass must not drop them. */
+function markShownOverviews(rows: KeywordRow[], query: RankTrackerQueryState) {
+  if (!query.filters.aiOverviewShown) return rows;
+  return rows.map((row) => ({ ...row, aiOverviewShown: true }));
+}
+
 async function withResearch(projectId: string, rows: KeywordRow[], query: RankTrackerQueryState) {
   if (!query.sort.field.startsWith("research")) return rows;
   const asOf = query.reportScope?.asOf ? new Date(query.reportScope.asOf) : new Date();
@@ -107,9 +113,12 @@ export async function selectRankTrackerKeywordsForProject(
   const effectiveQuery = resolvedQuery(query, raw);
   const exactRows = exact
     ? exactRankTrackerRows(
-        await withResearch(
-          project.id,
-          await loadKeywordRowsByInternalIds(project, raw.keywordIds),
+        markShownOverviews(
+          await withResearch(
+            project.id,
+            await loadKeywordRowsByInternalIds(project, raw.keywordIds),
+            effectiveQuery,
+          ),
           effectiveQuery,
         ),
         effectiveQuery,
@@ -140,9 +149,12 @@ async function exactExportIds(
       seenCandidateIds.add(id);
       return true;
     });
-    const rows = await withResearch(
-      project.id,
-      await loadKeywordRowsByInternalIds(project, candidateIds),
+    const rows = markShownOverviews(
+      await withResearch(
+        project.id,
+        await loadKeywordRowsByInternalIds(project, candidateIds),
+        query,
+      ),
       query,
     );
     for (const row of filterExactRankTrackerRows(rows, query)) {

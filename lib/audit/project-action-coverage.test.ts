@@ -12,6 +12,7 @@ vi.mock("server-only", () => ({}));
 const instanceOnlyActions = new Set([
   "account.achievements_preferences",
   "account.achievements_sharing",
+  "account.achievements_thirty_days",
   "account.analytics_consent_updated",
   "account.apple_tokens_revoked",
   "account.avatar_updated",
@@ -65,6 +66,7 @@ const instanceOnlyActions = new Set([
   "instance_admin.ops_test.failed",
   "instance_admin.ops_test.rate_limited",
   "instance_admin.ops_test.send",
+  "instance_admin.project_seo_challenge.set",
   "pat.exchange_login",
   "pat.issue",
   "pat.revoke",

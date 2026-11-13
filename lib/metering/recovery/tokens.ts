@@ -1,6 +1,6 @@
 import "server-only";
-import { createHash } from "node:crypto";
-import { decryptSecret, encryptSecret } from "@/lib/providers/crypto";
+import { createHash, createHmac } from "node:crypto";
+import { decryptSecret, encryptSecret, getPurposeSecretKeys } from "@/lib/providers/crypto";
 import { z } from "zod";
 import type { RecoveryCaseKind, RecoveryFilters } from "./contract";
 import { RecoveryCaseChangedError } from "./errors";
@@ -76,6 +76,19 @@ function open<T>(token: string, schema: z.ZodType<T>, scope: RecoveryTokenScope)
 export const recoveryCaseKey = (kind: RecoveryCaseKind, id: string) => `${kind}:${id}`;
 export function sealRecoveryCase(scope: RecoveryTokenScope, kind: RecoveryCaseKind, id: string) {
   return encryptSecret(JSON.stringify({ ...scope, type: "recovery-case", kind, id }));
+}
+/**
+ * A sealed token differs on every read, so it cannot identify a row across reads. The reference
+ * can, without revealing the case id; it grants nothing and is not bound to the administrator.
+ */
+export function recoveryCaseReference(
+  scope: RecoveryTokenScope,
+  kind: RecoveryCaseKind,
+  id: string,
+) {
+  return createHmac("sha256", getPurposeSecretKeys("recovery-case-reference")[0])
+    .update(JSON.stringify([scope.instance, scope.namespace, kind, id]))
+    .digest("base64url");
 }
 export function openRecoveryCase(token: string, scope: RecoveryTokenScope) {
   return open(token, caseEnvelope, scope);

@@ -1,7 +1,7 @@
 "use client";
 
+import { domainIconsEnabled } from "@/lib/ui/domain-icon-url";
 import { useCallback, useRef, useState } from "react";
-import { domainIconsEnabled } from "./domain-icon-url";
 
 export type DomainIconLayerProps = {
   layerClassName?: string;

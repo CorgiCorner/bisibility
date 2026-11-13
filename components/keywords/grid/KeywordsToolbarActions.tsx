@@ -21,6 +21,7 @@ import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
+import "./KeywordsToolbarActions.module.css";
 
 const menuRowStyle = { alignItems: "center", display: "flex", gap: "10px", minHeight: 36 };
 
@@ -76,8 +77,11 @@ export function KeywordsToolbarActions({
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center justify-start gap-1.5 2xl:justify-end">
-      <span className="inline-flex">
+    <div
+      className="contents lg:ml-auto lg:flex lg:flex-none lg:flex-nowrap lg:items-center lg:gap-1.5"
+      data-keywords-toolbar-actions=""
+    >
+      <span className="keyword-toolbar-columns inline-flex">
         <DataTableColumnsMenu
           footerContent={columnOrderControl}
           columnSizing={columnSizing}
@@ -106,7 +110,7 @@ export function KeywordsToolbarActions({
         variant="secondary"
       >
         {hasFilters ? (
-          <span className="ml-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent-solid px-1 font-sans tabular-nums text-[11px] text-accent-on-solid">
+          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent-solid px-1 font-sans tabular-nums text-ui-micro text-accent-on-solid lg:static lg:ml-1">
             {filterCount}
           </span>
         ) : null}
@@ -162,7 +166,7 @@ export function KeywordsToolbarActions({
       </Menu>
       <span className="hidden lg:inline-flex" data-testid="keywords-export-action">
         <KeywordsToolbarButton
-          compactBelowXl
+          iconOnly
           disabled={exportDisabled}
           label={t("export")}
           onClick={() => transfer("export", onOpenExport)}
@@ -182,7 +186,7 @@ export function KeywordsToolbarActions({
         <span className="hidden lg:inline-flex" data-testid="keywords-import-action">
           <ProjectReadOnlyTooltip>
             <KeywordsToolbarButton
-              compactBelowXl
+              iconOnly
               disabled={readOnly}
               label={t("import")}
               onClick={() => transfer("import", onImportCsv)}
@@ -200,9 +204,9 @@ export function KeywordsToolbarActions({
           </ProjectReadOnlyTooltip>
         </span>
       ) : null}
-      <span className="inline-flex shrink-0 items-center gap-1.5">
+      <span className="ml-auto inline-flex shrink-0 items-center gap-2 lg:ml-0 lg:gap-1.5">
         <KeywordsToolbarButton
-          compactBelowXl
+          iconOnly
           label={filterT("refreshTable")}
           loading={refreshing}
           onClick={onRefresh}
@@ -220,7 +224,8 @@ export function KeywordsToolbarActions({
         {onAddKeyword ? (
           <ProjectReadOnlyTooltip>
             <KeywordsToolbarButton
-              compactBelowXl
+              labelFrom="always"
+              className="keyword-toolbar-add"
               showTooltip
               disabled={readOnly}
               label={t("addKeyword")}

@@ -44,6 +44,8 @@ vi.mock("@/lib/actions/metering-recovery", () => ({
 import { OssLivePage } from "./OssLivePage";
 import { account, fixture } from "./page-fixtures.test-fixture";
 
+const [caseA, caseB] = fixture.tasks?.page?.rows ?? [];
+
 const data = () => (mocks.composition.mock.lastCall as unknown as [{ data: OssAdminData }])[0].data;
 beforeEach(() => {
   vi.clearAllMocks();
@@ -143,9 +145,12 @@ it("previews selected tokens, commits the frozen preview idempotently and reads 
   });
   const view = render(<OssLivePage view="Tasks" data={{ tasks: fixture.tasks }} />);
   await act(async () => {
-    data().recovery?.onPreview(["case-a", "case-b"]);
+    data().recovery?.onPreview([caseA.reference, caseB.reference]);
   });
-  expect(mocks.preview).toHaveBeenCalledWith({ caseTokens: ["case-a", "case-b"] });
+  expect(mocks.preview).toHaveBeenCalledWith({ caseTokens: [caseA.token, caseB.token] });
+  // The URL names the cases by reference; tokens never enter it.
+  expect(routerMock.push.mock.lastCall?.[0]).toContain(caseA.reference);
+  expect(routerMock.push.mock.lastCall?.[0]).not.toContain(caseA.token);
   setNavigationState({
     pathname: "/app/admin/users/accounts",
     searchParams: new URL(routerMock.push.mock.lastCall?.[0] as string, "http://localhost")
@@ -260,7 +265,7 @@ it.each(["unavailable", "throw"])(
     mocks.command.mockResolvedValue({ ok: false, code: "unavailable" });
     const view = render(<OssLivePage view="Tasks" data={{ tasks: fixture.tasks }} />);
     await act(async () => {
-      data().recovery?.onPreview(["case-a"]);
+      data().recovery?.onPreview([caseA.reference]);
     });
     setNavigationState({
       pathname: "/app/admin/users/accounts",
@@ -308,7 +313,7 @@ it("P2-R1 Tasks prepares a different selection after a definitive rejection", as
     });
     view.rerender(<OssLivePage view="Tasks" data={{ tasks: fixture.tasks }} />);
   };
-  await act(async () => data().recovery?.onPreview(["case-a"]));
+  await act(async () => data().recovery?.onPreview([caseA.reference]));
   navigate();
   await waitFor(() => expect(data().recovery?.preview).toEqual(preview));
   await act(async () => {
@@ -318,8 +323,8 @@ it("P2-R1 Tasks prepares a different selection after a definitive rejection", as
   expect(data().recovery?.preview).toBeNull();
   expect(mocks.command).not.toHaveBeenCalled();
   mocks.preview.mockResolvedValue({ ok: true, value: { ...preview, token: "preview-b" } });
-  await act(async () => data().recovery?.onPreview(["case-b"]));
+  await act(async () => data().recovery?.onPreview([caseB.reference]));
   navigate();
   await waitFor(() => expect(data().recovery?.preview?.token).toBe("preview-b"));
-  expect(mocks.preview).toHaveBeenCalledWith({ caseTokens: ["case-b"] });
+  expect(mocks.preview).toHaveBeenCalledWith({ caseTokens: [caseB.token] });
 });

@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 
 function ResearchIndicator({ label }: Readonly<{ label: string }>) {
   return (
-    <span className="inline-flex items-center gap-1 text-ui-xs text-green-text">
+    <span className="inline-flex items-center gap-1 text-ui-caption text-green-text">
       <CheckIcon weight="regular" size={12} className="shrink-0" aria-hidden />
       {label}
     </span>
@@ -40,7 +40,7 @@ export function PromptResearchText({ prompt }: Readonly<{ prompt: ResearchedProm
                 type="button"
                 size="xs"
                 variant="ghost"
-                className="h-auto max-w-full px-0 whitespace-normal text-left text-ui-xs text-fg-muted underline decoration-dotted"
+                className="h-auto max-w-full px-0 whitespace-normal text-left text-ui-caption text-fg-muted underline decoration-dotted"
               >
                 {t("merged", { count: String(prompt.variants.length) })}
               </Button>

@@ -119,19 +119,22 @@ function AnalyzeCardLoading() {
       <div className="grid gap-3.5">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
           <Bar
-            className="min-h-9 flex-1 sm:min-h-[34px] rounded-control border border-border md:min-w-[320px]"
+            className="min-h-10 max-sm:min-h-11 flex-1 rounded-control border border-border md:min-w-[320px]"
             data-skeleton="target-control"
           />
           <div className="md:w-[230px]" data-skeleton="scope-wrapper">
             <Bar
-              className="h-[34px] w-full rounded-control border border-border"
+              className="h-10 max-sm:h-11 w-full rounded-control border border-border"
               data-skeleton="scope-control"
             />
           </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-4">
           <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
-          <Bar className="h-[37px] min-w-[200px] rounded-control" data-skeleton="analyze-action" />
+          <Bar
+            className="h-10 max-sm:h-11 min-w-[200px] rounded-control"
+            data-skeleton="analyze-action"
+          />
         </div>
         <div
           className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5"

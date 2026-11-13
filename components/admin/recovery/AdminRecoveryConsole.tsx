@@ -1,5 +1,5 @@
 "use client";
-import { AdminTableState, useAdminSelection } from "@/components/admin/AdminTableState";
+import { AdminTableState } from "@/components/admin/AdminTableState";
 import { useRecoveryBatch } from "@/components/admin/pages/useRecoveryBatch";
 import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -14,14 +14,18 @@ import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useCallback, useContext, useState, useTransition } from "react";
+import { useContext, useState, useTransition } from "react";
 import { RecoveryDetails } from "./RecoveryDetails";
 import { RecoveryLoadFallback } from "./RecoveryLoadFallback";
 import { RecoveryPartialEvidence } from "./RecoveryPartialEvidence";
 import { RecoveryPreviewDialog } from "./RecoveryPreviewDialog";
 import { RecoverySummary } from "./RecoverySummary";
 import { RecoveryTable } from "./RecoveryTable";
-import { type RecoveryConsoleProps, useRecoverySelection } from "./useRecoverySelection";
+import {
+  type RecoveryConsoleProps,
+  useRecoveryBatchSelection,
+  useRecoverySelection,
+} from "./useRecoverySelection";
 
 export function AdminRecoveryConsole({ initial, filters, onNavigate }: RecoveryConsoleProps) {
   const [client] = useState(() => new QueryClient());
@@ -61,7 +65,8 @@ function RecoveryConsole({
     [localFilters, setFilters] = useState<RecoveryFilters>(initialFilters ?? { category: "all" });
   const page = onNavigate ? initial : localPage;
   const filters = onNavigate ? (initialFilters ?? { category: "all" }) : localFilters;
-  const [selected, setSelected] = useAdminSelection();
+  const selection = useRecoveryBatchSelection(page.rows);
+  const { selected } = selection;
   const [detail, setDetail] = useRecoverySelection(page.rows);
   const route = useContext(AdminTableState);
   const batch = useRecoveryBatch(
@@ -72,21 +77,10 @@ function RecoveryConsole({
           update: route.update,
         }
       : undefined,
+    page.rows,
   );
   const { preview, command } = batch;
   const [error, setError] = useState<RecoveryUiError | null>(null);
-  const selectCase = useCallback(
-    (token: string, checked: boolean) => {
-      setSelected((previous) =>
-        checked
-          ? previous.includes(token) || previous.length >= MAX_RECOVERY_BATCH
-            ? previous
-            : [...previous, token]
-          : previous.filter((value) => value !== token),
-      );
-    },
-    [setSelected],
-  );
   function load(next: RecoveryFilters = filters) {
     if (onNavigate) {
       onNavigate(next);
@@ -97,7 +91,7 @@ function RecoveryConsole({
       if (result.ok) {
         setPage(result.value);
         setFilters(next);
-        setSelected([]);
+        selection.clear();
         setDetail(null);
         setError(null);
       } else setError(result.code);
@@ -109,7 +103,7 @@ function RecoveryConsole({
   function commit() {
     if (!preview) return;
     start(async () => {
-      if (await batch.onConfirm(preview)) setSelected([]);
+      if (await batch.onConfirm(preview)) selection.clear();
     });
   }
   const activeError = batch.batchErrorCode ?? error;
@@ -222,7 +216,7 @@ function RecoveryConsole({
         selected={selected}
         busy={busy}
         onDetails={setDetail}
-        onSelect={selectCase}
+        onSelect={selection.select}
       />
       <RecoveryPartialEvidence rows={page.partialEvidence ?? []} />
       <div className="flex gap-3">

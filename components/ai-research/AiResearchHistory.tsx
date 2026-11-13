@@ -36,7 +36,7 @@ export function AiResearchHistory({
                   <PaymentChargeLine original payment={report.originalPayment} />
                 </span>
               </span>
-              <span className="font-mono text-ui-xs text-fg-muted">
+              <span className="font-mono text-ui-caption text-fg-muted">
                 {report.createdAt.slice(0, 10)}
               </span>
             </Link>

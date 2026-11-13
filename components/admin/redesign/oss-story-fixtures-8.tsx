@@ -10,6 +10,7 @@ export const RecoverySort: Story = recoveryScenario({
       {
         ...sortRecoveryRow,
         token: "sort-a",
+        reference: "ref-sort-a",
         project: "sort-z",
         provider: "alpha",
         send: "accepted",
@@ -31,6 +32,7 @@ export const RecoverySort: Story = recoveryScenario({
       {
         ...sortRecoveryRow,
         token: "sort-b",
+        reference: "ref-sort-b",
         project: "sort-a",
         provider: "zulu",
         send: "unknown",
@@ -45,6 +47,7 @@ export const RecoverySort: Story = recoveryScenario({
       {
         ...sortRecoveryRow,
         token: "sort-c",
+        reference: "ref-sort-c",
         project: "sort-a",
         historical: true,
         provider: "alpha",
@@ -64,6 +67,7 @@ export const RecoverySort: Story = recoveryScenario({
       {
         ...sortRecoveryRow,
         token: "sort-d",
+        reference: "ref-sort-d",
         project: null,
         provider: "",
         send: "not_started",

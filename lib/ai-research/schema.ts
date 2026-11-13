@@ -48,7 +48,7 @@ export const visibilitySchema = z
         code: "custom",
         path: ["domain"],
         message:
-          "Domain searches support at most 63 characters after removing a leading www. Use brand search or Prompt Playground for this domain.",
+          "Domain searches support at most 63 characters after removing a leading www. Use brand search or Model Playground for this domain.",
       });
   });
 export const promptSchema = z

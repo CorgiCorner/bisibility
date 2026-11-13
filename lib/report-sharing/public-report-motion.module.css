@@ -1,0 +1,53 @@
+@keyframes public-report-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.enter {
+  animation: public-report-enter 520ms ease-out both;
+}
+
+.d0 {
+  animation-delay: 0ms;
+}
+
+.d1 {
+  animation-delay: 60ms;
+}
+
+.d2 {
+  animation-delay: 120ms;
+}
+
+.d3 {
+  animation-delay: 180ms;
+}
+
+.d4 {
+  animation-delay: 240ms;
+}
+
+.d5 {
+  animation-delay: 300ms;
+}
+
+.d6 {
+  animation-delay: 360ms;
+}
+
+.d7 {
+  animation-delay: 420ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: none;
+  }
+}

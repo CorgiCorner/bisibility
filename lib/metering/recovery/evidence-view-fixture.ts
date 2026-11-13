@@ -13,6 +13,7 @@ export function evidenceRecoveryFixture(
       {
         ...page.rows[0],
         token: "evidence-fixture",
+        reference: "ref-evidence-fixture",
         historical: false,
         action: null,
         evidence: {

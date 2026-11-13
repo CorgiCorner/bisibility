@@ -8,6 +8,7 @@ import type {
 } from "@/lib/ai-tracking/projections/workspace";
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { TrackingBulkActions } from "./TrackingBulkActions";
 import { TrackingHistoryPanel } from "./TrackingHistoryPanel";
 import { TrackingMetrics } from "./TrackingMetrics";
@@ -25,6 +26,8 @@ export function AiTrackingWorkspace({
   schedulesHref,
   researchHref,
   shellOwnsHeading = false,
+  headerExtra = null,
+  initialDrawer = null,
 }: Readonly<{
   initialData: TrackingWorkspaceData;
   actions: TrackingWorkspaceActions;
@@ -35,9 +38,17 @@ export function AiTrackingWorkspace({
   /** Prompt suggestions and model generation live on Prompt Research. */
   researchHref?: string;
   shellOwnsHeading?: boolean;
+  headerExtra?: ReactNode;
+  initialDrawer?: "prompt" | "run" | null;
 }>) {
   const t = useTranslations("projectAiTracking");
-  const state = useTrackingWorkspace(initialData, initialSamples, initialTab, actions);
+  const state = useTrackingWorkspace(
+    initialData,
+    initialSamples,
+    initialTab,
+    actions,
+    initialDrawer,
+  );
   const {
     data,
     setData,
@@ -75,6 +86,7 @@ export function AiTrackingWorkspace({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {headerExtra}
           <Button
             variant="secondary"
             disabled={!data.canWrite}

@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
     projectDefaults: { findUnique: vi.fn() },
     providerConnection: { findMany: vi.fn() },
     rankCheck: { count: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
+    searchEngineUpdate: { findMany: vi.fn() },
+    signal: { findMany: vi.fn() },
     tag: { findMany: vi.fn() },
   },
   metadata: vi.fn(),
@@ -161,6 +163,8 @@ export function resetOverviewMocks() {
   mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
   mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
   mocks.prisma.tag.findMany.mockResolvedValue([]);
+  mocks.prisma.signal.findMany.mockResolvedValue([]);
+  mocks.prisma.searchEngineUpdate.findMany.mockResolvedValue([]);
 }
 
 export function getOverviewMocks() {

@@ -4,13 +4,22 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import { render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 
+function catalogMessage(source: unknown, key: string) {
+  const value = key.split(".").reduce<unknown>((current, part) => {
+    if (!current || typeof current !== "object") return undefined;
+    return (current as Record<string, unknown>)[part];
+  }, source);
+  return typeof value === "string" ? value : key;
+}
+
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
   useTranslations: (namespace: string) => (key: string, values?: Record<string, string | number>) =>
-    (
-      (namespace === "shared.actionPayment"
-        ? (sharedMessages.shared.actionPayment as Record<string, string>)
-        : (messages.projectAiResearch as Record<string, string>))[key] ?? key
+    catalogMessage(
+      namespace === "shared.actionPayment"
+        ? sharedMessages.shared.actionPayment
+        : messages.projectAiResearch,
+      key,
     ).replace(/\{(\w+)\}/g, (_match, name: string) => String(values?.[name] ?? name)),
 }));
 vi.mock("@/lib/actions/ai-research", () => ({ analyzeAiResearchAction: vi.fn() }));

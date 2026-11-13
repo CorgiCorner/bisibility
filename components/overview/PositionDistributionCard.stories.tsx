@@ -33,6 +33,15 @@ export const Empty: Story = {
   args: { buckets: emptyBuckets, empty: true },
 };
 
+export const Tall: Story = {
+  args: { buckets: overviewFixture.distribution },
+  render: (args) => (
+    <div className="h-96">
+      <PositionDistributionCard {...args} />
+    </div>
+  ),
+};
+
 export const ZeroHeavy: Story = {
   args: {
     buckets: overviewFixture.distribution.map((bucket, index) => ({

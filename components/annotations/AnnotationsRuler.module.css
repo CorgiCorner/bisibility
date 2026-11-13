@@ -1,0 +1,8 @@
+@layer theme, base, components, utilities;
+
+@layer components {
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules exposes the static pin class. */
+  :global(.annotation-ruler-pin) {
+    left: var(--annotation-pin-x);
+  }
+}

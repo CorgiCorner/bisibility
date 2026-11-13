@@ -1,0 +1,76 @@
+{
+  "projectSettingsTags": {
+    "columns": {
+      "keywords": "Keywords",
+      "pages": "Pages",
+      "rule": "Rule",
+      "tag": "Tag",
+      "actions": "Actions",
+      "usedIn": "Used in"
+    },
+    "delete": {
+      "cancel": "Cancel",
+      "confirm": "Remove tag",
+      "error": "Tag could not be removed.",
+      "title": "Remove {name}?",
+      "usageBothManyKeywords": "{keywordCount, number} keywords and {segmentCount, plural, one {# segment use it.} other {# segments use it.}}",
+      "usageBothOneKeyword": "{segmentCount, plural, one {1 keyword and # segment use it.} other {1 keyword and # segments use it.}}",
+      "usageKeywordOnly": "{count, plural, one {# keyword uses it.} other {# keywords use it.}}",
+      "usageSegmentOnly": "{count, plural, one {# segment uses it.} other {# segments use it.}}"
+    },
+    "empty": "No tags yet.",
+    "lead": "One set of tags for the whole project, used on pages and keywords.",
+    "menu": "More actions for {name}",
+    "menuDelete": "Delete",
+    "menuEdit": "Edit rule",
+    "menuMerge": "Merge into...",
+    "menuRename": "Rename",
+    "merge": {
+      "alerts": "{count, plural, one {# alert} other {# alerts}}",
+      "cancel": "Cancel",
+      "choose": "Tag",
+      "confirm": "Merge",
+      "error": "The tag could not be merged.",
+      "keywordSegments": "{count, plural, one {# keyword segment} other {# keyword segments}}",
+      "keywords": "{count, plural, one {# keyword} other {# keywords}}",
+      "none": "Nothing else uses this tag. It will be deleted.",
+      "pages": "{count, plural, one {# page} other {# pages}}",
+      "rule": "The page rule moves because {target} has none.",
+      "savedViews": "{count, plural, one {# saved view} other {# saved views}}",
+      "summary": "{counts} move to {target}.",
+      "title": "Merge {name} into"
+    },
+    "new": "New tag",
+    "rename": {
+      "cancel": "Cancel",
+      "confirm": "Rename",
+      "error": "The tag could not be renamed.",
+      "exists": "{name} already exists. Merge into it instead.",
+      "label": "New name",
+      "required": "Enter a tag name.",
+      "title": "Rename {name}",
+      "tooLong": "Tag names can be at most 48 characters."
+    },
+    "rule": {
+      "hand": "by hand",
+      "none": "-",
+      "sitemap": "sitemap",
+      "urls": "{count, plural, one {# URL} other {# URLs}}"
+    },
+    "ruleLead": "A rule keeps a tag on matching pages, including pages added later.",
+    "tableLabel": "Project tags",
+    "usage": {
+      "alert": "{count, plural, one {# alert} other {# alerts}}",
+      "keywordSegment": "{count, plural, one {# keyword segment} other {# keyword segments}}",
+      "none": "not used yet",
+      "savedView": "{count, plural, one {# saved view} other {# saved views}}",
+      "tooltipAlerts": "Alerts: {names}",
+      "tooltipKeywordSegments": "Keyword segments: {names}",
+      "tooltipSavedViews": "Saved views: {names}"
+    },
+    "where": {
+      "body": "Pages filter, By tag, and Compare. Rank Tracker filter and saved views. Alert rule target. Dashboard All tags filter.",
+      "title": "Where tags work"
+    }
+  }
+}

@@ -18,6 +18,8 @@ export type KeywordFilters = {
   lastCheck: LastCheckFilter;
   wrongUrl: boolean;
   urlChanged: boolean;
+  /** Latest completed check stored an AI Overview block. */
+  aiOverviewShown: boolean;
 };
 
 /**
@@ -38,6 +40,7 @@ export const emptyKeywordFilters: KeywordFilters = {
   volMin: 0,
   wrongUrl: false,
   urlChanged: false,
+  aiOverviewShown: false,
 };
 
 export const defaultKeywordFilters: KeywordFilters = {
@@ -163,7 +166,8 @@ export function applyKeywordFilters(rows: KeywordRow[], filters: KeywordFilters)
           rankingUrl: row.rankingUrl,
           targetUrl: row.targetUrl,
         })) &&
-      (!filters.urlChanged || row.rankingPages > 1)
+      (!filters.urlChanged || row.rankingPages > 1) &&
+      (!filters.aiOverviewShown || row.aiOverviewShown === true)
     );
   });
 }
@@ -203,6 +207,9 @@ export function getFilterChips(filters: KeywordFilters): KeywordFilterChip[] {
   if (filters.urlChanged) {
     chips.push({ key: "urlChanged" });
   }
+  if (filters.aiOverviewShown) {
+    chips.push({ key: "aiOverviewShown" });
+  }
   return chips;
 }
 
@@ -240,6 +247,9 @@ export function removeFilterChip(filters: KeywordFilters, key: string): KeywordF
   }
   if (key === "urlChanged") {
     return { ...filters, urlChanged: reset.urlChanged };
+  }
+  if (key === "aiOverviewShown") {
+    return { ...filters, aiOverviewShown: reset.aiOverviewShown };
   }
   return filters;
 }

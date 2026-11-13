@@ -1,6 +1,7 @@
 import "server-only";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { prisma } from "@/lib/db/prisma";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import { addKeywordSchema } from "@/lib/schemas/keyword";
@@ -91,7 +92,10 @@ export async function addSingleKeyword(input: unknown) {
     );
     return { ...stored, changed: !!created || tagged > 0 };
   });
-  if (keyword.changed) recordAppAction(actor);
+  if (keyword.changed) {
+    recordAppAction(actor);
+    captureProjectWork(actor.id, project.id);
+  }
   revalidateKeywords(keyword.publicId);
 
   const { changed: _changed, ...value } = keyword;

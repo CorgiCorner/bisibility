@@ -49,6 +49,7 @@ const fieldsByProvider: Record<string, readonly CredentialField[]> = {
   ahrefs: SERPAPI_CREDENTIAL_FIELDS,
   dataforseo: DATAFORSEO_CREDENTIAL_FIELDS,
   "local-sequence": [],
+  pagespeed: SERPAPI_CREDENTIAL_FIELDS,
   plausible: PLAUSIBLE_CREDENTIAL_FIELDS,
   serpapi: SERPAPI_CREDENTIAL_FIELDS,
 };

@@ -1,6 +1,7 @@
+import { annotationNoteDayBounds, annotationNoteHappenedAt } from "@/lib/annotations/note-day";
 import { appPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { addSignalNote, removeSignalNote } from "./signals";
+import { addSignalNote, removeSignalNote, searchAnnotationPages } from "./signals";
 
 const mocks = vi.hoisted(() => {
   class AuthorizationError extends Error {
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     keyword: { findFirst: vi.fn() },
     project: { findFirst: vi.fn() },
+    projectPage: { findMany: vi.fn() },
     signal: { delete: vi.fn(), findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
   };
@@ -58,6 +60,9 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/signals/emit", () => ({ emitSignal: mocks.emitSignal }));
+vi.mock("@/lib/queries/workspace-request-data", () => ({
+  getRequestProjectDefaults: vi.fn(async () => ({ timezone: "UTC" })),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
 function mockActor(role: "admin" | "member" | "viewer" = "admin") {
@@ -69,6 +74,7 @@ function mockActor(role: "admin" | "member" | "viewer" = "admin") {
 }
 
 const project = {
+  domain: "example.com",
   id: "project_1",
   ownerId: "user_1",
   publicId: "prj_abcdefghijklmnopqrstuvwx",
@@ -162,7 +168,7 @@ describe("signal actions", () => {
         targetType: "signal",
       }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "timeline"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "annotations"), "page");
   });
 
   it("rejects notes for keywords outside the project", async () => {
@@ -221,6 +227,38 @@ describe("signal actions", () => {
         before: expect.objectContaining({ id: manualSignal.publicId }),
       }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "timeline"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "annotations"), "page");
+  });
+
+  it("stores a day inside the chart window and rejects a future day", async () => {
+    const bounds = annotationNoteDayBounds(new Date(), "UTC");
+    await addSignalNote({
+      happenedOn: bounds.max,
+      note: "Shipped the guide",
+      projectId: "prj_abcdefghijklmnopqrstuvwx",
+    });
+    expect(mocks.emitSignal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        happenedAt: annotationNoteHappenedAt(bounds.max, new Date(), "UTC"),
+      }),
+    );
+
+    await expect(
+      addSignalNote({
+        happenedOn: "2099-01-01",
+        note: "Not yet",
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+      }),
+    ).rejects.toThrow(/chart window/);
+    expect(mocks.emitSignal).toHaveBeenCalledTimes(1);
+  });
+
+  it("searches the page register and returns a project URL", async () => {
+    mocks.prisma.projectPage.findMany.mockResolvedValue([{ path: "/pricing" }]);
+    await expect(
+      searchAnnotationPages({ projectId: "prj_abcdefghijklmnopqrstuvwx", query: "pric" }),
+    ).resolves.toEqual({
+      pages: [{ path: "/pricing", url: "https://example.com/pricing" }],
+    });
   });
 });

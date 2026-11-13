@@ -40,12 +40,11 @@ export type TrackQueryDialogProps = {
 };
 
 const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted";
-const CHIP =
-  "inline-flex min-h-7.5 max-w-full items-center gap-1.5 rounded-control border px-3 text-ui-caption font-medium transition-colors";
+const CHIP = "max-w-full gap-1.5 border";
 const CHIP_ON = "border-border-control bg-accent-soft text-fg";
 const CHIP_OFF = "border-border bg-bg-elev text-fg-muted hover:bg-bg-sunken";
 const SELECT =
-  "min-h-9 w-full justify-between rounded-control border-border bg-bg-elev px-3 normal-case tracking-normal";
+  "w-full justify-between rounded-control border-border bg-bg-elev normal-case tracking-normal";
 function trackDialogTitle(
   query: string | null,
   t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
@@ -163,10 +162,10 @@ export function TrackQueryDialog({
       title={trackDialogTitle(query, t)}
       footer={
         <div className="flex items-center gap-2.5">
-          <Button onClick={onCancel} size="sm" variant="ghost">
+          <Button onClick={onCancel} size="md" variant="ghost">
             {t("trackDialogCancel")}
           </Button>
-          <ProjectReadOnlyTooltip className="inline-flex flex-1">
+          <ProjectReadOnlyTooltip className="inline-flex">
             <Button
               disabled={readOnly || !selectedKey}
               onClick={() => {
@@ -174,7 +173,6 @@ export function TrackQueryDialog({
                   onConfirm({ device, locationKey: selectedKey, schedule, serpDepth });
               }}
               ref={confirmRef}
-              style={{ flex: 1 }}
             >
               {trackConfirmLabel(schedule, costContext.rawFrequency, t)}
             </Button>
@@ -187,7 +185,9 @@ export function TrackQueryDialog({
           <span className={LABEL}>{t("trackDialogMarket")}</span>
           <div className="flex flex-wrap gap-1.5">
             {options.map((option) => (
-              <button
+              <Button
+                size="sm"
+                variant="secondary"
                 aria-label={`${option.name} / ${option.language}`}
                 aria-pressed={option.key === selectedKey}
                 className={`${CHIP} ${option.key === selectedKey ? CHIP_ON : CHIP_OFF}${option.disabled ? " opacity-60" : ""}`}
@@ -200,13 +200,13 @@ export function TrackQueryDialog({
                   <Check aria-hidden size={10} weight="regular" />
                 ) : null}
                 <span className="truncate font-semibold">{option.name}</span>
-                <span className="text-fg-muted">/ {option.language}</span>
+                <span className="font-medium text-fg-muted">/ {option.language}</span>
                 {option.disabled ? (
                   <span className="font-sans tabular-nums text-ui-micro">
                     {t("trackDialogPaused")}
                   </span>
                 ) : null}
-              </button>
+              </Button>
             ))}
           </div>
         </section>
@@ -214,7 +214,9 @@ export function TrackQueryDialog({
           <span className={LABEL}>{t("trackDialogDevice")}</span>
           <div className="flex gap-1.5">
             {deviceOptions.map((option) => (
-              <button
+              <Button
+                size="sm"
+                variant="secondary"
                 aria-pressed={option.value === device}
                 className={`${CHIP} ${option.value === device ? CHIP_ON : CHIP_OFF}`}
                 key={option.value}
@@ -223,7 +225,7 @@ export function TrackQueryDialog({
               >
                 {option.value === device ? <Check aria-hidden size={10} weight="regular" /> : null}
                 {option.label}
-              </button>
+              </Button>
             ))}
           </div>
         </section>

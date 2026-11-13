@@ -1,0 +1,350 @@
+{
+  "projectPages": {
+    "bulk": {
+      "add": "Etiquetar selección",
+      "choose": "Etiqueta",
+      "check": "Comprobar métricas web principales",
+      "clear": "Borrar",
+      "remove": "Quitar etiqueta",
+      "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}"
+    },
+    "byTag": {
+      "addToPages": "Añadir a páginas",
+      "cancel": "Cancelar",
+      "columns": {
+        "actions": "Acciones",
+        "existing": "Existentes",
+        "keywords": "Palabras clave",
+        "new": "Nuevas",
+        "removed": "Eliminadas",
+        "pages": "Páginas",
+        "rule": "Regla",
+        "tag": "Etiqueta",
+        "type": "Tipo"
+      },
+      "edit": "Editar regla",
+      "empty": "Todavía no hay etiquetas en páginas.",
+      "hide": "Ocultar",
+      "keywordOnly": "{count, plural, one {# etiqueta más está solo en palabras clave: {names}} other {# etiquetas más están solo en palabras clave: {names}}}",
+      "kind": {
+        "manual": "A mano",
+        "path_pattern": "Patrón de ruta",
+        "sitemap": "Mapa del sitio",
+        "url_list": "Lista de URL"
+      },
+      "lead": "Un mismo conjunto de etiquetas para todo el proyecto: la misma etiqueta puede estar en páginas y en palabras clave.",
+      "manage": "Gestionar etiquetas en Ajustes",
+      "remove": "Quitar de las páginas",
+      "removeBody": "La etiqueta sigue en las palabras clave. Se quitan los enlaces de página y la regla.",
+      "removeConfirm": "Quitar de las páginas",
+      "removeTitle": "Quitar {name} de las páginas",
+      "ruleHand": "añadida a mano",
+      "ruleUrls": "{count, plural, one {# URL} other {# URL}}",
+      "show": "Mostrar",
+      "tableLabel": "Etiquetas en páginas"
+    },
+    "columns": {
+      "aiCitations": "Citas de IA",
+      "clicks": "Clics",
+      "conversions": "Conv.",
+      "conversionsConnect": "Conectar analítica",
+      "conversionsEmpty": "Esta página no tiene conversiones en el periodo.",
+      "conversionsSource": "{source}",
+      "cwv": "CWV",
+      "impressions": "Impr.",
+      "index": "Índice",
+      "keywords": "Palabras clave",
+      "openUrl": "Abrir {path}",
+      "page": "Página",
+      "position": "Pos.",
+      "sessions": "Sesiones",
+      "sitemap": "Sitemap",
+      "status": "Estado",
+      "tags": "Etiquetas",
+      "tagsMore": "+{count, number}"
+    },
+    "compare": {
+      "addNote": "Añadir una nota",
+      "annotationLabel": "Momento del cambio",
+      "annotationOption": "Anotación · {date} · {title}",
+      "caveat": "Esto muestra una dirección, no una prueba. Otros hechos, como las actualizaciones de Google, afectan a los dos grupos. Mira los marcadores G.",
+      "changed": "Con cambio",
+      "chartLabel": "Cambio indexado",
+      "chooseAnnotation": "Elige una anotación",
+      "dayOf": "Día {day, number} de 28. Cambio porcentual de {metric} frente {day, plural, one {al día} other {a los # días}} antes del cambio.",
+      "differenceLabel": "Diferencia",
+      "emptyAnnotations": "Todavía no hay anotaciones.",
+      "emptyAnnotationsAction": "Añadir una nota",
+      "emptyOverlap": "Estas etiquetas cubren las mismas páginas, así que no hay un grupo sin cambios.",
+      "emptyTags": "Todavía no hay etiquetas en las páginas.",
+      "emptyTagsAction": "Etiquetar páginas",
+      "finished": "Terminado",
+      "forecastLabel": "Esperado hasta ahora",
+      "forecastUnavailable": "La previsión no está disponible en esta versión",
+      "madeToday": "El cambio se hizo hoy. Los resultados empiezan mañana.",
+      "groupDetail": "{count, plural, one {# página} other {# páginas}}, {metric} frente a antes",
+      "metric": {
+        "clicks": "Clics",
+        "impressions": "Impresiones",
+        "sessions": "Sesiones"
+      },
+      "metricLabel": "Métrica",
+      "metricOption": "{metric} · {source}",
+      "monitoring": "En observación",
+      "notEnough": "No hay datos suficientes",
+      "notEnoughClicks": "No hay datos suficientes de clics, prueba con las impresiones",
+      "overlap": "{count, plural, one {# página está en las dos etiquetas y queda fuera de ambos grupos.} other {# páginas están en las dos etiquetas y quedan fuera de ambos grupos.}}",
+      "percent": "{direction, select, positive {+{percent, number}%} negative {{percent, number}%} other {0%}}",
+      "points": "{direction, select, positive {+{points, number} pts frente a las páginas sin cambios} negative {{points, number} pts frente a las páginas sin cambios} other {0 pts frente a las páginas sin cambios}}",
+      "seriesChanged": "Páginas con cambio",
+      "seriesUnchanged": "Páginas sin cambios",
+      "source": {
+        "analytics": "analítica principal",
+        "search_console": "Search Console"
+      },
+      "tagOption": "Etiqueta: {name} · {pages, plural, one {# página} other {# páginas}}",
+      "unchanged": "Sin cambios",
+      "unconnected": "Conecta {source} para usar esta métrica",
+      "waiting": "En espera"
+    },
+    "cwv": {
+      "checked": "Se comprobaron {count, number} páginas.",
+      "error": {
+        "invalid_key": "La clave de API de PageSpeed Insights fue rechazada.",
+        "no_sample": "Selecciona páginas de este proyecto.",
+        "not_connected": "Conecta PageSpeed Insights antes de comprobar.",
+        "quota": "Se alcanzó la cuota de PageSpeed Insights. Inténtalo más tarde."
+      },
+      "milliseconds": "{value} ms",
+      "needsWork": "Hay que mejorar",
+      "none": "-",
+      "pass": "Correcto",
+      "poor": "Deficiente",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Datos de campo de usuarios reales",
+        "lab": "Estimación de laboratorio",
+        "origin": "Datos de campo del origen"
+      },
+      "tooltip": "LCP {lcp}, INP {inp}, CLS {cls}. {source}"
+    },
+    "drawer": {
+      "autoJoin": "Las páginas que se añadan después entran solas",
+      "cancel": "Cancelar",
+      "errors": {
+        "exclude_invalid": "Escribe un patrón de exclusión que empiece por /.",
+        "invalid_url": "Escribe una ruta o una URL de este sitio.",
+        "must_start_with_slash": "Un patrón debe empezar por /.",
+        "required": "Escribe un patrón.",
+        "sitemap_required": "Elige un mapa del sitio.",
+        "tag_required": "Escribe un nombre de etiqueta.",
+        "too_long": "Ese patrón es demasiado largo.",
+        "too_many_urls": "Una regla puede listar como máximo 2.000 URL.",
+        "too_many_wildcards": "Un patrón puede usar como máximo 16 comodines."
+      },
+      "exclude": "Excluir",
+      "excludeAdd": "Añadir",
+      "excludePlaceholder": "/draft/*",
+      "excludeRemove": "Quitar {pattern}",
+      "handNote": "Ninguna regla selecciona páginas. Añade esta etiqueta a las páginas a mano.",
+      "keywordHint": "{name} ya está en {count, plural, one {# palabra clave} other {# palabras clave}}",
+      "pattern": "Patrón",
+      "patternHint": "'{slug}' = un segmento de ruta. * = cualquier cosa.",
+      "preview": "Coincide con {count, plural, one {# página} other {# páginas}}",
+      "previewFailed": "No se ha podido cargar la vista previa.",
+      "previewMore": "y {count, number} más",
+      "rule": "Regla",
+      "save": "Guardar etiqueta",
+      "saveFailed": "No se ha podido guardar la etiqueta.",
+      "sitemap": "Mapa del sitio",
+      "sitemapChoose": "Elige un mapa del sitio",
+      "sitemapEmpty": "Todavía no se conoce ninguna URL de mapa del sitio.",
+      "tag": "Etiqueta",
+      "tagHint": "Elige una etiqueta existente o escribe una nueva.",
+      "tagKeywords": "Etiquetar también las palabras clave que apuntan a estas páginas",
+      "titleEdit": "Editar {name}",
+      "titleNew": "Nueva etiqueta",
+      "urls": "Lista de URL",
+      "urlsPlaceholder": "/docs"
+    },
+    "empty": {
+      "description": "Una página aparece aquí cuando una fuente ve su URL. Estas fuentes pueden aportar páginas.",
+      "filtered": "Ninguna página coincide con estos filtros.",
+      "title": "Todavía no hay páginas"
+    },
+    "existing": {
+      "allTags": "Todas las etiquetas",
+      "columns": {
+        "existing": "Existentes",
+        "existingMetric": "Existentes {metric}",
+        "fresh": "Nuevas",
+        "freshMetric": "Nuevas {metric}",
+        "share": "Parte de las nuevas",
+        "tag": "Etiqueta"
+      },
+      "disabled": "{source} no está conectado",
+      "disabledConversions": "Conecta la analítica para graficar conversiones",
+      "emptyBody": "Una instantánea es la fecha y la lista de URL que existían ese día. Las métricas se quedan en cada fuente, así que cualquiera se puede dividir entre páginas que existían el día de la instantánea y páginas añadidas después.",
+      "emptyTitle": "Todavía no hay instantánea de páginas",
+      "metric": {
+        "ai_cites": "Citas de IA",
+        "clicks": "Clics",
+        "conversions": "Conversiones",
+        "option": "{metric} · {source}",
+        "sessions": "Sesiones"
+      },
+      "metricLabel": "Métrica",
+      "noSource": "Conecta Search Console, analítica o visibilidad en IA para comparar las páginas que existían el día de la instantánea con las añadidas después.",
+      "rolling": "Las sesiones usan la última ventana móvil de 28 días, no un total diario.",
+      "series": {
+        "existing": "Páginas existentes",
+        "fresh": "Páginas nuevas",
+        "removed": "Páginas retiradas"
+      },
+      "share": "{share, number}%",
+      "span": {
+        "28": "Últimos 28 días",
+        "since": "Desde la instantánea"
+      },
+      "spanLabel": "Periodo",
+      "summaryExisting": "Páginas existentes {total, number} · {pages, number} de {snapshot, number} páginas",
+      "summaryFresh": "Páginas nuevas {total, number} · {pages, number} páginas añadidas después de la instantánea",
+      "summaryRemoved": "Eliminadas {total, number} · {pages, number} páginas salieron del sitemap",
+      "tableLabel": "Páginas existentes y nuevas por etiqueta",
+      "title": "{metric} acumulados desde la instantánea"
+    },
+    "filters": {
+      "any": "Cualquiera",
+      "clear": "Borrar filtros",
+      "index": "Índice",
+      "label": "Filtros",
+      "sitemap": "Sitemap",
+      "source": "Fuente",
+      "title": "Filtros",
+      "coverage": "Estado de cobertura",
+      "cwv": "Métricas web principales",
+      "cwvValue": {
+        "missing": "Sin comprobar",
+        "needs_work": "Hay que mejorar",
+        "pass": "Correcto",
+        "poor": "Deficiente"
+      },
+      "clearCoverage": "Quitar el estado de cobertura {reason}"
+    },
+    "indexGroup": {
+      "indexed": "Indexada",
+      "inspection_failed": "Inspección fallida",
+      "not_checked": "Sin comprobar",
+      "not_indexed": "No indexada"
+    },
+    "columnNotConnected": "Sin conexión con {source}",
+    "keywordsLink": "Palabras clave de {path}",
+    "loadFailed": "No se pudo cargar la lista de páginas.",
+    "missing": "No hay datos de {source} para esta página.",
+    "paste": {
+      "added": "{count, number} añadidas",
+      "cancel": "Cancelar",
+      "description": "Una URL o ruta por línea, hasta 500 líneas.",
+      "existing": "{count, number} ya estaban",
+      "label": "URLs",
+      "line": "Línea {line, number}: {value} - {reason}",
+      "placeholder": "/docs",
+      "rejected": "Líneas rechazadas",
+      "submit": "Añadir páginas",
+      "title": "Pegar URLs"
+    },
+    "plausibleWindow": "Plausible usa una ventana continua de 28 días.",
+    "providers": {
+      "ga4": "GA4",
+      "plausible": "Plausible"
+    },
+    "reasons": {
+      "foreign": "Esta URL es de otro sitio.",
+      "invalid": "Escribe una URL o una ruta de este sitio.",
+      "missingDomain": "Este proyecto no tiene dominio.",
+      "tooMany": "Solo se pueden añadir 50.000 URLs en una actualización.",
+      "tooManyLines": "Pega como máximo 500 líneas."
+    },
+    "refresh": {
+      "done": "Páginas actualizadas ({count, number}).",
+      "failed": "No se pudieron actualizar las páginas."
+    },
+    "search": {
+      "label": "Buscar por ruta",
+      "placeholder": "/docs"
+    },
+    "segments": {
+      "all": "Todas",
+      "inSnapshot": "En la instantánea",
+      "listed": "En el sitemap",
+      "new": "Nuevas",
+      "notListed": "Fuera del sitemap",
+      "removed": "Eliminadas"
+    },
+    "snapshot": {
+      "bannerCount": "{count, number} páginas",
+      "bannerRegistry": "Este proyecto no tenía sitemap, así que la instantánea incluye cada página del registro. Las métricas no se copian. Cada fuente guarda su propio historial diario.",
+      "bannerSitemap": "Las métricas no se copian. Cada fuente guarda su propio historial diario, así que cualquiera se puede dividir entre páginas que existían ese día y páginas añadidas después.",
+      "bannerTitle": "Instantánea {label} · {date}",
+      "button": "Guardar instantánea de páginas",
+      "cancel": "Cancelar",
+      "confirmBody": "La nueva instantánea pasa a ser la referencia de la comparación. La actual se archiva, no se borra.",
+      "confirmTitle": "¿Guardar una nueva instantánea de páginas?",
+      "dateLabel": "Referencia: {date}",
+      "failed": "No se pudo guardar la instantánea.",
+      "openAnnotations": "Abrir en Anotaciones",
+      "replace": "Guardar nueva instantánea",
+      "taken": "Instantánea de páginas guardada ({count, number} páginas).",
+      "results": "Ver resultados desde esta instantánea"
+    },
+    "status": {
+      "gone": "Desaparecida · Día {day, number}",
+      "in_snapshot": "En la instantánea",
+      "new": "Nueva · Día {day, number}",
+      "redirected": "Redirigida · Día {day, number}",
+      "removed": "Eliminada · Día {day, number}"
+    },
+    "sitemapState": {
+      "listed": "Incluida",
+      "notListed": "No incluida"
+    },
+    "sourceKind": {
+      "ai_citation": "Citas de IA",
+      "ai_visibility": "Visibilidad en IA",
+      "analytics": "Analítica",
+      "analyticsConversions": "Analítica / Conversiones",
+      "manual": "Manual",
+      "page_indexing": "Indexación",
+      "pagespeed": "PageSpeed",
+      "rank_tracker": "Rank Tracker",
+      "search_console": "Search Console",
+      "sitemap": "Sitemap"
+    },
+    "sourcesLine": {
+      "add": "Añadir fuente",
+      "connect": "Conectar",
+      "hint": "Fuente principal de Sesiones y Conv. Pulsa para cambiar.",
+      "label": "Columnas de",
+      "paste": "Pegar URLs",
+      "refresh": "Actualizar ahora",
+      "refreshing": "Actualizando",
+      "state": {
+        "beta": "Beta",
+        "connected": "Conectada",
+        "not_connected": "Sin conectar"
+      }
+    },
+    "tableLabel": "Páginas del proyecto",
+    "tabs": {
+      "all": "Todas las páginas",
+      "byTag": "Por etiqueta",
+      "compare": "Comparar",
+      "existingVsNew": "Existentes y nuevas",
+      "navigation": "Vistas de páginas"
+    },
+    "tags": {
+      "all": "Todas las etiquetas",
+      "new": "Nueva etiqueta"
+    }
+  }
+}

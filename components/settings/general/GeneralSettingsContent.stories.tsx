@@ -5,10 +5,6 @@ import {
   GeneralSettingsRouteLoading,
 } from "@/components/settings/general/GeneralSettingsLoading";
 import type { UpdateProjectDetails } from "@/components/settings/general/ProjectDetailsCard";
-import type {
-  CreateTagAction,
-  DeleteTagAction,
-} from "@/components/settings/general/TagsSegmentsCard";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import { DEFAULT_LOCALE } from "@/i18n/config";
@@ -25,17 +21,6 @@ const project = {
   projectId: "prj_7Kd2Qf9m",
 };
 
-const tags = [
-  { color: "var(--blue)", keywordCount: 0, label: "brand", segmentCount: 0 },
-  { color: "var(--green)", keywordCount: 0, label: "product", segmentCount: 0 },
-  { color: "var(--purple)", keywordCount: 0, label: "blog", segmentCount: 0 },
-  { color: "var(--yellow)", keywordCount: 0, label: "docs", segmentCount: 0 },
-  { color: "var(--accent)", keywordCount: 0, label: "high-intent", segmentCount: 0 },
-  { color: "var(--blue)", keywordCount: 0, label: "competitor", segmentCount: 0 },
-];
-
-const createTag: CreateTagAction = async () => ({ ok: true, value: { created: true } });
-const deleteTag: DeleteTagAction = async () => ({ ok: true, value: { deleted: 1 } });
 const requestDomainChange = async (_input: DomainChangeRequest) => ({
   domain: "next.example.com",
   projectId: project.projectId,
@@ -74,14 +59,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const settledArgs = {
-  canCreateTags: true,
-  canDeleteTags: true,
   canEditProject: true,
-  createTag,
-  deleteTag,
   project,
   requestDomainChange,
-  tags,
   updateProject,
 } satisfies Story["args"];
 

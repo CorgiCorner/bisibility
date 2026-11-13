@@ -89,7 +89,10 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
         where: { userId: mail.userId, epoch: mail.epoch, earnedDay: mail.awardDay },
         select: { kind: true },
       });
-      if (!awards.length) {
+      const earned = awards.filter(
+        (award) => award.kind === "presence" || award.kind === "practice",
+      );
+      if (!earned.length) {
         await prisma.achievementMail.updateMany({
           where: { id: mail.id, status: "queued" },
           data: { status: "skipped", finishedAt: now, reason: "award_missing" },
@@ -98,7 +101,7 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
       }
       const link = `${origin}/app/account/activity`;
       const unsubscribe = `${origin}/activity/unsubscribe?token=${createAchievementUnsubscribeToken(mail.userId)}`;
-      const titles = awards
+      const titles = earned
         .map((a) => t(a.kind === "presence" ? "presenceTitle" : "practiceTitle"))
         .join(" · ");
       const text = `${t("emailIntro")}\n${titles}\n${t("emailCta")}: ${link}\n${t("emailUnsubscribe")}: ${unsubscribe}\n${t("emailNotice")}`;

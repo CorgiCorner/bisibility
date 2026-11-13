@@ -1,9 +1,11 @@
 import { WorkspaceShell } from "@/app/(regional)/app/(workspace)/workspace-shell";
+import { ProjectChallengeVisit } from "@/components/challenge-report/ProjectChallengeVisit";
 import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
 import { UsageDisplaySettingsProvider } from "@/components/metering/UsageDisplaySettingsProvider";
 import { SchedulerUpgradeBanner } from "@/components/schedules/SchedulerUpgradeBanner";
 import { renderProjectDataSourceExtension } from "@/components/settings/AccountDataSourceExtension";
+import { readChallengeVisitTimeZone } from "@/lib/challenge-report/project-challenge-check-in";
 import { readProjectUsageDisplaySettings } from "@/lib/project-usage-display/store";
 import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import { listSchedulerUpgradeIssues } from "@/lib/queries/scheduler-upgrade";
@@ -29,9 +31,11 @@ export default async function ProjectLayout({
   const { project } = await params;
   const access = await resolveProjectAccess(project);
   const actor = await getQueryActor();
-  const [usageDisplay, upgradeIssues] = await Promise.all([
+  // One indexed lookup: the visit hook mounts only for an open challenge window.
+  const [usageDisplay, upgradeIssues, challengeTimeZone] = await Promise.all([
     readProjectUsageDisplaySettings(access.publicId, actor),
     listSchedulerUpgradeIssues(access.publicId),
+    readChallengeVisitTimeZone(actor.id, access.projectId).catch(() => null),
   ]);
   const content = await renderProjectDataSourceExtension(
     <WorkspaceShell
@@ -41,6 +45,13 @@ export default async function ProjectLayout({
     >
       {upgradeIssues.length > 0 ? (
         <SchedulerUpgradeBanner issues={upgradeIssues} projectId={access.publicId} />
+      ) : null}
+      {challengeTimeZone ? (
+        <ProjectChallengeVisit
+          key={`${access.publicId}:${challengeTimeZone}`}
+          projectRef={access.publicId}
+          timeZone={challengeTimeZone}
+        />
       ) : null}
       {children}
     </WorkspaceShell>,

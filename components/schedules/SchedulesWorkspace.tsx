@@ -111,6 +111,7 @@ export function SchedulesWorkspace({
         <AiScheduleDrawerHost
           key={aiTarget}
           activePromptIds={ai.activePromptIds}
+          engineDefault={ai.engineDefault}
           projectId={projectId}
           schedules={ai.schedules}
           target={aiTarget}

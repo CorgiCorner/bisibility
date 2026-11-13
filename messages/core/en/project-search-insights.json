@@ -235,6 +235,12 @@
       "trackToastPaused": "Added paused in Rank Tracker.",
       "trackToastScheduled": "Tracked {frequency} in Rank Tracker.",
       "tablesFootnote": "Coverage is the share of clicks and impressions whose query text Google names. The rest is real traffic on queries Google withholds, so the two tables never sum to the KPI row.",
+      "clicksPerDay": "Clicks per day",
+      "clicksPerDayChartAria": "Clicks per day",
+      "clicksSeries": "Clicks",
+      "clicksPerDayEmptyTitle": "No clicks in this window",
+      "clicksPerDayEmptyDescription": "Google reported no clicks for this property on the finalized days in this window.",
+      "clicksPerDayLoading": "Loading clicks per day",
       "signalBandSub": "Already earning impressions, none of them in the top three",
       "signalFailed": "Could not count",
       "signalOverlapSub": "2 or more of your pages ranking for the same query",
@@ -322,6 +328,17 @@
       "deltaPositionBetter": "{value} better",
       "deltaPositionWorse": "{value} worse",
       "sourceGa4": "GA4",
+      "metricConversions": "Conversions",
+      "sourcePlausible": "Plausible",
+      "conversionSourceGoals": "{source} · {count, plural, one {# goal} other {# goals}}",
+      "conversionsByPage": "Conversions by page",
+      "conversionsColumnPage": "Page",
+      "conversionsColumnSessions": "Sessions",
+      "conversionsColumnConversions": "Conversions",
+      "conversionsColumnRate": "Rate",
+      "conversionsEmpty": "No conversions in this period.",
+      "conversionsConnect": "Connect analytics",
+      "openInPages": "Open in Pages",
       "pendingStatusComplete": "Complete",
       "pendingStatusNeedsReauth": "Needs reauth",
       "pendingStatusNeedsRetry": "Needs retry",
@@ -594,7 +611,129 @@
       "inspectSitemapHint": "Loads up to 10 stored URLs, starting with those not checked yet. You can edit the list before inspecting.",
       "inspectSitemapEmpty": "No stored URLs in this sitemap. Read sitemaps again and retry.",
       "inspectNoSitemaps": "Read sitemaps first to choose URLs from one.",
-      "inspectSitemapLoading": "Loading URLs..."
+      "inspectSitemapLoading": "Loading URLs...",
+      "lead": "Whether Google has your pages in its index, and why not when it does not.",
+      "allUrls": "All URLs",
+      "progress": {
+        "checked": "Checked {checked, number} of {total, number} URLs",
+        "perDay": "{count, number} URLs a day. Next batch at {time}.",
+        "perDayNoTime": "{count, number} URLs a day. The next batch time is not available.",
+        "off": "Checking is off.",
+        "limitZero": "The daily limit is 0, so nothing is checked.",
+        "availableQuota": "Uses the quota Google leaves available.",
+        "sources": "Sitemap {sitemap, number} · Rank Tracker targets {targets, number} · Added by hand {manual, number}",
+        "daysLeft": "About {days, plural, one {# day} other {# days}} left",
+        "settings": "Indexing settings",
+        "tooltip": "Checks use the URL Inspection API. The daily quota is shared by the whole Search Console property and resets at midnight Pacific.",
+        "meter": "Checked URLs"
+      },
+      "tiles": {
+        "names": {
+          "indexed": "Indexed",
+          "not_indexed": "Not indexed",
+          "inspection_failed": "Inspection failed",
+          "not_checked": "Not checked"
+        },
+        "indexedShare": "{percent} of checked",
+        "reasonCount": "{count, plural, one {# reason} other {# reasons}}",
+        "retriedTomorrow": "retried tomorrow",
+        "notScheduled": "not scheduled",
+        "queued": "queued",
+        "noChecked": "none checked yet"
+      },
+      "reasons": {
+        "title": "Not indexed, by reason",
+        "caption": "Google's coverage state, in Google's own words.",
+        "export": "Export CSV",
+        "exportFailed": "The export could not be created.",
+        "exportTruncated": "The export includes the first {rows, number} URLs.",
+        "columnReason": "Reason",
+        "columnUrls": "URLs",
+        "columnChange": "Last change",
+        "openInPages": "Open in Pages",
+        "changeNew": "new",
+        "changeNone": "no change",
+        "changeUp": "+{count, number} since {date}",
+        "changeDown": "-{count, number} since {date}",
+        "changeUnavailable": "A 7-day change cannot be derived from the stored history.",
+        "empty": "No not-indexed URLs with a coverage state.",
+        "docs": "Google's documentation for this status",
+        "genericDocs": "Google's indexing documentation"
+      },
+      "explanations": {
+        "crawledNotIndexed": {
+          "meaning": "Google crawled this URL and chose not to index it.",
+          "step1": "Make the page worth indexing: unique content, internal links, and a clear purpose.",
+          "step2": "Confirm the canonical URL is this page.",
+          "step3": "Ask for indexing only after the page is useful. Google still decides."
+        },
+        "discoveredNotIndexed": {
+          "meaning": "Google knows this URL and has not crawled it yet.",
+          "step1": "Link to it from pages Google already crawls.",
+          "step2": "Keep it in the sitemap if you want it indexed.",
+          "step3": "Wait for the next crawl. A request does not guarantee one."
+        },
+        "duplicateCanonical": {
+          "meaning": "Google treats this URL as a duplicate and picked a different canonical.",
+          "step1": "Choose the one URL that should rank.",
+          "step2": "Point the canonical tag and internal links at that URL.",
+          "step3": "Leave the duplicate out of the sitemap if it should not be indexed."
+        },
+        "alternateCanonical": {
+          "meaning": "This URL correctly points at another canonical page.",
+          "step1": "Confirm the canonical target is the page you want indexed.",
+          "step2": "Keep the alternate URL if it serves a real variant.",
+          "step3": "Do not expect this URL itself to appear in the index."
+        },
+        "pageWithRedirect": {
+          "meaning": "This URL redirects, so Google indexes the target instead.",
+          "step1": "Confirm the redirect goes to the right page.",
+          "step2": "Update internal links and the sitemap to the final URL.",
+          "step3": "Keep the redirect if the old URL should still resolve."
+        },
+        "notFound": {
+          "meaning": "Google requested this URL and the server returned 404.",
+          "step1": "Restore the page if it should exist, or redirect it to a replacement.",
+          "step2": "Remove it from the sitemap.",
+          "step3": "Fix internal links that still point here."
+        },
+        "soft404": {
+          "meaning": "The server said the page exists, but Google reads it as an empty or error page.",
+          "step1": "Return a real 404 or 410 for pages that are gone.",
+          "step2": "If the page should exist, give it substantial content.",
+          "step3": "Avoid thin not-found templates that still return 200."
+        },
+        "noindex": {
+          "meaning": "The page asks Google not to index it, with a noindex tag or header.",
+          "step1": "Remove noindex if the page should be indexed.",
+          "step2": "Confirm the robots meta tag and the X-Robots-Tag header agree.",
+          "step3": "Let Google recrawl after the tag is gone."
+        },
+        "robots": {
+          "meaning": "robots.txt blocks Google from crawling this URL.",
+          "step1": "Allow the URL in robots.txt if it should be crawled.",
+          "step2": "A blocked URL can stay out of the index.",
+          "step3": "Submit the sitemap again after the rule changes."
+        },
+        "serverError": {
+          "meaning": "Google saw a server error (5xx) on this URL.",
+          "step1": "Fix the error and confirm the page returns 200.",
+          "step2": "Check logs for this URL around the inspection time.",
+          "step3": "A lasting 5xx keeps the page out of the index."
+        }
+      },
+      "drops": {
+        "title": "Dropped out of the index",
+        "caption": "Verdict changed from indexed to not indexed in the last 90 days.",
+        "page": "Page",
+        "since": "Since",
+        "reason": "Reason",
+        "reasonMissing": "not recorded",
+        "annotations": "Annotations",
+        "inAnnotations": "in Annotations",
+        "notInAnnotations": "No annotation entry",
+        "viewInPages": "View in Pages"
+      }
     }
   }
 }

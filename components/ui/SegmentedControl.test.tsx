@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { SegmentedControl } from "./SegmentedControl";
+import { revealTab, Tabs } from "./Tabs";
 
 type Mode = "a" | "b";
 
@@ -40,6 +42,8 @@ describe("SegmentedControl", () => {
       />,
     );
 
+    expect(screen.getByRole("group")).toHaveClass("m-0", "min-w-0", "p-0");
+    expect(screen.getByRole("group").firstElementChild).toHaveClass("min-h-10", "max-sm:min-h-11");
     const radio = screen.getByRole("radio", { name: "A" });
     const label = radio.parentElement;
     const span = radio.nextElementSibling;
@@ -231,4 +235,77 @@ describe("SegmentedControl", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent("B is unavailable");
     expect(onChange).not.toHaveBeenCalled();
   });
+});
+
+function TabHarness() {
+  const [value, setValue] = useState("overview");
+  return (
+    <Tabs
+      ariaLabel="Sections"
+      onChange={setValue}
+      options={[
+        { label: "Overview", value: "overview" },
+        { label: "Activity", value: "activity" },
+      ]}
+      panelId="project-panel"
+      value={value}
+    />
+  );
+}
+
+it("scrolls nowrap tabs inside a strip that cannot widen the page", () => {
+  render(<TabHarness />);
+  const strip = screen.getByRole("tablist");
+  expect(strip).toHaveAttribute("data-tab-strip");
+  expect(strip.className).toContain("min-w-0");
+  expect(strip.className).toContain("overflow-x-auto");
+  expect(strip.className).not.toContain("pb-px");
+  const track = strip.querySelector("[data-tab-track]");
+  expect(track?.parentElement).toBe(strip);
+  expect(track?.className).toContain("min-w-full");
+  expect(track?.className).toContain("border-b");
+  for (const tab of screen.getAllByRole("tab")) {
+    expect(tab.className).toContain("whitespace-nowrap");
+    expect(tab.className).toContain("-mb-px");
+  }
+});
+
+it("scrolls the strip when the active tab sits outside it", () => {
+  const strip = document.createElement("div");
+  strip.setAttribute("data-tab-strip", "");
+  const tab = document.createElement("button");
+  strip.append(tab);
+  document.body.append(strip);
+  strip.getBoundingClientRect = () =>
+    ({
+      bottom: 20,
+      height: 20,
+      left: 0,
+      right: 100,
+      top: 0,
+      width: 100,
+      x: 0,
+      y: 0,
+      toJSON() {
+        return {};
+      },
+    }) as DOMRect;
+  tab.getBoundingClientRect = () =>
+    ({
+      bottom: 20,
+      height: 20,
+      left: 140,
+      right: 200,
+      top: 0,
+      width: 60,
+      x: 140,
+      y: 0,
+      toJSON() {
+        return {};
+      },
+    }) as DOMRect;
+  strip.scrollLeft = 0;
+  revealTab(tab);
+  expect(strip.scrollLeft).toBe(100);
+  strip.remove();
 });

@@ -20,6 +20,9 @@ export type ProviderConnectionRow = {
 
 export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
   if (item.id === "ahrefs") return "Free daily Domain Rating with your own Ahrefs API key.";
+  if (item.id === "pagespeed") {
+    return "Free Core Web Vitals field data with your own PageSpeed Insights API key.";
+  }
   if (item.id === "local-sequence") {
     return "Add [seq:5,15,15,4] to choose the ranks returned for a keyword.";
   }
@@ -49,6 +52,12 @@ export function providerMeta(
   credentials: ProviderCredentials,
   now: Date,
 ): ProviderMetaRow[] {
+  if (item.id === "pagespeed") {
+    return [
+      elapsedRow("lastSync", connection?.lastUsedAt, now),
+      { labelKey: "state", valueKey: stateValueKey(connection) },
+    ];
+  }
   if (item.kind === "analytics") {
     const identityKey = item.id === "plausible" ? "siteDomain" : "property";
     return [

@@ -207,7 +207,12 @@ describe("Overlay interaction contracts", () => {
       return (
         <>
           <Button onClick={() => setOpen(true)}>Open sheet</Button>
-          <Sheet open={open} title="Edit keyword" onClose={() => setOpen(false)}>
+          <Sheet
+            footer={<button type="button">Apply</button>}
+            open={open}
+            title="Edit keyword"
+            onClose={() => setOpen(false)}
+          >
             <Button>Save</Button>
           </Sheet>
         </>
@@ -217,11 +222,84 @@ describe("Overlay interaction contracts", () => {
     await userEvent.click(screen.getByRole("button", { name: "Open sheet" }));
     const sheet = screen.getByRole("dialog", { name: "Edit keyword" });
     expect(sheet.dataset.side).toBe("bottom");
+    expect(sheet.dataset.placement).toBe("sheet");
     expect(getComputedStyle(sheet).animationName).toBe("none");
-    expect(sheet.getBoundingClientRect().width).toBe(375);
-    expect(sheet.getBoundingClientRect().bottom).toBe(700);
+    const rect = sheet.getBoundingClientRect();
+    expect(rect.left).toBe(8);
+    expect(rect.right).toBe(375 - 8);
+    expect(rect.bottom).toBe(700 - 8);
+    expect(rect.width).toBe(375 - 16);
+    expect(getComputedStyle(sheet).borderTopLeftRadius).toBe("24px");
+    const grab = sheet.querySelector("[data-drawer-grab]");
+    expect(grab).toHaveAttribute("aria-hidden", "true");
+    const apply = screen.getByRole("button", { name: "Apply" });
+    expect(apply.getBoundingClientRect().width).toBeGreaterThan(rect.width * 0.7);
+    const close = screen.getByRole("button", { name: "Close sheet" });
+    expect(close.getBoundingClientRect().width).toBeLessThan(48);
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "Open sheet" }));
+  });
+
+  it("gives sheet footer buttons equal width and keeps a note above them", async () => {
+    await page.viewport(390, 844);
+    render(
+      sharedMessagesElement(
+        <Sheet
+          footer={
+            <div className="flex items-center gap-2.5">
+              <Button type="button" variant="secondary">
+                Reset
+              </Button>
+              <Button style={{ flex: 1 }} type="button">
+                Show results
+              </Button>
+            </div>
+          }
+          onClose={() => undefined}
+          open
+          title="Filters"
+        >
+          <p>Scope</p>
+        </Sheet>,
+      ),
+    );
+    const reset = screen.getByRole("button", { name: "Reset" });
+    const show = screen.getByRole("button", { name: "Show results" });
+    const resetBox = reset.getBoundingClientRect();
+    const showBox = show.getBoundingClientRect();
+    expect(Math.abs(resetBox.width - showBox.width)).toBeLessThan(1);
+    expect(Math.abs(resetBox.top - showBox.top)).toBeLessThan(1);
+    expect(show.scrollWidth).toBeLessThanOrEqual(Math.ceil(show.clientWidth) + 1);
+    expect(resetBox.width).toBeGreaterThan(120);
+    cleanup();
+
+    render(
+      sharedMessagesElement(
+        <Sheet
+          footer={
+            <div>
+              <p>Cached results stay free.</p>
+              <div className="flex items-center gap-2.5">
+                <Button type="button" variant="secondary">
+                  Reset
+                </Button>
+                <Button type="button">Show results</Button>
+              </div>
+            </div>
+          }
+          onClose={() => undefined}
+          open
+          title="Filters with a note"
+        >
+          <p>Scope</p>
+        </Sheet>,
+      ),
+    );
+    const note = screen.getByText("Cached results stay free.");
+    const noteBox = note.getBoundingClientRect();
+    const nested = screen.getByRole("button", { name: "Reset" }).getBoundingClientRect();
+    expect(noteBox.width).toBeGreaterThan(200);
+    expect(noteBox.bottom).toBeLessThanOrEqual(nested.top + 1);
   });
 });

@@ -1,0 +1,11 @@
+@layer theme, base, components, utilities;
+
+@media (width < 1024px) {
+  /* Section frames and their route wrappers share the shell width. Fields keep their caps. */
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules scopes the override to the shared settings column. */
+  :global([data-settings-content])
+    :where([data-slot="card"], :has([data-slot="card"])):not(:where([data-slot="card"] *)) {
+    max-width: none;
+    width: 100%;
+  }
+}

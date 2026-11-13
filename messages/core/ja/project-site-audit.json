@@ -2,8 +2,10 @@
   "projectSiteAudit": {
     "heading": "サイト監査",
     "description": "{domain} の HTTP、メタデータ、見出し、インデックス可能性、リンク、画像の代替テキストを確認します。",
-    "pageLimit": "ページ上限",
-    "pageLimitError": "1〜{limit, number}ページを選択してください。",
+    "budgetEmpty": "現在、監査に使えるページがありません。",
+    "maxAction": "最大",
+    "pageLimit": "確認するページ",
+    "pageLimitError": "現在、監査ごとに最大{limit, number}ページまで確認できます。",
     "run": "監査を実行",
     "running": "サイトを巡回中",
     "cost": "最大 15 秒 · プロバイダーのクレジット不要 · プロジェクトのキャッシュ設定に従って結果を再利用",
@@ -103,6 +105,44 @@
       "cancelled": "キャンセル済み",
       "unknown": "不明"
     },
-    "availableLimit": "現在、監査ごとに最大{limit, number}ページを利用できます。"
+    "vitals": {
+      "check": "コアウェブバイタルを確認",
+      "columns": {
+        "cls": "CLS",
+        "inp": "INP",
+        "lcp": "LCP",
+        "page": "ページ",
+        "status": "状態"
+      },
+      "connect": "PageSpeed Insights を接続",
+      "connectBody": "この監査のページのフィールドデータを見るには PageSpeed Insights を接続してください。",
+      "desktop": "デスクトップ",
+      "error": {
+        "invalid_key": "PageSpeed Insights の API キーが拒否されました。",
+        "no_sample": "確認するページを選ぶにはサイト監査を実行してください。",
+        "not_connected": "確認する前に PageSpeed Insights を接続してください。",
+        "quota": "PageSpeed Insights の割り当てに達しました。後でもう一度お試しください。"
+      },
+      "goodHint": "良好: LCP は 2.5 秒未満、INP は 200 ms 未満、CLS は 0.1 未満",
+      "milliseconds": "{value} ms",
+      "mobile": "モバイル",
+      "noSample": "確認するページを選ぶにはサイト監査を実行してください。",
+      "notChecked": "まだ確認していません。",
+      "passCount": "{strategy}では {sample, number} ページ中 {pass, number} ページが合格",
+      "seconds": "{value} 秒",
+      "source": {
+        "field": "実ユーザーのフィールドデータ",
+        "lab": "ラボ推定",
+        "origin": "オリジンのフィールドデータ"
+      },
+      "status": {
+        "good": "良好",
+        "needs_improvement": "改善が必要",
+        "poor": "不良",
+        "unknown": "不明"
+      },
+      "strategy": "端末",
+      "title": "コアウェブバイタル"
+    }
   }
 }

@@ -42,7 +42,7 @@
             "priority": 0,
             "status": "needs_reauth",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -80,7 +80,7 @@
             "name": "SerpApi",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -116,6 +116,44 @@
               }
             ],
             "name": "Google Search Console",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "pagespeed",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "pagespeed.web.dev",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "PageSpeed Insights",
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
@@ -246,7 +284,7 @@
             "name": "DataForSEO",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -284,7 +322,7 @@
             "name": "SerpApi",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -320,6 +358,44 @@
               }
             ],
             "name": "Google Search Console",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "pagespeed",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "pagespeed.web.dev",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "PageSpeed Insights",
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
@@ -450,7 +526,7 @@
             "name": "DataForSEO",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -488,7 +564,7 @@
             "name": "SerpApi",
             "status": "ready",
             "category_id": "serp",
-            "category_title": "SERP providers"
+            "category_title": "SEO data"
           },
           {
             "capabilities": {
@@ -529,6 +605,44 @@
             "primary": true,
             "priority": 0,
             "status": "connected",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "pagespeed",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "pagespeed.web.dev",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "PageSpeed Insights",
+            "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
           },

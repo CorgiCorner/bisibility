@@ -22,7 +22,7 @@ export function DataSourcesSettingsContent({ canEdit, defaults, projectId }: Rea
     state: null,
   };
   return (
-    <div className="max-w-[760px] space-y-5" data-data-sources-settings-content="">
+    <div className="space-y-5 lg:max-w-[760px]" data-data-sources-settings-content="">
       <div
         className="scroll-mt-6"
         id="url-inspection"
