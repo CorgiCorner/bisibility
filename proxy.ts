@@ -54,6 +54,7 @@ const APP_SURFACE_PATHS = [
   "/cloud",
   "/install",
   "/invite",
+  "/r",
   "/login",
   "/locale",
   "/oauth",

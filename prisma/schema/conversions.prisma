@@ -1,0 +1,45 @@
+enum ConversionSource {
+  ga4
+  plausible
+}
+
+/// One conversion count for a page, day, source, and the name that source uses.
+/// GA4 currently stores the combined key-event name `key_events`.
+model ConversionDaily {
+  id           String           @id @default(cuid())
+  projectId    String
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source       ConversionSource
+  date         DateTime         @db.Date
+  path         String
+  pathHash     String
+  name         String
+  count        Int
+  revenueMinor BigInt?
+  currency     String?          @db.Char(3)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([projectId, source, date, pathHash, name])
+  @@index([projectId, source, date])
+  @@map("conversion_daily")
+}
+
+/// A conversion name as one source reports it, with the name this project shows.
+model ConversionGoal {
+  id            String           @id @default(cuid())
+  projectId     String
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source        ConversionSource
+  sourceName    String
+  displayName   String
+  enabled       Boolean          @default(true)
+  countsRevenue Boolean          @default(false)
+  firstSeen     DateTime         @db.Date
+  lastSeen      DateTime         @db.Date
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([projectId, source, sourceName])
+  @@map("conversion_goals")
+}

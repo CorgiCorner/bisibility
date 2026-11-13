@@ -1,7 +1,7 @@
 "use client";
 
 import { ConsentSettingsModal } from "@/components/analytics/ConsentSettingsModal";
-import { Button } from "@/components/ui/Button";
+import { Button, type ButtonSize, type ButtonVariant } from "@/components/ui/Button";
 import { CONSENT_COOKIE, parseConsentCookie } from "@/lib/analytics/consent";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -19,7 +19,14 @@ function readConsentCookie() {
 export function PrivacyChoicesLink({
   label,
   appearance = "button",
-}: Readonly<{ label?: string; appearance?: "button" | "inline" }>) {
+  size = "xs",
+  variant = "ghost",
+}: Readonly<{
+  label?: string;
+  appearance?: "button" | "inline";
+  size?: ButtonSize;
+  variant?: ButtonVariant;
+}>) {
   const t = useTranslations("shared.analyticsConsent");
   const [open, setOpen] = useState(false);
 
@@ -37,9 +44,9 @@ export function PrivacyChoicesLink({
         <Button
           className="font-normal"
           onClick={() => setOpen(true)}
-          size="xs"
+          size={size}
           type="button"
-          variant="ghost"
+          variant={variant}
         >
           {label ?? t("title")}
         </Button>

@@ -96,9 +96,80 @@
       "validationUrl": "Use a valid URL."
     },
     "remove": {
-      "confirm": "Delete this timeline note?",
-      "aria": "Delete timeline note",
+      "confirm": "Delete this note?",
+      "aria": "Remove this note",
       "error": "Note could not be deleted."
+    },
+    "annotations": {
+      "lead": "Your notes plus Google updates, deploys, content and sitemap changes. Each one shows up on charts.",
+      "rulerTitle": "Last 90 days",
+      "rulerHint": "Pins are moments. A bar is a Google rollout.",
+      "rulerAria": "Annotations, last 90 days",
+      "legend": {
+        "note": "Notes",
+        "google": "Google updates",
+        "deploy": "Deploys",
+        "content": "Content",
+        "sitemap": "Sitemap"
+      },
+      "addAria": "Add a note",
+      "placeholder": "What did you change? e.g. Added FAQ to 20 tool pages",
+      "today": "Today",
+      "dateAria": "Note date",
+      "wholeProject": "Whole project",
+      "scopeAria": "Where the note applies",
+      "scopeSearch": "Search pages",
+      "scopeEmpty": "No pages match.",
+      "addNote": "Add note",
+      "filterAria": "Filter annotations",
+      "filter": {
+        "all": "All",
+        "note": "Notes",
+        "google": "Google updates",
+        "deploy": "Deploys",
+        "content": "Content",
+        "sitemap": "Sitemap"
+      },
+      "hideAutomatic": "Hide automatic",
+      "showAutomatic": "Show automatic",
+      "empty": "Nothing here for this filter.",
+      "byActor": "by {actor}",
+      "contentFallback": "Content updated",
+      "deindexedTitle": "URL removed from the index",
+      "deployFallback": "Deploy",
+      "detailContent": "From a CMS or content signal.",
+      "detailDeindexed": "This URL is no longer indexed.",
+      "detailDeploy": "From a deploy webhook. The provider, environment and deployment id are kept when they are sent.",
+      "detailGoogle": "Imported from the Google Search Status Dashboard. A rollout with a start and an end is a band, not a single day.",
+      "detailNote": "Manual note.",
+      "detailSitemap": "From the sitemap monitor. Added and removed URLs become annotations.",
+      "noteFallback": "Note",
+      "sitemapTitle": "Sitemap: {added, number} added, {removed, number} removed",
+      "primaryConversion": "Primary conversion source changed from {from} to {to}",
+      "conversionSource": {
+        "none": "none",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      },
+      "source": {
+        "note": "Note",
+        "google": "Google update",
+        "deploy": "Deploy",
+        "content": "Content",
+        "sitemap": "Sitemap"
+      },
+      "rolloutRange": "{start} to {end} · {status}",
+      "rolloutComplete": "rollout complete",
+      "rolloutOpen": "Rollout in progress",
+      "sourcesTitle": "Automatic sources",
+      "googleSourceDetail": "Search Status Dashboard · free",
+      "statusOn": "On",
+      "sitemapSource": "Sitemap changes",
+      "sitemapSourceDetail": "Sitemap monitor · already running",
+      "deploySourceDetail": "Webhook: Vercel, Netlify, GitHub",
+      "connect": "Connect",
+      "contentSource": "Content (CMS)",
+      "contentSourceDetail": "Webhook or API · signal source cms"
     }
   }
 }

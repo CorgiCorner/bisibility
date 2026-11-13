@@ -3,6 +3,7 @@ import { type AuditPayloadPolicy, auditFields as f } from "@/lib/auth/audit-payl
 export function registerInstanceAdminAuditDeclarations(
   declare: (actions: readonly string[], policy?: AuditPayloadPolicy) => void,
 ) {
+  declare(["instance_admin.project_seo_challenge.set"], { after: f.booleans("enabled") });
   declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
   const announcement = { ...f.strings("announcementId", "contentHash"), ...f.booleans("enabled") };
   declare(["instance_admin.announcement_created"], { after: announcement });

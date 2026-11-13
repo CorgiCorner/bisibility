@@ -82,7 +82,7 @@ export function MonitorCenterPicker({
         }}
       />
       {!hasCoordinates ? (
-        <p id={`${id}-empty`} className="m-0 text-ui-xs text-fg-muted">
+        <p id={`${id}-empty`} className="m-0 text-ui-caption text-fg-muted">
           {t("center.empty")}
         </p>
       ) : null}
@@ -94,7 +94,7 @@ export function MonitorCenterPicker({
           else setManualOpen(event.currentTarget.open);
         }}
       >
-        <summary className="w-fit cursor-pointer text-ui-xs text-fg-muted underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid">
+        <summary className="w-fit cursor-pointer text-ui-caption text-fg-muted underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid">
           {t("center.manual")}
         </summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -103,7 +103,7 @@ export function MonitorCenterPicker({
               <FieldLabel
                 htmlFor={`${id}-${axis}`}
                 label={t(`fields.${axis}`)}
-                className="text-ui-xs text-fg-muted"
+                className="text-ui-caption text-fg-muted"
               />
               <Input
                 id={`${id}-${axis}`}

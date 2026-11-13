@@ -25,14 +25,19 @@ function workspace(props: Partial<Parameters<typeof AiTrackingWorkspace>[0]> = {
   );
 }
 describe("tracking approval and evidence UI", () => {
+  it("renders a header action beside add topic", () => {
+    workspace({ headerExtra: <button type="button">Your brand names</button> });
+    expect(screen.getByRole("button", { name: "Your brand names" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Add topic" })).toBeTruthy();
+  });
   it("links to Prompt Research instead of rendering context suggestions", () => {
-    workspace({ researchHref: "/app/prj_1/prompt-research" });
+    workspace({ researchHref: "/app/prj_1/ai-visibility?tab=research" });
     expect(screen.queryByRole("button", { name: "Suggest from project context" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Review context and model" })).toBeNull();
     expect(screen.queryByText("Generate prompt drafts")).toBeNull();
     expect(screen.getByRole("link", { name: "Find prompts in Prompt Research" })).toHaveAttribute(
       "href",
-      "/app/prj_1/prompt-research",
+      "/app/prj_1/ai-visibility?tab=research",
     );
   });
   it("preserves the exact typed prompt and does not create a paid baseline when saving", async () => {

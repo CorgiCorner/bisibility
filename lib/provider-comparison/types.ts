@@ -60,6 +60,8 @@ export type ComparisonRun = {
   id: string;
   createdAt: string;
   keyword: ComparisonContext["keyword"];
+  /** An AI overview was fetched separately for this search; history marks it instead of listing it. */
+  overviewFetched?: true;
   depth: SerpDepth;
   sides: {
     provider: ComparisonProvider;

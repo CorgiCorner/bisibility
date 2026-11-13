@@ -44,6 +44,8 @@ export function MonitorRecurringForm({
       <div className="block text-sm">
         <span>{t("calendar")}</span>
         <MenuSelect
+          size="input"
+          triggerClassName="w-auto"
           value={form.watch("scheduleId")}
           onChange={(value) => form.setValue("scheduleId", value, { shouldValidate: true })}
           options={[
@@ -61,6 +63,8 @@ export function MonitorRecurringForm({
       <div className="block text-sm">
         <span>{t("connection")}</span>
         <MenuSelect
+          size="input"
+          triggerClassName="w-auto"
           value={form.watch("connectionId")}
           onChange={(value) => form.setValue("connectionId", value, { shouldValidate: true })}
           options={[
@@ -125,7 +129,7 @@ export function MonitorRecurringForm({
         </p>
       ) : null}
       <p className="text-sm text-fg-muted">{t("policy")}</p>
-      <Button type="submit" disabled={pending || state.choicesTruncated}>
+      <Button size="input" type="submit" disabled={pending || state.choicesTruncated}>
         {t("review")}
       </Button>
     </form>

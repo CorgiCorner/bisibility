@@ -1,3 +1,4 @@
+import { isReservedAgentReportKind } from "@/lib/agent-reports/kinds";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { z } from "zod";
 
@@ -53,16 +54,9 @@ export const agentReportSchema = z
   })
   .strict();
 
-const reservedProducerKinds = new Set([
-  "site_audit",
-  "ai_visibility",
-  "prompt_explorer",
-  "prompt_research",
-]);
-
 export const externalAgentReportSchema = agentReportSchema.extend({
   kind: agentReportSchema.shape.kind.refine(
-    (kind) => !reservedProducerKinds.has(kind.toLowerCase()),
+    (kind) => !isReservedAgentReportKind(kind),
     "This report kind is reserved for application-generated analyses. Use an external analysis kind.",
   ),
 });

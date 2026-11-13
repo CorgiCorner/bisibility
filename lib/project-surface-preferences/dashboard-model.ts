@@ -76,6 +76,7 @@ export function defaultPersonalDashboardLayout(preset: DashboardPreset): Dashboa
   // Preserve the existing full-width cards and the two secondary cards in the first personal layout.
   const wide = new Set([
     "domain_rating",
+    "organic_conversions",
     "organic_kpis",
     "position_trend",
     "data_source",

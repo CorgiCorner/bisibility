@@ -3,6 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { calendarDay, nextMorning } from "./calendar";
 import { achievementEmailsEnabled, achievementsEnabled } from "./config";
 import { badgeKinds, progressForDays } from "./progress";
+import {
+  progressForThirtyDays,
+  THIRTY_DAYS_DEFINITION_VERSION,
+  THIRTY_DAYS_KIND,
+} from "./thirty-days";
 export async function processAchievementUser(userId: string, now = new Date()) {
   if (!achievementsEnabled()) return;
   await prisma.$transaction(
@@ -81,6 +86,40 @@ export async function processAchievementUser(userId: string, now = new Date()) {
               dueAt: nextMorning(earnedDay, state.timeZone),
             },
             update: {},
+          });
+      }
+      const enrollment = await tx.achievementEnrollment.findUnique({
+        where: {
+          userId_kind_definitionVersion: {
+            userId,
+            kind: THIRTY_DAYS_KIND,
+            definitionVersion: THIRTY_DAYS_DEFINITION_VERSION,
+          },
+        },
+      });
+      if (enrollment) {
+        const thirty = progressForThirtyDays({
+          joinedOn: enrollment.joinedOn,
+          leftOn: enrollment.leftAt ? calendarDay(enrollment.leftAt, enrollment.timeZone) : null,
+          practiceDays: facts
+            .filter((fact) => fact.kind === "practice")
+            .map((fact) => fact.localDay),
+          today,
+        });
+        if (thirty.earned && thirty.earnedDay)
+          await tx.achievementAward.createMany({
+            data: [
+              {
+                userId,
+                kind: THIRTY_DAYS_KIND,
+                earnedDay: thirty.earnedDay,
+                epoch: state.epoch,
+                definitionVersion: THIRTY_DAYS_DEFINITION_VERSION,
+                timeZone: state.timeZone,
+                earnedAt: now,
+              },
+            ],
+            skipDuplicates: true,
           });
       }
       await tx.achievementDay.updateMany({

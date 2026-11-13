@@ -32,7 +32,7 @@ export function ProviderCardFeedback({
     <>
       {disconnectNotice ? (
         <div className="mt-3">
-          <ActionNotice notice={disconnectNotice} />
+          <ActionNotice notice={disconnectNotice} size="xs" />
         </div>
       ) : null}
       {testResult ? (

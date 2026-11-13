@@ -49,6 +49,36 @@ export type CoreMessages = {
       readonly share: "Share badge";
       readonly shareError: "The sharing change could not be saved. Try again.";
       readonly showHeader: "Show my streak in the header";
+      readonly thirtyCalendarLabel: "30 days of SEO";
+      readonly thirtyCancel: "Cancel";
+      readonly thirtyDayLabel: "Day {day, number}";
+      readonly thirtyDescription: "A daily habit with a badge you can post. Join any time.";
+      readonly thirtyError: "The 30-day challenge could not be updated. Try again.";
+      readonly thirtyHow: "How it works";
+      readonly thirtyLeave: "Leave the 30 days";
+      readonly thirtyLeaveBody: "The count pauses. Days you already finished stay. You can join again without starting over.";
+      readonly thirtyLeaveConfirm: "Leave";
+      readonly thirtyLeaveTitle: "Leave the 30 days?";
+      readonly thirtyLeft: "Paused since {date}. Finished days stay. Joining again continues this challenge.";
+      readonly thirtyOverflow: "{count, plural, one {# earlier day is not shown} other {# earlier days are not shown}}";
+      readonly thirtyPause: "Missed a day? The streak pauses, it does not reset.";
+      readonly thirtySlotDone: "Done";
+      readonly thirtySlotSkipped: "Skipped";
+      readonly thirtySlotToday: "Today";
+      readonly thirtySlotUpcoming: "Upcoming";
+      readonly thirtySnapshotEmpty: "Create a project to save a Day 1 snapshot from Pages.";
+      readonly thirtySnapshotLabel: "Project for the Day 1 snapshot";
+      readonly thirtySnapshotOpen: "Open Pages";
+      readonly thirtyStart: "Start my 30 days";
+      readonly thirtyStarted: "of {goal, number} · started {date}";
+      readonly thirtyStep1Body: "Your Day 1 is the day you join. Open the Day 1 snapshot for a project you pick. It is the baseline for later.";
+      readonly thirtyStep1Title: "Start any day";
+      readonly thirtyStep2Body: "The streak counts what you do, not traffic, so you can finish it even before results show.";
+      readonly thirtyStep2Title: "Count the days you practice";
+      readonly thirtyStep3Body: "SEO is slow. A missed day pauses the count. The badge is earned on the 30th day you practice.";
+      readonly thirtyStep3Title: "Results come later";
+      readonly thirtyTitle: "30 days of SEO";
+      readonly thirtyTrackingOff: "Turn on Track my activity to join.";
       readonly title: "Activity & badges";
       readonly today: "Today";
       readonly unsubscribed: "Badge milestone emails are turned off.";
@@ -138,6 +168,8 @@ export type CoreMessages = {
       };
       readonly description: "Personal to you, <emphasis>applied on every device you sign in from.</emphasis>";
       readonly landing: {
+        readonly "ai-visibility": "AI Visibility";
+        readonly annotations: "Annotations";
         readonly ariaLabel: "Default landing page";
         readonly backlinks: "Backlinks";
         readonly competitors: "Competitors";
@@ -145,9 +177,9 @@ export type CoreMessages = {
         readonly "domain-overview": "Domain Overview";
         readonly "keyword-research": "Keyword Research";
         readonly label: "Default landing page";
+        readonly pages: "Pages";
         readonly "rank-tracker": "Rank Tracker";
         readonly "search-console": "Search Console";
-        readonly timeline: "Timeline";
       };
       readonly language: {
         readonly description: "More languages are being prepared. English is active now.";
@@ -167,7 +199,7 @@ export type CoreMessages = {
       readonly title: "Preferences";
     };
     readonly privacy: {
-      readonly action: "Privacy choices";
+      readonly action: "Review choices";
       readonly description: "Review or change the optional analytics and setup replay choices stored in this browser.";
       readonly title: "Privacy choices";
     };
@@ -376,6 +408,8 @@ export type CoreMessages = {
     readonly analysis: "Analysis";
     readonly audience: "Audience";
     readonly audienceHint: "Who are your customers, and what do they need?";
+    readonly audienceLink: "Anyone with the link";
+    readonly audienceMembers: "Project members";
     readonly back: "All reports";
     readonly business: "Business";
     readonly businessHint: "What does your business do and what makes it different?";
@@ -384,27 +418,43 @@ export type CoreMessages = {
     readonly contextTitle: "Project context";
     readonly copyLink: "Copy report link";
     readonly created: "Saved {date}";
+    readonly draft: "Draft";
     readonly emptyDescription: "Run an analysis or save a report to build your project history.";
     readonly emptyTitle: "No saved analyses yet";
     readonly failed: "Could not save. Try again.";
+    readonly filterEmpty: "No reports of this kind.";
     readonly goals: "Goals";
     readonly goalsHint: "What should an analysis help you achieve?";
     readonly historyLimit: "Showing the latest 100 reports. Use the API cursor to read older history.";
+    readonly kindFilter: "Report kind";
+    readonly kinds: {
+      readonly ai_visibility: "AI visibility";
+      readonly all: "All kinds";
+      readonly challenge_report: "Performance report";
+      readonly manual_analysis: "Written report";
+      readonly prompt_explorer: "Prompt explorer";
+      readonly prompt_research: "Prompt research";
+      readonly site_audit: "Site audit";
+    };
     readonly membersOnly: "Only project members can open this link.";
     readonly products: "Products and services";
     readonly productsHint: "Describe your key products, services and positioning.";
     readonly provenance: "Source and provenance";
     readonly readOnly: "You can view context. Editing requires a writable project and a member role.";
+    readonly reportContent: "Report content";
     readonly reportSaved: "Analysis saved.";
-    readonly reportsDescription: "Saved analyses from your project, including AI research and site audits. Share a report link with project members.";
-    readonly reportsTitle: "Agent reports";
+    readonly reportsDescription: "See what changed on your site.";
+    readonly reportsTitle: "Reports";
+    readonly reportTitle: "Report title";
     readonly reportValidation: "Enter a title (up to 160 characters) and analysis (up to 12,000 characters).";
     readonly save: "Save context";
     readonly saved: "Project context saved.";
     readonly saveReport: "Save report";
     readonly saving: "Saving";
+    readonly share: "Share";
     readonly title: "Title";
     readonly validation: "Use up to 4,000 characters per field.";
+    readonly whoCanOpen: "Who can open";
   };
   readonly auth: {
     readonly capacity: {
@@ -626,6 +676,329 @@ export type CoreMessages = {
       readonly verify: "Verify and continue";
       readonly verifying: "Verifying...";
     };
+  };
+  readonly challengeReport: {
+    readonly activeBar: "Worked days in the period";
+    readonly activeSummary: "{count, plural, one {# day with work} other {# days with work}}";
+    readonly activeSummaryCompact: "{count} days with work";
+    readonly aiDay1: "Day 1: {named} of {total}";
+    readonly aiEngineDay1: "Day 1 {named} of {total}";
+    readonly aiEngineLine: "{engine}: {named} of {total}";
+    readonly aiEngineRatio: "{engine}: {named} of {total}";
+    readonly aiNamed: "{named} of {total} unbranded prompts named you";
+    readonly aiNoDay1: "No answers on Day 1";
+    readonly aiRatio: "{named} of {total}";
+    readonly baselineClicks: "Clicks in the 30 days before baseline";
+    readonly baselinePages: "Pages at baseline";
+    readonly calendar: {
+      readonly checked: "Day {index, number}, {date}: checked in";
+      readonly hint: "Missed a day? Select it to mark it as a day you worked.";
+      readonly label: "Your 30 days";
+      readonly mark: "Mark day {index, number}, {date}, as a day you worked";
+      readonly marked: "Day {index, number} checked in.";
+      readonly markFailed: "Could not mark that day. Try again.";
+      readonly missed: "Day {index, number}, {date}: not checked in";
+      readonly today: "Day {index, number}, {date}: today";
+      readonly upcoming: "Day {index, number}, {date}: upcoming";
+    };
+    readonly cancel: "Cancel";
+    readonly card: {
+      readonly change: "Change";
+      readonly clicks: "Organic search clicks";
+      readonly dailyClicks: "Daily organic search clicks";
+      readonly latest: "Latest check";
+      readonly netChange: "{change} over the period";
+      readonly newPages: "New pages since Day 1";
+      readonly noChange: "No change";
+      readonly performance: "Performance report";
+      readonly start: "At the start";
+      readonly topPages: "Pages with clicks (top 5)";
+    };
+    readonly cardStarted: "Started {date}";
+    readonly challengeEnded: "Finished {date} · {count, number} of 30 days checked in";
+    readonly challengePitch: "Do some SEO on this project each day for 30 days, then share what changed.";
+    readonly challengeStart: "Start 30 days of SEO";
+    readonly challengeStartFailed: "Could not update the challenge. Check activity tracking in Account → Activity and try again.";
+    readonly challengeStarting: "Starting challenge…";
+    readonly challengeStatus: "Day {day, number} of 30 · {count, plural, one {# day checked in} other {# days checked in}}";
+    readonly checkIn: {
+      readonly end: "Download your badge and share what changed in your report, even if you missed some days.";
+      readonly endTitle: "Your badge and report after 30 days";
+      readonly manual: "Worked without opening the project? Mark that date in the calendar.";
+      readonly title: "How to record a day";
+      readonly visit: "Opening the project records one check-in for that day.";
+    };
+    readonly clickBuckets: "Clicks per {days, number}-day group";
+    readonly clickCount: "{count, plural, one {# click} other {# clicks}}";
+    readonly clickCountCompact: "{count} clicks";
+    readonly clicks: "Clicks";
+    readonly clicksBefore: "{days, plural, one {# day before} other {# days before}}";
+    readonly clicksCurrent: "This period";
+    readonly clicksDelta: "{change} vs the {days, plural, one {# day} other {# days}} before";
+    readonly clicksNoBaseline: "The previous period has no clicks to compare.";
+    readonly clicksPrevious: "Previous period";
+    readonly clicksTotal: "{count} clicks";
+    readonly conversionsCurrent: "This period";
+    readonly conversionsDelta: "{change} vs before";
+    readonly conversionsPrevious: "Previous period";
+    readonly costAi: "AI answers";
+    readonly costMixed: "These amounts use more than one currency, so they are not added into one total.";
+    readonly costOther: "Other";
+    readonly costPerDay: "Per day";
+    readonly costRankChecks: "Rank checks";
+    readonly costSubscriptions: "Subscriptions";
+    readonly costTotal: "Total";
+    readonly create: "Create report";
+    readonly created: "Challenge report created.";
+    readonly creatingReport: "Creating report…";
+    readonly customRange: "Custom dates";
+    readonly dayDone: "Day {day, number}: worked";
+    readonly dayOne: "Day 1";
+    readonly dayOneCard: "Day 1 challenge card";
+    readonly dayOneSteps: {
+      readonly captureBody: "bisibility saves the URLs from your sitemap, or the URLs in Pages if you have no sitemap. That gives the report a starting point for comparing existing and newly added pages. If Search Console data is available, bisibility also records your site’s clicks from the previous 30 days.";
+      readonly captureTitle: "See what’s recorded at Start";
+      readonly noteBody: "A short note gives you something concrete to look back on in your report.";
+      readonly noteTitle: "Write down what you’ll change";
+      readonly pickBody: "For example, a key landing page or your product pages.";
+      readonly pickTitle: "Pick a page or a group of pages";
+      readonly title: "Day 1: set your starting point";
+    };
+    readonly daySkipped: "Day {day, number}: skipped";
+    readonly daysOf: "{count} of {days}";
+    readonly dayUpcoming: "Day {day, number}: upcoming";
+    readonly defaultTitle: "{days, plural, one {# day of SEO: {domain}} other {# days of SEO: {domain}}}";
+    readonly dialogTitle: "New challenge report";
+    readonly downloadBadge: "Download 30-day badge";
+    readonly downloadDayOne: "Download Day 1 card";
+    readonly dropped: "What we dropped";
+    readonly end: "End date";
+    readonly engines: {
+      readonly chat_gpt: "ChatGPT";
+      readonly claude: "Claude";
+      readonly gemini: "Gemini";
+      readonly google: "Google";
+      readonly perplexity: "Perplexity";
+    };
+    readonly exampleData: "Sample data";
+    readonly exampleReport: "View an example report";
+    readonly existingClicks: "Pages from Day 1";
+    readonly failed: "Could not save. Try again.";
+    readonly footnoteBody: "Each tile carries its own numbers. When a source has no data, or is not connected, the tile says so instead of showing zero.";
+    readonly footnoteTitle: "How this was measured";
+    readonly fromCount: "from {count}";
+    readonly goals: "Goals";
+    readonly hidePreview: "Hide preview";
+    readonly hideProgress: "Hide progress";
+    readonly intro: {
+      readonly finishBody: "After 30 calendar days, download your badge and create a report for exactly those days, however many you checked in.";
+      readonly finishTitle: "Share what changed";
+      readonly lead: "Do some SEO on this project each day for 30 days. Opening the project checks in the day for you, and at the end you share what changed.";
+      readonly learnMore: "Learn more";
+      readonly legendChecked: "Checked in";
+      readonly legendMissed: "Missed";
+      readonly legendUpcoming: "Upcoming";
+      readonly sample: "Sample";
+      readonly sampleClicks: "Clicks, 30 days before";
+      readonly samplePages: "Pages";
+      readonly sampleResult: "Clicks over the 30 days";
+      readonly startBody: "Start records which pages are already on your site, using your sitemap or the URLs in Pages. When available, it also records your site’s Google Search clicks from the previous 30 days.";
+      readonly startTitle: "Set your Day 1 starting point";
+      readonly title: "How 30 days of SEO works";
+      readonly workBody: "Opening this project checks in the day once. Worked on your SEO elsewhere? Mark that day yourself, within your 30 days. A missed day never resets your count.";
+      readonly workTitle: "Build a steady SEO habit that never resets";
+    };
+    readonly journeyCreate: "Create challenge report";
+    readonly journeyFrame: "{workDays, number} work days · {calendarDays, number} calendar days";
+    readonly journeyFrameCheckIns: "{checkIns, number} of {calendarDays, number} days checked in";
+    readonly journeyName: "30 days of SEO";
+    readonly journeyTitle: "30 days of SEO: {domain}";
+    readonly legend: "Chart series";
+    readonly length: "Length";
+    readonly lengthOption: "{days, plural, one {# day} other {# days}}";
+    readonly lessonEmpty: "Nothing written yet.";
+    readonly lessonsSaved: "Lessons saved.";
+    readonly lessonsTitle: "Lessons";
+    readonly newClicks: "Pages added later";
+    readonly newReport: "New report";
+    readonly openChallenge: "Open challenge";
+    readonly openProjectChallenge: "Project SEO challenge";
+    readonly pageCount: "{count, plural, one {# page} other {# pages}}";
+    readonly pageCountCompact: "{count} pages";
+    readonly path: "Page";
+    readonly perDayAmount: "{amount} a day";
+    readonly performanceChoice: "Generate a performance report";
+    readonly performanceHelp: "Summarize your site’s results for a selected period.";
+    readonly performanceTitle: "Performance report for {domain}";
+    readonly period: "{from} to {to} ({days, plural, one {# day} other {# days}})";
+    readonly preview: {
+      readonly badge: "Day 1 preview";
+      readonly lead: "This is what Day 1 looks like. Nothing is saved until you start.";
+      readonly sample: "Example plan";
+      readonly sampleAction: "Rewrite the titles of three products that appear often in Google Search but get few clicks.";
+      readonly sampleActionLabel: "First change";
+      readonly sampleFocus: "Product pages";
+      readonly sampleFocusLabel: "Pages to work on";
+    };
+    readonly previewFailed: "Could not check the tiles. You can still create the report.";
+    readonly previewHasData: "Has data";
+    readonly previewLoading: "Checking which tiles have data.";
+    readonly previewNoData: "No data";
+    readonly previewNotConnected: "Not connected";
+    readonly rangeValidation: "Enter a title and a valid period of up to {days, number} days.";
+    readonly rank: "#";
+    readonly reasons: {
+      readonly activity_off: "Activity tracking is off";
+      readonly ai_visibility: "AI answers are not connected.";
+      readonly conversions: "Conversions are not connected.";
+      readonly empty: "No data for this period.";
+      readonly no_actor: "Practice days need a signed-in member.";
+      readonly no_answers: "Unbranded prompts have no stored answers in this period.";
+      readonly no_checks: "Tracked keywords have no completed checks in this period.";
+      readonly no_goals: "No conversion goals are set up.";
+      readonly no_keywords: "This project is not tracking keywords.";
+      readonly no_prompts: "There are no unbranded prompts.";
+      readonly no_snapshot: "There is no Day 1 page snapshot yet.";
+      readonly search_console: "Search Console is not connected.";
+      readonly tile_failed: "This tile could not be read.";
+      readonly unknown: "This tile has no data.";
+    };
+    readonly reflection: {
+      readonly actions: "What did you change?";
+      readonly add: "Add your own question";
+      readonly addQuestion: "Add a question";
+      readonly answer: "Answer";
+      readonly empty: "Write a short takeaway from this period.";
+      readonly next: "What will you check next?";
+      readonly observations: "What did you observe?";
+      readonly question: "Question";
+      readonly remove: "Remove question";
+    };
+    readonly refresh: "Refresh numbers";
+    readonly refreshed: "Numbers refreshed.";
+    readonly saveLessons: "Save lessons";
+    readonly savingReport: "Saving report…";
+    readonly scopeProject: "Counts your work on this project.";
+    readonly scopeUser: "Practice days are counted for your account, across projects.";
+    readonly share: {
+      readonly accessHelp: "No sign-in. Raw data and emails stay private.";
+      readonly accessLink: "Anyone with the link can view";
+      readonly accessMembers: "Only project members";
+      readonly backToSettings: "Back to settings";
+      readonly badge: "Made with bisibility badge";
+      readonly badgeFooter: "Made with bisibility, open-source SEO tracking.";
+      readonly brand: "bisibility";
+      readonly brandLine: "{brand} · {report}";
+      readonly canView: "Can view";
+      readonly card: "Report card";
+      readonly cardActions: "Report card actions";
+      readonly cardValues: "Choose up to 4 metrics";
+      readonly copyLink: "Copy link";
+      readonly dayOf: "Day {current, number} of {total, number}";
+      readonly download: "Download image";
+      readonly expires: "Link expires";
+      readonly expires30: "30 days";
+      readonly expires7: "7 days";
+      readonly expires90: "90 days";
+      readonly expiresNever: "Never";
+      readonly failed: "Could not save. Try again.";
+      readonly fullReport: "Full report";
+      readonly general: "General access";
+      readonly imageAlt: "Share image for {title}";
+      readonly imageCopied: "Image copied to clipboard.";
+      readonly imageShareFailed: "Could not share the image. You can download it instead.";
+      readonly lessons: "Show lessons";
+      readonly linkCopied: "Link copied";
+      readonly linkSettings: "Link settings";
+      readonly members: "Project members · {count, number}";
+      readonly noindex: "Hide from search engines";
+      readonly noindexHelp: "Adds noindex, so this report does not compete with your own pages.";
+      readonly notFoundBody: "The link may have expired or been turned off.";
+      readonly notFoundTitle: "This report is not available";
+      readonly onlyYou: "Only you see this";
+      readonly owner: "Owner";
+      readonly people: "People with access";
+      readonly postLinkedIn: "Post on LinkedIn";
+      readonly postX: "Post on X";
+      readonly prepareLink: "Set up public link";
+      readonly preview: "Preview";
+      readonly publicEyebrow: "Public report";
+      readonly publishButton: "Publish update";
+      readonly published: "Update published.";
+      readonly publishLink: "Publish link";
+      readonly publishNew: "Create a new link";
+      readonly publishNewHelp: "This link stays as it is.";
+      readonly publishReady: "{title} is ready";
+      readonly publishTitle: "Publish update";
+      readonly publishUpdate: "Update this link";
+      readonly publishUpdateHelp: "The same URL shows the newer stage. The current one stays one tab away.";
+      readonly replaceLink: "Replace link";
+      readonly replaceLinkHelp: "Replacing the link turns off the previous URL.";
+      readonly revokeBody: "The URL stops working. Anyone who already has the link will see a missing page.";
+      readonly revokeCancel: "Cancel";
+      readonly revokeConfirm: "Revoke link";
+      readonly revokeTitle: "This URL will stop working";
+      readonly round: "Round numbers";
+      readonly roundHelp: "1,104 shows as 1.1k";
+      readonly saved: "Saved";
+      readonly shareCard: "Share card";
+      readonly shareImage: "Share image";
+      readonly shareResult: "Share the result";
+      readonly shareResultHelp: "The image is generated from this page. Link previews show it too.";
+      readonly stageLabel: "Stage";
+      readonly stages: {
+        readonly custom: "Custom";
+        readonly day30: "Day 30";
+        readonly day60: "Day 60";
+        readonly day90: "Day 90";
+      };
+      readonly team: "Team";
+      readonly theme: "Card theme";
+      readonly themeDark: "Dark";
+      readonly themeLight: "Light";
+      readonly title: 'Share "{title}"';
+      readonly tryIt: "Try it on your site";
+      readonly values: "Values shown publicly";
+      readonly valuesDone: "Done";
+      readonly valuesEdit: "{count, number} of 8 · Edit";
+      readonly views: "{count, plural, one {# view} other {# views}} · 7 days";
+      readonly you: "You";
+    };
+    readonly skipped: "{count, plural, one {# day skipped} other {# days skipped}}";
+    readonly skippedCompact: "{count} days skipped";
+    readonly sources: {
+      readonly ai_visibility: "AI visibility";
+      readonly conversions: "Conversions";
+      readonly pages: "Pages";
+      readonly practice_days: "Practice days";
+      readonly rank_tracker: "Rank tracker";
+      readonly search_console: "Search Console";
+      readonly usage: "Usage";
+    };
+    readonly sourcesLead: "Sources";
+    readonly start: "Start date";
+    readonly stateNoData: "No data";
+    readonly stateNotConnected: "Not connected";
+    readonly tiles: {
+      readonly activeDays: "Days with work";
+      readonly aiAnswers: "AI answers";
+      readonly clicks: "Clicks";
+      readonly conversions: "Conversions";
+      readonly cost: "Cost";
+      readonly existingVsNew: "Existing vs new";
+      readonly top10: "Tracked keywords in the top 10";
+      readonly topPages: "Top pages";
+    };
+    readonly title: "Title";
+    readonly top10End: "In the top 10 at the end";
+    readonly top10Jump: "Best jump: {keyword}, from {from} to {to}";
+    readonly top10NoJump: "No keyword moved up.";
+    readonly top10Start: "In the top 10 at the start";
+    readonly topPagesTable: "Top pages by clicks";
+    readonly unknown: "Still unknown";
+    readonly worked: "What worked";
+    readonly writtenChoice: "Write or paste a report";
+    readonly writtenHelp: "Add findings or an analysis prepared elsewhere.";
   };
   readonly cloudImport: {
     readonly metadata: {
@@ -1176,6 +1549,14 @@ export type CoreMessages = {
       readonly projectCount: "{count, plural, one {# project} other {# projects}}";
       readonly unavailable: "-";
     };
+    readonly features: {
+      readonly challenge: "30 days of SEO";
+      readonly challengeDescription: "Let project members start the 30-day SEO challenge from Pages. Turning this off hides the challenge and stops check-ins. Existing challenge dates and recorded days are kept.";
+      readonly failed: "Could not save the setting.";
+      readonly saved: "Setting saved.";
+      readonly saving: "Saving…";
+      readonly title: "Optional features";
+    };
     readonly instanceUsage: {
       readonly all: "All history";
       readonly copyProject: "Copy project ID";
@@ -1316,6 +1697,7 @@ export type CoreMessages = {
         readonly audit: "What changed on this instance?";
         readonly checks: "Are rank checks and URL presence healthy?";
         readonly dataSources: "Are data sources healthy?";
+        readonly features: "Which optional features are available on this instance?";
         readonly notifications: "Are operational notifications delivered?";
         readonly sendingToday: "How much email can this instance send today?";
         readonly settings: "How is instance email configured?";
@@ -1654,6 +2036,7 @@ export type CoreMessages = {
       readonly credits: "Credits";
       readonly dataSources: "Data sources";
       readonly description: "Cross-instance operational diagnostics. Tenant data is represented by identifiers only.";
+      readonly features: "Features";
       readonly hostedProviders: "Hosted providers";
       readonly journey: "Journey";
       readonly ledger: "Ledger";
@@ -2285,7 +2668,7 @@ export type CoreMessages = {
     readonly domain: "Domain";
     readonly domainCitations: "Domain citations";
     readonly domainCited: "Domain cited";
-    readonly emptyDescription: "Check the price, then get answers. Results are saved in Agent Reports.";
+    readonly emptyDescription: "Check the price, then get answers. Results are saved in Reports.";
     readonly engineChatGpt: "ChatGPT";
     readonly engineClaude: "Claude";
     readonly engineGemini: "Gemini";
@@ -2322,6 +2705,54 @@ export type CoreMessages = {
     readonly modelLimit: "Compare up to 2 models per check.";
     readonly modelNeedsActualPayment: "Choose to pay with your own DataForSEO account to use this model.";
     readonly modelNeedsOwnAccount: "Connect your own DataForSEO key in Providers and choose to pay DataForSEO directly.";
+    readonly modelPlayground: {
+      readonly absent: "no";
+      readonly addEngine: "Add an engine";
+      readonly answers: "Answers";
+      readonly brandColumn: "Brand";
+      readonly brands: "Brands";
+      readonly brandsHeading: "Brands";
+      readonly citedTimes: "{count, number}x";
+      readonly credits: "Credits";
+      readonly emptyDescription: "Run it across the selected engines to compare who they name and which pages they cite.";
+      readonly emptyTitle: "Ask one question";
+      readonly exportCsv: "Export CSV";
+      readonly fullAnswer: "Full answer";
+      readonly history: "History";
+      readonly historyTitle: "Recent checks";
+      readonly lead: "One question, several models. Compare who they name and which pages they cite.";
+      readonly matrixHint: "Rows are the project and competitors named in any answer.";
+      readonly matrixTitle: "Who each engine names";
+      readonly notNamed: "not named";
+      readonly payWith: "Pay with";
+      readonly payWithPending: "The payment options appear with the price.";
+      readonly position: "#{position, number}";
+      readonly positionCited: "#{position, number} · cited";
+      readonly remove: "Remove";
+      readonly run: "Run";
+      readonly runCost: "Run cost";
+      readonly sameModels: "Same prompt, {count, plural, one {# model} other {# models}}";
+      readonly samePrompt: "Same prompt, {count, plural, one {# engine} other {# engines}}";
+      readonly saveReport: "Save as report";
+      readonly saveReportHint: "Saves this run (prompt, answers, brands, sources, cost) to Reports. You can share it from there.";
+      readonly sharedPayment: "This run uses one payment for every column.";
+      readonly sources: "Sources";
+      readonly sourcesAll: "All {count, number}";
+      readonly sourcesHeading: "Sources";
+      readonly trackError: "Could not add this prompt.";
+      readonly trackPrompt: "Track this prompt";
+      readonly trackPromptHint: "Adds the prompt to AI Visibility > Prompts and asks the same engines every day.";
+      readonly trackSaved: "Added to AI Visibility.";
+      readonly trackTopic: "Topic";
+      readonly trackUnassigned: "No topic";
+      readonly verdictAbsent: "You are not named";
+      readonly verdictCited: "You are cited, not named";
+      readonly verdictNamed: "You are named #{position, number}";
+      readonly verdictNamedCited: "You are named #{position, number} and cited";
+      readonly viewLabel: "Result view";
+      readonly you: "You";
+      readonly yourKey: "Your key";
+    };
     readonly modelPolicyPending: "This model cannot be used yet, even if a price is listed.";
     readonly modelPricingUnavailable: "Current pricing cannot be verified for this model. Try again later.";
     readonly modelsMode: "Models";
@@ -2382,6 +2813,10 @@ export type CoreMessages = {
     readonly visibilityTitle: "Brand Visibility";
     readonly webSearch: "Let the AI search the web";
     readonly webSearchHint: "Available for supported models. Check the price before getting answers.";
+    readonly webSearchIncluded: "Included in the spending limit.";
+    readonly webSearchLabel: "Web search";
+    readonly webSearchNeedsKey: "Needs your own DataForSEO key. <link>Set it up in Advanced.</link>";
+    readonly webSearchOwnKey: "Billed to your own key, outside this estimate.";
     readonly webSearchPolicyPending: "To use web search with a chosen model, connect your own DataForSEO key and agree to pay its charges in Advanced.";
     readonly yourDomain: "Your domain";
   };
@@ -2402,6 +2837,29 @@ export type CoreMessages = {
     readonly archive: "Archive";
     readonly aRetainedObservationWithItsSourceAndMeasurement: "A retained observation, with its source and measurement limits.";
     readonly branded: "Branded";
+    readonly brandNames: {
+      readonly add: "Add";
+      readonly addSuggestion: "Add {name}";
+      readonly cancel: "Cancel";
+      readonly couldNotPreview: "Could not preview these names.";
+      readonly couldNotSave: "Could not save these names.";
+      readonly duplicate: "That name is already in the list.";
+      readonly excludedNameLabel: "Excluded name";
+      readonly excludedNames: "Excluded names";
+      readonly fixedName: "Always included";
+      readonly helper: "An answer names you when it contains any of these.";
+      readonly helperCompetitor: "An answer names this brand when it contains any of these.";
+      readonly namedIn: "Named in {named} of {answers} answers with these names";
+      readonly nameLabel: "Name";
+      readonly noAnswers: "No answers yet";
+      readonly recountNote: "Re-counts past answers, no new runs";
+      readonly save: "Save";
+      readonly suggestionHint: "Seen in your Rank Tracker keywords. Click to add.";
+      readonly title: "Names for {brand}";
+      readonly tooLong: "Use at most 120 characters.";
+      readonly tooMany: "You can add up to 50 names.";
+      readonly yourBrandNames: "Your brand names";
+    };
     readonly budgetAndCredentialsAreCheckedAgainBeforeLaunch: "Budget and credentials are checked again before launch. Schedules remain disabled by default.";
     readonly cancel: "Cancel";
     readonly cancelFailed: "Cancel failed.";
@@ -2442,6 +2900,36 @@ export type CoreMessages = {
     readonly enabledSchedules: "Enabled schedules";
     readonly enableSchedule: "Enable this schedule after approval";
     readonly engine: "Engine";
+    readonly enginesTab: {
+      readonly answeredBy: "Answered by";
+      readonly byLength: "by length";
+      readonly columnState: "State";
+      readonly connectProvider: "Connect DataForSEO in Providers";
+      readonly dataforseoFact: "Answers ChatGPT and Gemini as people see them, ChatGPT from the model API, and the Research question database.";
+      readonly engineBingCopilot: "Bing Copilot";
+      readonly engineGoogleAiMode: "Google AI Mode";
+      readonly engineGoogleOverview: "Google AI Overview";
+      readonly freeRank: "free, from Rank Tracker";
+      readonly groupConsumer: "As users see it: consumer answers and Google";
+      readonly groupModel: "Straight from the model: API answers, no app, no live sources";
+      readonly lead: "You choose engines. Every answer keeps the provider, engine and cost it came with.";
+      readonly off: "Off";
+      readonly on: "On";
+      readonly perAnswer: "Per answer";
+      readonly providerConnected: "Connected";
+      readonly providerMissing: "Not connected";
+      readonly providersOpen: "Open Providers";
+      readonly providersTitle: "Providers used here";
+      readonly rankLink: "Open Rank Tracker";
+      readonly rankTracker: "Rank Tracker";
+      readonly recentAnswers: "{count, plural, one {# answer in the last 30 days} other {# answers in the last 30 days}}";
+      readonly routingBody: "The first connected provider answers each engine.";
+      readonly routingTitle: "Routing";
+      readonly title: "Engines";
+      readonly turnOff: "Turn off";
+      readonly turnOn: "Turn on";
+      readonly unavailable: "Not available yet";
+    };
     readonly everyTextEditCreatesANewImmutableRevision: "Every text edit creates a new immutable revision. Existing evidence keeps the exact text it measured.";
     readonly evidenceLoaded: "{loaded, number} of {expected, number} expected samples loaded";
     readonly exactProviderModelIdentifier: "Exact provider model identifier";
@@ -2519,6 +3007,87 @@ export type CoreMessages = {
     readonly observationTimeUnknown: "Observation time unknown";
     readonly observed: "Observed";
     readonly optionalLabel: "Optional label";
+    readonly overview: {
+      readonly addCompetitor: "Add as competitor";
+      readonly addFailed: "Could not add this competitor.";
+      readonly addPrompts: "Add prompts";
+      readonly allEngines: "All engines";
+      readonly allMarkets: "All markets";
+      readonly answers: "Answers";
+      readonly answersDetail: "Stored answers in this view.";
+      readonly brandsDescription: "Your brand and competitors, then domains cited in the answers. Share of voice is an entity's mentions divided by all brand mentions.";
+      readonly brandsTitle: "Brands in answers";
+      readonly cited: "Cited";
+      readonly citedDetail: "{cited, number} of {total, plural, one {# answer links} other {# answers link}} {domain} ({links, plural, one {# link} other {# links}}). {unbrandedCited, number} in the unbranded {unbranded, plural, one {answer} other {answers}}.";
+      readonly citedNoDomain: "{cited, number} of {total, plural, one {# answer links your site} other {# answers link your site}} ({links, plural, one {# link} other {# links}}). {unbrandedCited, number} in the unbranded {unbranded, plural, one {answer} other {answers}}.";
+      readonly columnAnswers: "Answers";
+      readonly columnBrand: "Brand";
+      readonly columnLinks: "Links";
+      readonly columnMentions: "Mentions";
+      readonly columnProvider: "Provider";
+      readonly columnRank: "Rank";
+      readonly columnWrittenAs: "Written in answers as";
+      readonly costTotal: "{cost} total";
+      readonly countOf: "{count, number} of {total, number}";
+      readonly editCompetitors: "Edit competitors";
+      readonly emptyDescription: "Add prompts, then run them. Mentions, citations and share of voice show up after the first answers.";
+      readonly emptyTitle: "No answers yet";
+      readonly engineChatGpt: "ChatGPT";
+      readonly engineClaude: "Claude";
+      readonly engineGemini: "Gemini";
+      readonly engineGoogle: "Google AI Overview";
+      readonly engineNoAnswers: "No answers yet";
+      readonly enginePerplexity: "Perplexity";
+      readonly enginesTitle: "By engine";
+      readonly filteredEmpty: "No answers match these filters.";
+      readonly insightBuilt: "{engines} {engineCount, plural, one {cites} other {cite}} {domains} in {answers, plural, one {# unbranded answer} other {# unbranded answers}} that do not name you.";
+      readonly insightDismiss: "Dismiss";
+      readonly insightLinksNone: "{totalLinks, plural, one {The link does not point} other {None of the # links point}} to {domain}.";
+      readonly insightLinksNoneSite: "{totalLinks, plural, one {The link does not point} other {None of the # links point}} to your site.";
+      readonly insightLinksSome: "{ownLinks, number} of {totalLinks, plural, one {# link points} other {# links point}} to {domain}.";
+      readonly insightLinksSomeSite: "{ownLinks, number} of {totalLinks, plural, one {# link points} other {# links point}} to your site.";
+      readonly insightNoDomains: "{answers, plural, one {# unbranded answer does} other {# unbranded answers do}} not name you, and no other site is cited.";
+      readonly insightOpenSources: "Open sources";
+      readonly insightPath: "A listing on those pages is the shortest path into this answer.";
+      readonly insightTitle: "Where to show up next";
+      readonly lead: "Who AI answers name and which pages they cite. Also known as GEO or AEO.";
+      readonly manageEngines: "Manage engines";
+      readonly mentioned: "Mentioned";
+      readonly mentionedDetail: "{named, number} of {total, plural, one {# answer names} other {# answers name}} {brand}. {unbrandedNamed, number} of {unbranded, plural, one {# answer} other {# answers}} when the prompt does not name you.";
+      readonly named: "Named";
+      readonly namesAction: "Names";
+      readonly period: "Period";
+      readonly period30: "Last 30 days";
+      readonly period7: "Last 7 days";
+      readonly period90: "Last 90 days";
+      readonly periodAll: "All time";
+      readonly promptAll: "Branded and unbranded";
+      readonly promptBranded: "Branded";
+      readonly promptUnbranded: "Unbranded";
+      readonly runDaily: "Run daily";
+      readonly runNow: "Run now";
+      readonly seenInAnswers: "Seen in answers";
+      readonly seriesCited: "Cited";
+      readonly seriesMentioned: "Mentioned";
+      readonly shareDetail: "{mentions, number} of {total, plural, one {# brand mention} other {# brand mentions}}. {leader} leads with {leaderShare}.";
+      readonly shareEmpty: "No brand mentions in these answers.";
+      readonly shareLeads: "{brand} leads with {mentions, number} of {total, plural, one {# brand mention} other {# brand mentions}}.";
+      readonly shareOfVoice: "Share of voice";
+      readonly spellingsDescription: "Names, the domain and aliases are counted together. Split a spelling that is a different brand.";
+      readonly spellingsTitle: "Merged spellings";
+      readonly split: "Split";
+      readonly splitBody: "{name} will no longer count toward {brand}.";
+      readonly splitFailed: "Could not split this name.";
+      readonly splitName: "Split {name}";
+      readonly splitTitle: "Split {name} from {brand}?";
+      readonly trendEmpty: "Starts after the second day of answers.";
+      readonly trendLegend: "Chart series";
+      readonly trendTitle: "Visibility over time";
+      readonly truncated: "These numbers use the newest {count, number} answers. Older answers in this view are not included.";
+      readonly unknownCount: "-";
+      readonly unknownProvider: "Unknown";
+      readonly you: "You";
+    };
     readonly partialRunsStaySeparate: "Partial runs stay separate";
     readonly pause: "Pause";
     readonly popularityUnknown: "Popularity unknown";
@@ -2534,17 +3103,82 @@ export type CoreMessages = {
     readonly promptCount: "{count, number} prompts";
     readonly promptResearchDescription: "Find dataset questions about your market and the sites ChatGPT answers cite.";
     readonly prompts: "Prompts";
+    readonly promptsTab: {
+      readonly add: "Add";
+      readonly addMode: "Add mode";
+      readonly askedModel: "Model API";
+      readonly askedOverview: "Google AI Overview";
+      readonly askedUsers: "As users see it";
+      readonly askOthers: "Ask other engines";
+      readonly assignTopic: "Set topic";
+      readonly brandHint: "This prompt names your brand, so it will count as branded";
+      readonly brandsInAnswer: "Brands in this answer";
+      readonly bulkPlaceholder: "One prompt per line";
+      readonly citedSources: "Cited sources";
+      readonly columnCited: "Cited";
+      readonly columnEngines: "Engines";
+      readonly columnLastRun: "Last run";
+      readonly columnLeader: "Leader";
+      readonly columnNamed: "Named";
+      readonly columnPrompt: "Prompt";
+      readonly columnType: "Type";
+      readonly costUnknown: "No cost on the receipt";
+      readonly counter: "{count, number} / {limit, number}";
+      readonly createdSkipped: "Added {created, number}. Skipped {skipped, number}.";
+      readonly details: "Details";
+      readonly emptyAnswer: "No engine has answered this prompt yet. It is in the topic but has no source. Pick an engine to run it.";
+      readonly emptyTable: "No prompts in this view.";
+      readonly engineChoice: "Runs in {engines}.";
+      readonly engineChoiceNone: "No engines are turned on.";
+      readonly engines: "Engines";
+      readonly fullAnswer: "Full answer";
+      readonly group: "{topic} · {count, plural, one {# prompt} other {# prompts}}";
+      readonly helper: "Write it the way a customer would ask. Leave your brand name out to measure real visibility.";
+      readonly lineIssue: "Line {line, number}: {reason}";
+      readonly modeBulk: "Bulk (one per line)";
+      readonly modeOne: "One prompt";
+      readonly noTopic: "No topic";
+      readonly perRun: "~{cost} per run";
+      readonly promptLabel: "Prompt";
+      readonly provenance: "{asked} · {provider} · {when} · {cost}";
+      readonly provenanceDataset: "From a provider dataset";
+      readonly provenanceGenerated: "Generated suggestion";
+      readonly provenanceManual: "Added by you";
+      readonly revision: "Revision {revision, number}";
+      readonly runIn: "Run in {engine}";
+      readonly runInCost: "Run in {engine} · {cost}";
+      readonly runNowCost: "Run now · ~{cost}";
+      readonly skipDuplicate: "Already tracked";
+      readonly skipEmpty: "Empty";
+      readonly skipOverLimit: "Only {limit, number} lines can be added at once";
+      readonly skipTooLong: "Longer than {limit, number} characters";
+      readonly statusArchived: "Archived";
+      readonly statusPaused: "Paused";
+      readonly tooLong: "New prompts are limited to {limit, number} characters in this dialog.";
+    };
     readonly promptText: "Prompt text";
     readonly providerDatasetPrompt: "Prompt origin: provider dataset";
     readonly replacementConfigurationScope: "A replacement uses the configuration below and keeps the saved prompt selection. Preview and approve its current cost before enabling.";
     readonly requestedLocale: "Requested locale";
     readonly research: {
       readonly added: "{count} prompts added · Open Prompt Tracker";
+      readonly addedSkipped: "{added, number} added, {skipped, number} skipped";
+      readonly backToQuestions: "Questions";
+      readonly brandLookup: "Brand lookup";
+      readonly brandLookupHint: "Brand and domain mentions stay in this lookup. The question list uses the keyword dataset.";
       readonly brandMentioned: "Brand mentioned";
       readonly bulkActions: "Prompt actions";
       readonly cached: "Cached result · no new charge";
       readonly cacheHint: "Up to 100 dataset rows. Revisiting this keyword is free for {duration}.";
       readonly clearSelection: "Clear selection";
+      readonly columnBrands: "Brands in the answer";
+      readonly columnQuestion: "Question asked to AI";
+      readonly columnSeen: "Seen in";
+      readonly columnVolume: "AI volume";
+      readonly columnYou: "You";
+      readonly competitorsHint: "These competitors decide who gets named. Edit them in Settings.";
+      readonly competitorsNone: "No competitors";
+      readonly competitorsUsed: "Competitors: {names}";
       readonly confirmResearch: "Confirm research";
       readonly confirmTracking: "Save {count} prompts to Prompt Tracker";
       readonly contentTruncated: "Some provider content was shortened to fit evidence limits; mentions or sources may be incomplete.";
@@ -2553,25 +3187,45 @@ export type CoreMessages = {
       readonly emptyHint: "Try a shorter, broader term.";
       readonly emptyTitle: "No prompts found for “{keyword}”";
       readonly existingTopic: "Existing topic";
+      readonly filterEmpty: "No questions match these filters.";
+      readonly findPrompts: "Find prompts";
+      readonly findPromptsCost: "Find prompts · {cost}";
       readonly fromMemory: "The AI answered from memory and cited no sources.";
       readonly insufficientCredits: "Not enough Credits. Add Credits before researching.";
       readonly keyword: "Keyword";
       readonly keywordRequired: "Enter a keyword.";
       readonly keywordsHint: "Select a keyword to see the prompts people ask AI about it.";
       readonly keywordTooLong: "Use at most 100 characters.";
+      readonly lead: "Questions people ask AI about your topic, who gets named, and where you are missing.";
       readonly loadingQuote: "Preparing a free cost estimate…";
       readonly loadingResults: "Looking up dataset questions…";
       readonly market: "ChatGPT · United States · English";
+      readonly marketChip: "United States · English";
+      readonly marketTooltip: "This dataset only covers the United States in English.";
       readonly merged: "+{count} similar prompts merged";
       readonly noKeywordsHint: "Add Prompt Tracker topics or Rank Tracker keywords, or search a keyword above.";
       readonly noSources: "No sources";
+      readonly openPrompts: "Open Prompts";
       readonly ownDomainCited: "Cites your site";
       readonly partialFailure: "The provider returned incomplete evidence. Review this attempt before retrying.";
       readonly placeholder: "Enter a keyword";
+      readonly presenceAll: "All";
+      readonly presenceAllTip: "Every question in this lookup.";
+      readonly presenceCount: "{label} {count, number}";
+      readonly presenceLabel: "Your presence";
+      readonly presenceMissing: "Missing";
+      readonly presenceMissingTip: "At least one competitor is named and you are not.";
+      readonly presenceOnlyYou: "Only you";
+      readonly presenceOnlyYouTip: "Only you are named.";
+      readonly presenceShared: "Shared";
+      readonly presenceSharedTip: "You and at least one competitor are named.";
       readonly prompt: "Prompt";
       readonly promptCount: "{count, plural, one {# prompt} other {# prompts}}";
+      readonly queryLabel: "Topic, brand or competitor";
       readonly readOnly: "Research requires project write access";
       readonly readOnlyHint: "Ask a project editor to run research or add prompts.";
+      readonly recentEmpty: "No previous lookups";
+      readonly recentLookups: "Recent lookups";
       readonly relevantKeywords: "Relevant keywords";
       readonly requestFailure: "Research is unavailable. Review the provider connection, pricing and spending limits.";
       readonly resultsTitle: "Prompts about “{keyword}”";
@@ -2581,18 +3235,34 @@ export type CoreMessages = {
       readonly reviewTitle: "Review prompts to track";
       readonly scopeHint: "Up to 100 dataset rows.";
       readonly search: "Search";
+      readonly seenModel: "{model}";
+      readonly seenWithDate: "{model} · {date}";
       readonly selectAll: "Select all untracked prompts";
       readonly selected: "{count} selected";
       readonly selectPrompt: "Select {prompt}";
+      readonly showAnswer: "Show the answer for {prompt}";
       readonly showSources: "Show sources for {prompt}";
       readonly sourceCount: "{count, plural, one {# source} other {# sources}}";
+      readonly sourceLabel: "Source: AI answers";
       readonly sources: "Sources";
+      readonly sourceTooltip: "Questions, AI volume and answers come from the AI answers dataset.";
       readonly startResearch: "Research";
       readonly topic: "Topic (choose above or type a new one)";
+      readonly topicAll: "All";
       readonly topicRequired: "Enter a topic (up to 200 characters).";
+      readonly topicsLabel: "Topics";
+      readonly topicTooltip: "Topics group questions by the most common significant word that appears in at least two questions. Words under four letters and common question words are ignored.";
+      readonly trackDaily: "Track daily in {engines}";
+      readonly trackDailyCost: "Track daily in {engines} · about {cost} a day";
+      readonly trackDailyPlain: "Track daily";
       readonly tracked: "Tracked";
       readonly trackPrompts: "Track prompts";
+      readonly trackSelected: "Track selected";
+      readonly volumeMissing: "-";
+      readonly youNamed: "Named";
+      readonly youNotNamed: "Not named";
       readonly yourSite: "Your site";
+      readonly youToken: "You";
     };
     readonly resume: "Resume";
     readonly reviewDraft: "Review draft";
@@ -2613,6 +3283,67 @@ export type CoreMessages = {
     readonly selectedPrompts: "{count, number} prompts selected";
     readonly source: "Source";
     readonly sourceNotConfigured: "No recorded or scheduled source";
+    readonly sources: {
+      readonly addToPlan: "Add to plan";
+      readonly addToPlanFor: "Add {domain} to plan";
+      readonly answersOf: "{count, number} of {total, number}";
+      readonly clearType: "Use automatic type";
+      readonly columnAnswers: "Answers";
+      readonly columnDomain: "Domain";
+      readonly columnLinks: "Links";
+      readonly columnPage: "Page";
+      readonly columnType: "Type";
+      readonly domains: "Domains";
+      readonly emptyDescription: "Run prompts to see which domains and pages AI answers cite.";
+      readonly emptyTitle: "No answers yet";
+      readonly errorFixed: "You, Not you and Competitor come from the project and cannot be changed.";
+      readonly errorUrl: "The page link has to be on that domain.";
+      readonly filteredEmpty: "No answers match these filters.";
+      readonly group: "Group by";
+      readonly inPlan: "In plan";
+      readonly inPlanFor: "Remove {domain} from the plan";
+      readonly lead: "Pages that AI answers cite. Get listed where you are missing.";
+      readonly pages: "Pages";
+      readonly planDismissed: "Dismissed";
+      readonly planDone: "Done";
+      readonly planEmpty: "bisibility cannot tell whether you are already listed on a source. Add the places you want to get listed.";
+      readonly planNote: "Note for {domain}";
+      readonly planRemove: "Remove {domain}";
+      readonly planState: "Plan state for {domain}";
+      readonly planTitle: "Plan";
+      readonly planTodo: "To do";
+      readonly rowActions: "Actions for {domain}";
+      readonly saveFailed: "Could not update this source.";
+      readonly setType: "Set type";
+      readonly setTypeFor: "Set type for {domain}";
+      readonly tableEmpty: "No cited sources in this view.";
+      readonly tableLabel: "Cited sources";
+      readonly tileCited: "Cited domains";
+      readonly tileCitedDetail: "{domains, number} across {answers, plural, one {# answer} other {# answers}}";
+      readonly tileWithout: "Without your name";
+      readonly tileWithoutDomains: "{domains, plural, one {# other domain cited instead} other {# other domains cited instead}}";
+      readonly tileWithoutLinks: "{links, plural, one {# link} other {# links}}";
+      readonly tileYourSite: "Your site";
+      readonly tileYourSiteAll: "{links, plural, one {# link all in an answer that already names you} other {# links all in answers that already name you}}";
+      readonly tileYourSiteMixed: "{links, plural, one {# link} other {# links}}, {unnamed, plural, one {# is in an answer that does not name you} other {# are in answers that do not name you}}";
+      readonly tileYourSiteNone: "No links to your site in these answers";
+      readonly truncated: "Showing the latest {count, number} answers. Older answers in this view are not included.";
+      readonly type: {
+        readonly all: "All";
+        readonly community: "Community";
+        readonly competitor: "Competitor";
+        readonly competitors: "Competitors";
+        readonly directories: "Directories";
+        readonly directory: "Directory";
+        readonly editorial: "Editorial";
+        readonly not_you: "Not you";
+        readonly other: "Other";
+        readonly reviews: "Reviews";
+        readonly unsorted: "Unsorted";
+        readonly you: "You";
+      };
+      readonly typeFilter: "Source type";
+    };
     readonly startWithAQuestionYourCustomersAsk: "Start with a question your customers ask";
     readonly status: "Status";
     readonly suggestFromContext: "Suggest from project context";
@@ -2627,6 +3358,13 @@ export type CoreMessages = {
     readonly unassigned: "Unassigned";
     readonly unknown: "Unknown";
     readonly unknownFreshness: "Unknown freshness";
+    readonly visibilityTabs: {
+      readonly engines: "Engines";
+      readonly navigation: "AI Visibility";
+      readonly overview: "Overview";
+      readonly research: "Research";
+      readonly sources: "Sources";
+    };
     readonly whichToolsHelpASmallTeamTrackSearch: "Which tools help a small team track search visibility?";
   };
   readonly projectAlerts: {
@@ -2995,6 +3733,8 @@ export type CoreMessages = {
     readonly presentation: {
       readonly actorSystem: "System";
       readonly event: {
+        readonly aiEngineDisabled: "AI engine turned off";
+        readonly aiEngineEnabled: "AI engine turned on";
         readonly aiPromptArchive: "AI prompt archived";
         readonly aiPromptCreate: "AI prompt created";
         readonly aiPromptPause: "AI prompt paused";
@@ -3010,6 +3750,11 @@ export type CoreMessages = {
         readonly aiScheduleDisable: "AI schedule disabled";
         readonly aiScheduleEnable: "AI schedule enabled";
         readonly aiScheduleUpdate: "AI schedule updated";
+        readonly aiSourcePlanAdded: "Source added to the plan";
+        readonly aiSourcePlanRemoved: "Source removed from the plan";
+        readonly aiSourcePlanUpdated: "Source plan updated";
+        readonly aiSourceTypeCleared: "Source type cleared";
+        readonly aiSourceTypeSet: "Source type set";
         readonly aiSuggestionsAccepted: "AI suggestions accepted";
         readonly aiSuggestionsConsentRecorded: "AI suggestions consent recorded";
         readonly aiSuggestionsGenerated: "AI suggestions generated";
@@ -3028,6 +3773,7 @@ export type CoreMessages = {
         readonly apiKeyRevoked: "API key revoked";
         readonly apiKeyRolled: "API key rolled";
         readonly auditLogViewed: "Audit log viewed";
+        readonly brandNamesUpdated: "Brand names updated";
         readonly budgetUpdated: "Project budget updated";
         readonly businessAssigned: "Business assigned";
         readonly businessLocationArchived: "Business location archived";
@@ -3036,6 +3782,9 @@ export type CoreMessages = {
         readonly businessLocationRevised: "Business location updated";
         readonly businessUnassigned: "Business unassigned";
         readonly cachedDataDeleted: "Cached data deleted";
+        readonly challengeReportCreated: "Challenge report created";
+        readonly challengeReportLessonsSaved: "Challenge report lessons saved";
+        readonly challengeReportRefreshed: "Challenge report numbers refreshed";
         readonly checkScheduleArchived: "Check schedule archived";
         readonly checkScheduleAssigned: "Check schedule assigned";
         readonly checkScheduleCreated: "Check schedule created";
@@ -3056,6 +3805,13 @@ export type CoreMessages = {
         readonly competitorSuggestionConfirmed: "Suggested competitor confirmed";
         readonly competitorSuggestionDismissed: "Suggested competitor dismissed";
         readonly competitorUpdated: "Competitor updated";
+        readonly conversionGoalUpdated: "Conversion goal updated";
+        readonly conversionPrimaryUpdated: "Primary conversion source changed";
+        readonly conversionSourceSynced: "Conversion source synced";
+        readonly costItemCreated: "Cost item created";
+        readonly costItemDeleted: "Cost item deleted";
+        readonly costItemEnded: "Cost item ended";
+        readonly costItemUpdated: "Cost item updated";
         readonly creationDenied: "Creation denied";
         readonly dataCacheSettingsUpdated: "Data cache settings updated";
         readonly deletionDenied: "Deletion denied";
@@ -3134,6 +3890,8 @@ export type CoreMessages = {
         readonly migrationTokenUsed: "Migration token used";
         readonly notificationPreferencesUpdated: "Notification preferences updated";
         readonly ownershipTransferred: "Project ownership transferred";
+        readonly pageSnapshotTaken: "Day 1 snapshot saved";
+        readonly pageVitalsChecked: "Checked Core Web Vitals";
         readonly pricingFeedbackSubmitted: "Pricing feedback submitted";
         readonly projectCheckRequested: "Project check requested";
         readonly projectCreated: "Project created";
@@ -3191,6 +3949,12 @@ export type CoreMessages = {
         readonly rankCheckStarted: "Rank check started";
         readonly rankSnapshotExtended: "Rank snapshot extended";
         readonly readDenied: "Read access denied";
+        readonly reportShareExpiryUpdated: "Challenge report link expiry updated";
+        readonly reportSharePublished: "Challenge report published";
+        readonly reportShareReissued: "Challenge report link reissued";
+        readonly reportShareRevoked: "Challenge report link revoked";
+        readonly reportShareSettingsUpdated: "Challenge report link settings updated";
+        readonly reportShareUpdated: "Challenge report link updated";
         readonly sampleDataInstalled: "Sample data installed";
         readonly savedKeywordRemoved: "Saved keyword removed";
         readonly savedViewCreated: "Saved view created";
@@ -3215,6 +3979,10 @@ export type CoreMessages = {
         readonly slackConnectionUpdated: "Slack connection updated";
         readonly tagCreated: "Tag created";
         readonly tagDeleted: "Tag deleted";
+        readonly tagMerged: "Tags merged";
+        readonly tagPageLinksRemoved: "Page links removed";
+        readonly tagPageLinksSet: "Page links set";
+        readonly tagPageRuleSaved: "Page tag rule saved";
         readonly tagRenamed: "Tag renamed";
         readonly trackingScopeUpdated: "Tracking scope updated";
         readonly trafficSynced: "Traffic data synced";
@@ -3720,6 +4488,7 @@ export type CoreMessages = {
       readonly chartAriaLabel: "Position distribution chart. {summary}";
       readonly definition: "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.";
       readonly keywordCount: "{count, number} {count, plural, one {keyword} other {keywords}}";
+      readonly keywordShare: "{count, number} {count, plural, one {keyword} other {keywords}} · {percent, number}%";
       readonly ofTotal: "{percent, number}% of total";
       readonly positionRange: "Positions {start, number} to {end, number}";
       readonly summaryItem: "{range}: {count, number} {count, plural, one {keyword} other {keywords}}";
@@ -3982,6 +4751,16 @@ export type CoreMessages = {
       readonly viewerAskAdmin: "Ask a project admin to choose a data source before checks can start.";
       readonly viewKeywords: "View keywords";
     };
+    readonly organicConversions: {
+      readonly conversions: "Conversions";
+      readonly deltaNew: "new";
+      readonly deltaUnchanged: "unchanged";
+      readonly deltaVersus: "{value} vs previous {days, number} {days, plural, one {day} other {days}}";
+      readonly openSearchConsole: "Open Search Console";
+      readonly title: "Organic conversions";
+      readonly topPages: "Top pages";
+      readonly unavailable: "Conversions could not be read.";
+    };
     readonly positionTrend: {
       readonly chartAriaLabel: "Position trend chart.{hasTakeaway, select, true { {takeaway}} other {}}";
       readonly defaultSeriesLabel: "Project";
@@ -4058,6 +4837,14 @@ export type CoreMessages = {
       readonly description: "The rankings, traffic, and timeline events here are generated demo data.";
       readonly removeData: "Remove sample data";
       readonly title: "This is a sample project";
+    };
+    readonly seoCost: {
+      readonly empty: "No cost recorded this month.";
+      readonly openUsage: "Open Usage";
+      readonly split: "operations {operations} · subscriptions {subscriptions} · one-off {oneOff}";
+      readonly title: "SEO cost";
+      readonly total: "Total {value}";
+      readonly unavailable: "Cost could not be read.";
     };
     readonly toolbar: {
       readonly add: "Add";
@@ -5091,7 +5878,369 @@ export type CoreMessages = {
     readonly viewMarkets: "View markets";
     readonly visibility: "Visibility";
   };
+  readonly projectPages: {
+    readonly bulk: {
+      readonly add: "Tag selected";
+      readonly check: "Check Core Web Vitals";
+      readonly choose: "Tag";
+      readonly clear: "Clear";
+      readonly remove: "Remove tag";
+      readonly selected: "{count, plural, one {# selected} other {# selected}}";
+    };
+    readonly byTag: {
+      readonly addToPages: "Add to pages";
+      readonly cancel: "Cancel";
+      readonly columns: {
+        readonly actions: "Actions";
+        readonly existing: "Existing";
+        readonly keywords: "Keywords";
+        readonly new: "New";
+        readonly pages: "Pages";
+        readonly removed: "Removed";
+        readonly rule: "Rule";
+        readonly tag: "Tag";
+        readonly type: "Type";
+      };
+      readonly edit: "Edit rule";
+      readonly empty: "No tags are on pages yet.";
+      readonly hide: "Hide";
+      readonly keywordOnly: "{count, plural, one {# more tag is on keywords only: {names}} other {# more tags are on keywords only: {names}}}";
+      readonly kind: {
+        readonly manual: "By hand";
+        readonly path_pattern: "Path pattern";
+        readonly sitemap: "Sitemap";
+        readonly url_list: "URL list";
+      };
+      readonly lead: "One set of tags for the whole project: the same tag can sit on pages and on keywords.";
+      readonly manage: "Manage tags in Settings";
+      readonly remove: "Remove from pages";
+      readonly removeBody: "The tag stays on keywords. Page links and the page rule are removed.";
+      readonly removeConfirm: "Remove from pages";
+      readonly removeTitle: "Remove {name} from pages";
+      readonly ruleHand: "added by hand";
+      readonly ruleUrls: "{count, plural, one {# URL} other {# URLs}}";
+      readonly show: "Show";
+      readonly tableLabel: "Tags on pages";
+    };
+    readonly columnNotConnected: "{source} is not connected";
+    readonly columns: {
+      readonly aiCitations: "AI cites";
+      readonly clicks: "Clicks";
+      readonly conversions: "Conv.";
+      readonly conversionsConnect: "Connect analytics";
+      readonly conversionsEmpty: "No conversions for this page in the period.";
+      readonly conversionsSource: "{source}";
+      readonly cwv: "CWV";
+      readonly impressions: "Impr.";
+      readonly index: "Index";
+      readonly keywords: "Keywords";
+      readonly openUrl: "Open {path}";
+      readonly page: "Page";
+      readonly position: "Pos.";
+      readonly sessions: "Sessions";
+      readonly sitemap: "Sitemap";
+      readonly status: "Status";
+      readonly tags: "Tags";
+      readonly tagsMore: "+{count, number}";
+    };
+    readonly compare: {
+      readonly addNote: "Add a note";
+      readonly annotationLabel: "Moment of change";
+      readonly annotationOption: "Annotation · {date} · {title}";
+      readonly caveat: "This shows a direction, not proof. Other events, such as Google updates, affect both groups. See the G markers.";
+      readonly changed: "Changed";
+      readonly chartLabel: "Indexed change";
+      readonly chooseAnnotation: "Choose an annotation";
+      readonly dayOf: "Day {day, number} of 28. Percent change in {metric} compared with {day, plural, one {the day} other {the # days}} before the change.";
+      readonly differenceLabel: "Difference";
+      readonly emptyAnnotations: "No annotations yet.";
+      readonly emptyAnnotationsAction: "Add a note";
+      readonly emptyOverlap: "These tags cover the same pages, so there is no unchanged group.";
+      readonly emptyTags: "No page tags yet.";
+      readonly emptyTagsAction: "Tag pages";
+      readonly finished: "Finished";
+      readonly forecastLabel: "Expected by now";
+      readonly forecastUnavailable: "Forecast is not available in this version";
+      readonly groupDetail: "{count, plural, one {# page} other {# pages}}, {metric} vs before";
+      readonly madeToday: "The change was made today. Results start tomorrow.";
+      readonly metric: {
+        readonly clicks: "Clicks";
+        readonly impressions: "Impressions";
+        readonly sessions: "Sessions";
+      };
+      readonly metricLabel: "Metric";
+      readonly metricOption: "{metric} · {source}";
+      readonly monitoring: "Monitoring";
+      readonly notEnough: "Not enough data";
+      readonly notEnoughClicks: "Not enough data for clicks, try impressions";
+      readonly overlap: "{count, plural, one {# page is in both tags and is left out of both groups.} other {# pages are in both tags and are left out of both groups.}}";
+      readonly percent: "{direction, select, positive {+{percent, number}%} negative {{percent, number}%} other {0%}}";
+      readonly points: "{direction, select, positive {+{points, number} pts vs unchanged pages} negative {{points, number} pts vs unchanged pages} other {0 pts vs unchanged pages}}";
+      readonly seriesChanged: "Changed pages";
+      readonly seriesUnchanged: "Unchanged pages";
+      readonly source: {
+        readonly analytics: "primary analytics";
+        readonly search_console: "Search Console";
+      };
+      readonly tagOption: "Tag: {name} · {pages, plural, one {# page} other {# pages}}";
+      readonly unchanged: "Unchanged";
+      readonly unconnected: "Connect {source} to use this metric";
+      readonly waiting: "Waiting";
+    };
+    readonly cwv: {
+      readonly checked: "Checked {count, number} pages.";
+      readonly error: {
+        readonly invalid_key: "The PageSpeed Insights API key was rejected.";
+        readonly no_sample: "Select pages that belong to this project.";
+        readonly not_connected: "Connect PageSpeed Insights before checking.";
+        readonly quota: "PageSpeed Insights quota was reached. Try again later.";
+      };
+      readonly milliseconds: "{value} ms";
+      readonly needsWork: "Needs work";
+      readonly none: "-";
+      readonly pass: "Pass";
+      readonly poor: "Poor";
+      readonly seconds: "{value} s";
+      readonly source: {
+        readonly field: "Field data from real users";
+        readonly lab: "Lab estimate";
+        readonly origin: "Origin-level field data";
+      };
+      readonly tooltip: "LCP {lcp}, INP {inp}, CLS {cls}. {source}";
+    };
+    readonly drawer: {
+      readonly autoJoin: "Pages added later join automatically";
+      readonly cancel: "Cancel";
+      readonly errors: {
+        readonly exclude_invalid: "Enter an exclude pattern that starts with /.";
+        readonly invalid_url: "Enter a path or URL on this site.";
+        readonly must_start_with_slash: "A pattern must start with /.";
+        readonly required: "Enter a pattern.";
+        readonly sitemap_required: "Choose a sitemap.";
+        readonly tag_required: "Enter a tag name.";
+        readonly too_long: "That pattern is too long.";
+        readonly too_many_urls: "A rule can list at most 2,000 URLs.";
+        readonly too_many_wildcards: "A pattern can use at most 16 wildcards.";
+      };
+      readonly exclude: "Exclude";
+      readonly excludeAdd: "Add";
+      readonly excludePlaceholder: "/draft/*";
+      readonly excludeRemove: "Remove {pattern}";
+      readonly handNote: "No rule matches pages. Add this tag to pages by hand.";
+      readonly keywordHint: "{name} is already on {count, plural, one {# keyword} other {# keywords}}";
+      readonly pattern: "Pattern";
+      readonly patternHint: "'{slug}' = one path segment. * = anything.";
+      readonly preview: "Matches {count, plural, one {# page} other {# pages}}";
+      readonly previewFailed: "The preview could not be loaded.";
+      readonly previewMore: "and {count, number} more";
+      readonly rule: "Rule";
+      readonly save: "Save tag";
+      readonly saveFailed: "The tag could not be saved.";
+      readonly sitemap: "Sitemap";
+      readonly sitemapChoose: "Choose a sitemap";
+      readonly sitemapEmpty: "No sitemap URL is known yet.";
+      readonly tag: "Tag";
+      readonly tagHint: "Pick an existing tag or type a new one.";
+      readonly tagKeywords: "Also tag keywords that target these pages";
+      readonly titleEdit: "Edit {name}";
+      readonly titleNew: "New tag";
+      readonly urls: "URL list";
+      readonly urlsPlaceholder: "/docs";
+    };
+    readonly empty: {
+      readonly description: "A page appears here when a source sees its URL. These sources can feed pages.";
+      readonly filtered: "No pages match these filters.";
+      readonly title: "No pages yet";
+    };
+    readonly existing: {
+      readonly allTags: "All tags";
+      readonly columns: {
+        readonly existing: "Existing";
+        readonly existingMetric: "Existing {metric}";
+        readonly fresh: "New";
+        readonly freshMetric: "New {metric}";
+        readonly share: "Share from new";
+        readonly tag: "Tag";
+      };
+      readonly disabled: "{source} is not connected";
+      readonly disabledConversions: "Connect analytics to chart conversions";
+      readonly emptyBody: "A snapshot is the date and the list of URLs that existed that day. Metrics stay with each source, so any metric can be split into pages that existed on the snapshot day and pages added later.";
+      readonly emptyTitle: "No page snapshot yet";
+      readonly metric: {
+        readonly ai_cites: "AI cites";
+        readonly clicks: "Clicks";
+        readonly conversions: "Conversions";
+        readonly option: "{metric} · {source}";
+        readonly sessions: "Sessions";
+      };
+      readonly metricLabel: "Metric";
+      readonly noSource: "Connect Search Console, analytics, or AI visibility to compare pages that existed on the snapshot day with pages added later.";
+      readonly rolling: "Sessions use the latest rolling 28-day window, not a daily total.";
+      readonly series: {
+        readonly existing: "Existing pages";
+        readonly fresh: "New pages";
+        readonly removed: "Removed pages";
+      };
+      readonly share: "{share, number}%";
+      readonly span: {
+        readonly "28": "Last 28 days";
+        readonly since: "Since snapshot";
+      };
+      readonly spanLabel: "Period";
+      readonly summaryExisting: "Existing pages {total, number} · {pages, number} of {snapshot, number} pages";
+      readonly summaryFresh: "New pages {total, number} · {pages, number} pages added after the snapshot";
+      readonly summaryRemoved: "Removed {total, number} · {pages, number} pages left the sitemap";
+      readonly tableLabel: "Existing and new pages by tag";
+      readonly title: "{metric} added up since the snapshot";
+    };
+    readonly filters: {
+      readonly any: "Any";
+      readonly clear: "Clear filters";
+      readonly clearCoverage: "Clear coverage state {reason}";
+      readonly coverage: "Coverage state";
+      readonly cwv: "Core Web Vitals";
+      readonly cwvValue: {
+        readonly missing: "Not checked";
+        readonly needs_work: "Needs work";
+        readonly pass: "Pass";
+        readonly poor: "Poor";
+      };
+      readonly index: "Index";
+      readonly label: "Filters";
+      readonly sitemap: "Sitemap";
+      readonly source: "Source";
+      readonly title: "Filters";
+    };
+    readonly indexGroup: {
+      readonly indexed: "Indexed";
+      readonly inspection_failed: "Inspection failed";
+      readonly not_checked: "Not checked";
+      readonly not_indexed: "Not indexed";
+    };
+    readonly keywordsLink: "Keywords for {path}";
+    readonly loadFailed: "The page list could not be loaded.";
+    readonly missing: "No {source} data for this page.";
+    readonly paste: {
+      readonly added: "{count, number} added";
+      readonly cancel: "Cancel";
+      readonly description: "One URL or path per line, up to 500 lines.";
+      readonly existing: "{count, number} already listed";
+      readonly label: "URLs";
+      readonly line: "Line {line, number}: {value} - {reason}";
+      readonly placeholder: "/docs";
+      readonly rejected: "Rejected lines";
+      readonly submit: "Add pages";
+      readonly title: "Paste URLs";
+    };
+    readonly plausibleWindow: "Plausible keeps a rolling 28-day window.";
+    readonly providers: {
+      readonly ga4: "GA4";
+      readonly plausible: "Plausible";
+    };
+    readonly reasons: {
+      readonly foreign: "This URL is on another site.";
+      readonly invalid: "Enter a URL or a path on this site.";
+      readonly missingDomain: "This project has no site domain.";
+      readonly tooMany: "Only 50,000 URLs can be added in one update.";
+      readonly tooManyLines: "Paste at most 500 lines.";
+    };
+    readonly refresh: {
+      readonly done: "Pages refreshed ({count, number}).";
+      readonly failed: "Pages could not be refreshed.";
+    };
+    readonly search: {
+      readonly label: "Search by path";
+      readonly placeholder: "/docs";
+    };
+    readonly segments: {
+      readonly all: "All";
+      readonly inSnapshot: "In snapshot";
+      readonly listed: "In sitemap";
+      readonly new: "New";
+      readonly notListed: "Not in sitemap";
+      readonly removed: "Removed";
+    };
+    readonly sitemapState: {
+      readonly listed: "Listed";
+      readonly notListed: "Not listed";
+    };
+    readonly snapshot: {
+      readonly bannerCount: "{count, number} pages";
+      readonly bannerRegistry: "This project had no sitemap, so the snapshot lists every page in the registry. Metrics are not copied. Each source keeps its own daily history.";
+      readonly bannerSitemap: "Metrics are not copied. Each source keeps its own daily history, so any metric can be split into pages that existed on this day and pages added later.";
+      readonly bannerTitle: "{label} snapshot · {date}";
+      readonly button: "Save page snapshot";
+      readonly cancel: "Cancel";
+      readonly confirmBody: "The new snapshot becomes the comparison baseline. The current one is archived, not deleted.";
+      readonly confirmTitle: "Save a new page snapshot?";
+      readonly dateLabel: "Baseline {date}";
+      readonly failed: "The snapshot could not be saved.";
+      readonly openAnnotations: "Open in Annotations";
+      readonly replace: "Save new snapshot";
+      readonly results: "See results since this snapshot";
+      readonly taken: "Page snapshot saved ({count, number} pages).";
+    };
+    readonly sourceKind: {
+      readonly ai_citation: "AI cites";
+      readonly ai_visibility: "AI visibility";
+      readonly analytics: "Analytics";
+      readonly analyticsConversions: "Analytics / Conversions";
+      readonly manual: "Manual";
+      readonly page_indexing: "Index";
+      readonly pagespeed: "PageSpeed";
+      readonly rank_tracker: "Rank Tracker";
+      readonly search_console: "Search Console";
+      readonly sitemap: "Sitemap";
+    };
+    readonly sourcesLine: {
+      readonly add: "Add source";
+      readonly connect: "Connect";
+      readonly hint: "Primary source for Sessions and Conv. Click to change.";
+      readonly label: "Columns from";
+      readonly paste: "Paste URLs";
+      readonly refresh: "Refresh now";
+      readonly refreshing: "Refreshing";
+      readonly state: {
+        readonly beta: "Beta";
+        readonly connected: "Connected";
+        readonly not_connected: "Not connected";
+      };
+    };
+    readonly status: {
+      readonly gone: "Gone · Day {day, number}";
+      readonly in_snapshot: "In snapshot";
+      readonly new: "New · Day {day, number}";
+      readonly redirected: "Redirected · Day {day, number}";
+      readonly removed: "Removed · Day {day, number}";
+    };
+    readonly tableLabel: "Project pages";
+    readonly tabs: {
+      readonly all: "All pages";
+      readonly byTag: "By tag";
+      readonly compare: "Compare";
+      readonly existingVsNew: "Existing vs new";
+      readonly navigation: "Page views";
+    };
+    readonly tags: {
+      readonly all: "All tags";
+      readonly new: "New tag";
+    };
+  };
   readonly projectRankTracker: {
+    readonly aiOverviewList: {
+      readonly citedAt: "Cited · #{position}";
+      readonly citedPage: "Cited page";
+      readonly incompleteHint: "This stored overview has no source list, so a citation cannot be confirmed. Not cited only means the domain was absent from the sources that were returned.";
+      readonly none: "none";
+      readonly notAvailable: "n/a";
+      readonly notChecked: "Not checked";
+      readonly notCited: "Not cited";
+      readonly notShown: "Not shown";
+      readonly overview: "AI Overview";
+      readonly shown: "Shown";
+      readonly viewOverview: "View overview";
+      readonly yourDomain: "Your domain";
+    };
     readonly checks: {
       readonly allProviders: "All providers";
       readonly allProvidersFailed: "All providers failed";
@@ -6522,6 +7671,8 @@ export type CoreMessages = {
         };
         readonly filters: {
           readonly active: "{count, plural, one {# active} other {# active}}";
+          readonly aiOverviewShown: "AI Overview shown";
+          readonly aiOverviewShownDescription: "The latest check includes an AI Overview";
           readonly currentPosition: "Current position";
           readonly filterChangeAny: "Any";
           readonly filterChangeDropped: "Dropped";
@@ -6607,6 +7758,7 @@ export type CoreMessages = {
           readonly filterChangeImproved: "Improved";
           readonly filterChangeLost: "Lost";
           readonly filterChangeNew: "New";
+          readonly filterChipAiOverviewShown: "AI Overview shown";
           readonly filterChipChange: "Change: {change}";
           readonly filterChipContains: "Contains: {value}";
           readonly filterChipIntent: "Intent: {value}";
@@ -6617,7 +7769,7 @@ export type CoreMessages = {
           readonly filterChipTopic: "Topic: {value}";
           readonly filterChipUrlChanged: "Ranking URL changed";
           readonly filterChipVolume: "Volume: {minimum, number}k - {isCapped, select, yes {50k+} other {{maximum, number}k}}";
-          readonly filterChipWrongUrl: "Wrong URL ranking";
+          readonly filterChipWrongUrl: "Ranking URL differs from target";
           readonly filterLastCheckAny: "Any";
           readonly filterLastCheckCompleted: "Completed";
           readonly filterLastCheckFailed: "Failed";
@@ -7279,6 +8431,8 @@ export type CoreMessages = {
       readonly versions: "Identity revision: {identity}. Matcher: {matcher}.";
     };
     readonly reportScope: {
+      readonly ai_overviews: "AI Overviews";
+      readonly aiOverviewScope: "This view reads the latest stored check. It does not compare positions.";
       readonly applyTime: "Apply time";
       readonly asOfUtc: "Snapshot time (UTC)";
       readonly chooseSubject: "Choose an assigned business";
@@ -7293,6 +8447,7 @@ export type CoreMessages = {
       readonly localScope: "Local results show the selected business. Comparison and Local export are not available yet.";
       readonly membership: "The table uses your current keyword list. Changing the date shows older results, without restoring an older list.";
       readonly minute: "Minute";
+      readonly new: "New";
       readonly period: "Comparison period";
       readonly setupBusiness: "Manage businesses and assignments";
       readonly snapshot: "Snapshot: {date} UTC";
@@ -7305,7 +8460,7 @@ export type CoreMessages = {
       };
       readonly subject: "Business subject";
       readonly title: "Report scope";
-      readonly unsupportedFilters: "Organic movement, URL and SERP feature filters are unavailable in Local. Clear them to show Local targets.";
+      readonly unsupportedFilters: "Organic movement, URL, SERP feature and AI Overview filters are unavailable in Local. Clear them to show Local targets.";
       readonly view: "View";
     };
     readonly serpPlayground: {
@@ -8508,9 +9663,23 @@ export type CoreMessages = {
       readonly cancel: "Cancel";
       readonly chooseProperty: "Choose a property";
       readonly clicks: "Clicks";
+      readonly clicksPerDay: "Clicks per day";
+      readonly clicksPerDayChartAria: "Clicks per day";
+      readonly clicksPerDayEmptyDescription: "Google reported no clicks for this property on the finalized days in this window.";
+      readonly clicksPerDayEmptyTitle: "No clicks in this window";
+      readonly clicksPerDayLoading: "Loading clicks per day";
+      readonly clicksSeries: "Clicks";
       readonly clicksToSessionsHidden: "No Google clicks in this window - nothing to reconcile";
       readonly connect: "Connect";
       readonly connecting: "Connecting…";
+      readonly conversionsByPage: "Conversions by page";
+      readonly conversionsColumnConversions: "Conversions";
+      readonly conversionsColumnPage: "Page";
+      readonly conversionsColumnRate: "Rate";
+      readonly conversionsColumnSessions: "Sessions";
+      readonly conversionsConnect: "Connect analytics";
+      readonly conversionsEmpty: "No conversions in this period.";
+      readonly conversionSourceGoals: "{source} · {count, plural, one {# goal} other {# goals}}";
       readonly coverageCapHit: ", and this property hit Google's row ceiling on {days, number} {days, plural, one {day} other {days}}";
       readonly coverageNote: "Google hides low-volume query text for privacy, so the rest is real traffic with no query attached.";
       readonly coveragePendingFirstDays: "Coverage appears once Google reports the first finalized days.";
@@ -8631,6 +9800,7 @@ export type CoreMessages = {
       readonly matchingProperties: "Matches this project";
       readonly metricClicks: "Clicks";
       readonly metricClicksToSessions: "Clicks to sessions";
+      readonly metricConversions: "Conversions";
       readonly metricCtr: "CTR";
       readonly metricImpressions: "Impressions";
       readonly metricPosition: "Avg position";
@@ -8642,6 +9812,7 @@ export type CoreMessages = {
       readonly noRowsMatch: 'No rows match "{search}".';
       readonly noSessionsMatch: "No GA4 landing page matched this URL";
       readonly notNow: "Not now";
+      readonly openInPages: "Open in Pages";
       readonly openInSearchConsole: "Open in Search Console";
       readonly openSearchConsole: "Open Search Console";
       readonly openUrl: "Open {url}";
@@ -8722,6 +9893,7 @@ export type CoreMessages = {
       readonly signalOverlapTitle: "queries with page overlap";
       readonly sourceGa4: "GA4";
       readonly sourceGsc: "GSC";
+      readonly sourcePlausible: "Plausible";
       readonly switchProperty: "Switch property";
       readonly switchPropertyBody: "Switch this project to {property}? {preflight} History already imported for {currentProperty} stays stored, so you can switch back anytime.";
       readonly switchPropertyTitle: "Switch this project’s property?";
@@ -8852,6 +10024,7 @@ export type CoreMessages = {
       readonly allChanges: "All changes";
       readonly allSitemaps: "All sitemaps";
       readonly allStates: "All indexing states";
+      readonly allUrls: "All URLs";
       readonly andMore: "and {count, number} more";
       readonly asOf: "As of";
       readonly change: "Change";
@@ -8873,6 +10046,18 @@ export type CoreMessages = {
       readonly dailyExhaustedPartial: "Daily inspection quota exhausted. The report is still partial. Checks can resume after {reset}.";
       readonly denominator: "Checked {checked, number} of {total, plural, one {# URL} other {# URLs}}.";
       readonly discoveredUrls: "Discovered URLs";
+      readonly drops: {
+        readonly annotations: "Annotations";
+        readonly caption: "Verdict changed from indexed to not indexed in the last 90 days.";
+        readonly inAnnotations: "in Annotations";
+        readonly notInAnnotations: "No annotation entry";
+        readonly page: "Page";
+        readonly reason: "Reason";
+        readonly reasonMissing: "not recorded";
+        readonly since: "Since";
+        readonly title: "Dropped out of the index";
+        readonly viewInPages: "View in Pages";
+      };
       readonly enums: {
         readonly crawledAs: {
           readonly CRAWLING_USER_AGENT_UNSPECIFIED: "Unspecified";
@@ -8911,6 +10096,68 @@ export type CoreMessages = {
           readonly PARTIAL: "Partially passed";
           readonly PASS: "Passed";
           readonly VERDICT_UNSPECIFIED: "Unspecified";
+        };
+      };
+      readonly explanations: {
+        readonly alternateCanonical: {
+          readonly meaning: "This URL correctly points at another canonical page.";
+          readonly step1: "Confirm the canonical target is the page you want indexed.";
+          readonly step2: "Keep the alternate URL if it serves a real variant.";
+          readonly step3: "Do not expect this URL itself to appear in the index.";
+        };
+        readonly crawledNotIndexed: {
+          readonly meaning: "Google crawled this URL and chose not to index it.";
+          readonly step1: "Make the page worth indexing: unique content, internal links, and a clear purpose.";
+          readonly step2: "Confirm the canonical URL is this page.";
+          readonly step3: "Ask for indexing only after the page is useful. Google still decides.";
+        };
+        readonly discoveredNotIndexed: {
+          readonly meaning: "Google knows this URL and has not crawled it yet.";
+          readonly step1: "Link to it from pages Google already crawls.";
+          readonly step2: "Keep it in the sitemap if you want it indexed.";
+          readonly step3: "Wait for the next crawl. A request does not guarantee one.";
+        };
+        readonly duplicateCanonical: {
+          readonly meaning: "Google treats this URL as a duplicate and picked a different canonical.";
+          readonly step1: "Choose the one URL that should rank.";
+          readonly step2: "Point the canonical tag and internal links at that URL.";
+          readonly step3: "Leave the duplicate out of the sitemap if it should not be indexed.";
+        };
+        readonly noindex: {
+          readonly meaning: "The page asks Google not to index it, with a noindex tag or header.";
+          readonly step1: "Remove noindex if the page should be indexed.";
+          readonly step2: "Confirm the robots meta tag and the X-Robots-Tag header agree.";
+          readonly step3: "Let Google recrawl after the tag is gone.";
+        };
+        readonly notFound: {
+          readonly meaning: "Google requested this URL and the server returned 404.";
+          readonly step1: "Restore the page if it should exist, or redirect it to a replacement.";
+          readonly step2: "Remove it from the sitemap.";
+          readonly step3: "Fix internal links that still point here.";
+        };
+        readonly pageWithRedirect: {
+          readonly meaning: "This URL redirects, so Google indexes the target instead.";
+          readonly step1: "Confirm the redirect goes to the right page.";
+          readonly step2: "Update internal links and the sitemap to the final URL.";
+          readonly step3: "Keep the redirect if the old URL should still resolve.";
+        };
+        readonly robots: {
+          readonly meaning: "robots.txt blocks Google from crawling this URL.";
+          readonly step1: "Allow the URL in robots.txt if it should be crawled.";
+          readonly step2: "A blocked URL can stay out of the index.";
+          readonly step3: "Submit the sitemap again after the rule changes.";
+        };
+        readonly serverError: {
+          readonly meaning: "Google saw a server error (5xx) on this URL.";
+          readonly step1: "Fix the error and confirm the page returns 200.";
+          readonly step2: "Check logs for this URL around the inspection time.";
+          readonly step3: "A lasting 5xx keeps the page out of the index.";
+        };
+        readonly soft404: {
+          readonly meaning: "The server said the page exists, but Google reads it as an empty or error page.";
+          readonly step1: "Return a real 404 or 410 for pages that are gone.";
+          readonly step2: "If the page should exist, give it substantial content.";
+          readonly step3: "Avoid thin not-found templates that still return 200.";
         };
       };
       readonly feedback: {
@@ -8955,6 +10202,7 @@ export type CoreMessages = {
       readonly invalidBatch: "Enter between 1 and 10 URLs, at most 2048 characters each.";
       readonly last90Days: "Last 90 days";
       readonly lastCrawl: "Last crawl";
+      readonly lead: "Whether Google has your pages in its index, and why not when it does not.";
       readonly loadFailed: "Stored results could not be loaded. Try again.";
       readonly loadMore: "Load more URLs";
       readonly maturityBadge: "beta";
@@ -8992,9 +10240,41 @@ export type CoreMessages = {
       readonly pausedRange: "No inspections {dates}: mode off";
       readonly performance: "Performance";
       readonly previous: "Previous";
+      readonly progress: {
+        readonly availableQuota: "Uses the quota Google leaves available.";
+        readonly checked: "Checked {checked, number} of {total, number} URLs";
+        readonly daysLeft: "About {days, plural, one {# day} other {# days}} left";
+        readonly limitZero: "The daily limit is 0, so nothing is checked.";
+        readonly meter: "Checked URLs";
+        readonly off: "Checking is off.";
+        readonly perDay: "{count, number} URLs a day. Next batch at {time}.";
+        readonly perDayNoTime: "{count, number} URLs a day. The next batch time is not available.";
+        readonly settings: "Indexing settings";
+        readonly sources: "Sitemap {sitemap, number} · Rank Tracker targets {targets, number} · Added by hand {manual, number}";
+        readonly tooltip: "Checks use the URL Inspection API. The daily quota is shared by the whole Search Console property and resets at midnight Pacific.";
+      };
       readonly quotaReset: "{reset} your time (midnight Pacific)";
       readonly readSitemaps: "Read sitemaps";
       readonly reason: "Reason";
+      readonly reasons: {
+        readonly caption: "Google's coverage state, in Google's own words.";
+        readonly changeDown: "-{count, number} since {date}";
+        readonly changeNew: "new";
+        readonly changeNone: "no change";
+        readonly changeUnavailable: "A 7-day change cannot be derived from the stored history.";
+        readonly changeUp: "+{count, number} since {date}";
+        readonly columnChange: "Last change";
+        readonly columnReason: "Reason";
+        readonly columnUrls: "URLs";
+        readonly docs: "Google's documentation for this status";
+        readonly empty: "No not-indexed URLs with a coverage state.";
+        readonly export: "Export CSV";
+        readonly exportFailed: "The export could not be created.";
+        readonly exportTruncated: "The export includes the first {rows, number} URLs.";
+        readonly genericDocs: "Google's indexing documentation";
+        readonly openInPages: "Open in Pages";
+        readonly title: "Not indexed, by reason";
+      };
       readonly reasonsCaption: "Grouped like Search Console. Select a reason to filter URLs.";
       readonly reasonsTitle: "Why pages are or are not indexed";
       readonly referringPages: "Referring pages";
@@ -9046,6 +10326,20 @@ export type CoreMessages = {
       readonly storedDescription: "Google's stored indexed state, not a live test. Opening this drawer makes no Google request.";
       readonly storedState: "Results reflect Google's last known indexing state.";
       readonly stripSummary: "{start} to {end}: {indexed, number} indexed days, {notIndexed, number} not indexed days, {notChecked, number} not checked days.";
+      readonly tiles: {
+        readonly indexedShare: "{percent} of checked";
+        readonly names: {
+          readonly indexed: "Indexed";
+          readonly inspection_failed: "Inspection failed";
+          readonly not_checked: "Not checked";
+          readonly not_indexed: "Not indexed";
+        };
+        readonly noChecked: "none checked yet";
+        readonly notScheduled: "not scheduled";
+        readonly queued: "queued";
+        readonly reasonCount: "{count, plural, one {# reason} other {# reasons}}";
+        readonly retriedTomorrow: "retried tomorrow";
+      };
       readonly title: "Page indexing";
       readonly todayLabel: "Today";
       readonly trendCaption: "Counts are from our inspections, so early days cover fewer URLs.";
@@ -9094,6 +10388,8 @@ export type CoreMessages = {
       readonly description: "The five most recent entries. Filtering, inspection and export are available on the full audit screen.";
       readonly empty: "No audit entries yet.";
       readonly event: {
+        readonly aiEngineDisabled: "AI engine turned off";
+        readonly aiEngineEnabled: "AI engine turned on";
         readonly aiPromptArchive: "AI prompt archived";
         readonly aiPromptCreate: "AI prompt created";
         readonly aiPromptPause: "AI prompt paused";
@@ -9109,6 +10405,11 @@ export type CoreMessages = {
         readonly aiScheduleDisable: "AI schedule disabled";
         readonly aiScheduleEnable: "AI schedule enabled";
         readonly aiScheduleUpdate: "AI schedule updated";
+        readonly aiSourcePlanAdded: "Source added to the plan";
+        readonly aiSourcePlanRemoved: "Source removed from the plan";
+        readonly aiSourcePlanUpdated: "Source plan updated";
+        readonly aiSourceTypeCleared: "Source type cleared";
+        readonly aiSourceTypeSet: "Source type set";
         readonly aiSuggestionsAccepted: "AI suggestions accepted";
         readonly aiSuggestionsConsentRecorded: "AI suggestions consent recorded";
         readonly aiSuggestionsGenerated: "AI suggestions generated";
@@ -9127,6 +10428,7 @@ export type CoreMessages = {
         readonly apiKeyRevoked: "API key revoked";
         readonly apiKeyRolled: "API key rolled";
         readonly auditLogViewed: "Audit log viewed";
+        readonly brandNamesUpdated: "Brand names updated";
         readonly budgetUpdated: "Project budget updated";
         readonly businessAssigned: "Business assigned";
         readonly businessLocationArchived: "Business location archived";
@@ -9135,6 +10437,9 @@ export type CoreMessages = {
         readonly businessLocationRevised: "Business location updated";
         readonly businessUnassigned: "Business unassigned";
         readonly cachedDataDeleted: "Cached data deleted";
+        readonly challengeReportCreated: "Challenge report created";
+        readonly challengeReportLessonsSaved: "Challenge report lessons saved";
+        readonly challengeReportRefreshed: "Challenge report numbers refreshed";
         readonly checkScheduleArchived: "Check schedule archived";
         readonly checkScheduleAssigned: "Check schedule assigned";
         readonly checkScheduleCreated: "Check schedule created";
@@ -9155,6 +10460,13 @@ export type CoreMessages = {
         readonly competitorSuggestionConfirmed: "Suggested competitor confirmed";
         readonly competitorSuggestionDismissed: "Suggested competitor dismissed";
         readonly competitorUpdated: "Competitor updated";
+        readonly conversionGoalUpdated: "Conversion goal updated";
+        readonly conversionPrimaryUpdated: "Primary conversion source changed";
+        readonly conversionSourceSynced: "Conversion source synced";
+        readonly costItemCreated: "Cost item created";
+        readonly costItemDeleted: "Cost item deleted";
+        readonly costItemEnded: "Cost item ended";
+        readonly costItemUpdated: "Cost item updated";
         readonly creationDenied: "Creation denied";
         readonly dataCacheSettingsUpdated: "Data cache settings updated";
         readonly deletionDenied: "Deletion denied";
@@ -9233,6 +10545,8 @@ export type CoreMessages = {
         readonly migrationTokenUsed: "Migration token used";
         readonly notificationPreferencesUpdated: "Notification preferences updated";
         readonly ownershipTransferred: "Project ownership transferred";
+        readonly pageSnapshotTaken: "Day 1 snapshot saved";
+        readonly pageVitalsChecked: "Checked Core Web Vitals";
         readonly pricingFeedbackSubmitted: "Pricing feedback submitted";
         readonly projectCheckRequested: "Project check requested";
         readonly projectCreated: "Project created";
@@ -9290,6 +10604,12 @@ export type CoreMessages = {
         readonly rankCheckStarted: "Rank check started";
         readonly rankSnapshotExtended: "Rank snapshot extended";
         readonly readDenied: "Read access denied";
+        readonly reportShareExpiryUpdated: "Challenge report link expiry updated";
+        readonly reportSharePublished: "Challenge report published";
+        readonly reportShareReissued: "Challenge report link reissued";
+        readonly reportShareRevoked: "Challenge report link revoked";
+        readonly reportShareSettingsUpdated: "Challenge report link settings updated";
+        readonly reportShareUpdated: "Challenge report link updated";
         readonly sampleDataInstalled: "Sample data installed";
         readonly savedKeywordRemoved: "Saved keyword removed";
         readonly savedViewCreated: "Saved view created";
@@ -9314,6 +10634,10 @@ export type CoreMessages = {
         readonly slackConnectionUpdated: "Slack connection updated";
         readonly tagCreated: "Tag created";
         readonly tagDeleted: "Tag deleted";
+        readonly tagMerged: "Tags merged";
+        readonly tagPageLinksRemoved: "Page links removed";
+        readonly tagPageLinksSet: "Page links set";
+        readonly tagPageRuleSaved: "Page tag rule saved";
         readonly tagRenamed: "Tag renamed";
         readonly trackingScopeUpdated: "Tracking scope updated";
         readonly trafficSynced: "Traffic data synced";
@@ -9386,6 +10710,52 @@ export type CoreMessages = {
       readonly reactivating: "Reactivating...";
       readonly title: "Transfer project";
       readonly transfer: "Transfer project";
+    };
+  };
+  readonly projectSettingsConversions: {
+    readonly comparison: {
+      readonly description: "Enabled conversions in the last 28 days, one column per connected source.";
+      readonly empty: "No enabled conversions in the last 28 days.";
+      readonly goal: "Conversion";
+      readonly notReported: "Not reported";
+      readonly primary: "Primary";
+      readonly tableLabel: "Conversions by source";
+      readonly title: "All sources side by side";
+    };
+    readonly goals: {
+      readonly countsRevenue: "Counts revenue";
+      readonly description: "Rename a conversion for this project, or stop it from counting. The name in the tool stays as the source reports it.";
+      readonly displayNameLabel: "Display name for {name}";
+      readonly emptyDescription: "When a connected source reports a conversion, it shows up here.";
+      readonly emptyTitle: "No conversions yet";
+      readonly enabled: "Enabled";
+      readonly error: "The conversion could not be saved.";
+      readonly last28: "Last 28 days";
+      readonly sourceName: "Name in the tool";
+      readonly title: "Conversions";
+    };
+    readonly intro: "Conversions are defined once for this project. Each connected analytics source keeps its own daily counts, and the primary source is the default view.";
+    readonly sources: {
+      readonly cancel: "Cancel";
+      readonly confirmAction: "Change primary source";
+      readonly confirmBody: "Charts will use {source} as the default view. Existing data stays, and a note is added so a jump has a reason.";
+      readonly confirmTitle: "Change the primary conversion source?";
+      readonly connect: "Connect";
+      readonly connected: "Connected";
+      readonly description: "Choose the primary source for the default view. Changing it keeps every source's data and adds a chart note.";
+      readonly error: "The primary source could not be saved.";
+      readonly ga4Together: "GA4 reports all key events together.";
+      readonly last28: "{count} in the last 28 days";
+      readonly lastDay: "Last day with data: {date}";
+      readonly noData: "No conversion data yet";
+      readonly notConnected: "Not connected";
+      readonly plausibleOrganic: "Organic search goal conversions, one daily count per landing page.";
+      readonly primary: "Primary";
+      readonly primaryFor: "Primary source: {source}";
+      readonly syncError: "The source could not be synced.";
+      readonly syncing: "Syncing...";
+      readonly syncNow: "Sync now";
+      readonly title: "Sources";
     };
   };
   readonly projectSettingsDevelopers: {
@@ -9533,8 +10903,6 @@ export type CoreMessages = {
     readonly description: "Enable an experimental module for this project. Disabled modules are not available in navigation.";
     readonly module: {
       readonly competitors: "Competitors";
-      readonly promptPlayground: "Prompt Playground";
-      readonly timeline: "Timeline";
     };
     readonly saveError: "Experimental modules could not be saved.";
     readonly title: "Experimental modules";
@@ -9561,7 +10929,7 @@ export type CoreMessages = {
         readonly domain_overview: "Domain overview";
         readonly keyword_metrics: "Keyword metrics";
         readonly keyword_research: "Keyword research";
-        readonly prompt_explorer: "Prompt Playground";
+        readonly prompt_explorer: "Model Playground";
         readonly prompt_research: "Prompt research";
         readonly ranked_keywords: "Ranked keywords";
         readonly site_audit: "Site audit";
@@ -9584,7 +10952,7 @@ export type CoreMessages = {
         readonly metrics: "Metrics";
         readonly overview: "Overview";
         readonly pages: "Pages";
-        readonly prompt_explorer: "Prompt Playground";
+        readonly prompt_explorer: "Model Playground";
         readonly prompt_research: "Prompt research";
         readonly related: "Related";
         readonly site_audit: "Site audit";
@@ -9638,20 +11006,6 @@ export type CoreMessages = {
       readonly projectId: "Project ID";
       readonly saveError: "Project details could not be saved.";
       readonly title: "Project details";
-    };
-    readonly tags: {
-      readonly cancel: "Cancel";
-      readonly description: "Use tags to group keywords and filter saved views.";
-      readonly duplicate: "{name} already exists.";
-      readonly remove: "Remove tag";
-      readonly removeError: "Tag could not be removed.";
-      readonly removeTitle: "Remove {name}?";
-      readonly title: "Tags";
-      readonly usageBothManyKeywords: "{keywordCount, number} keywords and {segmentCount, plural, one {# segment use it.} other {# segments use it.}}";
-      readonly usageBothOneKeyword: "{segmentCount, plural, one {1 keyword and # segment use it.} other {1 keyword and # segments use it.}}";
-      readonly usageKeywordOnly: "{count, plural, one {# keyword uses it.} other {# keywords use it.}}";
-      readonly usageSegmentOnly: "{count, plural, one {# segment uses it.} other {# segments use it.}}";
-      readonly writeError: "Tag could not be added.";
     };
     readonly validation: {
       readonly confirmationTooLong: "The confirmation can be at most 253 characters.";
@@ -10015,6 +11369,10 @@ export type CoreMessages = {
           readonly keywords: "competition mentions citations";
           readonly label: "Competitors and brand aliases";
         };
+        readonly conversions: {
+          readonly keywords: "conversion goal primary source key events revenue";
+          readonly label: "Conversions";
+        };
         readonly defaultDevice: {
           readonly keywords: "mobile desktop";
           readonly label: "Default device";
@@ -10080,8 +11438,8 @@ export type CoreMessages = {
           readonly label: "Stop checks at first match";
         };
         readonly tagsAndSegments: {
-          readonly keywords: "organize keywords labels";
-          readonly label: "Tags and segments";
+          readonly keywords: "organize pages keywords labels rules merge segments";
+          readonly label: "Tags";
         };
         readonly urlInspectionLimit: {
           readonly keywords: "daily quota indexing google search console";
@@ -10107,14 +11465,90 @@ export type CoreMessages = {
       readonly businessLocations: "Business locations";
       readonly competitors: "Competitors";
       readonly context: "Project Context";
+      readonly conversions: "Conversions";
       readonly dataSources: "Data sources";
       readonly developers: "Developers";
       readonly experimental: "Experimental";
       readonly general: "General";
       readonly notifications: "Notifications";
+      readonly tags: "Tags";
       readonly team: "Team";
       readonly tracking: "Tracking";
       readonly usage: "Usage";
+    };
+  };
+  readonly projectSettingsTags: {
+    readonly columns: {
+      readonly actions: "Actions";
+      readonly keywords: "Keywords";
+      readonly pages: "Pages";
+      readonly rule: "Rule";
+      readonly tag: "Tag";
+      readonly usedIn: "Used in";
+    };
+    readonly delete: {
+      readonly cancel: "Cancel";
+      readonly confirm: "Remove tag";
+      readonly error: "Tag could not be removed.";
+      readonly title: "Remove {name}?";
+      readonly usageBothManyKeywords: "{keywordCount, number} keywords and {segmentCount, plural, one {# segment use it.} other {# segments use it.}}";
+      readonly usageBothOneKeyword: "{segmentCount, plural, one {1 keyword and # segment use it.} other {1 keyword and # segments use it.}}";
+      readonly usageKeywordOnly: "{count, plural, one {# keyword uses it.} other {# keywords use it.}}";
+      readonly usageSegmentOnly: "{count, plural, one {# segment uses it.} other {# segments use it.}}";
+    };
+    readonly empty: "No tags yet.";
+    readonly lead: "One set of tags for the whole project, used on pages and keywords.";
+    readonly menu: "More actions for {name}";
+    readonly menuDelete: "Delete";
+    readonly menuEdit: "Edit rule";
+    readonly menuMerge: "Merge into...";
+    readonly menuRename: "Rename";
+    readonly merge: {
+      readonly alerts: "{count, plural, one {# alert} other {# alerts}}";
+      readonly cancel: "Cancel";
+      readonly choose: "Tag";
+      readonly confirm: "Merge";
+      readonly error: "The tag could not be merged.";
+      readonly keywords: "{count, plural, one {# keyword} other {# keywords}}";
+      readonly keywordSegments: "{count, plural, one {# keyword segment} other {# keyword segments}}";
+      readonly none: "Nothing else uses this tag. It will be deleted.";
+      readonly pages: "{count, plural, one {# page} other {# pages}}";
+      readonly rule: "The page rule moves because {target} has none.";
+      readonly savedViews: "{count, plural, one {# saved view} other {# saved views}}";
+      readonly summary: "{counts} move to {target}.";
+      readonly title: "Merge {name} into";
+    };
+    readonly new: "New tag";
+    readonly rename: {
+      readonly cancel: "Cancel";
+      readonly confirm: "Rename";
+      readonly error: "The tag could not be renamed.";
+      readonly exists: "{name} already exists. Merge into it instead.";
+      readonly label: "New name";
+      readonly required: "Enter a tag name.";
+      readonly title: "Rename {name}";
+      readonly tooLong: "Tag names can be at most 48 characters.";
+    };
+    readonly rule: {
+      readonly hand: "by hand";
+      readonly none: "-";
+      readonly sitemap: "sitemap";
+      readonly urls: "{count, plural, one {# URL} other {# URLs}}";
+    };
+    readonly ruleLead: "A rule keeps a tag on matching pages, including pages added later.";
+    readonly tableLabel: "Project tags";
+    readonly usage: {
+      readonly alert: "{count, plural, one {# alert} other {# alerts}}";
+      readonly keywordSegment: "{count, plural, one {# keyword segment} other {# keyword segments}}";
+      readonly none: "not used yet";
+      readonly savedView: "{count, plural, one {# saved view} other {# saved views}}";
+      readonly tooltipAlerts: "Alerts: {names}";
+      readonly tooltipKeywordSegments: "Keyword segments: {names}";
+      readonly tooltipSavedViews: "Saved views: {names}";
+    };
+    readonly where: {
+      readonly body: "Pages filter, By tag, and Compare. Rank Tracker filter and saved views. Alert rule target. Dashboard All tags filter.";
+      readonly title: "Where tags work";
     };
   };
   readonly projectSettingsTeam: {
@@ -10573,7 +12007,7 @@ export type CoreMessages = {
     };
   };
   readonly projectSiteAudit: {
-    readonly availableLimit: "Currently available: up to {limit, number} pages per audit.";
+    readonly budgetEmpty: "No pages are available for an audit right now.";
     readonly bullets: {
       readonly "0": "HTTP status, title and meta description";
       readonly "1": "Heading structure, robots directives and image alt";
@@ -10629,6 +12063,7 @@ export type CoreMessages = {
     readonly loadingHistory: "Loading saved report...";
     readonly loadingPage: "Loading site audit...";
     readonly loadingRun: "Crawling public pages and checking URL issues...";
+    readonly maxAction: "Max";
     readonly missing: "Missing";
     readonly nextPages: "Next pages";
     readonly no: "No";
@@ -10637,8 +12072,8 @@ export type CoreMessages = {
     readonly notFetched: "Not fetched";
     readonly noTitle: "No title";
     readonly notMeasured: "Not measured";
-    readonly pageLimit: "Page limit";
-    readonly pageLimitError: "Choose 1 to {limit, number} pages.";
+    readonly pageLimit: "Pages to check";
+    readonly pageLimitError: "You can check up to {limit, number} pages per audit right now.";
     readonly partial: "Incomplete audit: reached the {reason}. Results cover only the pages fetched.";
     readonly partialUnavailable: "Incomplete audit: some pages or robots.txt could not be fetched. Unavailable pages have no measured SEO results.";
     readonly passed: "Passed";
@@ -10675,10 +12110,120 @@ export type CoreMessages = {
     readonly unknown: "Unknown";
     readonly urlIssues: "URL issues";
     readonly verifyDomain: "Verify this domain to crawl more pages.";
+    readonly vitals: {
+      readonly check: "Check Core Web Vitals";
+      readonly columns: {
+        readonly cls: "CLS";
+        readonly inp: "INP";
+        readonly lcp: "LCP";
+        readonly page: "Page";
+        readonly status: "Status";
+      };
+      readonly connect: "Connect PageSpeed Insights";
+      readonly connectBody: "Connect PageSpeed Insights to see field data for the pages in this audit.";
+      readonly desktop: "Desktop";
+      readonly error: {
+        readonly invalid_key: "The PageSpeed Insights API key was rejected.";
+        readonly no_sample: "Run a site audit to choose the pages to check.";
+        readonly not_connected: "Connect PageSpeed Insights before checking.";
+        readonly quota: "PageSpeed Insights quota was reached. Try again later.";
+      };
+      readonly goodHint: "Good: LCP under 2.5 s, INP under 200 ms, CLS under 0.1";
+      readonly milliseconds: "{value} ms";
+      readonly mobile: "Mobile";
+      readonly noSample: "Run a site audit to choose the pages to check.";
+      readonly notChecked: "Not checked yet.";
+      readonly passCount: "{pass, number} of {sample, number} pages pass on {strategy}";
+      readonly seconds: "{value} s";
+      readonly source: {
+        readonly field: "Field data from real users";
+        readonly lab: "Lab estimate";
+        readonly origin: "Origin-level field data";
+      };
+      readonly status: {
+        readonly good: "Good";
+        readonly needs_improvement: "Needs improvement";
+        readonly poor: "Poor";
+        readonly unknown: "Unknown";
+      };
+      readonly strategy: "Strategy";
+      readonly title: "Core Web Vitals";
+    };
     readonly workerCost: "Runs in the background · No provider credits";
     readonly yes: "Yes";
   };
   readonly projectTimeline: {
+    readonly annotations: {
+      readonly addAria: "Add a note";
+      readonly addNote: "Add note";
+      readonly byActor: "by {actor}";
+      readonly connect: "Connect";
+      readonly contentFallback: "Content updated";
+      readonly contentSource: "Content (CMS)";
+      readonly contentSourceDetail: "Webhook or API · signal source cms";
+      readonly conversionSource: {
+        readonly ga4: "Google Analytics 4";
+        readonly none: "none";
+        readonly plausible: "Plausible";
+      };
+      readonly dateAria: "Note date";
+      readonly deindexedTitle: "URL removed from the index";
+      readonly deployFallback: "Deploy";
+      readonly deploySourceDetail: "Webhook: Vercel, Netlify, GitHub";
+      readonly detailContent: "From a CMS or content signal.";
+      readonly detailDeindexed: "This URL is no longer indexed.";
+      readonly detailDeploy: "From a deploy webhook. The provider, environment and deployment id are kept when they are sent.";
+      readonly detailGoogle: "Imported from the Google Search Status Dashboard. A rollout with a start and an end is a band, not a single day.";
+      readonly detailNote: "Manual note.";
+      readonly detailSitemap: "From the sitemap monitor. Added and removed URLs become annotations.";
+      readonly empty: "Nothing here for this filter.";
+      readonly filter: {
+        readonly all: "All";
+        readonly content: "Content";
+        readonly deploy: "Deploys";
+        readonly google: "Google updates";
+        readonly note: "Notes";
+        readonly sitemap: "Sitemap";
+      };
+      readonly filterAria: "Filter annotations";
+      readonly googleSourceDetail: "Search Status Dashboard · free";
+      readonly hideAutomatic: "Hide automatic";
+      readonly lead: "Your notes plus Google updates, deploys, content and sitemap changes. Each one shows up on charts.";
+      readonly legend: {
+        readonly content: "Content";
+        readonly deploy: "Deploys";
+        readonly google: "Google updates";
+        readonly note: "Notes";
+        readonly sitemap: "Sitemap";
+      };
+      readonly noteFallback: "Note";
+      readonly placeholder: "What did you change? e.g. Added FAQ to 20 tool pages";
+      readonly primaryConversion: "Primary conversion source changed from {from} to {to}";
+      readonly rolloutComplete: "rollout complete";
+      readonly rolloutOpen: "Rollout in progress";
+      readonly rolloutRange: "{start} to {end} · {status}";
+      readonly rulerAria: "Annotations, last 90 days";
+      readonly rulerHint: "Pins are moments. A bar is a Google rollout.";
+      readonly rulerTitle: "Last 90 days";
+      readonly scopeAria: "Where the note applies";
+      readonly scopeEmpty: "No pages match.";
+      readonly scopeSearch: "Search pages";
+      readonly showAutomatic: "Show automatic";
+      readonly sitemapSource: "Sitemap changes";
+      readonly sitemapSourceDetail: "Sitemap monitor · already running";
+      readonly sitemapTitle: "Sitemap: {added, number} added, {removed, number} removed";
+      readonly source: {
+        readonly content: "Content";
+        readonly deploy: "Deploy";
+        readonly google: "Google update";
+        readonly note: "Note";
+        readonly sitemap: "Sitemap";
+      };
+      readonly sourcesTitle: "Automatic sources";
+      readonly statusOn: "On";
+      readonly today: "Today";
+      readonly wholeProject: "Whole project";
+    };
     readonly data: {
       readonly actorSystem: "System";
       readonly badgeTestEvent: "Test event";
@@ -10771,14 +12316,141 @@ export type CoreMessages = {
       readonly validationUrlProtocol: "Use an http(s) URL.";
     };
     readonly remove: {
-      readonly aria: "Delete timeline note";
-      readonly confirm: "Delete this timeline note?";
+      readonly aria: "Remove this note";
+      readonly confirm: "Delete this note?";
       readonly error: "Note could not be deleted.";
     };
     readonly row: {
       readonly deviceDesktop: "Desktop";
       readonly deviceMobile: "Mobile";
     };
+  };
+  readonly projectUsageCosts: {
+    readonly billing: {
+      readonly lifetime: "Lifetime";
+      readonly monthly: "Monthly";
+      readonly one_off: "One-off";
+      readonly yearly: "Yearly";
+    };
+    readonly card: {
+      readonly add: "Add a cost";
+      readonly cancel: "Cancel";
+      readonly columns: {
+        readonly actions: "Actions";
+        readonly item: "Item";
+        readonly perMonth: "Monthly cost";
+        readonly plan: "Plan";
+        readonly project: "This project's share";
+        readonly type: "Type";
+      };
+      readonly delete: "Delete";
+      readonly deleteBody: "This removes {name} from your SEO costs.";
+      readonly deleteShared: "This item is also used by {count, plural, one {# other project} other {# other projects}}. Deleting it removes it from every project.";
+      readonly deleteTitle: "Delete this cost?";
+      readonly description: "Amounts you pay, not vendor pricing.";
+      readonly edit: "Edit";
+      readonly emptyDescription: "Add the tools you pay for, so reports can show cost next to results. Usage from connected providers is tracked automatically.";
+      readonly emptyTitle: "Track what SEO costs you";
+      readonly end: "End";
+      readonly menu: "Actions for {name}";
+      readonly title: "Subscriptions";
+    };
+    readonly dash: "-";
+    readonly drawer: {
+      readonly addTitle: "Add cost";
+      readonly aMonth: "a month";
+      readonly amount: "Amount you pay";
+      readonly billing: "Billing";
+      readonly cancel: "Cancel";
+      readonly currency: "Currency";
+      readonly discount: "Discount";
+      readonly editTitle: "Edit cost";
+      readonly errors: {
+        readonly amount: "Enter an amount.";
+        readonly date: "Use a real date.";
+        readonly discount: "Enter a discount and when it ends.";
+        readonly name: "Enter a name.";
+        readonly percent: "Enter a percent from 0 to 100, with up to two decimal places.";
+        readonly projects: "Include this project.";
+        readonly trial: "The trial must end on or after the start date.";
+      };
+      readonly footnote: "Amount you pay, not vendor pricing";
+      readonly forMonths: "For months";
+      readonly lands: "{amount} a month lands in this project";
+      readonly landsOnce: "{amount} lands in this project";
+      readonly money: "Amount";
+      readonly months: "Months";
+      readonly name: "Name";
+      readonly none: "None";
+      readonly partial: "Only part of this cost belongs to this project";
+      readonly partialHint: "Use this when the same tool also serves other sites. Only this part is counted in this project's cost.";
+      readonly percent: "Percent";
+      readonly plan: "Plan";
+      readonly planHint: "Type a plan name, or pick a typical one.";
+      readonly priceChanges: "Price changes";
+      readonly save: "Save";
+      readonly saveError: "Could not save this cost.";
+      readonly started: "Started";
+      readonly submit: "Add cost";
+      readonly suggest: "Not listed? Suggest it";
+      readonly then: "then";
+      readonly tool: "Tool";
+      readonly trialUntil: "Free trial until";
+      readonly until: "until";
+      readonly untilDate: "Until date";
+    };
+    readonly kinds: {
+      readonly ai: "AI";
+      readonly analytics: "Analytics";
+      readonly custom: "Custom";
+      readonly seo_tool: "SEO tool";
+    };
+    readonly lead: "Plan, provider budgets and what SEO costs you in total.";
+    readonly lifetimeHint: "A lifetime amount is spread evenly over the 36 calendar months that start with the start month. A partial first or last month is prorated by day, then the amount is zero.";
+    readonly notes: {
+      readonly discountUntil: "-{percent, number}% until {date}";
+      readonly trialUntil: "trial until {date}";
+    };
+    readonly tiles: {
+      readonly custom: "Custom items";
+      readonly customHint: "One-off items";
+      readonly empty: "Nothing recorded for this month.";
+      readonly provider: "Provider operations";
+      readonly providerHint: "Rank checks, research and AI runs";
+      readonly seo: "SEO cost this month";
+      readonly seoHint: "This project's share";
+      readonly subscriptions: "Subscriptions";
+      readonly subscriptionsHint: "Recurring tools";
+    };
+  };
+  readonly researchHistory: {
+    readonly aiOverview: "AI Overview";
+    readonly all: "All";
+    readonly cached: "cached";
+    readonly checks: "{count, plural, one {# check} other {# checks}}";
+    readonly close: "Close history";
+    readonly desktop: "Desktop";
+    readonly emptyChecks: "Checks you run in this project show up here.";
+    readonly emptyRuns: "Runs you start in this project show up here.";
+    readonly emptyTitle: "No history yet";
+    readonly error: "History could not be loaded.";
+    readonly loading: "Loading history";
+    readonly loadOlderChecks: "Load older checks";
+    readonly loadOlderRuns: "Load older runs";
+    readonly mobile: "Mobile";
+    readonly openAllRuns: "Open all runs as a table";
+    readonly pin: "Pin {title}";
+    readonly pinned: "Pinned {count}";
+    readonly retry: "Try again";
+    readonly runs: "{count, plural, one {# run} other {# runs}}";
+    readonly searchKeywords: "Search keywords";
+    readonly searchLabel: "Search history";
+    readonly searchPrompts: "Search prompts";
+    readonly suggestions: "Recent";
+    readonly title: "History";
+    readonly today: "Today";
+    readonly unpin: "Unpin {title}";
+    readonly yesterday: "Yesterday";
   };
   readonly resourceCapacity: {
     readonly alertRulesAndWebhooks: "alert rules and webhooks";
@@ -11141,6 +12813,39 @@ export type CoreMessages = {
       };
       readonly yourDraft: "Your draft";
     };
+    readonly chartMarkers: {
+      readonly clusterHeading: "{date} · {count, number} annotations";
+      readonly clusterMore: "+{count, number} more";
+      readonly content: "Content";
+      readonly contentFallback: "Content updated";
+      readonly conversionSource: {
+        readonly ga4: "Google Analytics 4";
+        readonly none: "none";
+        readonly plausible: "Plausible";
+      };
+      readonly deindexedTitle: "URL removed from the index";
+      readonly deploy: "Deploy";
+      readonly deployFallback: "Deploy";
+      readonly fromAnnotations: "Markers come from Annotations.";
+      readonly hideMarkers: "Hide markers";
+      readonly legendAria: "Annotation markers";
+      readonly markers: "Markers";
+      readonly note: "Note";
+      readonly noteFallback: "Note";
+      readonly openAnnotations: "Open Annotations";
+      readonly pinClusterLabel: "{count, number} annotations, {date}";
+      readonly pinClusterName: "{count, number} annotations, {date}. {titles}";
+      readonly pinLabel: "{type}, {date}";
+      readonly pinName: "{title}, {date}";
+      readonly primaryConversion: "Primary conversion source changed from {from} to {to}";
+      readonly searchEngine: "Google update";
+      readonly showMarkers: "Show markers";
+      readonly sitemap: "Sitemap";
+      readonly sitemapTitle: "Sitemap: {added, number} added, {removed, number} removed";
+      readonly sourceLine: "{type} · {source}";
+      readonly tooltipHeading: "{type} · {date}";
+      readonly tooltipItem: "{letter} {title}";
+    };
     readonly controls: {
       readonly alert: {
         readonly dismiss: "Dismiss alert";
@@ -11210,10 +12915,10 @@ export type CoreMessages = {
         readonly deleteRunDangerLabel: "Delete run";
         readonly deleteRunTitle: "Delete run";
         readonly deleteRunToastMessage: "Run deleted";
-        readonly deleteTimelineNoteBody: "Delete this timeline note? This cannot be undone.";
+        readonly deleteTimelineNoteBody: "Delete this note? This cannot be undone.";
         readonly deleteTimelineNoteDangerLabel: "Delete note";
-        readonly deleteTimelineNoteTitle: "Delete timeline note?";
-        readonly deleteTimelineNoteToastMessage: "Timeline note deleted.";
+        readonly deleteTimelineNoteTitle: "Delete this note?";
+        readonly deleteTimelineNoteToastMessage: "Note deleted.";
         readonly deleteWebhookEndpointBody: "Stop future deliveries to this endpoint and remove its delivery history association. This cannot be undone.";
         readonly deleteWebhookEndpointDangerLabel: "Delete endpoint";
         readonly deleteWebhookEndpointTitle: "Delete webhook endpoint";
@@ -11409,6 +13114,12 @@ export type CoreMessages = {
         readonly yourTime: "{time} (your time)";
       };
     };
+    readonly conversions: {
+      readonly connect: "Connect analytics";
+      readonly primary: "Primary";
+      readonly primaryOption: "{label} · {mark}";
+      readonly switchLabel: "Conversion source";
+    };
     readonly dashboardComparison: {
       readonly asOf: "Report as of:";
       readonly baseline: "Baseline";
@@ -11556,6 +13267,10 @@ export type CoreMessages = {
           readonly description: "Read comparable changes and separate entry, exit, and unknown states.";
           readonly label: "Movers";
         };
+        readonly organic_conversions: {
+          readonly description: "Conversions for the dashboard period, with the daily trend and the top pages.";
+          readonly label: "Organic conversions";
+        };
         readonly organic_kpis: {
           readonly description: "Read stored organic metrics with their version, coverage, and comparable cohort.";
           readonly label: "Organic metrics";
@@ -11575,6 +13290,10 @@ export type CoreMessages = {
         readonly recent_targets: {
           readonly description: "Show recently added targets in the resolved search scope.";
           readonly label: "Recent targets";
+        };
+        readonly seo_cost: {
+          readonly description: "This month's project share of provider operations, subscriptions, and one-off costs.";
+          readonly label: "SEO cost";
         };
         readonly visibility_history: {
           readonly description: "Read versioned stored visibility history when a compatible report is available.";
@@ -12878,8 +14597,11 @@ export type CoreMessages = {
       readonly weekly: "Weekly · {weekday} {time}";
     };
     readonly schedulerUpgrade: {
+      readonly affected: "Affected keywords";
       readonly detail: "Automatic checks are paused for these keywords. Choose a schedule for them in Schedules. Other keywords continue as configured.";
+      readonly detailShort: "Automatic checks are paused until you choose a schedule.";
       readonly review: "Show affected keywords";
+      readonly reviewShort: "Show keywords";
       readonly schedules: "Open Schedules";
       readonly title: "{count, plural, one {# keyword needs schedule review} few {# keywords need schedule review} many {# keywords need schedule review} other {# keywords need schedule review}}";
     };
@@ -13190,6 +14912,7 @@ export type CoreMessages = {
         readonly aiTracking: "Monitor AI answers, brand mentions and cited sources over time.";
         readonly aiVisibility: "Brand mentions and citations from available provider observations.";
         readonly alerts: "Get notified when rankings change.";
+        readonly annotations: "Your notes plus Google updates, deploys, content and sitemap changes.";
         readonly audit: "Review project changes and security events.";
         readonly backlinks: "See who links to a site, what changed, and the cost before every run.";
         readonly competitors: "Benchmark competitors on your tracked keywords.";
@@ -13205,22 +14928,25 @@ export type CoreMessages = {
         readonly integrations: "Connect data providers and analytics sources.";
         readonly keywordResearch: "Find phrases worth tracking, with the cost visible before every lookup.";
         readonly markets: "Manage locations, keyword defaults, and market lifecycle.";
+        readonly pages: "Every URL of the project, one row each.";
         readonly preferences: "Theme and personal defaults.";
         readonly projectContext: "Business, audience, products and goals for your agents.";
-        readonly promptExplorer: "Try one prompt on several models and compare their answers and citations.";
+        readonly promptExplorer: "One question, several models. Compare who they name and which pages they cite.";
         readonly promptResearch: "Find dataset questions people ask AI about your market and the sites the answers cite.";
         readonly runs: "Rank checks, Prompt Tracker and Search Console imports for this project.";
         readonly searchConsole: "What Google reported, what it withheld, and what you keep.";
         readonly security: "Password, sessions and account protection.";
         readonly siteAudit: "Crawl your project site and inspect issues by URL.";
-        readonly timeline: "Project signals, page changes and notes over time.";
+        readonly timeline: "Your notes plus Google updates, deploys, content and sitemap changes.";
       };
       readonly titles: {
         readonly account: "Account settings";
-        readonly agentReports: "Agent Reports";
+        readonly agentReports: "Reports";
         readonly aiTracking: "Prompt Tracker";
         readonly aiVisibility: "Brand Visibility";
+        readonly aiVisibilityModule: "AI Visibility";
         readonly alerts: "Alerts";
+        readonly annotations: "Annotations";
         readonly audit: "Audit log";
         readonly backlinks: "Backlinks";
         readonly competitors: "Competitors";
@@ -13236,9 +14962,10 @@ export type CoreMessages = {
         readonly keywordResearch: "Keyword Research";
         readonly markets: "Markets";
         readonly overview: "Overview";
+        readonly pages: "Pages";
         readonly preferences: "Preferences";
         readonly projectContext: "Project Context";
-        readonly promptExplorer: "Prompt Playground";
+        readonly promptExplorer: "Model Playground";
         readonly promptResearch: "Prompt Research";
         readonly rankTracker: "Rank Tracker";
         readonly run: "Run";
@@ -13249,7 +14976,7 @@ export type CoreMessages = {
         readonly serpPlayground: "SERP Playground";
         readonly settings: "Settings";
         readonly siteAudit: "Site Audit";
-        readonly timeline: "Timeline";
+        readonly timeline: "Annotations";
         readonly usage: "Usage";
       };
     };
@@ -13296,10 +15023,12 @@ export type CoreMessages = {
         };
       };
       readonly items: {
-        readonly agentReports: "Agent Reports";
+        readonly agentReports: "Reports";
         readonly aiTracking: "Prompt Tracker";
         readonly aiVisibility: "Brand Visibility";
+        readonly aiVisibilityModule: "AI Visibility";
         readonly alerts: "Alerts";
+        readonly annotations: "Annotations";
         readonly backlinks: "Backlinks";
         readonly competitors: "Competitors";
         readonly dashboard: "Dashboard";
@@ -13308,8 +15037,9 @@ export type CoreMessages = {
         readonly integrations: "Providers";
         readonly keywordResearch: "Keyword Research";
         readonly markets: "Markets";
+        readonly pages: "Pages";
         readonly projectContext: "Project Context";
-        readonly promptExplorer: "Prompt Playground";
+        readonly promptExplorer: "Model Playground";
         readonly promptResearch: "Prompt Research";
         readonly rankTracker: "Rank Tracker";
         readonly runs: "Runs";
@@ -13319,6 +15049,27 @@ export type CoreMessages = {
         readonly settings: "Settings";
         readonly siteAudit: "Site Audit";
         readonly usage: "Usage";
+      };
+      readonly keywords: {
+        readonly agentReports: {
+          readonly legacy: "agent reports";
+        };
+        readonly aiVisibilityModule: {
+          readonly aeo: "aeo";
+          readonly aiSearch: "ai search";
+          readonly brandVisibility: "brand visibility";
+          readonly chatgpt: "chatgpt";
+          readonly geo: "geo";
+          readonly llm: "llm";
+          readonly llmo: "llmo";
+          readonly promptResearch: "prompt research";
+          readonly promptTracker: "prompt tracker";
+        };
+        readonly modelPlayground: {
+          readonly compareModels: "compare models";
+          readonly llm: "llm";
+          readonly promptPlayground: "prompt playground";
+        };
       };
       readonly menu: "Menu";
     };

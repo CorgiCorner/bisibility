@@ -33,7 +33,7 @@ it.each(viewports.flatMap((viewport) => themes.map((theme) => ({ ...viewport, th
             <SidebarNav
               activeHref="/app/prj_1/search-console"
               collapsed={collapsed}
-              enabledExperimentalModules={["timeline", "competitors"]}
+              enabledExperimentalModules={["competitors"]}
               projectRef="prj_1"
             />
           </div>
@@ -58,7 +58,7 @@ it.each(viewports.flatMap((viewport) => themes.map((theme) => ({ ...viewport, th
       "reports",
       "project",
     ]);
-    const reportRow = screen.getByRole("link", { name: "Agent Reports" });
+    const reportRow = screen.getByRole("link", { name: "Reports" });
     expect(reportRow.parentElement?.parentElement).toBe(headings[2].parentElement?.parentElement);
     expect(screen.queryByRole("link", { name: "Project Context" })).not.toBeInTheDocument();
     const rows = screen.getAllByRole("link");

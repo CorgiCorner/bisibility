@@ -18,8 +18,8 @@
     "failed": "Could not save. Try again.",
     "validation": "Use up to 4,000 characters per field.",
     "readOnly": "You can view context. Editing requires a writable project and a member role.",
-    "reportsTitle": "Agent reports",
-    "reportsDescription": "Saved analyses from your project, including AI research and site audits. Share a report link with project members.",
+    "reportsTitle": "Reports",
+    "reportsDescription": "See what changed on your site.",
     "emptyTitle": "No saved analyses yet",
     "emptyDescription": "Run an analysis or save a report to build your project history.",
     "addReport": "Save an analysis",
@@ -34,6 +34,24 @@
     "created": "Saved {date}",
     "historyLimit": "Showing the latest 100 reports. Use the API cursor to read older history.",
     "reportValidation": "Enter a title (up to 160 characters) and analysis (up to 12,000 characters).",
-    "reportSaved": "Analysis saved."
+    "reportSaved": "Analysis saved.",
+    "draft": "Draft",
+    "filterEmpty": "No reports of this kind.",
+    "kindFilter": "Report kind",
+    "kinds": {
+      "all": "All kinds",
+      "ai_visibility": "AI visibility",
+      "challenge_report": "Performance report",
+      "manual_analysis": "Written report",
+      "prompt_explorer": "Prompt explorer",
+      "prompt_research": "Prompt research",
+      "site_audit": "Site audit"
+    },
+    "audienceLink": "Anyone with the link",
+    "audienceMembers": "Project members",
+    "share": "Share",
+    "whoCanOpen": "Who can open",
+    "reportTitle": "Report title",
+    "reportContent": "Report content"
   }
 }

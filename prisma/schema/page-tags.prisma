@@ -1,0 +1,47 @@
+enum PageTagOrigin {
+  rule
+  manual
+}
+
+enum TagPageRuleKind {
+  path_pattern
+  sitemap
+  url_list
+  manual
+}
+
+/// A project tag on one registry page. Rule rows are reconciled; manual rows stay.
+model PageTag {
+  id        String        @id @default(cuid())
+  tagId     String
+  pageId    String
+  origin    PageTagOrigin
+  createdAt DateTime      @default(now())
+  tag       Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  page      ProjectPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, pageId])
+  @@index([pageId])
+  @@map("page_tags")
+}
+
+/// How one tag chooses pages. At most one rule per tag.
+model TagPageRule {
+  id                   String          @id @default(cuid())
+  tagId                String          @unique
+  kind                 TagPageRuleKind
+  pattern              String?
+  excludePatterns      String[]        @default([])
+  sitemapUrl           String?
+  urls                 String[]        @default([])
+  autoJoin             Boolean         @default(true)
+  tagTargetingKeywords Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  updatedById          String?
+  tag                  Tag             @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  updatedBy            User?           @relation("TagPageRuleUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([updatedById])
+  @@map("tag_page_rules")
+}

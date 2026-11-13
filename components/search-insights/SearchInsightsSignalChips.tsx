@@ -12,6 +12,8 @@ import { type ReactNode, use } from "react";
 import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";
 
 export type SearchInsightsSignalChipsProps = {
+  /** Conversions by page. It stays beside the analytics connect card. */
+  conversionsCard?: ReactNode;
   /** Slot for the optional second-source card, which is not a peer of the two chips. */
   ga4Card?: ReactNode;
   namedQueryCount: number;
@@ -84,6 +86,7 @@ function Chip({
 }
 
 export function SearchInsightsSignalChips({
+  conversionsCard,
   ga4Card,
   namedQueryCount,
   onOpenBand,
@@ -127,15 +130,18 @@ export function SearchInsightsSignalChips({
         which="overlap"
       />
       {ga4Card ? <div className="empty:hidden md:col-span-2">{ga4Card}</div> : null}
+      {conversionsCard ? <div className="empty:hidden md:col-span-2">{conversionsCard}</div> : null}
     </div>
   );
 }
 
 export function SearchInsightsSignalChipsResolver({
+  conversionsCard,
   ga4Card,
   namedQueryCount,
   result,
 }: Readonly<{
+  conversionsCard?: ReactNode;
   ga4Card?: ReactNode;
   namedQueryCount: number;
   result: Promise<SearchInsightsSignalResult>;
@@ -143,11 +149,17 @@ export function SearchInsightsSignalChipsResolver({
   const settled = use(result);
   return settled.state === "ready" ? (
     <SearchInsightsSignalChips
+      conversionsCard={conversionsCard}
       ga4Card={ga4Card}
       namedQueryCount={namedQueryCount}
       signals={settled.signals}
     />
   ) : (
-    <SearchInsightsSignalChips ga4Card={ga4Card} namedQueryCount={namedQueryCount} state="error" />
+    <SearchInsightsSignalChips
+      conversionsCard={conversionsCard}
+      ga4Card={ga4Card}
+      namedQueryCount={namedQueryCount}
+      state="error"
+    />
   );
 }

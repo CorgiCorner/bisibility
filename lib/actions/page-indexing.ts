@@ -4,6 +4,7 @@ import { consume } from "@/lib/api/ratelimit";
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { searchConsolePath } from "@/lib/routing/app-path";
+import { notIndexedUrlsCsv } from "@/lib/search-index/not-indexed-csv";
 import { readProjectSitemaps } from "@/lib/search-index/read-sitemaps";
 import { searchIndexInspectionSchema } from "@/lib/search-index/schema";
 import { connectionForProject, inspectSearchIndexUrls } from "@/lib/search-index/service";
@@ -60,6 +61,12 @@ export async function loadPageIndexingDetail(input: unknown) {
   const { project } = await requireReadableProject(projectId);
   const { property } = await connectionForProject(project.id);
   return storedIndexingDetail(project.id, property, url);
+}
+
+export async function exportNotIndexedUrls(input: unknown) {
+  const { projectId } = z.object({ projectId: projectRef }).parse(input);
+  const { project } = await requireReadableProject(projectId);
+  return notIndexedUrlsCsv(project.id);
 }
 
 export async function readPageIndexingSitemaps(

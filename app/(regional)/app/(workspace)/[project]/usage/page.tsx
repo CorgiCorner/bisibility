@@ -2,8 +2,17 @@ import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvid
 import { IntegrationUsagePanel } from "@/components/integrations/IntegrationUsagePanel";
 import type { BillingConnection } from "@/components/integrations/ProviderBillingCard";
 import { PageContent } from "@/components/shell/PageContent";
+import { UsageCosts } from "@/components/usage/UsageCosts";
+import { usageBlocks, usagePageClassName } from "@/components/usage/usage-page-layout";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import {
+  createCostItemAction,
+  deleteCostItemAction,
+  endCostItemAction,
+  updateCostItemAction,
+} from "@/lib/actions/cost-items";
+import { readUsageCosts } from "@/lib/cost-items/read";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
@@ -18,9 +27,10 @@ export default async function UsagePage({
 }>) {
   const [{ project }, runtime] = await Promise.all([params, resolveRegionalDocumentLocale()]);
   const { publicId } = await resolveProjectAccess(project);
-  const [{ categories }, messages, query] = await Promise.all([
+  const [{ categories }, messages, costs, query] = await Promise.all([
     getIntegrationsView(publicId),
-    loadCoreMessages(runtime.locale, ["shared", "projectIntegrations"]),
+    loadCoreMessages(runtime.locale, ["shared", "projectIntegrations", "projectUsageCosts"]),
+    readUsageCosts(publicId),
     searchParams,
   ]);
   const connections: BillingConnection[] = categories.flatMap((category) =>
@@ -44,16 +54,24 @@ export default async function UsagePage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent className="flex flex-col gap-5">
-        <IntegrationUsagePanel
-          projectRef={publicId}
-          editBudget={query?.budget === "edit"}
-          connections={
-            deploymentMode() === "self-host"
-              ? connections.filter((row) => row.credentialSource !== "hosted")
-              : connections
-          }
-        />
+      <PageContent className={usagePageClassName} data-usage-blocks={usageBlocks.join(" ")}>
+        <UsageCosts
+          createItem={createCostItemAction}
+          deleteItem={deleteCostItemAction}
+          endItem={endCostItemAction}
+          updateItem={updateCostItemAction}
+          view={costs}
+        >
+          <IntegrationUsagePanel
+            projectRef={publicId}
+            editBudget={query?.budget === "edit"}
+            connections={
+              deploymentMode() === "self-host"
+                ? connections.filter((row) => row.credentialSource !== "hosted")
+                : connections
+            }
+          />
+        </UsageCosts>
       </PageContent>
     </FeatureMessagesProvider>
   );

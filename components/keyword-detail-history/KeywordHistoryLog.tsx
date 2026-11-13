@@ -33,7 +33,7 @@ export function KeywordHistoryLog({
             ariaLabel={t("streamControl")}
             disabled={busy}
             fitContent
-            size="xs"
+            size="toolbar"
             value={stream}
             onChange={setStream}
             options={[

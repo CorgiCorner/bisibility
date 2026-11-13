@@ -1,0 +1,42 @@
+enum ProjectPageSourceKind {
+  sitemap
+  search_console
+  rank_tracker
+  ai_citation
+  manual
+}
+
+model ProjectPage {
+  id          String              @id @default(cuid())
+  projectId   String
+  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  path        String
+  pathHash    String
+  firstSeenAt DateTime
+  lastSeenAt  DateTime
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  sources       ProjectPageSource[]
+  vitals        PageVitals[]
+  pageTags      PageTag[]
+  snapshotPages PageSnapshotPage[]
+
+  @@unique([projectId, pathHash])
+  @@index([projectId, path])
+  @@map("project_pages")
+}
+
+model ProjectPageSource {
+  id          String                @id @default(cuid())
+  pageId      String
+  page        ProjectPage           @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  source      ProjectPageSourceKind
+  firstSeenAt DateTime
+  lastSeenAt  DateTime
+  detail      Json?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@unique([pageId, source])
+  @@map("project_page_sources")
+}

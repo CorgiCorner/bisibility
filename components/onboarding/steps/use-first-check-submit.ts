@@ -9,6 +9,7 @@ import { type SyntheticEvent, useRef, useState } from "react";
 import type { SaveOnboardingMarketsAction } from "./onboarding-market-actions";
 
 type FirstCheckSubmitInput = {
+  challenge?: boolean;
   completeOnboardingAction?: (input: { projectId: string }) => Promise<unknown>;
   marketKeys: readonly string[];
   navigationProjectId: string | null | undefined;
@@ -16,6 +17,7 @@ type FirstCheckSubmitInput = {
 };
 
 export function useFirstCheckSubmit({
+  challenge,
   completeOnboardingAction,
   marketKeys,
   navigationProjectId,
@@ -41,7 +43,11 @@ export function useFirstCheckSubmit({
         await completeOnboardingAction({ projectId: navigationProjectId });
       }
       router.push(
-        navigationProjectId ? appPath(navigationProjectId, "getting-started") : appRootPath(),
+        navigationProjectId
+          ? challenge
+            ? `${appPath(navigationProjectId, "pages")}#seo-challenge`
+            : appPath(navigationProjectId, "getting-started")
+          : appRootPath(),
       );
     } catch (error) {
       setSubmitError(presentActionError(error, sharedErrors, t("errors.complete")));

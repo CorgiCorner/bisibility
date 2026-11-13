@@ -15,11 +15,13 @@ export function AiCostPolicyFields({
   catalog,
   disabled,
   showConsent = true,
+  className,
 }: Readonly<{
   form: AiResearchForm;
   catalog?: AiResearchCatalog;
   disabled: boolean;
   showConsent?: boolean;
+  className?: string;
 }>) {
   const t = useTranslations("projectAiResearch");
   const values = form.watch();
@@ -45,7 +47,7 @@ export function AiCostPolicyFields({
   }
   return (
     <>
-      <div className="grid gap-2 text-ui-body sm:col-span-2">
+      <div className="grid w-full max-w-sm gap-2 text-ui-body sm:col-span-2">
         <span>{t("costPolicy")}</span>
         <MenuSelect
           ariaLabel={t("costPolicy")}
@@ -63,7 +65,7 @@ export function AiCostPolicyFields({
           ]}
         />
         {actual || !catalog?.actualCostAvailable ? (
-          <span className="text-ui-xs text-fg-muted">
+          <span className="text-ui-caption text-fg-muted">
             {t(
               actual && catalog?.actualCostAvailable
                 ? "actualCostOwnCredentials"
@@ -76,9 +78,9 @@ export function AiCostPolicyFields({
         <AiActualCostConsent form={form} disabled={disabled} detailed />
       ) : null}
       {actual && !showConsent ? (
-        <p className="m-0 text-ui-xs text-fg-muted sm:col-span-2">{t("actualCostRisk")}</p>
+        <p className="m-0 text-ui-caption text-fg-muted sm:col-span-2">{t("actualCostRisk")}</p>
       ) : null}
-      <AiResearchCostCap form={form} disabled={disabled} advisory={actual} />
+      <AiResearchCostCap advisory={actual} className={className} disabled={disabled} form={form} />
     </>
   );
 }

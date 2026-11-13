@@ -96,9 +96,80 @@
       "validationUrl": "有効な URL を入力してください。"
     },
     "remove": {
-      "confirm": "このタイムラインのメモを削除しますか？",
-      "aria": "タイムラインのメモを削除",
+      "confirm": "このメモを削除しますか？",
+      "aria": "このメモを外す",
       "error": "メモを削除できませんでした。"
+    },
+    "annotations": {
+      "lead": "メモに加え、Google のアップデート、デプロイ、コンテンツとサイトマップの変更をまとめます。それぞれがグラフに表示されます。",
+      "rulerTitle": "過去90日",
+      "rulerHint": "ピンは時点です。帯は Google のロールアウトです。",
+      "rulerAria": "注釈、過去90日",
+      "legend": {
+        "note": "メモ",
+        "google": "Google のアップデート",
+        "deploy": "デプロイ",
+        "content": "コンテンツ",
+        "sitemap": "サイトマップ"
+      },
+      "addAria": "メモを追加",
+      "placeholder": "何を変えましたか？ 例: 20ページに FAQ を追加",
+      "today": "今日",
+      "dateAria": "メモの日付",
+      "wholeProject": "プロジェクト全体",
+      "scopeAria": "メモの対象",
+      "scopeSearch": "ページを検索",
+      "scopeEmpty": "一致するページがありません。",
+      "addNote": "メモを追加",
+      "filterAria": "注釈を絞り込む",
+      "filter": {
+        "all": "すべて",
+        "note": "メモ",
+        "google": "Google のアップデート",
+        "deploy": "デプロイ",
+        "content": "コンテンツ",
+        "sitemap": "サイトマップ"
+      },
+      "hideAutomatic": "自動を隠す",
+      "showAutomatic": "自動を表示",
+      "empty": "このフィルタに該当するものはありません。",
+      "byActor": "{actor} より",
+      "contentFallback": "コンテンツを更新",
+      "deindexedTitle": "インデックスから外れた URL",
+      "deployFallback": "デプロイ",
+      "detailContent": "CMS またはコンテンツのシグナルです。",
+      "detailDeindexed": "この URL はもうインデックスされていません。",
+      "detailDeploy": "デプロイのウェブフックからです。送信された提供者、環境、デプロイ ID を残します。",
+      "detailGoogle": "Google 検索ステータスダッシュボードから取り込みました。開始と終了があるロールアウトは帯で、1日ではありません。",
+      "detailNote": "手入力のメモです。",
+      "detailSitemap": "サイトマップ監視からです。追加と削除された URL が注釈になります。",
+      "noteFallback": "メモ",
+      "sitemapTitle": "サイトマップ: {added, number} 件追加、{removed, number} 件削除",
+      "primaryConversion": "主なコンバージョンのソースが{from}から{to}に変わりました",
+      "conversionSource": {
+        "none": "なし",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      },
+      "source": {
+        "note": "メモ",
+        "google": "Google のアップデート",
+        "deploy": "デプロイ",
+        "content": "コンテンツ",
+        "sitemap": "サイトマップ"
+      },
+      "rolloutRange": "{start} から {end} · {status}",
+      "rolloutComplete": "ロールアウト完了",
+      "rolloutOpen": "ロールアウト中",
+      "sourcesTitle": "自動の情報源",
+      "googleSourceDetail": "検索ステータスダッシュボード · 無料",
+      "statusOn": "オン",
+      "sitemapSource": "サイトマップの変更",
+      "sitemapSourceDetail": "サイトマップ監視 · 稼働中",
+      "deploySourceDetail": "ウェブフック: Vercel、Netlify、GitHub",
+      "connect": "接続",
+      "contentSource": "コンテンツ (CMS)",
+      "contentSourceDetail": "ウェブフックまたは API · シグナル源 cms"
     }
   }
 }

@@ -24,7 +24,7 @@ vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
     navItems: (
       projectRef: string,
       context?: NavContext,
-      enabledExperimentalModules?: readonly ("timeline" | "competitors")[],
+      enabledExperimentalModules?: readonly "competitors"[],
     ) =>
       actual
         .navItems(projectRef, context, enabledExperimentalModules)
@@ -56,7 +56,7 @@ describe("SidebarNav", () => {
     const view = render(
       <SidebarNav
         collapsed={collapsed}
-        enabledExperimentalModules={["timeline", "competitors"]}
+        enabledExperimentalModules={["competitors"]}
         projectRef="prj_1"
       />,
     );
@@ -99,14 +99,14 @@ describe("SidebarNav", () => {
     const disabled = render(<SidebarNav enabledExperimentalModules={[]} projectRef="prj_1" />);
 
     expect(disabled.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(disabled.getByRole("link", { name: "Annotations" })).toBeInTheDocument();
     expect(disabled.queryByRole("link", { name: "Competitors" })).not.toBeInTheDocument();
     disabled.unmount();
 
-    render(
-      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
-    );
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
 
     expect(screen.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Annotations" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
   });
 
@@ -124,9 +124,7 @@ describe("SidebarNav", () => {
     setNavigationState({
       pathname: marketPath("prj_1", asMarketRef("pmkt_one"), "rank-tracker"),
     });
-    render(
-      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
-    );
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
 
     const current = screen.getByRole("link", { name: "Rank Tracker" });
 
@@ -155,9 +153,7 @@ describe("SidebarNav", () => {
 
   it("keeps account-route drawer links at project level", () => {
     setNavigationState({ pathname: "/app/account/preferences" });
-    render(
-      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
-    );
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
 
     for (const link of screen.getAllByRole("link")) {
       expect(link.getAttribute("href")).toMatch(/^\/app\/prj_1\//u);
@@ -193,10 +189,7 @@ describe("SidebarNav", () => {
   it("keeps Dashboard alone before purpose groups in expanded and collapsed drawers", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     const expanded = render(
-      <SidebarNav
-        enabledExperimentalModules={["timeline", "competitors", "promptPlayground"]}
-        projectRef="prj_1"
-      />,
+      <SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />,
     );
 
     expect(expanded.queryByText("Activity")).toBeNull();
@@ -213,11 +206,11 @@ describe("SidebarNav", () => {
       "/app/prj_1/backlinks",
       "/app/prj_1/site-audit",
       "/app/prj_1/competitors",
-      "/app/prj_1/prompt-tracker",
-      "/app/prj_1/prompt-research",
-      "/app/prj_1/brand-visibility",
-      "/app/prj_1/prompt-playground",
+      "/app/prj_1/ai-visibility",
+      "/app/prj_1/model-playground",
+      "/app/prj_1/pages",
       "/app/prj_1/search-console",
+      "/app/prj_1/annotations",
       "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
@@ -235,11 +228,7 @@ describe("SidebarNav", () => {
     expanded.unmount();
 
     const collapsed = render(
-      <SidebarNav
-        collapsed
-        enabledExperimentalModules={["timeline", "competitors", "promptPlayground"]}
-        projectRef="prj_1"
-      />,
+      <SidebarNav collapsed enabledExperimentalModules={["competitors"]} projectRef="prj_1" />,
     );
     expect(collapsed.queryByText("Activity")).toBeNull();
     expect(collapsed.queryByText("Project")).toBeNull();
@@ -258,11 +247,11 @@ describe("SidebarNav", () => {
       "/app/prj_1/backlinks",
       "/app/prj_1/site-audit",
       "/app/prj_1/competitors",
-      "/app/prj_1/prompt-tracker",
-      "/app/prj_1/prompt-research",
-      "/app/prj_1/brand-visibility",
-      "/app/prj_1/prompt-playground",
+      "/app/prj_1/ai-visibility",
+      "/app/prj_1/model-playground",
+      "/app/prj_1/pages",
       "/app/prj_1/search-console",
+      "/app/prj_1/annotations",
       "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
@@ -322,40 +311,17 @@ describe("SidebarNav", () => {
     expect(rows[rows.length - 1]).toBe(settings);
   });
 
-  it("renders experimental navigation as an icon with an accessible tooltip", () => {
+  it("does not mark experimental navigation in the rail", () => {
     navBadgeOverrides.Dashboard = "new";
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
-    render(
-      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
-    );
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
 
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
     expect(within(gcsInsights).queryByText("beta")).not.toBeInTheDocument();
 
     const competitors = screen.getByRole("link", { name: "Competitors" });
-    expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeInTheDocument();
-
-    const experimentalTooltip = competitors.querySelector('[data-tooltip="Experimental"]');
-    expect(experimentalTooltip).toBeInTheDocument();
-    const trigger = experimentalTooltip?.querySelector('[role="img"]');
-    expect(trigger).toHaveAttribute("aria-label", "Experimental");
-    expect(trigger).toHaveClass(
-      "grid",
-      "h-[30px]",
-      "w-[30px]",
-      "shrink-0",
-      "place-items-center",
-      "text-fg-muted",
-      "hover:text-fg",
-    );
-
-    const flask = trigger?.firstElementChild;
-    expect(flask).toHaveAttribute("data-experimental-badge-flask");
-    expect(flask?.tagName).toBe("svg");
-    expect(flask).toHaveAttribute("width", "14");
-    expect(flask).toHaveAttribute("height", "14");
-    expect(flask).toHaveClass("shrink-0", "text-current");
-    expect(gcsInsights.querySelector("[data-experimental-badge-flask]")).toBeNull();
+    expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeNull();
+    expect(competitors.querySelector('[data-tooltip="Experimental"]')).toBeNull();
 
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
     expect(within(dashboard).getByText("new")).toHaveClass(

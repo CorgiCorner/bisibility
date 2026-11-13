@@ -46,14 +46,24 @@ function LongMenu() {
 
 function InputSizedMenu() {
   const [value, setValue] = useState("draft");
+  const [values, setValues] = useState<string[]>(["draft"]);
   return (
-    <MenuSelect
-      ariaLabel="Input-sized menu"
-      onChange={setValue}
-      options={shortOptions}
-      size="input"
-      value={value}
-    />
+    <>
+      <MenuSelect
+        ariaLabel="Input-sized menu"
+        onChange={setValue}
+        options={shortOptions}
+        size="input"
+        value={value}
+      />
+      <MenuMultiSelect
+        ariaLabel="Input-sized multi-select"
+        onChange={setValues}
+        options={shortOptions}
+        size="input"
+        values={values}
+      />
+    </>
   );
 }
 

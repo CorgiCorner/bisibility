@@ -1,0 +1,4 @@
+/* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules keeps this selector global so the loading class is statically inspectable. */
+:global(.model-playground-composer-loading) {
+  min-height: 425px;
+}

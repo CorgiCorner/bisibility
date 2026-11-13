@@ -1,12 +1,21 @@
+import {
+  BRAND_NAME_MATCH_POLICY,
+  matchBrandNamesInAnswer,
+  positiveBrandNames,
+} from "@/lib/ai-tracking/brand-name-match";
 import type { EntityObservationInput, JsonValue } from "@/lib/ai-tracking/contract";
-import { findLiteralWordMatch } from "@/lib/ai-tracking/literal-match";
+
+function stringList(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
 
 export function trackingEntityObservations(
   answer: string | null,
   snapshot: JsonValue,
 ): EntityObservationInput[] {
   if (!answer || !Array.isArray(snapshot)) return [];
-  const normalized = answer.normalize("NFKC").toLocaleLowerCase("en");
   return snapshot.flatMap((entity) => {
     if (
       !entity ||
@@ -15,39 +24,29 @@ export function trackingEntityObservations(
       typeof entity.id !== "string"
     )
       return [];
-    const name =
-      typeof entity.label === "string"
-        ? entity.label
-        : typeof entity.domain === "string"
-          ? entity.domain
-          : "";
-    const aliases = [
-      ...new Set(
-        [name, entity.domain, ...(Array.isArray(entity.aliases) ? entity.aliases : [])].filter(
-          (value): value is string => typeof value === "string" && value.trim().length > 0,
-        ),
-      ),
-    ];
-    let position: number | null = null;
-    for (const alias of aliases) {
-      const match = findLiteralWordMatch(
-        normalized,
-        alias.normalize("NFKC").toLocaleLowerCase("en"),
-      );
-      if (match && (position === null || match.index < position)) position = match.index;
-    }
+    const names = {
+      aliases: stringList(entity.aliases),
+      domain: typeof entity.domain === "string" ? entity.domain : null,
+      excludedNames: stringList(entity.excludedNames),
+      label: typeof entity.label === "string" ? entity.label : null,
+    };
+    const name = names.label || names.domain || "";
+    const aliases = positiveBrandNames(names);
+    const match = matchBrandNamesInAnswer(answer, names);
     return [
       {
-        entityKey: entity.id,
-        competitorId: entity.kind === "project" ? null : entity.id,
-        name,
         aliases,
-        mentioned: position !== null,
-        position,
+        competitorId: entity.kind === "project" ? null : entity.id,
+        confidence: match.position === null ? null : 1,
+        entityKey: entity.id,
+        matchPolicy: BRAND_NAME_MATCH_POLICY,
+        mentioned: match.named,
+        name,
+        position: match.position,
         snippet:
-          position === null ? null : answer.slice(Math.max(0, position - 100), position + 200),
-        matchPolicy: "nfkc_unicode_word_v1",
-        confidence: position === null ? null : 1,
+          match.position === null
+            ? null
+            : answer.slice(Math.max(0, match.position - 100), match.position + 200),
       },
     ];
   });

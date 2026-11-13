@@ -34,3 +34,16 @@ export const renameTagSchema = z
     message: "Choose a different tag name.",
     path: ["toName"],
   });
+
+const tagIdSchema = z.string().trim().min(1).max(80);
+
+export const mergeTagSchema = z
+  .object({
+    projectId: projectIdSchema,
+    sourceId: tagIdSchema,
+    targetId: tagIdSchema,
+  })
+  .refine((data) => data.sourceId !== data.targetId, {
+    message: "Choose a different tag.",
+    path: ["targetId"],
+  });

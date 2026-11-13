@@ -15,6 +15,9 @@ vi.mock("@/components/achievements/AchievementsPanel", () => ({
 }));
 vi.mock("@/lib/achievements/read", () => ({ readAchievements: mocks.read }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.session }));
+vi.mock("@/lib/challenge-report/feature", () => ({
+  projectSeoChallengeEnabled: async () => false,
+}));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: async () => ({
     locale: mocks.locale,

@@ -34,7 +34,7 @@ describe("site audit workspace", () => {
   it("accepts a catalog-sized crawl above the legacy page ceiling", async () => {
     const action = vi.fn(async () => auditFixture);
     wrap("en", { runAction: action, maxPages: 5000, workerEnabled: true });
-    fireEvent.change(screen.getByLabelText("Page limit"), { target: { value: "120" } });
+    fireEvent.change(screen.getByLabelText("Pages to check"), { target: { value: "120" } });
     fireEvent.click(screen.getByRole("button", { name: "Run audit" }));
     await waitFor(() =>
       expect(action).toHaveBeenCalledWith({ projectId: "prj_demo", maxPages: 120 }),
@@ -146,7 +146,7 @@ describe("site audit workspace", () => {
   it("blocks invalid limits before the action", async () => {
     const action = vi.fn();
     wrap("en", { runAction: action });
-    fireEvent.change(screen.getByLabelText("Page limit"), { target: { value: "16" } });
+    fireEvent.change(screen.getByLabelText("Pages to check"), { target: { value: "16" } });
     const form = screen.getByRole("button", { name: "Run audit" }).closest("form");
     if (!form) throw new Error("Audit form missing");
     fireEvent.submit(form);

@@ -28,6 +28,7 @@ export function defaultsRowForTest(values: Partial<ProjectDefaults> = {}): Proje
     indexingDiscoveryComplete: false,
     searchSyncImportMonths: null,
     searchSyncPace: null,
+    primaryConversionSource: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),
     ...values,

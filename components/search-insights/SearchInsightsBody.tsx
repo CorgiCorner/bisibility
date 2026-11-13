@@ -14,7 +14,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";
-import { SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
+import { type ConversionsKpiSlot, SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
 import {
   PAGE_LENS_QUERY_PARAM,
   pageLensFromQuery,
@@ -32,11 +32,13 @@ import { organicSessionsPendingPresentation } from "./search-insights-sessions-m
 import { moduleTablesLayout } from "./search-insights-table-columns";
 import { useSearchInsightsRows } from "./useSearchInsightsRows";
 export type SearchInsightsBodyProps = {
+  conversions?: ConversionsKpiSlot | null;
   importState: SearchInsightsImportState | null;
   loadRowsAction: LoadSearchInsightsRowsAction;
   onOpenPage?: (row: SearchInsightsPageRow) => void;
   onOpenQuery?: (row: SearchInsightsQueryRow) => void;
   onTrack?: (row: SearchInsightsQueryRow) => void;
+  clicksChart?: ReactNode;
   period: string;
   projectId: string;
   property: string;
@@ -48,6 +50,8 @@ function viewIdSuffix(view: ExpandableCardView) {
   return view === "expanded" ? "-expanded" : "";
 }
 export function SearchInsightsBody({
+  clicksChart,
+  conversions = null,
   importState,
   loadRowsAction,
   onOpenPage,
@@ -160,9 +164,11 @@ export function SearchInsightsBody({
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
       <SearchInsightsKpiRow
+        conversions={conversions}
         extra={view.clicksToSessionsKpi ?? pendingSessionsKpi}
         kpis={view.kpis}
       />
+      {clicksChart}
       {signalChips}
       {/* Two tables sit side by side until a numeric column would start truncating; then they
           stack, each keeping its own horizontal scroll rather than shrinking a column. */}

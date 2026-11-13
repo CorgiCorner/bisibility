@@ -130,7 +130,7 @@ export function BusinessIdentityEditor({
       <Card>
         <p>{t("selectionChanged")}</p>
         <Button
-          size="sm"
+          size="input"
           variant="ghost"
           onClick={() => {
             onCancel();
@@ -187,7 +187,7 @@ export function BusinessIdentityEditor({
                 />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button
-                    size="sm"
+                    size="input"
                     variant="outline"
                     disabled={permissions.canWrite !== true || review.latest.state !== "active"}
                     onClick={() => {
@@ -205,7 +205,7 @@ export function BusinessIdentityEditor({
                     {t("keepChangedFields")}
                   </Button>
                   <Button
-                    size="sm"
+                    size="input"
                     variant="ghost"
                     onClick={() => {
                       setBase(review.latest);
@@ -223,7 +223,7 @@ export function BusinessIdentityEditor({
                 <p className="text-sm text-fg-muted">{t("currentUnavailable")}</p>
                 {!base ? (
                   <Button
-                    size="sm"
+                    size="input"
                     variant="outline"
                     disabled={!writable}
                     onClick={() => {
@@ -234,7 +234,7 @@ export function BusinessIdentityEditor({
                     {t("editConflictingIdentity")}
                   </Button>
                 ) : onRequestCurrent ? (
-                  <Button variant="outline" onClick={onRequestCurrent}>
+                  <Button size="input" variant="outline" onClick={onRequestCurrent}>
                     {t("reviewCurrent")}
                   </Button>
                 ) : null}
@@ -244,14 +244,14 @@ export function BusinessIdentityEditor({
         ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <Button
-            size="sm"
+            size="input"
             type="submit"
             disabled={!writable || action.pending || conflict || blocked}
           >
             {t("save")}
           </Button>
           <Button
-            size="sm"
+            size="input"
             variant="ghost"
             disabled={action.pending}
             onClick={() => {

@@ -1,39 +1,13 @@
-import { AiResearchWorkspace } from "@/components/ai-research/AiResearchWorkspace";
-import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import { PageContent } from "@/components/shell/PageContent";
-import { loadCoreMessages } from "@/i18n/catalog-loader.server";
-import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
-import { getAiResearchPage } from "@/lib/actions/ai-research";
-// Provider work has a 260-second aggregate budget, leaving time to settle usage and save results.
-export const maxDuration = 300;
+import { brandVisibilityRedirectPath } from "@/lib/ai-tracking/ai-visibility-paths";
+import { redirect } from "next/navigation";
 
-export default async function BrandVisibilityPage({
+export default async function BrandVisibilityRedirect({
   params,
-}: Readonly<{ params: Promise<{ project: string }> }>) {
-  const [{ project }, runtime] = await Promise.all([params, resolveRegionalDocumentLocale()]);
-  const [data, messages] = await Promise.all([
-    getAiResearchPage(project, "visibility"),
-    loadCoreMessages(runtime.locale, ["shared", "projectAiResearch"]),
-  ]);
-  return (
-    <FeatureMessagesProvider
-      locale={runtime.locale}
-      messages={messages}
-      timeZone={runtime.timeZone}
-    >
-      <PageContent variant="section">
-        <AiResearchWorkspace
-          projectId={project}
-          mode="visibility"
-          domain={data.domain}
-          history={data.history}
-          canRun={data.canRun}
-          catalog={data.catalog}
-          catalogError={data.catalogError}
-          catalogFailure={data.catalogFailure}
-          supportingProviders={data.supportingProviders}
-        />
-      </PageContent>
-    </FeatureMessagesProvider>
-  );
+  searchParams,
+}: Readonly<{
+  params: Promise<{ project: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}>) {
+  const [{ project }, query] = await Promise.all([params, searchParams]);
+  redirect(brandVisibilityRedirectPath(project, query ?? {}));
 }

@@ -193,6 +193,7 @@ export function ConnectDrawerOauthSelection({
           !manualEntry ? (
             <>
               <MenuSelect
+                size="input"
                 ariaLabel={isGa4 ? t("ga4Aria") : t("gscAria")}
                 onChange={(value) => {
                   onPropertyChange(value);
@@ -203,7 +204,7 @@ export function ConnectDrawerOauthSelection({
                   ? { groups }
                   : { options: propertyOptions.map((option) => menuOption(option)) })}
                 selectedContent={propertySelectionLabel}
-                triggerClassName="min-h-[42px] w-full justify-between"
+                triggerClassName="w-full justify-between"
                 value={property}
               />
               {!isGa4 ? (
@@ -212,6 +213,7 @@ export function ConnectDrawerOauthSelection({
                     <div key={name}>
                       <FieldLabel label={label} />
                       <MenuSelect
+                        size="input"
                         ariaLabel={label}
                         onChange={(value) =>
                           form.setValue(
@@ -239,7 +241,7 @@ export function ConnectDrawerOauthSelection({
                     data-slot="selection-secondary-actions"
                   >
                     {onCancel ? (
-                      <Button onClick={onCancel} type="button" variant="ghost">
+                      <Button size="input" onClick={onCancel} type="button" variant="ghost">
                         {t("cancel")}
                       </Button>
                     ) : null}
@@ -247,6 +249,7 @@ export function ConnectDrawerOauthSelection({
                   </div>
                 ) : null}
                 <Button
+                  size="input"
                   className="w-auto"
                   disabled={!property || readOnly}
                   loading={pending}

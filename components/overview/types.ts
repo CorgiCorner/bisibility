@@ -19,8 +19,9 @@ export type TrendTakeaway = OverviewReturn["trendTakeaway"];
 export type KpiDeltaTone = OverviewKpi["deltaTone"];
 export type OverviewView = Omit<
   OverviewReturn,
-  "projectReadOnly" | "state" | "firstCheckSourceReady"
+  "chartMarkers" | "projectReadOnly" | "state" | "firstCheckSourceReady"
 > & {
+  chartMarkers?: OverviewReturn["chartMarkers"];
   firstCheckSourceReady?: boolean;
   projectReadOnly: boolean;
   state: WorkspaceDataState;

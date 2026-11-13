@@ -69,6 +69,7 @@ export function StepFirstCheck({
   const providerCloseFocusRef = useRef<"run" | "trigger">("trigger");
   const timezone = defaults?.timezone ?? "UTC";
   const { onSubmit, submitError, submitting } = useFirstCheckSubmit({
+    challenge: flowState?.challenge,
     completeOnboardingAction,
     marketKeys: markets.map((market) => market.canonicalKey),
     navigationProjectId,

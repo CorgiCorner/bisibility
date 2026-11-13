@@ -79,52 +79,50 @@ export function KeywordsFilterBar({
 
   return (
     <div className="px-4 py-3" data-keywords-toolbar="">
-      <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-2" data-keywords-toolbar-row="">
         {hasContextControls ? (
           <div
-            // `contents` would leak these into the parent grid as separate rows below xl.
-            className="order-2 flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-2 lg:order-1"
+            className="contents lg:flex lg:shrink-0 lg:items-center lg:gap-2"
             data-keywords-toolbar-context=""
           >
             {scopeControl ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">{scopeControl}</div>
+              <div className="hidden min-w-0 items-center gap-2 lg:flex">{scopeControl}</div>
             ) : null}
             {savedViewControl ? (
-              <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
+              <span className="inline-flex min-w-0 flex-none">{savedViewControl}</span>
             ) : null}
           </div>
         ) : null}
-        <div className="order-1 grid min-w-0 grid-cols-1 items-center gap-2 lg:order-2 2xl:grid-cols-[minmax(220px,1fr)_auto]">
-          <ToolbarSearch
-            variant="outlined"
-            className="min-w-0"
-            id="keywords-filter"
-            label={t("searchKeywords")}
-            onChange={onSearchChange}
-            onSubmit={onSearchCommit}
-            placeholder={t("searchPlaceholder")}
-            value={searchValue}
-          />
-          <KeywordsToolbarActions
-            columnOrderControl={columnOrderControl}
-            columnSizing={columnSizing}
-            columns={columns}
-            columnVisibility={columnVisibility}
-            density={density}
-            filterCount={filterCount}
-            id={id}
-            onAddKeyword={onAddKeyword}
-            onColumnSizingChange={onColumnSizingChange}
-            onColumnVisibilityChange={onColumnVisibilityChange}
-            onDensityChange={onDensityChange}
-            onImportCsv={onImportCsv}
-            exportDisabled={exportDisabled}
-            onOpenExport={onOpenExport}
-            onOpenFilters={onOpenFilters}
-            onRefresh={onRefresh}
-            refreshing={refreshing}
-          />
-        </div>
+
+        <ToolbarSearch
+          variant="outlined"
+          className="order-first min-w-0 basis-full lg:order-none lg:max-w-sm lg:basis-32 lg:flex-1"
+          id="keywords-filter"
+          label={t("searchKeywords")}
+          onChange={onSearchChange}
+          onSubmit={onSearchCommit}
+          placeholder={t("searchPlaceholder")}
+          value={searchValue}
+        />
+        <KeywordsToolbarActions
+          columnOrderControl={columnOrderControl}
+          columnSizing={columnSizing}
+          columns={columns}
+          columnVisibility={columnVisibility}
+          density={density}
+          filterCount={filterCount}
+          id={id}
+          onAddKeyword={onAddKeyword}
+          onColumnSizingChange={onColumnSizingChange}
+          onColumnVisibilityChange={onColumnVisibilityChange}
+          onDensityChange={onDensityChange}
+          onImportCsv={onImportCsv}
+          exportDisabled={exportDisabled}
+          onOpenExport={onOpenExport}
+          onOpenFilters={onOpenFilters}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
       </div>
       {hasFilters || scopeChip ? (
         <div className={`relative mt-3 min-w-0 ${hasFilters ? "" : "lg:hidden"}`}>
@@ -154,7 +152,7 @@ export function KeywordsFilterBar({
             {hasFilters ? (
               <Button
                 variant="ghost"
-                size="xs"
+                size="sm"
                 aria-label={t("clearAllAriaLabel")}
                 onClick={onClearFilters}
                 type="button"

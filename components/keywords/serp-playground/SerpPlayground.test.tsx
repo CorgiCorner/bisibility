@@ -5,6 +5,16 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SerpPlayground } from "./SerpPlayground";
 
+vi.mock("@/lib/actions/research-history", () => ({
+  loadSerpPlaygroundHistoryAction: vi.fn(async () => ({
+    ok: true,
+    page: { chips: [], groups: [], nextCursor: null, pinnedCount: 0, timeZone: "UTC", total: 0 },
+  })),
+}));
+vi.mock("@/lib/actions/research-history-pins", () => ({
+  pinResearchHistoryAction: vi.fn(),
+  unpinResearchHistoryAction: vi.fn(),
+}));
 vi.mock("@/lib/actions/serp-playground", () => ({
   previewSerpPlaygroundAction: vi.fn(),
   launchSerpPlaygroundAction: vi.fn(),
@@ -222,15 +232,17 @@ it("loads the native response only in the provider view and offers its JSON for 
 });
 
 it("shows the measured sub-cent cost instead of rounding it to zero", async () => {
+  const { SerpPlaygroundResults } = await import("./SerpPlaygroundResults");
   const exactRun = { ...run, sides: run.sides.map((side) => ({ ...side, costCents: 0.35 })) };
   render(
-    <SerpPlayground
+    <SerpPlaygroundResults
+      providers={["dataforseo"]}
       projectRef="prj_test"
-      data={{ ...data, history: [exactRun] }}
-      service={service()}
+      run={exactRun}
+      view="serp"
+      loading={false}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: /Coffee/ }));
   expect(await screen.findByText("$0.0035")).toBeVisible();
   expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
 });

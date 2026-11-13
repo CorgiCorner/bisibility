@@ -14,7 +14,7 @@ const setupHref = appPath(project, "settings", "business-locations");
 
 function renderScope(
   state: LocalDashboardContext["state"],
-  view: "general" | "local" = "local",
+  view: "general" | "local" | "ai_overviews" = "local",
   asOf: string | null = null,
 ) {
   return render(
@@ -208,5 +208,16 @@ describe("Snapshot calendar", () => {
     } finally {
       fetch.mockRestore();
     }
+  });
+});
+
+describe("AI Overviews scope", () => {
+  it("offers the view with a New marker and hides the comparison period", async () => {
+    renderScope("ready", "ai_overviews");
+    expect(screen.queryByRole("button", { name: "Comparison period" })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.getByRole("menuitem", { name: /AI Overviews/ })).toBeInTheDocument();
+    expect(screen.getByText("New")).toBeInTheDocument();
   });
 });

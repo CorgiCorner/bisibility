@@ -22,14 +22,14 @@ describe("RemoveNoteAction", () => {
     mocks.removeSignalNote.mockResolvedValue({ removed: true });
     render(<RemoveNoteAction projectId="prj_1" signalId="sig_1" />);
 
-    await user.click(screen.getByRole("button", { name: "Delete timeline note" }));
+    await user.click(screen.getByRole("button", { name: "Remove this note" }));
 
     expect(confirm).not.toHaveBeenCalled();
     expect(mocks.removeSignalNote).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Delete timeline note?" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Delete this note?" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(mocks.removeSignalNote).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Delete timeline note" }));
+    await user.click(screen.getByRole("button", { name: "Remove this note" }));
     await user.click(screen.getByRole("button", { name: "Delete note" }));
     await waitFor(() =>
       expect(mocks.removeSignalNote).toHaveBeenCalledWith({

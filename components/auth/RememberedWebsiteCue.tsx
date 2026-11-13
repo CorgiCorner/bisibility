@@ -1,7 +1,7 @@
 "use client";
 
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
-import { buildDomainIconUrl, domainIconHost } from "@/components/ui/domain-icon-url";
+import { buildDomainIconUrl, domainIconHost } from "@/lib/ui/domain-icon-url";
 import { useTranslations } from "next-intl";
 
 type RememberedWebsiteCueProps = {

@@ -363,10 +363,10 @@
         "transferProjectOwnershipDangerLabel": "Transferir la propiedad",
         "transferProjectOwnershipTitle": "Transferir la propiedad del proyecto",
         "transferProjectOwnershipToastMessage": "Propiedad del proyecto transferida",
-        "deleteTimelineNoteBody": "¿Eliminar esta nota de la cronología? Esta acción no se puede deshacer.",
+        "deleteTimelineNoteBody": "¿Eliminar esta nota? Esta acción no se puede deshacer.",
         "deleteTimelineNoteDangerLabel": "Eliminar nota",
-        "deleteTimelineNoteTitle": "¿Eliminar nota de la cronología?",
-        "deleteTimelineNoteToastMessage": "Nota de la cronología eliminada.",
+        "deleteTimelineNoteTitle": "¿Eliminar esta nota?",
+        "deleteTimelineNoteToastMessage": "Nota eliminada.",
         "removeProviderKeyTitle": "¿Eliminar la clave guardada?",
         "removeProviderKeyBody": "Se eliminará la clave guardada y se desconectará este proveedor. Elige otra fuente para seguir usándolo.",
         "removeProviderKeyDangerLabel": "Eliminar clave",
@@ -585,6 +585,12 @@
       "emptyDescription": "Configura y guarda una comparación en la página Competidores para usarla aquí.",
       "configureComparison": "Configurar comparación"
     },
+    "conversions": {
+      "connect": "Conectar analítica",
+      "primary": "Principal",
+      "primaryOption": "{label} · {mark}",
+      "switchLabel": "Fuente de conversiones"
+    },
     "dashboardLayout": {
       "title": "Personalizar panel",
       "presentationOnly": "Solo presentación personal. No cambia la programación ni las comprobaciones de pago.",
@@ -662,6 +668,14 @@
         "domain_rating": {
           "label": "Domain Rating",
           "description": "Historial diario de autoridad de enlaces del dominio. La configuración de visualización no cambia la recopilación."
+        },
+        "organic_conversions": {
+          "label": "Conversiones orgánicas",
+          "description": "Conversiones del periodo del panel, con la tendencia diaria y las páginas principales."
+        },
+        "seo_cost": {
+          "label": "Coste SEO",
+          "description": "La parte de este mes del proyecto en operaciones del proveedor, suscripciones y costes puntuales."
         }
       },
       "reasons": {
@@ -1980,7 +1994,10 @@
       "title": "{count, plural, one {# palabra clave necesita revisar su programación} few {# palabras clave necesitan revisar su programación} many {# palabras clave necesitan revisar su programación} other {# palabras clave necesitan revisar su programación}}",
       "detail": "Las comprobaciones automáticas de estas palabras clave están pausadas. Asígnales una programación en Programaciones. Las demás siguen su configuración.",
       "review": "Mostrar palabras clave afectadas",
-      "schedules": "Abrir programaciones"
+      "schedules": "Abrir programaciones",
+      "affected": "Palabras clave afectadas",
+      "detailShort": "Las comprobaciones automáticas están pausadas hasta que elijas una programación.",
+      "reviewShort": "Ver palabras clave"
     },
     "setupVideo": {
       "fallback": "Tu navegador no admite vídeo.",
@@ -2193,6 +2210,39 @@
       "history": "Historial de mediciones",
       "date": "Fecha",
       "rating": "Puntuación"
+    },
+    "chartMarkers": {
+      "note": "Nota",
+      "deploy": "Despliegue",
+      "content": "Contenido",
+      "sitemap": "Mapa del sitio",
+      "searchEngine": "Actualización de Google",
+      "fromAnnotations": "Los marcadores vienen de Anotaciones.",
+      "openAnnotations": "Abrir anotaciones",
+      "hideMarkers": "Ocultar marcadores",
+      "showMarkers": "Mostrar marcadores",
+      "legendAria": "Marcadores de anotaciones",
+      "markers": "Marcadores",
+      "pinLabel": "{type}, {date}",
+      "pinClusterLabel": "{count, number} anotaciones, {date}",
+      "tooltipHeading": "{type} · {date}",
+      "clusterHeading": "{date} · {count, number} anotaciones",
+      "clusterMore": "+{count, number} más",
+      "sourceLine": "{type} · {source}",
+      "pinName": "{title}, {date}",
+      "pinClusterName": "{count, number} anotaciones, {date}. {titles}",
+      "tooltipItem": "{letter} {title}",
+      "contentFallback": "Contenido actualizado",
+      "deindexedTitle": "URL retirada del índice",
+      "deployFallback": "Despliegue",
+      "noteFallback": "Nota",
+      "sitemapTitle": "Mapa del sitio: {added, number} añadidas, {removed, number} retiradas",
+      "primaryConversion": "La fuente de conversión principal pasó de {from} a {to}",
+      "conversionSource": {
+        "none": "ninguna",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      }
     }
   }
 }

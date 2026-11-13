@@ -41,7 +41,6 @@ const englishCopy = {
       ]),
     ),
     Competitors: "Competitors",
-    "Prompt Playground": "Prompt Playground",
   },
 } satisfies CommandPaletteCopy;
 
@@ -76,7 +75,6 @@ describe("commandGroups", () => {
   it("omits disabled experimental navigation while preserving Markets rows", () => {
     const disabled = commandGroups("prj_1", vi.fn(), vi.fn(), [], [malaga]);
     const enabled = commandGroups("prj_1", vi.fn(), vi.fn(), [], [malaga], undefined, [
-      "timeline",
       "competitors",
     ]);
     const disabledNavigate = disabled.find((group) => group.title === "Navigate");
@@ -85,8 +83,10 @@ describe("commandGroups", () => {
     const enabledMarkets = enabled.find((group) => group.title === "Markets");
 
     expect(disabledNavigate?.items.map((item) => item.label)).not.toContain("Timeline");
+    expect(disabledNavigate?.items.map((item) => item.label)).toContain("Annotations");
     expect(disabledNavigate?.items.map((item) => item.label)).not.toContain("Competitors");
     expect(enabledNavigate?.items.map((item) => item.label)).toContain("Competitors");
+    expect(enabledNavigate?.items.map((item) => item.label)).toContain("Annotations");
     expect(enabledNavigate?.items.map((item) => item.label)).not.toContain("Timeline");
     expect(enabledMarkets?.items.map((item) => item.label)).toEqual(
       disabledMarkets?.items.map((item) => item.label),
@@ -313,14 +313,37 @@ describe("commandGroups markets", () => {
 });
 
 it("keeps AI commands in the same Tracker-first order as the sidebar", () => {
-  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), [], undefined, undefined, [
-    "promptPlayground",
-  ]);
-  const aiLabels = ["Prompt Tracker", "Prompt Research", "Brand Visibility", "Prompt Playground"];
+  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), []);
+  const aiLabels = ["AI Visibility", "Model Playground"];
   expect(
     groups
       .flatMap((group) => group.items)
       .filter((item) => aiLabels.includes(item.label))
       .map((item) => item.label),
   ).toEqual(aiLabels);
+});
+
+it("finds AI Visibility by its search keywords", () => {
+  const groups = commandGroups("prj_1", vi.fn(), vi.fn(), []);
+  for (const query of ["geo", "aeo", "chatgpt", "prompt tracker"]) {
+    expect(
+      filterGroups(groups, query)
+        .flatMap((group) => group.items)
+        .map((item) => item.label),
+    ).toContain("AI Visibility");
+  }
+});
+
+it("matches a translated navigation keyword", () => {
+  const copy = {
+    ...englishCopy,
+    navigation: { ...englishCopy.navigation, "AI Visibility": "Widoczność w AI" },
+    navigationKeywords: { "AI Visibility": ["geo", "monitor promptów"] },
+  };
+  const groups = buildCommandGroups("prj_1", vi.fn(), vi.fn(), copy, []);
+  expect(
+    filterGroups(groups, "monitor promptów")
+      .flatMap((group) => group.items)
+      .map((item) => item.label),
+  ).toContain("Widoczność w AI");
 });

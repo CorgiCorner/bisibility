@@ -157,6 +157,7 @@ export function BusinessCandidateReview({
         })}
       >
         <MenuSelect
+          size="input"
           ariaLabel={t("reviewAction")}
           value={form.watch("action")}
           disabled={!writable || action.pending}
@@ -216,6 +217,7 @@ export function BusinessCandidateReview({
             current.itemId === base.decision.itemId &&
             current.decisionRevision > base.decision.decisionRevision ? (
               <Button
+                size="input"
                 variant="outline"
                 disabled={!writable}
                 onClick={() => {
@@ -228,7 +230,7 @@ export function BusinessCandidateReview({
                 {t("reviewLatestDecision")}
               </Button>
             ) : onRequestCurrent ? (
-              <Button variant="outline" onClick={onRequestCurrent}>
+              <Button size="input" variant="outline" onClick={onRequestCurrent}>
                 {t("reviewCurrent")}
               </Button>
             ) : null}
@@ -236,6 +238,7 @@ export function BusinessCandidateReview({
         ) : null}
         <div className="flex flex-wrap gap-2">
           <Button
+            size="input"
             type="submit"
             disabled={
               !writable ||
@@ -247,6 +250,7 @@ export function BusinessCandidateReview({
             {t("saveReview")}
           </Button>
           <Button
+            size="input"
             variant="ghost"
             disabled={action.pending}
             onClick={() => {

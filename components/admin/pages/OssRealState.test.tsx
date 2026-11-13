@@ -1,4 +1,5 @@
 import "./real-page-mocks.test-fixture";
+import { routerMock } from "@/tests/next-navigation";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { realPage } from "./real-page-mocks.test-fixture";
@@ -74,4 +75,52 @@ it("gets a new authorized preview after closing and reopening a batch", async ()
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name: /Review selected/ }));
   await waitFor(() => expect(realPage.preview).toHaveBeenCalledTimes(2));
+});
+it("selects cases in memory without rendering the route again", async () => {
+  prepareRealScenario("RecoveryParity");
+  await renderRealPage("Tasks");
+  const table = screen.getByRole("table", { name: "Task recovery" });
+  const [first, second] = within(table)
+    .getAllByRole("checkbox")
+    .filter((item) => !item.hasAttribute("disabled"));
+  fireEvent.click(first);
+  fireEvent.click(second);
+  // Nothing to wait for: a navigation per checkbox would read the whole page from the server.
+  expect(first).toBeChecked();
+  expect(second).toBeChecked();
+  expect(screen.getByRole("button", { name: "Review selected (2)" })).toBeEnabled();
+  fireEvent.click(first);
+  expect(first).not.toBeChecked();
+  expect(screen.getByRole("button", { name: "Review selected (1)" })).toBeEnabled();
+  await settle();
+  // The same mounted checkboxes: neither the route nor the table cells were rendered anew.
+  expect(first).toBeInTheDocument();
+  expect(first).not.toBeChecked();
+  expect(second).toBeChecked();
+  expect(realPage.tasks).toHaveBeenCalledTimes(1);
+  expect(routerMock.push).not.toHaveBeenCalled();
+  expect(realPage.params.has("selected")).toBe(false);
+});
+it("keeps the selection when a read seals new case tokens and previews with the latest ones", async () => {
+  prepareRealScenario("RecoveryParity");
+  await renderRealPage("Tasks");
+  const table = () => screen.getByRole("table", { name: "Task recovery" });
+  const eligible = within(table())
+    .getAllByRole("checkbox")
+    .find((item) => !item.hasAttribute("disabled")) as HTMLElement;
+  const name = eligible.getAttribute("aria-label") as string;
+  fireEvent.click(eligible);
+  fireEvent.click(screen.getByRole("button", { name: "Refresh cases" }));
+  await waitFor(() => expect(realPage.tasks).toHaveBeenCalledTimes(2));
+  await settle();
+  expect(within(table()).getByRole("checkbox", { name })).toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "Review selected (1)" }));
+  await waitFor(() => expect(realPage.preview).toHaveBeenCalledTimes(1));
+  expect(realPage.preview).toHaveBeenCalledWith({ caseTokens: [expect.stringMatching(/:2$/)] });
+  await waitFor(() => expect(realPage.params.get("batch")).toMatch(/^\["ref-[a-z]+"\]$/));
+  await settle();
+  fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Close modal" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(within(table()).getByRole("checkbox", { name })).toBeChecked();
+  expect(screen.getByRole("button", { name: "Review selected (1)" })).toBeEnabled();
 });

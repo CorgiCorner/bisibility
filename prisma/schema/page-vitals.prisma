@@ -1,0 +1,39 @@
+enum PageVitalsStrategy {
+  mobile
+  desktop
+}
+
+enum PageVitalsSource {
+  field
+  origin
+  lab
+}
+
+enum PageVitalsStatus {
+  good
+  needs_improvement
+  poor
+  unknown
+}
+
+/// Latest Core Web Vitals reading for one page and strategy. History is out of scope.
+model PageVitals {
+  id        String              @id @default(cuid())
+  projectId String
+  project   Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      ProjectPage         @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  strategy  PageVitalsStrategy
+  source    PageVitalsSource
+  lcpMs     Int
+  inpMs     Int?
+  cls       Decimal             @db.Decimal(6, 4)
+  status    PageVitalsStatus
+  checkedAt DateTime
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([pageId, strategy])
+  @@index([projectId])
+  @@map("page_vitals")
+}

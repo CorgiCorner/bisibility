@@ -1,0 +1,23 @@
+// Personal history pins for Model Playground, SERP Playground and Keyword Research.
+// A pin is a per-user preference, not a shared project record.
+
+enum ResearchHistorySurface {
+  model_playground
+  serp_playground
+  keyword_research
+}
+
+model ResearchHistoryPin {
+  id        String                 @id @default(cuid())
+  userId    String
+  projectId String
+  surface   ResearchHistorySurface
+  itemKey   String
+  createdAt DateTime               @default(now())
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId, surface, itemKey])
+  @@index([projectId, userId, surface])
+  @@map("research_history_pins")
+}

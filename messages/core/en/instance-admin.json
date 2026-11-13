@@ -1,6 +1,15 @@
 {
   "instanceAdmin": {
+    "features": {
+      "title": "Optional features",
+      "challenge": "30 days of SEO",
+      "challengeDescription": "Let project members start the 30-day SEO challenge from Pages. Turning this off hides the challenge and stops check-ins. Existing challenge dates and recorded days are kept.",
+      "saving": "Saving…",
+      "saved": "Setting saved.",
+      "failed": "Could not save the setting."
+    },
     "shell": {
+      "features": "Features",
       "status": "Status",
       "accounts": "Accounts",
       "viewNavigation": "{tab} views",
@@ -856,6 +865,7 @@
       "lastExhaustion": "Last capacity exhaustion",
       "presenceHelp": "Latest deferred URLs from the daily URL-presence workflow. Capacity resets automatically.",
       "questions": {
+        "features": "Which optional features are available on this instance?",
         "status": "Is the instance healthy?",
         "worker": "Are workers and schedules healthy?",
         "checks": "Are rank checks and URL presence healthy?",

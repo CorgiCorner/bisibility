@@ -20,7 +20,7 @@ export function MonitorGridPreview({ form }: Readonly<{ form: UseFormReturn<Moni
     });
   } catch {
     return (
-      <p className="m-0 text-ui-xs text-fg-muted">
+      <p className="m-0 text-ui-caption text-fg-muted">
         {t(!grid.latitude || !grid.longitude ? "center.previewEmpty" : "center.previewInvalid")}
       </p>
     );
@@ -62,7 +62,7 @@ export function MonitorGridPreview({ form }: Readonly<{ form: UseFormReturn<Moni
             />
           ))}
         </svg>
-        <figcaption id={`${id}-caption`} className="flex min-w-0 flex-col gap-1 text-ui-xs">
+        <figcaption id={`${id}-caption`} className="flex min-w-0 flex-col gap-1 text-ui-caption">
           <p className="m-0 text-ui-body font-medium">
             {t("center.preview", { count: points.length })}
           </p>
@@ -76,7 +76,7 @@ export function MonitorGridPreview({ form }: Readonly<{ form: UseFormReturn<Moni
         </figcaption>
       </div>
       <details className="mt-2">
-        <summary className="w-fit cursor-pointer text-ui-xs text-fg-muted underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid">
+        <summary className="w-fit cursor-pointer text-ui-caption text-fg-muted underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid">
           {t("center.showPoints")}
         </summary>
         <div className="mt-2 max-h-48 overflow-auto">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { formatPaymentAmount } from "@/lib/action-payment/format";
+import { resolveDrawerEngine } from "@/lib/ai-tracking/drawer-engine-default";
 import { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
 import type { TrackingPreview } from "@/lib/ai-tracking/projections/workspace";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +32,8 @@ export function TrackingRunDrawer({
   onCatalog,
   mutationError,
   onSaveMetadata,
+  preset = null,
+  engineDefault = null,
 }: Readonly<TrackingRunDrawerProps>) {
   const locale = useLocale();
   const paymentT = useTranslations("shared.actionPayment");
@@ -38,6 +41,7 @@ export function TrackingRunDrawer({
   const [previewPending, startPreview] = useTransition();
   const [replaceConfiguration, setReplaceConfiguration] = useState(false);
   const saved = schedule?.configurations?.[0];
+  const picked = resolveDrawerEngine({ preset, project: engineDefault, saved });
   const reviewing = !schedule || replaceConfiguration;
   const version = useRef(0);
   const busy = pending || previewPending;
@@ -48,8 +52,8 @@ export function TrackingRunDrawer({
   >({
     resolver: zodResolver(trackingConfigurationForm),
     defaultValues: {
-      source: saved?.source ?? "consumer_scrape",
-      engine: saved?.engine ?? "chat_gpt",
+      source: picked.source,
+      engine: picked.engine,
       locale: String(saved?.parameters.language_code ?? "en"),
       location: String(saved?.parameters.location_name ?? "United States"),
       model: saved?.model ?? "",
@@ -193,6 +197,8 @@ export function TrackingRunDrawer({
           </p>
         ) : null}
         <Button
+          className="self-start"
+          size="input"
           type="submit"
           variant="secondary"
           loading={busy}
@@ -220,6 +226,7 @@ export function TrackingRunDrawer({
               </p>
             ) : null}
             <Button
+              size="input"
               className="mt-4"
               disabled={
                 busy ||

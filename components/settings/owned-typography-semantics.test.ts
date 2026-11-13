@@ -57,7 +57,7 @@ describe("owned product and settings typography", () => {
     const files = [
       "components/usagekit/measurement-card.tsx",
       "components/usagekit/usage-summary-cards.tsx",
-      "components/search-insights/SearchInsightsKpiRow.tsx",
+      "components/ui/StatTile.tsx",
       "components/domain-overview/DomainOverviewKeywordsTable.tsx",
     ];
     for (const file of files) {

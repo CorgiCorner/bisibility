@@ -4,7 +4,8 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { readDemoConfig } from "@/lib/demo/config";
 import { achievementsEnabled } from "./config";
-import { shareSchema } from "./schema";
+import { isShareableBadgeKind, shareSchema } from "./schema";
+import { THIRTY_DAYS_DEFINITION_VERSION, THIRTY_DAYS_KIND } from "./thirty-days";
 
 const hash = (token: string) => createHash("sha256").update(token).digest("hex");
 export async function setAchievementSharing(
@@ -17,7 +18,11 @@ export async function setAchievementSharing(
     return { kind: "disabled" as const };
   const token = data.published ? randomBytes(32).toString("base64url") : null;
   const changed = await prisma.achievementAward.updateMany({
-    where: { userId, kind: data.kind, definitionVersion: 1 },
+    where: {
+      userId,
+      kind: data.kind,
+      definitionVersion: data.kind === THIRTY_DAYS_KIND ? THIRTY_DAYS_DEFINITION_VERSION : 1,
+    },
     data: { shareTokenHash: token ? hash(token) : null },
   });
   if (changed.count > 0) onCommitted?.();
@@ -46,9 +51,7 @@ export async function readPublicAchievement(token: string) {
       user: { select: { deactivatedAt: true } },
     },
   });
-  return award &&
-    !award.user.deactivatedAt &&
-    (award.kind === "presence" || award.kind === "practice")
-    ? { kind: award.kind as "presence" | "practice", earnedDay: award.earnedDay }
+  return award && !award.user.deactivatedAt && isShareableBadgeKind(award.kind)
+    ? { kind: award.kind, earnedDay: award.earnedDay }
     : null;
 }

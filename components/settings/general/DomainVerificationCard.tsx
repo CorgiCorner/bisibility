@@ -62,7 +62,7 @@ export function DomainVerificationCard({ projectId, initial, canEdit }: Props) {
             <dd className="break-all">{verification.dns_value}</dd>
           </div>
           <div>
-            <Button size="xs" variant="outline" onClick={() => copy(verification.dns_value)}>
+            <Button size="sm" variant="outline" onClick={() => copy(verification.dns_value)}>
               {t("copy")}
             </Button>
           </div>

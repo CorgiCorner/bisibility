@@ -8,6 +8,10 @@ import {
   updateCompetitorAliasesSchema,
 } from "@/lib/actions/competitor-set-input";
 import { recordAppAction } from "@/lib/activity/app-mutation";
+import {
+  brandNameDraftSchema,
+  brandNameIdentityConflict,
+} from "@/lib/ai-tracking/brand-name-schema";
 import { writeAudit } from "@/lib/auth/audit";
 import { withCapacityFailure } from "@/lib/capacity/action";
 import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
@@ -132,8 +136,16 @@ export async function updateCompetitorAliases(input: unknown) {
   const { actor, project } = await competitorProjectScope("update", data.projectId);
   const result = await prisma.$transaction(async (tx) => {
     const before = await findScopedCompetitor(tx, project.id, data.competitorId);
+    const excludedNames = data.excludedNames ?? before.excludedNames ?? [];
+    const separated = brandNameDraftSchema.safeParse({ aliases: data.aliases, excludedNames });
+    if (!separated.success) throw new Error(separated.error.issues[0].message);
+    const identityConflict = brandNameIdentityConflict(excludedNames, before);
+    if (identityConflict) throw new Error(identityConflict);
     const competitor = await tx.competitor.update({
-      data: { aliases: data.aliases },
+      data: {
+        aliases: data.aliases,
+        ...(data.excludedNames !== undefined ? { excludedNames: data.excludedNames } : {}),
+      },
       select: competitorSelect,
       where: { id: before.id },
     });

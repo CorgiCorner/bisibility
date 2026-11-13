@@ -85,7 +85,7 @@
       "verified": "OTP で確認済み"
     },
     "privacy": {
-      "action": "プライバシー設定",
+      "action": "選択内容を確認",
       "description": "このブラウザーに保存されている、アナリティクスとセットアップリプレイの任意の選択内容を確認または変更します。",
       "title": "プライバシー設定"
     },
@@ -287,6 +287,7 @@
       "description": "個人ごとの設定です。<emphasis>サインインするすべてのデバイスに適用されます。</emphasis>",
       "landing": {
         "ariaLabel": "既定の開始ページ",
+        "ai-visibility": "AIでの可視性",
         "backlinks": "バックリンク",
         "competitors": "競合",
         "dashboard": "ダッシュボード",
@@ -294,8 +295,9 @@
         "keyword-research": "キーワードリサーチ",
         "label": "既定の開始ページ",
         "rank-tracker": "順位トラッカー",
+        "pages": "ページ",
         "search-console": "Search Console",
-        "timeline": "タイムライン"
+        "annotations": "注釈"
       },
       "language": {
         "description": "さらに多くの言語を準備中です。現在は英語が有効です。",
@@ -364,7 +366,37 @@
       "emptyDay": "アクティビティなし",
       "calendarLabel": "過去7日間の記録",
       "shareError": "共有の変更を保存できませんでした。もう一度お試しください。",
-      "badgeOptions": "バッジのオプション"
+      "badgeOptions": "バッジのオプション",
+      "thirtyTitle": "SEO 30日間",
+      "thirtyDescription": "投稿できるバッジが付く、毎日の習慣です。いつでも参加できます。",
+      "thirtyStart": "30日間を始める",
+      "thirtyDayLabel": "{day, number}日目",
+      "thirtyStarted": "{goal, number}日中 · {date}開始",
+      "thirtyPause": "1日休んでも、連続記録は一時停止するだけでリセットされません。",
+      "thirtyHow": "仕組み",
+      "thirtyStep1Title": "好きな日から始める",
+      "thirtyStep1Body": "参加した日が1日目です。選んだプロジェクトの1日目スナップショットを開きます。あとから比べる基準になります。",
+      "thirtyStep2Title": "実践した日を数える",
+      "thirtyStep2Body": "連続記録が数えるのは作業であり、トラフィックではありません。結果が出る前でも完了できます。",
+      "thirtyStep3Title": "結果はあとから",
+      "thirtyStep3Body": "SEOには時間がかかります。休んだ日はカウントを一時停止します。バッジは実践した30日目に獲得します。",
+      "thirtySnapshotLabel": "1日目スナップショットのプロジェクト",
+      "thirtySnapshotOpen": "ページを開く",
+      "thirtySnapshotEmpty": "1日目スナップショットを保存するには、プロジェクトを作成してください。",
+      "thirtyLeave": "30日間をやめる",
+      "thirtyLeaveTitle": "30日間をやめますか？",
+      "thirtyLeaveBody": "カウントは一時停止します。終えた日は残ります。最初からやり直さずに、また参加できます。",
+      "thirtyLeaveConfirm": "やめる",
+      "thirtyCancel": "キャンセル",
+      "thirtyLeft": "{date}から一時停止しています。終えた日は残ります。再参加すると同じチャレンジが続きます。",
+      "thirtyOverflow": "{count, plural, other {前の#日は表示していません}}",
+      "thirtyCalendarLabel": "SEO 30日間",
+      "thirtySlotDone": "完了",
+      "thirtySlotSkipped": "休み",
+      "thirtySlotToday": "今日",
+      "thirtySlotUpcoming": "これから",
+      "thirtyError": "30日間チャレンジを更新できませんでした。もう一度お試しください。",
+      "thirtyTrackingOff": "参加するには「アクティビティを記録する」をオンにしてください。"
     }
   }
 }

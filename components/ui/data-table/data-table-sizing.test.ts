@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { distributeDataTableWidths, normalizeDataTableSize } from "./data-table-sizing";
+import {
+  dataTableColumnBoxStyle,
+  distributeDataTableWidths,
+  normalizeDataTableSize,
+} from "./data-table-sizing";
 
 describe("data table sizing", () => {
   it("rounds to the 4px scale and clamps to column bounds", () => {
@@ -56,5 +60,19 @@ describe("data table sizing", () => {
     expect(equal).toEqual({ first: 68, second: 64 });
     expect(Object.values(equal).reduce((sum, width) => sum + width, 0)).toBe(132);
     expect(unevenWithMax).toEqual({ capped: 68, remaining: 80 });
+  });
+
+  it("lets only a flexible column grow past its basis", () => {
+    expect(dataTableColumnBoxStyle("var(--dt-col-brand)", 1)).toEqual({
+      flexBasis: "var(--dt-col-brand)",
+      flexGrow: 1,
+      flexShrink: 0,
+      minWidth: "var(--dt-col-brand)",
+    });
+    expect(dataTableColumnBoxStyle("var(--dt-col-rank)")).toEqual({
+      flexBasis: "var(--dt-col-rank)",
+      maxWidth: "var(--dt-col-rank)",
+      minWidth: "var(--dt-col-rank)",
+    });
   });
 });

@@ -31,11 +31,30 @@
       "tooltipKeywordQualified": "{keyword}（{device}{hasMarket, select, true {、{market}} other {}}）: {position, number, ::.#}位",
       "tooltipMore": "他{count, number}件"
     },
+    "organicConversions": {
+      "conversions": "コンバージョン",
+      "deltaNew": "新規",
+      "deltaUnchanged": "変化なし",
+      "deltaVersus": "{value} 前の{days, number}{days, plural, one {日間} other {日間}}比",
+      "openSearchConsole": "Search Console を開く",
+      "topPages": "上位のページ",
+      "title": "オーガニックコンバージョン",
+      "unavailable": "コンバージョンを読み取れませんでした。"
+    },
+    "seoCost": {
+      "empty": "今月のコストは記録されていません。",
+      "openUsage": "使用状況を開く",
+      "split": "操作 {operations} · サブスクリプション {subscriptions} · 単発 {oneOff}",
+      "title": "SEO コスト",
+      "total": "合計 {value}",
+      "unavailable": "コストを読み取れませんでした。"
+    },
     "distribution": {
       "bucketAriaLabel": "{start, number}位から{end, number}位: {count, plural, other {#件のキーワード}}",
       "chartAriaLabel": "順位分布グラフ。{summary}",
       "definition": "順位が取得できたキーワードを現在の順位ごとにグループ化しています。100位圏外のキーワードは表示されません。",
       "keywordCount": "{count, plural, other {#件のキーワード}}",
+      "keywordShare": "{count, plural, other {#件のキーワード}} · {percent, number}%",
       "ofTotal": "全体の{percent, number}%",
       "positionRange": "{start, number}位から{end, number}位",
       "summaryItem": "{range}: {count, plural, other {#件のキーワード}}",

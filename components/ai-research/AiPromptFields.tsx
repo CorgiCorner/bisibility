@@ -92,16 +92,8 @@ export function AiPromptFields({
     if (enabled && actual) {
       const minimum = Math.max(...capabilities.map((model) => model.minOutputTokens));
       const maximum = Math.min(...capabilities.map((model) => model.maxOutputTokens));
-      form.setValue(
-        "max_output_tokens",
-        Math.max(
-          minimum,
-          Math.min(
-            "max_output_tokens" in values ? (values.max_output_tokens ?? 512) : 512,
-            maximum,
-          ),
-        ),
-      );
+      const tokens = "max_output_tokens" in values ? (values.max_output_tokens ?? 512) : 512;
+      form.setValue("max_output_tokens", Math.max(minimum, Math.min(tokens, maximum)));
       if (!capabilities.every((model) => model.webSearch)) {
         form.setValue("web_search", false);
         form.setValue("country_iso_code", undefined);
@@ -168,7 +160,7 @@ export function AiPromptFields({
                 searchText: language.code,
               }))}
             />
-            <span className="text-ui-xs text-fg-muted">
+            <span className="text-ui-caption text-fg-muted">
               {t(legacy ? "legacyPromptLanguageHint" : "responseLanguageHint")}
             </span>
           </div>
@@ -231,7 +223,7 @@ export function AiPromptFields({
                 value={field.value ?? ""}
                 onChange={field.onChange}
               />
-              <span className="text-ui-xs text-fg-muted">{t("searchCountryHint")}</span>
+              <span className="text-ui-caption text-fg-muted">{t("searchCountryHint")}</span>
             </div>
           )}
         />
@@ -240,10 +232,10 @@ export function AiPromptFields({
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <AiEngineFields form={form} engineOptions={engineOptions} disabled={disabled} advanced />
           {!engineMode ? (
-            <p className="m-0 text-ui-xs text-fg-muted sm:col-span-2">{t("modelLimit")}</p>
+            <p className="m-0 text-ui-caption text-fg-muted sm:col-span-2">{t("modelLimit")}</p>
           ) : null}
           {engineMode ? null : (
-            <div className="grid gap-2 text-ui-xs text-fg-muted sm:col-span-2">
+            <div className="grid gap-2 text-ui-caption text-fg-muted sm:col-span-2">
               <span>
                 {t(
                   legacy
@@ -256,6 +248,8 @@ export function AiPromptFields({
               </span>
               {!legacy ? (
                 <Button
+                  className="justify-self-start"
+                  size="input"
                   type="button"
                   variant="secondary"
                   disabled={disabled}
@@ -279,7 +273,7 @@ export function AiPromptFields({
                 disabled={disabled || !expanded}
                 {...form.register("max_output_tokens", { valueAsNumber: true })}
               />
-              <span id="ai-output-token-bounds" className="text-ui-xs text-fg-muted">
+              <span id="ai-output-token-bounds" className="text-ui-caption text-fg-muted">
                 {t("tokenBounds", { min: minTokens, max: maxTokens })}
               </span>
             </label>

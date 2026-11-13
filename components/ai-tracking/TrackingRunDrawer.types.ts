@@ -1,5 +1,9 @@
 import type { AiCatalogOutcome } from "@/lib/ai-research/catalog-types";
-import type { SourceConfiguration } from "@/lib/ai-tracking/contract";
+import type {
+  SourceConfiguration,
+  TrackingEngine,
+  TrackingSource,
+} from "@/lib/ai-tracking/contract";
 import type {
   TrackingPreview,
   TrackingWorkspaceData,
@@ -31,4 +35,7 @@ export type TrackingRunDrawerProps = {
   scheduleMode?: boolean;
   onCatalog?: () => Promise<AiCatalogOutcome>;
   mutationError?: string | null;
+  preset?: { engine: TrackingEngine; source: TrackingSource } | null;
+  /** Project engine set. Omitted values keep the historical consumer ChatGPT preselection. */
+  engineDefault?: { engine: TrackingEngine; source: TrackingSource } | null;
 };

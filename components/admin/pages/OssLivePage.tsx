@@ -32,11 +32,15 @@ export function OssLivePage({
 }) {
   const query = useAdminQuery();
   const selection = useAdminAccount();
-  const taskActions = useTaskActions(query.refresh, {
-    batch: query.params?.get("batch") ?? null,
-    command: query.params?.get("command") ?? null,
-    update: query.update,
-  });
+  const taskActions = useTaskActions(
+    query.refresh,
+    {
+      batch: query.params?.get("batch") ?? null,
+      command: query.params?.get("command") ?? null,
+      update: query.update,
+    },
+    data.tasks?.page?.rows,
+  );
   const administration = data.accounts ?? data.settings;
   const composed: OssAdminData = {
     operations: data.operations

@@ -181,7 +181,12 @@ export function InstanceMailSettings({
         {settings.credentialsConfigured && !credentialsRequired ? (
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-xs text-fg-muted">{t("credentialsSaved")}</p>
-            <Button onClick={() => setReplacing(true)} size="sm" type="button" variant="secondary">
+            <Button
+              size="input"
+              onClick={() => setReplacing(true)}
+              type="button"
+              variant="secondary"
+            >
               {t("replace")}
             </Button>
           </div>
@@ -252,7 +257,7 @@ export function InstanceMailSettings({
           <Button
             disabled={busy || clearing}
             loading={saving}
-            size="sm"
+            size="input"
             type="submit"
             variant="primary"
           >
@@ -263,7 +268,7 @@ export function InstanceMailSettings({
               disabled={busy || saving}
               loading={clearing}
               onClick={onClear}
-              size="sm"
+              size="input"
               type="button"
               variant="secondary"
             >

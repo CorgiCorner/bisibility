@@ -13,10 +13,43 @@ const mocks = vi.hoisted(() => ({
   loadSearchSyncPreflightPlan: vi.fn(),
   integrationCategory: vi.fn(),
   requireReadableProject: vi.fn(),
+  readUsageCosts: vi.fn(),
   resolveProjectAccess: vi.fn(),
   saveStoredGoogleProperty: vi.fn(),
   usagePanel: vi.fn(),
 }));
+
+const costSummary = {
+  canEdit: false,
+  catalog: [],
+  month: "2026-11",
+  projectPublicId: "prj_abcdefghijklmnopqrstuvwx",
+  projects: [],
+  rows: [
+    {
+      amountMinor: 100,
+      billing: "monthly" as const,
+      catalogKey: null,
+      currency: "USD",
+      endedOn: null,
+      id: "cst_exampletool",
+      itemMonthlyMinor: 100,
+      kind: "custom" as const,
+      logoDomain: null,
+      name: "Example tool",
+      note: null,
+      planLabel: "",
+      priceChanges: [],
+      projectShareMinor: 100,
+      projects: [],
+      split: "single_project" as const,
+      startedOn: "2026-11-01",
+    },
+  ],
+  suggestHref: null,
+  tiles: { custom: [], provider: [], seo: [], subscriptions: [] },
+  today: "2026-11-10",
+};
 
 vi.mock("@/components/integrations/IntegrationUsagePanel", () => ({
   IntegrationUsagePanel: (props: unknown) => {
@@ -66,6 +99,9 @@ vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
+vi.mock("@/lib/cost-items/read", () => ({
+  readUsageCosts: mocks.readUsageCosts,
+}));
 vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationsView: mocks.getIntegrationsView,
 }));
@@ -92,6 +128,7 @@ describe("IntegrationsPage", () => {
       pace: "gentle",
       retentionMonths: 3,
     });
+    mocks.readUsageCosts.mockResolvedValue(costSummary);
     mocks.getIntegrationsView.mockResolvedValue({
       categories: [
         {
@@ -121,6 +158,8 @@ describe("IntegrationsPage", () => {
     );
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(screen.getByText("Usage panel")).toBeInTheDocument();
+    expect(screen.getByText("Example tool")).toBeInTheDocument();
+    expect(mocks.readUsageCosts).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx");
   });
 
   it("passes connected paid and free providers to the usage panel", async () => {
@@ -141,6 +180,7 @@ describe("IntegrationsPage", () => {
         searchParams: Promise.resolve({ tab: "usage" }),
       }),
     );
+    expect(screen.getByText("Example tool")).toBeInTheDocument();
     expect(mocks.usagePanel).toHaveBeenCalledWith(
       expect.objectContaining({
         connections: [

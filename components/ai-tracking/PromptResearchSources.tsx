@@ -2,9 +2,9 @@
 
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
-import { buildDomainIconUrl } from "@/components/ui/domain-icon-url";
 import type { ResearchedPrompt } from "@/lib/ai-research/prompt-research-projection";
 import { cn } from "@/lib/ui/cn";
+import { buildDomainIconUrl } from "@/lib/ui/domain-icon-url";
 import { useTranslations } from "next-intl";
 
 export function PromptResearchSources({ prompt }: Readonly<{ prompt: ResearchedPrompt }>) {
@@ -12,7 +12,7 @@ export function PromptResearchSources({ prompt }: Readonly<{ prompt: ResearchedP
   return (
     <div className="grid min-w-0 gap-3 py-1">
       {prompt.contentTruncated ? (
-        <p className="m-0 text-ui-xs text-fg-muted">{t("contentTruncated")}</p>
+        <p className="m-0 text-ui-caption text-fg-muted">{t("contentTruncated")}</p>
       ) : null}
       {prompt.sources.length ? (
         <ul className="m-0 grid list-none gap-2 p-0">
@@ -26,7 +26,7 @@ export function PromptResearchSources({ prompt }: Readonly<{ prompt: ResearchedP
             >
               <span
                 aria-hidden
-                className="relative grid size-5 shrink-0 place-items-center overflow-hidden rounded-control bg-bg-sunken text-ui-xs"
+                className="relative grid size-5 shrink-0 place-items-center overflow-hidden rounded-control bg-bg-sunken text-ui-caption"
               >
                 {source.domain.charAt(0).toUpperCase()}
                 <DomainIconLayer src={buildDomainIconUrl({ domain: source.domain })} size={32} />
@@ -42,10 +42,10 @@ export function PromptResearchSources({ prompt }: Readonly<{ prompt: ResearchedP
                     {source.title}
                   </a>
                   {source.own ? (
-                    <span className="text-ui-xs text-green-text">{t("yourSite")}</span>
+                    <span className="text-ui-caption text-green-text">{t("yourSite")}</span>
                   ) : null}
                 </div>
-                <span className="break-all text-ui-xs text-fg-muted">{source.domain}</span>
+                <span className="break-all text-ui-caption text-fg-muted">{source.domain}</span>
               </div>
             </li>
           ))}

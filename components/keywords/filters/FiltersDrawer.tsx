@@ -106,7 +106,8 @@ export function FiltersDrawer({
     filters.serp.length +
     (filters.lastCheck === "any" ? 0 : 1) +
     (filters.wrongUrl ? 1 : 0) +
-    (filters.urlChanged ? 1 : 0);
+    (filters.urlChanged ? 1 : 0) +
+    (filters.aiOverviewShown ? 1 : 0);
 
   function patch(patchValue: Partial<KeywordFilters>) {
     onChange({ ...filters, ...patchValue });
@@ -284,6 +285,12 @@ export function FiltersDrawer({
               description={t("urlChangedDescription")}
               label={t("urlChanged")}
               onClick={() => patch({ urlChanged: !filters.urlChanged })}
+            />
+            <UrlFilterToggle
+              active={filters.aiOverviewShown}
+              description={t("aiOverviewShownDescription")}
+              label={t("aiOverviewShown")}
+              onClick={() => patch({ aiOverviewShown: !filters.aiOverviewShown })}
             />
           </div>
         </FilterSection>

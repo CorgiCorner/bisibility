@@ -5,6 +5,16 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { SerpPlayground } from "./SerpPlayground";
 
+vi.mock("@/lib/actions/research-history", () => ({
+  loadSerpPlaygroundHistoryAction: vi.fn(async () => ({
+    ok: true,
+    page: { chips: [], groups: [], nextCursor: null, pinnedCount: 0, timeZone: "UTC", total: 0 },
+  })),
+}));
+vi.mock("@/lib/actions/research-history-pins", () => ({
+  pinResearchHistoryAction: vi.fn(),
+  unpinResearchHistoryAction: vi.fn(),
+}));
 vi.mock("@/lib/actions/serp-playground", () => ({
   previewSerpPlaygroundAction: vi.fn(),
   launchSerpPlaygroundAction: vi.fn(),

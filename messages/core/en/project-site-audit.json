@@ -2,8 +2,10 @@
   "projectSiteAudit": {
     "heading": "Site audit",
     "description": "Check HTTP, metadata, headings, indexability, links and image alt text for {domain}.",
-    "pageLimit": "Page limit",
-    "pageLimitError": "Choose 1 to {limit, number} pages.",
+    "budgetEmpty": "No pages are available for an audit right now.",
+    "maxAction": "Max",
+    "pageLimit": "Pages to check",
+    "pageLimitError": "You can check up to {limit, number} pages per audit right now.",
     "run": "Run audit",
     "running": "Crawling site",
     "cost": "Up to 15 seconds · No provider credits · Results reused according to project cache settings",
@@ -103,6 +105,44 @@
       "cancelled": "Cancelled",
       "unknown": "Unknown"
     },
-    "availableLimit": "Currently available: up to {limit, number} pages per audit."
+    "vitals": {
+      "check": "Check Core Web Vitals",
+      "columns": {
+        "cls": "CLS",
+        "inp": "INP",
+        "lcp": "LCP",
+        "page": "Page",
+        "status": "Status"
+      },
+      "connect": "Connect PageSpeed Insights",
+      "connectBody": "Connect PageSpeed Insights to see field data for the pages in this audit.",
+      "desktop": "Desktop",
+      "error": {
+        "invalid_key": "The PageSpeed Insights API key was rejected.",
+        "no_sample": "Run a site audit to choose the pages to check.",
+        "not_connected": "Connect PageSpeed Insights before checking.",
+        "quota": "PageSpeed Insights quota was reached. Try again later."
+      },
+      "goodHint": "Good: LCP under 2.5 s, INP under 200 ms, CLS under 0.1",
+      "milliseconds": "{value} ms",
+      "mobile": "Mobile",
+      "noSample": "Run a site audit to choose the pages to check.",
+      "notChecked": "Not checked yet.",
+      "passCount": "{pass, number} of {sample, number} pages pass on {strategy}",
+      "seconds": "{value} s",
+      "source": {
+        "field": "Field data from real users",
+        "lab": "Lab estimate",
+        "origin": "Origin-level field data"
+      },
+      "status": {
+        "good": "Good",
+        "needs_improvement": "Needs improvement",
+        "poor": "Poor",
+        "unknown": "Unknown"
+      },
+      "strategy": "Strategy",
+      "title": "Core Web Vitals"
+    }
   }
 }

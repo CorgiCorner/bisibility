@@ -1,4 +1,5 @@
-import { IntegrationsPageLoading } from "@/components/integrations/IntegrationsPageLoading";
+import { UsagePageLoading } from "@/components/usage/UsagePageLoading";
+
 export default function UsageLoading() {
-  return <IntegrationsPageLoading connectionsLabel="" active="usage" />;
+  return <UsagePageLoading />;
 }

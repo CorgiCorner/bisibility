@@ -3,7 +3,7 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { inputClassName } from "@/components/ui/input-styles";
+import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Switch } from "@/components/ui/Switch";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
@@ -21,8 +21,6 @@ type WebhookEndpointRowProps = {
   testAction?: EndpointAction;
   upsertAction: EndpointAction;
 };
-
-const fieldClass = `${inputClassName} min-h-10 w-full rounded-control px-3 py-2 text-[13px]`;
 
 function actionResponse(result: unknown) {
   return result && typeof result === "object" ? (result as Record<string, unknown>) : {};
@@ -175,18 +173,18 @@ export function WebhookEndpointRow({
       </div>
       {editing ? (
         <div className="grid gap-2">
-          <label>
+          <label htmlFor={`webhook-url-${endpoint.id}`}>
             {t("editUrl")}
-            <input
-              className={fieldClass}
+            <Input
+              id={`webhook-url-${endpoint.id}`}
               onChange={(event) => setUrl(event.target.value)}
               value={url}
             />
           </label>
-          <label>
+          <label htmlFor={`webhook-description-${endpoint.id}`}>
             {t("descriptionLabel")}
-            <input
-              className={fieldClass}
+            <Input
+              id={`webhook-description-${endpoint.id}`}
               maxLength={160}
               onChange={(event) => setDescription(event.target.value)}
               value={description}
@@ -195,7 +193,6 @@ export function WebhookEndpointRow({
           <label htmlFor={`webhook-rotation-${endpoint.id}`}>
             {t("newSecret")}
             <PasswordInput
-              className={fieldClass}
               id={`webhook-rotation-${endpoint.id}`}
               minLength={16}
               onChange={(event) => setRotationSecret(event.target.value)}
@@ -212,23 +209,22 @@ export function WebhookEndpointRow({
       <div className="flex flex-wrap gap-2">
         {editing ? (
           <>
-            <Button disabled={busy || !url} onClick={() => void saveEdit()} size="sm" type="button">
+            <Button disabled={busy || !url} onClick={() => void saveEdit()} size="input">
               {t("saveChanges")}
             </Button>
-            <Button onClick={() => setEditing(false)} size="sm" type="button" variant="secondary">
+            <Button onClick={() => setEditing(false)} size="input" variant="secondary">
               {t("cancel")}
             </Button>
           </>
         ) : (
           <>
-            <Button onClick={() => setEditing(true)} size="sm" type="button" variant="secondary">
+            <Button onClick={() => setEditing(true)} size="input" variant="secondary">
               {t("edit")}
             </Button>
             <Button
               disabled={busy}
               onClick={() => void toggleEnabled()}
-              size="sm"
-              type="button"
+              size="input"
               variant="secondary"
             >
               {endpoint.enabled ? t("disable") : t("enable")}
@@ -237,8 +233,7 @@ export function WebhookEndpointRow({
               <Button
                 disabled={busy || !endpoint.enabled}
                 onClick={() => void sendTest()}
-                size="sm"
-                type="button"
+                size="input"
                 variant="secondary"
               >
                 {t("test")}
@@ -248,8 +243,7 @@ export function WebhookEndpointRow({
               <Button
                 disabled={busy}
                 onClick={() => setConfirmingDelete(true)}
-                size="sm"
-                type="button"
+                size="input"
                 variant="secondary"
               >
                 {t("delete")}

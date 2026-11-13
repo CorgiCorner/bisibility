@@ -1,0 +1,31 @@
+{
+  "researchHistory": {
+    "aiOverview": "AI Overview",
+    "all": "すべて",
+    "cached": "キャッシュ",
+    "checks": "{count, plural, one {# 件のチェック} other {# 件のチェック}}",
+    "close": "履歴を閉じる",
+    "desktop": "デスクトップ",
+    "emptyChecks": "このプロジェクトで実行したチェックがここに表示されます。",
+    "emptyRuns": "このプロジェクトで開始した実行がここに表示されます。",
+    "emptyTitle": "履歴はまだありません",
+    "error": "履歴を読み込めませんでした。",
+    "loadOlderChecks": "以前のチェックを読み込む",
+    "loadOlderRuns": "以前の実行を読み込む",
+    "loading": "履歴を読み込み中",
+    "mobile": "モバイル",
+    "openAllRuns": "すべての実行を表で開く",
+    "pin": "{title} をピン留め",
+    "pinned": "ピン留め {count}",
+    "retry": "再試行",
+    "runs": "{count, plural, one {# 件の実行} other {# 件の実行}}",
+    "searchKeywords": "キーワードを検索",
+    "searchLabel": "履歴を検索",
+    "searchPrompts": "プロンプトを検索",
+    "suggestions": "最近",
+    "title": "履歴",
+    "today": "今日",
+    "unpin": "{title} のピン留めを外す",
+    "yesterday": "昨日"
+  }
+}

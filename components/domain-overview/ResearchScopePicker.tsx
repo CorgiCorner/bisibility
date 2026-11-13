@@ -11,6 +11,7 @@ type ResearchScopePickerProps = {
   disabled?: boolean;
   onChange: (scope: ResearchScope) => void;
   researchScope: ResearchScope | null;
+  size?: "input" | "toolbar";
   trackedScopes: readonly ResearchScope[];
   triggerClassName?: string;
   triggerTitle: string;
@@ -37,6 +38,7 @@ export function ResearchScopePicker({
   disabled,
   onChange,
   researchScope,
+  size = "input",
   trackedScopes,
   triggerClassName,
   triggerTitle,
@@ -61,6 +63,7 @@ export function ResearchScopePicker({
 
   return (
     <CountrySelect
+      size={size}
       ariaLabel={ariaLabel}
       countries={countries}
       disabled={disabled}

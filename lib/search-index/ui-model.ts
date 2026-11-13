@@ -1,3 +1,5 @@
+import type { DeindexRow } from "./deindex-model";
+import type { IndexingOverview } from "./indexing-overview";
 import type { getPageIndexingReport } from "./report";
 import type { getPageIndexingSettings } from "./settings";
 import type { listPageIndexingUrls } from "./urls";
@@ -62,7 +64,10 @@ export type IndexingData = {
   sitemaps: StoredSitemap[];
   sitemapSnapshot?: SitemapSnapshot;
   days?: IndexingDay[];
+  overview?: IndexingOverview;
 };
+export type { IndexingOverview };
+export type IndexingDrop = DeindexRow;
 export type ReadSitemapsAction = (input: {
   projectId: string;
 }) => Promise<{ status: "ok" | "rate_limited" | "error" }>;
@@ -94,6 +99,13 @@ export type LoadDetailAction = (input: {
   projectId: string;
   url: string;
 }) => Promise<IndexingUrl | null>;
+export type ExportNotIndexedAction = (input: { projectId: string }) => Promise<{
+  csv: string;
+  filename: string;
+  rows: number;
+  truncated: boolean;
+}>;
+export type SearchConsoleTabId = "page-indexing" | "performance" | "sitemaps";
 
 // Whole percentages sum to 100; a non-zero group rounded to zero remains visible.
 export function groupPercentages(counts: readonly number[]) {
@@ -109,16 +121,17 @@ export function groupPercentages(counts: readonly number[]) {
   return whole.map((value, index) => (value === 0 && counts[index] > 0 ? "<1%" : `${value}%`));
 }
 
-export function searchConsoleTab(value: string | string[] | undefined) {
-  return (Array.isArray(value) ? value[0] : value) === "page-indexing"
-    ? "page-indexing"
-    : "performance";
+export function searchConsoleTab(value: string | string[] | undefined): SearchConsoleTabId {
+  const tab = Array.isArray(value) ? value[0] : value;
+  if (tab === "page-indexing" || tab === "sitemaps") return tab;
+  return "performance";
 }
 
 export function searchConsoleTabHref(base: string, query: string, tab: string) {
   const params = new URLSearchParams(query);
   if (tab === "performance") params.delete("tab");
-  else params.set("tab", "page-indexing");
+  else if (tab === "sitemaps" || tab === "page-indexing") params.set("tab", tab);
+  else params.delete("tab");
   return `${base}${params.size ? `?${params}` : ""}`;
 }
 

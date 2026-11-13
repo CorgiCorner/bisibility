@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -14,14 +15,12 @@ export function generateWebhookSecret(cryptoSource: Pick<Crypto, "getRandomValue
 }
 
 type WebhookSecretFieldProps = {
-  fieldClassName: string;
   labelClassName: string;
   onChange: (value: string) => void;
   value: string;
 };
 
 export function WebhookSecretField({
-  fieldClassName,
   labelClassName,
   onChange,
   value,
@@ -47,8 +46,7 @@ export function WebhookSecretField({
       <label className={labelClassName} htmlFor="alert-webhook-hmac-secret">
         {t("hmacSecret")}
         {revealsGeneratedSecret ? (
-          <input
-            className={fieldClassName}
+          <Input
             id="alert-webhook-hmac-secret"
             name="hmacSecret"
             onChange={(event) => {
@@ -60,7 +58,6 @@ export function WebhookSecretField({
           />
         ) : (
           <PasswordInput
-            className={fieldClassName}
             id="alert-webhook-hmac-secret"
             minLength={16}
             name="hmacSecret"
@@ -71,11 +68,11 @@ export function WebhookSecretField({
         )}
       </label>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={generate} size="sm" type="button" variant="secondary">
+        <Button onClick={generate} size="input" type="button" variant="secondary">
           {t("generate")}
         </Button>
         {revealsGeneratedSecret ? (
-          <Button onClick={() => void copy()} size="sm" type="button" variant="secondary">
+          <Button onClick={() => void copy()} size="input" type="button" variant="secondary">
             {copied ? t("copied") : t("copySecret")}
           </Button>
         ) : null}

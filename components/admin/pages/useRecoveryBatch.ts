@@ -5,20 +5,31 @@ import {
   previewRecoveryAction,
 } from "@/lib/actions/metering-recovery";
 import type {
+  RecoveryCase,
   RecoveryCommandResult,
   RecoveryPreview,
   RecoveryUiError,
 } from "@/lib/metering/recovery/contract";
-import { recoveryPreviewInputSchema } from "@/lib/metering/recovery/input";
+import { MAX_RECOVERY_BATCH, recoveryPreviewInputSchema } from "@/lib/metering/recovery/input";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
+import { z } from "zod";
 export type RecoveryRoute = {
   batch: string | null;
   command: string | null;
   update: (values: Record<string, string | undefined>) => void;
 };
-export function useRecoveryBatch(route?: RecoveryRoute) {
+/**
+ * The batch is kept as case references. Sealed tokens made the URL about 9 KB for a full batch,
+ * above the request line some proxies accept, and a token of an earlier read is not needed: the
+ * loaded cases carry the current one.
+ */
+const batchReferences = z.array(z.string().min(1).max(128)).min(1).max(MAX_RECOVERY_BATCH);
+export function useRecoveryBatch(
+  route?: RecoveryRoute,
+  cases: readonly Pick<RecoveryCase, "reference" | "token">[] = [],
+) {
   const t = useTranslations("instanceAdmin.recovery");
   const [busy, start] = useTransition();
   const [client] = useState(() => new QueryClient());
@@ -38,7 +49,13 @@ export function useRecoveryBatch(route?: RecoveryRoute) {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       queryFn: async () => {
-        const parsed = recoveryPreviewInputSchema.parse({ caseTokens: JSON.parse(value ?? "[]") });
+        const references = batchReferences.parse(JSON.parse(value ?? "[]"));
+        // A case that is no longer loaded has no current token and cannot be authorized.
+        const parsed = recoveryPreviewInputSchema.parse({
+          caseTokens: references.flatMap(
+            (reference) => cases.find((item) => item.reference === reference)?.token ?? [],
+          ),
+        });
         const result = await previewRecoveryAction(parsed);
         return { result, commandId: crypto.randomUUID() };
       },
@@ -107,7 +124,7 @@ export function useRecoveryBatch(route?: RecoveryRoute) {
       setLocalBatch(null);
       route?.update({ batch: undefined });
     },
-    onPreview: (tokens: string[]) =>
+    onPreview: (references: string[]) =>
       start(async () => {
         const current = commandResult?.ok ? commandResult.value : localCommand;
         if (
@@ -119,7 +136,7 @@ export function useRecoveryBatch(route?: RecoveryRoute) {
         setLocalCommandId(null);
         setLocalCommand(null);
         setCommandError(undefined);
-        const value = JSON.stringify(tokens);
+        const value = JSON.stringify(references);
         setBatchError(undefined);
         setLocalBatch(value);
         route?.update({ batch: value, command: undefined });

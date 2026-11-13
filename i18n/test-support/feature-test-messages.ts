@@ -35,6 +35,7 @@ import projectSettingsTeamMessages from "@/messages/core/en/project-settings-tea
 import projectSettingsTrackingMessages from "@/messages/core/en/project-settings-tracking.json";
 import projectSettingsUsageMessages from "@/messages/core/en/project-settings-usage.json";
 import projectTimelineMessages from "@/messages/core/en/project-timeline.json";
+import researchHistoryMessages from "@/messages/core/en/research-history.json";
 import setupMessages from "@/messages/core/en/setup.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import shellMessages from "@/messages/core/en/shell.json";
@@ -76,6 +77,7 @@ export const researchFeatureTestMessages = mergeMessageCatalogs(
   projectMarketsMessages,
   projectRankTrackerMessages,
   projectRankTrackerKeywordImportMessages,
+  researchHistoryMessages,
 );
 export const searchInsightsFeatureTestMessages = mergeMessageCatalogs(
   sharedMessages,
@@ -124,6 +126,7 @@ export const projectRankTrackerFeatureTestMessages = mergeMessageCatalogs(
   projectRunsMessages,
   projectRunsRankRunsMessages,
   projectRunsSchedulesMessages,
+  researchHistoryMessages,
 );
 export const backlinksFeatureTestMessages = mergeMessageCatalogs(
   sharedMessages,

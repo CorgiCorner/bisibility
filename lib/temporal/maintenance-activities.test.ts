@@ -9,6 +9,8 @@ import {
   sendWeeklyReportDigestActivity,
   sweepRankCheckRawPurgeProgressActivity,
   syncPresenceActivity,
+  syncProjectPagesActivity,
+  syncSearchEngineUpdatesActivity,
   syncSitemapsActivity,
 } from "./maintenance-activities";
 
@@ -41,6 +43,8 @@ const mocks = vi.hoisted(() => ({
   sendWeeklyDigestForProject: vi.fn(),
   sweepRankCheckRawPurgeProgress: vi.fn(),
   syncPresenceForAllProjects: vi.fn(),
+  syncProjectPagesForAllProjects: vi.fn(),
+  syncSearchEngineUpdates: vi.fn(),
   syncSitemapForAllProjects: vi.fn(),
 }));
 
@@ -64,6 +68,9 @@ vi.mock("../reports/weekly-digest-send", () => ({
 vi.mock("../presence/sync", () => ({
   syncPresenceForAllProjects: mocks.syncPresenceForAllProjects,
 }));
+vi.mock("../pages/sync", () => ({
+  syncProjectPagesForAllProjects: mocks.syncProjectPagesForAllProjects,
+}));
 vi.mock("../rank-check/raw-retention-fences", () => ({
   sweepRankCheckRawPurgeProgress: mocks.sweepRankCheckRawPurgeProgress,
 }));
@@ -72,6 +79,9 @@ vi.mock("../rank-check/queued-source-retention", () => ({
 }));
 vi.mock("../rank-check/queued-retention", () => ({
   purgeExpiredQueuedRankCheckBatches: mocks.purgeExpiredQueuedRankCheckBatches,
+}));
+vi.mock("../search-engine-updates/sync", () => ({
+  syncSearchEngineUpdates: mocks.syncSearchEngineUpdates,
 }));
 vi.mock("../sitemap/sync", () => ({
   syncSitemapForAllProjects: mocks.syncSitemapForAllProjects,
@@ -379,6 +389,63 @@ describe("maintenance activities", () => {
 
     await expect(syncSitemapsActivity()).resolves.toMatchObject({ projects: 3, pruned: 4 });
     expect(mocks.syncSitemapForAllProjects).toHaveBeenCalledWith(now);
+  });
+
+  it("skips project page sync when scheduled maintenance is off", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
+
+    await expect(syncProjectPagesActivity()).resolves.toEqual({
+      failed: 0,
+      pages: 0,
+      projects: 0,
+      truncated: 0,
+    });
+    expect(mocks.syncProjectPagesForAllProjects).not.toHaveBeenCalled();
+  });
+
+  it("delegates project page sync and does not throw when the sync fails", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "1");
+    mocks.syncProjectPagesForAllProjects.mockResolvedValueOnce({
+      failed: 0,
+      pages: 4,
+      projects: 2,
+      truncated: 0,
+    });
+
+    await expect(syncProjectPagesActivity()).resolves.toEqual({
+      failed: 0,
+      pages: 4,
+      projects: 2,
+      truncated: 0,
+    });
+
+    mocks.syncProjectPagesForAllProjects.mockRejectedValueOnce(new Error("database unavailable"));
+    await expect(syncProjectPagesActivity()).resolves.toEqual({
+      failed: 1,
+      pages: 0,
+      projects: 0,
+      truncated: 0,
+    });
+  });
+
+  it("skips search engine updates when scheduled maintenance is off", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
+
+    await expect(syncSearchEngineUpdatesActivity()).resolves.toEqual({ status: "ok", upserted: 0 });
+    expect(mocks.syncSearchEngineUpdates).not.toHaveBeenCalled();
+  });
+
+  it("delegates search engine updates and does not throw when the sync fails", async () => {
+    vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "1");
+    mocks.syncSearchEngineUpdates.mockResolvedValueOnce({ status: "ok", upserted: 2 });
+
+    await expect(syncSearchEngineUpdatesActivity()).resolves.toEqual({ status: "ok", upserted: 2 });
+
+    mocks.syncSearchEngineUpdates.mockRejectedValueOnce(new Error("feed unavailable"));
+    await expect(syncSearchEngineUpdatesActivity()).resolves.toEqual({
+      reason: "network",
+      status: "error",
+    });
   });
 
   it("delegates presence sync activity to the shared all-project sync", async () => {

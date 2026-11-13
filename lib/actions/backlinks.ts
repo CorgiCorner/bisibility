@@ -4,6 +4,7 @@ import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { analyzeBacklinks, loadMoreBacklinkRows } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -83,7 +84,10 @@ export async function analyzeBacklinksAction(input: unknown) {
       ),
     ),
   );
-  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) {
+    recordAppAction(actor);
+    captureProjectWork(actor.id, project.id);
+  }
   return outcome;
 }
 

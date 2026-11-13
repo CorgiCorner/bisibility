@@ -43,6 +43,8 @@ export {
   sendWeeklyReportDigestActivity,
   sweepRankCheckRawPurgeProgressActivity,
   syncPresenceActivity,
+  syncProjectPagesActivity,
+  syncSearchEngineUpdatesActivity,
   syncSitemapsActivity,
 } from "./maintenance-activities";
 export type { MeteringMaintenanceActivityResult } from "./metering-maintenance-activity";

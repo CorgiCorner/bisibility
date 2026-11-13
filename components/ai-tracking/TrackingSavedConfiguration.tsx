@@ -23,7 +23,7 @@ export function TrackingSavedConfiguration({
           {String(configuration.parameters.location_name ?? t("unknown"))}
         </p>
       ))}
-      <Button className="mt-3" size="sm" variant="secondary" onClick={onReview}>
+      <Button className="mt-3" size="input" variant="secondary" onClick={onReview}>
         {t("reviewReplacementConfiguration")}
       </Button>
     </div>

@@ -1,5 +1,5 @@
+import { buildDomainIconUrl, buildPublicDomainIconUrl } from "@/lib/ui/domain-icon-url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildDomainIconUrl, buildPublicDomainIconUrl } from "./domain-icon-url";
 
 describe("buildDomainIconUrl", () => {
   afterEach(() => {

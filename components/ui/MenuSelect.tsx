@@ -9,6 +9,7 @@ import {
   filterGroupedGroups,
   MenuSearchField,
   type MenuSelectInput,
+  menuSelectHeaderClass,
   menuSelectInputClass,
   menuSelectTriggerClass,
   resolveMenuSelectPaperStyle,
@@ -51,7 +52,7 @@ type MenuSelectBaseProps = {
   searchPlaceholder?: string;
   searchable?: boolean;
   selectedContent?: (option: ReturnType<typeof resolveSelectedOption>) => ReactNode;
-  size?: "input" | "toolbar";
+  size?: "header" | "input" | "toolbar";
   trailingIcon?: ReactNode;
   triggerClassName?: string;
   triggerTitle?: string;
@@ -164,7 +165,11 @@ export function MenuSelect({
       aria-invalid={ariaInvalid}
       aria-label={ariaLabel}
       className={cn(
-        size === "input" ? menuSelectInputClass : menuSelectTriggerClass,
+        size === "input"
+          ? menuSelectInputClass
+          : size === "header"
+            ? menuSelectHeaderClass
+            : menuSelectTriggerClass,
         compact && "text-[12px] leading-4",
         triggerClassName,
       )}

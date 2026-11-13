@@ -99,6 +99,6 @@ These repository anchors document the reviewed contract, not live execution proo
 
 - `lib/mcp/canonical-contract.json:746`: ranked cache-only cap; `:6357`, `:6526`, `:7643`, `:7711`: tracker reads; `:8107`: free manual suggestions.
 - `lib/mcp/canonical-contract.json:8243`: spend-free preview; `:8392` and `:8603`: generation, explicit non-guaranteed consent and UUID; `:8133`, `:6563`: separately accepted writes.
-- `lib/mcp/canonical-contract.json:5830`: external report kinds, rejecting site_audit, ai_visibility and prompt_explorer.
+- `lib/mcp/canonical-contract.json:5830`: external report kinds, rejecting site_audit, ai_visibility, prompt_explorer, prompt_research and challenge_report.
 - `lib/ai-tracking/suggestions/preview.ts:32`: own-provider connection checks; `:112`: five-minute expiry and bound revisions.
 - `components/ai-tracking/PromptResearchClient.tsx:90`: generation consent/payment separate from prompt drawer save; `lib/actions/ai-tracking-suggestions.ts:99`: writable scope and payment requirement.

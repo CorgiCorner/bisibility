@@ -21,6 +21,9 @@ export function registerAccountAuditDeclarations(
   declare(["account.achievements_sharing"], {
     after: { ...strings("kind"), ...f.booleans("published") },
   });
+  declare(["account.achievements_thirty_days"], {
+    after: { ...f.booleans("joined"), ...strings("day") },
+  });
   declare(["account.analytics_consent_updated"], {
     before: f.booleans("analytics"),
     after: {

@@ -3,7 +3,6 @@
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { fieldClass } from "@/lib/keywords/add-keyword-drawer-shared";
 import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import { useTranslations } from "next-intl";
@@ -98,10 +97,11 @@ export function TrackingConfigurationFields({
           <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             <span className={labelsHidden ? "sr-only" : undefined}>{t("scheduleAria")}</span>
             <MenuSelect
+              size="input"
               ariaLabel={t("scheduleAria")}
               onChange={(value) => onScheduleChange(value as TrackingScheduleSelection)}
               options={localizedScheduleOptions}
-              triggerClassName={`${fieldClass} justify-between normal-case tracking-normal`}
+              triggerClassName="justify-between normal-case tracking-normal"
               value={scheduleFrequency}
             />
           </div>

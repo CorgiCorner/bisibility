@@ -36,7 +36,7 @@ describe("KeywordGridViewport", () => {
     }
 
     expect(ancestorClasses).not.toContain("overflow-x-auto");
-    expect(viewport).toHaveClass("w-full", "min-w-0");
+    expect(viewport).toHaveClass("w-full", "min-w-0", "max-w-full", "overflow-x-auto");
     expect(viewport).not.toHaveClass("min-w-[1080px]");
 
     const table = screen.getByRole("table", { name: "Rank tracker keywords" });

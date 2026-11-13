@@ -129,10 +129,10 @@ export function TrackingPromptDrawer({
           {t("savingAPromptDoesNotRunItOr")}
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
+          <Button size="input" variant="secondary" onClick={onClose}>
             {t("cancel")}
           </Button>
-          <Button type="submit" loading={pending || isSubmitting}>
+          <Button size="input" type="submit" loading={pending || isSubmitting}>
             {prompt ? t("saveRevision") : t("addPrompt")}
           </Button>
         </div>

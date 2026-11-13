@@ -48,12 +48,17 @@ const props: ComponentProps<typeof KeywordDataTable> = {
   searchValue: "",
   updateKeywordAction: vi.fn(),
 };
-function grid(nextRows = rows, version = 0, query = props.query) {
+function grid(
+  nextRows = rows,
+  version = 0,
+  query = props.query,
+  aiOverview?: ComponentProps<typeof KeywordDataTable>["aiOverview"],
+) {
   return (
     <AppRealtimeContext.Provider
       value={{ notifications: null, operations: [], status: "live", rankDataVersion: version }}
     >
-      <KeywordDataTable {...props} rows={nextRows} query={query} />
+      <KeywordDataTable {...props} rows={nextRows} query={query} aiOverview={aiOverview} />
     </AppRealtimeContext.Provider>
   );
 }
@@ -134,4 +139,35 @@ describe("keyword realtime banner", () => {
     expect(bodyKeywords()).toEqual([rows[1].id, rows[0].id]);
     expect(screen.queryByText("New results")).toBeNull();
   });
+});
+
+it("switches AI Overview columns and facts on server re-render, then restores the normal view", () => {
+  const view = render(grid());
+  expect(screen.queryByRole("columnheader", { name: "AI Overview" })).not.toBeInTheDocument();
+  const fact = {
+    keywordId: rows[0].id,
+    checkedAt: "2026-11-09T00:00:00.000Z",
+    citedPath: null,
+    citation: {
+      shown: true,
+      cited: false,
+      citedPosition: null,
+      citedUrl: null,
+      sourceCount: 0,
+      complete: true,
+    },
+    overview: { present: true, paragraphs: ["Retained answer"], sources: [] },
+  };
+  view.rerender(grid(rows, 0, props.query, { facts: [fact] }));
+  expect(screen.getByRole("columnheader", { name: "AI Overview" })).toBeInTheDocument();
+  expect(screen.getByText("Shown")).toBeInTheDocument();
+  view.rerender(
+    grid(rows, 0, props.query, {
+      facts: [{ ...fact, citation: { ...fact.citation, shown: false }, overview: null }],
+    }),
+  );
+  expect(screen.getByText("Not shown")).toBeInTheDocument();
+  expect(screen.queryByText("Shown")).not.toBeInTheDocument();
+  view.rerender(grid());
+  expect(screen.queryByRole("columnheader", { name: "AI Overview" })).not.toBeInTheDocument();
 });

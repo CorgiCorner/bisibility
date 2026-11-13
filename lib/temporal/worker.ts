@@ -33,9 +33,11 @@ import {
   ensureCheckNotificationSummariesSchedule,
   ensureMigrationHoldReleaseSchedule,
   ensurePresenceSyncSchedule,
+  ensureProjectPagesSyncSchedule,
   ensureQueuedRankCheckRetentionSchedule,
   ensureRankCheckRawPurgeSchedule,
   ensureRankCheckRunsSchedule,
+  ensureSearchEngineUpdatesSchedule,
   ensureSessionPurgeSchedule,
   ensureSitemapSyncSchedule,
   ensureStaleChecksSchedule,
@@ -68,12 +70,8 @@ import {
 import { reportWorkerStartup, safeOpsHeartbeatBootstrap } from "./worker-startup-report";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
-// Worker uses the TS transform and resolve hook because parameter properties reject strip-only mode:
-//
-//   node --experimental-transform-types \
-//     --import ./lib/temporal/register-loader.mjs lib/temporal/worker.ts
-// `npm run temporal:worker` wires this up but does not load .env or .env.local itself.
-// Load env first, e.g. set -a; . ./.env.local; set +a; npm run temporal:worker
+// Worker uses the TS transform because parameter properties reject strip-only mode.
+// temporal:worker loads the register hook. Load env first: set -a; . ./.env.local; set +a
 
 const connectionOptions = temporalConnectionOptions();
 const address = connectionOptions.address;
@@ -216,7 +214,9 @@ async function run() {
         ensureProviderUsageReconciliationSchedule(),
         ensureProviderAccountCheckSchedule(),
         ensureMeteringMaintenanceSchedule(),
+        ensureSearchEngineUpdatesSchedule(),
         ensureSitemapSyncSchedule(),
+        ensureProjectPagesSyncSchedule(),
         ensurePresenceSyncSchedule(),
         safeOpsHeartbeatBootstrap(),
       ]);

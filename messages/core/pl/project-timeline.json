@@ -96,9 +96,80 @@
       "validationUrl": "Podaj prawidłowy adres URL."
     },
     "remove": {
-      "confirm": "Usunąć notatkę z osi czasu?",
-      "aria": "Usuń notatkę z osi czasu",
+      "confirm": "Usunąć tę notatkę?",
+      "aria": "Usuń tę notatkę",
       "error": "Nie udało się usunąć notatki."
+    },
+    "annotations": {
+      "lead": "Twoje notatki oraz aktualizacje Google, wdrożenia i zmiany treści oraz mapy witryny. Każda z nich pojawia się na wykresach.",
+      "rulerTitle": "Ostatnie 90 dni",
+      "rulerHint": "Pinezki to momenty. Pasek to wdrożenie Google.",
+      "rulerAria": "Adnotacje, ostatnie 90 dni",
+      "legend": {
+        "note": "Notatki",
+        "google": "Aktualizacje Google",
+        "deploy": "Wdrożenia",
+        "content": "Treść",
+        "sitemap": "Mapa witryny"
+      },
+      "addAria": "Dodaj notatkę",
+      "placeholder": "Co się zmieniło? np. FAQ na 20 stronach narzędzi",
+      "today": "Dziś",
+      "dateAria": "Data notatki",
+      "wholeProject": "Cały projekt",
+      "scopeAria": "Zakres notatki",
+      "scopeSearch": "Szukaj stron",
+      "scopeEmpty": "Brak pasujących stron.",
+      "addNote": "Dodaj notatkę",
+      "filterAria": "Filtruj adnotacje",
+      "filter": {
+        "all": "Wszystkie",
+        "note": "Notatki",
+        "google": "Aktualizacje Google",
+        "deploy": "Wdrożenia",
+        "content": "Treść",
+        "sitemap": "Mapa witryny"
+      },
+      "hideAutomatic": "Ukryj automatyczne",
+      "showAutomatic": "Pokaż automatyczne",
+      "empty": "Nic tu nie ma dla tego filtra.",
+      "byActor": "autor: {actor}",
+      "contentFallback": "Zaktualizowano treść",
+      "deindexedTitle": "Adres usunięty z indeksu",
+      "deployFallback": "Wdrożenie",
+      "detailContent": "Ze sygnału CMS albo treści.",
+      "detailDeindexed": "Ten adres nie jest już w indeksie.",
+      "detailDeploy": "Z webhooka wdrożenia. Dostawca, środowisko i identyfikator zostają, gdy zostały przesłane.",
+      "detailGoogle": "Zaimportowane z panelu statusu wyszukiwarki Google. Wdrożenie z początkiem i końcem to pasek, nie jeden dzień.",
+      "detailNote": "Notatka ręczna.",
+      "detailSitemap": "Z monitora mapy witryny. Dodane i usunięte adresy stają się adnotacjami.",
+      "noteFallback": "Notatka",
+      "sitemapTitle": "Mapa witryny: dodano {added, number}, usunięto {removed, number}",
+      "primaryConversion": "Główne źródło konwersji zmieniono z {from} na {to}",
+      "conversionSource": {
+        "none": "brak",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      },
+      "source": {
+        "note": "Notatka",
+        "google": "Aktualizacja Google",
+        "deploy": "Wdrożenie",
+        "content": "Treść",
+        "sitemap": "Mapa witryny"
+      },
+      "rolloutRange": "{start} do {end} · {status}",
+      "rolloutComplete": "wdrożenie zakończone",
+      "rolloutOpen": "Wdrożenie w toku",
+      "sourcesTitle": "Źródła automatyczne",
+      "googleSourceDetail": "Panel statusu wyszukiwania · bezpłatny",
+      "statusOn": "Włączone",
+      "sitemapSource": "Zmiany mapy witryny",
+      "sitemapSourceDetail": "Monitor mapy witryny · już działa",
+      "deploySourceDetail": "Webhook: Vercel, Netlify, GitHub",
+      "connect": "Połącz",
+      "contentSource": "Treść (CMS)",
+      "contentSourceDetail": "Webhook albo API · źródło sygnału cms"
     }
   }
 }

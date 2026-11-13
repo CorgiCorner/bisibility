@@ -3,11 +3,11 @@
 import { WebhookEndpointRow } from "@/components/alerts/WebhookEndpointRow";
 import { WebhookSecretField } from "@/components/alerts/WebhookSecretField";
 import { Button } from "@/components/ui/Button";
-import { inputClassName } from "@/components/ui/input-styles";
+import { Input } from "@/components/ui/Input";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 type WebhookEndpointEditorProps = {
   action: (input: unknown) => Promise<unknown>;
@@ -18,7 +18,6 @@ type WebhookEndpointEditorProps = {
   testAction?: (input: unknown) => Promise<unknown>;
 };
 
-const fieldClass = `${inputClassName} min-h-10 w-full rounded-control px-3 py-2 text-[13px]`;
 const labelClass =
   "flex flex-col gap-1.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
@@ -32,6 +31,7 @@ export function WebhookEndpointEditor({
 }: Readonly<WebhookEndpointEditorProps>) {
   const t = useTranslations("projectAlerts.webhook");
   const router = useRouter();
+  const fieldId = useId();
   const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [hmacSecret, setHmacSecret] = useState("");
@@ -93,20 +93,20 @@ export function WebhookEndpointEditor({
         </p>
       )}
       <div className="mt-3 grid gap-2.5">
-        <label className={labelClass}>
+        <label className={labelClass} htmlFor={`${fieldId}-url`}>
           {t("endpointUrl")}
-          <input
-            className={fieldClass}
+          <Input
+            id={`${fieldId}-url`}
             name="url"
             onChange={(event) => setUrl(event.target.value)}
             placeholder={t("urlPlaceholder")}
             value={url}
           />
         </label>
-        <label className={labelClass}>
+        <label className={labelClass} htmlFor={`${fieldId}-description`}>
           {t("descriptionLabel")}
-          <input
-            className={fieldClass}
+          <Input
+            id={`${fieldId}-description`}
             maxLength={160}
             name="description"
             onChange={(event) => setDescription(event.target.value)}
@@ -114,7 +114,6 @@ export function WebhookEndpointEditor({
           />
         </label>
         <WebhookSecretField
-          fieldClassName={fieldClass}
           labelClassName={labelClass}
           onChange={setHmacSecret}
           value={hmacSecret}
@@ -130,11 +129,12 @@ export function WebhookEndpointEditor({
           </p>
         ) : null}
         <Button
+          className="justify-self-start"
           disabled={!url || hmacSecret.length < 16}
           loading={submitting}
           loadingLabel={t("saving")}
           onClick={() => void saveEndpoint()}
-          size="sm"
+          size="input"
           type="button"
           variant="secondary"
         >

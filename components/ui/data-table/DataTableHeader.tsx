@@ -16,7 +16,7 @@ import {
   dataTableHeaderSelectionState,
   toggleDataTablePageSelection,
 } from "./data-table-selection";
-import { dataTableColumnWidthVariable } from "./data-table-sizing";
+import { dataTableColumnBoxStyle, dataTableColumnWidthVariable } from "./data-table-sizing";
 import { dataTableHeaderCellClassName, dataTablePinnedEdgeClassName } from "./data-table-styles";
 import type { DataTableColumn, DataTableRowBase, DataTableSort } from "./data-table-types";
 import { DATA_TABLE_SELECTION_COLUMN_ID } from "./use-data-table";
@@ -66,7 +66,7 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
       <div
         className={cn(
           tableHeaderClassName,
-          "flex h-[42px] font-semibold",
+          "flex h-[42px] w-full min-w-full font-semibold",
           bordered && tableHeaderFrameBorderClassName,
           // With no body, the table frame or adjacent footer owns the lower boundary.
           !hasBody && "border-b-0",
@@ -82,10 +82,8 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
           const width = `var(${dataTableColumnWidthVariable(header.column.id)})`;
           const style: CSSProperties = {
             ...dataTablePinnedStyle(header.column),
+            ...dataTableColumnBoxStyle(width, definition.meta?.flex ?? 0),
             backgroundColor: header.column.getIsPinned() ? "var(--bg-elev)" : undefined,
-            flexBasis: width,
-            maxWidth: width,
-            minWidth: width,
           };
           const content = header.isPlaceholder ? null : typeof header.column.columnDef.header ===
             "string" ? (

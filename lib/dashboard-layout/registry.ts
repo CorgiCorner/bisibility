@@ -50,6 +50,8 @@ export const dashboardWidgetRegistry: readonly WidgetDefinition[] = Object.freez
   }),
   widget("visibility_history", ["visibility_history"], ["visibility_history"]),
   widget("contributors", ["contributions"], ["contributions"]),
+  widget("organic_conversions", ["organic_conversions"], ["organic_conversions"]),
+  widget("seo_cost", ["seo_cost"], ["seo_cost"]),
   widget("quality_history", ["quality_history"], ["quality_history"], {
     presets: ["general", "local", "competitors"],
     resultKinds: [],

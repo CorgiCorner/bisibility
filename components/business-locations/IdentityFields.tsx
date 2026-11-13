@@ -1,5 +1,5 @@
 import { HelpButton } from "@/components/ui/HelpButton";
-import { compactInputClassName, Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
@@ -41,7 +41,6 @@ export function IdentityFields({
             {t(`fields.${field}`)}
           </label>
           <Input
-            className={compactInputClassName}
             id={`${id}-${field}`}
             {...register(field)}
             disabled={disabled}
@@ -69,15 +68,12 @@ export function IdentityFields({
         <div className="mb-1 flex items-center gap-1.5">
           <p className="m-0 text-[12px] font-medium leading-4 text-fg-muted">{t("fields.role")}</p>
           <Tooltip content={t("identityHelp")} semantics="description">
-            <HelpButton
-              aria-label={t("helpLabel", { section: t("fields.role") })}
-              className="size-6 min-h-6 p-0 text-fg-muted"
-            />
+            <HelpButton aria-label={t("helpLabel", { section: t("fields.role") })} />
           </Tooltip>
         </div>
         <MenuSelect
           size="input"
-          triggerClassName="min-h-[34px] text-[12px]"
+          triggerClassName="text-[12px]"
           ariaLabel={t("fields.role")}
           value={role}
           disabled={disabled || roleDisabled}

@@ -111,7 +111,7 @@ export function AiResearchWorkspace({
       </p>
       {!canRun ? <Card className="text-ui-body text-fg-muted">{t("readOnly")}</Card> : null}
       {status === "refreshing" ? (
-        <p className="m-0 text-ui-xs text-fg-muted" role="status">
+        <p className="m-0 text-ui-caption text-fg-muted" role="status">
           {t("catalogRefreshing")}
         </p>
       ) : status === "unavailable" ? (
@@ -184,6 +184,7 @@ export function AiResearchWorkspace({
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
                 <Button
+                  size="input"
                   type="submit"
                   variant="secondary"
                   loading={pending}
@@ -193,6 +194,7 @@ export function AiResearchWorkspace({
                 </Button>
                 {mode === "visibility" ? (
                   <Button
+                    size="input"
                     type="button"
                     href={!expired ? quoteAddCreditsHref(quote) : undefined}
                     onClick={() => submit(expired)}
@@ -211,7 +213,7 @@ export function AiResearchWorkspace({
                     {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
                   </Button>
                 ) : null}
-                <span className="text-ui-xs text-fg-muted">
+                <span className="text-ui-caption text-fg-muted">
                   {t(actual ? "actualReplayHint" : "cacheHint")}
                 </span>
               </div>
@@ -222,6 +224,8 @@ export function AiResearchWorkspace({
               ) : null}
               {completed ? (
                 <Button
+                  className="justify-self-start"
+                  size="input"
                   type="button"
                   variant="secondary"
                   disabled={pending}
@@ -239,7 +243,7 @@ export function AiResearchWorkspace({
                 !completed &&
                 !(mode === "prompt" && reviewOpen) &&
                 (!estimateCurrent ? (
-                  <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
+                  <p className="m-0 text-ui-caption text-fg-muted">{t("estimateRequired")}</p>
                 ) : !estimateAffordable ? (
                   <p role="alert" className="m-0 text-ui-body text-red-text">
                     {t(credentialsRejected ? "actualCostUnavailable" : "estimateAboveCap")}

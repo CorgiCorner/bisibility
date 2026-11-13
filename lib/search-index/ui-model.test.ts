@@ -8,6 +8,8 @@ describe("Page indexing presentation", () => {
     ["unknown", "performance"],
     ["page-indexing", "page-indexing"],
     [["page-indexing"], "page-indexing"],
+    ["sitemaps", "sitemaps"],
+    [["sitemaps"], "sitemaps"],
   ] as const)("routes %s", (value, expected) => {
     expect(searchConsoleTab(value as string | string[] | undefined)).toBe(expected);
   });
@@ -22,6 +24,9 @@ describe("Page indexing presentation", () => {
     expect(searchConsoleTabHref("/app/p/search-console", "period=28d", "page-indexing")).toBe(
       "/app/p/search-console?period=28d&tab=page-indexing",
     );
+    expect(
+      searchConsoleTabHref("/app/p/search-console", "period=28d&tab=page-indexing", "sitemaps"),
+    ).toBe("/app/p/search-console?period=28d&tab=sitemaps");
   });
   it("rounds with the largest remainder, retaining small groups", () => {
     expect(groupPercentages([612, 248, 4, 376])).toEqual(["50%", "20%", "<1%", "30%"]);

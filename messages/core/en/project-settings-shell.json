@@ -94,8 +94,12 @@
           "keywords": "domain first result depth cost"
         },
         "tagsAndSegments": {
-          "label": "Tags and segments",
-          "keywords": "organize keywords labels"
+          "label": "Tags",
+          "keywords": "organize pages keywords labels rules merge segments"
+        },
+        "conversions": {
+          "label": "Conversions",
+          "keywords": "conversion goal primary source key events revenue"
         },
         "urlInspectionLimit": {
           "label": "URL inspection limit",
@@ -121,9 +125,11 @@
       "usage": "Usage",
       "competitors": "Competitors",
       "dataSources": "Data sources",
+      "conversions": "Conversions",
       "developers": "Developers",
       "experimental": "Experimental",
       "general": "General",
+      "tags": "Tags",
       "notifications": "Notifications",
       "team": "Team",
       "tracking": "Tracking",

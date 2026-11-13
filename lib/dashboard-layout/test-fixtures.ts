@@ -10,6 +10,8 @@ export const organicAccess: DashboardAccess = Object.freeze({
     "keyword_highlights",
     "connection_details",
     "market_rollup",
+    "organic_conversions",
+    "seo_cost",
   ] as const),
 });
 const messages: Record<string, string> = {
@@ -70,6 +72,8 @@ const widgetLabels: Record<string, string> = {
   contributors: "Contributors",
   quality_history: "Quality history",
   domain_rating: "Domain Rating",
+  organic_conversions: "Organic conversions",
+  seo_cost: "SEO cost",
 };
 for (const [id, label] of Object.entries(widgetLabels)) {
   messages[`widgets.${id}.label`] = label;

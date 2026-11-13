@@ -138,8 +138,9 @@ describe("DomainOverviewWorkspace", () => {
       </SessionSpendProvider>,
     );
     const analyzeButton = screen.getByRole("button", { name: /analyze domain/i });
-    expect(analyzeButton).toHaveAttribute("data-size", expect.stringMatching(/^(xs|sm)$/));
-    expect(analyzeButton).toHaveStyle({ height: "37px", minHeight: "37px" });
+    expect(analyzeButton).toHaveAttribute("data-size", "input");
+    expect(analyzeButton.style.height).toBe("");
+    expect(analyzeButton.style.minHeight).toBe("");
     fireEvent.click(analyzeButton);
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
     expect(analyzeAction).toHaveBeenCalledWith(

@@ -146,6 +146,8 @@ export function MonitorRetryPanel({
             />
           ))}
           <MenuSelect
+            triggerClassName="w-auto"
+            size="input"
             ariaLabel={manual("connection")}
             value={values.connectionId}
             disabled={!state || pending || !canWrite}
@@ -162,6 +164,7 @@ export function MonitorRetryPanel({
             }}
           />
           <Button
+            size="input"
             type="submit"
             variant="outline"
             disabled={!canWrite || pending || !values.connectionId || !selectionEligible}
@@ -197,7 +200,7 @@ export function MonitorRetryPanel({
             })}
           </p>
           <p className="text-sm">{manual("consentHelp")}</p>
-          <Button disabled={!canWrite || pending} onClick={() => void launch()}>
+          <Button size="input" disabled={!canWrite || pending} onClick={() => void launch()}>
             {t("confirm")}
           </Button>
         </section>
@@ -211,6 +214,7 @@ export function MonitorRetryPanel({
       ) : null}
       {queued ? <p role="status">{t("queued", { id: queued })}</p> : null}
       <Button
+        size="input"
         variant="ghost"
         disabled={pending || query.isFetching}
         onClick={() => {

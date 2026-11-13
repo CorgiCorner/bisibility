@@ -2,6 +2,7 @@
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { withCapacityFailure } from "@/lib/capacity/action";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { prisma } from "@/lib/db/prisma";
 import { deleteKeywordTargets } from "@/lib/keywords/delete";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
@@ -30,7 +31,10 @@ export async function bulkDeleteKeywords(input: unknown) {
   const keywords = await prisma.$transaction((tx) =>
     deleteKeywordTargets(tx, project.id, data.keywordIds),
   );
-  if (keywords.length > 0) recordAppAction(actor);
+  if (keywords.length > 0) {
+    recordAppAction(actor);
+    captureProjectWork(actor.id, project.id);
+  }
   await writeAudit({
     action: "keyword.bulk_delete",
     actorId: actor.id,
@@ -157,7 +161,10 @@ export async function bulkSetFrequency(input: unknown) {
         actor.id,
       );
     });
-    if (keywords.length > 0) recordAppAction(actor);
+    if (keywords.length > 0) {
+      recordAppAction(actor);
+      captureProjectWork(actor.id, project.id);
+    }
     await writeAudit({
       action: "keyword.bulk_set_frequency",
       actorId: actor.id,

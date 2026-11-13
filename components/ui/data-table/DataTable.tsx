@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { type CSSProperties, useCallback, useMemo, useState } from "react";
+import { type CSSProperties, useCallback, useMemo, useRef, useState } from "react";
 import { DataTableBody } from "./DataTableBody";
 import { DataTableFooter } from "./DataTableFooter";
 import { DataTableHeader } from "./DataTableHeader";
@@ -23,15 +23,21 @@ type DataTableCssProperties = CSSProperties & Record<string, number | string | u
 function useDataTableContainer() {
   const [containerWidth, setContainerWidth] = useState(0);
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
   const ref = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
     setScrollElement(node);
     if (!node) return;
-    const update = () => setContainerWidth(Math.round(node.clientWidth));
+    const update = () => {
+      const next = Math.round(node.clientWidth);
+      if (next > 0) setContainerWidth(next);
+    };
     update();
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(update);
     observer.observe(node);
-    return () => observer.disconnect();
+    observerRef.current = observer;
   }, []);
   return { containerWidth, ref, scrollElement };
 }
@@ -39,6 +45,7 @@ function useDataTableContainer() {
 export function DataTable<TRow extends DataTableRowBase>({
   ariaLabel,
   bordered = true,
+  className,
   measureRows = false,
   columnPinning,
   columnOrder,
@@ -146,6 +153,7 @@ export function DataTable<TRow extends DataTableRowBase>({
       aria-rowcount={rowCount}
       className={cn(
         dataTableRootClassName,
+        className,
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid",
         // The surface drawing the border must also own its corners, even inside a clipped card.
         bordered && "overflow-hidden rounded-card",
@@ -170,7 +178,13 @@ export function DataTable<TRow extends DataTableRowBase>({
       style={rootStyle}
       tabIndex={tabIndex}
     >
-      <div className="min-w-full shrink-0" style={{ width: `var(${DATA_TABLE_WIDTH_VARIABLE})` }}>
+      <div
+        className="w-full min-w-full shrink-0"
+        style={{
+          minWidth: "100%",
+          width: `max(100%, var(${DATA_TABLE_WIDTH_VARIABLE}))`,
+        }}
+      >
         <DataTableHeader
           bordered={bordered}
           hasBody={layout === "fill" || renderedRows.length > 0 || emptyState !== undefined}

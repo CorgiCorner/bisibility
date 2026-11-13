@@ -21,6 +21,7 @@ export type DeltaDirection = "down" | "flat" | "up";
 export type SearchInsightsKpiMetric =
   | "clicks"
   | "clicks_to_sessions"
+  | "conversions"
   | "ctr"
   | "impressions"
   | "position";
@@ -31,12 +32,16 @@ export type SearchInsightsKpiDelta =
   | { kind: "changed"; unit: "percentage_points" | "percent_change" | "position"; value: number }
   | { kind: "new" | "no_data" | "unchanged" };
 
+export type SearchInsightsKpiSource = "ga4" | "gsc" | "plausible";
+
 export type SearchInsightsKpi = {
   delta: SearchInsightsKpiDelta;
   dir: DeltaDirection;
+  /** Enabled goals behind a conversions total. Omitted on Search Console metrics. */
+  goalCount?: number;
   metric: SearchInsightsKpiMetric;
   previous: number | null;
-  source: "gsc";
+  source: SearchInsightsKpiSource;
   value: number;
   valueKind: SearchInsightsKpiValueKind;
 };
@@ -205,6 +210,28 @@ export function searchInsightsKpis(
       valueKind: "position",
     },
   ];
+}
+
+/** Period conversion total beside the Search Console row. A higher count is up. */
+export function conversionsKpi(input: {
+  current: number;
+  goalCount: number;
+  previous: number;
+  previousCovered?: boolean;
+  source: "ga4" | "plausible";
+}): SearchInsightsKpi {
+  const covered = input.previousCovered !== false;
+  return {
+    ...(covered
+      ? rawCountDelta(input.current, input.previous)
+      : { delta: rawNew(), dir: "flat" as const }),
+    goalCount: input.goalCount,
+    metric: "conversions",
+    previous: covered ? input.previous : null,
+    source: input.source,
+    value: input.current,
+    valueKind: "count",
+  };
 }
 
 export function clicksToSessionsKpi(

@@ -115,7 +115,7 @@ export function ChoiceGroup<T extends string>(props: Readonly<ChoiceGroupProps<T
               <span className="min-w-0 break-words">
                 <span className="block">{option.label}</span>
                 {reason || option.description ? (
-                  <span id={`${id}-desc-${index}`} className="block text-ui-xs text-fg-muted">
+                  <span id={`${id}-desc-${index}`} className="block text-ui-caption text-fg-muted">
                     {reason ?? option.description}
                   </span>
                 ) : null}
@@ -125,7 +125,7 @@ export function ChoiceGroup<T extends string>(props: Readonly<ChoiceGroupProps<T
         })}
       </div>
       {props.maxHint ? (
-        <span id={`${id}-hint`} className="text-ui-xs text-fg-muted" role="status">
+        <span id={`${id}-hint`} className="text-ui-caption text-fg-muted" role="status">
           {props.maxHint}
         </span>
       ) : null}

@@ -5,6 +5,10 @@ export const inputClassName =
 export const inputControlSizeClassName =
   "min-h-10 max-sm:min-h-11 px-[13px] py-[9px] text-ui-body leading-5";
 
+/** Input-sized frame for compound fields; inner content is vertically centered. */
+export const inputCompoundControlSizeClassName =
+  "min-h-10 max-sm:min-h-11 px-3 text-ui-body leading-5";
+
 // A fixed 20px line keeps fields and actions at 40px desktop and 44px below sm.
 export const inputActionSizeClassName = inputControlSizeClassName;
 

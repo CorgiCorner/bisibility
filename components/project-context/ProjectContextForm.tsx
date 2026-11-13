@@ -80,6 +80,7 @@ export function ProjectContextForm({
         <ProjectContextFooter>
           {canEdit ? (
             <Button
+              size="input"
               disabled={!form.formState.isDirty}
               loading={form.formState.isSubmitting}
               loadingLabel={t("saving")}

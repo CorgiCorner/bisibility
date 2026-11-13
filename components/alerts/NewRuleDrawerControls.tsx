@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/Button";
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
-import { menuSelectInputClass } from "@/components/ui/menu-select-support";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm, RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { ruleSeverityMeta, ruleTemplates } from "@/lib/alerts/new-rule-data";
@@ -53,7 +52,7 @@ export function TemplatePicker({
               disabled={item.disabled}
               key={id}
               onClick={() => onSelect(templateId)}
-              size="sm"
+              size="input"
               style={
                 active
                   ? {
@@ -174,6 +173,7 @@ export function RecipientFields({
         {t("recipients")}
       </span>
       <MenuMultiSelect
+        size="input"
         ariaLabel={t("recipientsAria")}
         minSelected={0}
         onChange={(values) =>
@@ -182,7 +182,7 @@ export function RecipientFields({
         options={targets.members.map((member) => ({ label: member.label, value: member.id }))}
         placeholder={t("creatorDefault")}
         searchable
-        triggerClassName={`${menuSelectInputClass} ${selectTriggerClass}`}
+        triggerClassName={selectTriggerClass}
         values={recipientIds}
       />
     </div>

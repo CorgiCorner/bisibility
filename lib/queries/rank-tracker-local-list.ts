@@ -91,6 +91,7 @@ export async function loadRankTrackerLocalList(
             urlChanged: false,
             serp: [],
             lastCheck: "any" as const,
+            aiOverviewShown: false,
           },
         };
         const base = await selectRankTrackerReportKeywordsInTransaction(

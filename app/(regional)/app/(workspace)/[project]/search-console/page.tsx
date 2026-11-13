@@ -1,4 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { SearchInsightsClicksChartLoading } from "@/components/search-insights/SearchInsightsClicksChart";
 import { SearchInsightsNoPropertyState } from "@/components/search-insights/SearchInsightsEmptyStates";
 import {
   SearchInsightsBodyLoading,
@@ -41,6 +42,7 @@ import {
   getSearchInsightsContext,
   loadSearchInsightsScope,
 } from "@/lib/search-insights/queries/context";
+import { getSearchInsightsDailyClicks } from "@/lib/search-insights/queries/daily-clicks";
 import {
   getSearchInsightsFirstView,
   getSearchInsightsFirstViewSignals,
@@ -53,6 +55,7 @@ import { Suspense } from "react";
 import { PageIndexingView, SearchConsoleNavigation } from "./PageIndexingSection";
 import {
   SearchInsightsBodySection,
+  SearchInsightsClicksChartSection,
   SearchInsightsNoDataSection,
   SearchInsightsTrustStripSection,
 } from "./SearchInsightsSections";
@@ -65,6 +68,7 @@ type SearchInsightsPageProps = {
     tab?: SearchParamValue;
     comparison?: SearchParamValue;
     google?: SearchParamValue;
+    conv?: SearchParamValue;
     period?: SearchParamValue;
     property?: SearchParamValue;
     provider?: SearchParamValue;
@@ -101,7 +105,7 @@ export default async function SearchInsightsPage({
       <SearchConsoleNavigation projectId={publicId} query={query} />
     </Suspense>
   );
-  if (searchConsoleTab(query.tab) === "page-indexing")
+  if (searchConsoleTab(query.tab) !== "performance")
     return (
       <PageIndexingView
         loadingLabel={loadingLabels.bodyAriaLabel}
@@ -109,6 +113,7 @@ export default async function SearchInsightsPage({
         navigation={navigation}
         projectId={publicId}
         runtime={runtime}
+        tab={searchConsoleTab(query.tab) === "sitemaps" ? "sitemaps" : "page-indexing"}
       />
     );
   const comparison = first(query.comparison);
@@ -153,12 +158,21 @@ export default async function SearchInsightsPage({
         scope,
       })
     : null;
+  const clicksChart =
+    scope.property && scope.window
+      ? getSearchInsightsDailyClicks({
+          projectId: scope.projectId,
+          property: scope.property,
+          window: scope.window,
+        })
+      : null;
   const signals = scope.property ? getSearchInsightsFirstViewSignals(scope) : null;
   // Every promise started here is consumed inside a Suspense boundary that may never render, and
   // the awaits below can lose the race to a rejection. `void x.catch()` marks the original handled
   // without settling it, so the section that awaits it later still sees the rejection, and Node
   // does not report an unhandled one when no section renders at all.
   void view?.catch(() => undefined);
+  void clicksChart?.catch(() => undefined);
   // The body turns rejection into an honest chip state after the view resolves. Mark the raw
   // promise handled immediately too, in case the signal read fails before that section starts.
   void signals?.catch(() => undefined);
@@ -252,6 +266,15 @@ export default async function SearchInsightsPage({
             >
               <SearchInsightsBodySection
                 cancelAction={cancelGooglePropertySelection}
+                clicksChart={
+                  clicksChart ? (
+                    <Suspense fallback={<SearchInsightsClicksChartLoading />}>
+                      <SearchInsightsClicksChartSection chart={clicksChart} projectId={publicId} />
+                    </Suspense>
+                  ) : null
+                }
+                conversionRequest={first(query.conv)}
+                conversionWindow={context.window}
                 completeAction={completeGooglePropertySelection}
                 disconnectAction={disconnectGoogleSearchConsole}
                 ga4Oauth={oauth.provider === "ga4" ? oauth : undefined}

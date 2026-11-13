@@ -39,6 +39,9 @@ details, passwords, API keys, and credentials are never event properties.
 | `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
 | `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
+| `seo_challenge_joined` | Client | A project member explicitly starts the 30-day SEO challenge. | None |
+| `seo_challenge_card_ready` | Client | The Day 1 card first loads after starting the challenge. | `elapsed_ms` |
+| `seo_challenge_card_download_clicked` | Client | A participant selects Download Day 1 card. | None |
 | `seo_cost_calculator_changed` | Client | A marketing SEO workload change settles; never on initial render or shared-state restoration. | `surface: "home" \| "pricing"`, `selection`, `frequency`, `funding_mode`, bucketed `rank_volume`, `research_volume`, `domain_volume`, `backlink_volume`; no exact volumes |
 | `language_switched` | Client | The marketing language switcher changes the locale. | `from`, `to`, `surface: "marketing_header" \| "marketing_mobile_menu"` |
 | `marketing_cta_clicked` | Client | A call to action on a hosted marketing page is selected. | `page`, `cta`, `slot`, optional `page_version: "legacy" \| "outcomes_v2"` |

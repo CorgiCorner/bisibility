@@ -57,7 +57,8 @@ describe("PositionTrendCard date display", () => {
       }
     });
 
-    expect(screen.getByText("24 de agosto de 2026")).toBeInTheDocument();
+    expect(screen.getByText("24 de agosto")).toBeInTheDocument();
+    expect(screen.queryByText("24 de agosto de 2026")).not.toBeInTheDocument();
     expect(screen.getByText("Ahora")).toBeInTheDocument();
     expect(screen.queryByText("2026-08-24")).not.toBeInTheDocument();
   });

@@ -48,6 +48,7 @@
   },
   {
     "details": [
+      "missing-required /definition/filters/ai_overview_shown",
       "missing-required /definition/filters/change",
       "missing-required /definition/filters/contains",
       "missing-required /definition/filters/excluded_keyword_ids",
@@ -72,8 +73,7 @@
       "type-mismatch /definition/filters/position must be array",
       "type-mismatch /definition/filters/position must be string",
       "type-mismatch /definition/filters/tag must be string",
-      "type-mismatch /definition/lens/location_id must be string",
-      "... 3 more"
+      "... 4 more"
     ],
     "kinds": ["missing-required", "type-mismatch", "value-mismatch"],
     "operation": "createSavedView",
@@ -237,6 +237,7 @@
   },
   {
     "details": [
+      "missing-required /data/*/definition/filters/ai_overview_shown",
       "missing-required /data/*/definition/filters/change",
       "missing-required /data/*/definition/filters/contains",
       "missing-required /data/*/definition/filters/excluded_keyword_ids",
@@ -261,8 +262,7 @@
       "type-mismatch /data/*/definition/filters/position must be array",
       "type-mismatch /data/*/definition/filters/position must be string",
       "type-mismatch /data/*/definition/filters/tag must be string",
-      "type-mismatch /data/*/definition/lens/location_id must be string",
-      "... 5 more"
+      "... 6 more"
     ],
     "kinds": ["missing-required", "type-mismatch", "value-mismatch"],
     "operation": "listSavedViews",

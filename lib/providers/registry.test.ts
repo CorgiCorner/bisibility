@@ -51,6 +51,7 @@ describe("provider logo domains", () => {
     ["dataforseo", "dataforseo.com"],
     ["serpapi", "serpapi.com"],
     ["gsc", "google.com"],
+    ["pagespeed", "pagespeed.web.dev"],
     ["ga4", "google.com"],
     ["plausible", "plausible.io"],
   ])("maps %s to %s", (providerId, domain) => {

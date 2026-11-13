@@ -40,6 +40,11 @@ describe("achievement route authorization", () => {
     });
     expect(m.read).toHaveBeenLastCalledWith("owner");
     expect(m.image).toHaveBeenCalledWith("presence", "2026-10-16", true);
+    m.read.mockResolvedValue({ awards: [{ kind: "thirty_days", earnedDay: "2026-12-29" }] });
+    await download(new Request("https://example.com/api/achievements"), {
+      params: Promise.resolve({ kind: "thirty_days" }),
+    });
+    expect(m.image).toHaveBeenLastCalledWith("thirty_days", "2026-12-29", true);
   });
   it("a revoked public token never serves a cached image", async () => {
     m.publicRead.mockResolvedValue(null);

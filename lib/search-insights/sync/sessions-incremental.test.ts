@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   },
   recordImportFailure: vi.fn(),
   resolveConnection: vi.fn(),
+  projectGa4: vi.fn(),
   syncRange: vi.fn(),
 }));
 
@@ -22,6 +23,7 @@ vi.mock("./sessions-credentials", () => ({
   ORGANIC_SESSIONS_SOURCE: "ga4",
   resolveOrganicSessionsConnection: mocks.resolveConnection,
 }));
+vi.mock("@/lib/conversions/ga4", () => ({ projectGa4KeyEvents: mocks.projectGa4 }));
 vi.mock("./sessions-partitions", () => ({
   ORGANIC_SESSIONS_SETTLING_LAG_DAYS: 1,
   syncOrganicSessionsRange: mocks.syncRange,
@@ -72,6 +74,7 @@ describe("runOrganicSessionsIncrementalSync", () => {
     });
     expect(mocks.resolveConnection).not.toHaveBeenCalled();
     expect(mocks.syncRange).not.toHaveBeenCalled();
+    expect(mocks.projectGa4).not.toHaveBeenCalled();
   });
 
   it("authoritatively refreshes the trailing three Pacific days through yesterday", async () => {
@@ -93,6 +96,7 @@ describe("runOrganicSessionsIncrementalSync", () => {
         }),
       }),
     );
+    expect(mocks.projectGa4).toHaveBeenCalledWith("project_1");
   });
 
   it("walks a stale gap without advancing the marker past the clamped request", async () => {

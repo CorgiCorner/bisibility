@@ -8,6 +8,7 @@ import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
 import { AuthorizationError, getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { moduleSupport } from "@/lib/providers/module-support";
@@ -29,8 +30,10 @@ export async function analyzeAiResearchAction(
       { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
       { ...data, require_payment: !data.estimate_only },
     );
-    if (result?.ok && !result.estimate && !result.cached && !data.estimate_only)
+    if (result?.ok && !result.estimate && !result.cached && !data.estimate_only) {
       recordAppAction(actor);
+      captureProjectWork(actor.id, project.id);
+    }
     recordQualifiedUse({
       actorId: actor.id,
       operation: "runAiResearch",

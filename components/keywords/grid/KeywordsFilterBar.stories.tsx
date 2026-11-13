@@ -87,6 +87,7 @@ function FilterBarStory({ refreshing = false }: Readonly<{ refreshing?: boolean 
       onColumnSizingChange={() => undefined}
       onColumnVisibilityChange={setColumnVisibility}
       onDensityChange={setDensity}
+      onImportCsv={() => undefined}
       onOpenExport={() => undefined}
       onOpenFilters={() => undefined}
       onAddKeyword={() => undefined}
@@ -94,7 +95,7 @@ function FilterBarStory({ refreshing = false }: Readonly<{ refreshing?: boolean 
       refreshing={refreshing}
       onRemoveFilter={() => undefined}
       onSearchChange={setSearchValue}
-      savedViewControl={<ToolbarControl>Default view</ToolbarControl>}
+      savedViewControl={<ToolbarControl>General</ToolbarControl>}
       scopeChip={<span>Scope: example.com</span>}
       scopeControl={<ToolbarControl>All projects</ToolbarControl>}
       searchValue={searchValue}
@@ -128,4 +129,13 @@ export const Interactive: Story = {
 export const Refreshing: Story = {
   ...Interactive,
   render: () => <FilterBarStory refreshing />,
+};
+
+export const Tablet: Story = {
+  ...Interactive,
+  globals: { viewport: { value: "tablet", isRotated: false } },
+};
+export const Phone: Story = {
+  ...Interactive,
+  globals: { viewport: { value: "mobile1", isRotated: false } },
 };

@@ -94,8 +94,12 @@
           "keywords": "domena pierwszy wynik głębokość koszt"
         },
         "tagsAndSegments": {
-          "label": "Tagi i segmenty",
-          "keywords": "porządkowanie słowa kluczowe etykiety"
+          "label": "Tagi",
+          "keywords": "porządkowanie strony słowa kluczowe etykiety reguły scalanie segmenty"
+        },
+        "conversions": {
+          "label": "Konwersje",
+          "keywords": "konwersja cel główne źródło kluczowe zdarzenia przychód"
         },
         "urlInspectionLimit": {
           "label": "Limit sprawdzeń adresu URL",
@@ -121,9 +125,11 @@
       "usage": "Zużycie",
       "competitors": "Konkurenci",
       "dataSources": "Źródła danych",
+      "conversions": "Konwersje",
       "developers": "Deweloperzy",
       "experimental": "Eksperymentalne",
       "general": "Ogólne",
+      "tags": "Tagi",
       "notifications": "Powiadomienia",
       "team": "Zespół",
       "tracking": "Monitorowanie",

@@ -20,6 +20,7 @@ export type DisclosureProps = {
   name?: string;
   summaryClassName?: string;
   title: ReactNode;
+  titleClassName?: string;
   variant?: "panel" | "inline";
 };
 
@@ -37,6 +38,7 @@ export function Disclosure({
   summaryClassName,
   name,
   title,
+  titleClassName,
   variant = "panel",
 }: Readonly<DisclosureProps>) {
   return (
@@ -46,8 +48,8 @@ export function Disclosure({
         variant === "panel" && "rounded-card border border-border bg-bg-elev",
         className,
       )}
-      open={defaultOpen}
       name={name}
+      {...(defaultOpen ? { open: true } : {})}
     >
       <summary
         className={cn(
@@ -61,9 +63,10 @@ export function Disclosure({
         <Heading
           className={cn(
             "m-0 min-w-0 flex-1 wrap-break-word",
-            variant === "panel"
-              ? "text-[17px] font-semibold leading-[1.3]"
-              : "text-xs font-normal leading-snug",
+            titleClassName ??
+              (variant === "panel"
+                ? "text-[17px] font-semibold leading-[1.3]"
+                : "text-xs font-normal leading-snug"),
           )}
         >
           {title}

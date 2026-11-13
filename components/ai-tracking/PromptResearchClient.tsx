@@ -1,159 +1,178 @@
 "use client";
-import { BackLink } from "@/components/ui/BackLink";
-import { Button } from "@/components/ui/Button";
+
+import { ActionPaymentLoading } from "@/components/action-payment/ActionPaymentLoading";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { inputActionSizeClassName } from "@/components/ui/input-styles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import type { PromptResearchPageData } from "@/lib/actions/prompt-research";
-import { promptResearchSearchSchema } from "@/lib/ai-research/prompt-research-schema";
+import { researchQuoteIsPriced } from "@/lib/ai-research/research-cost";
+import { researchQuestions } from "@/lib/ai-research/research-questions";
+import {
+  emptyResearchTabContext,
+  type ResearchTabContext,
+} from "@/lib/ai-research/research-tab-model";
+import { aiVisibilityTabHref } from "@/lib/ai-tracking/ai-visibility-paths";
 import { appPath } from "@/lib/routing/app-path";
-import { cn } from "@/lib/ui/cn";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import Link from "next/link";
+import { presentBudgetDenial } from "@/lib/ui/action-error";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { PromptResearchKeyword } from "./PromptResearchKeyword";
-import { PromptResearchMarket } from "./PromptResearchMarket";
+import { ResearchLookupControls } from "./ResearchLookupControls";
+import { ResearchPaymentDialog } from "./ResearchPaymentDialog";
+import { ResearchQuestionTable } from "./ResearchQuestionTable";
+import { ResearchRecentLookups } from "./ResearchRecentLookups";
+import { useResearchLookup } from "./use-research-lookup";
 
 export function PromptResearchClient({
-  projectId,
-  keyword = "",
+  context = emptyResearchTabContext("prj_example"),
   data,
+  keyword = "",
+  projectId,
 }: Readonly<{
-  projectId: string;
-  keyword?: string;
+  context?: ResearchTabContext;
   data: PromptResearchPageData;
+  keyword?: string;
+  projectId: string;
+}>) {
+  const [client] = useState(() => new QueryClient());
+  return (
+    <QueryClientProvider client={client}>
+      <ResearchClient
+        key={`${projectId}:${keyword}`}
+        context={context}
+        data={data}
+        keyword={keyword}
+        projectId={projectId}
+      />
+    </QueryClientProvider>
+  );
+}
+
+function ResearchClient({
+  context,
+  data,
+  keyword,
+  projectId,
+}: Readonly<{
+  context: ResearchTabContext;
+  data: PromptResearchPageData;
+  keyword: string;
+  projectId: string;
 }>) {
   const t = useTranslations("projectAiTracking.research");
-  const costT = useTranslations("projectAiResearch");
+  const errors = useSharedErrorMessages();
+  const locale = useLocale();
   const router = useRouter();
-  const form = useForm({
-    resolver: zodResolver(promptResearchSearchSchema),
-    defaultValues: { keyword },
-  });
-  const error = form.formState.errors.keyword;
-  const href = appPath(projectId, "prompt-research");
   const [sourceMissing, setSourceMissing] = useState(false);
+  const lookup = useResearchLookup({
+    data: { ...data, hasSource: data.hasSource && !sourceMissing },
+    keyword,
+    onSourceMissing: () => setSourceMissing(true),
+    projectId,
+  });
   const noSource =
     !data.hasSource ||
     sourceMissing ||
     Boolean(data.initial && !data.initial.ok && data.initial.reason === "no_source");
   const showNotice = Boolean(data.initial?.ok && !data.initial.estimate);
+  const result = lookup.display?.ok && !lookup.display.estimate ? lookup.display : undefined;
+  const priced = researchQuoteIsPriced(lookup.quote?.charge);
+  const actionLabel =
+    priced && lookup.quote
+      ? t("findPromptsCost", { cost: formatPaymentAmount(lookup.quote.charge, locale) })
+      : t("findPrompts");
+  const failure = lookup.failure;
   return (
     <div className="grid min-w-0 gap-4">
-      {keyword ? <BackLink href={href}>{t("relevantKeywords")}</BackLink> : null}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="m-0 max-w-3xl text-ui-body text-fg-muted">{t("lead")}</p>
+        <ResearchRecentLookups projectId={projectId} recent={context.recent} />
+      </div>
+      <p className="m-0 text-ui-caption text-fg-muted">{t("brandLookupHint")}</p>
       <ProviderAccessGate
         blocked={noSource}
-        providers={data.supportingProviders}
         href={appPath(projectId, "providers")}
-        surface="ai"
+        providers={data.supportingProviders}
         showNotice={showNotice}
+        surface="ai"
       >
-        <Card className="min-w-0 w-full p-4 sm:p-5" size="md">
-          <form
-            onSubmit={form.handleSubmit(({ keyword }) =>
-              router.push(`${href}?${new URLSearchParams({ q: keyword })}`),
-            )}
-            className="grid gap-3"
-          >
-            <label htmlFor="research-keyword" className="sr-only">
-              {t("keyword")}
-            </label>
-            <div className="flex items-start gap-2">
-              <div className="relative min-w-0 flex-1">
-                <MagnifyingGlassIcon
-                  weight="regular"
-                  aria-hidden
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-3 text-fg-muted"
-                />
-                <Input
-                  id="research-keyword"
-                  className="pl-9"
-                  {...form.register("keyword")}
-                  maxLength={100}
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={`${error ? "research-error " : ""}research-cost`}
-                  placeholder={t("placeholder")}
-                />
-              </div>
-              <Button type="submit" className={cn(inputActionSizeClassName, "shrink-0")}>
-                {t("search")}
-              </Button>
-            </div>
-            {error ? (
-              <p id="research-error" role="alert" className="m-0 text-ui-body text-red-text">
-                {t(form.getValues("keyword").trim() ? "keywordTooLong" : "keywordRequired")}
-              </p>
-            ) : null}
-            <p id="research-cost" className="m-0 text-ui-xs text-fg-muted">
-              {costT("estimateRequired")}
-            </p>
-            <PromptResearchMarket />
-          </form>
-        </Card>
+        <ResearchLookupControls
+          actionLabel={actionLabel}
+          context={context}
+          disabled={!data.canWrite || lookup.pending}
+          keyword={keyword}
+          onSearch={(next) =>
+            router.push(aiVisibilityTabHref(projectId, "research", { keyword: next }))
+          }
+          onSubmitCurrent={() => {
+            if (result) return;
+            lookup.setReviewOpen(true);
+          }}
+          projectId={projectId}
+        />
       </ProviderAccessGate>
+      {result?.cached ? <p className="m-0 text-ui-caption text-fg-muted">{t("cached")}</p> : null}
       {noSource && !showNotice ? (
         <ProviderAccessEmptyState
-          surface="ai"
           href={appPath(projectId, "providers")}
           providers={data.supportingProviders}
+          surface="ai"
         />
       ) : null}
-      {keyword ? (
-        <ProviderAccessGate blocked={noSource} surface="ai" showNotice={false}>
-          <PromptResearchKeyword
-            key={keyword}
-            projectId={projectId}
-            keyword={keyword}
-            data={{ ...data, hasSource: !noSource }}
-            onSourceMissing={() => setSourceMissing(true)}
-          />
-        </ProviderAccessGate>
-      ) : !noSource ? (
-        <section
-          className="overflow-hidden rounded-card border border-border bg-bg-elev"
-          aria-labelledby="research-keywords"
-        >
-          <div className="border-b border-border px-4 py-3.5">
-            <h2 id="research-keywords" className="m-0 text-[15px] font-semibold">
-              {t("relevantKeywords")}
-            </h2>
-            <p className="m-0 mt-1 text-ui-xs text-fg-muted">{t("keywordsHint")}</p>
-          </div>
-          {data.keywords.length ? (
-            <ul className="m-0 list-none divide-y divide-border-soft p-0">
-              {data.keywords.map((value) => (
-                <li key={value}>
-                  <Link
-                    className="flex items-center justify-between gap-3 px-4 py-3 text-ui-body font-medium hover:bg-bg-band focus-visible:outline focus-visible:outline-accent"
-                    href={`${href}?${new URLSearchParams({ q: value })}`}
-                  >
-                    <span className="min-w-0 break-words">{value}</span>
-                    <CaretRightIcon
-                      weight="regular"
-                      aria-hidden
-                      size={16}
-                      className="shrink-0 text-fg-muted"
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="m-0 px-4 py-8 text-center text-ui-body text-fg-muted">
-              {t("noKeywordsHint")}
-            </p>
+      {!data.canWrite ? <EmptyState description={t("readOnlyHint")} title={t("readOnly")} /> : null}
+      {lookup.pending ? <ActionPaymentLoading label={t("loadingResults")} /> : null}
+      {lookup.failed ? (
+        <Card className="text-ui-body text-red-text" role="alert">
+          {presentBudgetDenial(
+            failure,
+            errors,
+            t(failure === "insufficient_credits" ? "insufficientCredits" : "requestFailure"),
           )}
-        </section>
+        </Card>
       ) : null}
-      <p className="m-0 text-ui-xs leading-relaxed text-fg-muted">{t("datasetNotice")}</p>
+      {lookup.display?.payment && (!lookup.display.ok || !lookup.display.estimate) ? (
+        <PaymentChargeLine payment={lookup.display.payment} />
+      ) : null}
+      {lookup.blocked ? (
+        <p className="text-ui-body text-red-text" role="alert">
+          {t("reviewAttempt")}
+        </p>
+      ) : null}
+      <ResearchPaymentDialog keyword={keyword} lookup={lookup} />
+      {result && "prompts" in result ? (
+        result.result.failure && result.prompts.length === 0 ? (
+          <p className="text-ui-body text-red-text" role="alert">
+            {t("partialFailure")}
+          </p>
+        ) : (
+          <>
+            {result.result.failure ? (
+              <p className="text-ui-body text-red-text" role="alert">
+                {t("partialFailure")}
+              </p>
+            ) : null}
+            <ProviderAccessGate blocked={noSource} showNotice={false} surface="ai">
+              <ResearchQuestionTable
+                canWrite={data.canWrite}
+                dailyUsdPerPrompt={context.dailyUsdPerPrompt}
+                engines={context.engines}
+                entities={context.entities}
+                keyword={keyword}
+                projectId={projectId}
+                questions={researchQuestions(result.result.rows, result.prompts, context.entities)}
+                reportId={result.reportId}
+                topics={data.topics}
+              />
+            </ProviderAccessGate>
+          </>
+        )
+      ) : null}
+      <p className="m-0 text-ui-caption leading-relaxed text-fg-muted">{t("datasetNotice")}</p>
     </div>
   );
 }

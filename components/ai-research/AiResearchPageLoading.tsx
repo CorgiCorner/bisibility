@@ -40,7 +40,7 @@ function Field({
             className={`${multiline ? "min-h-[122px]" : "h-10"} w-full rounded-control border border-border bg-bg-sunken motion-safe:animate-pulse`}
           />
         ))}
-      {hint && <span className="text-ui-xs text-fg-muted">{hint}</span>}
+      {hint && <span className="text-ui-caption text-fg-muted">{hint}</span>}
     </div>
   );
 }
@@ -71,15 +71,15 @@ export function AiResearchPageLoading() {
               <div className="text-ui-body sm:col-span-2">{t("advanced")}</div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button disabled tabIndex={-1} variant="secondary">
+              <Button size="input" disabled tabIndex={-1} variant="secondary">
                 {t("estimateCost")}
               </Button>
-              <Button disabled tabIndex={-1}>
+              <Button size="input" disabled tabIndex={-1}>
                 {t("runAnalysis")}
               </Button>
-              <span className="text-ui-xs text-fg-muted">{t("cacheHint")}</span>
+              <span className="text-ui-caption text-fg-muted">{t("cacheHint")}</span>
             </div>
-            <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
+            <p className="m-0 text-ui-caption text-fg-muted">{t("estimateRequired")}</p>
           </div>
         </Card>
         <div className="opacity-40 motion-safe:animate-pulse">

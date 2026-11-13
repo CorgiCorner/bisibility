@@ -7,6 +7,7 @@ export const coreFragments: CoreFragmentLoaders = {
   "project-ai-tracking": () => import("@/messages/core/es-ES/project-ai-tracking.json"),
   "project-site-audit": () => import("@/messages/core/es-ES/project-site-audit.json"),
   "agent-workspace": () => import("@/messages/core/es-ES/agent-workspace.json"),
+  "challenge-report": () => import("@/messages/core/es-ES/challenge-report.json"),
   "account-preferences": () => import("@/messages/core/es-ES/account-preferences.json"),
   account: () => import("@/messages/core/es-ES/account.json"),
   auth: () => import("@/messages/core/es-ES/auth.json"),
@@ -26,17 +27,21 @@ export const coreFragments: CoreFragmentLoaders = {
   "project-install": () => import("@/messages/core/es-ES/project-install.json"),
   "project-integrations": () => import("@/messages/core/es-ES/project-integrations.json"),
   "project-markets": () => import("@/messages/core/es-ES/project-markets.json"),
+  "project-pages": () => import("@/messages/core/es-ES/project-pages.json"),
   "project-rank-tracker-keyword-detail": () =>
     import("@/messages/core/es-ES/project-rank-tracker-keyword-detail.json"),
   "project-rank-tracker-keyword-import": () =>
     import("@/messages/core/es-ES/project-rank-tracker-keyword-import.json"),
   "project-rank-tracker": () => import("@/messages/core/es-ES/project-rank-tracker.json"),
   "project-research": () => import("@/messages/core/es-ES/project-research.json"),
+  "research-history": () => import("@/messages/core/es-ES/research-history.json"),
   "project-runs-rank-runs": () => import("@/messages/core/es-ES/project-runs-rank-runs.json"),
   "project-runs-schedules": () => import("@/messages/core/es-ES/project-runs-schedules.json"),
   "project-runs": () => import("@/messages/core/es-ES/project-runs.json"),
   "project-search-insights": () => import("@/messages/core/es-ES/project-search-insights.json"),
   "project-settings-advanced": () => import("@/messages/core/es-ES/project-settings-advanced.json"),
+  "project-settings-conversions": () =>
+    import("@/messages/core/es-ES/project-settings-conversions.json"),
   "project-settings-developers": () =>
     import("@/messages/core/es-ES/project-settings-developers.json"),
   "project-settings-experimental": () =>
@@ -47,10 +52,12 @@ export const coreFragments: CoreFragmentLoaders = {
   "project-settings-notifications": () =>
     import("@/messages/core/es-ES/project-settings-notifications.json"),
   "project-settings-shell": () => import("@/messages/core/es-ES/project-settings-shell.json"),
+  "project-settings-tags": () => import("@/messages/core/es-ES/project-settings-tags.json"),
   "project-settings-team": () => import("@/messages/core/es-ES/project-settings-team.json"),
   "project-settings-tracking": () => import("@/messages/core/es-ES/project-settings-tracking.json"),
   "project-settings-usage": () => import("@/messages/core/es-ES/project-settings-usage.json"),
   "project-timeline": () => import("@/messages/core/es-ES/project-timeline.json"),
+  "project-usage-costs": () => import("@/messages/core/es-ES/project-usage-costs.json"),
   setup: () => import("@/messages/core/es-ES/setup.json"),
   shared: () => import("@/messages/core/es-ES/shared.json"),
   shell: () => import("@/messages/core/es-ES/shell.json"),

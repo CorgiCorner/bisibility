@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
@@ -8,8 +9,7 @@ import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
 import type { UseFormSetValue } from "react-hook-form";
 
-const chipClass =
-  "inline-flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12.5px] font-medium";
+const chipClass = "gap-1.5 whitespace-nowrap rounded-full font-medium";
 
 export function ruleMarketScopeLabel(
   marketIds: readonly string[],
@@ -51,7 +51,9 @@ export function NewRuleMarketFields({
         {t("markets")}
       </div>
       <div className="flex flex-wrap gap-[7px]">
-        <button
+        <Button
+          size="input"
+          variant="secondary"
           aria-pressed={marketIds.length === 0}
           className={`${chipClass} ${marketIds.length === 0 ? "border-accent bg-accent-soft text-fg" : "border-border-control bg-transparent text-fg"}`}
           onClick={() => setValue("marketIds", [], { shouldDirty: true })}
@@ -59,11 +61,13 @@ export function NewRuleMarketFields({
         >
           {marketIds.length === 0 ? <Check aria-hidden size={10} weight="regular" /> : null}
           {t("allMarkets")}
-        </button>
+        </Button>
         {markets.map((market) => {
           const selected = marketIds.includes(market.id);
           return (
-            <button
+            <Button
+              size="input"
+              variant="secondary"
               aria-pressed={selected}
               className={`${chipClass} ${selected ? "border-accent bg-accent-soft text-fg" : "border-border-control bg-transparent text-fg"}`}
               key={market.id}
@@ -73,7 +77,7 @@ export function NewRuleMarketFields({
             >
               {selected ? <Check aria-hidden size={10} weight="regular" /> : null}
               {market.label}
-            </button>
+            </Button>
           );
         })}
       </div>

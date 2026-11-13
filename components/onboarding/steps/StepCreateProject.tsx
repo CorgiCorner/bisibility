@@ -8,7 +8,6 @@ import {
 import { feedbackClass, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { DataResidencyNote } from "@/components/ui/DataResidencyNote";
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
-import { buildPublicDomainIconUrl } from "@/components/ui/domain-icon-url";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type {
@@ -23,6 +22,7 @@ import type {
 } from "@/lib/onboarding/website";
 import { onboardingWebsiteSchemaFor } from "@/lib/onboarding/website";
 import { presentActionError } from "@/lib/ui/action-error";
+import { buildPublicDomainIconUrl } from "@/lib/ui/domain-icon-url";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";

@@ -9,12 +9,14 @@ import {
 export const PROVIDER_ALLOCATION_METADATA = {
   ...historicalMetadata,
   ahrefs: { kind: "non_billable" },
+  pagespeed: { kind: "non_billable" },
 } as const satisfies Record<string, ProviderAllocationCatalog>;
 
 export function providerAllocationMetadata(
   providerId: string | null | undefined,
 ): ProviderAllocationCatalog | null {
-  return providerId === "ahrefs"
-    ? PROVIDER_ALLOCATION_METADATA.ahrefs
-    : historicalAllocation(providerId);
+  if (providerId === "ahrefs" || providerId === "pagespeed") {
+    return PROVIDER_ALLOCATION_METADATA[providerId];
+  }
+  return historicalAllocation(providerId);
 }

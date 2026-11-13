@@ -63,6 +63,8 @@ function OverviewSections({
         <PositionTrendCard
           data={trend}
           empty={trend.length === 0}
+          markers={overview.chartMarkers}
+          projectRef={projectRef}
           seriesLabel={overview.domain}
           takeaway={overview.trendTakeaway}
         />

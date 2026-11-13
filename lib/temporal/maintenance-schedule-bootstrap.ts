@@ -19,6 +19,8 @@ export const STALE_IMPORT_JOBS_SCHEDULE_ID = "maintenance-stale-import-jobs";
 export const MIGRATION_HOLD_RELEASE_SCHEDULE_ID = "maintenance-migration-hold-release";
 export const WEEKLY_DIGEST_SCHEDULE_ID = "maintenance-weekly-digest";
 export const SITEMAP_SYNC_SCHEDULE_ID = "maintenance-sitemap-sync";
+export const PROJECT_PAGES_SYNC_SCHEDULE_ID = "maintenance-project-pages-sync";
+export const SEARCH_ENGINE_UPDATES_SCHEDULE_ID = "maintenance-search-engine-updates";
 export const PRESENCE_SYNC_SCHEDULE_ID = "maintenance-presence-sync";
 export const ALERT_DIGEST_FLUSH_SCHEDULE_ID = "maintenance-alert-digest-flush";
 export const ALERT_HEALTH_SCHEDULE_ID = "maintenance-alert-health";
@@ -32,6 +34,8 @@ export const STALE_IMPORT_JOBS_WORKFLOW_TYPE = "markStaleImportJobsWorkflow";
 export const MIGRATION_HOLD_RELEASE_WORKFLOW_TYPE = "releaseExpiredMigrationHoldsWorkflow";
 export const WEEKLY_DIGEST_WORKFLOW_TYPE = "sendWeeklyReportDigestWorkflow";
 export const SITEMAP_SYNC_WORKFLOW_TYPE = "syncSitemapsWorkflow";
+export const PROJECT_PAGES_SYNC_WORKFLOW_TYPE = "syncProjectPagesWorkflow";
+export const SEARCH_ENGINE_UPDATES_WORKFLOW_TYPE = "syncSearchEngineUpdatesWorkflow";
 export const PRESENCE_SYNC_WORKFLOW_TYPE = "syncPresenceWorkflow";
 export const ALERT_DIGEST_FLUSH_WORKFLOW_TYPE = "flushAlertDigestsWorkflow";
 export const ALERT_HEALTH_WORKFLOW_TYPE = "alertHealthWorkflow";
@@ -48,6 +52,8 @@ const DEFAULT_QUEUED_RANK_CHECK_RETENTION = { hour: 3, minute: 41 };
 const DEFAULT_SESSION_PURGE = { hour: 4, minute: 33 };
 const DEFAULT_WEEKLY_DIGEST = { dayOfWeek: "MONDAY" as const, hour: 6, minute: 15 };
 const DEFAULT_SITEMAP_SYNC = { hour: 4, minute: 45 };
+const DEFAULT_PROJECT_PAGES_SYNC = { hour: 5, minute: 0 };
+const DEFAULT_SEARCH_ENGINE_UPDATES = { hour: 5, minute: 15 };
 const DEFAULT_PRESENCE_SYNC = { hour: 3, minute: 45 };
 
 export { scheduledMaintenanceEnabled as isScheduledMaintenanceEnabled } from "../rank-check/scheduled-maintenance";
@@ -260,6 +266,36 @@ export async function ensureSitemapSyncSchedule(
       scheduleId: SITEMAP_SYNC_SCHEDULE_ID,
       spec: calendarSpec(DEFAULT_SITEMAP_SYNC, process.env.SITEMAP_SYNC_CRON),
       workflowType: SITEMAP_SYNC_WORKFLOW_TYPE,
+    },
+    client,
+  );
+}
+
+export async function ensureProjectPagesSyncSchedule(client?: BootstrapScheduleClient) {
+  return ensureSingletonSchedule(
+    {
+      enabled: isScheduledMaintenanceEnabled(),
+      memo: { kind: "maintenance-project-pages-sync" },
+      note: "Project pages sync",
+      scheduleId: PROJECT_PAGES_SYNC_SCHEDULE_ID,
+      spec: calendarSpec(DEFAULT_PROJECT_PAGES_SYNC, undefined),
+      workflowType: PROJECT_PAGES_SYNC_WORKFLOW_TYPE,
+    },
+    client,
+  );
+}
+
+export async function ensureSearchEngineUpdatesSchedule(
+  client?: BootstrapScheduleClient,
+): Promise<EnsureScheduleResult> {
+  return ensureSingletonSchedule(
+    {
+      enabled: isScheduledMaintenanceEnabled(),
+      memo: { kind: "maintenance-search-engine-updates" },
+      note: "Search engine status sync",
+      scheduleId: SEARCH_ENGINE_UPDATES_SCHEDULE_ID,
+      spec: calendarSpec(DEFAULT_SEARCH_ENGINE_UPDATES, undefined),
+      workflowType: SEARCH_ENGINE_UPDATES_WORKFLOW_TYPE,
     },
     client,
   );

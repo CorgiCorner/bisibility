@@ -1,0 +1,20 @@
+@layer theme, base, components, utilities;
+
+@media (width < 400px) {
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: Static toolbar classes are shared with layout tests. */
+  :global(.keyword-toolbar-add),
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: Static toolbar classes are shared with layout tests. */
+  :global(.keyword-toolbar-columns > button) {
+    width: 2.125rem;
+    min-width: 0;
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: Static toolbar classes are shared with layout tests. */
+  :global(.keyword-toolbar-add [data-toolbar-label]),
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: Static toolbar classes are shared with layout tests. */
+  :global(.keyword-toolbar-columns [data-replay-label]) {
+    display: none;
+  }
+}

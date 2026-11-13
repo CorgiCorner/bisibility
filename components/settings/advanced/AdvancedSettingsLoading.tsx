@@ -93,7 +93,7 @@ export function AdvancedSettingsContentLoading({
   deployment = "self-host",
 }: Readonly<{ deployment?: "cloud" | "self-host" }>) {
   return (
-    <div className="flex max-w-[760px] flex-col gap-3.5" data-advanced-settings-loading="">
+    <div className="flex flex-col gap-3.5 lg:max-w-[760px]" data-advanced-settings-loading="">
       <AuditFrame />
       {deployment === "cloud" ? <BackupFrame /> : <MigrationFrame />}
       <DangerFrame />

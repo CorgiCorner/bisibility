@@ -2,6 +2,19 @@ import { type AuditPayloadPolicy, auditFields as f } from "./audit-payload-polic
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 
+export function registerAiSourceAuditDeclarations(declare: Declare) {
+  const sourceType = f.strings("domain", "type");
+  const plan = { ...f.strings("domain", "note", "state"), ...f.urls("url") };
+  declare(["ai_source.type.set", "ai_source.type.clear"], {
+    after: sourceType,
+    before: sourceType,
+  });
+  declare(["ai_source.plan.add", "ai_source.plan.update", "ai_source.plan.remove"], {
+    after: plan,
+    before: plan,
+  });
+}
+
 export function registerAiTrackingAuditDeclarations(declare: Declare) {
   declare(
     [
@@ -34,4 +47,9 @@ export function registerAiTrackingAuditDeclarations(declare: Declare) {
     },
   );
   declare(["ai_tracking.suggestions.accept"], { after: f.numbers("count") });
+  const engineChoice = { ...f.booleans("enabled"), ...f.strings("engine", "source") };
+  declare(["ai_tracking.engine.enable", "ai_tracking.engine.disable"], {
+    after: engineChoice,
+    before: engineChoice,
+  });
 }

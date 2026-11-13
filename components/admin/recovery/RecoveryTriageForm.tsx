@@ -45,6 +45,7 @@ export function RecoveryTriageForm({ row, onSaved }: { row: RecoveryCase; onSave
         name="status"
         render={({ field }) => (
           <MenuSelect
+            size="input"
             ariaLabel={t("triage")}
             disabled={busy}
             value={field.value}
@@ -66,6 +67,7 @@ export function RecoveryTriageForm({ row, onSaved }: { row: RecoveryCase; onSave
         name="reason"
         render={({ field }) => (
           <MenuSelect
+            size="input"
             ariaLabel={t("reason")}
             disabled={busy}
             value={field.value ?? "none"}
@@ -88,6 +90,7 @@ export function RecoveryTriageForm({ row, onSaved }: { row: RecoveryCase; onSave
           name="snoozedUntil"
           render={({ field }) => (
             <MenuSelect
+              size="input"
               ariaLabel={t("due")}
               disabled={busy}
               value={String(Math.round((Date.parse(field.value ?? "") - Date.now()) / 3600000))}
@@ -109,7 +112,7 @@ export function RecoveryTriageForm({ row, onSaved }: { row: RecoveryCase; onSave
           {t(`errors.${error}`)}
         </p>
       )}
-      <Button type="submit" disabled={busy}>
+      <Button className="justify-self-start" size="input" type="submit" disabled={busy}>
         {t("save")}
       </Button>
     </form>

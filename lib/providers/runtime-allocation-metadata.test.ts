@@ -9,6 +9,8 @@ describe("current provider allocation metadata", () => {
   it("classifies free domain rating without changing historical migration inputs", () => {
     expect(providerAllocationMetadata("ahrefs")).toEqual({ kind: "non_billable" });
     expect(historicalAllocation("ahrefs")).toBeNull();
+    expect(providerAllocationMetadata("pagespeed")).toEqual({ kind: "non_billable" });
+    expect(historicalAllocation("pagespeed")).toBeNull();
     for (const [provider, metadata] of Object.entries(historicalMetadata))
       expect(providerAllocationMetadata(provider)).toBe(metadata);
   });

@@ -223,6 +223,7 @@ export default async function KeywordsPage({
           >
             <KeywordsGrid
               local={list.local}
+              aiOverview={list.aiOverview}
               personalPreferences={personalPreferences}
               activeViewId={activeView?.id ?? null}
               addKeywordsAction={addKeywords}

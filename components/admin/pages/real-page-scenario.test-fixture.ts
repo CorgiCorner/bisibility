@@ -50,7 +50,18 @@ export function prepareRealScenario(name: string) {
     },
   );
   realPage.configured.mockReturnValue(administration?.mailerConfigured ?? false);
-  realPage.tasks.mockResolvedValue(data.recovery?.page);
+  // Like the service, seal a new token for every case on each read; only the reference is stable.
+  let read = 0;
+  realPage.tasks.mockImplementation(async () => {
+    read++;
+    const page = data.recovery?.page;
+    return (
+      page && {
+        ...page,
+        rows: page.rows.map((row) => ({ ...row, token: `${row.token}:${read}` })),
+      }
+    );
+  });
   realPage.audit.mockImplementation(async ({ filter }: { filter?: string }) => ({
     filter: ["account", "setup", "ops"].includes(filter ?? "") ? filter : "all",
     entries: (data.audit?.entries ?? [])
@@ -169,18 +180,22 @@ export function prepareRealScenario(name: string) {
       ? { ok: false, code: "unavailable" }
       : { ok: true, value: { status: "open" } },
   );
-  if (data.recovery?.initialDetail) realPage.params.set("case", data.recovery.initialDetail.token);
+  if (data.recovery?.initialDetail)
+    realPage.params.set("case", data.recovery.initialDetail.reference);
   if (data.recovery?.command || data.recovery?.commandError)
     realPage.params.set("command", "fixture-command");
   if (data.recovery?.initialDialogOpen)
     realPage.params.set(
       "batch",
-      JSON.stringify([data.recovery.page?.rows[0]?.token ?? "fixture-case"]),
+      JSON.stringify([data.recovery.page?.rows[0]?.reference ?? "fixture-case"]),
     );
   if (name === "AccountLookupForbidden") realPage.lookup.mockResolvedValue(null);
   if (name === "RecoveryError") {
     realPage.preview.mockResolvedValue({ ok: false, code: "unavailable" });
-    realPage.params.set("batch", JSON.stringify(["fixture-case"]));
+    realPage.params.set(
+      "batch",
+      JSON.stringify([data.recovery?.page?.rows[0]?.reference ?? "fixture-case"]),
+    );
   }
   if (name === "AdministrationBusy") {
     realPage.params.set("account", "sample@example.com");

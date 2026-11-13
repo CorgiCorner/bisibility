@@ -18,6 +18,7 @@ import { buildAiSchedulePayload } from "@/lib/ai-tracking/projections/schedule-p
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { TrackingRunDrawer } from "./TrackingRunDrawer";
+import type { TrackingRunDrawerProps } from "./TrackingRunDrawer.types";
 
 /**
  * Hosts the existing AI schedule drawer on the common Schedules page. Enabling still requires
@@ -30,6 +31,7 @@ export function AiScheduleDrawerHost({
   projectId,
   schedules,
   target,
+  engineDefault = null,
 }: Readonly<{
   activePromptIds: readonly string[];
   onClose: () => void;
@@ -37,6 +39,7 @@ export function AiScheduleDrawerHost({
   projectId: string;
   schedules: readonly TrackingScheduleListItem[];
   target: string;
+  engineDefault?: TrackingRunDrawerProps["engineDefault"];
 }>) {
   const t = useTranslations("projectAiTracking");
   const errors = useSharedErrorMessages();
@@ -67,6 +70,7 @@ export function AiScheduleDrawerHost({
 
   return (
     <TrackingRunDrawer
+      engineDefault={engineDefault}
       open
       scheduleMode
       schedule={schedule}

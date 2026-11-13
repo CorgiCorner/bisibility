@@ -53,6 +53,9 @@ const uiOptionSelectedSchema: z.ZodType<UiOptionSelectedProps> = z
   });
 
 export const analyticsEventSchemas = {
+  seo_challenge_joined: z.strictObject({}),
+  seo_challenge_card_ready: z.strictObject({ elapsed_ms: z.number().int().min(0).max(86_400_000) }),
+  seo_challenge_card_download_clicked: z.strictObject({}),
   seo_cost_calculator_changed: z.strictObject({
     surface: z.enum(["home", "pricing"]),
     selection: z.enum(["light", "steady", "busy", "custom"]),

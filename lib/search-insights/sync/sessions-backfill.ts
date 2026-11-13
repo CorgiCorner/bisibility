@@ -4,6 +4,7 @@ import {
   setAnalyticsSyncConnection,
   withAnalyticsSyncScope,
 } from "@/lib/analytics/analytics-sync-scope";
+import { projectGa4KeyEvents } from "@/lib/conversions/ga4";
 import { prisma } from "@/lib/db/prisma";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { addDays, dateFromKey, dateKey, diffDays, pacificToday } from "@/lib/search-insights/dates";
@@ -110,6 +111,10 @@ async function storeRange(input: {
     projectId: input.projectId,
     property: input.property,
     start: input.start,
+  });
+  await projectGa4KeyEvents(input.projectId, {
+    from: dateFromKey(input.start),
+    to: dateFromKey(input.end),
   });
   const capHitDays = capHit
     ? await countCappedDays({ projectId: input.projectId, property: input.property, source: "ga4" })

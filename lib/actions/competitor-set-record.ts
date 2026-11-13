@@ -6,6 +6,7 @@ export const competitorSelect = {
   aliases: true,
   domain: true,
   evidence: true,
+  excludedNames: true,
   id: true,
   label: true,
   publicId: true,
@@ -17,6 +18,7 @@ export type CompetitorRecord = {
   aliases: string[];
   domain: string;
   evidence: unknown;
+  excludedNames?: string[];
   id: string;
   label: string | null;
   publicId: string | null;
@@ -36,6 +38,7 @@ export function publicCompetitor(competitor: CompetitorRecord) {
     aliases: competitor.aliases,
     domain: competitor.domain,
     evidence: competitor.evidence,
+    excludedNames: competitor.excludedNames ?? [],
     id: requiredCompetitorId(competitor.publicId),
     label: competitor.label,
     scopePolicy: competitor.scopePolicy,

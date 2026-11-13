@@ -98,6 +98,8 @@ export async function loadDashboardPersonalContext(
       "visibility_history",
       "contributions",
       "quality_history",
+      "organic_conversions",
+      "seo_cost",
       ...((comparison?.state === "ready" || competitorCount !== 0) && layout.preset !== "local"
         ? ["competitor_reports" as const]
         : []),

@@ -1,7 +1,52 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { useRef } from "react";
+import { type ComponentPropsWithoutRef, useRef } from "react";
+// Hidden scrollbar for [data-tab-strip], shared with the other overflow scroller.
+import "./FloatingSelectionBar.module.css";
+
+const tabStripClassName = "min-w-0 overflow-x-auto";
+
+/** Moves the strip's own scrollLeft so the active tab stays inside it. */
+export function revealTab(node: HTMLElement | null) {
+  if (!node) return;
+  const strip = node.closest("[data-tab-strip]");
+  if (!(strip instanceof HTMLElement)) return;
+  const stripBox = strip.getBoundingClientRect();
+  const tabBox = node.getBoundingClientRect();
+  if (stripBox.width <= 0 || tabBox.width <= 0) return;
+  if (tabBox.left < stripBox.left) {
+    strip.scrollLeft -= stripBox.left - tabBox.left;
+  } else if (tabBox.right > stripBox.right) {
+    strip.scrollLeft += tabBox.right - stripBox.right;
+  }
+}
+
+export function TabStrip({
+  bordered = false,
+  children,
+  className,
+  trackClassName,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  bordered?: boolean;
+  trackClassName?: string;
+}) {
+  return (
+    <div className={cn(tabStripClassName, className)} data-tab-strip="" {...props}>
+      {bordered ? (
+        <div
+          className={cn("min-w-full border-b border-border", trackClassName ?? "w-max")}
+          data-tab-track=""
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
+    </div>
+  );
+}
 
 export function tabTriggerClassName(active: boolean, layout: "inline" | "stretch" = "inline") {
   return cn(
@@ -38,10 +83,12 @@ export function Tabs<T extends string>({
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   return (
-    <div
+    <TabStrip
       aria-label={ariaLabel}
-      className={cn("flex min-w-0 gap-0.5", layout === "stretch" && "w-full")}
+      bordered
+      className={layout === "stretch" ? "w-full" : undefined}
       role="tablist"
+      trackClassName={cn("flex gap-0.5", layout === "stretch" ? "w-full" : "w-max")}
     >
       {options.map((option, index) => (
         <button
@@ -69,6 +116,7 @@ export function Tabs<T extends string>({
           }}
           ref={(button) => {
             buttons.current[index] = button;
+            if (button && value === option.value) revealTab(button);
           }}
           role="tab"
           tabIndex={value === option.value ? 0 : -1}
@@ -77,6 +125,6 @@ export function Tabs<T extends string>({
           {option.label}
         </button>
       ))}
-    </div>
+    </TabStrip>
   );
 }

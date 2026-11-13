@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { ActionPaymentError } from "@/lib/action-payment/token";
 import { bindAiPaymentExecution, readAiPaymentConsent } from "@/lib/ai-research/payment";
+import { trackingRunSnapshot } from "@/lib/ai-tracking/brand-name-snapshot";
 import type { PlanTrackingRunInput, SamplePlan } from "@/lib/ai-tracking/contract";
 import { payloadHash, sourceConfigurationHash } from "@/lib/ai-tracking/identity";
 import { planTrackingRunSchema } from "@/lib/ai-tracking/schema";
@@ -115,23 +116,27 @@ export function planTrackingRun(
       throw new Error("Active tracking prompts not found.");
     const competitors = await tx.competitor.findMany({
       where: { projectId },
-      select: { id: true, publicId: true, domain: true, label: true, aliases: true },
+      select: {
+        aliases: true,
+        domain: true,
+        excludedNames: true,
+        id: true,
+        label: true,
+        publicId: true,
+      },
     });
     const project = await tx.project.findUniqueOrThrow({
       where: { id: projectId },
-      select: { id: true, publicId: true, name: true, domain: true },
-    });
-    const snapshot = [
-      {
-        kind: "project",
-        id: project.id,
-        publicId: project.publicId,
-        label: project.name,
-        domain: project.domain,
-        aliases: [],
+      select: {
+        brandAliases: true,
+        brandExcludedNames: true,
+        domain: true,
+        id: true,
+        name: true,
+        publicId: true,
       },
-      ...competitors.map((competitor) => ({ ...competitor, kind: "competitor" })),
-    ];
+    });
+    const snapshot = trackingRunSnapshot(project, competitors);
     const authority = data.paymentConsent ? readAiPaymentConsent(data.paymentConsent) : null;
     if (
       authority &&

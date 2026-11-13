@@ -4,6 +4,7 @@ import { AgentWorkspaceLoading } from "@/components/agent-reports/AgentWorkspace
 import { PageContent } from "@/components/shell/PageContent";
 import { emptyProjectContext } from "@/lib/project-context/model";
 import messages from "@/messages/core/en/agent-workspace.json";
+import challenge from "@/messages/core/en/challenge-report.json";
 import settings from "@/messages/core/en/project-settings-shell.json";
 import shared from "@/messages/core/en/shared.json";
 import { render, screen } from "@testing-library/react";
@@ -27,16 +28,24 @@ vi.mock("@/lib/actions/agent-workspace", () => ({
   saveManualAgentReportAction: vi.fn(),
   saveProjectContextAction: vi.fn(),
 }));
+vi.mock("@/lib/actions/challenge-report", () => ({
+  createChallengeReportAction: vi.fn(),
+  previewChallengeReportAction: vi.fn(),
+}));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: async () => ({ locale: "en", timeZone: "UTC" }),
 }));
 vi.mock("@/i18n/catalog-loader.server", () => ({
-  loadCoreMessages: async () => ({ ...shared, ...messages, ...settings }),
+  loadCoreMessages: async () => ({ ...shared, ...messages, ...settings, ...challenge }),
 }));
 
 beforeEach(() => {
   mocks.permissions.mockResolvedValue({ canCreate: true, canEdit: true });
-  mocks.reports.mockResolvedValue({ reports: [], canCreate: true });
+  mocks.reports.mockResolvedValue({
+    canCreate: true,
+    challenge: { defaultStart: "2026-01-01", domain: "example.com" },
+    reports: [],
+  });
   mocks.context.mockResolvedValue({ context: emptyProjectContext, canEdit: true });
 });
 
@@ -46,6 +55,7 @@ it.each(["empty", "populated", "loading"])(
     if (state === "populated")
       mocks.reports.mockResolvedValue({
         canCreate: true,
+        challenge: { defaultStart: "2026-01-01", domain: "example.com" },
         reports: [
           {
             id: "agr_abcdefghijklmnopqrstuvwx",
@@ -74,6 +84,7 @@ it("preserves the Reports read-only affordance", async () => {
   render(await AgentReportsPage({ params }));
   expect(screen.getByRole("heading", { name: "No saved analyses yet" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Save an analysis" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "New challenge report" })).not.toBeInTheDocument();
 });
 
 it("keeps context and its loader in the canonical settings shell without nested containers", async () => {

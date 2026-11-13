@@ -100,7 +100,7 @@ export function DataTableRow<TRow extends DataTableRowBase>({
         data-index={virtualIndex}
         aria-rowindex={rowIndex}
         className={cn(
-          "group flex border-b border-border-soft",
+          "group flex w-full min-w-full border-b border-border-soft",
           isLastRow && "border-b-0",
           rowClassName?.(original),
         )}
@@ -129,7 +129,11 @@ export function DataTableRow<TRow extends DataTableRowBase>({
       ref={measureRef}
       data-index={virtualIndex}
       aria-rowindex={rowIndex}
-      className={cn("group flex", clickable && "cursor-pointer", rowClassName?.(original))}
+      className={cn(
+        "group flex w-full min-w-full",
+        clickable && "cursor-pointer",
+        rowClassName?.(original),
+      )}
       data-depth={row.depth}
       data-last-row={isLastRow || undefined}
       data-selected={isSelected || undefined}

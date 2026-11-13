@@ -153,7 +153,7 @@ async function upsertEnvSeededApiKey(projectId: string) {
 
 async function upsertDefaults(projectId: string, lastCheckedAt: Date | null, nextCheckAt: Date) {
   const data = {
-    enabledExperimentalModules: ["timeline", "competitors"],
+    enabledExperimentalModules: ["competitors"],
     cronExpression: "0 6 * * *",
     frequency: RankCheckFrequency.daily,
     jitterMinutes: 60,

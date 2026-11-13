@@ -114,6 +114,7 @@ export function IndexingUrls({
   ];
   return (
     <SearchInsightsRowsCard
+      className="rounded-none border-0"
       title={t("urls")}
       caption={t("urlsCaption")}
       empty={!data.report.total && !data.urls.length}
@@ -121,6 +122,14 @@ export function IndexingUrls({
       expandable={false}
       toolbar={
         <>
+          <ToolbarSearch
+            id="indexing-search"
+            label={t("search")}
+            placeholder={t("search")}
+            value={filters.search ?? ""}
+            onChange={(value) => change({ search: value || undefined }, true)}
+            onSubmit={list.submitSearch}
+          />
           <MenuSelect
             ariaLabel={t("coverageState")}
             value={reason}
@@ -173,14 +182,6 @@ export function IndexingUrls({
               { value: "", label: t("allChanges") },
               { value: "7", label: t("changedLast7Days") },
             ]}
-          />
-          <ToolbarSearch
-            id="indexing-search"
-            label={t("search")}
-            placeholder={t("search")}
-            value={filters.search ?? ""}
-            onChange={(value) => change({ search: value || undefined }, true)}
-            onSubmit={list.submitSearch}
           />
         </>
       }

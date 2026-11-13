@@ -183,13 +183,13 @@ describe("database seed", () => {
     );
   });
 
-  it("opts both demo projects into Timeline without populating the empty project", async () => {
+  it("does not seed the retired timeline module", async () => {
     await seed();
     const defaults = mocks.prisma.projectDefaults.upsert.mock.calls.map(([input]) => input);
     expect(defaults).toHaveLength(2);
     for (const input of defaults) {
-      expect(input.create.enabledExperimentalModules).toContain("timeline");
-      expect(input.update.enabledExperimentalModules).toContain("timeline");
+      expect(input.create.enabledExperimentalModules).not.toContain("timeline");
+      expect(input.update.enabledExperimentalModules).not.toContain("timeline");
     }
     expect(
       mocks.prisma.keyword.upsert.mock.calls.every(

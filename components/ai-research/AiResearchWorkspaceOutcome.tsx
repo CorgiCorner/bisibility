@@ -90,10 +90,12 @@ export function AiResearchWorkspaceOutcome({
               {paymentT("expired")}
             </p>
           ) : null}
-          {actual ? <p className="mt-2 text-ui-xs text-fg-muted">{t("actualCostRisk")}</p> : null}
+          {actual ? (
+            <p className="mt-2 text-ui-caption text-fg-muted">{t("actualCostRisk")}</p>
+          ) : null}
           {actual ? (
             <Disclosure title={t("estimateCalculation")} variant="inline" className="mt-2">
-              <p className="text-ui-xs text-fg-muted">{t("forecastDetails")}</p>
+              <p className="text-ui-caption text-fg-muted">{t("forecastDetails")}</p>
             </Disclosure>
           ) : null}
         </Card>

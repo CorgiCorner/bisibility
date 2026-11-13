@@ -18,8 +18,8 @@
     "failed": "No se pudo guardar. Inténtalo de nuevo.",
     "validation": "Usa hasta 4000 caracteres por campo.",
     "readOnly": "Puedes ver el contexto. Editarlo requiere un proyecto activo y el rol de miembro.",
-    "reportsTitle": "Informes de agentes",
-    "reportsDescription": "Análisis guardados del proyecto, incluidos análisis de IA y auditorías del sitio. Comparte el enlace con miembros del proyecto.",
+    "reportsTitle": "Informes",
+    "reportsDescription": "Descubre qué cambió en tu sitio.",
     "emptyTitle": "Aún no hay análisis guardados",
     "emptyDescription": "Ejecuta un análisis o guarda un informe para crear el historial del proyecto.",
     "addReport": "Guardar un análisis",
@@ -34,6 +34,24 @@
     "created": "Guardado {date}",
     "historyLimit": "Se muestran los últimos 100 informes. Usa el cursor de la API para consultar el historial anterior.",
     "reportValidation": "Introduce un título (hasta 160 caracteres) y un análisis (hasta 12 000 caracteres).",
-    "reportSaved": "Análisis guardado."
+    "reportSaved": "Análisis guardado.",
+    "draft": "Borrador",
+    "filterEmpty": "No hay informes de este tipo.",
+    "kindFilter": "Tipo de informe",
+    "kinds": {
+      "all": "Todos los tipos",
+      "ai_visibility": "Visibilidad en IA",
+      "challenge_report": "Informe de rendimiento",
+      "manual_analysis": "Informe escrito",
+      "prompt_explorer": "Explorador de prompts",
+      "prompt_research": "Investigación de prompts",
+      "site_audit": "Auditoría del sitio"
+    },
+    "audienceLink": "Cualquiera con el enlace",
+    "audienceMembers": "Miembros del proyecto",
+    "share": "Compartir",
+    "whoCanOpen": "Quién puede abrirlo",
+    "reportTitle": "Título del informe",
+    "reportContent": "Contenido del informe"
   }
 }

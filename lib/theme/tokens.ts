@@ -158,7 +158,7 @@ export const colorSchemes = {
     "rank-bucket-yellow": "#E6B452",
     "rank-bucket-orange": "#EC9A63",
     "rank-bucket-red": "#E0705C",
-    "code-bg": "#101010",
+    "code-bg": "#1C1C1C",
     "code-fg": "#EEEEEE",
     "code-faint": "#AAAAAA",
     "code-border": "#404040",

@@ -40,6 +40,7 @@ export default async function ResearchPage({
     "projectRankTracker",
     "projectResearch",
     "projectRuns",
+    "researchHistory",
   ]);
   const t = createIntlTranslator(runtime.locale, messages, { timeZone: runtime.timeZone });
   const demo = await getDemoResearchAccess(project);

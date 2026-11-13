@@ -15,6 +15,23 @@ describe("Disclosure", () => {
     expect(screen.getByText("They are read from the same SERP snapshot.")).toBeInTheDocument();
   });
 
+  it("keeps a visitor's open section open when the parent renders again", () => {
+    const { rerender } = render(
+      <Disclosure title="All URLs">
+        <p>Tracked URLs</p>
+      </Disclosure>,
+    );
+    const details = screen.getByText("All URLs").closest("details");
+    expect(details).not.toHaveAttribute("open");
+    if (details instanceof HTMLDetailsElement) details.open = true;
+    rerender(
+      <Disclosure title="All URLs">
+        <p>Tracked URLs</p>
+      </Disclosure>,
+    );
+    expect(details).toHaveAttribute("open");
+  });
+
   it("renders open when defaultOpen is set and never groups items into an exclusive set", () => {
     render(
       <>

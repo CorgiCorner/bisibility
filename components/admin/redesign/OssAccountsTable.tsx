@@ -121,6 +121,7 @@ export function OssAccountsTable({
           label={t("searchLabel")}
         />
         <Input
+          density="compact"
           id={searchId}
           placeholder={t("searchPlaceholder")}
           disabled={state !== "ready"}

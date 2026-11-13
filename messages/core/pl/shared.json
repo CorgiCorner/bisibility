@@ -363,10 +363,10 @@
         "transferProjectOwnershipDangerLabel": "Przenieś własność",
         "transferProjectOwnershipTitle": "Przenieść własność projektu?",
         "transferProjectOwnershipToastMessage": "Przeniesiono własność projektu",
-        "deleteTimelineNoteBody": "Usunąć tę notatkę z osi czasu? Tej operacji nie można cofnąć.",
+        "deleteTimelineNoteBody": "Usunąć tę notatkę? Tej operacji nie można cofnąć.",
         "deleteTimelineNoteDangerLabel": "Usuń notatkę",
-        "deleteTimelineNoteTitle": "Usunąć notatkę z osi czasu?",
-        "deleteTimelineNoteToastMessage": "Usunięto notatkę z osi czasu.",
+        "deleteTimelineNoteTitle": "Usunąć tę notatkę?",
+        "deleteTimelineNoteToastMessage": "Usunięto notatkę.",
         "removeProviderKeyTitle": "Usunąć zapisany klucz?",
         "removeProviderKeyBody": "Zapisany klucz i połączenie z tym dostawcą zostaną usunięte. Wybierz inne źródło, aby nadal z niego korzystać.",
         "removeProviderKeyDangerLabel": "Usuń klucz",
@@ -585,6 +585,12 @@
       "emptyDescription": "Skonfiguruj i zapisz porównanie na stronie Konkurenci, aby używać go tutaj.",
       "configureComparison": "Skonfiguruj porównanie"
     },
+    "conversions": {
+      "connect": "Podłącz analitykę",
+      "primary": "Główne",
+      "primaryOption": "{label} · {mark}",
+      "switchLabel": "Źródło konwersji"
+    },
     "dashboardLayout": {
       "title": "Dostosuj dashboard",
       "presentationOnly": "Tylko osobisty wygląd. Harmonogramy i płatne sprawdzenia się nie zmieniają.",
@@ -662,6 +668,14 @@
         "domain_rating": {
           "label": "Domain Rating",
           "description": "Codzienna historia autorytetu domeny projektu. Ustawienia widoku nie zmieniają zbierania danych."
+        },
+        "organic_conversions": {
+          "label": "Konwersje organiczne",
+          "description": "Konwersje z okresu pulpitu, z dziennym trendem i najmocniejszymi stronami."
+        },
+        "seo_cost": {
+          "label": "Koszt SEO",
+          "description": "Udział projektu w tym miesiącu: operacje dostawcy, subskrypcje i koszty jednorazowe."
         }
       },
       "reasons": {
@@ -1980,7 +1994,10 @@
       "title": "{count, plural, one {# słowo kluczowe wymaga sprawdzenia harmonogramu} few {# słowa kluczowe wymagają sprawdzenia harmonogramu} many {# słów kluczowych wymaga sprawdzenia harmonogramu} other {# słowa kluczowego wymaga sprawdzenia harmonogramu}}",
       "detail": "Automatyczne sprawdzenia tych słów są wstrzymane. Wybierz dla nich harmonogram w sekcji Harmonogramy. Pozostałe słowa działają zgodnie z ustawieniami.",
       "review": "Pokaż słowa wymagające poprawienia",
-      "schedules": "Otwórz harmonogramy"
+      "schedules": "Otwórz harmonogramy",
+      "affected": "Słowa wymagające poprawienia",
+      "detailShort": "Automatyczne sprawdzenia są wstrzymane, dopóki nie wybierzesz harmonogramu.",
+      "reviewShort": "Pokaż słowa"
     },
     "setupVideo": {
       "fallback": "Twoja przeglądarka nie obsługuje wideo.",
@@ -2193,6 +2210,39 @@
       "history": "Historia pomiarów",
       "date": "Data",
       "rating": "Wynik"
+    },
+    "chartMarkers": {
+      "note": "Notatka",
+      "deploy": "Wdrożenie",
+      "content": "Treść",
+      "sitemap": "Mapa witryny",
+      "searchEngine": "Aktualizacja Google",
+      "fromAnnotations": "Znaczniki pochodzą z Adnotacji.",
+      "openAnnotations": "Otwórz adnotacje",
+      "hideMarkers": "Ukryj znaczniki",
+      "showMarkers": "Pokaż znaczniki",
+      "legendAria": "Znaczniki adnotacji",
+      "markers": "Znaczniki",
+      "pinLabel": "{type}, {date}",
+      "pinClusterLabel": "{count, number} adnotacji, {date}",
+      "tooltipHeading": "{type} · {date}",
+      "clusterHeading": "{date} · {count, number} adnotacji",
+      "clusterMore": "+{count, number} więcej",
+      "sourceLine": "{type} · {source}",
+      "pinName": "{title}, {date}",
+      "pinClusterName": "{count, number} adnotacji, {date}. {titles}",
+      "tooltipItem": "{letter} {title}",
+      "contentFallback": "Zaktualizowano treść",
+      "deindexedTitle": "Adres usunięty z indeksu",
+      "deployFallback": "Wdrożenie",
+      "noteFallback": "Notatka",
+      "sitemapTitle": "Mapa witryny: dodano {added, number}, usunięto {removed, number}",
+      "primaryConversion": "Główne źródło konwersji zmieniono z {from} na {to}",
+      "conversionSource": {
+        "none": "brak",
+        "ga4": "Google Analytics 4",
+        "plausible": "Plausible"
+      }
     }
   }
 }

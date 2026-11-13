@@ -82,6 +82,7 @@ function prepareRankTrackerReportSelection(
 }
 
 import { readRankResultEvidence } from "./rank-result-evidence";
+import { loadAiOverviewShownPublicIds } from "./rank-tracker-ai-overview-read";
 
 async function readRankTrackerReportSelection(
   tx: Prisma.TransactionClient,
@@ -169,8 +170,17 @@ async function readRankTrackerReportSelection(
       (query.lens.device === "all" || row.device.toLowerCase() === query.lens.device) &&
       (!query.lens.locationId || row.location.canonicalKey === query.lens.locationId),
   );
+  const eligible = lensRows.filter((row) => rankTrackerQualityRowMatches(row, query));
+  const shownIds = query.filters.aiOverviewShown
+    ? await loadAiOverviewShownPublicIds(
+        tx,
+        project.id,
+        eligible.map((row) => row.id),
+        asOf,
+      )
+    : null;
   const matchedRows = sortRankTrackerQualityRows(
-    lensRows.filter((row) => rankTrackerQualityRowMatches(row, query)),
+    shownIds ? eligible.filter((row) => shownIds.has(row.id)) : eligible,
     query.sort,
   );
   const selectedKeywordIds = matchedRows.map(({ id }) => id).sort();

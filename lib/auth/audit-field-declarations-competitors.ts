@@ -13,7 +13,12 @@ export function registerCompetitorAuditDeclarations(declare: Declare) {
   const competitor = {
     aliases: list("string"),
     evidence: { ...strings("domain"), ...f.numbers("bestPosition", "of", "seenOn") },
+    excludedNames: list("string"),
     ...strings("domain", "id", "label", "scopePolicy", "source"),
+  };
+  const brandNames = {
+    brandAliases: list("string"),
+    brandExcludedNames: list("string"),
   };
   declare(["competitor.add"], { after: competitor });
   declare(["competitor.remove"], {
@@ -25,6 +30,7 @@ export function registerCompetitorAuditDeclarations(declare: Declare) {
     after: competitor,
     before: competitor,
   });
+  declare(["project.brand_names.update"], { after: brandNames, before: brandNames });
   declare(["competitor.suggestion.dismiss"], { after: strings("domain") });
   declare(["competitor.setup.confirm", "competitor.setup.skip"], { after: strings("outcome") });
   declare(["competitor.market_membership.replace"], {

@@ -24,3 +24,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: { text: FIELD_HELP.frequency },
 };
+
+export const FieldHelp: Story = { args: { text: FIELD_HELP.frequency, size: "label" } };

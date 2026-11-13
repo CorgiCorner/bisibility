@@ -1,42 +1,37 @@
 import { ChatCircleTextIcon } from "@phosphor-icons/react/dist/ssr/ChatCircleText";
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
 import { FileTextIcon } from "@phosphor-icons/react/dist/ssr/FileText";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { ScanIcon } from "@phosphor-icons/react/dist/ssr/Scan";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import type { NavEntry } from "./nav-items";
 
-export const promptResearchNavEntry = {
+export const aiVisibilityNavEntry = {
+  badge: "new",
   group: "ai",
-  label: "Prompt Research",
+  keywords: [
+    "geo",
+    "aeo",
+    "llm",
+    "llmo",
+    "chatgpt",
+    "ai search",
+    "prompt tracker",
+    "prompt research",
+    "brand visibility",
+  ],
+  label: "AI Visibility",
   scope: "own-axis",
-  segment: "prompt-research",
-  icon: MagnifyingGlassIcon,
-} as const satisfies NavEntry;
-
-export const aiTrackingNavEntry = {
-  group: "ai",
-  label: "Prompt Tracker",
-  scope: "own-axis",
-  segment: "prompt-tracker",
+  segment: "ai-visibility",
   icon: SparkleIcon,
 } as const satisfies NavEntry;
 
 export const aiSearchNavEntries = [
   {
+    badge: "new",
     group: "ai",
-    label: "Brand Visibility",
+    keywords: ["prompt playground", "compare models", "llm"],
+    label: "Model Playground",
     scope: "own-axis",
-    segment: "brand-visibility",
-    icon: EyeIcon,
-  },
-  {
-    group: "ai",
-    badge: "experimental",
-    experimentalModule: "promptPlayground",
-    label: "Prompt Playground",
-    scope: "own-axis",
-    segment: "prompt-playground",
+    segment: "model-playground",
     icon: ChatCircleTextIcon,
   },
 ] as const satisfies readonly NavEntry[];
@@ -53,7 +48,7 @@ export const researchModuleNavEntries = [
 
 export const agentReportsNavEntry = {
   group: "reports",
-  label: "Agent Reports",
+  label: "Reports",
   scope: "project",
   segment: "agent-reports",
   icon: FileTextIcon,

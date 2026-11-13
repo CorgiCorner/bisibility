@@ -4,9 +4,11 @@ import { expect } from "storybook/test";
 import { describe, it } from "vitest";
 import preview from "../.storybook/preview";
 import * as advancedStories from "../components/settings/advanced/AdvancedSettingsContent.stories";
+import * as conversionsStories from "../components/settings/conversions/ConversionsSettings.stories";
 import * as dataSourcesStories from "../components/settings/data-sources/DataSourcesSettingsContent.stories";
 import * as developersStories from "../components/settings/developers/DevelopersSettingsContent.stories";
 import * as notificationStories from "../components/settings/notifications/NotificationPreferences.stories";
+import * as tagsStories from "../components/settings/tags/SettingsTagsSection.stories";
 import * as teamStories from "../components/settings/team/TeamSettingsContent.stories";
 import * as trackingStories from "../components/settings/tracking/TrackingSettingsContent.stories";
 
@@ -34,6 +36,13 @@ const settingsShellStories = [
     story: composeSettingsStory(advancedStories, "StateDomainSet"),
   },
   {
+    activeSection: "Conversions",
+    name: "Conversions with two sources",
+    saveControl: "absent",
+    sectionId: "conversions",
+    story: composeSettingsStory(conversionsStories, "TwoSources"),
+  },
+  {
     activeSection: "Developers",
     name: "Developers state with the shell provider",
     saveControl: "absent",
@@ -53,6 +62,13 @@ const settingsShellStories = [
     saveControl: "absent",
     sectionId: "notifications",
     story: composeSettingsStory(notificationStories, "Settled"),
+  },
+  {
+    activeSection: "Tags",
+    name: "Tags table with the shell provider",
+    saveControl: "absent",
+    sectionId: "tags",
+    story: composeSettingsStory(tagsStories, "Mixed"),
   },
   {
     activeSection: "Team",

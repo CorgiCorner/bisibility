@@ -46,8 +46,6 @@ export default async function GeneralSettingsPage({ params }: Readonly<GeneralSe
     ? verificationResource(await readDomainVerification(access.project.id, access.actor))
     : null;
   const canEditProject = writable && canProjectAction(projectRole, "update", "project");
-  const canCreateTags = writable && canProjectAction(projectRole, "create", "keyword");
-  const canDeleteTags = writable && canProjectAction(projectRole, "delete", "keyword");
 
   return (
     <SettingsShell activeSection="general" projectRef={asProjectRef(access.project.publicId)}>
@@ -57,13 +55,7 @@ export default async function GeneralSettingsPage({ params }: Readonly<GeneralSe
           messages={messages}
           timeZone={runtime.timeZone}
         >
-          <GeneralSettingsSection
-            canCreateTags={canCreateTags}
-            canDeleteTags={canDeleteTags}
-            canEditProject={canEditProject}
-            project={settings.project}
-            tags={settings.tags}
-          />
+          <GeneralSettingsSection canEditProject={canEditProject} project={settings.project} />
           {showDomainVerification && (
             <div className="mt-5 max-w-[640px]">
               <DomainVerificationCard

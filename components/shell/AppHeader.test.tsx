@@ -81,7 +81,7 @@ describe("AppHeader", () => {
       <AppHeader
         activeProjectId="proj_example"
         canCreateWorkspace={false}
-        enabledExperimentalModules={["timeline"]}
+        enabledExperimentalModules={["competitors"]}
         projectRef="prj_example"
         workspaces={[]}
       />,
@@ -89,7 +89,7 @@ describe("AppHeader", () => {
 
     expect(screen.getByRole("button", { name: "Navigation" })).toHaveAttribute(
       "data-enabled-modules",
-      "timeline",
+      "competitors",
     );
   });
 

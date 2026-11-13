@@ -1,6 +1,15 @@
 {
   "instanceAdmin": {
+    "features": {
+      "title": "オプション機能",
+      "challenge": "SEO の 30 日間",
+      "challengeDescription": "プロジェクトメンバーはページから30日間のSEOチャレンジを開始できます。無効にするとチャレンジが非表示になり、日々のチェックインが停止します。チャレンジの日付と記録済みの日は保持されます。",
+      "saving": "保存中…",
+      "saved": "設定を保存しました。",
+      "failed": "設定を保存できませんでした。"
+    },
     "shell": {
+      "features": "機能",
       "status": "ステータス",
       "accounts": "アカウント",
       "viewNavigation": "{tab}のビュー",
@@ -856,6 +865,7 @@
       "lastExhaustion": "最後に上限に達した日時",
       "presenceHelp": "日次 URL 存在確認で延期された最新の URL。上限は自動的にリセットされます。",
       "questions": {
+        "features": "このインスタンスで使えるオプション機能は何ですか？",
         "status": "インスタンスは正常ですか？",
         "worker": "ワーカーとスケジュールは正常ですか？",
         "checks": "順位確認と URL 存在確認は正常ですか？",

@@ -88,3 +88,29 @@ export async function auditTrackingGeneration(
     consent: true,
   });
 }
+
+type EngineChoice = { enabled: boolean; engine: string; source: string };
+
+function engineChoice(value: EngineChoice) {
+  return { enabled: value.enabled, engine: value.engine, source: value.source };
+}
+
+export async function auditTrackingEngine(
+  actor: Actor,
+  project: AuditProject,
+  after: EngineChoice,
+  before: EngineChoice | null,
+  client?: AuditClient,
+) {
+  const input = {
+    action: after.enabled ? "ai_tracking.engine.enable" : "ai_tracking.engine.disable",
+    actorId: actor.id,
+    after: engineChoice(after),
+    before: before ? engineChoice(before) : null,
+    projectId: project.id,
+    targetId: `${after.engine}:${after.source}`,
+    targetType: "ai_project_engine",
+  };
+  if (client) await writeAudit(input, client);
+  else await writeAudit(input);
+}

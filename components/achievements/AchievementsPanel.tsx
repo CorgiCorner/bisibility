@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AchievementCard } from "./AchievementCard";
 import { AchievementSettings } from "./AchievementSettings";
+import { ThirtyDayCard } from "./ThirtyDayCard";
 export function AchievementsPanel({ view }: { view: AchievementView }) {
   const t = useTranslations("account.achievements"),
     router = useRouter();
@@ -18,6 +19,7 @@ export function AchievementsPanel({ view }: { view: AchievementView }) {
         <p className="mb-0 mt-2 text-[13px] leading-6 text-fg-muted">{t("intro")}</p>
       </header>
       {!view.enabled ? <p className="text-[13px] text-fg-muted">{t("disabled")}</p> : null}
+      <ThirtyDayCard view={view} onRefresh={() => router.refresh()} />
       <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         {(["presence", "practice"] as const).map((kind) => (
           <AchievementCard key={kind} view={view} kind={kind} onRefresh={() => router.refresh()} />

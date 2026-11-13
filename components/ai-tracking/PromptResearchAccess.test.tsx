@@ -50,8 +50,8 @@ function view({
 function expectGate() {
   expect(screen.getAllByText(shared.shared.providerAccess.emptyDescription)).toHaveLength(1);
   expect(screen.getByText("Supported providers: DataForSEO.")).toBeVisible();
-  expect(screen.getByRole("textbox", { name: "Keyword" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
+  expect(screen.getByRole("textbox", { name: "Topic, brand or competitor" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Find prompts" })).toBeDisabled();
   expect(screen.queryByText(/projectAiTracking\./)).not.toBeInTheDocument();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
@@ -74,7 +74,6 @@ it("uses the same gate for an initial no_source outcome", () => {
 it("locks search and results when an in-flow estimate returns no_source", async () => {
   lookup.mockResolvedValue(noSource);
   view();
-  await userEvent.click(screen.getByRole("button", { name: "Research" }));
   await screen.findByText("Supported providers: DataForSEO.");
   expectGate();
   expect(lookup).toHaveBeenCalledTimes(1);
@@ -86,7 +85,7 @@ it("locks search and results when an in-flow estimate returns no_source", async 
 it("locks the same gate if the source disappears after the estimate", async () => {
   lookup.mockResolvedValueOnce(researchQuoteFixture).mockResolvedValueOnce(noSource);
   view();
-  await userEvent.click(screen.getByRole("button", { name: "Research" }));
+  await userEvent.click(await screen.findByRole("button", { name: /Find prompts/ }));
   await userEvent.click(await screen.findByRole("button", { name: "Start" }));
   await screen.findByText("Supported providers: DataForSEO.");
   expectGate();
@@ -122,7 +121,7 @@ it("retains cached evidence and locks its actions if the source is missing", () 
   expect(screen.getByText("Cached result · no new charge")).toBeVisible();
   expect(screen.getByText("Best tools?")).toBeVisible();
   expect(screen.getByRole("checkbox", { name: "Select Best tools?" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Find prompts" })).toBeDisabled();
   expect(screen.queryByText(shared.shared.providerAccess.emptyDescription)).not.toBeInTheDocument();
   expect(lookup).not.toHaveBeenCalled();
 });

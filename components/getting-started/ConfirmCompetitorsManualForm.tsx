@@ -98,13 +98,13 @@ export function ConfirmCompetitorsManualForm({
         <Button
           disabled={isSubmitting}
           onClick={onCancel}
-          size="sm"
+          size="input"
           type="button"
           variant="secondary"
         >
           {cancelLabel}
         </Button>
-        <Button disabled={isSubmitting} size="sm" type="submit">
+        <Button disabled={isSubmitting} size="input" type="submit">
           {isSubmitting ? t("adding") : t("add")}
         </Button>
       </div>

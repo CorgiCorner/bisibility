@@ -77,7 +77,7 @@ export function MonitorKeywordPicker({
       <legend className="mb-3 p-0 text-ui-body font-medium">{t("keywords")}</legend>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
-          <label htmlFor={id} className="mb-1.5 block text-ui-xs text-fg-muted">
+          <label htmlFor={id} className="mb-1.5 block text-ui-caption text-fg-muted">
             {t("searchKeywords")}
           </label>
           <Input
@@ -103,7 +103,7 @@ export function MonitorKeywordPicker({
           {t("search")}
         </Button>
       </div>
-      <p className="m-0 text-ui-xs text-fg-muted">
+      <p className="m-0 text-ui-caption text-fg-muted">
         {t("selectedKeywords", { count: format.number(selected.length) })}
       </p>
       <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
@@ -137,9 +137,11 @@ export function MonitorKeywordPicker({
           </li>
         ))}
       </ul>
-      {!rows.length ? <p className="m-0 text-ui-xs text-fg-muted">{t("noKeywords")}</p> : null}
+      {!rows.length ? <p className="m-0 text-ui-caption text-fg-muted">{t("noKeywords")}</p> : null}
       {cursor ? (
         <Button
+          className="self-start"
+          size="input"
           type="button"
           variant="ghost"
           disabled={pending || disabled}

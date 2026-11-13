@@ -2,6 +2,7 @@
 import { withAchievementUse } from "@/lib/achievements/record-use";
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import { recordAppAction } from "@/lib/activity/app-mutation";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import {
   analyzeDomainOverview,
   loadDomainKeywordsPage,
@@ -136,7 +137,10 @@ export async function analyzeDomainOverviewAction(input: unknown) {
         ),
       ),
   );
-  if (outcome?.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+  if (outcome?.ok && !data.estimateOnly && !outcome.cached) {
+    recordAppAction(actor);
+    captureProjectWork(actor.id, project.id);
+  }
   return outcome;
 }
 

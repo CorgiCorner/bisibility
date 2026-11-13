@@ -96,6 +96,7 @@ const serverActionAliases = [
   "@/lib/actions/search-insights-drawers",
   "@/lib/actions/search-insights-rows",
   "@/lib/actions/settings",
+  "@/lib/actions/signals",
   "@/lib/actions/slack",
   "@/lib/actions/tags",
   "@/lib/actions/team",
@@ -104,7 +105,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|provider-recovery|provider-ui|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|provider-recovery|provider-ui|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|signals|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /[\\/](?:credential-source|credits-bonus|payment)-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,

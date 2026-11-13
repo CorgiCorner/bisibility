@@ -197,6 +197,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
       ? normalizeOnboardingDevices(deviceValues)
       : normalizeOnboardingDevices(projectDefaults?.device ? [projectDefaults.device] : undefined);
   const flowState: OnboardingFlowState = {
+    ...(paramValue(params?.challenge) === "1" ? { challenge: true } : {}),
     devices,
     locations,
     projectId,
@@ -222,7 +223,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   }
 
   if (!project?.domain && currentStep > 1) {
-    redirect(buildOnboardingStepHref(1, project ? flowState : undefined));
+    redirect(buildOnboardingStepHref(1, project || flowState.challenge ? flowState : undefined));
   }
 
   const supportedStep = clampOnboardingStep(

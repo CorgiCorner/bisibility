@@ -1,0 +1,79 @@
+enum CostItemKind {
+  seo_tool
+  ai
+  analytics
+  custom
+}
+
+enum CostItemBilling {
+  monthly
+  yearly
+  lifetime
+  one_off
+}
+
+enum CostItemSplit {
+  equal
+  percent
+  single_project
+}
+
+enum CostItemPriceReason {
+  trial
+  discount
+  regular
+}
+
+/// Account-scoped SEO cost. `ownerId` is `Project.ownerId`: the account that
+/// owns the workspace, not the per-project metering budget key.
+model CostItem {
+  id           String            @id @default(cuid())
+  publicId     String            @unique
+  ownerId      String
+  owner        User              @relation("CostItemOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  name         String            @db.VarChar(120)
+  kind         CostItemKind
+  catalogKey   String?           @db.VarChar(64)
+  planLabel    String            @default("") @db.VarChar(80)
+  billing      CostItemBilling
+  amountMinor  Int
+  currency     String            @db.Char(3)
+  startedOn    DateTime          @db.Date
+  endedOn      DateTime?         @db.Date
+  split        CostItemSplit
+  createdById  String
+  createdBy    User              @relation("CostItemCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  projects     CostItemProject[]
+  priceChanges CostItemPriceChange[]
+
+  @@index([ownerId])
+  @@map("cost_items")
+}
+
+model CostItemProject {
+  id          String   @id @default(cuid())
+  costItemId  String
+  costItem    CostItem @relation(fields: [costItemId], references: [id], onDelete: Cascade)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  basisPoints Int?
+
+  @@unique([costItemId, projectId])
+  @@index([projectId])
+  @@map("cost_item_projects")
+}
+
+model CostItemPriceChange {
+  id            String              @id @default(cuid())
+  costItemId    String
+  costItem      CostItem            @relation(fields: [costItemId], references: [id], onDelete: Cascade)
+  effectiveFrom DateTime            @db.Date
+  amountMinor   Int
+  reason        CostItemPriceReason
+  note          String?             @db.VarChar(200)
+
+  @@index([costItemId, effectiveFrom])
+  @@map("cost_item_price_changes")
+}

@@ -92,6 +92,7 @@ it("caps selection at 25 eligible cases", () => {
   page.rows = Array.from({ length: 26 }, (_, index) => ({
     ...row,
     token: `case-${index}`,
+    reference: `ref-${index}`,
     project: `prj_example_${index}`,
   }));
   render(<AdminRecoveryConsole initial={page} />);
@@ -153,7 +154,7 @@ function render(ui: Parameters<typeof renderMessages>[0]) {
 }
 
 it("P2-3 restores authorized previews and command status after URL navigation and reload", async () => {
-  const params = new URLSearchParams('batch=["case-result"]');
+  const params = new URLSearchParams('batch=["ref-result"]');
   const update = vi.fn((values: Record<string, string | undefined>) => {
     for (const [key, value] of Object.entries(values)) {
       if (value === undefined) params.delete(key);

@@ -141,7 +141,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-medium">{t("list")}</h3>
         <Tooltip content={t("refreshHelp")} semantics="description">
-          <Button size="xs" variant="ghost" onClick={() => load()} disabled={pending}>
+          <Button size="sm" variant="ghost" onClick={() => load()} disabled={pending}>
             {t(page.available ? "refresh" : "retry")}
           </Button>
         </Tooltip>
@@ -179,7 +179,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
                 </p>
               </div>
               <Button
-                size="xs"
+                size="sm"
                 variant="ghost"
                 disabled={!canEdit || !loaded || pending}
                 onClick={() => remove(entry.token)}
@@ -192,7 +192,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
         </ul>
       ) : null}
       {page.cursor !== "0" ? (
-        <Button size="xs" variant="outline" disabled={pending} onClick={() => load(page.cursor)}>
+        <Button size="sm" variant="outline" disabled={pending} onClick={() => load(page.cursor)}>
           {t("next")}
         </Button>
       ) : null}

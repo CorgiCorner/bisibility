@@ -12,7 +12,7 @@ export const defaultRankTrackerReportScope = {
 };
 export const rankTrackerReportScopeSchema = z
   .object({
-    view: z.enum(["general", "local"]),
+    view: z.enum(["general", "local", "ai_overviews"]),
     subject: dashboardLocalSelectionSchema.nullable(),
     comparisonDays: z.union(rankTrackerComparisonDays.map((value) => z.literal(value))),
     asOf: asOfSchema.nullable(),

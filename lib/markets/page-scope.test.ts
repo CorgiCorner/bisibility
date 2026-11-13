@@ -10,6 +10,7 @@ describe("page scope", () => {
     expect(sectionScope("/markets")).toBe("project");
     expect(sectionScope("/alerts")).toBe("project");
     expect(sectionScope("/timeline")).toBe("project");
+    expect(sectionScope("/annotations")).toBe("project");
   });
 
   it("treats pages that measure a market as market-scopable", () => {

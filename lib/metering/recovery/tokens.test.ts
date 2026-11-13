@@ -3,6 +3,7 @@ import {
   openRecoveryCase,
   openRecoveryCursor,
   openRecoveryPreview,
+  recoveryCaseReference,
   sealRecoveryCase,
   sealRecoveryCursor,
   sealRecoveryPreview,
@@ -19,6 +20,25 @@ it("binds every case to actor, instance and accounting namespace", () => {
     expect(() => openRecoveryCase(token, different)).toThrow("Invalid recovery token");
   expect(token).not.toContain("private-operation");
   expect(() => openRecoveryCase(`${token}changed`, scope)).toThrow();
+});
+it("gives a case one reference on every read while its token is sealed anew", () => {
+  const first = sealRecoveryCase(scope, "operation", "private-operation");
+  expect(sealRecoveryCase(scope, "operation", "private-operation")).not.toBe(first);
+  const reference = recoveryCaseReference(scope, "operation", "private-operation");
+  expect(recoveryCaseReference(scope, "operation", "private-operation")).toBe(reference);
+  // Another administrator opening a shared link must resolve the same case.
+  expect(
+    recoveryCaseReference({ ...scope, actor: "other" }, "operation", "private-operation"),
+  ).toBe(reference);
+  expect(reference).not.toContain("private-operation");
+  expect(reference).toMatch(/^[A-Za-z0-9_-]{43}$/);
+  for (const different of [
+    recoveryCaseReference(scope, "operation", "other-operation"),
+    recoveryCaseReference(scope, "run", "private-operation"),
+    recoveryCaseReference({ ...scope, instance: "demo" }, "operation", "private-operation"),
+    recoveryCaseReference({ ...scope, namespace: "other" }, "operation", "private-operation"),
+  ])
+    expect(different).not.toBe(reference);
 });
 it("prevents a filtered cursor from being replayed in a different list", () => {
   const token = sealRecoveryCursor(

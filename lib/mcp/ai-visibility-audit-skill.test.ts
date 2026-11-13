@@ -38,7 +38,14 @@ describe("installable AI visibility audit skill contract", () => {
     const result = externalAgentReportSchema.shape.kind.safeParse(fixture.kind);
     expect(result.error?.issues.map((issue) => issue.message) ?? []).toEqual([]);
     expect(result.success).toBe(true);
-    for (const kind of ["site_audit", "ai_visibility", "prompt_explorer", "AI_VISIBILITY"]) {
+    for (const kind of [
+      "site_audit",
+      "ai_visibility",
+      "prompt_explorer",
+      "prompt_research",
+      "challenge_report",
+      "AI_VISIBILITY",
+    ]) {
       const reserved = externalAgentReportSchema.shape.kind.safeParse(kind);
       expect(reserved.error?.issues[0].message).toContain("reserved");
     }

@@ -56,7 +56,7 @@ export function ApiKeyRollModal({
         issuedKey ? (
           <Button
             onClick={onClose}
-            size="sm"
+            size="md"
             startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
@@ -64,7 +64,7 @@ export function ApiKeyRollModal({
           </Button>
         ) : (
           <>
-            <Button disabled={busy} onClick={onClose} size="sm" type="button" variant="ghost">
+            <Button disabled={busy} onClick={onClose} size="md" type="button" variant="ghost">
               {t("cancel")}
             </Button>
             <Button

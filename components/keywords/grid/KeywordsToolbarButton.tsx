@@ -4,50 +4,34 @@ import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles"
 import { cn } from "@/lib/ui/cn";
 export const toolbarSecondaryIconClassName = "text-fg-muted";
 
-type LabelFrom = "sm" | "lg" | "xl";
-
-function labelVisibilityClass(
-  compactBelowXl: boolean,
-  iconOnly: boolean,
-  labelFrom?: LabelFrom,
-): string | null {
-  if (iconOnly) return null;
-  const breakpoint = labelFrom ?? (compactBelowXl ? "xl" : "lg");
-  if (breakpoint === "sm") return "hidden sm:inline";
-  if (breakpoint === "xl") return "hidden xl:inline";
-  return "hidden lg:inline";
-}
-
 type KeywordsToolbarButtonProps = ButtonProps & {
-  compactBelowXl?: boolean;
   iconOnly?: boolean;
   label: string;
-  labelFrom?: LabelFrom;
+  labelFrom?: "always" | "lg";
   showTooltip: boolean;
 };
 
 export function KeywordsToolbarButton({
   children,
-  compactBelowXl = false,
   iconOnly = false,
   label,
-  labelFrom,
+  labelFrom = "lg",
   showTooltip,
   size = "sm",
   style,
   className,
   ...props
 }: KeywordsToolbarButtonProps) {
-  const labelClassName = labelVisibilityClass(compactBelowXl, iconOnly, labelFrom);
+  const labelClassName = iconOnly ? null : labelFrom === "always" ? "inline" : "hidden lg:inline";
   const button = (
     <span className="inline-flex shrink-0">
       <Button
         aria-label={label}
         className={cn(
           "shrink-0 whitespace-nowrap",
-          iconOnly || compactBelowXl
-            ? "max-xl:min-w-9 max-xl:w-9 max-xl:gap-0 max-xl:px-0"
-            : "max-lg:min-w-9 max-lg:w-9 max-lg:gap-0 max-lg:px-0",
+          iconOnly
+            ? "size-8.5 min-w-0 gap-0 p-0"
+            : labelFrom === "lg" && "w-8.5 min-w-0 gap-0 px-0 lg:w-auto lg:gap-2 lg:px-3",
           props.variant === "secondary" && toolbarControlClassName,
           props.variant === "secondary" && "[&_[data-button-start-icon]]:text-fg-muted",
           className,
@@ -62,7 +46,11 @@ export function KeywordsToolbarButton({
         {...props}
         variant={props.variant === "secondary" ? "outline" : props.variant}
       >
-        {labelClassName ? <span className={labelClassName}>{label}</span> : null}
+        {labelClassName ? (
+          <span className={labelClassName} data-toolbar-label="">
+            {label}
+          </span>
+        ) : null}
         {children}
       </Button>
     </span>

@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import CompetitorsSettingsLoading from "@/app/(regional)/app/(workspace)/[project]/settings/(sections)/competitors/loading";
 import { AdvancedSettingsLoading } from "@/components/settings/advanced/AdvancedSettingsLoading";
+import { ConversionsSettingsRouteLoading } from "@/components/settings/conversions/ConversionsSettingsLoading";
 import { DataSourcesSettingsRouteLoading } from "@/components/settings/data-sources/DataSourcesSettingsLoading";
 import { DevelopersLoading } from "@/components/settings/developers/DevelopersLoading";
 import { GeneralSettingsRouteLoading } from "@/components/settings/general/GeneralSettingsLoading";
@@ -17,6 +19,9 @@ import {
 } from "@/components/settings/shell/settings-field-widths";
 import {
   settingsCardGeometryClassNames,
+  settingsCardNaturalFrameClassName,
+  settingsContentColumnClassName,
+  settingsShellFrameClassName,
   settingsShellGridClassName,
 } from "@/components/settings/shell/settings-layout";
 import {
@@ -24,6 +29,7 @@ import {
   resolveLegacySettingsHash,
   settingsSections,
 } from "@/components/settings/shell/settings-sections";
+import { SettingsTagsRouteLoading } from "@/components/settings/tags/SettingsTagsLoading";
 import { TeamSettingsLoading } from "@/components/settings/team/TeamSettingsLoading";
 import { TrackingSettingsRouteLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
 import {
@@ -89,6 +95,11 @@ const loadingBoundaries = [
     render: () => <GeneralSettingsRouteLoading />,
   },
   {
+    activeSection: "tags",
+    name: "Tags",
+    render: () => <SettingsTagsRouteLoading />,
+  },
+  {
     activeSection: "tracking",
     name: "Tracking",
     render: () => <TrackingSettingsRouteLoading />,
@@ -97,6 +108,11 @@ const loadingBoundaries = [
     activeSection: "data-sources",
     name: "Data sources",
     render: () => <DataSourcesSettingsRouteLoading />,
+  },
+  {
+    activeSection: "conversions",
+    name: "Conversions",
+    render: () => <ConversionsSettingsRouteLoading />,
   },
   {
     activeSection: "notifications",
@@ -208,6 +224,7 @@ describe("SettingsShell", () => {
     const measurement = within(nav).getByRole("region", { name: "Measurements" });
     expect(within(measurement).getByRole("link", { name: "Tracking" })).toBeInTheDocument();
     expect(within(measurement).getByRole("link", { name: "Data sources" })).toBeInTheDocument();
+    expect(within(measurement).getByRole("link", { name: "Conversions" })).toBeInTheDocument();
     expect(within(measurement).queryByRole("link", { name: "General" })).toBeNull();
     expect(within(nav).getAllByRole("link")).toHaveLength(settingsSections.length);
     for (const label of ["Project", "Measurements", "Team and billing", "Administration"])
@@ -326,6 +343,34 @@ describe("SettingsShell", () => {
     );
   });
 
+  it("uses one content width below lg and the 760px column from lg", () => {
+    expect(settingsShellFrameClassName).toBe("mx-auto w-full lg:max-w-[1040px]");
+    expect(settingsContentColumnClassName).toBe("min-w-0 w-full lg:max-w-[760px]");
+    expect(settingsCardNaturalFrameClassName).toContain("w-full lg:max-w-[760px]");
+    expect(settingsShellGridClassName).toContain("lg:grid-cols-[200px_minmax(0,760px)]");
+
+    const { container } = render(<Shell />);
+    const shell = container.querySelector("[data-settings-shell]");
+    const column = shell?.querySelector(":scope > div > div.min-w-0");
+    const menu = column?.querySelector(".lg\\:hidden");
+
+    expect(shell).toHaveClass("w-full", "lg:max-w-[1040px]");
+    expect(shell).not.toHaveClass("max-w-[1040px]");
+    expect(column).toHaveClass("w-full", "lg:max-w-[760px]");
+    expect(column).not.toHaveClass("max-w-[760px]");
+    expect(menu).toBeTruthy();
+  });
+
+  it("removes section and ancestor width caps below lg without targeting inner fields", () => {
+    const css = readFileSync("components/settings/shell/SettingsShell.module.css", "utf8");
+    expect(css).toContain("@media (width < 1024px)");
+    expect(css).toContain(':where([data-slot="card"], :has([data-slot="card"]))');
+    expect(css).toContain(':not(:where([data-slot="card"] *))');
+    expect(css).toContain("max-width: none");
+    const { container } = render(<Shell />);
+    expect(container.querySelector("[data-settings-content]")).toHaveClass("w-full");
+  });
+
   it("keeps the shared settled card on its geometry contract", () => {
     const { container } = render(
       <SettingsCard className={settingsCardGeometryClassNames.form} title="Settled">
@@ -333,7 +378,7 @@ describe("SettingsShell", () => {
       </SettingsCard>,
     );
     expect(container.querySelector('[data-settings-card-frame="settled"]')).toHaveClass(
-      "max-w-[760px]",
+      "lg:max-w-[760px]",
       "min-h-[376px]",
       "rounded-card",
       "p-5",

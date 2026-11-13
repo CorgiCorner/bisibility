@@ -19,6 +19,7 @@ const FILTER_PARAMS = [
   ["lastCheck", "lastCheck"],
   ["wrongUrl", "wrongUrl"],
   ["urlChanged", "urlChanged"],
+  ["aiOverviewShown", "aiOverviewShown"],
 ] as const;
 
 function serializedInput(input: RankTrackerQueryState | RankTrackerQueryParseResult) {

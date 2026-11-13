@@ -33869,6 +33869,10 @@
                   "filters": {
                     "additionalProperties": false,
                     "properties": {
+                      "ai_overview_shown": {
+                        "default": false,
+                        "type": "boolean"
+                      },
                       "change": {
                         "default": "any",
                         "enum": ["any", "up", "down", "new", "lost"],
@@ -33965,7 +33969,8 @@
                       "url_changed",
                       "vol_max",
                       "vol_min",
-                      "wrong_url"
+                      "wrong_url",
+                      "ai_overview_shown"
                     ],
                     "type": "object"
                   },
@@ -34079,6 +34084,10 @@
                   "filters": {
                     "additionalProperties": false,
                     "properties": {
+                      "ai_overview_shown": {
+                        "default": false,
+                        "type": "boolean"
+                      },
                       "change": {
                         "default": "any",
                         "enum": ["any", "up", "down", "new", "lost"],
@@ -34175,7 +34184,8 @@
                       "url_changed",
                       "vol_max",
                       "vol_min",
-                      "wrong_url"
+                      "wrong_url",
+                      "ai_overview_shown"
                     ],
                     "type": "object"
                   },
@@ -34355,7 +34365,7 @@
                         "type": "object"
                       },
                       "view": {
-                        "enum": ["general", "local"],
+                        "enum": ["general", "local", "ai_overviews"],
                         "type": "string"
                       }
                     },
@@ -48381,7 +48391,7 @@
         }
       },
       "post": {
-        "description": "Save external analysis. Producer kinds site_audit, ai_visibility and prompt_explorer are reserved. Access follows existing project membership and token scopes.",
+        "description": "Save external analysis. Producer kinds site_audit, ai_visibility, prompt_explorer, prompt_research and challenge_report are reserved. Access follows existing project membership and token scopes.",
         "operationId": "createAgentReport",
         "parameters": [
           {
@@ -75962,6 +75972,7 @@
                 "serpapi",
                 "local-sequence",
                 "gsc",
+                "pagespeed",
                 "ga4",
                 "plausible"
               ],
@@ -76123,6 +76134,7 @@
                 "serpapi",
                 "local-sequence",
                 "gsc",
+                "pagespeed",
                 "ga4",
                 "plausible"
               ],
@@ -76296,6 +76308,7 @@
                 "serpapi",
                 "local-sequence",
                 "gsc",
+                "pagespeed",
                 "ga4",
                 "plausible"
               ],
@@ -76470,6 +76483,7 @@
                 "serpapi",
                 "local-sequence",
                 "gsc",
+                "pagespeed",
                 "ga4",
                 "plausible"
               ],
@@ -76643,6 +76657,7 @@
                 "serpapi",
                 "local-sequence",
                 "gsc",
+                "pagespeed",
                 "ga4",
                 "plausible"
               ],
@@ -78599,6 +78614,10 @@
                                   "filters": {
                                     "additionalProperties": false,
                                     "properties": {
+                                      "ai_overview_shown": {
+                                        "default": false,
+                                        "type": "boolean"
+                                      },
                                       "change": {
                                         "default": "any",
                                         "enum": ["any", "up", "down", "new", "lost"],
@@ -78708,7 +78727,8 @@
                                       "url_changed",
                                       "vol_max",
                                       "vol_min",
-                                      "wrong_url"
+                                      "wrong_url",
+                                      "ai_overview_shown"
                                     ],
                                     "type": "object"
                                   },
@@ -78822,6 +78842,10 @@
                                   "filters": {
                                     "additionalProperties": false,
                                     "properties": {
+                                      "ai_overview_shown": {
+                                        "default": false,
+                                        "type": "boolean"
+                                      },
                                       "change": {
                                         "default": "any",
                                         "enum": ["any", "up", "down", "new", "lost"],
@@ -78931,7 +78955,8 @@
                                       "url_changed",
                                       "vol_max",
                                       "vol_min",
-                                      "wrong_url"
+                                      "wrong_url",
+                                      "ai_overview_shown"
                                     ],
                                     "type": "object"
                                   },
@@ -79111,7 +79136,7 @@
                                         "type": "object"
                                       },
                                       "view": {
-                                        "enum": ["general", "local"],
+                                        "enum": ["general", "local", "ai_overviews"],
                                         "type": "string"
                                       }
                                     },
@@ -79587,6 +79612,10 @@
                             "filters": {
                               "additionalProperties": false,
                               "properties": {
+                                "ai_overview_shown": {
+                                  "default": false,
+                                  "type": "boolean"
+                                },
                                 "change": {
                                   "default": "any",
                                   "enum": ["any", "up", "down", "new", "lost"],
@@ -79690,7 +79719,8 @@
                                 "url_changed",
                                 "vol_max",
                                 "vol_min",
-                                "wrong_url"
+                                "wrong_url",
+                                "ai_overview_shown"
                               ],
                               "type": "object"
                             },
@@ -79804,6 +79834,10 @@
                             "filters": {
                               "additionalProperties": false,
                               "properties": {
+                                "ai_overview_shown": {
+                                  "default": false,
+                                  "type": "boolean"
+                                },
                                 "change": {
                                   "default": "any",
                                   "enum": ["any", "up", "down", "new", "lost"],
@@ -79907,7 +79941,8 @@
                                 "url_changed",
                                 "vol_max",
                                 "vol_min",
-                                "wrong_url"
+                                "wrong_url",
+                                "ai_overview_shown"
                               ],
                               "type": "object"
                             },
@@ -80087,7 +80122,7 @@
                                   "type": "object"
                                 },
                                 "view": {
-                                  "enum": ["general", "local"],
+                                  "enum": ["general", "local", "ai_overviews"],
                                   "type": "string"
                                 }
                               },

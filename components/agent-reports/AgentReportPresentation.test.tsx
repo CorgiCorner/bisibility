@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { auditFixture, failedAuditFixture } from "@/components/site-audit/story-fixtures";
 import { renderWithFeatureMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { AgentReportResource } from "@/lib/agent-reports/model";
@@ -56,6 +57,42 @@ describe("shared report page presentation", () => {
     expect(screen.getByText("manual analysis")).toBeInTheDocument();
     expect(container.querySelector("time")).toHaveAttribute("datetime", report.createdAt);
     expect(container.querySelector("time")).toHaveTextContent("Oct 1, 2026");
+  });
+
+  it("stretches the report link over the padded row while keeping Share independently clickable", () => {
+    const onShare = vi.fn();
+    render(
+      <AgentReportHistory
+        reports={[report]}
+        projectRef={projectRef}
+        locale="en"
+        timeZone="UTC"
+        audience={() => "Members"}
+        share={() => (
+          <button type="button" onClick={onShare}>
+            Share
+          </button>
+        )}
+      />,
+    );
+    const link = screen.getByRole("link");
+    const row = link.closest("[data-report-row]");
+    expect(row).toHaveClass(
+      "relative",
+      "px-4",
+      "py-3",
+      "hover:bg-bg-sunken",
+      "focus-within:bg-bg-sunken",
+    );
+    expect(link).toHaveClass("after:absolute", "after:inset-0", "focus-visible:after:ring-inset");
+    expect(link).not.toHaveClass("relative", "hover:bg-bg-sunken");
+    expect(row).toContainElement(screen.getByText("Members"));
+    expect(row?.querySelector("time")).toBeInTheDocument();
+    const share = screen.getByRole("button", { name: "Share" });
+    expect(share.parentElement).toHaveClass("relative", "z-10");
+    expect(link).not.toContainElement(share);
+    fireEvent.click(share);
+    expect(onShare).toHaveBeenCalledOnce();
   });
 
   it("copies the existing member-only deep link from the detail header", async () => {
@@ -157,4 +194,14 @@ describe("shared report page presentation", () => {
     expect(screen.getByText("Clarify the guide title.")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Provenance" })).not.toBeInTheDocument();
   });
+});
+
+it("keeps the kind filter bounded in the actions toolbar", () => {
+  const filter = readFileSync("components/agent-reports/AgentReportKindFilter.tsx", "utf8");
+  expect(filter).toContain('triggerWrapperClassName="w-auto max-w-xs shrink-0"');
+  const page = readFileSync(
+    "app/(regional)/app/(workspace)/[project]/agent-reports/page.tsx",
+    "utf8",
+  );
+  expect(page).toMatch(/filter=\{\s*<AgentReportKindFilter/);
 });

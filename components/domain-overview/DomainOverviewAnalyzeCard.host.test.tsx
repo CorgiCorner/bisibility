@@ -89,8 +89,8 @@ describe("DomainOverviewAnalyzeCard country picker", () => {
     renderCard([domainOverviewScopeFixture]);
 
     const trigger = screen.getByRole("button", { name: "Country: United States" });
-    expect(trigger).toHaveClass("h-[34px]", "min-h-[34px]", "w-full");
-    expect(trigger).not.toHaveClass("h-10", "min-h-10");
+    expect(trigger).toHaveClass("min-h-10", "max-sm:min-h-11", "w-full");
+    expect(trigger).not.toHaveClass("h-[34px]", "min-h-[34px]");
     expect(trigger.parentElement).toHaveClass("w-full");
     expect(trigger.parentElement?.parentElement).toHaveClass("md:w-[230px]");
     expect(trigger.querySelector("[data-country-flag='US']")).toBeInTheDocument();
@@ -105,22 +105,16 @@ describe("DomainOverviewAnalyzeCard country picker", () => {
     expect(await screen.findByText("Change country")).toBeInTheDocument();
   });
 
-  it("keeps the domain target within the exact compact control height", () => {
+  it("matches the domain field, country picker and action to the form size", () => {
     renderCard([domainOverviewScopeFixture]);
-
     const target = screen.getByRole("textbox", { name: "Domain or subdomain" });
-    expect(target.parentElement).toHaveClass("h-[34px]", "min-h-[34px]");
-    expect(target).toHaveClass(
-      "h-full",
-      "min-h-0",
-      "py-1",
-      "compact-text-12",
-      "text-[12px]",
-      "leading-4",
-      "placeholder:text-[12px]",
-      "placeholder:leading-4",
-    );
-    expect(target).not.toHaveClass("h-10", "min-h-10");
+    expect(target.parentElement).toHaveClass("min-h-10", "max-sm:min-h-11");
+    expect(target).toHaveClass("p-0", "text-ui-body", "leading-5");
+    expect(target).not.toHaveClass("h-full", "min-h-0", "py-1");
+    const submit = screen.getByRole("button", { name: "Analyze domain" });
+    expect(submit).toHaveAttribute("data-size", "input");
+    expect(submit.style.height).toBe("");
+    expect(submit.style.minHeight).toBe("");
   });
 
   it("uses the neutral subdomain example in the domain placeholder", () => {

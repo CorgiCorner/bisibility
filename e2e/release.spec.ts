@@ -71,7 +71,7 @@ async function expectAppPage(page: Page, path: string, assertVisible: () => Prom
 
 async function enableExperimentalModules(page: Page, projectRef: string) {
   const path = `/app/${projectRef}/settings/experimental`;
-  const moduleLabels = ["Timeline", "Competitors"] as const;
+  const moduleLabels = ["Competitors"] as const;
   await expectAppPage(page, path, async () => {
     for (const label of moduleLabels) {
       const experimentalModule = page.getByRole("switch", { name: label, exact: true });

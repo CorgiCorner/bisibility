@@ -34,20 +34,6 @@
       "domainTooLong": "Un dominio puede tener 253 caracteres como máximo.",
       "invalidDomain": "Escribe un dominio, por ejemplo example.com."
     },
-    "tags": {
-      "cancel": "Cancelar",
-      "description": "Agrupa palabras clave con etiquetas y filtra las vistas guardadas.",
-      "duplicate": "{name} ya existe.",
-      "remove": "Quitar etiqueta",
-      "removeError": "No se ha podido quitar la etiqueta.",
-      "removeTitle": "¿Quitar {name}?",
-      "title": "Etiquetas",
-      "usageBothManyKeywords": "{keywordCount, number} palabras clave y {segmentCount, plural, one {# segmento la usan.} other {# segmentos la usan.}}",
-      "usageBothOneKeyword": "{segmentCount, plural, one {1 palabra clave y # segmento la usan.} other {1 palabra clave y # segmentos la usan.}}",
-      "usageKeywordOnly": "{count, plural, one {# palabra clave la usa.} other {# palabras clave la usan.}}",
-      "usageSegmentOnly": "{count, plural, one {# segmento la usa.} other {# segmentos la usan.}}",
-      "writeError": "No se ha podido añadir la etiqueta."
-    },
     "dataCache": {
       "title": "Caché de datos",
       "help": "Compartida por los módulos de este proyecto. Un plazo menor limita también resultados existentes; uno mayor se aplica a los nuevos. Se conservan informes, historial y comprobantes de pago.",
@@ -86,7 +72,7 @@
         "keywords": "Palabras clave",
         "pages": "Páginas",
         "ai_visibility": "Visibilidad de marca",
-        "prompt_explorer": "Laboratorio de prompts",
+        "prompt_explorer": "Comparador de modelos",
         "prompt_research": "Investigación de preguntas",
         "site_audit": "Auditoría web"
       },
@@ -98,7 +84,7 @@
         "backlinks": "Enlaces entrantes",
         "domain_overview": "Resumen del dominio",
         "ai_visibility": "Visibilidad de marca",
-        "prompt_explorer": "Laboratorio de prompts",
+        "prompt_explorer": "Comparador de modelos",
         "prompt_research": "Investigación de preguntas",
         "site_audit": "Auditoría web"
       }

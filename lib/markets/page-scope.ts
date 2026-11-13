@@ -14,6 +14,7 @@ const PROJECT_SCOPED_SECTIONS = new Set([
   "providers",
   "markets",
   "settings",
+  "annotations",
   "timeline",
 ]);
 

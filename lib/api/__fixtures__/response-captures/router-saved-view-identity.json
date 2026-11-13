@@ -16,7 +16,8 @@
             "url_changed": false,
             "vol_max": 50,
             "vol_min": 0,
-            "wrong_url": false
+            "wrong_url": false,
+            "ai_overview_shown": false
           },
           "lens": {
             "device": "all",
@@ -41,7 +42,8 @@
             "url_changed": false,
             "vol_max": 50,
             "vol_min": 0,
-            "wrong_url": false
+            "wrong_url": false,
+            "ai_overview_shown": false
           },
           "lens": {
             "device": "all",
@@ -79,7 +81,8 @@
             "url_changed": false,
             "vol_max": 50,
             "vol_min": 0,
-            "wrong_url": false
+            "wrong_url": false,
+            "ai_overview_shown": false
           },
           "lens": {
             "device": "all",
@@ -104,7 +107,8 @@
             "url_changed": false,
             "vol_max": 50,
             "vol_min": 0,
-            "wrong_url": false
+            "wrong_url": false,
+            "ai_overview_shown": false
           },
           "lens": {
             "device": "all",
@@ -144,7 +148,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "lens": {
                 "device": "mobile",
@@ -175,7 +180,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "grouped": true,
               "lens": {
@@ -219,7 +225,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "lens": {
                 "device": "mobile",
@@ -250,7 +257,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "grouped": true,
               "lens": {
@@ -294,7 +302,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "lens": {
                 "device": "mobile",
@@ -325,7 +334,8 @@
                 "url_changed": false,
                 "vol_max": 50,
                 "vol_min": 0,
-                "wrong_url": true
+                "wrong_url": true,
+                "ai_overview_shown": false
               },
               "grouped": true,
               "lens": {
@@ -383,7 +393,8 @@
                 "vol_max": 50,
                 "vol_min": 0,
                 "wrong_url": false,
-                "url_changed": false
+                "url_changed": false,
+                "ai_overview_shown": false
               },
               "lens": {
                 "device": "all",
@@ -408,7 +419,8 @@
                 "vol_max": 50,
                 "vol_min": 0,
                 "wrong_url": false,
-                "url_changed": false
+                "url_changed": false,
+                "ai_overview_shown": false
               },
               "lens": {
                 "device": "all",

@@ -10,6 +10,7 @@ import { purgeAuditLogs } from "../audit/retention";
 import { purgeExpiredSessions } from "../auth/session-retention";
 import { releaseExpiredMigrationHolds } from "../migration/stale-holds";
 import { markStaleImportJobs } from "../migration/stale-jobs";
+import { syncProjectPagesForAllProjects } from "../pages/sync";
 import { syncPresenceForAllProjects } from "../presence/sync";
 import type { QueuedDeadlineMaintenanceCursor } from "../rank-check/queued-deadline-maintenance";
 import { purgeExpiredQueuedRankCheckBatches } from "../rank-check/queued-retention";
@@ -20,7 +21,9 @@ import {
   RANK_CHECK_RAW_PURGE_MAX_BATCHES_PER_ACTIVITY,
 } from "../rank-check/raw-retention";
 import { sweepRankCheckRawPurgeProgress } from "../rank-check/raw-retention-fences";
+import { scheduledMaintenanceEnabled } from "../rank-check/scheduled-maintenance";
 import { markStaleRunningChecks } from "../rank-check/stale-checks";
+import { syncSearchEngineUpdates } from "../search-engine-updates/sync";
 import { syncSitemapForAllProjects } from "../sitemap/sync";
 
 // Activities run in the worker's Node.js process (NOT the workflow sandbox), so
@@ -259,8 +262,41 @@ export async function syncSitemapsActivity(): Promise<SyncSitemapsActivityResult
   return syncSitemapForAllProjects(new Date());
 }
 
+export type SyncProjectPagesActivityResult = {
+  failed: number;
+  pages: number;
+  projects: number;
+  truncated: number;
+};
+
+/** Daily page registry sync. Never throws into the scheduler. */
+export async function syncProjectPagesActivity(): Promise<SyncProjectPagesActivityResult> {
+  if (!scheduledMaintenanceEnabled()) return { failed: 0, pages: 0, projects: 0, truncated: 0 };
+  try {
+    return await syncProjectPagesForAllProjects(new Date());
+  } catch (error: unknown) {
+    console.error("[pages] project page sync failed", error);
+    return { failed: 1, pages: 0, projects: 0, truncated: 0 };
+  }
+}
+
 export type SyncPresenceActivityResult = Awaited<ReturnType<typeof syncPresenceForAllProjects>>;
 
 export async function syncPresenceActivity(): Promise<SyncPresenceActivityResult> {
   return syncPresenceForAllProjects(new Date());
+}
+
+export type SyncSearchEngineUpdatesActivityResult = Awaited<
+  ReturnType<typeof syncSearchEngineUpdates>
+>;
+
+/** Global Google Search status sync. Never throws into the scheduler. */
+export async function syncSearchEngineUpdatesActivity(): Promise<SyncSearchEngineUpdatesActivityResult> {
+  if (!scheduledMaintenanceEnabled()) return { status: "ok", upserted: 0 };
+  try {
+    return await syncSearchEngineUpdates();
+  } catch (error: unknown) {
+    console.error("[annotations] search engine update sync failed", error);
+    return { reason: "network", status: "error" };
+  }
 }

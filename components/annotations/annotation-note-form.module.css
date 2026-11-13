@@ -1,0 +1,5 @@
+/* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules uses :global so this rule stays on the note field. */
+:global(textarea[data-annotation-note]) {
+  field-sizing: content;
+  overflow-y: auto;
+}

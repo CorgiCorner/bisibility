@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { compactInputClassName, Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { useZodForm } from "@/lib/forms/use-zod-form";
 import { useId, useState } from "react";
@@ -114,7 +114,7 @@ export function BusinessSubjectAssignment({
           <p className="m-0 mb-1 text-[12px] font-medium leading-4 text-fg-muted">{t("subject")}</p>
           <MenuSelect
             size="input"
-            triggerClassName="min-h-[34px] text-[12px]"
+            triggerClassName="text-[12px]"
             ariaLabel={t("subject")}
             value={choice?.locationId ?? ""}
             disabled={permissions.canWrite !== true || action.pending}
@@ -147,7 +147,6 @@ export function BusinessSubjectAssignment({
           {t("fields.reason")}
         </label>
         <Input
-          className={compactInputClassName}
           id={`${id}-reason`}
           {...form.register("reason")}
           disabled={permissions.canWrite !== true || action.pending}
@@ -186,7 +185,7 @@ export function BusinessSubjectAssignment({
             current.scope.id === base.assignment.scope.id &&
             current.revision >= base.assignment.revision ? (
               <Button
-                size="sm"
+                size="input"
                 variant="outline"
                 disabled={permissions.canWrite !== true}
                 onClick={() => {
@@ -197,14 +196,14 @@ export function BusinessSubjectAssignment({
                 {t("reviewAssignmentKeepChoice")}
               </Button>
             ) : onRequestCurrent ? (
-              <Button size="sm" variant="outline" onClick={onRequestCurrent}>
+              <Button size="input" variant="outline" onClick={onRequestCurrent}>
                 {t("reviewCurrent")}
               </Button>
             ) : null}
           </div>
         ) : null}
         <Button
-          size="sm"
+          size="input"
           type="submit"
           disabled={
             permissions.canWrite !== true || action.pending || conflict || !validChoice || !dirty

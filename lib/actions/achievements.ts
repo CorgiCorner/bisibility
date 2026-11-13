@@ -3,6 +3,7 @@ import { captureDailyActivity } from "@/lib/achievements/capture";
 import { updateAchievementPreferences } from "@/lib/achievements/preferences";
 import { readAchievements } from "@/lib/achievements/read";
 import { setAchievementSharing } from "@/lib/achievements/sharing";
+import { joinThirtyDays, leaveThirtyDays } from "@/lib/achievements/thirty-days-enrollment";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { getOptionalAvailableSession, requireSession } from "@/lib/auth/session";
 export async function touchAchievementVisit() {
@@ -33,4 +34,12 @@ export async function shareAchievement(input: unknown) {
     recordAppAction(session),
   );
   return actionResult;
+}
+export async function joinThirtyDaysChallenge() {
+  const session = await requireSession();
+  return joinThirtyDays(session.user.id, () => recordAppAction(session));
+}
+export async function leaveThirtyDaysChallenge() {
+  const session = await requireSession();
+  return leaveThirtyDays(session.user.id, () => recordAppAction(session));
 }

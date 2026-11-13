@@ -15,15 +15,34 @@ export function createTimelineNoteFormSchema(t: TimelineFormTranslations) {
     .trim()
     .optional()
     .transform((value) => value || undefined)
+    .superRefine((value, ctx) => {
+      if (!value) return;
+      if (value.startsWith("/")) {
+        if (!/^\/\S*$/.test(value)) ctx.addIssue({ code: "custom", message: t("validationUrl") });
+        return;
+      }
+      if (!/^https?:\/\//i.test(value)) {
+        ctx.addIssue({ code: "custom", message: t("validationUrlProtocol") });
+        return;
+      }
+      if (!z.url().safeParse(value).success) {
+        ctx.addIssue({ code: "custom", message: t("validationUrl") });
+      }
+    });
+  const optionalDaySchema = z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined)
     .pipe(
       z
         .string()
-        .regex(/^https?:\/\//i, t("validationUrlProtocol"))
-        .pipe(z.url(t("validationUrl")))
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional(),
     );
 
   return z.object({
+    happenedOn: optionalDaySchema,
     keywordId: optionalIdSchema,
     note: z
       .string()

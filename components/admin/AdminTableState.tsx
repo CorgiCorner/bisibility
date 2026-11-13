@@ -56,31 +56,3 @@ export function useAdminViewState(key: string, initial: string | null = null) {
   );
   return [route ? route.get(key) : local, update] as const;
 }
-
-function selectedTokens(value: string | null): string[] {
-  try {
-    const data: unknown = JSON.parse(value ?? "[]");
-    return Array.isArray(data) &&
-      data.length <= 25 &&
-      data.every((v) => typeof v === "string" && v.length <= 32768)
-      ? [...new Set(data)]
-      : [];
-  } catch {
-    return [];
-  }
-}
-export function useAdminSelection() {
-  const route = useContext(AdminTableState);
-  const [local, setLocal] = useState<string[]>([]);
-  const update = useCallback(
-    (next: string[] | ((current: string[]) => string[])) => {
-      if (route) {
-        const current = selectedTokens(route.get("selected"));
-        const values = typeof next === "function" ? next(current) : next;
-        route.update({ selected: values.length ? JSON.stringify(values) : undefined });
-      } else setLocal(next);
-    },
-    [route],
-  );
-  return [route ? selectedTokens(route.get("selected")) : local, update] as const;
-}

@@ -85,7 +85,7 @@
       "verified": "Verified via OTP"
     },
     "privacy": {
-      "action": "Privacy choices",
+      "action": "Review choices",
       "description": "Review or change the optional analytics and setup replay choices stored in this browser.",
       "title": "Privacy choices"
     },
@@ -287,6 +287,7 @@
       "description": "Personal to you, <emphasis>applied on every device you sign in from.</emphasis>",
       "landing": {
         "ariaLabel": "Default landing page",
+        "ai-visibility": "AI Visibility",
         "backlinks": "Backlinks",
         "competitors": "Competitors",
         "dashboard": "Dashboard",
@@ -294,8 +295,9 @@
         "keyword-research": "Keyword Research",
         "label": "Default landing page",
         "rank-tracker": "Rank Tracker",
+        "pages": "Pages",
         "search-console": "Search Console",
-        "timeline": "Timeline"
+        "annotations": "Annotations"
       },
       "language": {
         "description": "More languages are being prepared. English is active now.",
@@ -364,7 +366,37 @@
       "emptyDay": "No activity recorded",
       "calendarLabel": "Your last seven days",
       "shareError": "The sharing change could not be saved. Try again.",
-      "badgeOptions": "Badge options"
+      "badgeOptions": "Badge options",
+      "thirtyTitle": "30 days of SEO",
+      "thirtyDescription": "A daily habit with a badge you can post. Join any time.",
+      "thirtyStart": "Start my 30 days",
+      "thirtyDayLabel": "Day {day, number}",
+      "thirtyStarted": "of {goal, number} · started {date}",
+      "thirtyPause": "Missed a day? The streak pauses, it does not reset.",
+      "thirtyHow": "How it works",
+      "thirtyStep1Title": "Start any day",
+      "thirtyStep1Body": "Your Day 1 is the day you join. Open the Day 1 snapshot for a project you pick. It is the baseline for later.",
+      "thirtyStep2Title": "Count the days you practice",
+      "thirtyStep2Body": "The streak counts what you do, not traffic, so you can finish it even before results show.",
+      "thirtyStep3Title": "Results come later",
+      "thirtyStep3Body": "SEO is slow. A missed day pauses the count. The badge is earned on the 30th day you practice.",
+      "thirtySnapshotLabel": "Project for the Day 1 snapshot",
+      "thirtySnapshotOpen": "Open Pages",
+      "thirtySnapshotEmpty": "Create a project to save a Day 1 snapshot from Pages.",
+      "thirtyLeave": "Leave the 30 days",
+      "thirtyLeaveTitle": "Leave the 30 days?",
+      "thirtyLeaveBody": "The count pauses. Days you already finished stay. You can join again without starting over.",
+      "thirtyLeaveConfirm": "Leave",
+      "thirtyCancel": "Cancel",
+      "thirtyLeft": "Paused since {date}. Finished days stay. Joining again continues this challenge.",
+      "thirtyOverflow": "{count, plural, one {# earlier day is not shown} other {# earlier days are not shown}}",
+      "thirtyCalendarLabel": "30 days of SEO",
+      "thirtySlotDone": "Done",
+      "thirtySlotSkipped": "Skipped",
+      "thirtySlotToday": "Today",
+      "thirtySlotUpcoming": "Upcoming",
+      "thirtyError": "The 30-day challenge could not be updated. Try again.",
+      "thirtyTrackingOff": "Turn on Track my activity to join."
     }
   }
 }

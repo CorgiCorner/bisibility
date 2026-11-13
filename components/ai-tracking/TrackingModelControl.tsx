@@ -43,7 +43,7 @@ export function TrackingModelControl({
       )}
       {onCatalog && (
         <Button
-          size="xs"
+          size="input"
           variant="ghost"
           loading={pending}
           onClick={() =>

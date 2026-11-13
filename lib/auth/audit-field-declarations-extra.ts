@@ -8,11 +8,13 @@ import {
   reviewedConsentPolicy,
   withReviewedConsent,
 } from "./audit-field-declarations-consent";
+import { registerConversionAuditDeclarations } from "./audit-field-declarations-conversions";
 import {
   registerLocalMeasurementAuditDeclarations,
   registerRankCheckAuditDeclarations,
 } from "./audit-field-declarations-measurement";
 import { registerOnboardingAuditDeclarations } from "./audit-field-declarations-onboarding";
+import { registerTagAuditDeclarations } from "./audit-field-declarations-tags";
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 type SharedPolicies = Record<
@@ -177,12 +179,7 @@ export function registerAdditionalAuditDeclarations(
   };
   declare(["signal.note_added"], { after: signalNote });
   declare(["signal.note_removed"], { before: signalNote });
-  declare(["tag.create"], { after: strings("name") });
-  declare(["tag.delete"], { before: { ...strings("name"), ...f.numbers("count") } });
-  declare(["tag.rename"], {
-    after: { ...strings("name"), ...f.numbers("count"), ...f.booleans("merged") },
-    before: strings("name"),
-  });
+  registerTagAuditDeclarations(declare);
   const invite = { ...strings("email", "inviteId", "role"), ...f.dates("expiresAt") };
   declare(["team.invite.accept", "team.invite.create"], { after: invite });
   declare(["team.invite.resend"], { after: invite, before: invite });
@@ -295,4 +292,5 @@ export function registerAdditionalAuditDeclarations(
   declare(["traffic.sync_now"], {
     after: f.numbers("connections", "keywordSnapshots", "pageSnapshots", "skipped"),
   });
+  registerConversionAuditDeclarations(declare);
 }

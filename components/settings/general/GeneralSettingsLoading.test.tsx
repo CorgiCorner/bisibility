@@ -8,19 +8,14 @@ import { renderWithGeneralSettingsMessages as render } from "@/i18n/test-support
 import { describe, expect, it, vi } from "vitest";
 
 const props = {
-  canCreateTags: true,
-  canDeleteTags: true,
   canEditProject: true,
-  createTag: vi.fn(),
-  deleteTag: vi.fn(),
   project: { domain: "example.com", name: "Example", projectId: "prj_7Kd2Qf9m" },
   requestDomainChange: vi.fn(),
-  tags: [{ color: "var(--blue)", keywordCount: 0, label: "brand", segmentCount: 0 }],
   updateProject: vi.fn(),
 };
 
 describe("GeneralSettingsLoading", () => {
-  it("uses the same settled frame geometry for both General cards", () => {
+  it("uses the same settled frame geometry for the project details card", () => {
     const { container } = render(
       <>
         <GeneralSettingsContent {...props} />
@@ -30,7 +25,6 @@ describe("GeneralSettingsLoading", () => {
 
     const frames = [
       ["project-details", generalSettingsCardGeometryClassNames.projectDetails],
-      ["tags-segments", generalSettingsCardGeometryClassNames.tagsSegments],
     ] as const;
 
     for (const [name, geometryClassName] of frames) {
@@ -54,6 +48,6 @@ describe("GeneralSettingsLoading", () => {
       container.querySelector('[data-settings-loading-boundary="general"]'),
     ).toBeInTheDocument();
     expect(container.querySelector("[data-general-settings-loading]")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-general-settings-loading-frame]")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-general-settings-loading-frame]")).toHaveLength(1);
   });
 });

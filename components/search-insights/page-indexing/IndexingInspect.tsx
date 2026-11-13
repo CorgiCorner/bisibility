@@ -115,8 +115,9 @@ export function IndexingInspect({
           </InlineCallout>
         ) : null}
         <Button
+          className="self-start"
           type="submit"
-          size="sm"
+          size="input"
           loading={isSubmitting}
           disabled={loadingUrls || !watch("urls").trim()}
         >
@@ -130,7 +131,7 @@ export function IndexingInspect({
           >
             <span className="break-all">{item.url}</span> {t(`feedback.${item.status}`)}
             {item.status === "success" ? (
-              <Button size="xs" variant="ghost" onClick={() => onStoredResult(item.url)}>
+              <Button size="input" variant="ghost" onClick={() => onStoredResult(item.url)}>
                 {t("viewStored")}
               </Button>
             ) : null}

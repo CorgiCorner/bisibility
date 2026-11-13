@@ -18,8 +18,8 @@
     "failed": "Nie udało się zapisać. Spróbuj ponownie.",
     "validation": "Użyj do 4000 znaków w każdym polu.",
     "readOnly": "Możesz przeglądać kontekst. Edycja wymaga aktywnego projektu i roli członka.",
-    "reportsTitle": "Raporty agentów",
-    "reportsDescription": "Zapisane analizy projektu, w tym analizy AI i audyty strony. Udostępnij link do raportu członkom projektu.",
+    "reportsTitle": "Raporty",
+    "reportsDescription": "Zobacz, co zmieniło się na Twojej stronie.",
     "emptyTitle": "Brak zapisanych analiz",
     "emptyDescription": "Uruchom analizę lub zapisz raport, aby budować historię projektu.",
     "addReport": "Zapisz analizę",
@@ -34,6 +34,24 @@
     "created": "Zapisano {date}",
     "historyLimit": "Wyświetlono 100 najnowszych raportów. Starsza historia jest dostępna przez kursor API.",
     "reportValidation": "Podaj tytuł (do 160 znaków) i analizę (do 12 000 znaków).",
-    "reportSaved": "Zapisano analizę."
+    "reportSaved": "Zapisano analizę.",
+    "draft": "Szkic",
+    "filterEmpty": "Brak raportów tego rodzaju.",
+    "kindFilter": "Rodzaj raportu",
+    "kinds": {
+      "all": "Wszystkie rodzaje",
+      "ai_visibility": "Widoczność AI",
+      "challenge_report": "Podsumowanie wyników",
+      "manual_analysis": "Raport tekstowy",
+      "prompt_explorer": "Eksplorator promptów",
+      "prompt_research": "Badanie promptów",
+      "site_audit": "Audyt strony"
+    },
+    "audienceLink": "Każdy z linkiem",
+    "audienceMembers": "Członkowie projektu",
+    "share": "Udostępnij",
+    "whoCanOpen": "Kto może otworzyć",
+    "reportTitle": "Tytuł raportu",
+    "reportContent": "Treść raportu"
   }
 }

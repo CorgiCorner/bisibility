@@ -7,14 +7,26 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("experimental modules", () => {
-  it("includes Prompt Playground as an opt-in key", () => {
-    expect(experimentalModuleKeys).toEqual(["timeline", "competitors", "promptPlayground"]);
+  it("keeps only current module keys and still parses retired stored keys", () => {
+    expect(experimentalModuleKeys).toEqual(["competitors"]);
     expect(
       experimentalModulesSchema.safeParse({
         enabledExperimentalModules: ["timeline", "not-a-module"],
         projectId: "prj_abcdefghijklmnopqrstuvwx",
       }).success,
     ).toBe(false);
+    expect(
+      experimentalModulesSchema.parse({
+        enabledExperimentalModules: ["timeline", "promptPlayground", "competitors"],
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+      }).enabledExperimentalModules,
+    ).toEqual(["competitors"]);
+    expect(
+      experimentalModulesSchema.parse({
+        enabledExperimentalModules: ["timeline"],
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+      }).enabledExperimentalModules,
+    ).toEqual([]);
   });
 
   it("resolves missing defaults to no enabled modules", () => {
@@ -23,10 +35,14 @@ describe("experimental modules", () => {
   });
 
   it("ignores unknown stored values and uses normalized membership", () => {
-    const enabled = normalizeExperimentalModules(["unknown", "competitors", "timeline"]);
+    const enabled = normalizeExperimentalModules([
+      "unknown",
+      "competitors",
+      "timeline",
+      "promptPlayground",
+    ]);
 
-    expect(enabled).toEqual(["timeline", "competitors"]);
-    expect(hasExperimentalModule(enabled, "timeline")).toBe(true);
+    expect(enabled).toEqual(["competitors"]);
     expect(hasExperimentalModule(enabled, "competitors")).toBe(true);
   });
 });

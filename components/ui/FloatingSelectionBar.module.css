@@ -10,6 +10,15 @@
   .actions::-webkit-scrollbar {
     display: none;
   }
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules uses :global so the tab strip rule is not hashed. */
+  :global([data-tab-strip]) {
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules uses :global so the tab strip rule is not hashed. */
+  :global([data-tab-strip])::-webkit-scrollbar {
+    display: none;
+  }
   @keyframes floating-selection-bar-enter {
     from {
       opacity: 0;

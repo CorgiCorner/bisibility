@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Menu } from "@/components/ui/Menu";
 import { MenuItem } from "@/components/ui/MenuItem";
 import { Tooltip } from "@/components/ui/Tooltip";
-import type { BadgeKind } from "@/lib/achievements/progress";
+import type { ShareableBadgeKind } from "@/lib/achievements/schema";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
 import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
@@ -14,9 +14,11 @@ import styles from "./achievements.module.css";
 export function AchievementActionsMenu({
   kind,
   onReplay,
+  size = "xs",
 }: {
-  kind: BadgeKind;
+  kind: ShareableBadgeKind;
   onReplay: () => void;
+  size?: "sm" | "xs";
 }) {
   const t = useTranslations("account.achievements");
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -24,7 +26,7 @@ export function AchievementActionsMenu({
     <>
       <Tooltip content={t("badgeOptions")}>
         <Button
-          size="xs"
+          size={size}
           variant="ghost"
           className="min-w-0 w-8 shrink-0 p-0"
           aria-label={t("badgeOptions")}

@@ -13,7 +13,7 @@ const frames = [
 
 export function DevelopersCardsLoading() {
   return (
-    <div className="max-w-[640px] space-y-3.5">
+    <div className="w-full space-y-3.5 lg:max-w-[640px]">
       {frames.map((frame) => (
         <section
           className={cn(

@@ -94,8 +94,12 @@
           "keywords": "dominio primer resultado profundidad coste"
         },
         "tagsAndSegments": {
-          "label": "Etiquetas y segmentos",
-          "keywords": "organizar palabras clave etiquetas"
+          "label": "Etiquetas",
+          "keywords": "organizar páginas palabras clave etiquetas reglas fusionar segmentos"
+        },
+        "conversions": {
+          "label": "Conversiones",
+          "keywords": "conversion objetivo fuente principal eventos clave ingresos"
         },
         "urlInspectionLimit": {
           "label": "Límite de inspección de URL",
@@ -121,9 +125,11 @@
       "usage": "Uso",
       "competitors": "Competidores",
       "dataSources": "Fuentes de datos",
+      "conversions": "Conversiones",
       "developers": "Desarrolladores",
       "experimental": "Experimental",
       "general": "General",
+      "tags": "Etiquetas",
       "notifications": "Notificaciones",
       "team": "Equipo",
       "tracking": "Seguimiento",

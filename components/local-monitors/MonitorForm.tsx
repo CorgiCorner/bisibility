@@ -133,7 +133,7 @@ export function MonitorForm({
   };
   return (
     <Card component="section" className="space-y-4">
-      <h2 className="font-semibold">{t(current ? "edit" : "create")}</h2>
+      <h2 className="text-ui-section">{t(current ? "edit" : "create")}</h2>
       <p className="text-sm text-fg-muted">{t("setupOnly")}</p>
       <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-5">
         <MonitorField label={t("subject")}>
@@ -157,6 +157,8 @@ export function MonitorForm({
         ) : null}
         {choices.nextSubject ? (
           <Button
+            className="self-start"
+            size="input"
             type="button"
             variant="ghost"
             disabled={blocked}
@@ -167,6 +169,8 @@ export function MonitorForm({
         ) : null}
         {subject && subject.identityRevisionId !== form.watch("identityRevisionId") ? (
           <Button
+            className="self-start"
+            size="input"
             type="button"
             variant="outline"
             disabled={blocked}
@@ -193,7 +197,7 @@ export function MonitorForm({
             form.setValue("keywordIds", values, { shouldDirty: true });
           }}
         />
-        <p className="m-0 text-ui-xs text-fg-muted">
+        <p className="m-0 text-ui-caption text-fg-muted">
           {t("targetCount", { count: format.number(ids.length * size * size) })}
         </p>
         {Object.keys(form.formState.errors).length ? (
@@ -208,10 +212,10 @@ export function MonitorForm({
           </p>
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={blocked}>
+          <Button size="input" type="submit" disabled={blocked}>
             {t(pending ? "saving" : "save")}
           </Button>
-          <Button type="button" variant="ghost" disabled={pending} onClick={onCancel}>
+          <Button size="input" type="button" variant="ghost" disabled={pending} onClick={onCancel}>
             {t("cancel")}
           </Button>
         </div>

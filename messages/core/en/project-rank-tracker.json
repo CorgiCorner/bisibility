@@ -308,6 +308,8 @@
       "view": "View",
       "general": "General organic results",
       "local": "Local Google results",
+      "ai_overviews": "AI Overviews",
+      "new": "New",
       "subject": "Business subject",
       "chooseSubject": "Choose an assigned business",
       "setupBusiness": "Manage businesses and assignments",
@@ -317,8 +319,9 @@
       "applyTime": "Apply time",
       "latest": "Latest",
       "invalidTime": "Choose a valid UTC time at or before now.",
-      "unsupportedFilters": "Organic movement, URL and SERP feature filters are unavailable in Local. Clear them to show Local targets.",
+      "unsupportedFilters": "Organic movement, URL, SERP feature and AI Overview filters are unavailable in Local. Clear them to show Local targets.",
       "localScope": "Local results show the selected business. Comparison and Local export are not available yet.",
+      "aiOverviewScope": "This view reads the latest stored check. It does not compare positions.",
       "membership": "The table uses your current keyword list. Changing the date shows older results, without restoring an older list.",
       "snapshot": "Snapshot: {date} UTC",
       "state": {
@@ -332,6 +335,20 @@
       "minute": "Minute",
       "comparisonLabel": "Compare",
       "comparisonHelp": "Compares results for the selected date and at least {days} days earlier. This is not an average. If an appropriate earlier result is missing, no comparison is shown."
+    },
+    "aiOverviewList": {
+      "overview": "AI Overview",
+      "yourDomain": "Your domain",
+      "citedPage": "Cited page",
+      "shown": "Shown",
+      "notShown": "Not shown",
+      "notChecked": "Not checked",
+      "citedAt": "Cited · #{position}",
+      "notCited": "Not cited",
+      "notAvailable": "n/a",
+      "none": "none",
+      "viewOverview": "View overview",
+      "incompleteHint": "This stored overview has no source list, so a citation cannot be confirmed. Not cited only means the domain was absent from the sources that were returned."
     },
     "localList": {
       "expandTargets": "Expand {count} targets",

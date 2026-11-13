@@ -1,0 +1,17 @@
+// Global search-engine status incidents. One row per engine and external id,
+// shared by every project. Annotations reads them; nothing is fetched per request.
+model SearchEngineUpdate {
+  id         String    @id @default(cuid())
+  externalId String    @unique
+  engine     String
+  name       String
+  service    String
+  beginsAt   DateTime
+  endsAt     DateTime?
+  uri        String
+  modifiedAt DateTime
+  fetchedAt  DateTime
+
+  @@index([engine, beginsAt])
+  @@map("search_engine_updates")
+}

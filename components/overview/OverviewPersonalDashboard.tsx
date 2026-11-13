@@ -10,11 +10,13 @@ import type { DashboardAccess, DashboardLayout, ProjectionId } from "@/lib/dashb
 import type { LocalDashboardContext, LocalReport } from "@/lib/dashboard-local/model";
 import type { DashboardSurfacePreference } from "@/lib/project-surface-preferences/dashboard-model";
 import type { CheckHealth } from "@/lib/queries/check-health";
+import { overviewComparisonDays } from "@/lib/queries/overview-filters";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { ByMarketRollup } from "./ByMarketRollup";
 import { DataSourcePanel } from "./DataSourcePanel";
 import { HighlightLists } from "./HighlightLists";
+import { OrganicConversionsCard } from "./OrganicConversionsCard";
 import { OverviewCompetitorsCard } from "./OverviewCompetitorsCard";
 import { OverviewContributorsCard } from "./OverviewContributorsCard";
 import { OverviewCoverageSummary } from "./OverviewCoverageSummary";
@@ -25,6 +27,7 @@ import { OverviewSetupNotice } from "./OverviewSetupNotice";
 import { OverviewToolbar } from "./OverviewToolbar";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
+import { SeoCostCard } from "./SeoCostCard";
 import type { OverviewView } from "./types";
 
 export async function OverviewPersonalDashboard({
@@ -109,11 +112,23 @@ export async function OverviewPersonalDashboard({
         qualityReport={overview.qualityReport}
       />,
     ),
+    organic_conversions: loaded(
+      "organic_conversions",
+      <OrganicConversionsCard
+        comparisonDays={overviewComparisonDays(overview.toolbar.rangeValue)}
+        markers={overview.chartMarkers}
+        model={overview.organicConversions}
+        projectRef={projectRef}
+      />,
+    ),
+    seo_cost: loaded("seo_cost", <SeoCostCard model={overview.seoCost} projectRef={projectRef} />),
     position_trend: loaded(
       "position_history",
       <PositionTrendCard
         data={overview.trend}
         empty={overview.trend.length === 0}
+        markers={overview.chartMarkers}
+        projectRef={projectRef}
         seriesLabel={overview.domain}
         takeaway={overview.trendTakeaway}
       />,

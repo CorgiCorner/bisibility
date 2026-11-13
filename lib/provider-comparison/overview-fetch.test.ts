@@ -152,7 +152,13 @@ describe("saved overview reuse", () => {
     await expect(readSavedOverviewFetch(input)).resolves.toEqual({ id: "match" });
     expect(m.access).toHaveBeenCalledWith(tx, "project", "actor", false);
     expect(tx.providerComparisonRun.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { projectId: "project", keywordId: null } }),
+      expect.objectContaining({
+        where: expect.objectContaining({
+          projectId: "project",
+          keywordId: null,
+          sides: { some: { provider: "serpapi", status: "completed" } },
+        }),
+      }),
     );
     expect(m.preview).not.toHaveBeenCalled();
   });

@@ -1,5 +1,6 @@
 import {
   settingsContentColumnClassName,
+  settingsShellFrameClassName,
   settingsShellGridClassName,
 } from "@/components/settings/shell/settings-layout";
 import {
@@ -105,7 +106,7 @@ export function SettingsRouteLoading({
     <div
       aria-hidden
       aria-busy="true"
-      className="mx-auto w-full max-w-[1040px]"
+      className={settingsShellFrameClassName}
       data-settings-loading-boundary={activeSection}
       data-settings-route-loading=""
     >

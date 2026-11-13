@@ -109,6 +109,8 @@ export function PromptResearchReview({
           </p>
         ) : null}
         <Button
+          className="justify-self-start"
+          size="input"
           type="submit"
           loading={form.formState.isSubmitting}
           disabled={form.formState.isSubmitting}

@@ -31,11 +31,30 @@
       "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): n.º {position, number, ::.#}",
       "tooltipMore": "+{count, number} más"
     },
+    "organicConversions": {
+      "conversions": "Conversiones",
+      "deltaNew": "nuevo",
+      "deltaUnchanged": "sin cambios",
+      "deltaVersus": "{value} respecto a los {days, number} {days, plural, one {día} other {días}} anteriores",
+      "openSearchConsole": "Abrir Search Console",
+      "topPages": "Páginas principales",
+      "title": "Conversiones orgánicas",
+      "unavailable": "No se han podido leer las conversiones."
+    },
+    "seoCost": {
+      "empty": "No hay coste registrado este mes.",
+      "openUsage": "Abrir Uso",
+      "split": "operaciones {operations} · suscripciones {subscriptions} · puntual {oneOff}",
+      "title": "Coste SEO",
+      "total": "Total {value}",
+      "unavailable": "No se ha podido leer el coste."
+    },
     "distribution": {
       "bucketAriaLabel": "Posiciones de la {start, number} a la {end, number}: {count, number} {count, plural, one {palabra clave} other {palabras clave}}",
       "chartAriaLabel": "Gráfico de distribución de posiciones. {summary}",
       "definition": "Palabras clave posicionadas, agrupadas por su posición actual. No se muestran las que quedan fuera del top 100.",
       "keywordCount": "{count, number} {count, plural, one {palabra clave} other {palabras clave}}",
+      "keywordShare": "{count, number} {count, plural, one {palabra clave} other {palabras clave}} · {percent, number}%",
       "ofTotal": "{percent, number} % del total",
       "positionRange": "Posiciones de la {start, number} a la {end, number}",
       "summaryItem": "{range}: {count, number} {count, plural, one {palabra clave} other {palabras clave}}",

@@ -1,8 +1,14 @@
 "use client";
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
-import { formatDisplayDate, formatDisplayMonthYear } from "@/lib/dates/format";
-import type { CSSProperties, ReactNode } from "react";
+import type { ChartMarker } from "@/lib/annotations/marker-style";
+import { resolveTimeSeriesAxis } from "@/lib/charts/time-series-axis";
+import {
+  formatDisplayDate,
+  formatDisplayDateRange,
+  formatDisplayMonthYear,
+} from "@/lib/dates/format";
+import { type ReactNode, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -10,10 +16,14 @@ import {
   Line,
   ResponsiveContainer,
   Text,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { ChartMarkerGuides } from "./ChartMarkerGuides";
+import { ChartMarkerBands, ChartMarkerPins } from "./ChartMarkerPins";
+import { chartHasVisibleMarkers, layoutChartMarkers } from "./chart-marker-layout";
+import { markersForPreference, useChartMarkerPreference } from "./chart-marker-preference";
+import { TimeSeriesTooltips } from "./TimeSeriesTooltips";
 
 export type TimeSeries = {
   label: string;
@@ -32,7 +42,13 @@ export type TimeSeriesChartProps = {
   /** Align endpoint dates to the plot edges and leave room below the baseline. */
   dateAxisLayout?: "compact" | "aligned";
   labels: readonly string[];
+  /** Annotation pins and rollout bands. Omitted charts render exactly as before. */
+  markers?: readonly ChartMarker[];
+  /** Project whose saved marker visibility this chart follows. */
+  markerProjectRef?: string;
   series: readonly TimeSeries[];
+  /** Stretch the plot to its parent's height. `height` stays the initial size. */
+  fill?: boolean;
   height: number;
   min?: number;
   max?: number;
@@ -60,13 +76,6 @@ const axisStyle = {
   style: { fontVariantNumeric: "tabular-nums" },
 };
 const defaultMargin = { top: 12, right: 16, bottom: 0, left: 0 };
-const tooltipContentStyle = {
-  background: "var(--bg-elev)",
-  border: "1px solid var(--border)",
-  borderRadius: 6,
-  color: "var(--fg)",
-  fontSize: 12,
-};
 
 function seriesDot(item: TimeSeries) {
   if (!item.dots) return false;
@@ -81,41 +90,15 @@ function seriesDot(item: TimeSeries) {
   };
 }
 
-function SeriesTooltipContent({
-  accessibilityLayer,
-  active,
-  activeIndex,
-  contentStyle,
-  renderTooltip,
-}: {
-  accessibilityLayer?: boolean;
-  active?: boolean;
-  activeIndex?: string | null;
-  contentStyle?: CSSProperties;
-  renderTooltip: (index: number) => ReactNode;
-}) {
-  if (!active || activeIndex == null) return null;
-  const index = Number(activeIndex);
-  if (!Number.isInteger(index) || index < 0) return null;
-  const body = renderTooltip(index);
-  if (body == null || body === false) return null;
-  return (
-    <div
-      aria-live={accessibilityLayer ? "assertive" : undefined}
-      role={accessibilityLayer ? "status" : undefined}
-      style={{ margin: 0, padding: 10, ...contentStyle }}
-    >
-      {body}
-    </div>
-  );
-}
-
 export function TimeSeriesChart({
   dateKeys,
   dateLabelStyle = "date",
   dateAxisLayout = "compact",
   labels,
+  markerProjectRef,
+  markers,
   series,
+  fill = false,
   height,
   min = 0,
   max,
@@ -137,6 +120,25 @@ export function TimeSeriesChart({
 }: TimeSeriesChartProps) {
   const dateDisplay = useDateDisplay();
   const alignedDates = dateAxisLayout === "aligned";
+  const { preference } = useChartMarkerPreference(markerProjectRef);
+  const [activePin, setActivePin] = useState<number | null>(null);
+  const visibleMarkers =
+    markers && markerProjectRef ? markersForPreference(markers, preference) : (markers ?? []);
+  const markerLayout =
+    visibleMarkers.length > 0 ? layoutChartMarkers(dateKeys ?? [], visibleMarkers) : null;
+  const hasMarkers = chartHasVisibleMarkers(markerLayout);
+  const axis = resolveTimeSeriesAxis({
+    ...(formatValue ? { formatValue } : {}),
+    labelCount: labels.length,
+    locale: dateDisplay.locale,
+    ...(max !== undefined ? { max } : {}),
+    min,
+    series,
+    ...(xTickIndexes ? { xTickIndexes } : {}),
+    ...(yTicks ? { yTicks } : {}),
+    yWidth,
+  });
+  const plotMargin = hasMarkers ? { ...margin, top: Math.max(margin.top, 36) } : margin;
   const showTooltip = renderTooltip != null || tooltip;
   const activeDot = showTooltip ? { r: 4, clipDot: false } : false;
   const labelAt = (index: number) => {
@@ -146,6 +148,11 @@ export function TimeSeriesChart({
       ? formatDisplayMonthYear(key, dateDisplay)
       : formatDisplayDate(key, dateDisplay);
   };
+  const axisLabelAt = (index: number) => {
+    const key = dateKeys?.[index];
+    if (!key || dateLabelStyle === "month_year") return labelAt(index);
+    return formatDisplayDateRange(key, key, dateDisplay);
+  };
   const data = labels.map((label, index) => ({
     index,
     label,
@@ -154,11 +161,11 @@ export function TimeSeriesChart({
   return (
     <ResponsiveContainer
       width="100%"
-      height={height}
+      height={fill ? "100%" : height}
       minWidth={0}
       initialDimension={{ width: 600, height }}
     >
-      <ComposedChart data={data} margin={margin} accessibilityLayer>
+      <ComposedChart data={data} margin={plotMargin} accessibilityLayer>
         {showGrid ? (
           <CartesianGrid
             vertical={showVerticalGrid}
@@ -189,14 +196,14 @@ export function TimeSeriesChart({
                       verticalAnchor="start"
                       textAnchor={first ? "start" : last ? "end" : "middle"}
                     >
-                      {labelAt(Number(payload.value))}
+                      {axisLabelAt(Number(payload.value))}
                     </Text>
                   );
                 }
               : axisStyle
           }
-          tickFormatter={(index) => labelAt(Number(index))}
-          ticks={xTickIndexes}
+          tickFormatter={(index) => axisLabelAt(Number(index))}
+          ticks={axis.categoryTicks.length > 0 ? axis.categoryTicks : undefined}
           minTickGap={16}
         />
         <YAxis
@@ -205,47 +212,27 @@ export function TimeSeriesChart({
           allowDataOverflow={max !== undefined}
           reversed={reversed}
           hide={!showYAxis}
-          width={showYAxis ? yWidth : 0}
+          width={showYAxis ? axis.yAxisWidth : 0}
           axisLine={false}
           tickLine={false}
           ticks={yTicks}
           tickCount={5}
           tick={axisStyle}
-          tickFormatter={formatValue}
+          tickFormatter={axis.formatTick}
           allowDecimals={false}
         />
-        {showTooltip && renderTooltip ? (
-          <Tooltip
-            isAnimationActive={false}
-            cursor={{ stroke: "var(--border-control)", strokeDasharray: "3 3" }}
-            contentStyle={tooltipContentStyle}
-            content={(props) => (
-              <SeriesTooltipContent
-                accessibilityLayer={props.accessibilityLayer}
-                active={props.active}
-                activeIndex={props.activeIndex}
-                contentStyle={props.contentStyle}
-                renderTooltip={renderTooltip}
-              />
-            )}
-          />
-        ) : null}
-        {showTooltip && !renderTooltip ? (
-          <Tooltip
-            isAnimationActive={false}
-            cursor={{ stroke: "var(--border-control)", strokeDasharray: "3 3" }}
-            contentStyle={tooltipContentStyle}
-            labelFormatter={(index) => labelAt(Number(index))}
-            formatter={(value, name, item) => {
-              const selected = series[Number(String(item.dataKey).replace("value", ""))];
-              return [
-                typeof value === "number"
-                  ? ((selected?.formatValue ?? formatValue)?.(value) ?? String(value))
-                  : "No data",
-                name,
-              ];
-            }}
-          />
+        <TimeSeriesTooltips
+          formatValue={formatValue}
+          hasMarkers={hasMarkers}
+          labelAt={labelAt}
+          markerLayout={markerLayout}
+          renderTooltip={renderTooltip}
+          series={series}
+          showTooltip={showTooltip}
+        />
+        {hasMarkers && markerLayout ? <ChartMarkerBands bands={markerLayout.bands} /> : null}
+        {hasMarkers && markerLayout ? (
+          <ChartMarkerGuides activeIndex={activePin} pins={markerLayout.pins} />
         ) : null}
         {series.map((item, index) =>
           item.fill ? (
@@ -283,6 +270,15 @@ export function TimeSeriesChart({
             />
           ),
         )}
+        {hasMarkers && markerLayout ? (
+          <ChartMarkerPins
+            activeIndex={activePin}
+            labelAt={labelAt}
+            onActiveChange={setActivePin}
+            pins={markerLayout.pins}
+            projectRef={markerProjectRef}
+          />
+        ) : null}
         {children}
       </ComposedChart>
     </ResponsiveContainer>

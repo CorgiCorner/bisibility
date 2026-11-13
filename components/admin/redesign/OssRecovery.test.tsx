@@ -21,7 +21,7 @@ it("requires an eligible selection before preview and passes the selected case",
   expect(screen.getByRole("button", { name: "Review selected (0)" })).toBeDisabled();
   fireEvent.click(screen.getByRole("checkbox", { name: "Select prj_example_pending, dataforseo" }));
   fireEvent.click(screen.getByRole("button", { name: "Review selected (1)" }));
-  expect(onPreview).toHaveBeenCalledWith(["case-result"]);
+  expect(onPreview).toHaveBeenCalledWith(["ref-result"]);
   expect(screen.getByRole("button", { name: "Confirm recovery" })).toBeDisabled();
 }, 30000);
 

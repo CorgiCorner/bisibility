@@ -60,7 +60,7 @@ export function TrackingTopicDrawer({
           {t("description")}
           <Textarea id="tracking-description" {...register("description")} rows={4} />
         </label>
-        <Button type="submit" loading={pending || isSubmitting}>
+        <Button className="self-start" size="input" type="submit" loading={pending || isSubmitting}>
           {t("addTopic")}
         </Button>
       </form>

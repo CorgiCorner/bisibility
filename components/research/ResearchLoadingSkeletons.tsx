@@ -30,10 +30,10 @@ function SearchCardLoading() {
   return (
     <div className="min-w-0 rounded-card border border-border bg-bg-elev p-4 sm:p-5">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
-        <Bar className="min-h-[34px] flex-1 rounded-control md:min-w-[240px]" />
-        <Bar className="h-[34px] md:w-[230px]" />
-        <Bar className="h-[34px] md:w-[132px]" />
-        <Bar className="h-[34px] md:w-[132px]" />
+        <Bar className="min-h-10 max-sm:min-h-11 flex-1 rounded-control md:min-w-[240px]" />
+        <Bar className="h-10 max-sm:h-11 md:w-[230px]" />
+        <Bar className="h-10 max-sm:h-11 md:w-[132px]" />
+        <Bar className="h-10 max-sm:h-11 md:w-[132px]" />
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
@@ -43,7 +43,7 @@ function SearchCardLoading() {
         </div>
         <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
           <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
-          <Bar className="h-9 w-[216px]" />
+          <Bar className="h-10 max-sm:h-11 w-[216px]" />
         </div>
       </div>
     </div>

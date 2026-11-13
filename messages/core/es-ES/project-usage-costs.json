@@ -1,0 +1,100 @@
+{
+  "projectUsageCosts": {
+    "lead": "Plan, presupuestos de proveedores y lo que el SEO te cuesta en total.",
+    "lifetimeHint": "Un importe de por vida se reparte a partes iguales entre los 36 meses naturales que empiezan en el mes de inicio. Un mes inicial o final incompleto se prorratea por días y después el importe es cero.",
+    "dash": "-",
+    "tiles": {
+      "seo": "Coste SEO este mes",
+      "seoHint": "Parte de este proyecto",
+      "provider": "Operaciones de proveedores",
+      "providerHint": "Comprobaciones de posición, investigación y ejecuciones de IA",
+      "subscriptions": "Suscripciones",
+      "subscriptionsHint": "Herramientas recurrentes",
+      "custom": "Gastos propios",
+      "customHint": "Gastos puntuales",
+      "empty": "Nada registrado este mes."
+    },
+    "card": {
+      "title": "Suscripciones",
+      "description": "Importes que pagas, no precios del proveedor.",
+      "add": "Añadir un coste",
+      "emptyTitle": "Registra lo que te cuesta el SEO",
+      "emptyDescription": "Añade las herramientas que pagas, para que los informes muestren el coste junto a los resultados. El uso de los proveedores conectados se registra automáticamente.",
+      "menu": "Acciones para {name}",
+      "edit": "Editar",
+      "end": "Terminar",
+      "delete": "Eliminar",
+      "deleteTitle": "¿Eliminar este coste?",
+      "deleteBody": "Esto quita {name} de tus costes de SEO.",
+      "cancel": "Cancelar",
+      "columns": {
+        "item": "Elemento",
+        "type": "Tipo",
+        "plan": "Plan",
+        "perMonth": "Coste mensual",
+        "actions": "Acciones",
+        "project": "Parte de este proyecto"
+      },
+      "deleteShared": "Este elemento también se usa en {count, plural, one {# proyecto más} other {# proyectos más}}. Al eliminarlo, se quita de todos los proyectos."
+    },
+    "kinds": {
+      "seo_tool": "Herramienta SEO",
+      "ai": "IA",
+      "analytics": "Analítica",
+      "custom": "Personalizado"
+    },
+    "billing": {
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "lifetime": "De por vida",
+      "one_off": "Pago único"
+    },
+    "notes": {
+      "trialUntil": "prueba hasta el {date}",
+      "discountUntil": "-{percent, number}% hasta el {date}"
+    },
+    "drawer": {
+      "addTitle": "Añadir coste",
+      "editTitle": "Editar coste",
+      "tool": "Herramienta",
+      "name": "Nombre",
+      "suggest": "¿No está en la lista? Sugiérelo",
+      "plan": "Plan",
+      "planHint": "Escribe un plan o elige uno habitual.",
+      "billing": "Facturación",
+      "amount": "Importe que pagas",
+      "currency": "Moneda",
+      "priceChanges": "Cambios de precio",
+      "trialUntil": "Prueba gratuita hasta",
+      "discount": "Descuento",
+      "percent": "Porcentaje",
+      "money": "Importe",
+      "forMonths": "Durante meses",
+      "untilDate": "Hasta una fecha",
+      "months": "Meses",
+      "none": "Ninguno",
+      "partial": "Solo una parte de este coste pertenece a este proyecto",
+      "partialHint": "Úsalo cuando la misma herramienta también sirve a otros sitios. Solo esta parte se cuenta en el coste de este proyecto.",
+      "lands": "{amount} al mes entra en este proyecto",
+      "landsOnce": "{amount} entra en este proyecto",
+      "started": "Inicio",
+      "footnote": "El importe que pagas, no el precio del proveedor",
+      "cancel": "Cancelar",
+      "submit": "Añadir coste",
+      "save": "Guardar",
+      "then": "luego",
+      "until": "hasta",
+      "aMonth": "al mes",
+      "saveError": "No se pudo guardar este coste.",
+      "errors": {
+        "amount": "Escribe un importe.",
+        "name": "Escribe un nombre.",
+        "projects": "Incluye este proyecto.",
+        "percent": "Introduce un porcentaje de 0 a 100, con hasta dos decimales.",
+        "trial": "La prueba debe terminar en la fecha de inicio o después.",
+        "discount": "Escribe un descuento y cuándo termina.",
+        "date": "Usa una fecha real."
+      }
+    }
+  }
+}

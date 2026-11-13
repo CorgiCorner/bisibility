@@ -55,6 +55,7 @@ export const rankTrackerExportQuerySchema: z.ZodType<RankTrackerQueryState> = z
         volMax: z.number().finite().min(0).max(50),
         volMin: z.number().finite().min(0).max(50),
         wrongUrl: z.boolean(),
+        aiOverviewShown: z.boolean().default(false),
       })
       .strict()
       .refine(({ volMax, volMin }) => volMax >= volMin, "Invalid volume range."),

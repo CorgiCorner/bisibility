@@ -202,7 +202,7 @@ export async function sendIngestHookTest(input: unknown) {
   const signalId = result.signal.publicId;
 
   return {
-    signalHref: `${appPath(project.publicId, "timeline")}?filter=deploys&q=${encodeURIComponent(signalId)}#signal-${signalId}`,
+    signalHref: `${appPath(project.publicId, "annotations")}?filter=deploys&q=${encodeURIComponent(signalId)}#signal-${signalId}`,
     signalId,
   };
 }

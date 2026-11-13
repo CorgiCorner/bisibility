@@ -49,12 +49,14 @@ export function AiEngineFields({
   engineOptions,
   disabled,
   advanced = false,
+  label,
   onSelectionChange,
 }: Readonly<{
   form: AiResearchForm;
   engineOptions: readonly AiEngineOption[];
   disabled: boolean;
   advanced?: boolean;
+  label?: string;
   onSelectionChange?: () => void;
 }>) {
   const t = useTranslations("projectAiResearch");
@@ -107,7 +109,14 @@ export function AiEngineFields({
   }
   if (advanced)
     return engineMode ? (
-      <Button type="button" variant="secondary" disabled={disabled} onClick={activateModels}>
+      <Button
+        className="justify-self-start"
+        size="input"
+        type="button"
+        variant="secondary"
+        disabled={disabled}
+        onClick={activateModels}
+      >
         {t("chooseModels")}
       </Button>
     ) : null;
@@ -116,7 +125,7 @@ export function AiEngineFields({
       {engineMode ? (
         <>
           <ChoiceGroup
-            label={t("aiEngines")}
+            label={label ?? t("aiEngines")}
             disabled={disabled}
             mode="multiple"
             max={AI_ENGINES.length}
@@ -137,10 +146,12 @@ export function AiEngineFields({
               };
             })}
           />
-          <span className="text-ui-xs text-fg-muted">{t("engineModeHint")}</span>
+          <span className="text-ui-caption text-fg-muted">{t("engineModeHint")}</span>
         </>
       ) : (
         <Button
+          className="justify-self-start"
+          size="input"
           type="button"
           variant="secondary"
           disabled={disabled}

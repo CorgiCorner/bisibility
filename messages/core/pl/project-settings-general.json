@@ -34,20 +34,6 @@
       "domainTooLong": "Domena może mieć maksymalnie 253 znaki.",
       "invalidDomain": "Podaj domenę w formacie example.com."
     },
-    "tags": {
-      "cancel": "Anuluj",
-      "description": "Grupuj słowa kluczowe tagami i filtruj zapisane widoki.",
-      "duplicate": "Tag {name} już istnieje.",
-      "remove": "Usuń tag",
-      "removeError": "Nie udało się usunąć tagu.",
-      "removeTitle": "Usunąć tag {name}?",
-      "title": "Tagi",
-      "usageBothManyKeywords": "Używany przez słowa kluczowe ({keywordCount, number}) i {segmentCount, plural, one {# segment} few {# segmenty} many {# segmentów} other {# segmentu}}.",
-      "usageBothOneKeyword": "{segmentCount, plural, one {Używany przez 1 słowo kluczowe i # segment.} few {Używany przez 1 słowo kluczowe i # segmenty.} many {Używany przez 1 słowo kluczowe i # segmentów.} other {Używany przez 1 słowo kluczowe i # segmentu.}}",
-      "usageKeywordOnly": "{count, plural, one {Używany przez # słowo kluczowe.} few {Używany przez # słowa kluczowe.} many {Używany przez # słów kluczowych.} other {Używany przez # słowa kluczowego.}}",
-      "usageSegmentOnly": "{count, plural, one {Używany przez # segment.} few {Używany przez # segmenty.} many {Używany przez # segmentów.} other {Używany przez # segmentu.}}",
-      "writeError": "Nie udało się dodać tagu."
-    },
     "dataCache": {
       "title": "Cache danych",
       "help": "Wspólny dla modułów tego projektu. Skrócenie czasu obejmuje też zapisane wyniki; wydłużenie dotyczy nowo pobranych. Raporty, historia pomiarów i potwierdzenia rozliczeń zostają.",
@@ -86,7 +72,7 @@
         "keywords": "Frazy",
         "pages": "Strony",
         "ai_visibility": "Widoczność marki",
-        "prompt_explorer": "Pracownia promptów",
+        "prompt_explorer": "Porównanie modeli",
         "prompt_research": "Badanie pytań",
         "site_audit": "Audyt strony"
       },
@@ -98,7 +84,7 @@
         "backlinks": "Backlinki",
         "domain_overview": "Przegląd domeny",
         "ai_visibility": "Widoczność marki",
-        "prompt_explorer": "Pracownia promptów",
+        "prompt_explorer": "Porównanie modeli",
         "prompt_research": "Badanie pytań",
         "site_audit": "Audyt strony"
       }

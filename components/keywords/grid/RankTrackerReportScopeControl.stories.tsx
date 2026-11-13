@@ -43,3 +43,13 @@ export const HistoricalSnapshot: Story = {
     },
   },
 };
+export const AiOverviews: Story = {
+  args: {
+    ...Latest.args,
+    query: {
+      ...defaultRankTrackerQueryState,
+      filters: { ...defaultRankTrackerQueryState.filters, aiOverviewShown: true, wrongUrl: true },
+      reportScope: { view: "ai_overviews", subject: null, comparisonDays: 7, asOf: null },
+    },
+  },
+};

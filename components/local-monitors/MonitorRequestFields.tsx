@@ -53,7 +53,7 @@ export function MonitorRequestFields({
       <div>
         <label
           htmlFor={`${id}-zoom`}
-          className="mb-1.5 flex min-h-6 items-center text-ui-xs text-fg-muted"
+          className="mb-1.5 flex min-h-6 items-center text-ui-caption text-fg-muted"
         >
           {t("fields.zoom")}
         </label>

@@ -27,6 +27,7 @@ export const ossAdminRoutes = (
     ["Email", "Sending today", "email/sending-today", "email", "sendingToday"],
     ["Email", "Settings", "email/settings", "email", "settings"],
     ["Audit", "Audit", "audit", "audit", "audit"],
+    ["Settings", "Features", "settings/features", "settings", "features"],
   ] as const
 ).map<AdminRoute>(([tab, view, path, tabKey, viewKey]) => ({
   tab,

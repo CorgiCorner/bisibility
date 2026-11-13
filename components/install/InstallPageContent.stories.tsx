@@ -44,6 +44,17 @@ export const WithApiKey: Story = {
   },
 };
 
+export const Dark: Story = {
+  args: WithApiKey.args,
+  decorators: [
+    (Story) => (
+      <div className="rounded-card bg-bg-elev p-6 text-fg" data-theme="dark">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 export const WithoutApiKey: Story = {
   args: { ...commonArgs, apiKey: null },
 };

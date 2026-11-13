@@ -152,16 +152,6 @@ const separators: Separator[] = [
   },
   { path: "components/shell/Sidebar.tsx", token: "border-r", reason: "Sidebar/workspace divider." },
   {
-    path: "components/ui/AppDrawer.tsx",
-    token: "borderLeft: panelBorder,",
-    reason: "Drawer/workspace boundary.",
-  },
-  {
-    path: "components/ui/Sheet.tsx",
-    token: 'borderLeft: isDesktop ? "1px solid var(--border)" : "none",',
-    reason: "Desktop sheet/workspace boundary.",
-  },
-  {
     path: "components/usagekit/usage-overview-card.tsx",
     token: "border-l",
     count: 2,

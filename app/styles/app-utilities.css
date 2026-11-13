@@ -1,4 +1,6 @@
-/* Keep the pre-paint session hint more specific than component display classes. */
+[data-theme="dark"] .bg-code-bg:not([class*="border"]) {
+  box-shadow: inset 0 0 0 1px var(--code-border);
+}
 html[data-authed="true"] .bv-anon-only {
   display: none;
 }
@@ -48,8 +50,7 @@ html {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
-/* Use the opt-in attribute so Next.js can suppress smooth scrolling during
-   route changes. */
+/* Use the opt-in attribute so Next.js can suppress smooth scrolling during route changes. */
 html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
 }
@@ -293,7 +294,6 @@ body {
     transition: opacity 160ms ease;
   }
 }
-
 a:has(.bv-arrow-link-label):is(:hover, :focus-visible) {
   text-decoration-line: underline;
   text-underline-offset: 0.25em;

@@ -80,7 +80,7 @@ export function AppFooter({
       : null;
 
   return (
-    <footer className="flex min-h-12 items-center justify-between gap-3 border-border border-t px-4 text-xs text-fg-muted sm:px-5 lg:px-7">
+    <footer className="flex min-h-12 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-border border-t px-4 py-1 text-xs text-fg-muted sm:px-5 lg:px-7">
       {status ? (
         <div className="flex min-w-0 items-center gap-2">
           <span

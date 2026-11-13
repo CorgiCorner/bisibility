@@ -12,7 +12,7 @@ import { appPath } from "@/lib/routing/app-path";
 import { useProviderAction } from "@usagekit/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { ProjectLimitsCard } from "./ProjectLimitsCard";
 import { type LimitSurface, ProviderLimitGroup } from "./ProviderLimitRows";
 
@@ -29,7 +29,17 @@ export function visibleBudgetRows(data: ProjectUsageViews) {
 }
 
 /** Self-host Usage: the project limit, then one row per provider traffic limit. */
-export function ProviderUsageCard({
+export function ProviderUsageCard(props: ComponentProps<typeof ProviderUsagePanel>) {
+  // The budget deep link resets the editor when navigation changes its URL-controlled flag.
+  return (
+    <ProviderUsagePanel
+      key={`${props.projectRef}:${props.initialBudgetEditOpen ?? false}`}
+      {...props}
+    />
+  );
+}
+
+function ProviderUsagePanel({
   canEditBudget,
   initialBudgetEditOpen = false,
   projectId,
@@ -175,6 +185,7 @@ export function ProviderUsageCard({
               <div className="min-w-0 space-y-5">
                 {entries.length > 5 && (
                   <Input
+                    density="compact"
                     type="search"
                     aria-label={limits("searchProviders")}
                     placeholder={limits("searchProviders")}
@@ -215,7 +226,7 @@ export function ProviderUsageCard({
                         </p>
                         {canEdit && (
                           <Button
-                            size="xs"
+                            size="sm"
                             variant="secondary"
                             onClick={() =>
                               setEditing({ connections: [entry.connection], surface: "app" })
@@ -245,7 +256,7 @@ export function ProviderUsageCard({
                     {filtered.length > 5 && (
                       <div className="flex gap-2">
                         <Button
-                          size="xs"
+                          size="sm"
                           variant="outline"
                           disabled={current === 0}
                           onClick={() => setPage(current - 1)}
@@ -253,7 +264,7 @@ export function ProviderUsageCard({
                           {limits("previous")}
                         </Button>
                         <Button
-                          size="xs"
+                          size="sm"
                           variant="outline"
                           disabled={(current + 1) * 5 >= filtered.length}
                           onClick={() => setPage(current + 1)}

@@ -132,7 +132,7 @@ export function AccountEmailChangeSteps({
           <Button
             loading={busy}
             onClick={sendCurrentCode}
-            size="sm"
+            size="input"
             type="button"
             variant="secondary"
           >
@@ -177,10 +177,16 @@ export function AccountEmailChangeSteps({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button disabled={busy} onClick={restart} size="sm" type="button" variant="secondary">
+            <Button
+              disabled={busy}
+              onClick={restart}
+              size="input"
+              type="button"
+              variant="secondary"
+            >
               {t("cancel")}
             </Button>
-            <Button className="ml-auto" loading={busy} size="sm" type="submit">
+            <Button className="ml-auto" loading={busy} size="input" type="submit">
               {t("sendNewCode")}
             </Button>
           </div>
@@ -212,10 +218,16 @@ export function AccountEmailChangeSteps({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button loading={busy} size="sm" type="submit">
+            <Button loading={busy} size="input" type="submit">
               {t("confirm")}
             </Button>
-            <Button disabled={busy} onClick={restart} size="sm" type="button" variant="secondary">
+            <Button
+              disabled={busy}
+              onClick={restart}
+              size="input"
+              type="button"
+              variant="secondary"
+            >
               {t("restart")}
             </Button>
           </div>

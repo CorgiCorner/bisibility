@@ -1,6 +1,6 @@
 import { PageContent } from "@/components/shell/PageContent";
+import { BackLink } from "@/components/ui/BackLink";
 import { Card } from "@/components/ui/Card";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export function AgentReportDetailFrame({
@@ -17,9 +17,7 @@ export function AgentReportDetailFrame({
 export function AgentReportBack({ label, href }: Readonly<{ label: string; href?: string }>) {
   const className = "text-[13px] font-semibold text-accent-text hover:underline";
   return href ? (
-    <Link href={href} className={className}>
-      {label}
-    </Link>
+    <BackLink href={href}>{label}</BackLink>
   ) : (
     <span aria-hidden className={className}>
       <span className="rounded-control bg-border text-transparent motion-safe:animate-pulse">

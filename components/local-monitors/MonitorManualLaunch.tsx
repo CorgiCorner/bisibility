@@ -100,6 +100,8 @@ export function MonitorManualLaunch({
       {canWrite ? (
         <form className="space-y-3" onSubmit={form.handleSubmit(prepare)}>
           <MenuSelect
+            triggerClassName="w-auto"
+            size="input"
             ariaLabel={t("connection")}
             value={connectionId}
             disabled={pending || !state}
@@ -121,7 +123,7 @@ export function MonitorManualLaunch({
           {state && !state.connections.length ? (
             <p className="text-sm">{t("noConnection")}</p>
           ) : null}
-          <Button type="submit" variant="outline" disabled={pending || !connectionId}>
+          <Button size="input" type="submit" variant="outline" disabled={pending || !connectionId}>
             {t("preview")}
           </Button>
         </form>
@@ -146,7 +148,7 @@ export function MonitorManualLaunch({
             })}
           </p>
           <p className="text-sm text-fg-muted">{t("consentHelp")}</p>
-          <Button disabled={pending} onClick={() => void enqueue()}>
+          <Button size="input" disabled={pending} onClick={() => void enqueue()}>
             {t("confirmLaunch")}
           </Button>
         </section>
@@ -162,6 +164,7 @@ export function MonitorManualLaunch({
         </p>
       ) : null}
       <Button
+        size="input"
         variant="ghost"
         disabled={pending || query.isFetching}
         onClick={() => void query.refetch()}

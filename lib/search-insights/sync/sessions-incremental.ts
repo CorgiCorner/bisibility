@@ -4,6 +4,7 @@ import {
   setAnalyticsSyncConnection,
   withAnalyticsSyncScope,
 } from "@/lib/analytics/analytics-sync-scope";
+import { projectGa4KeyEvents } from "@/lib/conversions/ga4";
 import { prisma } from "@/lib/db/prisma";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
@@ -146,6 +147,7 @@ async function runOrganicSessionsIncrementalSyncImpl(input: {
       },
       where: { id: row.id },
     });
+    await projectGa4KeyEvents(input.projectId);
     return {
       daysProcessed: diffDays(start, end) + 1,
       projectId: input.projectId,

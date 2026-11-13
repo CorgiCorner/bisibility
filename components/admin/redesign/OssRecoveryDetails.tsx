@@ -167,6 +167,8 @@ export function OssRecoveryDetails({
               {["waiting_evidence", "escalated"].includes(triage.status) &&
                 triage.reason === "none" && <p role="status">{p("reasonRequired")}</p>}
               <Button
+                className="justify-self-start"
+                size="sm"
                 disabled={
                   busy ||
                   (["waiting_evidence", "escalated"].includes(triage.status) &&

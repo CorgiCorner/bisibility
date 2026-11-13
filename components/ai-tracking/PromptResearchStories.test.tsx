@@ -2,12 +2,12 @@ import { composeStories } from "@storybook/react";
 import { render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import * as storyModule from "./PromptResearchClient.stories";
-import { researchResultFixture } from "./prompt-research-fixtures";
+import { researchQuoteFixture, researchResultFixture } from "./prompt-research-fixtures";
 
 vi.mock("@/lib/actions/prompt-research", () => ({
-  lookupPromptResearchAction: vi.fn(),
-  trackPromptResearchAction: vi.fn(),
+  lookupPromptResearchAction: vi.fn(async () => researchQuoteFixture),
 }));
+vi.mock("@/lib/capacity/client-actions", () => ({ trackPromptResearchAction: vi.fn() }));
 const stories = composeStories(storyModule);
 afterEach(() => vi.restoreAllMocks());
 it.each(Object.entries(stories))("renders the %s story with complete messages", (_name, Story) => {
@@ -15,11 +15,14 @@ it.each(Object.entries(stories))("renders the %s story with complete messages", 
   render(<Story />);
   if (_name === "NoProvider") {
     expect(screen.getByText("Supported providers: DataForSEO.")).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Keyword" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Topic, brand or competitor" })).toBeDisabled();
   } else
     expect(
       screen.getByRole("textbox", {
-        name: _name === "ReviewDrawer" ? "Topic (choose above or type a new one)" : "Keyword",
+        name:
+          _name === "ReviewDrawer"
+            ? "Topic (choose above or type a new one)"
+            : "Topic, brand or competitor",
       }),
     ).toBeInTheDocument();
   expect(errors).not.toHaveBeenCalled();

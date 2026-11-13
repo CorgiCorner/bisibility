@@ -20,7 +20,7 @@ function Frame({
   action = false,
   contentClassName,
   children,
-}: Readonly<{ name: Section; action?: boolean; contentClassName?: string; children: ReactNode }>) {
+}: Readonly<{ name: Section; action?: boolean; contentClassName?: string; children?: ReactNode }>) {
   const t = useTranslations("account");
   return (
     <AccountSection
@@ -42,7 +42,7 @@ function Field({ help = false }: Readonly<{ help?: boolean }>) {
     <div className="min-w-0 space-y-1.5">
       <Bar className="h-[15px] w-28" />
       {help ? <Bar className="h-8 w-full" /> : null}
-      <Bar className="h-10 w-full" />
+      <Bar className="h-10 max-sm:h-11 w-full" />
     </div>
   );
 }
@@ -85,15 +85,13 @@ function Profile() {
       <Frame name="email">
         <Field />
         <div className="mt-3 flex justify-end">
-          <Bar className="h-8 w-32" />
+          <Bar className="h-10 max-sm:h-11 w-32" />
         </div>
       </Frame>
       <Frame name="connected" contentClassName="overflow-hidden p-0">
         <Rows />
       </Frame>
-      <Frame name="privacy">
-        <Bar className="h-5 w-40" />
-      </Frame>
+      <Frame name="privacy" action />
       <div className="rounded-card border border-red bg-bg-elev px-5 py-4.5">
         <div className="text-[14.5px] font-semibold text-red-text">{t("title")}</div>
         <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">
@@ -115,7 +113,7 @@ function Preferences() {
             <Bar className="h-5 w-16" />
             <Bar className="h-[18px] w-48" />
           </div>
-          <Bar className="h-8 w-40" />
+          <Bar className="h-10 max-sm:h-11 w-40" />
         </div>
         <div className="grid gap-3.5 border-t border-border pt-4 sm:grid-cols-2">
           <Field />
@@ -129,7 +127,7 @@ function Preferences() {
             <Bar className="h-5 w-40" />
             <Bar className="h-[18px] w-52" />
           </div>
-          <Bar className="h-8 w-44" />
+          <Bar className="h-10 max-sm:h-11 w-44" />
         </div>
       </div>
     </Frame>

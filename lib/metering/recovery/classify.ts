@@ -3,7 +3,12 @@ import { RECOVERY_ERROR_CODES, type RecoveryErrorCode } from "@/lib/provider-usa
 import { queuedCostOperatorState } from "@/lib/rank-check/queued-cost-evidence";
 import type { RecoveryCase } from "./contract";
 import type { RecoveryRecord } from "./records";
-import { type RecoveryTokenScope, recoveryHash, sealRecoveryCase } from "./tokens";
+import {
+  type RecoveryTokenScope,
+  recoveryCaseReference,
+  recoveryHash,
+  sealRecoveryCase,
+} from "./tokens";
 
 function object(value: Prisma.JsonValue | null): Record<string, Prisma.JsonValue | undefined> {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -101,6 +106,7 @@ export function classifyRecoveryRecord(
   return {
     closedUnknown: row.closedUnknown,
     token: sealRecoveryCase(scope, row.kind, row.id),
+    reference: recoveryCaseReference(scope, row.kind, row.id),
     version: `${basis}:${row.triageVersion ?? 0}`,
     kind: row.kind,
     provider: row.provider,

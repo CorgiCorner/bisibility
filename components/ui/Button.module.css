@@ -38,7 +38,7 @@
   .secondary {
     --button-bg: var(--button-secondary-bg);
     --button-fg: var(--fg);
-    --button-border: transparent;
+    --button-border: var(--border-control);
     --button-hover-bg: var(--button-secondary-hover-bg);
   }
   .outline {

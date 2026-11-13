@@ -215,6 +215,7 @@ export function ScheduleEditor({
         {canEdit ? null : <StatusChip label={VIEWER_PREVIEW_ONLY_LABEL} tone="neutral" />}
         {!embedded ? (
           <Button
+            size="input"
             onClick={() =>
               onCancel ? onCancel() : router.replace(projectSchedulesPath(projectId))
             }
@@ -226,6 +227,7 @@ export function ScheduleEditor({
         ) : null}
         {canEdit ? (
           <Button
+            size="input"
             disabled={!isNew && !formState.isDirty && pendingMembers.length === 0}
             loading={formState.isSubmitting}
             loadingLabel={t("editor.saving")}

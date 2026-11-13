@@ -103,15 +103,19 @@ describe("workspace server actions", () => {
     expect(mocks.create).not.toHaveBeenCalled();
     expect(mocks.saveContext).not.toHaveBeenCalled();
   });
-  it.each(["site_audit", "ai_visibility", "prompt_explorer", "SITE_AUDIT"])(
-    "rejects external use of reserved kind %s",
-    async (kind) => {
-      await expect(
-        createAgentReportAction({ projectId, title: "Fake producer result", kind, body: {} }),
-      ).rejects.toThrow("reserved");
-      expect(mocks.create).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    "site_audit",
+    "ai_visibility",
+    "prompt_explorer",
+    "prompt_research",
+    "challenge_report",
+    "SITE_AUDIT",
+  ])("rejects external use of reserved kind %s", async (kind) => {
+    await expect(
+      createAgentReportAction({ projectId, title: "Fake producer result", kind, body: {} }),
+    ).rejects.toThrow("reserved");
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
   it("retains the real role table for context and analysis writes", () => {
     expect(() =>
       authorize(

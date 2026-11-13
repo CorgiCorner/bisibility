@@ -169,7 +169,7 @@ export function PersonalTokensSection({
           issued ? (
             <Button
               onClick={closeCreate}
-              size="sm"
+              size="md"
               startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
               type="button"
             >
@@ -177,7 +177,7 @@ export function PersonalTokensSection({
             </Button>
           ) : (
             <>
-              <Button onClick={closeCreate} size="sm" type="button" variant="ghost">
+              <Button onClick={closeCreate} size="md" type="button" variant="ghost">
                 {t("cancel")}
               </Button>
               <Button

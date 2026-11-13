@@ -8,6 +8,7 @@ import { researchProjectState } from "@/lib/ai-research/prompt-research-project"
 import { projectResearchQuestions } from "@/lib/ai-research/prompt-research-projection";
 import { promptResearchSchema } from "@/lib/ai-research/prompt-research-schema";
 import { researchAiQuestions } from "@/lib/ai-research/service";
+import { aiVisibilityPath } from "@/lib/ai-tracking/ai-visibility-paths";
 import { canWriteAiTracking } from "@/lib/ai-tracking/projections/schedule-list";
 import { auditTrackingAcceptance, auditTrackingCatalog } from "@/lib/api/ai-tracking-audit";
 import { trackingScope } from "@/lib/api/ai-tracking-service";
@@ -91,8 +92,7 @@ export async function trackPromptResearchAction(projectId: string, value: unknow
     );
     if (result.added > 0) recordAppAction(actor);
     await auditTrackingAcceptance(actor, project, result.added);
-    revalidatePath(`/app/${projectId}/prompt-tracker`);
-    revalidatePath(`/app/${projectId}/prompt-research`);
+    revalidatePath(aiVisibilityPath(projectId));
 
     return { added: result.added, topics: result.state.topics, tracked: result.state.tracked };
   });

@@ -3,6 +3,7 @@
 import { cn } from "@/lib/ui/cn";
 import { Fragment, type KeyboardEvent, type ReactNode, useId } from "react";
 import { Spinner } from "./Spinner";
+import { revealTab } from "./Tabs";
 import { Tooltip } from "./Tooltip";
 import { toolbarControlClassName } from "./toolbar-control-styles";
 
@@ -116,7 +117,7 @@ export function SegmentedControl<T extends string>({
     <fieldset
       aria-busy={loading ? true : undefined}
       aria-label={label ? undefined : ariaLabel}
-      className={cn("relative border-0 p-0", className)}
+      className={cn("relative m-0 min-w-0 border-0 p-0", className)}
       disabled={busy}
     >
       {label ? <legend className={cn("mb-1.5 p-0", labelClassName)}>{label}</legend> : null}
@@ -128,7 +129,7 @@ export function SegmentedControl<T extends string>({
             : size === "xs"
               ? "min-h-[30px] gap-0.5 rounded-control border border-border-control bg-transparent p-[2px]"
               : size === "field"
-                ? "min-h-10 gap-1 rounded-control border border-border-control bg-transparent p-[3px]"
+                ? "min-h-10 max-sm:min-h-11 gap-1 rounded-control border border-border-control bg-transparent p-[3px]"
                 : "gap-1 rounded-control border border-border-control bg-transparent p-1",
           loading && "opacity-65",
         )}
@@ -143,7 +144,11 @@ export function SegmentedControl<T extends string>({
           const optionDisabled = busy || option.disabled;
           const descriptionId = `${generatedId}-desc-${index}`;
           const labelEl = (
-            <label className={cn("flex", fitContent ? "flex-none" : "min-w-0")} key={option.value}>
+            <label
+              className={cn("flex", fitContent ? "flex-none" : "min-w-0")}
+              key={option.value}
+              ref={active ? revealTab : undefined}
+            >
               <input
                 aria-describedby={option.tooltip ? descriptionId : undefined}
                 aria-label={option.ariaLabel}

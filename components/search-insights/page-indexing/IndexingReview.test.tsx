@@ -28,6 +28,7 @@ import { pausedRanges, trendValueTicks } from "./history-presentation";
 import { historyTab } from "./history-tab.test-support";
 import { IndexingDrawer } from "./IndexingDrawer";
 import { IndexingHistoryStrip } from "./IndexingHistoryStrip";
+import { IndexingProgressCard } from "./IndexingProgressCard";
 import { IndexingStatus } from "./IndexingStatus";
 import { IndexingHistoryLine } from "./IndexingStoredFacts";
 import { IndexingSummary } from "./IndexingSummary";
@@ -230,4 +231,14 @@ it("keeps the eight reviewed URLs and the duplicate canonical", () => {
   const duplicate = data.urls.find((row) => row.url.endsWith("?ref=nav"));
   expect(duplicate?.googleCanonical).toBe("https://example.com/docs/rank-tracking");
   expect(data.urls.every((row) => row.checkedAt && row.group !== "not_checked")).toBe(true);
+});
+
+it("places the bounded indexing settings action beside the progress heading", () => {
+  view(<IndexingProgressCard data={historyTab(siteFillingDays)} projectId="prj_example" />);
+  const action = screen.getByRole("link", { name: "Indexing settings" });
+  const heading = screen.getByRole("heading");
+  expect(action.parentElement).toBe(heading.parentElement);
+  expect(action.parentElement).toHaveClass("flex", "justify-between");
+  expect(action).toHaveClass("shrink-0");
+  expect(action).toHaveAttribute("data-size", "sm");
 });

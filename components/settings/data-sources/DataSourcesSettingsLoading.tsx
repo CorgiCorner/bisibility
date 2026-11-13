@@ -24,7 +24,7 @@ function CardFrame({ kind }: Readonly<{ kind: "inspection" | "sync" }>) {
 }
 export function DataSourcesSettingsLoading() {
   return (
-    <div className="max-w-[760px] space-y-5" data-data-sources-settings-loading="">
+    <div className="space-y-5 lg:max-w-[760px]" data-data-sources-settings-loading="">
       <CardFrame kind="inspection" />
       <CardFrame kind="sync" />
     </div>

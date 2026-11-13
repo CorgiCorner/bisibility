@@ -44,7 +44,7 @@ const props = {
 };
 
 function expectCompactWidth(button: HTMLElement) {
-  expect(button).toHaveClass("max-xl:min-w-9", "max-xl:w-9", "max-xl:gap-0");
+  expect(button).toHaveClass("size-8.5", "min-w-0", "gap-0", "p-0");
 }
 
 describe("KeywordsToolbarActions", () => {
@@ -136,7 +136,7 @@ describe("KeywordsToolbarActions", () => {
     expect(screen.getAllByRole("button", { name: "Import" })).toHaveLength(1);
   });
 
-  it("keeps each transfer action compact below xl and labeled at xl", () => {
+  it("keeps transfer icons square and accessible", () => {
     render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={vi.fn()} />);
 
     for (const [action, label] of [
@@ -148,17 +148,19 @@ describe("KeywordsToolbarActions", () => {
         "lg:inline-flex",
       );
       const button = screen.getByRole("button", { name: label });
-      expect(button).toHaveTextContent(label);
+      expect(button).toHaveAttribute("aria-label", label);
       expect(button.querySelectorAll("svg")).toHaveLength(1);
       expectCompactWidth(button);
     }
   });
 
-  it("keeps Add keyword compact below xl like the transfer actions", () => {
+  it("keeps Add keyword labeled until the narrow phone layout", () => {
     render(<KeywordsToolbarActions {...props} density="compact" onAddKeyword={vi.fn()} />);
 
     const addKeyword = screen.getByRole("button", { name: "Add keyword" });
-    expectCompactWidth(addKeyword);
+    expect(addKeyword).toHaveClass("keyword-toolbar-add");
+    expect(addKeyword).toHaveTextContent("Add keyword");
+    expect(addKeyword).toHaveAttribute("data-size", "sm");
     expect(addKeyword.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
       "data-tooltip-label",
       "Add keyword",

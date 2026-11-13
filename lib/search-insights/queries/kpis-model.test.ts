@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { clicksToSessionsKpi, searchInsightsKpis, windowTotals } from "./kpis-model";
+import {
+  clicksToSessionsKpi,
+  conversionsKpi,
+  searchInsightsKpis,
+  windowTotals,
+} from "./kpis-model";
 
 describe("windowTotals", () => {
   it("takes the ratio of the window, not the average of its days", () => {
@@ -180,5 +185,38 @@ describe("clicksToSessionsKpi", () => {
       kind: "visible",
       kpi: expect.objectContaining({ value: 0, valueKind: "percentage" }),
     });
+  });
+});
+
+describe("conversionsKpi", () => {
+  it("counts a higher total as up and names the source and its goals", () => {
+    expect(
+      conversionsKpi({
+        current: 18,
+        goalCount: 2,
+        previous: 12,
+        source: "plausible",
+      }),
+    ).toMatchObject({
+      dir: "up",
+      goalCount: 2,
+      metric: "conversions",
+      previous: 12,
+      source: "plausible",
+      value: 18,
+      valueKind: "count",
+    });
+  });
+
+  it("suppresses the previous total until that window is covered", () => {
+    expect(
+      conversionsKpi({
+        current: 4,
+        goalCount: 1,
+        previous: 9,
+        previousCovered: false,
+        source: "ga4",
+      }),
+    ).toMatchObject({ delta: { kind: "new" }, previous: null, source: "ga4" });
   });
 });

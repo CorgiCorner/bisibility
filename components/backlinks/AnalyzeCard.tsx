@@ -4,7 +4,7 @@ import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPay
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { compactInputClassName } from "@/components/ui/input-styles";
+import { inputCompoundControlSizeClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -23,8 +23,6 @@ import type { BacklinksEstimateView, BacklinksLimit } from "./backlinks-workspac
 
 const formSchema = z.object({ target: z.string().trim().min(1).max(2048) });
 type FormValues = z.infer<typeof formSchema>;
-
-const analyzeControlHeightClassName = "h-[34px]";
 
 type AnalyzeCardProps = {
   disabled?: boolean;
@@ -99,7 +97,7 @@ export function AnalyzeCard({
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
           <div
             data-input-shell
-            className={`flex ${analyzeControlHeightClassName} flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]`}
+            className={`flex ${inputCompoundControlSizeClassName} flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent focus-within:border-accent md:min-w-[240px]`}
           >
             <GlobeSimple
               weight="regular"
@@ -129,7 +127,7 @@ export function AnalyzeCard({
                   {...targetField}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  className={`${compactInputClassName} h-full min-h-0 min-w-0 flex-1 bg-transparent text-fg outline-none`}
+                  className="min-w-0 flex-1 bg-transparent p-0 text-ui-body leading-5 text-fg outline-none"
                   id="backlinks-target"
                   onChange={(event) => {
                     targetField.onChange(event);
@@ -148,23 +146,25 @@ export function AnalyzeCard({
             onChange={onScopeChange}
             optionClassName="min-w-[92px]"
             options={scopeOptions}
-            size="toolbar"
+            size="field"
             value={scope}
           />
           <MenuSelect
+            size="input"
             ariaLabel={t("limitAria")}
             onChange={(value) => onLimitChange(Number(value) as BacklinksLimit)}
             options={limitOptions}
-            triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between lg:w-[132px]`}
+            triggerClassName="w-auto justify-between lg:w-36"
             value={String(resultLimit)}
           />
           {providers.length > 1 && onProviderChange ? (
             <MenuSelect
+              size="input"
               ariaLabel={t("provider")}
               disabled={submitting}
               onChange={onProviderChange}
               options={providers}
-              triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between`}
+              triggerClassName="w-auto justify-between"
               value={provider ?? providers[0].value}
             />
           ) : null}
@@ -184,6 +184,7 @@ export function AnalyzeCard({
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
             {onPaymentOptionChange ? (
               <ActionPaymentOptionPicker
+                size="input"
                 options={estimate.paymentOptions ?? []}
                 value={estimate.payment?.option.id ?? ""}
                 disabled={estimate.loading || submitting}
@@ -194,6 +195,7 @@ export function AnalyzeCard({
               />
             ) : null}
             <Button
+              size="input"
               disabled={analyzeDisabled}
               loading={submitting}
               loadingLabel={analyzeLabel(true)}

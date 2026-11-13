@@ -36,14 +36,15 @@ type KeywordGridViewportProps = Required<Pick<TableProps, (typeof requiredTableP
 export function KeywordGridViewport(props: Readonly<KeywordGridViewportProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   return (
-    <div className="min-w-0 overflow-hidden">
+    <div className="min-w-0 max-w-full">
       <div
-        className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] w-full min-w-0"
+        className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] w-full min-w-0 max-w-full overflow-x-auto"
         data-testid="keywords-grid-viewport"
       >
         <DataTable
           {...pickGridProps(props, tableProps)}
           bordered={false}
+          className="h-full max-h-full w-full min-w-0 max-w-full"
           ariaLabel={t("tableAria")}
           emptyState={<KeywordNoRowsOverlay state={props.noRowsState} />}
           layout="fill"

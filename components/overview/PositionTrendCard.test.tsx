@@ -1,6 +1,8 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import messages from "@/messages/core/en/project-dashboard.json";
+import dashboardMessages from "@/messages/core/en/project-dashboard.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ComponentProps, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { PositionTrendCard } from "./PositionTrendCard";
@@ -13,6 +15,8 @@ vi.mock("@/components/charts/TimeSeriesChart", () => ({
     return <div data-testid="line-chart" />;
   },
 }));
+
+const messages = { ...dashboardMessages, ...sharedMessages };
 
 function withMessages(children: ReactNode) {
   return (
@@ -207,5 +211,44 @@ describe("PositionTrendCard", () => {
     });
 
     expect(container.querySelector("div[aria-hidden].animate-pulse")).toBeInTheDocument();
+  });
+
+  it("plots the day's markers and hides them from the legend toggle", async () => {
+    const user = userEvent.setup();
+    const marker = {
+      dateKey: "2026-11-02",
+      id: "note",
+      kind: "note" as const,
+      title: "Title change",
+    };
+    renderTrend({
+      data: [
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-11-02",
+          label: "2026-11-02",
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 3,
+        },
+      ],
+      markers: [marker],
+      projectRef: "prj_1",
+    });
+
+    expect(lineChart).toHaveBeenLastCalledWith(
+      expect.objectContaining({ markerProjectRef: "prj_1", markers: [marker] }),
+    );
+    expect(screen.getByRole("link", { name: "Open Annotations" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/annotations",
+    );
+    const legend = screen.getByRole("switch", { name: "Markers" }).closest("[data-tab-strip]");
+    expect(screen.getByTestId("line-chart").compareDocumentPosition(legend ?? document.body)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    await user.click(screen.getByRole("switch", { name: "Markers" }));
+    expect(screen.getByRole("switch", { name: "Markers" })).not.toBeChecked();
+    expect(screen.queryByRole("button", { name: /Note/ })).not.toBeInTheDocument();
   });
 });

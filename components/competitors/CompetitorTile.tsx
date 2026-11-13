@@ -1,5 +1,5 @@
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
-import { buildDomainIconUrl } from "@/components/ui/domain-icon-url";
+import { buildDomainIconUrl } from "@/lib/ui/domain-icon-url";
 
 export type CompetitorTileProps = {
   domain: string;

@@ -86,3 +86,22 @@ export function dataTableColumnWidthVariable(id: string): string {
 export function dataTablePinnedOffsetVariable(id: string): string {
   return `--dt-pin-${dataTableColumnCssId(id)}`;
 }
+
+/**
+ * Fixed columns stay at their measured width. A flexible column keeps that width as its
+ * basis and grows into space the row already stretches across, so its rule reaches the card
+ * even before the container measurement lands.
+ */
+export function dataTableColumnBoxStyle(
+  width: string,
+  flex = 0,
+): {
+  flexBasis: string;
+  flexGrow?: number;
+  flexShrink?: number;
+  maxWidth?: string;
+  minWidth: string;
+} {
+  if (flex > 0) return { flexBasis: width, flexGrow: flex, flexShrink: 0, minWidth: width };
+  return { flexBasis: width, maxWidth: width, minWidth: width };
+}

@@ -269,6 +269,7 @@ function ConnectionChainEditor({
           )}
         <div className="border-t border-border pt-4">
           <Button
+            size="sm"
             type="button"
             disabled={!editable || !changed}
             onClick={() =>

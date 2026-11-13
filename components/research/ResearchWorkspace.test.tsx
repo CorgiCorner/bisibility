@@ -6,6 +6,7 @@ import {
 import { ToastProvider } from "@/components/ui/Toast";
 import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
+import { loadKeywordResearchHistoryAction } from "@/lib/actions/research-history";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -18,6 +19,17 @@ function SessionSpendProbe() {
   return <output aria-label="session spend cents">{sessionCents}</output>;
 }
 
+vi.mock("@/lib/actions/research-history", () => ({
+  loadKeywordResearchHistoryAction: vi.fn(async () => ({
+    ok: true,
+    page: { chips: [], groups: [], nextCursor: null, pinnedCount: 0, timeZone: "UTC", total: 0 },
+  })),
+  readStoredKeywordResearchAction: vi.fn(),
+}));
+vi.mock("@/lib/actions/research-history-pins", () => ({
+  pinResearchHistoryAction: vi.fn(),
+  unpinResearchHistoryAction: vi.fn(),
+}));
 vi.mock("./ResearchSearchCard", () => ({
   ResearchSearchCard: (props: {
     connectionId: string;
@@ -305,25 +317,6 @@ function success(input: { cached: boolean; costCents: number; estimate?: boolean
   };
 }
 
-function persistRecent(overrides: Partial<Record<string, unknown>> = {}) {
-  window.localStorage.setItem(
-    "bisibility:keyword-research:recent:prj_1",
-    JSON.stringify([
-      {
-        cachedUntil: new Date(Date.now() + 60_000).toISOString(),
-        connectionId: "conn_a00000000000000000000000",
-        createdAt: new Date().toISOString(),
-        includeClickstream: false,
-        scopeLabel: "United States / English",
-        mode: "auto",
-        resultLimit: 100,
-        seed: "saved seed",
-        ...overrides,
-      },
-    ]),
-  );
-}
-
 describe("ResearchWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -592,88 +585,6 @@ describe("ResearchWorkspace", () => {
     expect(screen.getByRole("button", { name: "Run research" })).toBeEnabled();
   });
 
-  it("prefills an expired recent search and waits for the priced submit", async () => {
-    persistRecent({
-      cachedUntil: new Date(Date.now() - 60_000).toISOString(),
-      connectionId: "deleted_connection",
-    });
-    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
-      success({
-        cached: false,
-        costCents: input.estimateOnly ? 7 : 4,
-        estimate: input.estimateOnly,
-      }),
-    );
-    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
-
-    fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
-    expect(screen.getByLabelText("search seeds")).toHaveTextContent("saved seed");
-    await waitFor(() => expect(screen.getByLabelText("estimate cost")).toHaveTextContent("7"));
-    expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(0);
-    expect(researchAction).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        connectionId: "conn_a00000000000000000000000",
-        estimateOnly: true,
-        seed: "saved seed",
-      }),
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
-    await waitFor(() =>
-      expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1),
-    );
-  });
-
-  it("estimates an expired replay with its stored scope", async () => {
-    persistRecent({
-      cachedUntil: new Date(Date.now() - 60_000).toISOString(),
-      locationKey: "DE",
-      scopeLabel: "Germany / German",
-    });
-    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
-      success({
-        cached: false,
-        costCents: input.estimateOnly ? 7 : 4,
-        estimate: input.estimateOnly,
-      }),
-    );
-    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
-
-    fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
-
-    await waitFor(() =>
-      expect(researchAction).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          estimateOnly: true,
-          locationKey: "DE",
-          seed: "saved seed",
-        }),
-      ),
-    );
-  });
-
-  it("replays a valid cached search immediately with an eligible connection fallback", async () => {
-    persistRecent({ connectionId: "deleted_connection" });
-    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
-      success({ cached: !input.estimateOnly, costCents: 0, estimate: input.estimateOnly }),
-    );
-    renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
-
-    fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
-    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
-    await waitFor(() =>
-      expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1),
-    );
-    expect(researchAction.mock.calls.find(([input]) => !input.estimateOnly)?.[0]).toEqual(
-      expect.objectContaining({
-        connectionId: "conn_a00000000000000000000000",
-        fresh: false,
-        seed: "saved seed",
-      }),
-    );
-  });
-
   it("retries the failed tab with its own request and estimate", async () => {
     let runs = 0;
     const researchAction = vi.fn(
@@ -732,6 +643,19 @@ describe("ResearchWorkspace", () => {
     );
   });
 
+  it("keeps history available when no provider is connected", async () => {
+    vi.mocked(loadKeywordResearchHistoryAction).mockResolvedValue({
+      ok: true,
+      page: { chips: [], groups: [], nextCursor: null, pinnedCount: 0, timeZone: "UTC", total: 45 },
+    });
+    renderWorkspace(vi.fn() as unknown as ResearchKeywordsAction, {
+      context: { ...context, connections: [] },
+    });
+    const history = await screen.findByRole("button", { name: /45 checks/ });
+    expect(history).toBeEnabled();
+    expect(history.closest("fieldset")).toBeNull();
+  });
+
   it("does not describe missing-provider fields as waiting for a budget reset", () => {
     const researchAction = vi.fn();
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
@@ -757,21 +681,6 @@ describe("ResearchWorkspace", () => {
       `/app/${context.project.id}/providers`,
     );
     expect(screen.queryByRole("link", { name: "Open Providers" })).not.toBeInTheDocument();
-    expect(researchAction).not.toHaveBeenCalled();
-  });
-
-  it("disables recent chips with a hint when no research provider exists", () => {
-    persistRecent();
-    const researchAction = vi.fn();
-    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
-      context: { ...context, connections: [] },
-    });
-
-    expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
-    expect(screen.getByLabelText("research lookup disabled")).toHaveTextContent("true");
-    expect(screen.getByRole("button", { name: "Run research" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^saved seed/i })).toBeDisabled();
-    expect(screen.getByText("Choose a data source to replay recent searches.")).toBeInTheDocument();
     expect(researchAction).not.toHaveBeenCalled();
   });
 

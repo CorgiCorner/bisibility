@@ -15,7 +15,7 @@ export default function CompetitorsSettingsLoading() {
             <SettingsLoadingBar className="h-[22.5px] w-28" />
             <SettingsLoadingBar className="h-5 w-full max-w-xl" />
           </div>
-          <SettingsLoadingBar className="h-8 w-36" />
+          <SettingsLoadingBar className="h-8.5 w-36" />
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[760px] border-t border-border">

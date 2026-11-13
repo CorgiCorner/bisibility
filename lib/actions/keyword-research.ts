@@ -3,6 +3,7 @@ import { withAchievementUse } from "@/lib/achievements/record-use";
 import { assessActionPayments } from "@/lib/action-payment/batch";
 import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import { recordAppAction } from "@/lib/activity/app-mutation";
+import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -55,7 +56,10 @@ export async function researchKeywordsAction(input: unknown) {
         }),
       ),
     );
-    if (outcome.ok && !data.estimateOnly && !outcome.cached) recordAppAction(actor);
+    if (outcome.ok && !data.estimateOnly && !outcome.cached) {
+      recordAppAction(actor);
+      captureProjectWork(actor.id, project.id);
+    }
     if (outcome.ok && !data.estimateOnly) revalidatePath(appPath(project.publicId, "rank-tracker"));
 
     return outcome;

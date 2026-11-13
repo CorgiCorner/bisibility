@@ -12,6 +12,8 @@ export type MenuProps = {
   children: ReactNode;
   align?: "start" | "center" | "end";
   side?: "top" | "bottom" | "left" | "right";
+  /** Opt-in gap between the trigger and the menu, in px. Defaults to touching. */
+  sideOffset?: number;
   contentProps?: ComponentProps<"div">;
   listProps?: ComponentProps<"div">;
   onExited?: () => void;
@@ -30,6 +32,7 @@ export function Menu({
   children,
   align = "start",
   side = "bottom",
+  sideOffset,
   contentProps = {},
   listProps = {},
   onExited,
@@ -59,6 +62,7 @@ export function Menu({
           {...contentProps}
           align={align}
           side={side}
+          sideOffset={sideOffset}
           collisionPadding={16}
           loop
           style={contentProps.style}

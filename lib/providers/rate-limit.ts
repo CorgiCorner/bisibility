@@ -26,6 +26,7 @@ const DEFAULT_POLICIES = {
   dataforseo: { perMinute: 1800, windowSeconds: 60 },
   ga4: { perMinute: 60, windowSeconds: 60 },
   gsc: { perMinute: 600, windowSeconds: 60 },
+  pagespeed: { perMinute: 60, windowSeconds: 60 },
   plausible: { perMinute: 10, windowSeconds: 60 },
   serpapi: { perMinute: 60, windowSeconds: 60 },
 } satisfies Record<string, ProviderPolicy>;
@@ -46,6 +47,7 @@ const PROVIDER_RATE_LIMIT_ENV = {
     perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GSC_PER_MINUTE,
     windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_GSC_WINDOW_SECONDS,
   }),
+  pagespeed: () => ({ perMinute: undefined, windowSeconds: undefined }),
   plausible: () => ({
     perMinute: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_PER_MINUTE,
     windowSeconds: process.env.BISIBILITY_PROVIDER_RATE_LIMIT_PLAUSIBLE_WINDOW_SECONDS,
@@ -135,6 +137,7 @@ export function providerAccountKey(
         ? `dataforseo:${rateLimitBucketFingerprint(c.login)}`
         : projectFallback(providerId, options?.projectId);
     case "ahrefs":
+    case "pagespeed":
     case "serpapi":
       return apiKeyAccountKey(providerId, c.apiKey, options?.projectId);
     case "gsc":

@@ -308,6 +308,8 @@
       "view": "Vista",
       "general": "Resultados orgánicos generales",
       "local": "Resultados locales de Google",
+      "ai_overviews": "Resúmenes de IA",
+      "new": "Nuevo",
       "subject": "Empresa",
       "chooseSubject": "Elige una empresa asignada",
       "setupBusiness": "Gestionar empresas y asignaciones",
@@ -317,8 +319,9 @@
       "applyTime": "Aplicar fecha",
       "latest": "Más reciente",
       "invalidTime": "Elige una fecha UTC válida que no sea futura.",
-      "unsupportedFilters": "Los filtros de cambios orgánicos, URL y funciones SERP no están disponibles en Local. Bórralos para mostrar los objetivos locales.",
+      "unsupportedFilters": "Los filtros de cambios orgánicos, URL, funciones SERP y resúmenes de IA no están disponibles en Local. Bórralos para mostrar los objetivos locales.",
       "localScope": "Los resultados locales muestran la empresa seleccionada. La comparación y la exportación local aún no están disponibles.",
+      "aiOverviewScope": "Esta vista usa la última comprobación guardada. No compara posiciones.",
       "membership": "La tabla usa tu lista actual de palabras clave. La fecha cambia el período de resultados, sin restaurar una lista anterior.",
       "snapshot": "Consulta: {date} UTC",
       "state": {
@@ -332,6 +335,20 @@
       "minute": "Minuto",
       "comparisonLabel": "Comparar",
       "comparisonHelp": "Compara resultados de la fecha seleccionada y de al menos {days} días antes. No es un promedio. Si falta un resultado anterior válido, no se muestra una comparación."
+    },
+    "aiOverviewList": {
+      "overview": "Resumen de IA",
+      "yourDomain": "Tu dominio",
+      "citedPage": "Página citada",
+      "shown": "Mostrado",
+      "notShown": "No mostrado",
+      "notChecked": "Sin comprobación",
+      "citedAt": "Citado · #{position}",
+      "notCited": "No citado",
+      "notAvailable": "n/d",
+      "none": "ninguna",
+      "viewOverview": "Ver resumen",
+      "incompleteHint": "Este resumen guardado no incluye la lista de fuentes, así que no se puede confirmar una cita. No citado solo significa que el dominio no estaba entre las fuentes devueltas."
     },
     "localList": {
       "expandTargets": "Expandir {count} objetivos",

@@ -3,6 +3,7 @@ import type { RecoveryCase, RecoveryPage } from "./contract";
 export function recoveryViewFixture(): RecoveryPage {
   const row: RecoveryCase = {
     token: "case-history",
+    reference: "ref-history",
     version: "version1",
     kind: "operation",
     provider: "dataforseo",
@@ -49,6 +50,7 @@ export function recoveryViewFixture(): RecoveryPage {
       {
         ...row,
         token: "case-result",
+        reference: "ref-result",
         version: "version2",
         project: "prj_example_pending",
         historical: false,
@@ -60,6 +62,7 @@ export function recoveryViewFixture(): RecoveryPage {
       {
         ...row,
         token: "case-conflict",
+        reference: "ref-conflict",
         project: "prj_example_conflict",
         historical: false,
         funding: "platform",
@@ -79,6 +82,7 @@ export function recoveryViewFixture(): RecoveryPage {
       {
         ...row,
         token: "case-unknown",
+        reference: "ref-unknown",
         project: null,
         connection: null,
         send: "unknown",
@@ -89,6 +93,7 @@ export function recoveryViewFixture(): RecoveryPage {
       {
         ...row,
         token: "case-run",
+        reference: "ref-run",
         project: "prj_example_queued",
         kind: "run",
         originalAuthorization: { maxCostCents: "2", targets: 1, maxAttempts: 1 },

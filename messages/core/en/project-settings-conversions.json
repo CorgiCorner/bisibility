@@ -1,0 +1,48 @@
+{
+  "projectSettingsConversions": {
+    "intro": "Conversions are defined once for this project. Each connected analytics source keeps its own daily counts, and the primary source is the default view.",
+    "sources": {
+      "title": "Sources",
+      "description": "Choose the primary source for the default view. Changing it keeps every source's data and adds a chart note.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connect": "Connect",
+      "primary": "Primary",
+      "primaryFor": "Primary source: {source}",
+      "last28": "{count} in the last 28 days",
+      "lastDay": "Last day with data: {date}",
+      "noData": "No conversion data yet",
+      "ga4Together": "GA4 reports all key events together.",
+      "plausibleOrganic": "Organic search goal conversions, one daily count per landing page.",
+      "syncNow": "Sync now",
+      "syncing": "Syncing...",
+      "syncError": "The source could not be synced.",
+      "confirmTitle": "Change the primary conversion source?",
+      "confirmBody": "Charts will use {source} as the default view. Existing data stays, and a note is added so a jump has a reason.",
+      "confirmAction": "Change primary source",
+      "cancel": "Cancel",
+      "error": "The primary source could not be saved."
+    },
+    "comparison": {
+      "title": "All sources side by side",
+      "description": "Enabled conversions in the last 28 days, one column per connected source.",
+      "goal": "Conversion",
+      "primary": "Primary",
+      "notReported": "Not reported",
+      "empty": "No enabled conversions in the last 28 days.",
+      "tableLabel": "Conversions by source"
+    },
+    "goals": {
+      "title": "Conversions",
+      "description": "Rename a conversion for this project, or stop it from counting. The name in the tool stays as the source reports it.",
+      "emptyTitle": "No conversions yet",
+      "emptyDescription": "When a connected source reports a conversion, it shows up here.",
+      "sourceName": "Name in the tool",
+      "displayNameLabel": "Display name for {name}",
+      "enabled": "Enabled",
+      "countsRevenue": "Counts revenue",
+      "last28": "Last 28 days",
+      "error": "The conversion could not be saved."
+    }
+  }
+}

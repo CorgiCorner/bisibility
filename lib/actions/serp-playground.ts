@@ -5,8 +5,8 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
-import { parseComparisonSnapshot } from "@/lib/provider-comparison/model";
 import { readPlaygroundCache } from "@/lib/provider-comparison/playground-cache";
+import { readRecentPlaygroundSearches } from "@/lib/provider-comparison/playground-history";
 import {
   type PlaygroundPageData,
   playgroundInputSchema,
@@ -19,11 +19,7 @@ import {
   launchPlaygroundComparison,
   previewPlaygroundComparison,
 } from "@/lib/provider-comparison/playground-service";
-import {
-  comparisonRunView,
-  readPlaygroundRaw,
-  readProviderComparison,
-} from "@/lib/provider-comparison/read";
+import { readPlaygroundRaw, readProviderComparison } from "@/lib/provider-comparison/read";
 import { comparisonProviders } from "@/lib/provider-comparison/types";
 import { type LocationSelection, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -58,12 +54,7 @@ export async function getSerpPlaygroundPage(projectRef: string): Promise<Playgro
       orderBy: { createdAt: "asc" },
       include: { location: true },
     }),
-    prisma.providerComparisonRun.findMany({
-      where: { projectId: project.id, keywordId: null },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-      include: { sides: true },
-    }),
+    readRecentPlaygroundSearches(project.id),
   ]);
   const location = market?.location;
   return {
@@ -96,13 +87,7 @@ export async function getSerpPlaygroundPage(projectRef: string): Promise<Playgro
           languageCode: "en",
           languageLabel: "English",
         },
-    history: runs.flatMap((run) => {
-      try {
-        return parseComparisonSnapshot(run.snapshot).version === 2 ? [comparisonRunView(run)] : [];
-      } catch {
-        return [];
-      }
-    }),
+    history: runs,
   };
 }
 

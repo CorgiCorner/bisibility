@@ -1,4 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { shiftDay } from "@/lib/achievements/calendar";
+import { progressForThirtyDays } from "@/lib/achievements/thirty-days";
 import account from "@/messages/core/en/account.json";
 import shared from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -74,3 +76,69 @@ export const FirstVisit: Story = {
 };
 
 export const DarkProgress: Story = { args: { view }, parameters: { activityTheme: "dark" } };
+
+const projects = [{ publicId: "prj_examplepagesnapshot", name: "Example" }];
+const emptyChallenge = {
+  joinedOn: null,
+  leftOn: null,
+  dayNumber: 0,
+  earned: false,
+  paused: false,
+  overflowDays: 0,
+  slots: [],
+};
+function challenge(progress: ReturnType<typeof progressForThirtyDays>) {
+  return {
+    joinedOn: progress.joinedOn,
+    leftOn: progress.leftOn,
+    dayNumber: progress.dayNumber,
+    earned: progress.earned,
+    paused: progress.paused,
+    overflowDays: progress.overflowDays,
+    slots: progress.slots,
+  };
+}
+const dayThree = progressForThirtyDays({
+  joinedOn: "2026-11-07",
+  leftOn: null,
+  practiceDays: ["2026-11-07", "2026-11-08", "2026-11-10"],
+  today: "2026-11-10",
+});
+const earned = progressForThirtyDays({
+  joinedOn: "2026-10-01",
+  leftOn: null,
+  practiceDays: Array.from({ length: 30 }, (_, index) => shiftDay("2026-10-01", index)),
+  today: "2026-10-30",
+});
+export const ThirtyDaysNotJoined: Story = {
+  args: { view: { ...view, snapshotProjects: projects, thirtyDays: emptyChallenge } },
+};
+export const ThirtyDaysDayThree: Story = {
+  args: {
+    view: {
+      ...view,
+      today: "2026-11-10",
+      snapshotProjects: projects,
+      thirtyDays: challenge(dayThree),
+    },
+  },
+};
+export const ThirtyDaysEarned: Story = {
+  args: {
+    view: {
+      ...view,
+      today: "2026-10-30",
+      snapshotProjects: projects,
+      thirtyDays: challenge(earned),
+      awards: [
+        ...view.awards,
+        {
+          kind: "thirty_days",
+          earnedAt: "2026-10-30T12:00:00Z",
+          earnedDay: "2026-10-30",
+          published: false,
+        },
+      ],
+    },
+  },
+};

@@ -2,6 +2,7 @@ import { captureHttpResponse } from "@/lib/providers/provider-response";
 import "server-only";
 
 import { assertWebhookUrlAllowed } from "@/lib/alerts/webhook-guard";
+import { analyticsReadDeadlineMs } from "@/lib/providers/analytics/read-deadline";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderConfigurationError, ProviderHttpError } from "@/lib/providers/failure-class";
 import {
@@ -19,6 +20,9 @@ import type {
 
 const DEFAULT_BASE_URL = "https://plausible.io";
 const ORGANIC_SEARCH_FILTER = [["is", "visit:channel", ["Organic Search"]]] as const;
+
+/** Organic Search channel filter used by page stats and goal conversions. */
+export const PLAUSIBLE_ORGANIC_SEARCH_FILTER = ORGANIC_SEARCH_FILTER;
 const PAGE_DIMENSIONS = ["event:page"] as const;
 const PAGE_METRICS = [
   "visitors",
@@ -31,11 +35,11 @@ const PAGE_METRICS = [
 type PlausibleMetric = (typeof PAGE_METRICS)[number] | "visitors";
 type PlausibleQuery = {
   site_id: string;
-  metrics: readonly PlausibleMetric[];
+  metrics: readonly string[];
   date_range: [string, string];
   dimensions?: readonly string[];
-  filters?: typeof ORGANIC_SEARCH_FILTER;
-  pagination?: { limit: number };
+  filters?: readonly (readonly [string, string, readonly string[]])[];
+  pagination?: { limit: number; offset?: number };
 };
 type PlausibleResultRow = { dimensions?: unknown[]; metrics?: unknown[] };
 type PlausibleResponse = {
@@ -125,7 +129,15 @@ async function parseJson(response: Response): Promise<PlausibleResponse> {
   return payload;
 }
 
-async function runQuery(creds: ProviderCredentials, query: PlausibleQuery) {
+export function plausibleRejectsMetric(error: unknown, metric: string) {
+  return (
+    error instanceof PlausibleApiError &&
+    (error.status === 400 || error.status === 422) &&
+    error.message.toLowerCase().includes(metric.toLowerCase())
+  );
+}
+
+async function runQuery(creds: ProviderCredentials, query: PlausibleQuery, signal?: AbortSignal) {
   const { accountKey, apiKey, baseUrl } = readCredentials(creds);
   if (creds.endpoint?.trim()) {
     await assertEndpointAllowed(baseUrl);
@@ -142,6 +154,7 @@ async function runQuery(creds: ProviderCredentials, query: PlausibleQuery) {
       "Content-Type": "application/json",
     },
     method: "POST",
+    ...(signal ? { signal } : {}),
   });
 
   await captureHttpResponse(response, creds.captureResponse, queryUrl(baseUrl));
@@ -158,6 +171,19 @@ async function runQuery(creds: ProviderCredentials, query: PlausibleQuery) {
     throw new PlausibleApiError(responseMessage(payload, response.status), response.status);
   }
   return payload;
+}
+
+/** Stats API v2 query using the same credentials, base URL and errors as page stats. */
+export async function postPlausibleQuery(
+  creds: ProviderCredentials,
+  query: Omit<PlausibleQuery, "site_id">,
+) {
+  const { siteId } = readCredentials(creds);
+  return runQuery(
+    creds,
+    { ...query, site_id: siteId },
+    AbortSignal.timeout(analyticsReadDeadlineMs()),
+  );
 }
 
 function pageQuery(input: {

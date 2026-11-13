@@ -22,6 +22,7 @@ export function buildRankTrackerListSql(
   const offset = (query.page - 1) * query.pageSize;
   const lens = lensPredicate(query.lens, options.strictLocation);
   const content = contentPredicate(query.filters, query.search, {
+    asOf: query.reportScope?.asOf ? new Date(query.reportScope.asOf) : null,
     deferExactRowPredicates: options.candidatesOnly,
   });
   const requestedOrder = rankTrackerOrderBy(query.sort);

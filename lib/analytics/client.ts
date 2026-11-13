@@ -2,6 +2,9 @@
 // closed to arbitrary strings.
 export interface AnalyticsEventRegistry {
   seo_cost_calculator_changed: true;
+  seo_challenge_joined: true;
+  seo_challenge_card_ready: true;
+  seo_challenge_card_download_clicked: true;
   module_navigation_clicked: true;
   product_action_clicked: true;
   getting_started_cta_clicked: true;

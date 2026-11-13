@@ -31,11 +31,30 @@
       "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): #{position, number, ::.#}",
       "tooltipMore": "+{count, number} more"
     },
+    "organicConversions": {
+      "conversions": "Conversions",
+      "deltaNew": "new",
+      "deltaUnchanged": "unchanged",
+      "deltaVersus": "{value} vs previous {days, number} {days, plural, one {day} other {days}}",
+      "openSearchConsole": "Open Search Console",
+      "topPages": "Top pages",
+      "title": "Organic conversions",
+      "unavailable": "Conversions could not be read."
+    },
+    "seoCost": {
+      "empty": "No cost recorded this month.",
+      "openUsage": "Open Usage",
+      "split": "operations {operations} · subscriptions {subscriptions} · one-off {oneOff}",
+      "title": "SEO cost",
+      "total": "Total {value}",
+      "unavailable": "Cost could not be read."
+    },
     "distribution": {
       "bucketAriaLabel": "Positions {start, number} to {end, number}: {count, number} {count, plural, one {keyword} other {keywords}}",
       "chartAriaLabel": "Position distribution chart. {summary}",
       "definition": "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
       "keywordCount": "{count, number} {count, plural, one {keyword} other {keywords}}",
+      "keywordShare": "{count, number} {count, plural, one {keyword} other {keywords}} · {percent, number}%",
       "ofTotal": "{percent, number}% of total",
       "positionRange": "Positions {start, number} to {end, number}",
       "summaryItem": "{range}: {count, number} {count, plural, one {keyword} other {keywords}}",

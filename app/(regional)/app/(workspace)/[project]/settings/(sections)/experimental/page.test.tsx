@@ -38,7 +38,7 @@ describe("ExperimentalSettingsPage", () => {
       actor: { memberships: [{ projectId: "project_1", role: "member" }] },
       project: { id: "project_1", publicId: "prj_resolved", writeMode: "active" },
     });
-    mocks.getExperimentalModules.mockResolvedValue(["timeline"]);
+    mocks.getExperimentalModules.mockResolvedValue(["competitors"]);
   });
 
   it("supplies the project module settings with member update capability", async () => {
@@ -51,7 +51,7 @@ describe("ExperimentalSettingsPage", () => {
     expect(mocks.shellProps).toEqual(expect.objectContaining({ activeSection: "experimental" }));
     expect(mocks.sectionProps).toEqual({
       canEdit: true,
-      enabledExperimentalModules: ["timeline"],
+      enabledExperimentalModules: ["competitors"],
       projectId: "prj_resolved",
     });
   });
