@@ -12,8 +12,12 @@ export function propertyQuotaKey(property: string) {
   return `gsc:property:${createHash("sha256").update(normalizeGscProperty(property)).digest("hex").slice(0, 16)}`;
 }
 
-export async function readPropertyQuota(accountKey: string, now = new Date()) {
-  const row = await prisma.inspectionPropertyQuota.findUnique({ where: { accountKey } });
+export async function readPropertyQuota(
+  accountKey: string,
+  now = new Date(),
+  db: Prisma.TransactionClient = prisma,
+) {
+  const row = await db.inspectionPropertyQuota.findUnique({ where: { accountKey } });
   return {
     todayCount: row?.pacificDate === pacificDate(now) ? row.used : 0,
     last429Kind: row?.last429Kind ?? null,

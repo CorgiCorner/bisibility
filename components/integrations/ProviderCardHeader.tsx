@@ -11,21 +11,22 @@ export function ProviderCardHeader({
   provider,
   canManageProviders,
 }: Readonly<{
-  provider: IntegrationProviderData;
+  provider: Pick<
+    IntegrationProviderData,
+    "enabled" | "icon" | "logoDomain" | "name" | "primary" | "recovery" | "status" | "tint"
+  >;
   canManageProviders: boolean;
 }>) {
   const t = useTranslations("projectIntegrations.provider");
   return (
     <div className="flex min-w-0 items-start gap-3" data-provider-header="">
-      <span className="grid h-6 w-6 shrink-0 place-items-center">
-        <ProviderLogo
-          alt={t("logo", { provider: provider.name })}
-          domain={provider.logoDomain}
-          fallbackIcon={provider.icon}
-          size="sm"
-          tint={provider.tint}
-        />
-      </span>
+      <ProviderLogo
+        alt={t("logo", { provider: provider.name })}
+        domain={provider.logoDomain}
+        fallbackIcon={provider.icon}
+        size="sm"
+        tint={provider.tint}
+      />
       <div className="min-w-0 flex-1">
         <SectionTitle component="h3" size="sm">
           {provider.name}

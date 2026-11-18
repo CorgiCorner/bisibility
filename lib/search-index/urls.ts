@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { sitemapMembershipValue } from "@/lib/pages/export-csv";
+import { pagePathForProject } from "@/lib/pages/page-path";
+import { getStoredSitemapRead } from "@/lib/pages/sitemap-read";
+import { pageSitemapMembershipQuery } from "@/lib/pages/sitemap-sql";
+import { trackedProjectDomain } from "@/lib/schemas/project";
 import { currentPageIndexingScope } from "./current-rows";
 import { pageIndexingGroup } from "./report";
 import { pageIndexingUrlsQuerySchema } from "./report-schema";
@@ -59,6 +64,27 @@ export async function listPageIndexingUrls(
     paged?.rows ??
     (await prisma.urlPresence.findMany({ where, orderBy: { url: "asc" }, take: input.limit + 1 }));
   const page = paged ? rows : rows.slice(0, input.limit);
+  const sitemapRead = await getStoredSitemapRead(projectId);
+  const project = await prisma.project.findFirst({
+    where: { id: projectId },
+    select: { domain: true },
+  });
+  const domain = trackedProjectDomain(project?.domain) ?? "";
+  const memberships =
+    sitemapRead && page.length
+      ? await prisma.$queryRaw<{ url: string; listed: boolean | null }[]>(
+          pageSitemapMembershipQuery(
+            projectId,
+            sitemapRead,
+            page.map((row) => ({
+              url: row.url,
+              path: pagePathForProject(domain, row.url),
+              firstSeenAt: row.createdAt,
+            })),
+          ),
+        )
+      : [];
+  const membershipByUrl = new Map(memberships.map((row) => [row.url, row.listed]));
   const data = await Promise.all(
     page.map(
       async ({
@@ -70,6 +96,8 @@ export async function listPageIndexingUrls(
       }) => ({
         ...row,
         group: pageIndexingGroup(row),
+        sitemapState: sitemapMembershipValue(membershipByUrl.get(row.url) ?? null),
+        sitemapChecked: (membershipByUrl.get(row.url) ?? null) !== null,
         ...(input.history === "true"
           ? {
               history: await prisma.urlPresenceChange

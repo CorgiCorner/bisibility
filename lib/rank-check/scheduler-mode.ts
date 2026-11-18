@@ -34,7 +34,7 @@ export function warnRetiredRankSchedulerConfiguration(
   if (env.RANK_CHECK_SCHEDULER_MODE === "legacy") retired.push("RANK_CHECK_SCHEDULER_MODE=legacy");
   if (!retired.length) return;
   warn(
-    `Retired rank scheduler configuration: ${retired.join(", ")}. The worker upgrades scheduling automatically; named Schedules are authoritative. Stop old workers before starting this version. Remove retired settings when convenient. To retain the old maintenance opt-out, set SCHEDULED_MAINTENANCE_ENABLED=0. Guide: https://bisibility.com/docs/self-hosting/scheduler-upgrade`,
+    `Retired rank scheduler configuration: ${retired.join(", ")}. Retired configuration is ignored. Named Schedules are authoritative. Missing assignments must be resolved by the operator. Stop old workers before starting this version. Remove retired settings when convenient. To retain the old maintenance opt-out, set SCHEDULED_MAINTENANCE_ENABLED=0. Guide: https://bisibility.com/docs/self-hosting/scheduler-upgrade`,
   );
 }
 

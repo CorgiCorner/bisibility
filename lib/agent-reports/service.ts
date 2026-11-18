@@ -13,10 +13,11 @@ import {
   agentReportListSchema,
   agentReportSchema,
   type ReportJson,
+  storedAgentReportSchema,
 } from "./model";
 
 function resource(row: AgentReport): AgentReportResource {
-  const { body, provenance, kind, title } = agentReportSchema.parse({
+  const { body, provenance, kind, title } = storedAgentReportSchema.parse({
     body: row.body,
     provenance: row.provenance,
     kind: row.kind,
@@ -106,11 +107,23 @@ export async function getAgentReportRecord(input: { projectId: string; reportId:
   const row = await prisma.agentReport.findFirst({
     where: { projectId: input.projectId, publicId },
   });
-  return row ? { report: resource(row), actorId: row.createdById } : null;
+  if (!row) return null;
+  const report = resource(row);
+  if (report.kind === "prompt_explorer" && report.provenance.source === "model_playground") {
+    const linked = await prisma.modelPlaygroundRun.findFirst({
+      where: { projectId: input.projectId, reportId: row.id },
+      select: { id: true },
+    });
+    if (linked) report.modelPlaygroundRunId = linked.id;
+  }
+  return { report, actorId: row.createdById };
 }
 
 export async function getAgentReport(input: { projectId: string; reportId: string }) {
-  return (await getAgentReportRecord(input))?.report ?? null;
+  const report = (await getAgentReportRecord(input))?.report;
+  if (!report) return null;
+  const { modelPlaygroundRunId: _nativeLink, ...resource } = report;
+  return resource;
 }
 
 export function findAgentReport(input: { projectId: string; publicId: string }) {

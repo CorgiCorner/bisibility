@@ -92,6 +92,15 @@ hand.
 | `AWS_REGION`, `AWS_DEFAULT_REGION` | Standard AWS SDK chain fallbacks for SES region when `SES_REGION` is unset. |
 | `SMTP_URL` | SMTP connection URL (`smtp://user:pass@host:port` or `smtps://...`); required when `EMAIL_PROVIDER=smtp`. |
 
+### AI Assistant
+
+| Variable | Purpose |
+| - | - |
+| `ASSISTANT_ENABLED` | Set to `1` to enable the AI Assistant with a configured model catalog. Defaults to `0`. |
+| `ASSISTANT_MODELS_JSON` | JSON array of available models. Each entry requires a unique `id`, a `provider` (`openai`, `anthropic`, or `openrouter`), `providerModel`, `label`, `toolUse`, `maxOutputTokens`, `contextChars`, and `pricing`. |
+
+Set a pricing `version` for each model and use the provider's rates in integer micro-USD per million tokens. Supply `inputMicroUsdPerMTok`, `cachedInputMicroUsdPerMTok`, `cacheWriteMicroUsdPerMTok`, and `outputMicroUsdPerMTok`. Add a provider key under the project's Providers settings.
+
 ### Temporal
 
 | Variable | Purpose |
@@ -108,6 +117,7 @@ hand.
 | `TEMPORAL_NAMESPACE_RETENTION` | Retention managed by the bundled namespace job, default `24h`. External Temporal namespaces are validated but never created or mutated by the app or worker. |
 | `TEMPORAL_MAX_CONCURRENT_ACTIVITIES` | Maximum concurrent activities for the Temporal worker. Defaults to `5`. |
 | `TEMPORAL_UI_URL` | Base URL of your Temporal Web UI. When set, ops Slack messages link workflows to it. |
+| `MODEL_PLAYGROUND_WORKER_ENABLED` | Runs Model Playground requests on the Temporal worker instead of inline in the web app. Defaults to `false`; accepts `true` or `1`. Deploy the worker from the same release before turning it on. |
 | `WORKER_INTENT_POLL_INTERVAL_MS` | Fallback interval for durable user-intent pickup when the realtime wake is unavailable. Defaults to `2000`; valid values are integers from `100` through `60000`. |
 
 ### Scheduler driver values
@@ -122,8 +132,8 @@ hand.
 
 | Variable | Purpose |
 | - | - |
-| `RANK_CHECK_SCHEDULER_MODE` | `dispatcher` is the default (also when empty) and runs the named-schedule planner and due-work dispatcher. `cutover` stops automatic starts while allowing state healing and already-paid collection. `legacy` is rejected; follow [scheduler upgrade](/self-hosting/scheduler-upgrade). Set the same value on app and worker. |
-| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Retired. Remove configured values from app and worker; startup rejects them, even with an explicit scheduler mode. |
+| `RANK_CHECK_SCHEDULER_MODE` | `dispatcher` is the default when unset or empty and runs the named-schedule planner and due-work dispatcher. `cutover` stops automatic starts while allowing state healing and already-paid collection. `legacy` is ignored and selects `dispatcher`; startup warns and continues. Any other value is rejected. Set the same value on the app and the worker. See [scheduler upgrade](/self-hosting/scheduler-upgrade). |
+| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Retired. A configured value is ignored. Startup warns and continues; it does not reject the process. Remove the values from the app and the worker. |
 | `RANK_CHECK_DISPATCHER_INTERVAL`, `RANK_CHECK_PLANNER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Dispatcher polling, planner planning and stale-check intervals remain configurable. |
 | `RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS` | Maximum due keywords one project may claim in one dispatcher pass. Defaults to `25`; valid values are integers from `1` through `100`. Invalid values fail the claim before database work. |
 | `DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED` | DataForSEO Standard queue route for scheduled checks. It is ON by default, also when empty; only `0`, `false`, `off` or `no` turns it off. While it is off, scheduled runs are blocked with the reason "Scheduled checks off" instead of starting work that would be deferred. It submits only in `dispatcher` mode. In `cutover`, already-submitted work may finish result retrieval, but no new paid submission is allowed. Manual checks remain available in every mode. |

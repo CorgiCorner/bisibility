@@ -16,9 +16,12 @@
       "analyticsTitle": "Fuentes de analítica",
       "analyticsDescription": "Conecta fuentes de datos propios, como Google Search Console o Google Analytics 4, para añadir contexto de tráfico y de rendimiento de las consultas. Las fuentes de analítica no se usan para determinar las posiciones.",
       "enrichmentTitle": "Enriquecimiento SEO",
-      "enrichmentDescription": "Sigue la autoridad de tu dominio con una medición gratuita de Domain Rating al día."
+      "enrichmentDescription": "Sigue la autoridad de tu dominio con una medición gratuita de Domain Rating al día.",
+      "modelTitle": "Proveedores de modelos",
+      "modelDescription": "Conecta tus propias claves de proveedores de modelos. El proveedor factura a tu cuenta."
     },
     "drawer": {
+      "ahrefsSyncSchedule": "La autoridad del dominio se comprueba una vez al día. Puedes pausarla en Programaciones.",
       "oauthTitleCloud": "Inicia sesión con Google en modo de solo lectura. Los tokens se guardan cifrados en tu espacio de trabajo.",
       "oauthTitleSelfHost": "Inicia sesión con Google en modo de solo lectura. Los tokens se guardan cifrados en tu instancia.",
       "keyTitle": "Usa tu propia cuenta del proveedor. Las credenciales se guardan cifradas en tu instancia.",
@@ -68,6 +71,7 @@
       "connectionSavedTraffic": "Se ha guardado la conexión con {provider}. La sincronización de tráfico está en cola."
     },
     "oauth": {
+      "gscSyncSchedule": "Las importaciones de Search Console y las comprobaciones de indexación de páginas se ejecutan a diario cuando están habilitadas. Puedes pausarlas en Programaciones.",
       "loadPropertiesError": "No se han podido cargar las propiedades. Inténtalo de nuevo o vuelve a conectar la cuenta.",
       "propertySelectionUnavailable": "La selección de propiedad no está disponible.",
       "reconnectToChangeProperty": "Vuelve a conectar la cuenta de Google para cambiar su propiedad.",

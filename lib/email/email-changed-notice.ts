@@ -36,6 +36,7 @@ export async function sendEmailChangedNotice(input: EmailChangedNoticeInput) {
   const { from, replyTo } = resolveFounderEmailIdentity();
 
   await sendEmail({
+    purpose: "email-changed-notice",
     category: "transactional",
     from,
     html,

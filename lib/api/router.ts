@@ -17,6 +17,7 @@ import { handleDiscovery } from "./discovery-router";
 import { errorFromUnknown } from "./error-mapper";
 import { scopeToEnforce } from "./estimate-only-scope";
 import { withIdempotency } from "./idempotency";
+import { projectApiKeyRole } from "./key-creator";
 import { isOauthExchangeRequest } from "./oauth-exchange-request";
 import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
@@ -207,7 +208,7 @@ async function dispatchApiRequest(
     // Project keys never exceed the admin tier: owner-only operations need an owner's PAT.
     actor = {
       id: auth.project.ownerId ?? auth.apiKey.id,
-      memberships: [{ projectId: auth.project.id, role: "admin" }],
+      memberships: [{ projectId: auth.project.id, role: projectApiKeyRole(auth.creatorRole) }],
     };
   }
 
@@ -268,7 +269,8 @@ async function dispatchApiRequest(
     }
   };
 
-  return method === "GET"
+  // A read estimate stores nothing, so an Idempotency-Key never creates a replay entry for it.
+  return method === "GET" || declaredOperation.operationId === "estimateModelPlaygroundRun"
     ? execute()
     : withIdempotency(
         {
@@ -277,6 +279,7 @@ async function dispatchApiRequest(
           method,
           pathname: url.pathname,
           req,
+          fingerprintBody: declaredOperation.operationId === "createModelPlaygroundRun",
         },
         execute,
       );

@@ -27,12 +27,17 @@ const writerModules = new Map([
     ]),
   ],
   ["lib/api/provider-audit.ts", new Map([["auditProviderMutation", "auditProviderMutation"]])],
+  ["lib/assistant/kill-switch.ts", new Map([["raiseKillSwitch", "raiseKillSwitch"]])],
 ]);
+
+// Writers whose audit payload is not their first argument.
+const writerInputArgument = new Map([["raiseKillSwitch", 2]]);
 
 const localWriterWrappers = new Map([
   ["lib/actions/team.ts", new Set(["auditAndRevalidate"])],
   ["lib/api/provider-audit.ts", new Set(["auditProviderMutation"])],
   ["lib/api/rank-check-request.ts", new Set(["writeFailureAudit"])],
+  ["lib/assistant/kill-switch.ts", new Set(["raiseKillSwitch"])],
 ]);
 
 function sourceFiles(directory: string): string[] {
@@ -136,12 +141,14 @@ function auditCallSites(): AuditCallSite[] {
       writers.set(wrapper, wrapper);
     }
 
+    if (writers.size === 0) continue;
+
     function visit(node: ts.Node) {
       if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
         const writer = writers.get(node.expression.text);
         const wrapper = enclosingFunctionName(node);
         if (writer && !(wrapper && localWriterWrappers.get(path)?.has(wrapper))) {
-          const input = node.arguments[0];
+          const input = node.arguments[writerInputArgument.get(writer) ?? 0];
           const object = input && ts.isObjectLiteralExpression(input) ? input : null;
           calls.push({
             action: object ? property(object, "action", source) : null,
@@ -179,7 +186,7 @@ let discoveredAuditCallSites: AuditCallSite[];
 
 beforeAll(() => {
   discoveredAuditCallSites = auditCallSites();
-}, 30_000);
+}, 60_000);
 
 function auditClient() {
   const create = vi.fn().mockResolvedValue({ id: "audit_1" });
@@ -322,11 +329,10 @@ describe("audit redaction canaries", () => {
   it.each(["archive", "restore", "update"])(
     "retains schedule %s details without unrelated payload fields",
     async (operation) => {
-      const before = { archivedAt: null, enabled: true, isDefault: true };
+      const before = { archivedAt: null, enabled: true };
       const after = {
         archivedAt: operation === "restore" ? null : "2026-09-09T00:00:00.000Z",
         enabled: false,
-        isDefault: false,
         keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],
         movedTo: "sch_bcdefghijklmnopqrstuvwxy",
       };
@@ -417,6 +423,15 @@ describe("audit redaction canaries", () => {
       keywordId: "kw_abcdefghijklmnopqrstuvwx",
       text: "rank tracker",
     });
+  });
+
+  it("keeps the reason an instance admin gives for a kill switch flip", async () => {
+    const data = await writeCanary(
+      { level: "all", reason: "Provider incident" },
+      undefined,
+      "instance_admin.assistant_kill_switch.set",
+    );
+    expect(data.after).toEqual({ level: "all", reason: "Provider incident" });
   });
 
   it("redacts a secret-shaped status reason independently of payload keys", async () => {

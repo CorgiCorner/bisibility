@@ -42,6 +42,7 @@ export default async function ModelPlaygroundPage({
           sourceOverrides={data.sourceOverrides}
           supportingProviders={data.supportingProviders}
           topics={data.topics}
+          nativeComposer={data.nativeComposer}
         />
       </PageContent>
     </FeatureMessagesProvider>

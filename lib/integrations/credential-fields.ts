@@ -52,6 +52,10 @@ const fieldsByProvider: Record<string, readonly CredentialField[]> = {
   pagespeed: SERPAPI_CREDENTIAL_FIELDS,
   plausible: PLAUSIBLE_CREDENTIAL_FIELDS,
   serpapi: SERPAPI_CREDENTIAL_FIELDS,
+  openai: SERPAPI_CREDENTIAL_FIELDS,
+  anthropic: SERPAPI_CREDENTIAL_FIELDS,
+  openrouter: SERPAPI_CREDENTIAL_FIELDS,
+  vercel_ai_gateway: SERPAPI_CREDENTIAL_FIELDS,
 };
 
 function savedSecretField(field: CredentialField): CredentialField {

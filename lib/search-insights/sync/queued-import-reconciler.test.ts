@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => ({
   updateMany: vi.fn(),
 }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { searchAnalyticsImport: { findMany: mocks.findMany, updateMany: mocks.updateMany } },
+  prisma: {
+    projectSyncPause: { findUnique: async () => null },
+    searchAnalyticsImport: { findMany: mocks.findMany, updateMany: mocks.updateMany },
+  },
 }));
 vi.mock("@/lib/temporal/search-insights-client", () => ({
   startSearchInsightsBackfillWorkflow: mocks.start,

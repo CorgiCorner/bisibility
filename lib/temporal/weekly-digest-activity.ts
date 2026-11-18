@@ -14,7 +14,7 @@ export type SendWeeklyReportDigestActivityResult = {
 export async function sendWeeklyReportDigestForAllProjects(
   now: Date,
 ): Promise<SendWeeklyReportDigestActivityResult> {
-  // Editable demo sends digests normally; recipient selection excludes the shared Viewer.
+  // Each project sender enforces notification policy; the legacy snapshot also skips lookup.
   if (readOnlyDemoConfig()) return { projects: 0, sent: 0, skipped: 0, ambiguous: 0 };
   const incidentDigest = recoverySwitches().incidentDigest;
   const projects = await prisma.project.findMany({ select: { id: true } });

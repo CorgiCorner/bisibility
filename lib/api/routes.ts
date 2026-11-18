@@ -27,6 +27,14 @@ type Handler = (ctx: ApiContext) => Response | Promise<Response | null | undefin
 // The router has already matched method/path and applied the operation policy.
 // Keep the existing eager imports eager and every existing lazy import literal.
 const handlers = {
+  previewSchedule: (ctx) =>
+    import("./schedule-write-routes").then((routes) => routes.previewPublicSchedule(ctx)),
+  createSchedule: (ctx) =>
+    import("./schedule-write-routes").then((routes) => routes.createPublicSchedule(ctx)),
+  updateSchedule: (ctx) =>
+    import("./schedule-write-routes").then((routes) => routes.updatePublicSchedule(ctx)),
+  listSchedules: (ctx) => import("./schedules").then((routes) => routes.listProjectSchedules(ctx)),
+  getSchedule: (ctx) => import("./schedules").then((routes) => routes.getProjectSchedule(ctx)),
   getDomainVerification: (ctx) => domainVerification(ctx, "read"),
   issueDomainVerification: (ctx) => domainVerification(ctx, "issue"),
   checkDomainVerification: (ctx) => domainVerification(ctx, "check"),

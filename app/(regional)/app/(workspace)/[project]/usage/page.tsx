@@ -1,6 +1,7 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { IntegrationUsagePanel } from "@/components/integrations/IntegrationUsagePanel";
 import type { BillingConnection } from "@/components/integrations/ProviderBillingCard";
+import { withAiBillingConnections } from "@/components/integrations/provider-billing-connections";
 import { PageContent } from "@/components/shell/PageContent";
 import { UsageCosts } from "@/components/usage/UsageCosts";
 import { usageBlocks, usagePageClassName } from "@/components/usage/usage-page-layout";
@@ -12,10 +13,11 @@ import {
   endCostItemAction,
   updateCostItemAction,
 } from "@/lib/actions/cost-items";
+import { assistantConfig } from "@/lib/assistant/config";
 import { readUsageCosts } from "@/lib/cost-items/read";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
-import { resolveProjectAccess } from "@/lib/queries/_auth";
+import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getIntegrationsView } from "@/lib/queries/integrations";
 
 export default async function UsagePage({
@@ -27,13 +29,14 @@ export default async function UsagePage({
 }>) {
   const [{ project }, runtime] = await Promise.all([params, resolveRegionalDocumentLocale()]);
   const { publicId } = await resolveProjectAccess(project);
-  const [{ categories }, messages, costs, query] = await Promise.all([
+  const [{ categories }, messages, costs, query, assistant] = await Promise.all([
     getIntegrationsView(publicId),
     loadCoreMessages(runtime.locale, ["shared", "projectIntegrations", "projectUsageCosts"]),
     readUsageCosts(publicId),
     searchParams,
+    getQueryActor().then((actor) => assistantConfig(publicId, actor.id)),
   ]);
-  const connections: BillingConnection[] = categories.flatMap((category) =>
+  const catalogConnections: BillingConnection[] = categories.flatMap((category) =>
     category.providers.flatMap((provider) => {
       if (!provider.connectionId) return [];
       const catalog = PROVIDER_CATALOG.find((entry) => entry.id === provider.id);
@@ -48,6 +51,7 @@ export default async function UsagePage({
       ];
     }),
   );
+  const connections = withAiBillingConnections(catalogConnections, assistant);
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}

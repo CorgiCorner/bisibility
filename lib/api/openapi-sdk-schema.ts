@@ -76,6 +76,23 @@ export function publicIdPrefix(pattern: unknown) {
 }
 
 /**
+ * Prefixes of a public-ID union whose every member is one strict single-prefix pattern.
+ * A loose, unknown or repeated pattern returns undefined.
+ */
+export function strictPublicIdUnionPrefixes(
+  members: readonly { pattern?: unknown; "x-bisibility-public-id"?: unknown }[],
+): string[] | undefined {
+  if (members.length === 0) return undefined;
+  const prefixes: string[] = [];
+  for (const member of members) {
+    const prefix = publicIdPrefix(member.pattern);
+    if (!prefix || member["x-bisibility-public-id"] !== prefix) return undefined;
+    prefixes.push(prefix);
+  }
+  return new Set(prefixes).size === prefixes.length ? prefixes : undefined;
+}
+
+/**
  * Copies `value`, adding `x-bisibility-public-id` next to every strict public-ID `pattern`. The
  * prefix is read from the pattern itself, so the two cannot disagree.
  */

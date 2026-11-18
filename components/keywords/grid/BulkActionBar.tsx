@@ -29,10 +29,7 @@ import { bulkTargetView } from "./bulk-target-model";
 import { SetScheduleModal } from "./SetScheduleModal";
 import type { CheckScheduleSummary } from "./set-schedule-model";
 
-type BulkActionBarProps = Omit<
-  KeywordWorkspaceActions,
-  "addKeywordsAction" | "bulkSetFrequencyAction"
-> & {
+type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
   checksRunning?: boolean;
   canDeleteKeyword: boolean;
   canUpdateKeyword: boolean;

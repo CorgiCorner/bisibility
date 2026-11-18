@@ -88,7 +88,8 @@ export function AddKeywordDrawerPanels({
           label: tabLabels[tab.id],
           value: tab.id,
         }))}
-        size="toolbar"
+        optionClassName="whitespace-nowrap"
+        size="field"
         value={activeTab}
       />
 

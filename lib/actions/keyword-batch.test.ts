@@ -229,6 +229,7 @@ describe("set-based keyword batch creation", () => {
       [stored(1).id],
       expect.objectContaining({ frequency: "manual" }),
       null,
+      "schedule",
     );
     expect(result.created).toEqual([]);
     expect(result.restored).toEqual([{ ...stored(1), archivedAt: null }]);

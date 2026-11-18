@@ -8,7 +8,7 @@ import { verifyMigrationDiff } from "@/scripts/ci/migration-diff.mjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Client } from "pg";
 
-export async function isolatedTrackingDatabase() {
+export async function isolatedTrackingDatabase(options?: { checkFunctionBodies?: boolean }) {
   const connectionString = process.env.AI_TRACKING_TEST_DATABASE_URL;
   if (!connectionString)
     throw new Error("AI_TRACKING_TEST_DATABASE_URL must point to disposable local PostgreSQL.");
@@ -19,10 +19,22 @@ export async function isolatedTrackingDatabase() {
   const admin = new Client({ connectionString });
   await admin.connect();
   await admin.query(`CREATE SCHEMA "${schema}"`);
+  // Historical functions pin search_path to public. That is a known pre-existing defect.
+  // Body checks are off only inside this migrate process, never for the database.
+  // Prisma's engine does not read PGOPTIONS, so the same GUC is also a URL option.
+  const relaxBodies = options?.checkFunctionBodies === false;
   url.searchParams.set("schema", schema);
   function command(args: string[]) {
+    const migrateUrl = new URL(url.href);
+    if (relaxBodies) migrateUrl.searchParams.set("options", "-c check_function_bodies=off");
+    const env = {
+      ...process.env,
+      DATABASE_URL: migrateUrl.href,
+      DIRECT_URL: migrateUrl.href,
+      ...(relaxBodies ? { PGOPTIONS: "-c check_function_bodies=off" } : {}),
+    };
     const result = spawnSync("node", ["node_modules/prisma/build/index.js", ...args], {
-      env: { ...process.env, DATABASE_URL: url.href, DIRECT_URL: url.href },
+      env,
       encoding: "utf8",
     });
     if (result.status !== 0)

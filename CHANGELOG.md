@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.50.0] - 2026-11-18
+
+### Added
+
+- Compare answers side by side with your own keys in Model Playground. Preview costs, review saved runs, and start comparisons from the API.
+- Use the in-app AI Assistant with your own key and approve changes before it acts. Project API keys follow their creator's current role.
+
+### Changed
+
+- **Breaking:** Unscheduled keywords stay manual. Scheduling them or increasing check frequency needs web approval. Self-hosted upgrades require the offline scheduler upgrade.
+- Preview costs, pause data syncs and manage schedules in the app or API. Use the schedule endpoints for new integrations. Legacy schedule aliases are deprecated.
+
+### Fixed
+
+- Save custom project cost types and export filtered Pages to CSV. Fixed sitemap membership and usage reconciliation to preserve budget totals.
+
 ## [0.49.0] - 2026-11-13
 
 ### Added

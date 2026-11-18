@@ -1,157 +1,126 @@
 import "server-only";
 
 import { createKeywordBatchSet } from "@/lib/actions/keyword-helpers";
+import { linkCheckSchedule } from "@/lib/actions/keyword-schedule-assignment";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { MarketArchivedError } from "@/lib/markets/archived";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
-import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { resolveSerpLanguage } from "@/lib/serp/language-catalog";
+import { scheduleNotFound } from "@/lib/schedules/errors";
 import {
-  canonicalKey,
-  LocationInputError,
-  type LocationSelection,
-  normalizeCanonicalLocationKey,
-} from "@/lib/serp/location";
+  commitKeywordCreate,
+  type KeywordCreateReview,
+} from "@/lib/schedules/keyword-create-write";
+import type { KeywordCreateChange } from "@/lib/schemas/keyword-create-review";
+import { scheduleReviewSchema } from "@/lib/schemas/schedule-review";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
-import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, projectMatches } from "./context";
+import { deferredKeywordLocations, resolveLocationForReview } from "./deferred-keyword-location";
+import { ApiInputError } from "./errors";
+import {
+  prepareCreateCadenceReview,
+  ScheduleReviewRequiredError,
+  scheduleReviewResponse,
+} from "./keyword-cadence-review";
 import { assignCreatedKeywordCadences } from "./keyword-create-cadence";
 import { parseKeywordCreateBody } from "./keyword-create-input";
-import { scheduleFromCreate } from "./keyword-utils";
-import { legacyMarketLocationKey, legacyMarketLocationSelection } from "./legacy-market-input";
+import {
+  type CreateMarket,
+  createMarket,
+  type KeywordCreateClient,
+  type KeywordCreateTransaction,
+  loadCreateDefaultMarket,
+  locationInput,
+  marketKey,
+} from "./keyword-create-market";
+import { assertSingleScheduleInput, scheduleFromCreate, scheduleSource } from "./keyword-utils";
 import { KeywordLimitExceededError } from "./resource-limits";
 import { keywordInclude, keywordResources } from "./resources";
 import { errorResponse, resourceResponse } from "./responses";
+import { apiScheduleReviewer, withApiScheduleAudit } from "./schedule-reviewer";
 
 export const KEYWORD_CREATE_TRANSACTION_TIMEOUT_MS = 10_000;
 
-// Every create item ends as a location key; legacy names pass through the translator.
-type CreateMarket = {
-  device: "desktop" | "mobile";
-  locationKey: string;
-  selection: LocationSelection;
-  source: "canonical" | "legacy";
-};
-type KeywordCreateTransaction = Pick<
-  Prisma.TransactionClient,
-  | "$executeRaw"
-  | "$queryRaw"
-  | "auditLog"
-  | "checkSchedule"
-  | "project"
-  | "rankCheckRun"
-  | "rankCheckRunItem"
-  | "rankCheck"
-  | "queuedRankCheckTask"
-  | "keyword"
-  | "keywordTag"
-  | "keywordSchedule"
-  | "projectMarket"
-  | "projectDefaults"
-  | "tag"
->;
-type KeywordCreateClient =
-  | KeywordCreateTransaction
-  | (KeywordCreateTransaction & Pick<typeof prisma, "$transaction">);
-
-async function loadCreateDefaultMarket(projectId: string, client: KeywordCreateClient) {
-  const [defaults, keywords] = await Promise.all([
-    client.projectDefaults.findUnique({ where: { projectId } }),
-    client.keyword.findMany({
-      select: { device: true, location: true, locationRef: true },
-      where: { projectId },
-    }),
-  ]);
-  return projectDefaultSerpMarket(defaults, keywords);
+function keywordCreateReviewSubmission(body: unknown) {
+  if (!body || typeof body !== "object" || !("review" in body)) return undefined;
+  return scheduleReviewSchema.optional().parse(body.review);
 }
 
-function defaultLocationKeyWithLanguage(locationKey: string, language: string | null | undefined) {
-  if (!language) return locationKey;
-  const languageCode = resolveSerpLanguage(language)?.code;
-  if (!languageCode) {
-    throw new LocationInputError("languageCode", `Unsupported language: ${language}`);
-  }
-  const { selector } = normalizeCanonicalLocationKey(locationKey);
-  return canonicalKey({ ...selector, languageCode });
+export async function keywordCreatePreviewChange(ctx: ApiContext, body: unknown) {
+  return (await prepareKeywords(ctx.auth.project.id, body, prisma, true)).change;
 }
 
-function createMarket(
-  item: {
-    city?: string | null;
-    country?: string;
-    device?: "desktop" | "mobile";
-    language?: string | null;
-    location?: string;
-    location_key?: string;
-  },
-  defaults: Awaited<ReturnType<typeof loadCreateDefaultMarket>>,
-): CreateMarket {
-  const device = item.device ?? defaults.device;
-  if (item.location_key) {
-    return {
-      device,
-      locationKey: item.location_key,
-      selection: { canonicalKey: item.location_key, kind: "city" },
-      source: "canonical",
-    };
-  }
-  const country = item.location ?? item.country;
-  if (country) {
-    const legacyInput = {
-      city: item.city,
-      country,
-      language: item.language,
-    };
-    return {
-      device,
-      locationKey: legacyMarketLocationKey(legacyInput),
-      selection: legacyMarketLocationSelection(legacyInput),
-      source: "legacy",
-    };
-  }
-  if (item.city) {
-    const legacyInput = {
-      city: item.city,
-      country: defaults.country,
-      language: item.language,
-    };
-    return {
-      device,
-      locationKey: legacyMarketLocationKey(legacyInput),
-      selection: legacyMarketLocationSelection(legacyInput),
-      source: "legacy",
-    };
-  }
-  if (defaults.locationKey) {
-    const locationKey = defaultLocationKeyWithLanguage(defaults.locationKey, item.language);
-    return {
-      device,
-      locationKey,
-      selection: { canonicalKey: locationKey, kind: "city" },
-      source: "canonical",
-    };
-  }
-  const legacyInput = {
-    city: defaults.city,
-    country: defaults.country,
-    language: item.language,
+async function prepareKeywords(
+  projectId: string,
+  body: unknown,
+  client: KeywordCreateClient,
+  forceDeferred: boolean,
+) {
+  const items = parseKeywordCreateBody(body);
+  const selections = new Set(
+    items.map((item) => item.schedule_id).filter((id) => id !== undefined),
+  );
+  if (
+    selections.size > 1 ||
+    (selections.size > 0 && items.some((item) => item.schedule_id === undefined))
+  )
+    throw new ApiInputError("Use one schedule_id per keyword create request.");
+  const scheduleId = [...selections][0];
+  for (const item of items) assertSingleScheduleInput(item);
+  const defaultMarket = await loadCreateDefaultMarket(projectId, client);
+  const warnings = new Set<string>();
+  const preparedItems: Array<{
+    item: (typeof items)[number];
+    market: CreateMarket;
+  }> = items.map((item) => {
+    const market = createMarket(item, defaultMarket);
+    return { item, market };
+  });
+  const uniqueMarkets = new Map(
+    preparedItems.map(({ market }) => [marketKey(market), market] as const),
+  );
+  const deferLocations =
+    forceDeferred ||
+    scheduleId !== undefined ||
+    items.some((item) => {
+      const schedule = scheduleFromCreate(item);
+      return schedule && schedule.frequency !== "manual" && schedule.frequency !== "paused";
+    });
+  const deferred = deferLocations ? deferredKeywordLocations(client) : null;
+  const resolvedMarkets = new Map(
+    await Promise.all(
+      [...uniqueMarkets].map(
+        async ([key, market]) =>
+          [
+            key,
+            await resolveLocationForReview(locationInput(market, projectId), deferred),
+          ] as const,
+      ),
+    ),
+  );
+  const resolvedItems = preparedItems.map(({ item, market }) => {
+    const resolved = resolvedMarkets.get(marketKey(market));
+    if (!resolved) throw new Error("Keyword location could not be resolved.");
+    if (resolved.warning) warnings.add(resolved.warning);
+    return { item, market, resolved };
+  });
+
+  const change: KeywordCreateChange = {
+    op: "keywords-create",
+    scheduleId: scheduleId ?? null,
+    ...(scheduleId ? { allowPausedSchedule: true } : {}),
+    cadence: null,
+    keywords: resolvedItems.map(({ item, market, resolved }) => ({
+      keyword: item.keyword,
+      device: market.device,
+      locationKey: resolved.location.canonicalKey,
+      ...(scheduleId === undefined && (item.frequency || item.schedule)
+        ? { cadence: scheduleFromCreate(item) }
+        : {}),
+    })),
   };
-  return {
-    device,
-    locationKey: legacyMarketLocationKey(legacyInput),
-    selection: legacyMarketLocationSelection(legacyInput),
-    source: "legacy",
-  };
-}
-
-function locationInput(market: CreateMarket, projectId: string) {
-  return { projectId, selection: market.selection };
-}
-
-function marketKey(market: CreateMarket) {
-  return `${market.source}\u0000${market.locationKey}`;
+  return { change, deferred, resolvedItems, scheduleId, warnings };
 }
 
 export async function createKeywords(
@@ -164,35 +133,30 @@ export async function createKeywords(
   }
 
   const body = await ctx.req.json();
-  const items = parseKeywordCreateBody(body);
-  const defaultMarket = await loadCreateDefaultMarket(ctx.auth.project.id, client);
-  const warnings = new Set<string>();
-  const preparedItems: Array<{
-    item: (typeof items)[number];
-    market: CreateMarket;
-  }> = items.map((item) => {
-    const market = createMarket(item, defaultMarket);
-    return { item, market };
-  });
-  const uniqueMarkets = new Map(
-    preparedItems.map(({ market }) => [marketKey(market), market] as const),
+  const submission = keywordCreateReviewSubmission(body);
+  const { change, deferred, resolvedItems, scheduleId, warnings } = await prepareKeywords(
+    ctx.auth.project.id,
+    body,
+    client,
+    Boolean(submission),
   );
-  const resolvedMarkets = new Map(
-    await Promise.all(
-      [...uniqueMarkets].map(
-        async ([key, market]) =>
-          [key, await resolveKeywordLocation(locationInput(market, ctx.auth.project.id))] as const,
-      ),
-    ),
-  );
-  const resolvedItems = preparedItems.map(({ item, market }) => {
-    const resolved = resolvedMarkets.get(marketKey(market));
-    if (!resolved) throw new Error("Keyword location could not be resolved.");
-    if (resolved.warning) warnings.add(resolved.warning);
-    return { item, market, resolved };
-  });
+  const reviewed = scheduleId !== undefined || Boolean(submission);
+  if (reviewed && !("$transaction" in client))
+    throw new ApiInputError("Reviewed keyword creation requires an API-owned transaction.");
+  const review = reviewed
+    ? undefined
+    : await prepareCreateCadenceReview(client, ctx.auth.project.id, resolvedItems);
+  if (review?.newKeywordRequiresReview) return scheduleReviewResponse(ctx);
 
-  const persist = async (tx: KeywordCreateTransaction) => {
+  const persist = async (tx: KeywordCreateTransaction, admission?: KeywordCreateReview) => {
+    await review?.assertExisting(tx);
+    const target = scheduleId
+      ? await tx.checkSchedule.findFirst({
+          where: { projectId: ctx.auth.project.id, publicId: scheduleId, archivedAt: null },
+        })
+      : null;
+    if (scheduleId && !target) throw scheduleNotFound();
+    const locationIds = deferred ? await deferred.flush(tx) : new Map<string, string>();
     const persisted = await createKeywordBatchSet(
       tx,
       ctx.auth.project.id,
@@ -200,8 +164,9 @@ export async function createKeywords(
         device: market.device,
         keyword: item.keyword,
         location: denormalizedLocationLabel(resolved.location),
-        locationId: resolved.location.id,
-        schedule: scheduleFromCreate(item),
+        locationId: locationIds.get(resolved.location.id) ?? resolved.location.id,
+        schedule: scheduleId === undefined ? scheduleFromCreate(item) : null,
+        scheduleSource: scheduleSource(item),
         tags: item.tags,
         targetUrl: item.target_url ?? null,
         topic: item.topic ?? null,
@@ -213,7 +178,19 @@ export async function createKeywords(
       ctx.auth.project.id,
       persisted.accepted,
       ctx.actorId ?? null,
+      admission,
     );
+    if (target) {
+      await linkCheckSchedule(
+        tx as Prisma.TransactionClient,
+        ctx.auth.project.id,
+        target,
+        persisted.accepted
+          .filter((row) => row.created || row.restored)
+          .map(({ keyword }) => keyword),
+        admission,
+      );
+    }
     const hydrated = await tx.keyword.findMany({
       include: keywordInclude,
       where: { id: { in: persisted.accepted.map(({ keyword }) => keyword.id) } },
@@ -252,13 +229,27 @@ export async function createKeywords(
   let persisted: Awaited<ReturnType<typeof persist>>;
   try {
     // Only this REST-owned transaction sets a budget; TransactionClient callers keep their outer one.
-    persisted =
-      "$transaction" in client
+    persisted = reviewed
+      ? await withApiScheduleAudit(ctx, () =>
+          commitKeywordCreate(
+            ctx.auth.project.id,
+            apiScheduleReviewer(ctx),
+            change,
+            submission,
+            persist,
+            { strictReview: true },
+          ),
+        )
+      : "$transaction" in client
         ? await client.$transaction((tx) => persist(tx), {
             timeout: KEYWORD_CREATE_TRANSACTION_TIMEOUT_MS,
           })
         : await persist(client);
   } catch (error) {
+    if (error instanceof ScheduleReviewRequiredError) {
+      if ("$transaction" in client) return scheduleReviewResponse(ctx);
+      throw error;
+    }
     if (error instanceof MarketArchivedError) {
       return errorResponse("conflict", error.message, 409, {
         headers: ctx.headers,

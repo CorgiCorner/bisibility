@@ -38,6 +38,7 @@ export function ProviderCard({
   consumerDetails = "inline",
   deploymentMode,
   initialOpen = false,
+  layout = "subgrid",
   projectId,
   projectRef,
   provider,
@@ -52,7 +53,11 @@ export function ProviderCard({
   const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
   const { isHostedSerp, managementActionKey } = providerCardActions(provider);
-  const managementActionLabel = t(managementActionKey);
+  const managementActionLabel = {
+    manageKey: t("manageKey"),
+    connectionSettings: t("connectionSettings"),
+    manage: t("manage"),
+  }[managementActionKey];
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
   const consumerStatuses = providerConsumerStatuses(provider);
@@ -104,7 +109,11 @@ export function ProviderCard({
     <>
       <Card
         id={`provider-${provider.id}`}
-        className="row-span-3 grid min-w-0 grid-rows-subgrid p-4"
+        className={
+          layout === "stack"
+            ? "flex min-w-0 flex-col gap-3 p-4"
+            : "row-span-3 grid min-w-0 grid-rows-subgrid p-4"
+        }
         size="md"
         style={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
       >
@@ -160,7 +169,15 @@ export function ProviderCard({
               className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text"
               role="alert"
             >
-              {tIntegrations(reauthMessageKey(provider))}
+              {
+                {
+                  "oauth.googlePropertyPermission": tIntegrations("oauth.googlePropertyPermission"),
+                  "oauth.googlePropertyScope": tIntegrations("oauth.googlePropertyScope"),
+                  "provider.reauthGsc": tIntegrations("provider.reauthGsc"),
+                  "provider.reauthGa4": tIntegrations("provider.reauthGa4"),
+                  "provider.reauthGeneric": tIntegrations("provider.reauthGeneric"),
+                }[reauthMessageKey(provider)]
+              }
             </p>
           ) : null}
           <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />
@@ -174,7 +191,7 @@ export function ProviderCard({
         </div>
         {showFooter ? (
           <div
-            className="flex min-w-0 flex-col gap-3 border-t border-border pt-3"
+            className={`${layout === "stack" ? "mt-auto " : ""}flex min-w-0 flex-col gap-3 border-t border-border pt-3`}
             data-provider-footer=""
           >
             {provider.kind === "serp" && canManageProviders ? (

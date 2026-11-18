@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 5c79c1b47a4b7639ef019e1eba288ee1b9c1a3bcf5bbc0793ef5d12b11bb0952
+# Source hash: 4450943b96affbebef2bda0727996a9db5e2a2398c5d5711a5fe482cf7d4b141
 name: CI
 
 on:
@@ -30,7 +30,7 @@ env:
 jobs:
   static:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # The Action requires a paid organization license; use the OSS CLI before npm ci.

@@ -8,6 +8,7 @@ import type { InstanceEmailAllowance } from "./allowance-model";
 import { emailBudgetUtcDay, resolveEmailDailyBudget } from "./budget";
 import { configuredEmailFrom } from "./from";
 import { readInstanceMailStatus, refreshInstanceMailRuntime } from "./instance-mail-store";
+import { emailNotificationsDisabled, NOTIFICATIONS_DISABLED_REASON } from "./notification-policy";
 import { isEmailConfigured } from "./registry";
 
 const categories = ["bulk", "transactional"] as const;
@@ -43,6 +44,10 @@ export async function getInstanceAdminEmailAllowance(
     resetsAt: new Date(day.getTime() + 86_400_000).toISOString(),
     scope: "installation",
     status: await allowanceCapability(),
+    notificationsDisabled: emailNotificationsDisabled(),
+    ...(emailNotificationsDisabled()
+      ? { notificationPolicyMessage: NOTIFICATIONS_DISABLED_REASON }
+      : {}),
     categories: [],
   };
   if (state.status !== "available") return state;

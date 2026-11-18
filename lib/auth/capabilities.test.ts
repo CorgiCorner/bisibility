@@ -1,6 +1,11 @@
 import type { Role } from "@/lib/generated/prisma/client";
 import { describe, expect, it } from "vitest";
-import { canDeleteProjectSavedView, canProjectAction, canReadProjectAudit } from "./capabilities";
+import {
+  canDeleteProjectSavedView,
+  canProjectAction,
+  canReadProjectAudit,
+  hasProjectCapability,
+} from "./capabilities";
 
 const roles = ["viewer", "auditor", "member", "admin", "owner"] satisfies Role[];
 
@@ -49,4 +54,15 @@ describe("canProjectAction", () => {
       expect(canDeleteProjectSavedView(role, "actor-1", null)).toBe(canDeleteOthers);
     },
   );
+});
+
+describe("hasProjectCapability", () => {
+  it("grants assistant.use from member upwards only", () => {
+    expect(hasProjectCapability("viewer", "assistant.use")).toBe(false);
+    expect(hasProjectCapability("auditor", "assistant.use")).toBe(false);
+    expect(hasProjectCapability("member", "assistant.use")).toBe(true);
+    expect(hasProjectCapability("admin", "assistant.use")).toBe(true);
+    expect(hasProjectCapability("owner", "assistant.use")).toBe(true);
+    expect(hasProjectCapability(null, "assistant.use")).toBe(false);
+  });
 });

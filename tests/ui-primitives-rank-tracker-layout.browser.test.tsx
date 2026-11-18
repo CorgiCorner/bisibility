@@ -98,7 +98,6 @@ function table(grouped: boolean, density: "compact" | "standard", filtered = fal
         <KeywordDataTable
           bulkClearTargetAction={vi.fn()}
           bulkDeleteAction={vi.fn()}
-          bulkSetFrequencyAction={vi.fn()}
           bulkSetTargetAction={vi.fn()}
           bulkTagAction={vi.fn()}
           canDeleteKeyword={false}

@@ -1,8 +1,8 @@
 "use server";
-
 import { prisma } from "@/lib/db/prisma";
 import { configuredEmailFrom } from "@/lib/email/from";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
+import { skipEmailNotification } from "@/lib/email/notification-policy";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import {
@@ -87,6 +87,7 @@ function escapeHtml(value: string) {
 }
 
 async function notifyOwner(input: StoredWaitlist) {
+  if (skipEmailNotification("waitlist-notice")) return;
   await refreshInstanceMailRuntime();
   const to = resolveNotifyEmail();
   const isFeedback = settingsFeedbackSources.has(input.source);
@@ -115,6 +116,7 @@ async function notifyOwner(input: StoredWaitlist) {
     ? "New pricing feedback from settings."
     : "New bisibility waitlist submission.";
   await sendEmail({
+    purpose: "waitlist-notice",
     category: "transactional",
     html: `<p>${intro}</p><pre>${escapeHtml(text)}</pre>`,
     subject,

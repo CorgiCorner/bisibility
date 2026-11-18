@@ -77,6 +77,7 @@ describe("API activity authorization", () => {
   it("attributes a delivered project-key result to its account owner without an interactive return", async () => {
     mocks.authenticate.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { ...auth.token, projectId: "project" },
       project: { ...project, ownerId: "owner" },
     });

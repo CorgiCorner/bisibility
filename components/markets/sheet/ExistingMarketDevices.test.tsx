@@ -70,7 +70,11 @@ it("invalidates the old review when the real schedule selection changes", async 
   await user.click(screen.getByRole("button", { name: "Schedule" }));
   await user.click(screen.getByRole("menuitem", { name: "Weekly main" }));
   expect(screen.queryByRole("button", { name: /Add Mobile tracking/ })).toBeNull();
-  expect(screen.getByText(/Checks follow the selected schedule/)).toBeVisible();
+  expect(
+    screen.getByText(
+      /Scheduled checks use credits or your provider account and can increase recurring cost/,
+    ),
+  ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Review changes" }));
   await waitFor(() =>
     expect(actions.preview).toHaveBeenLastCalledWith({
@@ -157,4 +161,42 @@ it("adds only explicitly selected keywords and never treats an empty selection a
   await waitFor(() =>
     expect(actions.add).toHaveBeenCalledWith(expect.objectContaining({ keywordIds: [secondId] })),
   );
+});
+
+import {
+  createSpendPreview,
+  keywordCreateReviewCases,
+} from "@/components/schedules/keyword-create-review.test-support";
+import { beforeEach as reviewBeforeEach } from "vitest";
+
+const reviewPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: reviewPort.preview,
+}));
+reviewBeforeEach(() =>
+  reviewPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+keywordCreateReviewCases("ExistingMarketDevices", reviewPort.preview, async () => {
+  const user = userEvent.setup();
+  mount();
+  await user.click(screen.getByRole("button", { name: "Schedule" }));
+  await user.click(screen.getByRole("menuitem", { name: "Weekly main" }));
+  await user.click(screen.getByRole("button", { name: "Review changes" }));
+  await screen.findByRole("button", { name: "Add Mobile tracking (3)" });
+  return {
+    action: actions.add,
+    start: async () => {
+      await user.click(screen.getByRole("button", { name: "Add Mobile tracking (3)" }));
+    },
+    assertDraft: () => {
+      expect(onAdded).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Weekly main");
+    },
+  };
 });

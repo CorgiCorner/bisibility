@@ -1,3 +1,4 @@
+import { makePublicId } from "@/lib/db/public-id";
 import { prisma } from "@/lib/db/prisma";
 import { handleApiRequest } from "@/lib/api/router";
 import { hashApiKey } from "@/lib/providers/crypto";
@@ -56,10 +57,12 @@ export async function restBatch(ownerId: string) {
       ownerId,
       publicId: projectPublicId,
       trackingScope: "country",
+      members: { create: { publicId: makePublicId("mbr"), role: "owner", userId: ownerId } },
     },
   });
   await prisma.apiKey.create({
     data: {
+      createdById: ownerId,
       hashedKey: hashApiKey(rawKey),
       name: "REST harness",
       prefix: rawKey.slice(0, 21),

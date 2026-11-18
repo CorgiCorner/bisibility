@@ -33,6 +33,7 @@ type DataTableBodyProps<TRow extends DataTableRowBase> = {
   renderSection?: (row: TRow) => ReactNode;
   rootId: string;
   rowClassName?: (row: TRow) => string | undefined;
+  rowClickable?: (row: TRow) => boolean;
   rowHeight?: (row: TRow) => number | undefined;
   rows: Row<TRow>[];
   scrollElement: HTMLDivElement | null;
@@ -75,7 +76,7 @@ function rowProps<TRow extends DataTableRowBase>(
     isLastRow: index === props.rows.length - 1,
     onExpandedToggle: props.onExpandedToggle,
     onGroupRowClick: props.onGroupRowClick,
-    onRowClick: props.onRowClick,
+    onRowClick: props.rowClickable?.(row.original) === false ? undefined : props.onRowClick,
     onSelectionChange: props.onSelectionChange,
     renderSection: props.renderSection,
     row,

@@ -313,7 +313,7 @@
         "markets": "Manage locations, keyword defaults, and market lifecycle.",
         "preferences": "Theme and personal defaults.",
         "runs": "Rank checks, Prompt Tracker and Search Console imports for this project.",
-        "pages": "Every URL of the project, one row each.",
+        "pages": "Known project URLs, one row each.",
         "searchConsole": "What Google reported, what it withheld, and what you keep.",
         "security": "Password, sessions and account protection.",
         "timeline": "Your notes plus Google updates, deploys, content and sitemap changes.",

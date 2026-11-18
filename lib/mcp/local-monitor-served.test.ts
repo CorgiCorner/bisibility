@@ -19,7 +19,7 @@ vi.mock("@/lib/api/router", () => ({
     expect(request.headers.get("x-bisibility-source")).toBe("mcp");
     const ctx = exportTestContext(new URL(request.url).search);
     ctx.auth.project.id = "synthetic-project";
-    ctx.auth.apiKey.projectId = ctx.auth.project.id;
+    if ("apiKey" in ctx.auth) ctx.auth.apiKey.projectId = ctx.auth.project.id;
     const f = localTransportFixture();
     state.reads++;
     if (state.revoked)

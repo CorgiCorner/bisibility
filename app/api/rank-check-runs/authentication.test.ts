@@ -11,7 +11,6 @@ const mocks = vi.hoisted(() => ({
   preview: vi.fn(),
   remove: vi.fn(),
   requireScope: vi.fn(),
-  setDefault: vi.fn(),
   update: vi.fn(),
 }));
 
@@ -50,7 +49,6 @@ vi.mock("@/lib/rank-check/runs/run-now", () => ({ runRankCheckRunNowCommand: vi.
 vi.mock("@/lib/rank-check/schedules/service", () => ({
   createSchedule: mocks.create,
   deleteSchedule: mocks.delete,
-  setDefaultSchedule: mocks.setDefault,
   updateSchedule: mocks.update,
 }));
 vi.mock("@/lib/rank-check/schedules/service-membership", () => ({
@@ -67,7 +65,6 @@ import {
   GET as getSchedule,
   PATCH,
 } from "@/app/api/check-schedules/[publicId]/route";
-import { POST as setDefault } from "@/app/api/check-schedules/[publicId]/set-default/route";
 import { POST as createSchedule, GET as listSchedules } from "@/app/api/check-schedules/route";
 import { ProjectNotFoundError } from "@/lib/actions/_shared";
 import { ApiNotFoundError } from "@/lib/api/errors";
@@ -197,14 +194,6 @@ const cases = [
       ),
   ],
   [
-    "schedule default",
-    () =>
-      setDefault(
-        json("POST", `/api/check-schedules/${scheduleId}/set-default`, { projectId }),
-        scheduleContext,
-      ),
-  ],
-  [
     "schedule assign",
     () =>
       assignKeywords(
@@ -243,15 +232,6 @@ const scheduleNotFoundCases = [
       ),
     name: "DELETE",
     service: mocks.delete,
-  },
-  {
-    invoke: () =>
-      setDefault(
-        json("POST", `/api/check-schedules/${scheduleId}/set-default`, { projectId }),
-        scheduleContext,
-      ),
-    name: "set-default",
-    service: mocks.setDefault,
   },
   {
     invoke: () =>
@@ -367,3 +347,8 @@ describe("app rank run and schedule route boundary", () => {
     });
   });
 });
+
+// Preserve scope/store characterizations with an explicit no-spend admission fixture.
+vi.mock("@/lib/schedules/review-load", async () => ({
+  loadScheduleSpend: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));

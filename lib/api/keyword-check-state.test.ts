@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadLatestSuccessfulChecks } from "./keyword-check-state";
-import { listKeywords } from "./keywords";
+import { getKeyword, listKeywords } from "./keywords";
 
 const mocks = vi.hoisted(() => ({
   keywordFindMany: vi.fn(),
+  keywordFindFirst: vi.fn(),
   rankCheckFindMany: vi.fn(),
   rankCheckGroupBy: vi.fn(),
   resolveLocation: vi.fn(),
@@ -12,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    keyword: { findMany: mocks.keywordFindMany },
+    keyword: { findMany: mocks.keywordFindMany, findFirst: mocks.keywordFindFirst },
     rankCheck: { findMany: mocks.rankCheckFindMany, groupBy: mocks.rankCheckGroupBy },
   },
 }));
@@ -192,6 +193,31 @@ describe("keyword list check-state loading", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.rankCheckFindMany.mockResolvedValue([]);
+  });
+
+  it("returns the same completed timestamp for list and single keyword responses", async () => {
+    const keyword = keywordRow(0);
+    const checkedAt = new Date("2026-09-04T00:00:00.000Z");
+    mocks.keywordFindMany.mockResolvedValue([keyword]);
+    mocks.keywordFindFirst.mockResolvedValue(keyword);
+    mocks.rankCheckGroupBy.mockResolvedValue([{ _max: { checkedAt }, keywordId: keyword.id }]);
+    mocks.rankCheckFindMany.mockResolvedValue([
+      {
+        checkedAt,
+        keywordId: keyword.id,
+        position: 6,
+        publicId: "check_a00000000000000000000000",
+        rankingUrl: "https://example.com/rank-tracker",
+        run: null,
+      },
+    ]);
+
+    const list = await listKeywords(context(), "prj_a00000000000000000000000");
+    const single = await getKeyword(context(), keyword.publicId);
+    const listBody = await list.json();
+    const singleBody = await single.json();
+    expect(listBody.data[0].schedule.last_checked_at).toBe(checkedAt.toISOString());
+    expect(singleBody.schedule.last_checked_at).toBe(checkedAt.toISOString());
   });
 
   it("issues one bounded groupBy plus one findMany for successful checks when listing 50 keywords", async () => {

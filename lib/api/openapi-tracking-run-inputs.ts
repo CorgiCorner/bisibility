@@ -1,6 +1,7 @@
 import { TRACKING_ENGINES, TRACKING_SOURCES } from "@/lib/ai-tracking/contract";
 import { paymentRequestFields } from "./openapi-action-payment";
 import { publicIdSchema } from "./openapi-public-id";
+import { publicScheduleReviewSchema } from "./openapi-schedule-writes";
 import { closedEnum, sdkName } from "./openapi-sdk-schema";
 
 const text = { type: "string" };
@@ -171,6 +172,7 @@ const plan = {
     "Project-scoped prompt, schedule and connection lookups must succeed. Manual plans require at least one prompt. schedule_id and planned_at must be supplied together. No per-request cost cap is supported.",
 };
 const scheduleProperties = {
+  review: publicScheduleReviewSchema,
   name: { ...nonempty, maxLength: 200 },
   cron: { ...nonempty, maxLength: 200 },
   timezone: { ...nonempty, maxLength: 100 },

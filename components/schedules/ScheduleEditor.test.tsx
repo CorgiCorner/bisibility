@@ -12,7 +12,6 @@ const schedule = {
   cronExpression: null,
   enabled: true,
   frequency: "daily" as const,
-  isDefault: false,
   jitterMinutes: 15,
   keywordCount: 2,
   name: "Commercial daily",
@@ -36,7 +35,6 @@ function renderEditor(
   return render(
     <ScheduleEditor
       connectedProviders={connectedProviders}
-      defaultScheduleName="Daily 06:00"
       members={[{ name: "headless cms", publicId: "kw_saved", targetCount: 2 }]}
       projectId="prj_story"
       projectDefaults={defaults}
@@ -66,17 +64,16 @@ describe("ScheduleEditor", () => {
       ).toBeVisible();
     },
   );
-  it("keeps dirty edits when the full-page summary updates the default", () => {
+  it("keeps dirty edits when the full-page summary updates", () => {
     const props = {
       connectedProviders,
       projectId: "prj_story",
       projectDefaults,
       projectTimezone: "Europe/Madrid",
-      showDefaultControl: false,
     };
     const { rerender } = render(<ScheduleEditor {...props} schedule={schedule} />);
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "My unsaved name" } });
-    rerender(<ScheduleEditor {...props} schedule={{ ...schedule, isDefault: true }} />);
+    rerender(<ScheduleEditor {...props} schedule={{ ...schedule, keywordCount: 3 }} />);
     expect(screen.getByLabelText("Name")).toHaveValue("My unsaved name");
     expect(screen.getByRole("button", { name: "Save schedule" })).toBeEnabled();
     expect(screen.queryByRole("switch", { name: /default suggestion/i })).toBeNull();
@@ -179,40 +176,10 @@ describe("ScheduleEditor", () => {
     );
   });
 
-  it("implements default toggle names the schedule losing the flag", () => {
+  it("offers no default schedule control", () => {
     renderEditor();
-
-    expect(screen.getByText(/Replaces Daily 06:00 as the suggested schedule/)).toBeVisible();
-  });
-
-  it("lets users undo choosing a default before saving", async () => {
-    const user = userEvent.setup();
-    renderEditor();
-    const toggle = screen.getByRole("switch", { name: /default suggestion/i });
-    await user.click(toggle);
-    expect(toggle).toBeChecked();
-    expect(toggle).toBeEnabled();
-    await user.click(toggle);
-    expect(toggle).not.toBeChecked();
-  });
-
-  it("keeps the current default selected until another schedule replaces it", () => {
-    render(
-      <ScheduleEditor
-        connectedProviders={connectedProviders}
-        defaultScheduleName="Commercial daily"
-        projectId="prj_story"
-        projectDefaults={projectDefaults}
-        projectTimezone="Europe/Madrid"
-        schedule={{ ...schedule, isDefault: true }}
-      />,
-    );
-
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.getByText("Default suggestion")).toBeVisible();
-    expect(
-      screen.getByText("Suggested when you choose a schedule. No keywords join automatically."),
-    ).toBeVisible();
+    expect(screen.queryByRole("switch", { name: /default suggestion/i })).toBeNull();
+    expect(screen.queryByText("Default suggestion")).toBeNull();
   });
 
   it("uses the Zod 30-minute validation message instead of native form validation", async () => {
@@ -301,7 +268,6 @@ describe("ScheduleEditor", () => {
             targetCount: 2,
           },
         ]}
-        defaultScheduleName="Daily 06:00"
         isNew
         projectId="prj_story"
         projectDefaults={projectDefaults}
@@ -333,7 +299,6 @@ describe("ScheduleEditor", () => {
     render(
       <ScheduleEditor
         connectedProviders={connectedProviders}
-        defaultScheduleName="Daily"
         initialSaveConfirmed
         planningMinutes={15}
         projectId="prj_story"
@@ -346,7 +311,7 @@ describe("ScheduleEditor", () => {
     expect(screen.queryByText(/Planned runs usually appear/)).toBeNull();
   });
 
-  it("shows the first schedule as the default and saves that default", async () => {
+  it("creates the first schedule without selecting a default", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
       .fn()
@@ -357,7 +322,6 @@ describe("ScheduleEditor", () => {
     render(
       <ScheduleEditor
         connectedProviders={connectedProviders}
-        defaultScheduleName={null}
         isNew
         projectId="prj_story"
         projectDefaults={projectDefaults}
@@ -369,15 +333,12 @@ describe("ScheduleEditor", () => {
     expect(screen.getByText("0 keywords")).toBeVisible();
     expect(screen.getByText(/No keywords assigned.*will not plan new checks/)).toBeVisible();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.getByText("Default suggestion")).toBeVisible();
+    expect(screen.queryByText("Default suggestion")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      "/api/check-schedules",
-      "/api/check-schedules/sch_created/set-default",
-    ]);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/api/check-schedules"]);
   });
 
   it("implements consequence line counts every move", () => {
@@ -415,7 +376,6 @@ describe("ScheduleEditor", () => {
         dayOfMonth: "1st",
         extra: true,
         frequency: "daily",
-        isDefault: false,
         jitterMinutes: "15",
         name: "Daily 06:00",
         providerPolicy: "project",
@@ -433,7 +393,6 @@ describe("ScheduleEditor", () => {
         cronExpression: "0 6 * * *",
         dayOfMonth: "1st",
         frequency: "daily",
-        isDefault: false,
         jitterMinutes: "15",
         name: "Daily 06:00",
         providerPolicy: "project",

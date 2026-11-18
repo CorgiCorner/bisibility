@@ -8,7 +8,7 @@ export async function collectDomainRatingBatchActivity(cursor: string | null) {
   const projects = await prisma.project.findMany({
     where: {
       owner: { deactivatedAt: null },
-      domainRatingEnabled: true,
+      syncPauses: { none: { kind: "domain_rating" } },
       isSample: false,
       writeMode: "active",
       domain: { not: null },

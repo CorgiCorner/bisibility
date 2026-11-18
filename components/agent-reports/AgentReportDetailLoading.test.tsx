@@ -6,9 +6,7 @@ import { describe, expect, it } from "vitest";
 
 describe("challenge report loading", () => {
   it("mirrors the challenge tile grid inside the shared report frame", () => {
-    const { container } = render(
-      <AgentReportDetailLoading backLabel="All reports" membersOnlyLabel="Members" />,
-    );
+    const { container } = render(<AgentReportDetailLoading backLabel="All reports" />);
     expect(container.querySelector("[data-challenge-blocks]")).toHaveAttribute(
       "data-challenge-blocks",
       challengeReportBlocks.join(" "),

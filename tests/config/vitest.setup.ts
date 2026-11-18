@@ -1,5 +1,13 @@
 import "@testing-library/jest-dom/vitest";
 import "./vitest.setup.common";
+import { vi } from "vitest";
+
+// DOM fixtures never invoke authenticated server actions. Review scenarios override this port.
+vi.mock(
+  "@/lib/schedules/preview-client",
+  () => import("@/.storybook/schedule-review-action-stubs"),
+);
+
 import { CompressionStream, DecompressionStream, ReadableStream } from "node:stream/web";
 
 globalThis.CompressionStream ??= CompressionStream as typeof globalThis.CompressionStream;

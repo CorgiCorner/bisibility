@@ -488,7 +488,6 @@
           "currentUnavailable": "Bieżący harmonogram jest niedostępny. Odśwież stronę i spróbuj ponownie.",
           "ariaLabel": "Harmonogram",
           "current": "Bieżący",
-          "default": "Domyślny",
           "alreadyAssigned": "{count, plural, one {# cel już tu jest.} few {Wszystkie # cele już tu są.} many {Wszystkie # celów już tu jest.} other {# celu już tu jest.}}",
           "moveFrom": "{count, plural, one {# cel zostanie przeniesiony} few {Wszystkie # cele zostaną przeniesione} many {Wszystkie # celów zostanie przeniesionych} other {# celu zostanie przeniesione}} z harmonogramu {name}.",
           "assignTo": "Przypisz {count, plural, one {ten cel} few {te # cele} many {# celów} other {# celu}} do tego harmonogramu.",

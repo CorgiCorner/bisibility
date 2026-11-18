@@ -32,7 +32,12 @@ export function UsageCosts({
   view: UsageCostsView;
 }>) {
   const t = useTranslations("projectUsageCosts");
-  const [drawer, setDrawer] = useState<{ id?: string; mode: "create" | "edit" } | null>(null);
+  const [drawer, setDrawer] = useState<{
+    id?: string;
+    mode: "create" | "edit";
+    open: boolean;
+    instance: number;
+  } | null>(null);
   const [remove, setRemove] = useState<CostRow | null>(null);
   const editing = view.rows.find((row) => row.id === drawer?.id);
   const initial = editing
@@ -47,9 +52,22 @@ export function UsageCosts({
       {children}
       <CostSubscriptions
         canEdit={view.canEdit}
-        onAdd={() => setDrawer({ mode: "create" })}
+        onAdd={() =>
+          setDrawer((current) => ({
+            mode: "create",
+            open: true,
+            instance: (current?.instance ?? 0) + 1,
+          }))
+        }
         onDelete={setRemove}
-        onEdit={(row) => setDrawer({ id: row.id, mode: "edit" })}
+        onEdit={(row) =>
+          setDrawer((current) => ({
+            id: row.id,
+            mode: "edit",
+            open: true,
+            instance: (current?.instance ?? 0) + 1,
+          }))
+        }
         onEnd={(row) => void endItem({ projectId: view.projectPublicId, publicId: row.id })}
         rows={view.rows}
       />
@@ -57,13 +75,12 @@ export function UsageCosts({
         catalog={view.catalog}
         editingId={editing?.id}
         initial={initial}
-        key={`${drawer?.mode ?? "closed"}-${drawer?.id ?? "new"}`}
+        key={drawer?.instance ?? 0}
         mode={drawer?.mode ?? "create"}
-        onClose={() => setDrawer(null)}
+        onClose={() => setDrawer((current) => (current ? { ...current, open: false } : null))}
         onSubmit={drawer?.mode === "edit" ? updateItem : createItem}
-        open={drawer !== null}
+        open={drawer?.open === true}
         projectPublicId={view.projectPublicId}
-        suggestHref={view.suggestHref}
       />
       <Modal
         description={

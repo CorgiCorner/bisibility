@@ -32,6 +32,7 @@ export const costItemInputSchema = z
     catalogKey: z.string().trim().min(1).max(64).nullable(),
     currency: z.enum(COST_CURRENCIES),
     discount: discountSchema.nullable(),
+    customType: z.string().trim().max(80).nullable().optional(),
     kind: z.enum(COST_KINDS),
     name: z.string().trim().min(1).max(120),
     planLabel: z.string().trim().max(80),
@@ -76,6 +77,7 @@ export type CostFormValues = {
   discountPercent: string;
   discountSpan: "months" | "until";
   discountUntil: string;
+  customType?: string;
   kind: CostKind;
   name: string;
   percents: Record<string, string>;
@@ -98,6 +100,7 @@ export const costFormSchema = z
     discountPercent: z.string(),
     discountSpan: z.enum(["months", "until"]),
     discountUntil: z.string(),
+    customType: z.string().max(80, "customType").optional(),
     kind: z.enum(COST_KINDS),
     name: z.string(),
     percents: z.record(z.string(), z.string()),
@@ -178,6 +181,7 @@ export function toCostItemInput(
   publicId?: string,
 ): CostItemInput | string {
   if (!values.name.trim()) return "name";
+  if (values.kind === "custom" && (values.customType?.trim().length ?? 0) > 80) return "customType";
   if (!isDate(values.startedOn)) return "date";
   const amountMinor = majorToMinor(values.amount, values.currency);
   if (amountMinor === null) return "amount";
@@ -193,6 +197,7 @@ export function toCostItemInput(
     catalogKey: values.catalogKey.trim() || null,
     currency: values.currency,
     discount,
+    customType: values.kind === "custom" ? values.customType?.trim() || null : null,
     kind: values.kind,
     name: values.name.trim(),
     planLabel: values.planLabel.trim(),

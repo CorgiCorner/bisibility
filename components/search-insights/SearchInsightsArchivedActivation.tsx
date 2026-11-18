@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import type { SelectSearchInsightsPropertyAction } from "@/lib/actions/search-insights";
 import { formatDisplayDate } from "@/lib/dates/format";
-import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { googlePropertyInsightsFailureMessage } from "@/lib/integrations/google-property-failure";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -46,13 +46,15 @@ export function SearchInsightsArchivedActivation({
       const result = await selectPropertyAction({ projectId, property: target.value });
       if (result.status === "reauth_required") {
         showToast(
-          result.failure ? googlePropertyFailureMessage(result.failure, t) : t("reauthRequired"),
+          result.failure
+            ? googlePropertyInsightsFailureMessage(result.failure, t)
+            : t("reauthRequired"),
           { severity: "connection" },
         );
         return;
       }
       if (result.status === "failed") {
-        showToast(googlePropertyFailureMessage(result.failure, t), { severity: "error" });
+        showToast(googlePropertyInsightsFailureMessage(result.failure, t), { severity: "error" });
         return;
       }
       onClose();

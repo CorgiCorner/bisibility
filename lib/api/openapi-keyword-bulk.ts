@@ -1,16 +1,30 @@
+import { publicIdSchema } from "./openapi-public-id";
+import { publicScheduleReviewSchema } from "./openapi-schedule-writes";
 import { closedEnum, openEnum, sdkName } from "./openapi-sdk-schema";
 
 const frequencyValues = ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"];
-const operationValues = ["add_tags", "delete", "remove_tags", "set_frequency", "set_target_url"];
+const operationValues = [
+  "add_tags",
+  "delete",
+  "remove_tags",
+  "set_frequency",
+  "set_schedule",
+  "set_target_url",
+];
 
 export const keywordBulkRequest = {
   ...sdkName("KeywordBulkRequest"),
   type: "object",
   required: ["keyword_ids", "operation"],
   description:
-    "Partial mutation: optional fields may be absent. target_url accepts null to clear the URL; for set_target_url, omission also clears it. Other top-level fields reject null. Tag operations require nonempty tags; set_frequency requires frequency or schedule.",
+    "Partial mutation: optional fields may be absent. target_url accepts null to clear the URL; for set_target_url, omission also clears it. Other top-level fields reject null. Tag operations require nonempty tags; set_schedule requires schedule_id (null means Manual). Deprecated set_frequency also accepts frequency or schedule.",
   properties: {
-    frequency: { type: "string", enum: frequencyValues, ...closedEnum("KeywordBulkFrequency") },
+    frequency: {
+      type: "string",
+      deprecated: true,
+      enum: frequencyValues,
+      ...closedEnum("KeywordBulkFrequency"),
+    },
     keyword_ids: {
       type: "array",
       minItems: 1,
@@ -18,7 +32,10 @@ export const keywordBulkRequest = {
       items: { type: "string", minLength: 1, maxLength: 160, pattern: "^kw_[a-z][a-z0-9]{23}$" },
     },
     operation: { type: "string", enum: operationValues, ...closedEnum("KeywordBulkOperation") },
+    review: publicScheduleReviewSchema,
+    schedule_id: { ...publicIdSchema("sch"), type: ["string", "null"] },
     schedule: {
+      deprecated: true,
       ...sdkName("KeywordBulkSchedule"),
       type: "object",
       required: ["frequency"],

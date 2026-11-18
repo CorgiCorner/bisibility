@@ -10,9 +10,9 @@ const mocks = vi.hoisted(() => ({
   delete: vi.fn(),
   get: vi.fn(),
   list: vi.fn(),
+  rank: vi.fn(),
   remove: vi.fn(),
   requireScope: vi.fn(),
-  setDefault: vi.fn(),
   update: vi.fn(),
 }));
 
@@ -46,7 +46,6 @@ vi.mock("@/lib/queries/rank-check-runs", () => ({
 vi.mock("@/lib/rank-check/schedules/service", () => ({
   createSchedule: mocks.create,
   deleteSchedule: mocks.delete,
-  setDefaultSchedule: mocks.setDefault,
   updateSchedule: mocks.update,
 }));
 vi.mock("@/lib/rank-check/schedules/service-membership", () => ({
@@ -58,12 +57,18 @@ vi.mock("@/lib/rank-check/schedules/archive", () => ({
   archiveSchedule: mocks.archive,
   restoreSchedule: mocks.restore,
 }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    checkSchedule: {
+      findFirst: mocks.rank,
+    },
+  },
+}));
 
 import { POST as archiveScheduleRoute } from "./[publicId]/archive/route";
 import { POST as assignKeywords, DELETE as removeKeywords } from "./[publicId]/keywords/route";
 import { POST as restoreScheduleRoute } from "./[publicId]/restore/route";
 import { DELETE as deleteScheduleRoute, GET as getSchedule, PATCH } from "./[publicId]/route";
-import { POST as setDefault } from "./[publicId]/set-default/route";
 import { POST as createScheduleRoute, GET as listSchedules } from "./route";
 
 const projectId = "prj_a00000000000000000000000";
@@ -90,13 +95,13 @@ describe("check schedule app routes", () => {
       mocks.create,
       mocks.delete,
       mocks.remove,
-      mocks.setDefault,
       mocks.update,
     ]) {
       service.mockResolvedValue({ publicId: scheduleId });
     }
     mocks.list.mockResolvedValue([]);
     mocks.get.mockResolvedValue({ publicId: scheduleId });
+    mocks.rank.mockResolvedValue({ archivedAt: null, enabled: true });
   });
 
   it("authorizes lifecycle changes at manage scope before mutation", async () => {
@@ -111,6 +116,10 @@ describe("check schedule app routes", () => {
       projectId,
       scheduleId,
       destinationScheduleId: null,
+    });
+    mocks.rank.mockResolvedValue({
+      archivedAt: new Date("2026-01-01T00:00:00.000Z"),
+      enabled: false,
     });
     await restoreScheduleRoute(jsonRequest("POST", { projectId }), context);
     expect(mocks.restore).toHaveBeenCalledWith("user_1", "project_1", scheduleId);
@@ -190,13 +199,11 @@ describe("check schedule app routes", () => {
     expect(mocks.audit).not.toHaveBeenCalled();
   });
 
-  it("uses manage scope for set-default and delete", async () => {
-    await setDefault(jsonRequest("POST", { projectId }), context);
+  it("uses manage scope for delete", async () => {
     await deleteScheduleRoute(jsonRequest("DELETE", { projectId }), context);
 
-    expect(mocks.setDefault).toHaveBeenCalledWith("user_1", "project_1", scheduleId);
     expect(mocks.delete).toHaveBeenCalledWith("user_1", "project_1", scheduleId);
-    expect(mocks.requireScope.mock.calls.map((call) => call[1])).toEqual(["manage", "manage"]);
+    expect(mocks.requireScope.mock.calls.map((call) => call[1])).toEqual(["manage"]);
   });
 
   it("assigns and removes keywords through membership services at update scope", async () => {
@@ -217,3 +224,8 @@ describe("check schedule app routes", () => {
     expect(mocks.requireScope.mock.calls.map((call) => call[1])).toEqual(["update", "update"]);
   });
 });
+
+// Preserve scope/store characterizations with an explicit no-spend admission fixture.
+vi.mock("@/lib/schedules/review-load", async () => ({
+  loadScheduleSpend: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));

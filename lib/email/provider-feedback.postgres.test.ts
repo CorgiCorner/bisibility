@@ -223,8 +223,9 @@ it("leaves the real bulk allowance available after a suppressed prepared deliver
         to,
       }),
       reserveBudget: () => reserveEmailDailyBudget("bulk"),
-      send: (message, claimProviderSend) =>
-        sendEmail({ ...message, category: "bulk", claimProviderSend }),
+      send: async (message, claimProviderSend) => {
+        await sendEmail({ ...message, purpose: "alert", category: "bulk", claimProviderSend });
+      },
       store: prismaPreparedEmailStore,
       transport: { id: "ses", idempotent: false },
     });

@@ -1,9 +1,14 @@
 "use client";
+import {
+  ScheduleReviewCancelled,
+  useScheduleSpendReview,
+} from "@/components/schedules/useScheduleSpendReview";
 import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { useToast } from "@/components/ui/toast-context";
 import { useZodForm } from "@/lib/forms/use-zod-form";
+import { marketDevicesChange } from "@/lib/markets/create-review-change";
 import {
   type MarketDeviceActions,
   type MarketDeviceCandidate,
@@ -37,6 +42,7 @@ export function ExistingMarketDevices({
   actionsContainer?: HTMLElement | null;
   candidates?: readonly MarketDeviceCandidate[];
 }) {
+  const spend = useScheduleSpendReview(projectId);
   const t = useTranslations("projectMarkets.deviceTracking");
   const { showToast } = useToast();
   const root = useTranslations("projectMarkets");
@@ -90,7 +96,9 @@ export function ExistingMarketDevices({
     onPendingChange?.(true);
     setError(null);
     try {
-      const value = await actions.add({ ...input, fingerprint: shown.fingerprint });
+      const value = await spend.run(marketDevicesChange(input), (submission) =>
+        actions.add({ ...input, fingerprint: shown.fingerprint, review: submission }),
+      );
       if (current.current.key !== key || current.current.request !== request) return;
       if (value.outcome === "unavailable") {
         setReview(null);
@@ -100,7 +108,8 @@ export function ExistingMarketDevices({
         showToast(t("added", { count: value.created }), { severity: "success" });
         onAdded?.();
       }
-    } catch {
+    } catch (cause) {
+      if (cause instanceof ScheduleReviewCancelled) return;
       if (current.current.request === request) {
         setReview(null);
         setError(t("failed"));
@@ -125,7 +134,7 @@ export function ExistingMarketDevices({
       {!shown?.newCheckCount ? (
         <Button
           type="button"
-          size="sm"
+          size="input"
           variant="primary"
           disabled={busy || (candidates !== undefined && !selection.keywordIds?.length)}
           onClick={() => void form.handleSubmit(preview)()}
@@ -136,7 +145,7 @@ export function ExistingMarketDevices({
       {shown && shown.newCheckCount > 0 ? (
         <Button
           type="button"
-          size="sm"
+          size="input"
           disabled={busy}
           loading={busy}
           onClick={() => void form.handleSubmit(confirm)()}
@@ -148,6 +157,7 @@ export function ExistingMarketDevices({
   );
   return (
     <section aria-label={t("title")} className="grid gap-3 rounded-card border border-border p-4">
+      {spend.dialog}
       <h3 className="text-sm font-medium">{t("title")}</h3>
       <fieldset className="m-0 grid min-w-0 gap-3 border-0 p-0" disabled={busy}>
         <div className="grid gap-1.5">

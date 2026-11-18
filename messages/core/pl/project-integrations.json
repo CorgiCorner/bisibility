@@ -16,9 +16,12 @@
       "analyticsTitle": "Źródła analityczne",
       "analyticsDescription": "Połącz źródła danych własnych, takie jak Google Search Console czy Google Analytics 4, aby dodać kontekst ruchu i skuteczności zapytań. Źródła analityczne nie służą do ustalania pozycji w wynikach.",
       "enrichmentTitle": "Wzbogacanie SEO",
-      "enrichmentDescription": "Śledź autorytet domeny za pomocą jednego bezpłatnego pomiaru Domain Rating dziennie."
+      "enrichmentDescription": "Śledź autorytet domeny za pomocą jednego bezpłatnego pomiaru Domain Rating dziennie.",
+      "modelTitle": "Dostawcy modeli",
+      "modelDescription": "Połącz własne klucze dostawców modeli. Koszty są rozliczane na Twoim koncie u dostawcy."
     },
     "drawer": {
+      "ahrefsSyncSchedule": "Rating domeny jest sprawdzany raz dziennie. Możesz wstrzymać sprawdzanie w Harmonogramach.",
       "oauthTitleCloud": "Zaloguj się przez Google, tylko do odczytu. Tokeny są przechowywane w postaci zaszyfrowanej w Twojej przestrzeni roboczej.",
       "oauthTitleSelfHost": "Zaloguj się przez Google, tylko do odczytu. Tokeny są przechowywane w postaci zaszyfrowanej w Twojej instancji.",
       "keyTitle": "Użyj własnego konta u dostawcy. Dane uwierzytelniające są przechowywane w postaci zaszyfrowanej w Twojej instancji.",
@@ -68,6 +71,7 @@
       "connectionSavedTraffic": "Połączenie z {provider} zostało zapisane. Synchronizacja ruchu czeka w kolejce."
     },
     "oauth": {
+      "gscSyncSchedule": "Import z Search Console i sprawdzanie indeksowania stron działają codziennie po włączeniu. Możesz je wstrzymać w Harmonogramach.",
       "loadPropertiesError": "Nie udało się wczytać usług. Spróbuj ponownie lub połącz konto ponownie.",
       "propertySelectionUnavailable": "Wybór usługi jest niedostępny.",
       "reconnectToChangeProperty": "Połącz ponownie konto Google, aby zmienić wybraną usługę.",

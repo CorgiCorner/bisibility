@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createAgentReport,
   getAgentReport,
+  getAgentReportRecord,
   listAgentReportPage,
   listAgentReports,
 } from "./service";
 
 const mocks = vi.hoisted(() => ({
   project: vi.fn(),
+  link: vi.fn(),
   create: vi.fn(),
   findFirst: vi.fn(),
   findMany: vi.fn(),
@@ -16,6 +18,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     project: { findUniqueOrThrow: mocks.project },
+    modelPlaygroundRun: { findFirst: mocks.link },
     agentReport: { create: mocks.create, findFirst: mocks.findFirst, findMany: mocks.findMany },
   },
 }));
@@ -106,5 +109,41 @@ describe("agent report storage", () => {
       }),
     );
     await expect(listAgentReports({ projectId: "project1", limit: 101 })).rejects.toThrow();
+  });
+});
+
+it("uses the stored run link for native presentation and omits it from the public resource", async () => {
+  const runId = "019a70b2-0000-7000-8000-000000000001";
+  mocks.findFirst.mockResolvedValue({
+    ...row,
+    kind: "prompt_explorer",
+    body: { format: "model_playground", version: 1, runId },
+    provenance: { source: "model_playground", runId },
+  });
+  mocks.link.mockResolvedValue({ id: runId });
+  const record = await getAgentReportRecord({ projectId: "project1", reportId });
+  expect(record?.report.modelPlaygroundRunId).toBe(runId);
+  expect(mocks.link).toHaveBeenCalledWith({
+    where: { projectId: "project1", reportId: row.id },
+    select: { id: true },
+  });
+  expect(await getAgentReport({ projectId: "project1", reportId })).not.toHaveProperty(
+    "modelPlaygroundRunId",
+  );
+  mocks.link.mockResolvedValue(null);
+  expect(
+    (await getAgentReportRecord({ projectId: "project1", reportId }))?.report,
+  ).not.toHaveProperty("modelPlaygroundRunId");
+});
+it("keeps unsupported or forged native-format stored bodies available to the legacy renderer", async () => {
+  mocks.findFirst.mockResolvedValue({
+    ...row,
+    kind: "prompt_explorer",
+    body: { format: "model_playground", version: 2 },
+    provenance: {},
+  });
+  expect((await getAgentReport({ projectId: "project1", reportId }))?.body).toEqual({
+    format: "model_playground",
+    version: 2,
   });
 });

@@ -90,7 +90,6 @@ export function renderPendingGrid(
     addKeywordsAction: vi.fn().mockResolvedValue({ created: 1, keywords: [] }),
     bulkClearTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
     bulkDeleteAction: vi.fn().mockResolvedValue({ deleted: 1 }),
-    bulkSetFrequencyAction: vi.fn().mockResolvedValue({ updated: 1 }),
     bulkSetTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
     bulkTagAction: vi.fn().mockResolvedValue({ updated: 1 }),
     canCreateKeyword: true,

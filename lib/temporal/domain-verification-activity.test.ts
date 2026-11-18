@@ -177,3 +177,19 @@ it("advances past a full failed notice batch so later owners can be notified", a
   expect(second).toMatchObject({ notices: 1, hasMore: false });
   log.mockRestore();
 });
+
+it("records no sent notice or error when mail policy returns a quiet skip", async () => {
+  const revoked = {
+    id: "row",
+    domain: "example.com",
+    revokedAt: new Date(),
+    project: { owner: { email: "owner@example.org" } },
+  };
+  mocks.due.mockResolvedValueOnce([]).mockResolvedValueOnce([revoked]);
+  mocks.send.mockResolvedValue(false);
+  const log = vi.spyOn(console, "error");
+  expect(await domainVerificationActivity()).toMatchObject({ notices: 0 });
+  expect(mocks.update).not.toHaveBeenCalled();
+  expect(log).not.toHaveBeenCalled();
+  log.mockRestore();
+});

@@ -128,6 +128,7 @@ describe("project overview API", () => {
     }));
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Key",
@@ -311,7 +312,7 @@ describe("project overview API", () => {
     await expect(report.loadMetadata(tx, project, [], now)).rejects.toThrow("authorized");
     expect(apiKey.findFirst).toHaveBeenCalledWith({
       where: { id: "key_1", projectId: project.id },
-      select: { revokedAt: true, expiresAt: true, scopes: true },
+      select: { revokedAt: true, expiresAt: true, scopes: true, createdById: true },
     });
     expect(query).not.toHaveBeenCalled();
     expect(mocks.getQueryActor).not.toHaveBeenCalled();

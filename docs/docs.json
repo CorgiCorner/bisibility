@@ -70,6 +70,7 @@
               "guides/backlinks",
               "guides/domain-overview",
               "guides/prompt-tracker",
+              "guides/model-playground",
               "guides/site-audit",
               "guides/research-workflows"
             ]
@@ -122,6 +123,7 @@
               "api/locations",
               "api/checks",
               "api/rank-history",
+              "api/schedules",
               "api/competitors",
               "api/saved-views"
             ]
@@ -186,6 +188,26 @@
         "tab": "API Reference",
         "openapi": "openapi.snapshot.json",
         "groups": [
+          {
+            "group": "Schedules",
+            "pages": [
+              "GET /projects/{project_id}/schedules",
+              "GET /projects/{project_id}/schedules/{schedule_id}",
+              "POST /projects/{project_id}/schedules/preview",
+              "POST /projects/{project_id}/schedules",
+              "PATCH /projects/{project_id}/schedules/{schedule_id}"
+            ]
+          },
+          {
+            "group": "Model Playground",
+            "pages": [
+              "GET /projects/{project_id}/model-playground/catalog",
+              "POST /projects/{project_id}/model-playground/runs",
+              "POST /projects/{project_id}/model-playground/runs/estimate",
+              "POST /projects/{project_id}/model-playground/runs/preview",
+              "GET /projects/{project_id}/model-playground/runs/{run_id}"
+            ]
+          },
           {
             "group": "Prompt Tracker",
             "pages": [

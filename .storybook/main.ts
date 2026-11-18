@@ -4,6 +4,10 @@ import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { type Plugin, searchForWorkspaceRoot } from "vite";
 import { adminPageAliases } from "./admin-page-extension";
+import {
+  modelPlaygroundStoryBoundaries,
+  resolveModelPlaygroundStoryBoundary,
+} from "./model-playground-story-boundary";
 
 const aiResearchActionsStub = fileURLToPath(
   new URL("./ai-research-action-stubs.ts", import.meta.url),
@@ -25,6 +29,10 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/schedules/preview-client": fileURLToPath(
+    new URL("./schedule-review-action-stubs.ts", import.meta.url),
+  ),
+  ...modelPlaygroundStoryBoundaries,
   "@/lib/actions/serp-playground": fileURLToPath(
     new URL("./serp-playground-stubs.ts", import.meta.url),
   ),
@@ -131,6 +139,7 @@ const adminActionBoundaries = {
   "@/lib/actions/instance-admin": adminActionStub,
   "@/lib/actions/instance-admin-account-actions": adminActionStub,
   "@/lib/actions/instance-mail-settings": adminActionStub,
+  "@/lib/actions/assistant-kill-switch": adminActionStub,
 };
 
 export const runtimeAliases = {
@@ -213,8 +222,9 @@ export function resolveRankRunActionBoundary(source: string): string | null {
   }
   throw new Error(`Missing Storybook rank-run action boundary mapping for "${source}".`);
 }
-
 function resolveKeywordActionBoundary(source: string): string | null {
+  if (source.replaceAll("\\", "/").endsWith("/lib/schedules/preview-client.ts"))
+    return keywordActionBoundaries["@/lib/schedules/preview-client"];
   if (source in keywordActionBoundaries) {
     return keywordActionBoundaries[source as keyof typeof keywordActionBoundaries];
   }
@@ -225,6 +235,8 @@ export const runtimeStubPlugin = {
   name: "storybook-runtime-stubs",
   enforce: "pre",
   resolveId(source, importer) {
+    const modelBoundary = resolveModelPlaygroundStoryBoundary(source, importer);
+    if (modelBoundary) return modelBoundary;
     if (source === "@/lib/actions/ai-research") return aiResearchActionsStub;
     if (source === "@/lib/actions/instance-announcements") return announcementActionsStub;
     if (source in adminActionBoundaries)

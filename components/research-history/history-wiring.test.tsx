@@ -8,7 +8,6 @@ import rankMessages from "@/messages/core/en/project-rank-tracker-keyword-detail
 import researchMessages from "@/messages/core/en/project-research.json";
 import historyMessages from "@/messages/core/en/research-history.json";
 import sharedMessages from "@/messages/core/en/shared.json";
-import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { type ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -145,8 +144,8 @@ describe("history drawer wiring", () => {
     renderWithMessages(<ModelPlaygroundHistoryButton projectId="prj_abcdefghijklmnopqrstuvwx" />);
     fireEvent.click(await screen.findByRole("button", { name: /History/ }));
     await screen.findByText("example.com prompt");
-    openHistoryRow(/example.com prompt/);
-    expect(routerMock.push).toHaveBeenCalledWith(
+    expect(screen.getByRole("link", { name: /example.com prompt/ })).toHaveAttribute(
+      "href",
       "/app/prj_abcdefghijklmnopqrstuvwx/agent-reports/agr_savedreport000000000000",
     );
   });

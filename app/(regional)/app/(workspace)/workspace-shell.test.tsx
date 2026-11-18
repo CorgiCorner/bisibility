@@ -599,6 +599,26 @@ describe("workspace layout", () => {
     expect(markup).not.toContain("$0.00");
   });
 
+  it("starts account notices while the project limit is still loading", async () => {
+    let finishLimit!: (value: null) => void;
+    mocks.reachedProjectLimit.mockReturnValueOnce(
+      new Promise<null>((resolve) => {
+        finishLimit = resolve;
+      }),
+    );
+    const pending = WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+    try {
+      await vi.waitFor(() => expect(mocks.noticeExtension).toHaveBeenCalled());
+    } finally {
+      finishLimit(null);
+      await pending;
+    }
+  });
+
   it.each(["owner", "viewer", "admin"])(
     "keeps the %s route usable when usage is unavailable",
     async (role) => {

@@ -18,7 +18,6 @@
       "checks": "{count, plural, one {# check} other {# checks}}",
       "checksLabel": "Checks",
       "current": "Current",
-      "default": "Default",
       "device": "Device",
       "frequency": "Frequency",
       "frequencyDaily": "Daily",
@@ -78,7 +77,6 @@
       },
       "archiveDialog": {
         "body": "Future runs will stop. Runs already launched can finish, and past results remain available.",
-        "defaultNotice": "New keywords stay manual until assigned to a schedule.",
         "manualChecks": "Manual checks",
         "moveKeywords": "Move {count, plural, one {# keyword} other {# keywords}} to",
         "title": "Archive “{name}”?"
@@ -98,6 +96,7 @@
         "withinWindow": "Within {minutes, number} min of {time}"
       },
       "cadenceLabels": {
+        "hourly": "Hourly, :{minute}",
         "custom": "Custom - {expression}",
         "dayOfMonth": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}",
         "daily": "Daily, {time}",
@@ -142,10 +141,6 @@
         "cronTooLong": "Cron expressions are {maximum, number} characters or fewer.",
         "customCron": "Custom cron",
         "customPreview": "Custom cron schedule.",
-        "defaultEnabled": "Suggest this schedule when scheduling keywords. Keywords are added only when you choose them.",
-        "defaultExisting": "Default suggestion",
-        "defaultExistingDescription": "Suggested when you choose a schedule. No keywords join automatically.",
-        "defaultReplacement": "Replaces {name} as the suggested schedule. Existing assignments stay unchanged.",
         "depth": "Depth",
         "everyWeekday": "Every weekday at 06:00.",
         "invalidCron": "Enter a valid five-field cron expression.",
@@ -184,7 +179,6 @@
         "thirtyMinuteSteps": "Use :00 or :30, e.g. 09:00 or 09:30.",
         "time24": "Time, 24-hour",
         "topDepth": "Top {depth, number}",
-        "useAsDefault": "Use as default suggestion",
         "nameHelp": "Name only. Change Frequency below to change when checks run.",
         "saveSessionExpired": "Your session expired. Sign in again, then retry saving.",
         "saveForbidden": "You no longer have permission to edit this schedule.",
@@ -218,7 +212,6 @@
       "list": {
         "actions": "Actions",
         "blocked": "Next run blocked - monthly limit",
-        "defaultHint": "Suggested when choosing a schedule. Keywords never join automatically.",
         "memberMeta": "{markets, plural, one {# market} other {# markets}} x {devices, plural, one {# device} other {# devices}}",
         "members": "{keywords, plural, one {# keyword} other {# keywords}} = {targets, plural, one {# check a run} other {# checks a run}}",
         "noAssignedKeywords": "No assigned keywords",
@@ -252,14 +245,60 @@
         "nextRun": "Next run",
         "perMonth": "Estimated per month",
         "nextPending": "Being planned",
-        "makeDefault": "Make default",
-        "defaultHint": "The default is a suggestion when you choose a schedule. New keywords stay unscheduled until you assign them.",
+        "nonEmptyDeletion": "Move or remove all keywords before deleting this schedule. You can also archive it.",
         "unscheduledCount": "{count, plural, one {# keyword has no schedule.} other {# keywords have no schedule.}}",
         "addToSchedule": "Add to schedule"
       },
       "planning": {
         "delay": "Planned runs usually appear in Runs within {minutes, number} minutes. Checks run at their scheduled times.",
         "delayUnknown": "Planned runs may take a short time to appear in Runs. Checks run at their scheduled times."
+      },
+      "unified": {
+        "syncSaveFailed": "Could not save the sync schedule.",
+        "inspectionSettings": "URL inspection settings",
+        "checks": "Checks",
+        "data_sync": "Data sync",
+        "monthlyCost": "Estimated monthly cost: {amount}",
+        "unknownCosts": "{count, plural, one {# estimate unavailable} other {# estimates unavailable}}",
+        "lastRun": "Last recorded run",
+        "noRecordedRun": "No recorded run",
+        "lastEvidenceHint": "Latest retained evidence",
+        "monitorCount": "{count, plural, one {# monitor} other {# monitors}}",
+        "states": {
+          "active": "Active",
+          "paused": "Paused",
+          "archived": "Archived"
+        },
+        "reasons": {
+          "approval_expired": "Approval expired",
+          "limit_reached": "Approval limit reached",
+          "recurring_disabled": "Recurring monitors disabled",
+          "instance_disabled": "Disabled on this instance",
+          "integration_disconnected": "Integration disconnected",
+          "inspection_budget_off": "Background inspection is off"
+        },
+        "syncs": {
+          "domain_rating": "Domain rating",
+          "sitemap": "Sitemap sync",
+          "search_console": "Search Console import",
+          "page_indexing": "Page indexing"
+        },
+        "frequencies": {
+          "manual": "Manual",
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly"
+        }
+      },
+      "errors": {
+        "commandRequired": "A monitor version is required to change this schedule.",
+        "createUnsupported": "Only rank and prompt monitoring schedules can be created.",
+        "dataSyncArchive": "This data sync cannot be archived.",
+        "dataSyncUnsupported": "This data sync cannot be turned on or off per project yet ({syncKind}).",
+        "kindRequired": "A data sync kind is required.",
+        "notFound": "Schedule not found.",
+        "projectRequired": "A project id is required to change this schedule.",
+        "transition": "Restore an archived schedule to paused before activating it."
       }
     }
   }

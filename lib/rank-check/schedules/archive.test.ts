@@ -48,14 +48,14 @@ describe("schedule archive lifecycle", () => {
       Promise.resolve({ ...schedule, ...data }),
     );
   });
-  it("archives the default, moves all members to manual, and keeps the schedule record", async () => {
+  it("archives a legacy default, moves all members to manual, and keeps the schedule record", async () => {
     await archiveSchedule("actor", "project", {
       scheduleId: "sch_current",
       destinationScheduleId: null,
     });
     expect(mocks.tx.checkSchedule.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { archivedAt: expect.any(Date), enabled: false, isDefault: false },
+        data: { archivedAt: expect.any(Date), enabled: false },
       }),
     );
     expect(mocks.tx.keyword.updateMany).toHaveBeenCalledWith({
@@ -63,11 +63,7 @@ describe("schedule archive lifecycle", () => {
       where: { id: { in: ["keyword"] }, projectId: "project" },
     });
     expect(mocks.manual).toHaveBeenCalledWith(mocks.tx, "project", ["keyword"]);
-    expect(mocks.tx.projectDefaults.upsert).toHaveBeenCalledWith({
-      where: { projectId: "project" },
-      create: { projectId: "project", frequency: "manual" },
-      update: { frequency: "manual", cronExpression: null, nextCheckAt: null },
-    });
+    expect(mocks.tx.projectDefaults.upsert).not.toHaveBeenCalled();
     expect(mocks.reconcile).toHaveBeenCalledWith("schedule", mocks.tx, { deleting: true });
     expect(mocks.audit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -119,11 +115,11 @@ describe("schedule archive lifecycle", () => {
     });
     expect(mocks.tx.checkSchedule.update).not.toHaveBeenCalled();
   });
-  it("restores paused, nondefault and without moving members back", async () => {
+  it("restores paused and without moving members back", async () => {
     mocks.tx.checkSchedule.findFirst.mockResolvedValue({ ...schedule, archivedAt: new Date() });
     await restoreSchedule("actor", "project", "sch_current");
     expect(mocks.tx.checkSchedule.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { archivedAt: null, enabled: false, isDefault: false } }),
+      expect.objectContaining({ data: { archivedAt: null, enabled: false } }),
     );
     expect(mocks.tx.keyword.updateMany).not.toHaveBeenCalled();
     expect(mocks.audit).toHaveBeenCalledWith(
@@ -136,3 +132,7 @@ describe("schedule archive lifecycle", () => {
     expect(mocks.tx.checkSchedule.update).not.toHaveBeenCalled();
   });
 });
+
+vi.mock("@/lib/schedules/review-load-transfers", async () => ({
+  loadTransfer: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));

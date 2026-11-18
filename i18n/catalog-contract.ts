@@ -111,6 +111,7 @@ type MessageSignature = {
   arguments: Map<string, TYPE>;
   exactPluralOptions: Map<string, Set<string>>;
   pluralRules: Map<string, { offset: number; type: Intl.PluralRulesOptions["type"] }>;
+  pluralCategories: Map<string, Set<string>>;
   selectOptions: Map<string, Set<string>>;
   tags: Set<string>;
 };
@@ -144,6 +145,7 @@ function collectSignature(elements: MessageFormatElement[], signature: MessageSi
       if (element.type === TYPE.select) {
         signature.selectOptions.set(element.value, new Set(optionNames));
       } else {
+        signature.pluralCategories.set(element.value, new Set(optionNames));
         signature.pluralRules.set(element.value, {
           offset: element.offset,
           type: element.pluralType,
@@ -175,6 +177,7 @@ export function messageSignature(message: string): MessageSignature {
     arguments: new Map(),
     exactPluralOptions: new Map(),
     pluralRules: new Map(),
+    pluralCategories: new Map(),
     selectOptions: new Map(),
     tags: new Set(),
   };

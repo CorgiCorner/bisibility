@@ -2,8 +2,7 @@
 
 import { cn } from "@/lib/ui/cn";
 import { type ComponentPropsWithoutRef, useRef } from "react";
-// Hidden scrollbar for [data-tab-strip], shared with the other overflow scroller.
-import "./FloatingSelectionBar.module.css";
+import styles from "./FloatingSelectionBar.module.css";
 
 const tabStripClassName = "min-w-0 overflow-x-auto";
 
@@ -33,7 +32,7 @@ export function TabStrip({
   trackClassName?: string;
 }) {
   return (
-    <div className={cn(tabStripClassName, className)} data-tab-strip="" {...props}>
+    <div className={cn(styles.tabStrip, tabStripClassName, className)} data-tab-strip="" {...props}>
       {bordered ? (
         <div
           className={cn("min-w-full border-b border-border", trackClassName ?? "w-max")}

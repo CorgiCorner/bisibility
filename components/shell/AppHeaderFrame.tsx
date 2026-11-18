@@ -66,7 +66,7 @@ export function AppHeaderFrame({
 }: Readonly<AppHeaderFrameProps>) {
   return (
     <header className="relative z-40 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-2.5 sm:flex sm:flex-nowrap border-b border-border bg-bg-sidebar px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
-      <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3 sm:overflow-hidden">
+      <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3">
         <MobileNav
           activeProjectId={activeProjectId}
           canCreateWorkspace={canCreateWorkspace}

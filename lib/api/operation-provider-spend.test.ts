@@ -3,6 +3,11 @@ import path from "node:path";
 import { PROVIDER_REQUEST_FEATURES } from "@/lib/provider-usage/request-features";
 import { describe, expect, it } from "vitest";
 import { estimateOnlyScope } from "./estimate-only-scope";
+import {
+  defaultModelPlaygroundService,
+  getModelPlaygroundService,
+  type ModelPlaygroundService,
+} from "./model-playground-service";
 import { getOpenApiDocument } from "./openapi";
 import {
   deferredSpendAnchors,
@@ -19,28 +24,52 @@ import {
 import { deploymentFreeOperationProviderSpend } from "./operation-provider-spend-extension";
 
 const entries = Object.entries(operationProviderSpend) as [string, OperationProviderSpend][];
-const operationIds = Object.values(getOpenApiDocument().paths).flatMap((item) =>
-  Object.values(item as Record<string, { operationId?: string }>).map(
-    (operation) => operation.operationId,
-  ),
+const operations = Object.values(getOpenApiDocument().paths).flatMap((item) =>
+  Object.values(item as Record<string, { operationId?: string; "x-bisibility-cost"?: object }>),
 );
+const operationIds = operations.map((operation) => operation.operationId);
 const graph = importGraph();
 const billed = billedRequestSites(graph.sources);
+const runtimeGraph = importGraph({ runtimeOnly: true, sources: graph.sources });
+
+function assertPlaygroundBinding(
+  bound: ModelPlaygroundService,
+  anchors: readonly string[],
+  runtime: Set<string>,
+) {
+  if (bound === defaultModelPlaygroundService && Object.isFrozen(bound)) {
+    expect(anchors.some((anchor) => runtime.has(anchor))).toBe(false);
+    return true;
+  }
+  expect(anchors.some((anchor) => runtime.has(anchor))).toBe(true);
+  return false;
+}
 
 describe("operation provider spend registry", () => {
+  it("allows only the frozen shipped default to omit an admission anchor", () => {
+    const anchors = ["lib/model-playground/admission.ts"];
+    expect(assertPlaygroundBinding(defaultModelPlaygroundService, anchors, new Set())).toBe(true);
+    expect(() =>
+      assertPlaygroundBinding(defaultModelPlaygroundService, anchors, new Set(anchors)),
+    ).toThrow();
+  });
+  it.each([false, true])(
+    "requires the admission anchor for a replacement binding enabled=%s",
+    (enabled) => {
+      const bound = Object.freeze({ ...getModelPlaygroundService(), enabled });
+      const anchors = ["lib/model-playground/admission.ts"];
+      expect(assertPlaygroundBinding(bound, anchors, new Set(anchors))).toBe(false);
+      expect(() => assertPlaygroundBinding(bound, anchors, new Set())).toThrow();
+    },
+  );
+
   it("keeps explicit free classifications documented and separate from paid operations", () => {
     for (const [id, entry] of Object.entries(operationProviderFree)) {
       expect(operationProviderSpend).not.toHaveProperty(id);
       expect(existsSync(path.join(repositoryRoot, entry.handler)), entry.handler).toBe(true);
       if (id in deploymentFreeOperationProviderSpend) continue;
       expect(operationIds).toContain(id);
-      const operation = Object.values(getOpenApiDocument().paths)
-        .flatMap((item) =>
-          Object.values(
-            item as Record<string, { operationId?: string; "x-bisibility-cost"?: object }>,
-          ),
-        )
-        .find((candidate) => candidate.operationId === id);
+      const operation = operations.find((candidate) => candidate.operationId === id);
       expect(operation?.["x-bisibility-cost"]).toEqual({ kind: "free" });
     }
   });
@@ -69,6 +98,12 @@ describe("operation provider spend registry", () => {
   it.each(entries)("%s: its handler reaches the code that bills or queues it", (_id, spend) => {
     expect(existsSync(path.join(repositoryRoot, spend.handler)), spend.handler).toBe(true);
     const reached = graph.reachable(spend.handler);
+    if (_id === "createModelPlaygroundRun") {
+      const runtime = runtimeGraph.reachable(spend.handler);
+      const anchors = deferredSpendAnchors.model_playground ?? [];
+      expect(anchors).toEqual(["lib/model-playground/admission.ts"]);
+      if (assertPlaygroundBinding(getModelPlaygroundService(), anchors, runtime)) return;
+    }
     if (spend.timing === "inline") {
       expect(
         billed.filter((site) => reached.has(site)),

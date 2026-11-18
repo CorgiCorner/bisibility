@@ -6,7 +6,13 @@ import { scheduleInputSchema } from "@/lib/ai-tracking/schema";
 import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { CronExpressionParser } from "cron-parser";
-import { jsonInput, lockTrackingProject, prisma, requireFound } from "./shared";
+import {
+  jsonInput,
+  lockTrackingProject,
+  prisma,
+  requireFound,
+  type TrackingTransaction,
+} from "./shared";
 import type { ScheduleInput } from "./signatures";
 
 export function listSchedules(projectId: string) {
@@ -15,6 +21,12 @@ export function listSchedules(projectId: string) {
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
 }
+function withTrackingTransaction<T>(
+  existing: TrackingTransaction | undefined,
+  run: (tx: TrackingTransaction) => Promise<T>,
+) {
+  return existing ? run(existing) : prisma.$transaction(run);
+}
 function validateSchedule(cron: string, timezone: string) {
   new Intl.DateTimeFormat("en", { timeZone: timezone });
   CronExpressionParser.parse(cron, { tz: timezone });
@@ -22,10 +34,11 @@ function validateSchedule(cron: string, timezone: string) {
 export function createSchedule(
   projectId: string,
   input: ScheduleInput,
+  existingTx?: TrackingTransaction,
 ): Promise<import("@/lib/generated/prisma/client").AiTrackingSchedule & { replayed?: boolean }> {
   const data = scheduleInputSchema.parse(input);
   validateSchedule(data.cron, data.timezone);
-  return prisma.$transaction(async (tx) => {
+  return withTrackingTransaction(existingTx, async (tx) => {
     await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     if (
@@ -89,9 +102,10 @@ export function updateSchedule(
   projectId: string,
   scheduleId: string,
   input: Partial<ScheduleInput>,
+  existingTx?: TrackingTransaction,
 ) {
   const data = scheduleInputSchema.partial().parse(input);
-  return prisma.$transaction(async (tx) => {
+  return withTrackingTransaction(existingTx, async (tx) => {
     await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     const schedule = requireFound(
@@ -151,8 +165,12 @@ export function updateSchedule(
     });
   });
 }
-export function archiveSchedule(projectId: string, scheduleId: string) {
-  return prisma.$transaction(async (tx) => {
+export function archiveSchedule(
+  projectId: string,
+  scheduleId: string,
+  existingTx?: TrackingTransaction,
+) {
+  return withTrackingTransaction(existingTx, async (tx) => {
     await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
     await lockTrackingProject(tx, projectId);
     const schedule = requireFound(
@@ -163,5 +181,47 @@ export function archiveSchedule(projectId: string, scheduleId: string) {
       where: { id: scheduleId },
       data: { enabled: false, archivedAt: schedule.archivedAt ?? new Date() },
     });
+  });
+}
+export function restoreSchedule(
+  projectId: string,
+  scheduleId: string,
+  onRestored?: (tx: TrackingTransaction, row: { publicId: string }) => Promise<void>,
+  existingTx?: TrackingTransaction,
+) {
+  return withTrackingTransaction(existingTx, async (tx) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
+    await lockTrackingProject(tx, projectId);
+    const schedule = requireFound(
+      await tx.aiTrackingSchedule.findFirst({ where: { projectId, id: scheduleId } }),
+      "Schedule",
+    );
+    if (!schedule.archivedAt) return schedule;
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: [],
+      cadence: {
+        dimension: "promptSchedules",
+        before: {
+          frequency: "custom_cron",
+          cronExpression: schedule.cron,
+          timezone: schedule.timezone,
+          enabled: schedule.enabled,
+        },
+        after: {
+          frequency: "custom_cron",
+          cronExpression: schedule.cron,
+          timezone: schedule.timezone,
+          enabled: false,
+        },
+      },
+    });
+    await capacity.check();
+    const restored = await tx.aiTrackingSchedule.update({
+      where: { id: scheduleId },
+      data: { archivedAt: null, enabled: false },
+    });
+    if (onRestored) await onRestored(tx, restored);
+    return restored;
   });
 }

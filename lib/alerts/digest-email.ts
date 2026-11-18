@@ -1,8 +1,11 @@
 import "server-only";
-
 import { reserveEmailDailyBudget } from "@/lib/email/budget";
 import { alertsEmailFrom } from "@/lib/email/from";
 import { describeEmailTransport } from "@/lib/email/idempotency";
+import {
+  NOTIFICATIONS_DISABLED_REASON,
+  skipEmailNotification,
+} from "@/lib/email/notification-policy";
 import {
   notificationUnsubscribeFooter,
   notificationUnsubscribeUrl,
@@ -43,6 +46,8 @@ export async function deliverAlertDigestEmailActivity(input: {
   recipient: AlertEmailRecipient;
 }) {
   try {
+    if (skipEmailNotification("alert-digest"))
+      return { delivered: false, skipped: true, reason: NOTIFICATIONS_DISABLED_REASON };
     const identityInput = {
       alertIds: input.job.alertIds,
       ruleId: input.job.ruleId,
@@ -99,8 +104,9 @@ export async function deliverAlertDigestEmailActivity(input: {
         };
       },
       reserveBudget: () => reserveEmailDailyBudget("bulk"),
-      send: (message, claimProviderSend) =>
-        sendEmail({
+      send: async (message, claimProviderSend) => {
+        const submitted = await sendEmail({
+          purpose: "alert-digest",
           beforeProviderSend: () =>
             requireAlertEmailSend({
               alertIds: input.job.alertIds,
@@ -119,7 +125,9 @@ export async function deliverAlertDigestEmailActivity(input: {
           subject: message.subject,
           text: message.text,
           to: message.to,
-        }),
+        });
+        if (submitted === false) throw new AlertDeliverySkipped(NOTIFICATIONS_DISABLED_REASON);
+      },
       store: prismaPreparedEmailStore,
       transport: describeEmailTransport(provider?.id ?? null),
     });

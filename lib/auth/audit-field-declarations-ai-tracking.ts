@@ -31,6 +31,7 @@ export function registerAiTrackingAuditDeclarations(declare: Declare) {
       "ai_tracking.schedule.create",
       "ai_tracking.schedule.update",
       "ai_tracking.schedule.archive",
+      "ai_tracking.schedule.restore",
       "ai_tracking.schedule.enable",
       "ai_tracking.schedule.disable",
       "ai_tracking.run.launch",

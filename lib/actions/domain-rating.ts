@@ -1,41 +1,32 @@
 "use server";
 import { recordAppAction } from "@/lib/activity/app-mutation";
-import { writeAudit } from "@/lib/auth/audit";
-import { prisma } from "@/lib/db/prisma";
 import { domainRatingSettingsSchema } from "@/lib/domain-rating/settings";
+import { withScheduleActionResult } from "@/lib/schedules/action-result";
+import { dataSyncStatePermission } from "@/lib/schedules/data-sync-permission";
+import { setScheduleState } from "@/lib/schedules/mutations";
+import { WEB_UNGATED_REVIEW } from "@/lib/schedules/review-commit";
 import { revalidatePath } from "next/cache";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 
 export async function setDomainRatingTracking(input: unknown) {
-  const data = parseActionInput(domainRatingSettingsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "manage", data.projectId, {
-    type: "provider_connection",
-  });
-  await prisma.$transaction(async (tx) => {
-    const before = await tx.project.findUniqueOrThrow({
-      where: { id: project.id },
-      select: { domainRatingEnabled: true },
+  return withScheduleActionResult(async () => {
+    const data = parseActionInput(domainRatingSettingsSchema, input);
+    const actor = await getActionActor();
+    const permission = dataSyncStatePermission("domain_rating");
+    const project = await requireProjectScope(actor, permission.action, data.projectId, {
+      type: permission.type,
     });
-    await tx.project.update({
-      where: { id: project.id },
-      data: { domainRatingEnabled: data.enabled },
-    });
-    await writeAudit(
-      {
-        action: "project.domain_rating.update",
-        actorId: actor.id,
-        projectId: project.id,
-        targetId: project.publicId,
-        targetType: "project",
-        before: { enabled: before.domainRatingEnabled },
-        after: { enabled: data.enabled },
-      },
-      tx,
+    await setScheduleState(
+      project.id,
+      actor,
+      `sync:${project.publicId}:domain_rating`,
+      data.enabled ? "active" : "paused",
+      { kind: "data_sync", projectPublicId: project.publicId, syncKind: "domain_rating" },
+      WEB_UNGATED_REVIEW,
     );
-  });
-  recordAppAction(actor);
-  revalidatePath("/app", "layout");
+    recordAppAction(actor);
+    revalidatePath("/app", "layout");
 
-  return { ok: true };
+    return { ok: true };
+  });
 }

@@ -2,6 +2,7 @@ import { conversionDailyMetricCte } from "@/lib/conversions/page-sql";
 import type { ConversionSource } from "@/lib/conversions/types";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { canonicalPagePathSql } from "./page-path";
+import type { StoredSitemapRead } from "./sitemap-read-model";
 import type { SnapshotMetricId } from "./snapshot-view";
 import { pageBucketSql, snapshotStatusCtes } from "./status-sql";
 
@@ -15,6 +16,7 @@ export type SnapshotMetricQuery = {
   projectId: string;
   sessions: "ga4" | "none" | "plausible";
   tagId?: string;
+  sitemapRead?: StoredSitemapRead | null;
   to: Date;
 };
 
@@ -150,7 +152,7 @@ function membersCte(input: SnapshotMetricQuery) {
 
 export function existingVsNewQueries(input: SnapshotMetricQuery) {
   const withMembers = Prisma.sql`
-    WITH ${snapshotStatusCtes(input.projectId)},
+    WITH ${snapshotStatusCtes(input.projectId, input.sitemapRead)},
     ${metricCte(input)},
     ${membersCte(input)}
   `;

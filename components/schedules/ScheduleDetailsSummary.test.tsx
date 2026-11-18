@@ -9,7 +9,6 @@ const schedule: ScheduleListRow = {
   name: "Weekly",
   frequency: "weekly",
   enabled: true,
-  isDefault: false,
   keywordCount: 2,
   timeOfDay: null,
   timezone: "UTC",
@@ -42,7 +41,7 @@ describe("ScheduleDetailsSummary", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
   it("uses the existing pause endpoint only after an explicit click", async () => {
-    const fetch = vi.fn(async () => new Response("{}"));
+    const fetch = vi.fn(async (_url: string, _init: RequestInit) => new Response("{}"));
     vi.stubGlobal("fetch", fetch);
     summary();
     fireEvent.click(screen.getByRole("button", { name: "Pause" }));
@@ -51,30 +50,24 @@ describe("ScheduleDetailsSummary", () => {
       "/api/check-schedules/sch_example",
       expect.objectContaining({
         method: "PATCH",
-        body: JSON.stringify({ projectId: "prj_example", enabled: false }),
       }),
     );
+    expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))).toEqual({
+      projectId: "prj_example",
+      enabled: false,
+    });
   });
   it("explains a blocked next run instead of promising its planned date", () => {
     summary({ blocked: true });
     expect(screen.getByText("Next run blocked - monthly limit")).toBeVisible();
     expect(screen.queryByText(/spread across the interval/)).toBeNull();
   });
-  it("changes the default only after explicitly selecting the action", async () => {
-    const fetch = vi.fn(async () => new Response("{}"));
-    vi.stubGlobal("fetch", fetch);
+  it("offers archive without a default action or badge", () => {
     summary();
+    expect(screen.queryByText("Default")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Weekly" }));
-    expect(fetch).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Make default" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/check-schedules/sch_example/set-default",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ projectId: "prj_example" }),
-      }),
-    );
+    expect(screen.queryByRole("menuitem", { name: "Make default" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Archive" })).toBeVisible();
   });
   it("keeps custom cron instants fixed and does not invent a monthly estimate", () => {
     summary({ frequency: "custom_cron", timeOfDay: null });
@@ -82,12 +75,21 @@ describe("ScheduleDetailsSummary", () => {
     expect(screen.getByText(/00:00/)).toBeVisible();
     expect(screen.getByText("Estimated per month").nextElementSibling).toHaveTextContent("-");
   });
-  it("keeps the current default clear and offers no redundant Make default action", () => {
-    summary({ isDefault: true });
-    expect(screen.getByText("Default")).toBeVisible();
+  it("explains deletion for assigned keywords and offers archive", () => {
+    summary({ keywordCount: 0, assignedKeywordCount: 1 });
+    expect(
+      screen.getByText(
+        "Move or remove all keywords before deleting this schedule. You can also archive it.",
+      ),
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Weekly" }));
-    expect(screen.queryByRole("menuitem", { name: "Make default" })).toBeNull();
-    expect(screen.getByRole("menuitem", { name: "Archive" })).toBeVisible();
+    expect(screen.queryByRole("menuitem", { name: /delete/i })).toBeNull();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(screen.getByRole("button", { name: "Move 1 keyword to" })).toBeVisible();
+  });
+  it("does not show the non-empty deletion message for an empty schedule", () => {
+    summary({ keywordCount: 0, assignedKeywordCount: 0 });
+    expect(screen.queryByText(/Move or remove all keywords before deleting/)).toBeNull();
   });
   it("omits lifecycle mutations for readers", () => {
     summary({}, false, false);

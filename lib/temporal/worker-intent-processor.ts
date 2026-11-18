@@ -2,14 +2,17 @@ import "server-only";
 import { sweepAchievementMail } from "../achievements/mail";
 import { sweepAchievementFacts } from "../achievements/process";
 import { processPendingAlertEvaluationIntents } from "../alerts/evaluation-intent";
+import { prisma } from "../db/prisma";
 import { produceDueRecurringMonitors } from "../local-monitor-recurring/producer";
 import { redactOpsText } from "../ops/redact-text";
 import { reconcileRequestedSearchInsightsSyncs } from "../search-insights/sync/requested-sync-reconciler";
+import { dispatchModelPlaygroundIntents } from "../worker-intents/model-playground";
 import { hasPendingWorkerIntent } from "../worker-intents/pending-probe";
 import { subscribeToWorkerIntents, workerIntentPollIntervalMs } from "../worker-intents/realtime";
 import { dispatchAiTrackingIntents } from "./ai-tracking-intent-dispatch";
 import { enqueueAlertDeliveries } from "./alert-delivery-client";
 import { dispatchLocalMonitorIntents } from "./local-monitor-intent-dispatch";
+import { startModelPlaygroundWorkflow } from "./model-playground-client";
 import { dispatchProviderComparisonIntents } from "./provider-comparison-intents";
 import { dispatchQueuedRankCheckRunIntents } from "./rank-run-intent-dispatch";
 import { dispatchFirstTrafficSyncIntent } from "./traffic-intent-dispatch";
@@ -20,6 +23,7 @@ type SweepOptions = {
   produceLocalMonitors?: typeof produceDueRecurringMonitors;
   dispatchLocalMonitors?: typeof dispatchLocalMonitorIntents;
   dispatchComparisons?: typeof dispatchProviderComparisonIntents;
+  dispatchPlayground?: () => Promise<{ started: number }>;
   dispatchTracking?: typeof dispatchAiTrackingIntents;
   dispatchRankRuns?: typeof dispatchQueuedRankCheckRunIntents;
   dispatchTraffic?: typeof dispatchFirstTrafficSyncIntent;
@@ -32,6 +36,10 @@ type SweepOptions = {
 export async function sweepWorkerIntents(options: SweepOptions = {}) {
   // A person is usually waiting on a rank run, so it goes before the background syncs.
   const rankRuns = await (options.dispatchRankRuns ?? dispatchQueuedRankCheckRunIntents)();
+  const playground = await (
+    options.dispatchPlayground ??
+    (() => dispatchModelPlaygroundIntents(prisma, startModelPlaygroundWorkflow))
+  )().catch(() => ({ started: 0 }));
   const alertEvaluations = await (
     options.processAlertEvaluations ?? processPendingAlertEvaluationIntents
   )().catch((error: unknown) => {
@@ -60,6 +68,7 @@ export async function sweepWorkerIntents(options: SweepOptions = {}) {
   const welcome = await (options.sweepWelcome ?? sweepWelcomeFollowupIntents)();
   return {
     rankRuns,
+    playground,
     alertEvaluations,
     localRecurring,
     localMonitors,

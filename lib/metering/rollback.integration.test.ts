@@ -28,7 +28,7 @@ test("before paid admission a restored snapshot reverses the import; after admis
       await f.restart();
       expect(
         await tx().read((sql) => sql.query(Prisma.sql`SELECT count(*) FROM metering_operation`)),
-      ).toEqual([{ count: 0n }]);
+      ).toEqual([{ count: "0" }]);
       expect(
         await tx().read((sql) =>
           sql.query(Prisma.sql`SELECT cursor,verified_at FROM metering_history_progress`),
@@ -89,7 +89,7 @@ test("before paid admission a restored snapshot reverses the import; after admis
         expect(totals.rows[0]?.cost.money?.units).toBe(1n);
         expect(
           await sql.read((tx) => tx.query(Prisma.sql`SELECT count(*) FROM metering_receipt`)),
-        ).toEqual([{ count: 1n }]);
+        ).toEqual([{ count: "1" }]);
       } finally {
         await reconstructed.close();
       }

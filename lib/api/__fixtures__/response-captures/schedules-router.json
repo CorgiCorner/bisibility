@@ -1,0 +1,898 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "ais_a00000000000000000000000",
+            "kind": "ai",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Weekly prompts",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": null,
+            "last_run_status": null,
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 9 * * 1",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "prompts",
+              "ids": ["aip_a00000000000000000000000", "aip_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 96,
+            "target_summary": {
+              "prompts": 2
+            },
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "page_indexing",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "page_indexing",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 3 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "search_console_import",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "search_console",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "40 12 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "sitemap_fetch",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "sitemap",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "domain_rating",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "domain_rating",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 * * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "lmn_a00000000000000000000000",
+            "kind": "local_monitor",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Local checks",
+            "state": "active",
+            "state_reason": "approval_expired",
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "monitor",
+              "ids": ["lmn_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 200,
+            "target_summary": {
+              "monitors": 1
+            },
+            "limits": {}
+          },
+          {
+            "id": "sch_a00000000000000000000000",
+            "kind": "rank",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Daily 06:00",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": null,
+            "last_run_status": null,
+            "cadence": {
+              "frequency": "daily",
+              "cron_expression": null,
+              "timezone": "UTC",
+              "time_of_day": "06:00",
+              "jitter_minutes": 15
+            },
+            "target": {
+              "type": "keywords"
+            },
+            "settings": {
+              "serp_depth": 20,
+              "jitter_minutes": 15
+            },
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 3.6,
+            "target_summary": {
+              "keywords": 1,
+              "targets": 2
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "ais_a00000000000000000000000",
+            "kind": "ai",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Weekly prompts",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": null,
+            "last_run_status": null,
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 9 * * 1",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "prompts",
+              "ids": ["aip_a00000000000000000000000", "aip_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 96,
+            "target_summary": {
+              "prompts": 2
+            },
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "page_indexing",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "page_indexing",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 3 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "search_console_import",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "search_console",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "40 12 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": "000000000000000000"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "ais_a00000000000000000000000",
+            "kind": "ai",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Weekly prompts",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": null,
+            "last_run_status": null,
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 9 * * 1",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "prompts",
+              "ids": ["aip_a00000000000000000000000", "aip_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 96,
+            "target_summary": {
+              "prompts": 2
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "domain_rating",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "domain_rating",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 * * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "sitemap_fetch",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "sitemap",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "dsy_a00000000000000000000000",
+            "kind": "domain_rating",
+            "group": "data_sync",
+            "actions": ["read"],
+            "name": "domain_rating",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "0 * * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": null,
+            "target_summary": {},
+            "limits": {}
+          },
+          {
+            "id": "lmn_a00000000000000000000000",
+            "kind": "local_monitor",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Local checks",
+            "state": "active",
+            "state_reason": "approval_expired",
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "monitor",
+              "ids": ["lmn_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 200,
+            "target_summary": {
+              "monitors": 1
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": "000000000000000000"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "lmn_a00000000000000000000000",
+            "kind": "local_monitor",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Local checks",
+            "state": "active",
+            "state_reason": "approval_expired",
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "monitor",
+              "ids": ["lmn_a00000000000000000000000"]
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 200,
+            "target_summary": {
+              "monitors": 1
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "lmn_a00000000000000000000000",
+            "kind": "local_monitor",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Local checks",
+            "state": "paused",
+            "state_reason": "approval_expired",
+            "last_run_at": "2026-10-20T12:00:00.000Z",
+            "last_run_status": "snapshot_saved",
+            "cadence": {
+              "frequency": "custom_cron",
+              "cron_expression": "45 4 * * *",
+              "timezone": "UTC",
+              "time_of_day": null,
+              "jitter_minutes": null
+            },
+            "target": {
+              "type": "project",
+              "domain": "example.com"
+            },
+            "settings": {},
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 200,
+            "target_summary": {
+              "monitors": 1
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "sch_a00000000000000000000000",
+            "kind": "rank",
+            "group": "tracking",
+            "actions": ["read"],
+            "name": "Daily 06:00",
+            "state": "active",
+            "state_reason": null,
+            "last_run_at": null,
+            "last_run_status": null,
+            "cadence": {
+              "frequency": "daily",
+              "cron_expression": null,
+              "timezone": "UTC",
+              "time_of_day": "06:00",
+              "jitter_minutes": 15
+            },
+            "target": {
+              "type": "keywords"
+            },
+            "settings": {
+              "serp_depth": 20,
+              "jitter_minutes": 15
+            },
+            "next_run_at": null,
+            "monthly_cost_estimate_cents": 3.6,
+            "target_summary": {
+              "keywords": 1,
+              "targets": 2
+            },
+            "limits": {}
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/sch_000000000000000000000000",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Cursor must be a valid v3 cursor.",
+        "docs_url": "https://bisibility.com/docs/api/errors#invalid_cursor",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 400,
+        "title": "Invalid cursor",
+        "type": "https://bisibility.com/problems/invalid_cursor"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Expected a public schedule ID.",
+        "docs_url": "https://bisibility.com/docs/api/errors#invalid_public_id",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/internal_id",
+        "status": 400,
+        "title": "Invalid public ID",
+        "type": "https://bisibility.com/problems/invalid_public_id"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Missing bearer token.",
+        "docs_url": "https://bisibility.com/docs/api/errors#unauthorized",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 401,
+        "title": "Unauthorized",
+        "type": "https://bisibility.com/problems/unauthorized"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 401
+    },
+    {
+      "body": {
+        "detail": "Missing bearer token.",
+        "docs_url": "https://bisibility.com/docs/api/errors#unauthorized",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/sch_000000000000000000000000",
+        "status": 401,
+        "title": "Unauthorized",
+        "type": "https://bisibility.com/problems/unauthorized"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 401
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/sch_000000000000000000000000",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "kind": [
+              "Invalid option: expected one of \"rank\"|\"local_monitor\"|\"ai\"|\"domain_rating\"|\"search_console_import\"|\"page_indexing\"|\"sitemap_fetch\""
+            ]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Invalid input: expected number, received NaN"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "state": ["Invalid option: expected one of \"active\"|\"paused\"|\"archived\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSchedules",
+      "path": "/projects/{project_id}/schedules",
+      "status": 400
+    },
+    {
+      "body": {
+        "id": "dsy_a00000000000000000000000",
+        "kind": "domain_rating",
+        "group": "data_sync",
+        "actions": ["read"],
+        "name": "domain_rating",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "custom_cron",
+          "cron_expression": "0 * * * *",
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": null
+        },
+        "target": {
+          "type": "project",
+          "domain": "example.com"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "sch_a00000000000000000000000",
+        "kind": "rank",
+        "group": "tracking",
+        "actions": ["read"],
+        "name": "Daily 06:00",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": null,
+        "last_run_status": null,
+        "cadence": {
+          "frequency": "daily",
+          "cron_expression": null,
+          "timezone": "UTC",
+          "time_of_day": "06:00",
+          "jitter_minutes": 15
+        },
+        "target": {
+          "type": "keywords"
+        },
+        "settings": {
+          "serp_depth": 20,
+          "jitter_minutes": 15
+        },
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": 3.6,
+        "target_summary": {
+          "keywords": 1,
+          "targets": 2
+        },
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/schedules-router.test.ts"
+}

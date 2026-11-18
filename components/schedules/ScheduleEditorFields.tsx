@@ -4,7 +4,6 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { Switch } from "@/components/ui/Switch";
 import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
 import { scheduleTimezoneOptions } from "@/lib/schedules/form-defaults";
 import { scheduleNameAfterChange } from "@/lib/schedules/suggested-name";
@@ -30,13 +29,11 @@ import {
 import { useScheduleNameLabels } from "./useScheduleNameLabels";
 
 type ScheduleEditorFieldsProps = {
-  defaultScheduleName?: string | null;
   connectedProviders: readonly ScheduleEditorProvider[];
   form: UseFormReturn<ScheduleEditorValues>;
   projectDefaults: ScheduleEditorProjectDefaults;
   projectTimezone: string;
   referenceIso?: string;
-  showDefaultControl?: boolean;
 };
 
 const labelClass = "text-[12px] font-semibold text-fg";
@@ -44,13 +41,11 @@ const fieldClass = "";
 const triggerClass = "normal-case tracking-normal";
 
 export function ScheduleEditorFields({
-  defaultScheduleName,
   connectedProviders,
   form,
   projectDefaults,
   projectTimezone,
   referenceIso,
-  showDefaultControl = true,
 }: Readonly<ScheduleEditorFieldsProps>) {
   const locale = useLocale();
   const t = useTranslations("projectRuns.schedules");
@@ -65,8 +60,6 @@ export function ScheduleEditorFields({
   const timezone = watch("timezone");
   const timeOfDay = watch("timeOfDay");
   const cronExpression = watch("cronExpression");
-  const isDefault = watch("isDefault");
-  const savedDefault = form.formState.defaultValues?.isDefault === true;
   function setCadenceValue<
     K extends "frequency" | "weekday" | "dayOfMonth" | "timeOfDay" | "cronExpression",
   >(field: K, value: ScheduleEditorValues[K]) {
@@ -272,29 +265,6 @@ export function ScheduleEditorFields({
           triggerClassName={triggerClass}
         />
       </div>
-
-      {!showDefaultControl ? null : savedDefault ? (
-        <div className="flex flex-col gap-1 text-[12px]">
-          <span className="font-semibold text-fg">{t("editor.defaultExisting")}</span>
-          <span className="text-fg-muted">{t("editor.defaultExistingDescription")}</span>
-        </div>
-      ) : (
-        <Switch
-          checked={isDefault}
-          description={
-            defaultScheduleName
-              ? t("editor.defaultReplacement", { name: defaultScheduleName })
-              : t("editor.defaultEnabled")
-          }
-          label={t("editor.useAsDefault")}
-          onChange={(event) =>
-            setValue("isDefault", event.currentTarget.checked, {
-              shouldDirty: true,
-              shouldValidate: true,
-            })
-          }
-        />
-      )}
     </div>
   );
 }

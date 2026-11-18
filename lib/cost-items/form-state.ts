@@ -21,6 +21,7 @@ export function emptyCostForm(projectPublicId: string, today: string): CostFormV
     discountPercent: "",
     discountSpan: "months",
     discountUntil: "",
+    customType: "",
     kind: "custom",
     name: "",
     percents: { [projectPublicId]: "100" },
@@ -37,6 +38,7 @@ type StoredFormSource = {
   billing: CostBilling;
   catalogKey: string | null;
   currency: string;
+  customType?: string | null;
   kind: CostKind;
   name: string;
   planLabel: string;
@@ -65,6 +67,7 @@ export function formFromStored(item: StoredFormSource, projectPublicId: string):
     ...prices,
     discountAmount:
       prices.discountMode === "amount" ? minorToMajor(Number(prices.discountAmount), currency) : "",
+    customType: item.customType ?? "",
     kind: item.kind,
     name: item.name,
     percents: { [projectPublicId]: String(partial ? percent : 100) },

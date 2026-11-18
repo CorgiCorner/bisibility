@@ -24,6 +24,8 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.audit }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     project: { findUnique: mocks.project },
+    // No Schedules pause: the reconciler checks it before restarting a Search Console import.
+    projectSyncPause: { findUnique: async () => null },
     projectDefaults: { findUnique: mocks.projectDefaults },
     searchAnalyticsImport: {
       create: mocks.create,

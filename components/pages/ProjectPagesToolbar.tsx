@@ -7,11 +7,15 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Pill } from "@/components/ui/Pill";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
+import { Tooltip } from "@/components/ui/Tooltip";
+import type { ProjectPagesExportAction } from "@/lib/pages/export-csv";
 import { projectPagesPeriod, projectPagesPeriodId } from "@/lib/pages/period";
 import type { ProjectPageTagOption } from "@/lib/pages/tag-view";
 import type { ProjectPagesListResult } from "@/lib/pages/types";
 import type { ProjectPagesQuery } from "@/lib/pages/url-state";
+import { finalizedWindow } from "@/lib/search-insights/dates";
 import { useFormatter, useTranslations } from "next-intl";
+import { ProjectPagesExportButton } from "./ProjectPagesExportButton";
 import type { ProjectPagesTableRow } from "./project-pages-columns";
 
 const ALL_TAGS = "all";
@@ -20,6 +24,12 @@ export function ProjectPagesToolbar({
   canWrite,
   columns,
   counts,
+  exportCsv,
+  total,
+  sitemapChecked,
+  sitemapComplete = counts.notListed !== null,
+  sitemapReadAt,
+  periodWindow,
   onFilters,
   onNewTag,
   onQuery,
@@ -33,6 +43,12 @@ export function ProjectPagesToolbar({
   canWrite: boolean;
   columns: readonly DataTableColumn<ProjectPagesTableRow>[];
   counts: ProjectPagesListResult["counts"];
+  exportCsv?: ProjectPagesExportAction;
+  total?: number;
+  sitemapChecked: boolean;
+  sitemapComplete?: boolean;
+  sitemapReadAt?: Date | null;
+  periodWindow?: { from: string; to: string };
   onFilters: () => void;
   onNewTag: () => void;
   onQuery: (query: ProjectPagesQuery) => void;
@@ -46,6 +62,9 @@ export function ProjectPagesToolbar({
   const t = useTranslations("projectPages");
   const format = useFormatter();
   const period = projectPagesPeriod(query.period);
+  const window = periodWindow
+    ? finalizedWindow(periodWindow.to.slice(0, 10), Number(query.period))
+    : period.window;
   function commitSearch() {
     const next = search.trim();
     if (next === query.search) return;
@@ -73,7 +92,7 @@ export function ProjectPagesToolbar({
         onPeriodChange={(id) => onQuery({ ...query, page: 1, period: projectPagesPeriodId(id) })}
         pending={pending}
         period={period.period}
-        window={period.window}
+        window={window}
       />
       <DataTableColumnsMenu columns={columns} id="project-pages" />
       <MenuSelect
@@ -93,6 +112,13 @@ export function ProjectPagesToolbar({
       <Button onClick={onFilters} size="sm" type="button" variant="outline">
         {t("filters.label")}
       </Button>
+      {exportCsv ? (
+        <ProjectPagesExportButton
+          columns={columns}
+          exportCsv={exportCsv}
+          total={total ?? counts.all}
+        />
+      ) : null}
       {query.coverage ? (
         <Pill
           aria-label={t("filters.clearCoverage", { reason: query.coverage })}
@@ -102,51 +128,92 @@ export function ProjectPagesToolbar({
           {query.coverage}
         </Pill>
       ) : null}
-      <div className="flex flex-wrap gap-1">
-        {showStatus ? (
-          <>
-            <Pill active={!query.status} onClick={() => status(undefined)} type="button">
-              {t("segments.all")} {format.number(counts.all)}
-            </Pill>
-            <Pill
-              active={query.status === "in_snapshot"}
-              onClick={() => status("in_snapshot")}
-              type="button"
-            >
-              {t("segments.inSnapshot")} {format.number(counts.inSnapshot)}
-            </Pill>
-            <Pill active={query.status === "new"} onClick={() => status("new")} type="button">
-              {t("segments.new")} {format.number(counts.new)}
-            </Pill>
-            <Pill
-              active={query.status === "removed"}
-              onClick={() => status("removed")}
-              type="button"
-            >
-              {t("segments.removed")} {format.number(counts.removed)}
-            </Pill>
-          </>
-        ) : (
-          <>
-            <Pill active={!query.sitemap} onClick={() => sitemap(undefined)} type="button">
-              {t("segments.all")} {format.number(counts.all)}
-            </Pill>
-            <Pill
-              active={query.sitemap === "listed"}
-              onClick={() => sitemap("listed")}
-              type="button"
-            >
-              {t("segments.listed")} {format.number(counts.listed)}
-            </Pill>
-            <Pill
-              active={query.sitemap === "not_listed"}
-              onClick={() => sitemap("not_listed")}
-              type="button"
-            >
-              {t("segments.notListed")} {format.number(counts.notListed)}
-            </Pill>
-          </>
-        )}
+      {sitemapReadAt ? (
+        <Tooltip content={t("sitemapState.freshnessHint")} semantics="description">
+          <span className="text-ui-caption text-fg-muted">
+            {t("sitemapState.lastRead", {
+              date: format.dateTime(sitemapReadAt, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              }),
+            })}
+          </span>
+        </Tooltip>
+      ) : null}
+      <div className="w-full min-w-0 overflow-x-auto" data-pages-segments="">
+        <div className="flex w-max items-center gap-1">
+          {showStatus ? (
+            <>
+              <Pill active={!query.status} onClick={() => status(undefined)} type="button">
+                {t("segments.all")} {format.number(counts.all)}
+              </Pill>
+              <Pill
+                active={query.status === "in_snapshot"}
+                onClick={() => status("in_snapshot")}
+                type="button"
+              >
+                {t("segments.inSnapshot")} {format.number(counts.inSnapshot)}
+              </Pill>
+              <Pill active={query.status === "new"} onClick={() => status("new")} type="button">
+                {t("segments.new")} {format.number(counts.new)}
+              </Pill>
+              <Pill
+                active={query.status === "removed"}
+                onClick={() => status("removed")}
+                type="button"
+              >
+                {t("segments.removed")} {format.number(counts.removed)}
+              </Pill>
+              {!sitemapChecked ? (
+                <Tooltip content={t("sitemapState.notCheckedHint")} semantics="description">
+                  <span className="whitespace-nowrap px-2 text-ui-caption text-fg-muted">
+                    {t("sitemapState.notChecked")}
+                  </span>
+                </Tooltip>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Pill active={!query.sitemap} onClick={() => sitemap(undefined)} type="button">
+                {t("segments.all")} {format.number(counts.all)}
+              </Pill>
+              {sitemapChecked ? (
+                <>
+                  <Pill
+                    active={query.sitemap === "listed"}
+                    onClick={() => sitemap("listed")}
+                    type="button"
+                  >
+                    {t("segments.listed")} {format.number(counts.listed)}
+                  </Pill>
+                  {sitemapComplete && counts.notListed !== null ? (
+                    <Pill
+                      active={query.sitemap === "not_listed"}
+                      onClick={() => sitemap("not_listed")}
+                      type="button"
+                    >
+                      {t("segments.notListed")} {format.number(counts.notListed)}
+                    </Pill>
+                  ) : (
+                    <Tooltip content={t("sitemapState.freshnessHint")} semantics="description">
+                      <span className="whitespace-nowrap px-2 text-ui-caption text-fg-muted">
+                        {t("sitemapState.absenceNotChecked")}
+                      </span>
+                    </Tooltip>
+                  )}
+                </>
+              ) : (
+                <Tooltip content={t("sitemapState.notCheckedHint")} semantics="description">
+                  <span className="whitespace-nowrap px-2 text-ui-caption text-fg-muted">
+                    {t("sitemapState.notChecked")}
+                  </span>
+                </Tooltip>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

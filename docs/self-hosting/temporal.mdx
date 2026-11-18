@@ -104,8 +104,7 @@ npm run temporal:worker
 are independent. `dispatcher` is the default and plans named Schedules into runs
 and bounded dispatch items. `cutover` pauses automatic starts while allowing state
 repair and already-paid collection. Manual checks remain available in both modes.
-The legacy engine is retired. The worker [upgrades existing schedules automatically](/self-hosting/scheduler-upgrade); old variables warn instead of blocking startup.
-Stop old workers before starting the new version.
+The legacy engine is retired. Stop old workers and complete the [offline scheduler upgrade](/self-hosting/scheduler-upgrade) before starting dispatcher mode. Retired scheduler variables produce a warning, not a startup error; remove them from the configuration.
 
 The worker owns Temporal maintenance schedules. Set
 `SCHEDULED_MAINTENANCE_ENABLED` explicitly; otherwise the historical reconciler opt-out is preserved, defaulting to enabled when neither is set. It controls eight schedules: audit and raw-payload purges, queued

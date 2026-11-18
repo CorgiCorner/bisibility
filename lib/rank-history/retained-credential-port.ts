@@ -1,12 +1,16 @@
+import type { MembershipReader } from "@/lib/api/key-creator";
+
 /** Exact read shapes shared by retained-history transports and their credential fixtures. */
 type CredentialState = { revokedAt: Date | null; expiresAt: Date | null; scopes: unknown };
 const credentialSelect = { revokedAt: true, expiresAt: true, scopes: true } as const;
-export type RetainedCredentialReadPort = {
+const keySelect = { ...credentialSelect, createdById: true } as const;
+/** A project key also reads its creator's current role, which caps what the key can do. */
+export type RetainedCredentialReadPort = MembershipReader & {
   apiKey: {
     findFirst(input: {
       where: { id: string; projectId: string };
-      select: typeof credentialSelect;
-    }): Promise<CredentialState | null>;
+      select: typeof keySelect;
+    }): Promise<(CredentialState & { createdById: string | null }) | null>;
   };
   personalAccessToken: {
     findFirst(input: {

@@ -8,6 +8,9 @@ import type { CapabilityScope, RecoveryAdmissionReason } from "./account-health/
 import { ProviderCostLimitError } from "./cost-limit";
 import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
 
+/** Native receipts have independent usage/money certainty and never enter the legacy observer. */
+export type { ModelNativeUsageReceipt } from "@/lib/model-playground/usage-contract";
+
 export type ProviderUsageReceipt = {
   cached: boolean;
   costCents: number | null;

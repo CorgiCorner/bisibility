@@ -1,3 +1,5 @@
+import { type CronField, parseCronExpression } from "@/lib/rank-check/cron";
+import { scheduleWeekdayNames } from "@/lib/schedules/cadence-label";
 import type { useTranslations } from "next-intl";
 import type { RankSchedulesTableRow, SchedulesTableRow } from "./schedules-table-columns";
 
@@ -58,7 +60,37 @@ const weekdayKeys = {
   Wednesday: "Wednesday",
 } as const;
 
-function rankCadenceLabel(row: RankSchedulesTableRow, t: SchedulesT) {
+type CadenceRow = Pick<
+  RankSchedulesTableRow,
+  "cronExpression" | "timeOfDay" | "weekday" | "dayOfMonth"
+> & { frequency: string };
+
+function singleValue(field: CronField) {
+  return field?.size === 1 ? [...field][0] : null;
+}
+
+function cronCadenceLabel(expression: string | null | undefined, t: SchedulesT): string {
+  const fallback = () => t("cadenceLabels.custom", { expression: expression ?? "-" });
+  const parsed = expression ? parseCronExpression(expression) : null;
+  if (!parsed?.ok || parsed.month !== null) return fallback();
+  const minute = singleValue(parsed.minute);
+  const hour = singleValue(parsed.hour);
+  if (minute === null) return fallback();
+  if (parsed.day === null && parsed.weekday === null && parsed.hour === null)
+    return t("cadenceLabels.hourly", { minute: String(minute).padStart(2, "0") });
+  if (hour === null) return fallback();
+  const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  if (parsed.day === null && parsed.weekday === null) return t("cadenceLabels.daily", { time });
+  const weekday = singleValue(parsed.weekday);
+  if (parsed.day === null && weekday !== null)
+    return t("cadenceLabels.weekly", { day: t(`weekdays.${scheduleWeekdayNames[weekday]}`), time });
+  const day = singleValue(parsed.day);
+  if (parsed.weekday === null && day !== null)
+    return t("cadenceLabels.monthly", { day: t("cadenceLabels.dayOfMonth", { day }), time });
+  return fallback();
+}
+
+function rankCadenceLabel(row: CadenceRow, t: SchedulesT) {
   const time = row.timeOfDay ?? "-";
   if (row.timeOfDay === null && ["daily", "weekly", "monthly"].includes(row.frequency)) {
     const interval =
@@ -83,13 +115,12 @@ function rankCadenceLabel(row: RankSchedulesTableRow, t: SchedulesT) {
       time,
     });
   }
-  if (row.frequency === "custom_cron")
-    return t("cadenceLabels.custom", { expression: row.cronExpression ?? "-" });
+  if (row.frequency === "custom_cron") return cronCadenceLabel(row.cronExpression, t);
   return row.frequency === "manual" ? t("cadenceLabels.manual") : t("cadenceLabels.paused");
 }
 
-export function cadenceLabel(row: SchedulesTableRow, t: SchedulesT) {
-  if (row.scheduleKind === "ai") return t("cadenceLabels.custom", { expression: row.cron });
+export function cadenceLabel(row: SchedulesTableRow | CadenceRow, t: SchedulesT) {
+  if ("scheduleKind" in row && row.scheduleKind === "ai") return cronCadenceLabel(row.cron, t);
   return rankCadenceLabel(row, t);
 }
 

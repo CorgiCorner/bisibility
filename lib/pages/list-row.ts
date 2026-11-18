@@ -29,7 +29,7 @@ export type ProjectPageListRecord = {
   statusKind?: string | null;
   sources: Record<string, { firstSeenAt: string | Date; lastSeenAt: string | Date }> | null;
   verdict: string | null;
-  listed: boolean;
+  listed: boolean | null;
   vitalsCls?: number | string | null;
   vitalsInpMs?: number | null;
   vitalsLcpMs?: number | null;

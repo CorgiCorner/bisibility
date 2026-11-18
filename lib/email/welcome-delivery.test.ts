@@ -145,7 +145,7 @@ describe("welcome email prepare/send boundary", () => {
     const prepared = prepareWelcomeEmail(recipient, "https://cloud.example.com");
     await sendPreparedWelcomeEmail(prepared);
 
-    expect(mocks.sendEmail).toHaveBeenCalledWith(prepared);
+    expect(mocks.sendEmail).toHaveBeenCalledWith({ ...prepared, purpose: "welcome" });
   });
 
   it("propagates transport errors from sendPreparedWelcomeEmail", async () => {

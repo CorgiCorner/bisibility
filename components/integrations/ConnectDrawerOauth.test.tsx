@@ -89,6 +89,11 @@ describe("ConnectDrawerOauth", () => {
     );
 
     expect(screen.getByText(/Importing 3 months takes about 400 requests/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Search Console imports and page indexing checks run daily when enabled. You can pause them in Schedules.",
+      ),
+    ).toBeVisible();
   });
 
   it("submits the in-form GSC depth and speed after updating the estimate locally", async () => {

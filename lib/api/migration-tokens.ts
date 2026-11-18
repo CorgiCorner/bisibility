@@ -54,7 +54,11 @@ export async function mintProjectMigrationToken(ctx: ApiContext, projectId: stri
     project_id: projectId,
   });
   const actorId = migrationActorId(ctx);
-  await runDomain(() => assertMigrationTokenMintRateLimit(ctx.actorId ?? ctx.auth.apiKey.id));
+  await runDomain(() =>
+    assertMigrationTokenMintRateLimit(
+      ctx.actorId ?? ("apiKey" in ctx.auth ? ctx.auth.apiKey.id : requireApiActor(ctx).id),
+    ),
+  );
   const token = await runDomain(() =>
     mintMigrationTokenForProject({
       action: "migration_token.mint",

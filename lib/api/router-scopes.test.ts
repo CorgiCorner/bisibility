@@ -38,7 +38,7 @@ const project = {
 };
 
 function request(method: string, path: string) {
-  return new Request(`https://example.test/api/v1${path}`, {
+  return new Request(`https://example.com/api/v1${path}`, {
     headers: { authorization: "Bearer bsb_key_live_test_key" },
     method,
   });
@@ -51,6 +51,7 @@ describe("API key scopes", () => {
     mocks.dispatchRoute.mockResolvedValue(undefined);
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Read only",
@@ -69,9 +70,42 @@ describe("API key scopes", () => {
     expect(mocks.dispatchRoute).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["member", "DELETE", 403],
+    ["member", "PATCH", 204],
+    ["admin", "DELETE", 204],
+  ])(
+    "checks a %s creator's current role for %s with write scope",
+    async (creatorRole, method, status) => {
+      const keywordId = "kw_a00000000000000000000000";
+      mocks.authenticateBearer.mockResolvedValue({
+        kind: "project_key",
+        creatorRole,
+        apiKey: {
+          id: "write-key",
+          name: "Write",
+          prefix: "bsb_key_live_",
+          projectId: project.id,
+          scopes: ["write"],
+        },
+        project,
+      });
+      mocks.dispatchRoute.mockResolvedValue(new Response(null, { status: 204 }));
+
+      const response = await handleApiRequest(request(method, `/keywords/${keywordId}`), [
+        "keywords",
+        keywordId,
+      ]);
+
+      expect(response.status).toBe(status);
+      if (status === 403) expect(mocks.dispatchRoute).not.toHaveBeenCalled();
+    },
+  );
+
   it("allows the POST keyword lookup with read scope during migration hold", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Read only",
@@ -102,6 +136,7 @@ describe("API key scopes", () => {
   it("allows signal ingestion for write-scope API keys", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Write",
@@ -135,6 +170,7 @@ describe("API key scopes", () => {
   it("requires admin scope for team mutations and passes an explicit API actor", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Write only",
@@ -152,6 +188,7 @@ describe("API key scopes", () => {
 
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Admin",
@@ -184,6 +221,7 @@ describe("API key scopes", () => {
   it("rejects project creation for project-scoped API keys before dispatch", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Admin",
@@ -254,6 +292,7 @@ describe("API key scopes", () => {
   it("requires admin scope for deleting a project", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Write only",
@@ -276,6 +315,7 @@ describe("API key scopes", () => {
   it("rejects writes while the authenticated project is read-only", async () => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Admin",
@@ -384,6 +424,7 @@ describe("role capabilities", () => {
   function projectKey(scopes: string[]) {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Automation",

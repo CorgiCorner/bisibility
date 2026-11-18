@@ -38,6 +38,7 @@ function query(ctx: ApiContext) {
 }
 export function historyApiAuthority(ctx: ApiContext): HistoryExportAuthority {
   const actor = requireApiActor(ctx);
+  if (ctx.origin.surface === "app") return { actor, transport: "session" };
   const kind = ctx.origin.credentialKind;
   if (kind !== "project_key" && kind !== "personal_token" && kind !== "oauth_client")
     throw new AuthorizationError("forbidden");

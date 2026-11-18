@@ -28,8 +28,12 @@ import {
 } from "@/lib/api/ai-tracking-service";
 import { AuthorizationError, getProjectRole } from "@/lib/auth/authorize";
 import { withCapacityFailure } from "@/lib/capacity/action";
+import { withScheduleActionResult } from "@/lib/schedules/action-result";
+import type { ScheduleReviewSubmission } from "@/lib/schedules/review-commit";
 import { revalidatePath } from "next/cache";
 import { getActionActor, ProjectNotFoundError } from "./_shared";
+import { stampAppScheduleInput } from "./ai-tracking-input";
+import { writeReviewedAiSchedule } from "./ai-tracking-schedule-write";
 import { trackingActionResult } from "./tracking-action-result";
 
 export async function getAiTrackingPage(projectId: string): Promise<TrackingWorkspaceData> {
@@ -147,34 +151,29 @@ export async function mutateAiTrackingAction(
   method: "POST" | "PATCH" | "DELETE",
   input: unknown,
   member?: string,
+  review?: ScheduleReviewSubmission,
 ) {
-  return withCapacityFailure(async () => {
-    const actor = await getActionActor();
-    const project = await trackingScope(actor, projectId, true);
-    const value =
-      resource === "schedules" && (input as { configuration?: unknown }).configuration
-        ? {
-            ...(input as object),
-            configuration: {
-              ...(input as { configuration: object }).configuration,
-              requirePayment: true,
-              actorId: actor.id,
-              actorCredential: undefined,
-              entrySource: "app",
-              origin: "manual",
-            },
-          }
-        : input;
-    const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
-    if (!("replayed" in result && result.replayed)) recordAppAction(actor);
-    await auditTrackingCatalog(actor, project, resource, method, value, result);
-    revalidatePath(aiVisibilityPath(projectId));
-    if (resource === "schedules") {
-      revalidatePath(`/app/${projectId}/schedules`);
-      revalidatePath(`/app/${projectId}/runs/schedules`);
-    }
-    return getAiTrackingPage(projectId);
-  });
+  return withCapacityFailure(() =>
+    withScheduleActionResult(async () => {
+      const actor = await getActionActor();
+      const project = await trackingScope(actor, projectId, true);
+      const value = resource === "schedules" ? stampAppScheduleInput(input, actor.id) : input;
+      const result =
+        resource === "schedules"
+          ? await writeReviewedAiSchedule(project.id, actor, method, value, member, review, input)
+          : await mutateTrackingCatalog(project.id, resource, method, value, member);
+      if (resource === "schedules" && "unchanged" in result && result.unchanged)
+        return getAiTrackingPage(projectId);
+      if (!("replayed" in result && result.replayed)) recordAppAction(actor);
+      await auditTrackingCatalog(actor, project, resource, method, value, result);
+      revalidatePath(aiVisibilityPath(projectId));
+      if (resource === "schedules") {
+        revalidatePath(`/app/${projectId}/schedules`);
+        revalidatePath(`/app/${projectId}/runs/schedules`);
+      }
+      return getAiTrackingPage(projectId);
+    }),
+  );
 }
 
 export async function previewAiTrackingAction(projectId: string, input: unknown) {

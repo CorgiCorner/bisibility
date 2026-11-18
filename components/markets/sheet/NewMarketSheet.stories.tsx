@@ -1,6 +1,14 @@
+import { storyLocale } from "@/.storybook/story-locale";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { catalogMarketDefinitionSource } from "@/components/markets/blocks/market-definition-source";
+import { projectMarketsFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
+import es from "@/messages/core/es-ES/project-markets.json";
+import ja from "@/messages/core/ja/project-markets.json";
+import pl from "@/messages/core/pl/project-markets.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { NewMarketSheet } from "./NewMarketSheet";
+
+const marketMessages = { en: projectMarketsFeatureTestMessages, pl, "es-ES": es, ja };
 
 const projectId = `prj_${"a".repeat(24)}`;
 
@@ -24,6 +32,17 @@ const meta = {
   component: NewMarketSheet,
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   title: "Markets/Sheet/NewMarketSheet",
+  decorators: [
+    (Story, context) => (
+      <FeatureMessagesProvider
+        locale={storyLocale(context.globals.locale)}
+        timeZone="UTC"
+        messages={marketMessages[storyLocale(context.globals.locale)]}
+      >
+        <Story />
+      </FeatureMessagesProvider>
+    ),
+  ],
 } satisfies Meta<typeof NewMarketSheet>;
 
 export default meta;
@@ -50,7 +69,6 @@ export const Empty: Story = {
     ],
     scheduleContext: {
       connectedProviders: [],
-      defaultScheduleName: "Weekly Monday",
       projectDefaults: { provider: null, serpDepth: 100 },
       projectTimezone: "Europe/Warsaw",
     },

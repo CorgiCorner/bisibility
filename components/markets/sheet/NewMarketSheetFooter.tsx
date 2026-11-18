@@ -32,7 +32,7 @@ export function NewMarketSheetFooter({
         </>
       ) : null}
       <div className="flex justify-end gap-2">
-        <Button disabled={pending} onClick={onClose} size="sm" type="button" variant="ghost">
+        <Button disabled={pending} onClick={onClose} size="input" type="button" variant="ghost">
           {cancelLabel}
         </Button>
         {showCreate ? (
@@ -40,7 +40,7 @@ export function NewMarketSheetFooter({
             disabled={createDisabled}
             form="new-market-form"
             loading={pending}
-            size="sm"
+            size="input"
             type="submit"
             variant="secondary"
           >

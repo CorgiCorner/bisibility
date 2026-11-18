@@ -56,7 +56,7 @@ export type ConnectDrawerProps = {
   searchSyncPlan?: SearchSyncPreflightPlan;
 };
 
-function drawerNoticeCopy(t: ReturnType<typeof useTranslations>) {
+function drawerNoticeCopy(t: ReturnType<typeof useTranslations<"projectIntegrations.drawer">>) {
   return {
     appUpdateRequired: t("appUpdateRequired"),
     connectionTestFailed: t("connectionTestFailed"),
@@ -102,6 +102,7 @@ export function ConnectDrawer({
   const errors = form.formState.errors;
   const busy = pendingAction !== null;
   const isManage = mode === "manage";
+  const unavailable = provider.kind === "model" && provider.status === "planned";
   const credentialFields = providerCredentialFields(provider);
   const [initialCredentialSignature, setInitialCredentialSignature] = useState(() =>
     credentialFieldsSignature(credentialFields, formDefaults),
@@ -144,6 +145,7 @@ export function ConnectDrawer({
 
   const handleSave = form.handleSubmit((values) =>
     runAction("save", async () => {
+      if (unavailable) return null;
       if (saveDisabled) {
         return {
           message: t("testRequiredMessage"),
@@ -176,7 +178,7 @@ export function ConnectDrawer({
   );
 
   function handleTest() {
-    if (readOnly) {
+    if (readOnly || unavailable) {
       return;
     }
     form
@@ -208,7 +210,7 @@ export function ConnectDrawer({
   }
 
   const footer =
-    authMode === "oauth" && !isManage ? undefined : (
+    unavailable || (authMode === "oauth" && !isManage) ? undefined : (
       <ConnectDrawerFooter
         busy={busy}
         formId={formId}
@@ -241,37 +243,44 @@ export function ConnectDrawer({
   return (
     <Sheet footer={footer} onClose={onClose} open={open} title={title}>
       <div className="flex flex-col gap-5">
-        <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
-          <input type="hidden" {...form.register("projectId")} />
-          <input type="hidden" {...form.register("providerId")} />
-          {authMode === "oauth" ? (
-            <ConnectDrawerOauth
-              completePropertySelection={activeActions.completeGooglePropertySelection}
-              disconnectProvider={activeActions.disconnectProvider}
-              loadStoredProperties={activeActions.loadStoredGoogleProperties}
-              onDisconnected={onClose}
-              projectId={projectId}
-              projectRef={projectRef}
-              provider={provider}
-              saveStoredProperty={activeActions.saveStoredGoogleProperty}
-              scopes={oauthScopes(provider)}
-              syncPlan={provider.id === "gsc" ? searchSyncPlan : undefined}
-            />
-          ) : (
-            <>
-              <CredentialFields errors={errors} form={form} provider={provider} />
-              {notice ? <ActionNotice notice={notice} size="input" /> : null}
-            </>
-          )}
-          {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
-            <ConnectionOkBanner
-              message={testSuccessMessage}
-              detail={t("testPassedUnsavedMessage", {
-                action: isManage ? t("saveChanges") : t("connectProvider"),
-              })}
-            />
-          ) : null}
-        </form>
+        {!isManage && provider.id === "ahrefs" ? (
+          <p className="m-0 text-[12px] leading-5 text-fg-muted">{t("ahrefsSyncSchedule")}</p>
+        ) : null}
+        {unavailable ? (
+          <p className="m-0 text-[12px] leading-5 text-fg-muted">{provider.description}</p>
+        ) : (
+          <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
+            <input type="hidden" {...form.register("projectId")} />
+            <input type="hidden" {...form.register("providerId")} />
+            {authMode === "oauth" ? (
+              <ConnectDrawerOauth
+                completePropertySelection={activeActions.completeGooglePropertySelection}
+                disconnectProvider={activeActions.disconnectProvider}
+                loadStoredProperties={activeActions.loadStoredGoogleProperties}
+                onDisconnected={onClose}
+                projectId={projectId}
+                projectRef={projectRef}
+                provider={provider}
+                saveStoredProperty={activeActions.saveStoredGoogleProperty}
+                scopes={oauthScopes(provider)}
+                syncPlan={provider.id === "gsc" ? searchSyncPlan : undefined}
+              />
+            ) : (
+              <>
+                <CredentialFields errors={errors} form={form} provider={provider} />
+                {notice ? <ActionNotice notice={notice} size="input" /> : null}
+              </>
+            )}
+            {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
+              <ConnectionOkBanner
+                message={testSuccessMessage}
+                detail={t("testPassedUnsavedMessage", {
+                  action: isManage ? t("saveChanges") : t("connectProvider"),
+                })}
+              />
+            ) : null}
+          </form>
+        )}
         {/* Each rate saves through its own form, which cannot sit inside the connection form. */}
         {provider.kind === "serp" ? (
           <ConnectionRatePanel

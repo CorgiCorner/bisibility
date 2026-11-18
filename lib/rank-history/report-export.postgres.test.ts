@@ -193,6 +193,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           prefix: "owned_read_fixture",
           hashedKey: "synthetic-hash-only",
           scopes: ["read"],
+          createdById: f.context.actor.id,
         },
       });
       const context: HistoryExportAuthority = {

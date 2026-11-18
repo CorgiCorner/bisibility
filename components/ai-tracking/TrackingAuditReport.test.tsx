@@ -151,6 +151,6 @@ describe("retained evidence saved audit workflow", () => {
     expect(
       screen.getByText("This audit contains only a bounded part of the selected run."),
     ).toBeVisible();
-    expect(screen.getByText(messages.agentWorkspace.membersOnly)).toBeVisible();
+    expect(screen.getByRole("button", { name: messages.agentWorkspace.copyLink })).toBeVisible();
   });
 });

@@ -2,11 +2,9 @@ import { prepareResourceCapacity } from "@/lib/capacity/capacity-extension";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { assertDefinitionActor } from "@/lib/measurement-definitions/access";
 import type { ReviewedConsentSummary } from "@/lib/measurement-settings/host/reviewed-consent";
-import { transferOnScheduleDelete } from "./transfer-on-delete";
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
-import { ApiNotFoundError } from "@/lib/api/errors";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
@@ -18,121 +16,88 @@ import type {
   UpdateCheckScheduleInput,
 } from "@/lib/schemas/check-schedule";
 import {
-  type CheckScheduleRow,
   checkScheduleAudit,
   checkScheduleSelect,
   mirrorScheduleToKeywords,
 } from "./service-membership";
+import {
+  cadenceChanged,
+  projectTimezone,
+  requireSchedule,
+  storedCronExpression,
+} from "./service-row";
 
-export class DefaultCheckScheduleDeletionError extends Error {
-  readonly code = "default_check_schedule";
+export class CheckScheduleNotEmptyError extends Error {
+  readonly code = "check_schedule_not_empty";
 
   constructor() {
-    super("The default check schedule cannot be deleted.");
-    this.name = "DefaultCheckScheduleDeletionError";
+    super("Move or remove all keywords before deleting this schedule.");
+    this.name = "CheckScheduleNotEmptyError";
   }
-}
-
-async function requireSchedule(tx: Prisma.TransactionClient, projectId: string, publicId: string) {
-  const schedule = await tx.checkSchedule.findFirst({
-    select: checkScheduleSelect,
-    where: { archivedAt: null, projectId, publicId },
-  });
-  if (!schedule) throw new ApiNotFoundError("Check schedule not found.");
-  return schedule;
-}
-
-async function projectTimezone(tx: Prisma.TransactionClient, projectId: string) {
-  const project = await tx.project.findUnique({
-    select: { defaults: { select: { timezone: true } } },
-    where: { id: projectId },
-  });
-  return project?.defaults?.timezone ?? "UTC";
-}
-
-function cadenceChanged(before: CheckScheduleRow, after: CheckScheduleRow) {
-  return (
-    before.cronExpression !== after.cronExpression ||
-    before.enabled !== after.enabled ||
-    before.frequency !== after.frequency ||
-    before.jitterMinutes !== after.jitterMinutes ||
-    before.timeOfDay !== after.timeOfDay ||
-    before.timezone !== after.timezone
-  );
-}
-
-function storedCronExpression(
-  frequency: CheckScheduleRow["frequency"],
-  cronExpression: string | null,
-  normalizedCronExpression: string | null,
-) {
-  return frequency === "weekly" || frequency === "monthly"
-    ? cronExpression
-    : normalizedCronExpression;
 }
 
 export async function createSchedule(
   actorId: string,
   projectId: string,
   data: CreateCheckScheduleInput,
+  existingTx?: Prisma.TransactionClient,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
-      await lockProjectForProviderMutation(tx, projectId);
-      const timezone = data.timezone ?? (await projectTimezone(tx, projectId));
-      const cadence = normalizeSchedule({
-        cronExpression: data.cronExpression,
-        frequency: data.frequency,
-        jitterMinutes: data.jitterMinutes,
-        timezone,
-      });
-      const cronExpression = storedCronExpression(
-        data.frequency,
-        data.cronExpression,
-        cadence.cronExpression,
-      );
-      const capacity = await prepareResourceCapacity(tx, {
+  const run = async (tx: Prisma.TransactionClient) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
+    await lockProjectForProviderMutation(tx, projectId);
+    const timezone = data.timezone ?? (await projectTimezone(tx, projectId));
+    const cadence = normalizeSchedule({
+      cronExpression: data.cronExpression,
+      frequency: data.frequency,
+      jitterMinutes: data.jitterMinutes,
+      timezone,
+    });
+    const cronExpression = storedCronExpression(
+      data.frequency,
+      data.cronExpression,
+      cadence.cronExpression,
+    );
+    const capacity = await prepareResourceCapacity(tx, {
+      projectId,
+      dimensions: [],
+      cadence: {
+        dimension: "scheduleFrequencies",
+        after: { ...cadence, enabled: true },
+      },
+    });
+    const schedule = await tx.checkSchedule.create({
+      data: {
+        cronExpression,
+        enabled: true,
+        frequency: cadence.frequency,
+        jitterMinutes: cadence.jitterMinutes,
+        name: data.name,
         projectId,
-        dimensions: [],
-        cadence: {
-          dimension: "scheduleFrequencies",
-          after: { ...cadence, enabled: true },
-        },
-      });
-      const schedule = await tx.checkSchedule.create({
-        data: {
-          cronExpression,
-          enabled: true,
-          frequency: cadence.frequency,
-          isDefault: false,
-          jitterMinutes: cadence.jitterMinutes,
-          name: data.name,
-          projectId,
-          providerPolicy: data.providerPolicy ?? null,
-          publicId: makePublicId("sch"),
-          serpDepth: data.serpDepth ?? null,
-          timeOfDay: data.timeOfDay ?? null,
-          timezone: data.timezone ?? null,
-        },
-        select: checkScheduleSelect,
-      });
-      await writeAudit(
-        {
-          action: "check_schedule.create",
-          actorId,
-          after: checkScheduleAudit(schedule),
-          projectId,
-          targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
-        },
-        tx,
-      );
-      await capacity.check();
-      return { publicId: schedule.publicId };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+        providerPolicy: data.providerPolicy ?? null,
+        publicId: makePublicId("sch"),
+        serpDepth: data.serpDepth ?? null,
+        timeOfDay: data.timeOfDay ?? null,
+        timezone: data.timezone ?? null,
+      },
+      select: checkScheduleSelect,
+    });
+    await writeAudit(
+      {
+        action: "check_schedule.create",
+        actorId,
+        after: checkScheduleAudit(schedule),
+        projectId,
+        targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
+        targetType: "check_schedule",
+      },
+      tx,
+    );
+    await capacity.check();
+    return { publicId: schedule.publicId };
+  };
+  return existingTx
+    ? run(existingTx)
+    : prisma.$transaction(run, { maxWait: 10_000, timeout: 60_000 });
 }
 
 export async function updateScheduleInTransaction(
@@ -141,6 +106,7 @@ export async function updateScheduleInTransaction(
   projectId: string,
   data: UpdateCheckScheduleInput,
   consent?: ReviewedConsentSummary,
+  clientConsent?: string,
 ) {
   await assertDefinitionActor(tx, actorId, projectId, "update", "check_schedule");
   await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
@@ -208,7 +174,11 @@ export async function updateScheduleInTransaction(
     {
       action: "check_schedule.update",
       actorId,
-      after: { ...checkScheduleAudit(schedule), ...(consent ? { consent } : {}) },
+      after: {
+        ...checkScheduleAudit(schedule),
+        ...(consent ? { consent } : {}),
+        ...(clientConsent ? { clientConsent } : {}),
+      },
       before: checkScheduleAudit(before),
       projectId,
       targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
@@ -223,48 +193,14 @@ export async function updateSchedule(
   actorId: string,
   projectId: string,
   data: UpdateCheckScheduleInput,
+  existingTx?: Prisma.TransactionClient,
+  clientConsent?: string,
 ) {
-  return prisma.$transaction((tx) => updateScheduleInTransaction(tx, actorId, projectId, data), {
-    maxWait: 10_000,
-    timeout: 60_000,
-  });
-}
-
-export async function setDefaultSchedule(actorId: string, projectId: string, scheduleId: string) {
-  return prisma.$transaction(
-    async (tx) => {
-      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
-      await lockProjectForProviderMutation(tx, projectId);
-      const schedule = await requireSchedule(tx, projectId, scheduleId);
-      const previous = await tx.checkSchedule.findFirst({
-        select: { publicId: true },
-        where: { archivedAt: null, isDefault: true, projectId },
-      });
-      await tx.checkSchedule.updateMany({
-        data: { isDefault: false },
-        where: { archivedAt: null, isDefault: true, projectId },
-      });
-      const updated = await tx.checkSchedule.update({
-        data: { isDefault: true },
-        select: checkScheduleSelect,
-        where: { id: schedule.id },
-      });
-      await writeAudit(
-        {
-          action: "check_schedule.set_default",
-          actorId,
-          after: { publicId: updated.publicId },
-          before: previous ? { publicId: previous.publicId } : null,
-          projectId,
-          targetId: requiredPublicAuditId(updated.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
-        },
-        tx,
-      );
-      return { publicId: updated.publicId };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+  const run = (tx: Prisma.TransactionClient) =>
+    updateScheduleInTransaction(tx, actorId, projectId, data, undefined, clientConsent);
+  return existingTx
+    ? run(existingTx)
+    : prisma.$transaction(run, { maxWait: 10_000, timeout: 60_000 });
 }
 
 export async function deleteSchedule(actorId: string, projectId: string, scheduleId: string) {
@@ -273,28 +209,20 @@ export async function deleteSchedule(actorId: string, projectId: string, schedul
       await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
       await lockProjectForProviderMutation(tx, projectId);
       const schedule = await requireSchedule(tx, projectId, scheduleId);
-      if (schedule.isDefault) throw new DefaultCheckScheduleDeletionError();
-      const fallback = await tx.checkSchedule.findFirst({
-        select: checkScheduleSelect,
-        where: { archivedAt: null, isDefault: true, projectId },
-      });
-      if (!fallback) throw new ApiNotFoundError("Default check schedule not found.");
       const members = await tx.keyword.findMany({
-        select: { id: true, publicId: true },
+        select: { id: true },
         where: { checkScheduleId: schedule.id },
       });
-      const keywordIds = members.map((keyword) => keyword.id);
-      const movedTo = await transferOnScheduleDelete(tx, projectId, keywordIds, fallback);
+      if (members.length > 0) throw new CheckScheduleNotEmptyError();
       await reconcilePlannedRunsForSchedule(schedule.id, tx, { deleting: true });
-      await reconcilePlannedRunsForSchedule(fallback.id, tx);
       await tx.checkSchedule.delete({ where: { id: schedule.id } });
       await writeAudit(
         {
           action: "check_schedule.delete",
           actorId,
           after: {
-            keywordIds: members.map((keyword) => keyword.publicId),
-            movedTo,
+            keywordIds: [],
+            movedTo: null,
           },
           before: checkScheduleAudit(schedule),
           projectId,

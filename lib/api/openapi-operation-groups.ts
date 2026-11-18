@@ -1,9 +1,15 @@
+import { modelPlaygroundPolicies } from "./model-playground-registry";
 import type { openApiTags } from "./openapi-tags";
 import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 
 type OpenApiTagName = (typeof openApiTags)[number]["name"];
 
 export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly string[]]> = [
+  [
+    "schedules",
+    ["listSchedules", "getSchedule", "previewSchedule", "createSchedule", "updateSchedule"],
+  ],
+  ["model-playground", Object.keys(modelPlaygroundPolicies)],
   ["prompt-research", Object.keys(promptResearchPolicies)],
   ["prompt-tracker", Object.keys(promptTrackerPolicies)],
   [

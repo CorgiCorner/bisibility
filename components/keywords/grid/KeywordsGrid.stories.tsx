@@ -13,7 +13,6 @@ const actionArgs = {
   addKeywordsAction: async () => undefined,
   bulkClearTargetAction: async () => undefined,
   bulkDeleteAction: async () => undefined,
-  bulkSetFrequencyAction: async () => undefined,
   bulkSetTargetAction: async () => undefined,
   bulkTagAction: async () => undefined,
   canCreateKeyword: true,

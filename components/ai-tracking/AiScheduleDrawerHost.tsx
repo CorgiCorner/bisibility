@@ -1,7 +1,12 @@
 "use client";
-import { capacityActionClient } from "@/lib/capacity/action";
+import {
+  ScheduleReviewCancelled,
+  useScheduleSpendReview,
+} from "@/components/schedules/useScheduleSpendReview";
+import { scheduleActionClient } from "@/lib/schedules/action-result";
+import { aiScheduleChange } from "@/lib/schedules/web-change";
 
-const mutateAiTrackingAction = capacityActionClient(mutateAiTrackingActionCapacityAction);
+const mutateAiTrackingAction = scheduleActionClient(mutateAiTrackingActionCapacityAction);
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { getAiResearchCatalogAction } from "@/lib/actions/ai-research";
@@ -15,7 +20,7 @@ import {
 } from "@/lib/ai-tracking/projections/generation-result";
 import type { TrackingScheduleListItem } from "@/lib/ai-tracking/projections/schedule-list";
 import { buildAiSchedulePayload } from "@/lib/ai-tracking/projections/schedule-payload";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { TrackingRunDrawer } from "./TrackingRunDrawer";
 import type { TrackingRunDrawerProps } from "./TrackingRunDrawer.types";
@@ -41,6 +46,8 @@ export function AiScheduleDrawerHost({
   target: string;
   engineDefault?: TrackingRunDrawerProps["engineDefault"];
 }>) {
+  const locale = useLocale();
+  const spendReview = useScheduleSpendReview(projectId);
   const t = useTranslations("projectAiTracking");
   const errors = useSharedErrorMessages();
   const [pending, setPending] = useState(false);
@@ -59,9 +66,19 @@ export function AiScheduleDrawerHost({
     setPending(true);
     setError(null);
     try {
-      await mutateAiTrackingAction(projectId, "schedules", method, input, schedule?.id);
+      await spendReview.run(aiScheduleChange(method, input, schedule?.id, locale), (review) =>
+        mutateAiTrackingAction(
+          projectId,
+          "schedules",
+          method,
+          input,
+          schedule?.id,
+          ...(review ? ([review] as const) : []),
+        ),
+      );
       onSaved();
     } catch (cause) {
+      if (cause instanceof ScheduleReviewCancelled) return;
       setError(cause instanceof Error ? cause.message : t("couldNotSaveChanges"));
     } finally {
       setPending(false);
@@ -69,39 +86,42 @@ export function AiScheduleDrawerHost({
   }
 
   return (
-    <TrackingRunDrawer
-      engineDefault={engineDefault}
-      open
-      scheduleMode
-      schedule={schedule}
-      mutationError={error}
-      onCatalog={() => getAiResearchCatalogAction(projectId)}
-      count={promptIds.length}
-      onClose={onClose}
-      pending={pending}
-      onSaveMetadata={(metadata) => save("PATCH", metadata)}
-      onPreview={async (configurations, payment) =>
-        actionValue(
-          await previewAiTrackingAction(projectId, { promptIds, configurations, ...payment }),
-        )
-      }
-      onLaunch={async (preview, metadata) => {
-        if (!metadata) return;
-        const payload = buildAiSchedulePayload(metadata, preview, promptIds);
-        await save(schedule ? "PATCH" : "POST", {
-          ...payload,
-          configuration: {
-            ...payload.configuration,
-            acceptedPayment: preview.payment
-              ? { quoteToken: preview.payment.quoteToken }
-              : undefined,
-            requirePayment: true,
-            paymentScope: "recurring",
-            ...(schedule ? { paymentScheduleId: schedule.id } : {}),
-            paymentRecurrence: { cron: metadata.cron, timezone: metadata.timezone },
-          },
-        });
-      }}
-    />
+    <>
+      {spendReview.dialog}
+      <TrackingRunDrawer
+        engineDefault={engineDefault}
+        open
+        scheduleMode
+        schedule={schedule}
+        mutationError={error}
+        onCatalog={() => getAiResearchCatalogAction(projectId)}
+        count={promptIds.length}
+        onClose={onClose}
+        pending={pending}
+        onSaveMetadata={(metadata) => save("PATCH", metadata)}
+        onPreview={async (configurations, payment) =>
+          actionValue(
+            await previewAiTrackingAction(projectId, { promptIds, configurations, ...payment }),
+          )
+        }
+        onLaunch={async (preview, metadata) => {
+          if (!metadata) return;
+          const payload = buildAiSchedulePayload(metadata, preview, promptIds);
+          await save(schedule ? "PATCH" : "POST", {
+            ...payload,
+            configuration: {
+              ...payload.configuration,
+              acceptedPayment: preview.payment
+                ? { quoteToken: preview.payment.quoteToken }
+                : undefined,
+              requirePayment: true,
+              paymentScope: "recurring",
+              ...(schedule ? { paymentScheduleId: schedule.id } : {}),
+              paymentRecurrence: { cron: metadata.cron, timezone: metadata.timezone },
+            },
+          });
+        }}
+      />
+    </>
   );
 }

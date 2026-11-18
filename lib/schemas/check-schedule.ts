@@ -148,7 +148,6 @@ export const updateCheckScheduleSchema = z
   .superRefine(requireCustomCron)
   .superRefine(requireCalendarCron);
 
-export const setDefaultCheckScheduleSchema = scheduleTargetSchema;
 export const deleteCheckScheduleSchema = scheduleTargetSchema;
 
 export const checkScheduleMembershipSchema = scheduleTargetSchema.extend({

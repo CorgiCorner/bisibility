@@ -4,6 +4,20 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
 
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: vi.fn(async () => ({
+    requires_review: false,
+    preview_token: null,
+    expected_revision: "1",
+    capacity: null,
+    review_reasons: [],
+    cost_before_cents: 0,
+    cost_after_cents: 0,
+    window_start: "2026-10-01T00:00:00.000Z",
+  })),
+}));
+
 const mocks = vi.hoisted(() => ({
   addKeywordsMatrix: vi.fn(async (_input: unknown) => ({ created: 1, keywords: [] })),
 }));
@@ -51,7 +65,6 @@ function setup() {
           sources: [],
           scheduleContext: {
             connectedProviders: [{ label: "DataForSEO", value: "dataforseo" }],
-            defaultScheduleName: null,
             projectDefaults: {
               provider: { label: "DataForSEO", value: "dataforseo" },
               serpDepth: 100,
@@ -95,10 +108,17 @@ it("selects a newly created weekly schedule and submits its ID with the preserve
     serpDepth: null,
     timezone: null,
   });
+  expect(JSON.parse(request.body as string)).not.toHaveProperty("isDefault");
   expect(JSON.parse(request.body as string).name).toContain("Weekly");
   await user.click(screen.getByRole("button", { name: "New schedule" }));
-  expect(screen.getByRole("switch")).not.toBeChecked();
+  expect(screen.getAllByRole("dialog")).toHaveLength(1);
+  expect(screen.getByRole("heading", { name: "New schedule" })).toBeVisible();
+  expect(screen.getByRole("radio", { name: "Daily" })).toBeChecked();
+  expect(screen.getByRole("radio", { name: "Weekly" })).not.toBeChecked();
+  expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Back to keywords" }));
+  expect(screen.getByLabelText("Keywords")).toHaveValue("rank tracker");
+  expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Weekly");
   await user.click(screen.getByRole("button", { name: "Add keywords" }));
   await waitFor(() => expect(mocks.addKeywordsMatrix).toHaveBeenCalledOnce());
   expect(mocks.addKeywordsMatrix.mock.calls[0]?.[0]).toMatchObject({

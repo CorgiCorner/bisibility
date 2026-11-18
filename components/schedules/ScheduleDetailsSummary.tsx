@@ -2,9 +2,7 @@
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { Button } from "@/components/ui/Button";
 import { RowActionsMenu } from "@/components/ui/RowActionsMenu";
-import { StatusChip } from "@/components/ui/StatusChip";
 import { useToast } from "@/components/ui/toast-context";
-import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { RUNS_PER_MONTH } from "@/lib/cost-estimate/estimate";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,6 +10,8 @@ import { useState } from "react";
 import { ArchiveScheduleModal } from "./ArchiveScheduleModal";
 import type { ScheduleListRow } from "./SchedulesList";
 import { nextRunLabel } from "./schedule-next-run";
+import { requestScheduleState } from "./schedule-state-request";
+import { ScheduleReviewCancelled, useScheduleSpendReview } from "./useScheduleSpendReview";
 
 export function ScheduleDetailsSummary({
   canEdit,
@@ -31,6 +31,7 @@ export function ScheduleDetailsSummary({
   const usage = useNativeUsageFormat();
   const router = useRouter();
   const { showToast } = useToast();
+  const spendReview = useScheduleSpendReview(projectId);
   const [pending, setPending] = useState(false);
   const [archive, setArchive] = useState(false);
   const runs =
@@ -61,27 +62,22 @@ export function ScheduleDetailsSummary({
               : false,
           ) ?? (schedule.keywordCount === 0 ? "-" : t("summary.nextPending")));
 
-  async function change(action: "pause" | "default") {
+  async function change() {
     if (pending) return;
     setPending(true);
     try {
-      const response = await fetch(
-        `/api/check-schedules/${schedule.publicId}${action === "default" ? "/set-default" : ""}`,
+      await spendReview.run(
         {
-          method: action === "default" ? "POST" : "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            projectId,
-            ...(action === "pause" ? { enabled: !schedule.enabled } : {}),
-          }),
+          op: "state",
+          id: schedule.publicId,
+          state: schedule.enabled ? "paused" : "active",
+          command: { kind: "rank", projectPublicId: projectId },
         },
+        (review) => requestScheduleState(projectId, schedule.publicId, !schedule.enabled, review),
       );
-      if (!response.ok) {
-        publishCapacityProblem(await response.json().catch(() => null));
-        throw new Error("schedule_action_failed");
-      }
       router.refresh();
-    } catch {
+    } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       showToast(t("list.toggleFailed"), { severity: "error" });
     } finally {
       setPending(false);
@@ -90,6 +86,7 @@ export function ScheduleDetailsSummary({
 
   return (
     <>
+      {spendReview.dialog}
       <section
         aria-label={t("summary.title")}
         className="rounded-card border border-border bg-bg-elev p-4"
@@ -108,13 +105,10 @@ export function ScheduleDetailsSummary({
             ))}
           </dl>
           <div className="flex items-center gap-2">
-            {schedule.isDefault ? (
-              <StatusChip label={t("default")} tone="neutral" dot={false} />
-            ) : null}
             {canEdit ? (
               <Button
                 disabled={pending}
-                onClick={() => void change("pause")}
+                onClick={() => void change()}
                 size="sm"
                 type="button"
                 variant="secondary"
@@ -126,15 +120,6 @@ export function ScheduleDetailsSummary({
               <RowActionsMenu
                 ariaLabel={t("lifecycle.archiveActions", { name: schedule.name })}
                 items={[
-                  ...(!schedule.isDefault
-                    ? [
-                        {
-                          label: t("summary.makeDefault"),
-                          disabled: pending,
-                          onSelect: () => void change("default"),
-                        },
-                      ]
-                    : []),
                   {
                     label: t("lifecycle.archive"),
                     disabled: pending,
@@ -145,7 +130,9 @@ export function ScheduleDetailsSummary({
             ) : null}
           </div>
         </div>
-        <p className="m-0 mt-3 text-[11.5px] text-fg-muted">{t("summary.defaultHint")}</p>
+        {(schedule.assignedKeywordCount ?? schedule.keywordCount) > 0 ? (
+          <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{t("summary.nonEmptyDeletion")}</p>
+        ) : null}
       </section>
       {archive ? (
         <ArchiveScheduleModal

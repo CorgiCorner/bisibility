@@ -1,4 +1,4 @@
-import { unwrapCapacityResult } from "@/lib/capacity/action";
+import { unwrapScheduleActionResult as unwrapCapacityResult } from "@/lib/schedules/action-result";
 import { addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { addKeywordsMatrix } from "./keyword";
@@ -47,6 +47,17 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+// These tests exercise batch/membership behavior; the real admission is covered in keyword-create-review.postgres.test.ts.
+vi.mock("@/lib/schedules/keyword-create-write", () => ({
+  commitKeywordCreate: (
+    _project: unknown,
+    _actor: unknown,
+    _change: unknown,
+    _review: unknown,
+    run: (tx: unknown) => unknown,
+  ) => mocks.prisma.$transaction(run),
+  assertKeywordCreateAdmission: vi.fn(),
+}));
 vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
   setKeywordCadence: mocks.setKeywordCadence,
 }));

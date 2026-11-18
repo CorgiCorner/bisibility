@@ -46,6 +46,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key", projectId: "project", scopes: ["read"] },
     project: {
       id: "project",
@@ -104,6 +105,7 @@ it("rejects a cross-project read before querying connections", async () => {
 it("enforces the router's read scope before dispatch", async () => {
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key", projectId: "project", scopes: [] },
     project: { id: "project", publicId: projectId },
   });

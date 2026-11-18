@@ -26,10 +26,7 @@ function TextBar({ className }: Readonly<{ className?: string }>) {
   );
 }
 
-export function AgentReportDetailLoading({
-  backLabel,
-  membersOnlyLabel,
-}: Readonly<{ backLabel: string; membersOnlyLabel: string }>) {
+export function AgentReportDetailLoading({ backLabel }: Readonly<{ backLabel: string }>) {
   return (
     <AgentReportDetailFrame busy>
       <AgentReportBack label={backLabel} />
@@ -37,14 +34,7 @@ export function AgentReportDetailLoading({
         loading
         title={<TextBar className="w-2/3 max-w-80" />}
         kind={<TextBar className="w-20" />}
-        share={
-          <div className="flex flex-wrap items-center gap-2 text-[12px] text-fg-muted">
-            <Bar className="size-7.5 shrink-0" />
-            <span className="rounded-control bg-border text-transparent motion-safe:animate-pulse">
-              {membersOnlyLabel}
-            </span>
-          </div>
-        }
+        share={<Bar className="size-7.5 shrink-0" />}
       />
       <div
         aria-hidden

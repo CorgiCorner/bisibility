@@ -1,5 +1,10 @@
 "use client";
+import {
+  ScheduleReviewCancelled,
+  useScheduleSpendReview,
+} from "@/components/schedules/useScheduleSpendReview";
 import { capacityActionClient } from "@/lib/capacity/action";
+import { keywordCreateChange } from "@/lib/schedules/keyword-create-change";
 
 const addKeywordsMatrix = capacityActionClient(addKeywordsMatrixCapacityAction);
 
@@ -22,6 +27,7 @@ type UseAddKeywordDrawerSaveArgs = Pick<
   AddKeywordDrawerProps,
   "addKeywordsAction" | "consumeSavedIds" | "onAdded"
 > & {
+  projectId: string;
   activeTab: AddKeywordTab;
   checkScheduleId?: string | null;
   csvRows?: DrawerCsvKeywordRow[];
@@ -36,6 +42,7 @@ type UseAddKeywordDrawerSaveArgs = Pick<
 };
 
 export function useAddKeywordDrawerSave({
+  projectId,
   activeTab,
   addKeywordsAction,
   checkScheduleId,
@@ -51,10 +58,11 @@ export function useAddKeywordDrawerSave({
   setActionError,
   setActionWarning,
 }: UseAddKeywordDrawerSaveArgs) {
+  const review = useScheduleSpendReview(projectId);
   const router = useRouter();
   const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("projectRankTracker.keywordImport.management.add");
-  return useCallback(
+  const save = useCallback(
     async (values: AddKeywordDrawerForm) => {
       setActionError(null);
       setActionWarning(null);
@@ -74,10 +82,11 @@ export function useAddKeywordDrawerSave({
         const input = consumeSavedIds?.length
           ? { ...pending.input, consumeSavedIds: [...consumeSavedIds] }
           : pending.input;
-        const result =
+        const result = await review.run(keywordCreateChange(input), (submission) =>
           activeTab === "manual"
-            ? await addKeywordsMatrix(input)
-            : await capacityActionClient(addKeywordsAction)(input);
+            ? addKeywordsMatrix({ ...input, review: submission })
+            : capacityActionClient(addKeywordsAction)({ ...input, review: submission }),
+        );
         const addedKeywords = addedKeywordResult(result);
         if (hasActionWarning(result)) {
           setActionWarning(t("locationDegraded"));
@@ -89,6 +98,7 @@ export function useAddKeywordDrawerSave({
         onClose();
         router.refresh();
       } catch (error) {
+        if (error instanceof ScheduleReviewCancelled) return;
         setActionError(presentSafeActionError(error, sharedErrors, t("addFailed")));
       }
     },
@@ -106,10 +116,12 @@ export function useAddKeywordDrawerSave({
       onAdded,
       onClose,
       router,
+      review.run,
       setActionError,
       setActionWarning,
       sharedErrors,
       t,
     ],
   );
+  return { save, dialog: review.dialog, isActive: review.isActive };
 }

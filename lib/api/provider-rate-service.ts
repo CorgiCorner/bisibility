@@ -7,6 +7,7 @@ import { lockProjectForProviderMutation } from "@/lib/provider-allocations/proje
 import { providerRateFeatures } from "@/lib/provider-rates/catalog";
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { parseNativeRateCents } from "@/lib/provider-ui/form-schema";
+import { assertNoModelManualRate } from "@/lib/providers/model/connection-policy";
 import type { UpdateProviderCostInput, UpdateProviderRateInput } from "@/lib/schemas/provider";
 import { auditConnection, auditProviderMutation } from "./provider-audit";
 import { requireApiPublicId } from "./public-id";
@@ -31,6 +32,7 @@ export async function updateProviderCostConnection(
   input: UpdateProviderCostInput,
   context: ProviderMutationContext,
 ) {
+  assertNoModelManualRate(input.providerId);
   const amountCents = dollarsToCents(input.costPerCheck);
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, context.projectId);
@@ -77,6 +79,7 @@ export async function updateProviderConnectionRate(
   input: UpdateProviderRateInput,
   context: ProviderMutationContext,
 ) {
+  assertNoModelManualRate(input.providerId);
   if (!providerRateFeatures(input.providerId).includes(input.feature)) {
     throw new Error("Provider does not support this billable feature.");
   }
@@ -101,6 +104,7 @@ export async function updateProviderConnectionRateInTransaction(
   input: { amountCents: string | number | null; feature: ProviderCostFeature; providerId: string },
   context: ProviderMutationContext,
 ) {
+  assertNoModelManualRate(input.providerId);
   if (
     !providerRateFeatures(input.providerId).includes(
       input.feature as UpdateProviderRateInput["feature"],

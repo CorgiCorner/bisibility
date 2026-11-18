@@ -12,9 +12,11 @@ import {
   targetUrlSchema,
   topicSchema,
 } from "@/lib/schemas/keyword";
+import { scheduleReviewSchema } from "@/lib/schemas/schedule-review";
 import { resolveSerpLanguage } from "@/lib/serp/language-catalog";
 import { z } from "zod";
 import { paymentBodyFields } from "./action-payment";
+import { keywordScheduleId } from "./schedule-write-input";
 
 const idSchema = z.string().trim().min(1).max(160);
 const tagSchema = z.string().trim().min(1).max(48);
@@ -110,12 +112,14 @@ export const keywordCreateItemSchema = z.object({
   location: serpMarketNameSchema.optional(),
   location_key: canonicalKeySchema.optional(),
   schedule: apiKeywordScheduleSchema.optional(),
+  schedule_id: keywordScheduleId.optional(),
   tags: z.array(tagSchema).max(12).default([]),
   target_url: targetUrlSchema,
   topic: topicSchema,
 });
 
 export const keywordPatchSchema = z.object({
+  review: scheduleReviewSchema.optional(),
   city: serpCitySchema,
   country: z.preprocess(emptyStringToUndefined, serpMarketNameSchema.optional()),
   device: deviceSchema.optional(),
@@ -125,6 +129,7 @@ export const keywordPatchSchema = z.object({
   location: z.preprocess(emptyStringToUndefined, serpMarketNameSchema.optional()),
   location_key: z.preprocess(emptyStringToUndefined, canonicalKeySchema.optional()),
   schedule: apiKeywordScheduleSchema.optional(),
+  schedule_id: keywordScheduleId.optional(),
   tags: z.array(tagSchema).max(12).optional(),
   target_url: targetUrlSchema,
   topic: topicSchema,
@@ -144,8 +149,17 @@ export const keywordBulkSchema = z
       .array(idSchema.regex(/^kw_[a-z][a-z0-9]{23}$/))
       .min(1)
       .max(500),
-    operation: z.enum(["add_tags", "delete", "remove_tags", "set_frequency", "set_target_url"]),
+    review: scheduleReviewSchema.optional(),
+    operation: z.enum([
+      "add_tags",
+      "delete",
+      "remove_tags",
+      "set_frequency",
+      "set_schedule",
+      "set_target_url",
+    ]),
     schedule: apiKeywordScheduleSchema.optional(),
+    schedule_id: keywordScheduleId.optional(),
     tags: z.array(tagSchema).max(12).optional(),
     target_url: targetUrlSchema,
   })
@@ -157,7 +171,15 @@ export const keywordBulkSchema = z
         path: ["tags"],
       });
     }
-    if (value.operation === "set_frequency" && !value.frequency && !value.schedule) {
+    if (value.operation === "set_schedule" && value.schedule_id === undefined) {
+      ctx.addIssue({ code: "custom", path: ["schedule_id"], message: "schedule_id is required." });
+    }
+    if (
+      value.operation === "set_frequency" &&
+      value.schedule_id === undefined &&
+      !value.frequency &&
+      !value.schedule
+    ) {
       ctx.addIssue({
         code: "custom",
         message: "frequency or schedule is required.",

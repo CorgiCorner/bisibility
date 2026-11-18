@@ -421,6 +421,48 @@ describe("paid provider lookup", () => {
     vi.unstubAllGlobals();
   });
 
+  it.each(["own", "hosted"])(
+    "rejects Model Playground before legacy %s lookup or funding work",
+    async (credentialSource) => {
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+        credentialSource,
+        credentialsEncrypted: "encrypted",
+        projectId: "project_1",
+        provider: "dataforseo",
+      });
+      const call = vi.fn();
+      // Untyped callers must not turn native model work into a legacy paid lookup.
+      await expect(
+        Reflect.apply(paidProviderCall, undefined, [
+          {
+            call,
+            connection: {
+              credentialsEncrypted: "encrypted",
+              id: "connection_1",
+              provider: "dataforseo",
+            },
+            feature: "model_playground",
+            itemCount: 1,
+            projectId: "project_1",
+            provider: dataForSeoProvider,
+            rate: keywordResearchRate("dataforseo", "suggestions"),
+            rateContext: LIST_PROVIDER_RATE_CONTEXT,
+            source: "app",
+            trigger: "manual",
+          },
+        ]),
+      ).rejects.toThrow("Model Playground requires native model execution.");
+      expect(mocks.assertOperationAccess).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerConnection.findUnique).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerConnectionRate.findMany).not.toHaveBeenCalled();
+      expect(mocks.startExecution).not.toHaveBeenCalled();
+      expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeLimit).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+      expect(mocks.ledger).toEqual([]);
+    },
+  );
+
   it("refuses a paid call estimate when no provider rate is configured", () => {
     expect(() =>
       requiredEstimatedCostCents({

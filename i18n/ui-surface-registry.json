@@ -1943,6 +1943,14 @@
       "path": "components/admin/redesign/OssRecovery.tsx",
       "reason": "This copy belongs to the Storybook-only admin preview and is not imported by a live product route. Reclassify and localize this source before using it in a live interface.",
       "text": "Sample data - no live instance connected."
+    },
+    {
+      "anchor": "function:AnswerColumn",
+      "fingerprint": "bde217eb7019850fe0b5ef4cacce7ddf09670d80c3bc159d95ada3246a17da5c",
+      "kind": "jsx-expression",
+      "path": "components/ai-research/ModelPlaygroundColumns.tsx",
+      "text": "{provider}",
+      "reason": "Interpolation token for the caller-provided localized previous-answer message. It is replaced by retained provider identity before rendering; it is not display copy."
     }
   ],
   "schemaVersion": 1,
@@ -2000,9 +2008,17 @@
       "components/agent-reports/challenge-report-layout.ts",
       "components/ai-research/ai-research-failure-copy.ts",
       "components/ai-research/ai-research-presets.ts",
+      "components/ai-research/model-playground-composer-copy.test-support.ts",
       "components/ai-research/model-playground-layout.ts",
+      "components/ai-research/model-playground-result-copy.ts",
       "components/ai-research/useAiResearchCatalogRefresh.ts",
       "components/ai-research/useAiResearchSubmission.ts",
+      "components/ai-research/useModelPlayground.ts",
+      "components/ai-research/useModelPlaygroundLifecycle.ts",
+      "components/ai-research/useModelPlaygroundQuote.ts",
+      "components/ai-research/useModelPlaygroundRead.ts",
+      "components/ai-research/useModelPlaygroundReport.ts",
+      "components/ai-research/useModelPlaygroundScroll.ts",
       "components/ai-tracking/ai-visibility-column-layout.ts",
       "components/ai-tracking/overview-labels.ts",
       "components/ai-tracking/prompt-writes.ts",
@@ -2024,6 +2040,8 @@
       "components/analytics/use-analytics-provider-sync.ts",
       "components/analytics/use-onboarding-entry-analytics.ts",
       "components/annotations/annotations-layout.ts",
+      "components/assistant/funding-format.ts",
+      "components/assistant/useAssistantConversation.ts",
       "components/audit/audit-export.ts",
       "components/audit/audit-filtering.ts",
       "components/audit/audit-presentation.ts",
@@ -2180,6 +2198,7 @@
       "components/markets/market-picker-constants.ts",
       "components/markets/market-picker-model.ts",
       "components/markets/page/market-page-rows.ts",
+      "components/markets/page/useMarketSpendReview.ts",
       "components/markets/sheet/new-market-creator-copy.ts",
       "components/markets/sheet/new-market-creator-model.ts",
       "components/measurement-help/translate.ts",
@@ -2254,7 +2273,10 @@
       "components/schedules/ai-schedule-rows.ts",
       "components/schedules/schedule-editor-field-options.ts",
       "components/schedules/schedule-editor-request.ts",
+      "components/schedules/schedule-keyword-candidates.ts",
+      "components/schedules/schedule-keyword-request.ts",
       "components/schedules/schedule-next-run.ts",
+      "components/schedules/schedule-state-request.ts",
       "components/schedules/schedules-table-labels.ts",
       "components/schedules/useScheduleMemberRemoval.ts",
       "components/schedules/useScheduleNameLabels.ts",
@@ -4024,6 +4046,11 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AssistantSafeguards.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/DangerousActionGate.tsx",
       "status": "migrated"
     },
@@ -4369,6 +4396,11 @@
     },
     {
       "kind": "render",
+      "path": "components/agent-reports/ModelPlaygroundReport.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/agent-reports/ReportBody.tsx",
       "status": "pending"
     },
@@ -4473,9 +4505,34 @@
       "status": "pending"
     },
     {
+      "kind": "render",
+      "path": "components/ai-research/LegacyModelPlayground.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/LegacyModelPlaygroundComposer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/model-playground-composer-copy.test-support.ts",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "components/ai-research/model-playground-layout.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/model-playground-render.test-support.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/model-playground-result-copy.ts",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -4484,8 +4541,33 @@
     },
     {
       "kind": "render",
-      "path": "components/ai-research/ModelPlaygroundColumns.tsx",
+      "path": "components/ai-research/ModelPlaygroundAddColumn.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumnFooter.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumnFrame.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumnIdentity.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumns.tsx",
+      "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundColumnSettings.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -4494,8 +4576,28 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundConnect.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundEstimate.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-research/ModelPlaygroundHistory.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundIdleColumn.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundLegacySources.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -4514,8 +4616,38 @@
     },
     {
       "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundRetry.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundRoutingFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundSetupState.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/ai-research/ModelPlaygroundSources.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundTrackDialog.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/ModelPlaygroundViewTabs.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/NativeModelPlayground.tsx",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -4525,6 +4657,36 @@
     {
       "kind": "ui-data",
       "path": "components/ai-research/useAiResearchSubmission.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlayground.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlaygroundLifecycle.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlaygroundQuote.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlaygroundRead.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlaygroundReport.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useModelPlaygroundScroll.ts",
       "status": "pending"
     },
     {
@@ -5175,6 +5337,86 @@
     {
       "kind": "render",
       "path": "components/annotations/AnnotationsRuler.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantFrame.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantFundingSettings.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantProvider.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantProviderCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/AssistantSetupState.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/Composer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/ComposerControls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/assistant/funding-format.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/FundingDetails.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/KeySettings.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/MessageList.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/RunCost.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/SafeMarkdown.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/assistant/ToolCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/assistant/useAssistantConversation.ts",
       "status": "migrated"
     },
     {
@@ -8384,6 +8626,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/markets/page/useMarketSpendReview.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/markets/sheet/ExistingMarketDevices.tsx",
       "status": "pending"
@@ -9206,6 +9453,11 @@
     },
     {
       "kind": "render",
+      "path": "components/pages/ProjectPagesExportButton.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/pages/ProjectPagesFilters.tsx",
       "status": "migrated"
     },
@@ -9940,6 +10192,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/schedules/ReadOnlyScheduleCell.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/schedules/schedule-editor-field-options.ts",
       "status": "migrated"
@@ -9948,6 +10205,16 @@
       "kind": "ui-data",
       "path": "components/schedules/schedule-editor-request.ts",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/schedules/schedule-keyword-candidates.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/schedules/schedule-keyword-request.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -9960,9 +10227,19 @@
       "status": "pending"
     },
     {
+      "kind": "ui-data",
+      "path": "components/schedules/schedule-state-request.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/schedules/ScheduleAssignmentDestination.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/ScheduleCostReviewDialog.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -10056,8 +10333,18 @@
     },
     {
       "kind": "render",
+      "path": "components/schedules/SchedulesListActions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/schedules/SchedulesWorkspace.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/UnifiedScheduleTable.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -10072,6 +10359,11 @@
     {
       "kind": "ui-data",
       "path": "components/schedules/useScheduleNameLabels.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/useScheduleSpendReview.tsx",
       "status": "migrated"
     },
     {

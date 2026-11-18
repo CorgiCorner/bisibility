@@ -8,6 +8,15 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/schedules/keyword-create-write", () => ({
+  commitKeywordCreate: (
+    _project: unknown,
+    _actor: unknown,
+    _change: unknown,
+    _review: unknown,
+    run: (tx: unknown) => unknown,
+  ) => mocks.prisma.$transaction(run),
+}));
 vi.mock("@/lib/rank-check/dispatcher-state", () => ({
   refreshKeywordDispatchStates: mocks.refreshKeywordDispatchStates,
 }));

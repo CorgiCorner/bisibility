@@ -35,7 +35,11 @@ describe("presence sync across projects", () => {
     mocks.emitSignal.mockResolvedValue({ id: "signal_1" });
     mocks.markProviderNeedsReauth.mockResolvedValue(true);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.tx));
-    mocks.prisma.project.findFirst.mockResolvedValue({ defaults: null, id: "project_1" });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      syncPauses: [],
+      defaults: null,
+      id: "project_1",
+    });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       credentialsEncrypted: "encrypted",
       id: "connection_1",
@@ -105,7 +109,7 @@ describe("presence sync across projects", () => {
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
     mocks.prisma.project.findFirst.mockImplementation(({ where }) => {
       const id = where.OR[0].id;
-      return Promise.resolve({ defaults: { inspectionDailyLimit: 2 }, id });
+      return Promise.resolve({ syncPauses: [], defaults: { inspectionDailyLimit: 2 }, id });
     });
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { targetUrl: "https://example.com/a" },
@@ -131,7 +135,11 @@ describe("presence sync across projects", () => {
     const projects = ["project_1", "project_2", "project_3"];
     mocks.prisma.project.findMany.mockResolvedValue(projects.map((id) => ({ id })));
     mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
-      Promise.resolve({ defaults: { inspectionDailyLimit: 2 }, id: where.OR[0].id }),
+      Promise.resolve({
+        syncPauses: [],
+        defaults: { inspectionDailyLimit: 2 },
+        id: where.OR[0].id,
+      }),
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { targetUrl: "https://example.com/a" },
@@ -174,7 +182,7 @@ describe("presence sync across projects", () => {
 
   it("returns the same daily reset for projects sharing run state", async () => {
     mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
-      Promise.resolve({ defaults: null, id: where.OR[0].id }),
+      Promise.resolve({ syncPauses: [], defaults: null, id: where.OR[0].id }),
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
     mocks.provider.inspectUrl.mockRejectedValueOnce(
@@ -203,7 +211,7 @@ describe("presence sync across projects", () => {
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
     mocks.prisma.project.findFirst.mockImplementation(({ where }) => {
       const id = where.OR[0].id;
-      return Promise.resolve({ defaults: { inspectionDailyLimit: 50 }, id });
+      return Promise.resolve({ syncPauses: [], defaults: { inspectionDailyLimit: 50 }, id });
     });
     mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
     mocks.provider.inspectUrl
@@ -230,7 +238,7 @@ describe("presence sync across projects", () => {
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
     mocks.prisma.project.findFirst
       .mockRejectedValueOnce(new Error("database unavailable"))
-      .mockResolvedValueOnce({ id: "project_2" });
+      .mockResolvedValueOnce({ id: "project_2", syncPauses: [] });
     mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
 
     await expect(syncPresenceForAllProjects(now)).resolves.toMatchObject({

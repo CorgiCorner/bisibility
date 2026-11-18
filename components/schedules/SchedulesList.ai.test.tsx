@@ -16,7 +16,6 @@ vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
 const rank: ScheduleListRow = {
   enabled: true,
   frequency: "daily",
-  isDefault: true,
   keywordCount: 12,
   memberDeviceCount: 1,
   memberMarketCount: 1,
@@ -56,21 +55,22 @@ function controller(overrides: Partial<AiSchedulesController> = {}): AiSchedules
   };
 }
 
-function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {}) {
-  return render(
-    <SchedulesList
-      canManage
-      canUpdate
-      projectId="prj_story"
-      projectRef="prj_story"
-      schedules={[rank]}
-      ai={controller()}
-      {...overrides}
-    />,
-  );
-}
+describe.each([false, true])("SchedulesList with AI schedules (unified=%s)", (unified) => {
+  function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {}) {
+    return render(
+      <SchedulesList
+        canManage
+        canUpdate
+        projectId="prj_story"
+        projectRef="prj_story"
+        schedules={[rank]}
+        ai={controller()}
+        readOnlySchedules={unified ? [] : undefined}
+        {...overrides}
+      />,
+    );
+  }
 
-describe("SchedulesList with AI schedules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
@@ -79,11 +79,11 @@ describe("SchedulesList with AI schedules", () => {
 
   it("lists both kinds in one table with kind labels and a combined count", () => {
     renderList();
-    expect(screen.getByRole("heading", { name: "3 schedules" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: unified ? "Checks" : "3 schedules" })).toBeVisible();
     const aiRow = screen.getByRole("row", { name: /Weekly prompts/ });
     expect(within(aiRow).getByText("Prompt Tracker")).toBeVisible();
     expect(within(aiRow).getByText("3 prompts")).toBeVisible();
-    expect(within(aiRow).getByText("Custom - 0 9 * * 1")).toBeVisible();
+    expect(within(aiRow).getByText("Monday, 09:00")).toBeVisible();
     expect(within(aiRow).getByText("Asia/Tokyo")).toBeVisible();
     const rankRow = screen.getByRole("row", { name: /Daily 06:00/ });
     expect(within(rankRow).getByText("Rank checks")).toBeVisible();
@@ -217,7 +217,7 @@ describe("SchedulesList with AI schedules", () => {
 
   it("renders rank rows only when AI tracking is unavailable", () => {
     renderList({ ai: undefined });
-    expect(screen.getByRole("heading", { name: "1 schedule" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: unified ? "Checks" : "1 schedule" })).toBeVisible();
     expect(screen.queryByText("Rank checks")).toBeNull();
     expect(screen.queryByRole("link", { name: "New Prompt Tracker schedule" })).toBeNull();
   });

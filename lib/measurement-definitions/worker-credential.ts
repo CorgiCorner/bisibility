@@ -1,4 +1,5 @@
 import "server-only";
+import { liveApiKeyScopes } from "@/lib/api/key-creator";
 import { DefinitionUnavailableError } from "./errors";
 import type { DefinitionTransaction } from "./model";
 
@@ -24,9 +25,16 @@ export async function assertDefinitionRunCredential(
     await tx.$queryRaw`SELECT id FROM api_keys WHERE id=${run.credentialId} FOR SHARE`;
     const key = await tx.apiKey.findFirst({
       where: { id: run.credentialId, projectId },
-      select: { scopes: true, revokedAt: true, expiresAt: true },
+      select: { scopes: true, revokedAt: true, expiresAt: true, createdById: true },
     });
-    if (!key || key.revokedAt || (key.expiresAt && key.expiresAt <= now) || !writable(key.scopes))
+    const scopes = await liveApiKeyScopes(tx, key && { ...key, projectId }, now);
+    if (
+      !key ||
+      key.revokedAt ||
+      (key.expiresAt && key.expiresAt <= now) ||
+      !scopes ||
+      !writable(scopes)
+    )
       throw new DefinitionUnavailableError();
     return;
   }

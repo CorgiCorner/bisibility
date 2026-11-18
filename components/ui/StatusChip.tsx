@@ -8,6 +8,7 @@ import { PauseIcon as Pause } from "@phosphor-icons/react/dist/csr/Pause";
 import { SealCheckIcon as SealCheck } from "@phosphor-icons/react/dist/csr/SealCheck";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useTranslations } from "next-intl";
+import { statusMessage } from "./status-chip-mapping";
 
 export type StatusChipTone =
   | "neutral"
@@ -133,7 +134,7 @@ export function StatusChip({
   const toneStyle = TONE_STYLES[tone];
   const solid = variant === "solid";
   const StatusIcon = icon ? iconFor(icon) : null;
-  const renderedLabel = messageKey ? t(messageKey) : label || t("fallback");
+  const renderedLabel = messageKey ? statusMessage(messageKey, t) : label || t("fallback");
   const backgroundColor = solid
     ? toneStyle.hue
     : variant === "outline"

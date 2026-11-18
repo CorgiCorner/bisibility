@@ -488,7 +488,6 @@
           "currentUnavailable": "現在のスケジュールを利用できません。更新して再試行してください。",
           "ariaLabel": "スケジュール",
           "current": "現在",
-          "default": "既定",
           "alreadyAssigned": "{count, plural, other {ターゲット#件}}はすべてここに割り当て済みです。",
           "moveFrom": "{count, plural, other {ターゲット#件}}すべてが {name} から移動します。",
           "assignTo": "{count, plural, other {この#件のターゲット}}をこのスケジュールに割り当てます。",

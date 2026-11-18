@@ -127,6 +127,7 @@ it("generates the same response evidence consumed by all SDKs and MCP", async ()
     unobserved_keyword: keywordResource(
       { ...keyword(completed), rankChecks: [] },
       failedSummaryProjectId,
+      null,
     ),
     failed_keyword: keywordResource(
       keyword(failure as unknown as typeof completed),

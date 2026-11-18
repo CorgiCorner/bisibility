@@ -13,6 +13,7 @@ import { sweepWorkerIntents } from "./worker-intent-processor";
 
 describe("worker intent processor", () => {
   it("claims intent kinds in the shared priority order", async () => {
+    const playground = vi.fn(async () => ({ started: 0 }));
     const rankRuns = vi.fn(async () => ({ claimed: 0, launched: 0, scanned: 0 }));
     const localRecurring = vi.fn(async () => ({
       enabled: false,
@@ -43,6 +44,7 @@ describe("worker intent processor", () => {
       sweepWorkerIntents({
         processAlertEvaluations: alertEvaluations,
         dispatchRankRuns: rankRuns,
+        dispatchPlayground: playground,
         dispatchLocalMonitors: localMonitors,
         produceLocalMonitors: localRecurring,
         dispatchTracking: tracking,
@@ -53,6 +55,7 @@ describe("worker intent processor", () => {
       }),
     ).resolves.toEqual({
       rankRuns: { claimed: 0, launched: 0, scanned: 0 },
+      playground: { started: 0 },
       alertEvaluations: { failed: 0, immediateAlertIds: [], processed: 0 },
       localMonitors: { started: 0 },
       localRecurring: { enabled: false, queued: 0, blocked: 0, skipped: 0, retained: 0 },
@@ -93,6 +96,42 @@ describe("worker intent processor", () => {
         immediateAlertIds: ["alert_1"],
         processed: 1,
       }),
+      dispatchPlayground: async () => ({ started: 0 }),
+      dispatchRankRuns: async () => ({ claimed: 0, launched: 0, scanned: 0 }),
+      produceLocalMonitors: async () => ({
+        enabled: false,
+        queued: 0,
+        blocked: 0,
+        skipped: 0,
+        retained: 0,
+      }),
+      dispatchLocalMonitors: async () => ({ started: 0 }),
+      dispatchComparisons: async () => ({ started: 0 }),
+      dispatchTracking: async () => ({ started: 0 }),
+      reconcileSearchInsights: async () => ({
+        claimed: 0,
+        failed: 0,
+        scanned: 0,
+        skipped: 0,
+        started: 0,
+      }),
+      dispatchTraffic: async () => ({ status: "idle" as const }),
+      sweepWelcome: async () => ({ dispatched: 0, expired: 0 }),
+    });
+    expect(enqueue).toHaveBeenCalledExactlyOnceWith(["alert_1"]);
+  });
+
+  it("continues other intent families when the playground migration is missing", async () => {
+    enqueue.mockClear();
+    await sweepWorkerIntents({
+      processAlertEvaluations: async () => ({
+        failed: 0,
+        immediateAlertIds: ["alert_1"],
+        processed: 1,
+      }),
+      dispatchPlayground: async () => {
+        throw new Error("relation model_playground_runs does not exist");
+      },
       dispatchRankRuns: async () => ({ claimed: 0, launched: 0, scanned: 0 }),
       produceLocalMonitors: async () => ({
         enabled: false,
@@ -124,6 +163,7 @@ describe("worker intent processor", () => {
         processAlertEvaluations: async () => {
           throw new Error("sweep broke");
         },
+        dispatchPlayground: async () => ({ started: 0 }),
         dispatchRankRuns: async () => ({ claimed: 0, launched: 0, scanned: 0 }),
         produceLocalMonitors: async () => ({
           enabled: false,
@@ -168,6 +208,7 @@ it("keeps welcome work running when either achievements sweep fails", async () =
   try {
     const result = await sweepWorkerIntents({
       processAlertEvaluations: alertEvaluations,
+      dispatchPlayground: async () => ({ started: 0 }),
       dispatchRankRuns: async () => ({ claimed: 0, launched: 0, scanned: 0 }),
       produceLocalMonitors: async () => ({
         enabled: false,

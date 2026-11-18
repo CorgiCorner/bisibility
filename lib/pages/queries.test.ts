@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getProjectPageSources, getProjectPagesList } from "./queries";
+import { getProjectPageSources, getProjectPagesExportList, getProjectPagesList } from "./queries";
 
 const mocks = vi.hoisted(() => ({
   conversionSources: vi.fn(),
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("./sitemap-read", () => ({ getStoredSitemapRead: vi.fn(async () => null) }));
 vi.mock("@/lib/conversions/queries", () => ({
   getConversionSources: mocks.conversionSources,
 }));
@@ -19,6 +20,7 @@ vi.mock("@/lib/db/prisma", () => ({
     $queryRaw: mocks.queryRaw,
     conversionGoal: { findMany: vi.fn(async () => []) },
     project: { findFirst: mocks.findFirst },
+    sitemapSnapshot: { findMany: vi.fn(async () => []) },
     projectDefaults: { findUnique: vi.fn(async () => null) },
     providerConnection: { findFirst: mocks.findFirst, findMany: mocks.findMany },
   },
@@ -140,7 +142,7 @@ describe("project page reads", () => {
   });
 
   it("reports page indexing as beta only when Search Console is connected", async () => {
-    mocks.findFirst.mockResolvedValue({ id: "project_1", sitemapMonitoringEnabled: true });
+    mocks.findFirst.mockResolvedValue({ id: "project_1", syncPauses: [] });
     mocks.queryRaw.mockResolvedValue([
       {
         aiCitations: 0,
@@ -230,5 +232,17 @@ describe("project page reads", () => {
         return sqlText(call[0]).includes('AS "tagId"');
       }),
     ).toHaveLength(1);
+  });
+  it("bounds the export SQL to 5001 rows from the start of the matching view", async () => {
+    await getProjectPagesExportList("project_1", {
+      page: 4,
+      pageSize: 50,
+      period: { from: new Date("2026-10-01"), to: new Date("2026-10-31") },
+      sort: { by: "path", dir: "asc" },
+    });
+    const query = mocks.queryRaw.mock.calls
+      .map((call) => call[0])
+      .find((query) => query.sql.includes("SELECT * FROM filtered"));
+    expect(query.values.slice(-2)).toEqual([5001, 0]);
   });
 });

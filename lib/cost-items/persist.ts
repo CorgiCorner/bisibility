@@ -46,6 +46,7 @@ function canonical(input: CostItemInput) {
   return {
     ...input,
     catalogKey: entry?.key ?? null,
+    customType: !entry && input.kind === "custom" ? input.customType?.trim() || null : null,
     kind: entry?.kind ?? input.kind,
     name: entry?.name ?? input.name,
   };
@@ -64,6 +65,7 @@ function nested(input: CostItemInput, projects: readonly LinkedProject[]) {
     billing: input.billing,
     catalogKey: input.catalogKey,
     currency: input.currency,
+    customType: input.customType ?? null,
     kind: input.kind,
     name: input.name,
     planLabel: input.planLabel,
@@ -93,6 +95,7 @@ function auditFields(input: CostItemInput, publicId: string, endedOn: string | n
     currency: input.currency,
     endedOn,
     id: publicId,
+    customType: input.customType ?? null,
     kind: input.kind,
     name: input.name,
     projectIds: input.projects.map((link) => link.projectPublicId).sort(),
@@ -130,6 +133,7 @@ function previous(item: Awaited<ReturnType<typeof existing>>): CostItemInput {
     catalogKey: item.catalogKey,
     currency: item.currency as CostItemInput["currency"],
     discount: null,
+    customType: item.customType,
     kind: item.kind,
     name: item.name,
     planLabel: item.planLabel,

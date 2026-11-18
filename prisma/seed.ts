@@ -108,10 +108,16 @@ async function upsertApiKey({
   projectId: string;
 }) {
   const keyHash = hashedKey ?? hashApiKey(prefix);
+  // A seeded key belongs to the project owner, whose role caps what it can do.
+  const { ownerId } = await prisma.project.findUniqueOrThrow({
+    where: { id: projectId },
+    select: { ownerId: true },
+  });
   await prisma.apiKey.upsert({
     where: { hashedKey: keyHash },
-    update: { lastUsedAt, name, prefix, projectId, revokedAt: null },
+    update: { createdById: ownerId, lastUsedAt, name, prefix, projectId, revokedAt: null },
     create: {
+      createdById: ownerId,
       hashedKey: keyHash,
       lastUsedAt,
       name,

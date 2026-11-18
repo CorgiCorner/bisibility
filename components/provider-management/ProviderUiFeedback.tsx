@@ -6,6 +6,26 @@ import type { ProviderAction } from "@usagekit/react";
 import type { ViewState } from "@usagekit/views";
 import { useTranslations } from "next-intl";
 
+function providerFeedback(
+  message: "ambiguous" | "conflict" | "forbidden" | "loading" | "readOnly" | "unavailable",
+  t: ReturnType<typeof useTranslations<"projectIntegrations.providerManagement">>,
+) {
+  switch (message) {
+    case "ambiguous":
+      return t("ambiguous");
+    case "conflict":
+      return t("conflict");
+    case "forbidden":
+      return t("forbidden");
+    case "loading":
+      return t("loading");
+    case "readOnly":
+      return t("readOnly");
+    case "unavailable":
+      return t("unavailable");
+  }
+}
+
 export function ProviderUiFeedback({
   action,
   onReload,
@@ -42,7 +62,7 @@ export function ProviderUiFeedback({
   return (
     <div className="border-t border-border px-3.5 py-3 text-xs text-fg-muted">
       <p className="m-0" role={message === "loading" ? "status" : "alert"}>
-        {t(message)}
+        {providerFeedback(message, t)}
       </p>
       {action.ambiguous ? (
         <Button

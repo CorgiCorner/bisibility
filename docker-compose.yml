@@ -20,6 +20,8 @@ x-app-env: &app-env
   ALERT_FIRE_SPIKE_MIN: ${ALERT_FIRE_SPIKE_MIN:-}
   ALERT_FIRE_SPIKE_MULTIPLIER: ${ALERT_FIRE_SPIKE_MULTIPLIER:-}
   ALERT_HEALTH_INTERVAL: ${ALERT_HEALTH_INTERVAL:-}
+  ASSISTANT_ENABLED: ${ASSISTANT_ENABLED:-0}
+  ASSISTANT_MODELS_JSON: ${ASSISTANT_MODELS_JSON:-}
   AUDIT_IP_HMAC_SECRET: ${AUDIT_IP_HMAC_SECRET:-}
   AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-}
   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
@@ -109,7 +111,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.49.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.50.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       <<: *app-build
@@ -123,7 +125,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.49.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.50.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build: *app-build
     restart: unless-stopped
@@ -311,7 +313,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.49.0}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.50.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     build:
       context: .

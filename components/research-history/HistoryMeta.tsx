@@ -3,25 +3,45 @@
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useTranslations } from "next-intl";
 
-const engineMessage = {
-  chat_gpt: "engineChatGpt",
-  claude: "engineClaude",
-  gemini: "engineGemini",
-  perplexity: "enginePerplexity",
-} as const;
+export function engineChipLabel(
+  engine: string,
+  t: ReturnType<typeof useTranslations<"projectAiResearch">>,
+) {
+  switch (engine) {
+    case "chat_gpt":
+      return t("engineChatGpt");
+    case "claude":
+      return t("engineClaude");
+    case "gemini":
+      return t("engineGemini");
+    case "perplexity":
+      return t("enginePerplexity");
+    default:
+      return engine;
+  }
+}
 
-const modeMessage = {
-  auto: "modeAuto",
-  ideas: "modeIdeas",
-  related: "modeRelated",
-  suggestions: "modeSuggestions",
-} as const;
+export function modeChipLabel(
+  mode: string,
+  t: ReturnType<typeof useTranslations<"projectResearch.search">>,
+) {
+  switch (mode) {
+    case "auto":
+      return t("modeAuto");
+    case "ideas":
+      return t("modeIdeas");
+    case "related":
+      return t("modeRelated");
+    case "suggestions":
+      return t("modeSuggestions");
+    default:
+      return mode;
+  }
+}
 
 export function ModelHistoryMeta({ engines }: Readonly<{ engines: readonly string[] }>) {
   const t = useTranslations("projectAiResearch");
-  const labels = engines.map((engine) =>
-    engine in engineMessage ? t(engineMessage[engine as keyof typeof engineMessage]) : engine,
-  );
+  const labels = engines.map((engine) => engineChipLabel(engine, t));
   return <span>{labels.join(", ")}</span>;
 }
 
@@ -34,7 +54,7 @@ export function SerpHistoryMeta({
   return (
     <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5">
       <span>
-        {market} · {t(device)}
+        {market} · {device === "mobile" ? t("mobile") : t("desktop")}
       </span>
       {aiOverview ? <StatusChip dot={false} label={t("aiOverview")} size="sm" tone="info" /> : null}
     </span>
@@ -43,24 +63,9 @@ export function SerpHistoryMeta({
 
 export function KeywordHistoryMeta({ mode, scope }: Readonly<{ mode: string; scope: string }>) {
   const t = useTranslations("projectResearch.search");
-  const label = mode in modeMessage ? t(modeMessage[mode as keyof typeof modeMessage]) : mode;
   return (
     <span>
-      {scope} · {label}
+      {scope} · {modeChipLabel(mode, t)}
     </span>
   );
-}
-
-export function engineChipLabel(
-  engine: string,
-  t: (key: (typeof engineMessage)[keyof typeof engineMessage]) => string,
-) {
-  return engine in engineMessage ? t(engineMessage[engine as keyof typeof engineMessage]) : engine;
-}
-
-export function modeChipLabel(
-  mode: string,
-  t: (key: (typeof modeMessage)[keyof typeof modeMessage]) => string,
-) {
-  return mode in modeMessage ? t(modeMessage[mode as keyof typeof modeMessage]) : mode;
 }

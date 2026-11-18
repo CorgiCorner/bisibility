@@ -14,7 +14,7 @@ export function CostLiveSummary({
   const money = useMinorMoney();
   const date = useCostDate();
   const input = toCostItemInput(values, projectPublicId);
-  if (typeof input === "string") return <p className="text-sm text-fg-muted">{t("footnote")}</p>;
+  if (typeof input === "string") return null;
   const changes = buildPriceChanges({
     amountMinor: input.amountMinor,
     discount: input.discount,
@@ -37,7 +37,6 @@ export function CostLiveSummary({
   return (
     <div className="flex flex-col gap-1 text-sm">
       <p>{sentence}</p>
-      <p className="text-fg-muted">{t("footnote")}</p>
     </div>
   );
 }

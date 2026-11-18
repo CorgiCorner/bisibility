@@ -17,6 +17,7 @@ export type KeywordBatchRow = {
   location: string;
   locationId: string;
   schedule: StoredSchedule | null;
+  scheduleSource?: "frequency" | "schedule";
   tags: string[];
   targetUrl?: string | null;
   topic?: string | null;
@@ -197,6 +198,7 @@ export async function createKeywordBatchSet(
         timezone: "UTC",
       }),
       null,
+      "schedule",
     );
 
   const existingKeys = new Set(

@@ -1,0 +1,117 @@
+---
+title: "Schedules"
+description: "Read, preview and change project schedules."
+---
+
+Read operations require read scope. Preview and write operations require write scope. Use public project IDs. A schedule outside
+the selected project returns 404.
+
+## List schedules
+
+```http
+GET /api/v1/projects/{project_id}/schedules?kind=rank&state=active&limit=50
+Authorization: Bearer <api_key>
+```
+
+Optional `kind` filters are `rank`, `local_monitor`, `ai`, `domain_rating`,
+`search_console_import`, `page_indexing`, and `sitemap_fetch`. Optional `state`
+filters are `active`, `paused`, and `archived`. Without `state`, the list includes
+active and paused schedules. Use `state=archived` for archived schedules.
+
+The response contains `data` and `meta.next_cursor`. Pass the cursor as `cursor`
+for the next page with the same filters. `limit` defaults to 50 and accepts 1 to
+200. Items are ordered by public schedule ID.
+
+## Get a schedule
+
+```http
+GET /api/v1/projects/{project_id}/schedules/{schedule_id}
+Authorization: Bearer <api_key>
+```
+
+Use the schedule ID returned by the list. Rank schedules use `sch_` IDs, AI
+schedules use `ais_` IDs, local monitors use `lmn_` IDs, and data syncs use
+stable `dsy_` IDs. The response is one schedule object. It includes `kind`, `group`,
+`actions`, `name`, `state`, `state_reason`, `last_run_at`, `last_run_status`,
+`cadence`, `target`, `settings`, `next_run_at`, `monthly_cost_estimate_cents`,
+`target_summary`, and `limits`.
+
+Cadence includes `frequency`, `cron_expression`, `time_of_day`, `timezone`, and
+`jitter_minutes`. Unavailable times, jitter and cost estimates are null. Settings,
+limits and target details contain only data available for that schedule kind.
+The server cost estimate is the same estimate used by the web Schedules list.
+To match its total, sum known estimates for active tracking schedules and keep
+unknown tracking estimates distinct from zero. Data syncs are excluded from that
+cost total. Response enum values are open to future additions.
+
+Keyword responses also include nullable `schedule.schedule_id` and
+`schedule.schedule_state`. These describe membership while the existing cadence
+fields retain their compatibility values.
+
+## Preview and save a change
+
+Send the proposed create or update body as `schedule` to
+`POST /api/v1/projects/{project_id}/schedules/preview`. Use `operation: "create"`
+for a new schedule or `operation: "update"` with `schedule_id` for an existing
+one.
+
+```json
+{
+  "operation": "update",
+  "schedule_id": "sch_a00000000000000000000000",
+  "schedule": { "kind": "rank", "cadence": { "frequency": "daily" } }
+}
+```
+
+The preview returns before and after cost in cents, review reasons and
+applicable plan capacity. If `requires_review` is true, confirm the change with
+`POST /api/v1/projects/{project_id}/schedules` or
+`PATCH /api/v1/projects/{project_id}/schedules/{schedule_id}`. Submit the same
+schedule fields with a `review` object containing the returned
+`preview_token`, `expected_revision`, and `window_start`. A write that needs
+review returns `428 schedule_review_required` when review is missing and
+`409 schedule_review_stale` when it has expired, changed, or already been used.
+Decreases do not require review.
+
+Rank writes accept `name`, `cadence`, and `settings`. Set rank membership
+separately with `target.keyword_ids` or the keyword endpoints. AI writes accept
+a Prompt Tracker `configuration` with public prompt and provider connection
+IDs and the existing recurring payment fields. Enabling an AI schedule with
+that configuration still requires the applicable recurring provider approval.
+
+Send only `state` for a state change. Data sync schedules are managed by the
+project and only accept state changes. Search Console import state uses its
+existing pause controls. A page indexing budget set to zero must be configured
+before page indexing can be activated. A page indexing state change for a project
+without a connected Search Console property returns
+`409 data_sync_connection_required`. Activating a paused local monitor requires its
+recurring approval flow.
+
+## Schedule keywords
+
+On `POST /api/v1/keywords/bulk`, send `operation: "set_schedule"`,
+`keyword_ids`, and a rank `schedule_id` or `null` for Manual. Preview with
+the same fields, then include `review` when required. On keyword PATCH, use
+the same preview with the individual keyword ID.
+
+On keyword create, add `schedule_id` to the keyword or to the `keywords`
+wrapper. For a create request with multiple keywords, set the same schedule ID for every keyword or supply it on the wrapper. Preview with
+`operation: "create_keywords"` and the complete keyword create body as
+`keywords`. Send the review with a single keyword or the bulk wrapper.
+
+The v1 keyword `schedule`, `frequency`, `schedule.source`, bulk
+`set_frequency` and Prompt Tracker schedule operations are deprecated.
+Legacy cadence selections can be previewed with `operation: "set_frequency"`
+or `operation: "create_keywords"`. Project defaults cadence fields are
+deprecated and do not create recurring schedules.
+
+## Related operations
+
+- [`GET /projects/{project_id}/schedules`](/api-reference/schedules/list-project-schedules) (`listSchedules`, SDK `schedules.list`)
+- [`GET /projects/{project_id}/schedules/{schedule_id}`](/api-reference/schedules/get-a-project-schedule) (`getSchedule`, SDK `schedules.get`)
+
+- [Preview a schedule change](/api-reference/schedules/preview-a-schedule-change) (`previewSchedule`, SDK `schedules.preview`)
+- [Create a project schedule](/api-reference/schedules/create-a-project-schedule) (`createSchedule`, SDK `schedules.create`)
+- [Update a project schedule](/api-reference/schedules/update-a-project-schedule) (`updateSchedule`, SDK `schedules.update`)
+
+Exact request and response schemas live in the generated API Reference.

@@ -1,7 +1,7 @@
 {
   "projectUsageCosts": {
     "lead": "Plan, budżety dostawców i łączny koszt SEO.",
-    "lifetimeHint": "Kwota dożywotnia jest rozkładana równo na 36 miesięcy kalendarzowych, licząc od miesiąca rozpoczęcia. Niepełny pierwszy lub ostatni miesiąc jest rozliczany dniami, a potem kwota wynosi zero.",
+    "lifetimeHint": "Koszt dożywotni rozkładamy na 36 miesięcy. Niepełne miesiące liczymy proporcjonalnie.",
     "dash": "-",
     "tiles": {
       "seo": "Koszt SEO w tym miesiącu",
@@ -57,14 +57,14 @@
       "addTitle": "Dodaj koszt",
       "editTitle": "Edytuj koszt",
       "tool": "Narzędzie",
-      "name": "Nazwa",
+      "name": "Własne narzędzie",
       "suggest": "Nie ma na liście? Zaproponuj",
       "plan": "Plan",
       "planHint": "Wpisz nazwę planu albo wybierz typową.",
       "billing": "Rozliczenie",
-      "amount": "Kwota, którą płacisz",
+      "amount": "Kwota",
       "currency": "Waluta",
-      "priceChanges": "Zmiany ceny",
+      "priceChanges": "Okres próbny i rabaty",
       "trialUntil": "Bezpłatny okres próbny do",
       "discount": "Rabat",
       "percent": "Procent",
@@ -74,7 +74,7 @@
       "months": "Miesiące",
       "none": "Brak",
       "partial": "Tylko część tego kosztu należy do tego projektu",
-      "partialHint": "Użyj tego, gdy to samo narzędzie obsługuje też inne strony. W koszcie tego projektu liczy się tylko ta część.",
+      "partialHint": "Do projektu wliczamy tylko wybraną część kosztu.",
       "lands": "{amount} miesięcznie trafia do tego projektu",
       "landsOnce": "{amount} trafia do tego projektu",
       "started": "Data rozpoczęcia",
@@ -93,8 +93,13 @@
         "percent": "Wpisz procent od 0 do 100, z maksymalnie dwoma miejscami po przecinku.",
         "trial": "Okres próbny musi kończyć się w dniu rozpoczęcia lub później.",
         "discount": "Podaj rabat i termin jego końca.",
-        "date": "Podaj prawdziwą datę."
-      }
+        "date": "Podaj prawdziwą datę.",
+        "customType": "Wpisz maksymalnie 80 znaków."
+      },
+      "nameHint": "Twoja nazwa narzędzia, widoczna na liście subskrypcji.",
+      "description": "Śledź wydatki projektu, aby lepiej widzieć jego koszty.",
+      "customType": "Własny typ",
+      "customTypeHint": "Na przykład hosting, CRM lub projektowanie."
     }
   }
 }

@@ -30,11 +30,15 @@ const fixtures = vi.hoisted(() => {
     $queryRaw: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: {
+      findUnique: vi.fn(
+        async () => null as { id: string; archivedAt: Date | null; checkSchedule: null } | null,
+      ),
       findMany: vi.fn(async (args: object) => ("include" in args ? [keyword] : [])),
     },
     keywordSchedule: {},
     keywordTag: {},
     projectDefaults: { findUnique: vi.fn(async () => null) },
+    providerConnection: { findFirst: vi.fn(async () => null) },
     tag: {},
   };
   return { calls, keyword, mocks, tx };
@@ -63,6 +67,7 @@ vi.mock("@/lib/serp/default-market", () => ({
 }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: fixtures.mocks.resolveKeywordLocation,
+  resolveKeywordLocationUsingStore: fixtures.mocks.resolveKeywordLocation,
 }));
 vi.mock("./resources", () => ({
   keywordInclude: {},
@@ -101,6 +106,7 @@ describe("REST keyword creation transaction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     calls.length = 0;
+    tx.keyword.findUnique.mockResolvedValue(null);
     mocks.defaultMarket.mockReturnValue({
       city: null,
       country: "United States",
@@ -132,7 +138,7 @@ describe("REST keyword creation transaction", () => {
     }));
   });
 
-  it.each([undefined, "daily", "manual"])(
+  it.each([undefined, "manual"])(
     "assigns cadence only when create explicitly supplies %s",
     async (frequency) => {
       await createKeywords(
@@ -147,18 +153,76 @@ describe("REST keyword creation transaction", () => {
           ["keyword_1"],
           expect.objectContaining({ frequency }),
           null,
+          "frequency",
         );
     },
   );
+  it("requires review before creating a keyword with a runnable cadence", async () => {
+    const response = await createKeywords(
+      context({ keyword: "atomic keyword", frequency: "daily" }),
+      "prj_a00000000000000000000000",
+    );
+    expect(response.status).toBe(428);
+    expect(response.headers.get("content-type")).toContain("application/problem+json");
+    await expect(response.json()).resolves.toMatchObject({
+      code: "schedule_review_required",
+      detail: "This change may increase recurring spend. Review it in the web app for now.",
+    });
+    expect(mocks.createKeywordBatchSet).not.toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+  it("rolls back a restored keyword with a runnable cadence before any writes", async () => {
+    tx.keyword.findUnique.mockResolvedValue({
+      id: keyword.id,
+      archivedAt: new Date(),
+      checkSchedule: null,
+    });
+    const response = await createKeywords(
+      context({ keyword: "atomic keyword", frequency: "weekly" }),
+      "prj_a00000000000000000000000",
+    );
+    expect(response.status).toBe(428);
+    expect(mocks.transaction).toHaveBeenCalledOnce();
+    expect(mocks.createKeywordBatchSet).not.toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
+  });
+  it("propagates a review error through a caller-owned transaction", async () => {
+    tx.keyword.findUnique.mockResolvedValue({
+      id: keyword.id,
+      archivedAt: new Date(),
+      checkSchedule: null,
+    });
+    await expect(
+      createKeywords(
+        context({ keyword: "atomic keyword", frequency: "weekly" }),
+        "prj_a00000000000000000000000",
+        tx as never,
+      ),
+    ).rejects.toThrow("This change may increase recurring spend.");
+    expect(mocks.createKeywordBatchSet).not.toHaveBeenCalled();
+  });
   it("does not change a skipped existing keyword's membership", async () => {
+    tx.keyword.findUnique.mockResolvedValue({
+      id: keyword.id,
+      archivedAt: null,
+      checkSchedule: null,
+    });
     mocks.createKeywordBatchSet.mockResolvedValueOnce({
       accepted: [{ created: false, restored: false, keyword, row: {} }],
       created: [],
     });
-    await createKeywords(
+    const response = await createKeywords(
       context({ keyword: "atomic keyword", frequency: "daily" }),
       "prj_a00000000000000000000000",
     );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      created: 0,
+      results: [{ keyword: { id: keyword.publicId, type: "keyword" }, status: "skipped" }],
+      skipped: 1,
+    });
+    expect(mocks.createKeywordBatchSet).toHaveBeenCalled();
     expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
   });
   it("resolves locations before opening its explicitly budgeted transaction", async () => {

@@ -33,7 +33,7 @@ export function prepareWelcomeEmail(
 }
 
 export async function sendPreparedWelcomeEmail(prepared: PreparedWelcomeEmail) {
-  await sendEmail(prepared);
+  return sendEmail({ ...prepared, purpose: "welcome" });
 }
 
 export async function sendWelcomeFollowupEmail(
@@ -41,7 +41,8 @@ export async function sendWelcomeFollowupEmail(
 ) {
   const identity = resolveFounderEmailIdentity();
   const message = welcomeFollowupEmail({ ...recipient, ...identity });
-  await sendEmail({
+  return sendEmail({
+    purpose: "founder-followup",
     ...message,
     category: "bulk",
     to: recipient.email,

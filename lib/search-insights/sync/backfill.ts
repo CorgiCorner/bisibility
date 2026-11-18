@@ -1,4 +1,5 @@
 import "server-only";
+
 import {
   setAnalyticsSyncConnection,
   withAnalyticsSyncScope,
@@ -8,6 +9,7 @@ import {
   createGscSearchAnalyticsSession,
   type GscSearchAnalyticsSession,
 } from "@/lib/providers/analytics/gsc-search-analytics";
+import { isProjectSyncPaused } from "@/lib/schedules/sync-pauses";
 import { addDays, dateFromKey, diffDays } from "@/lib/search-insights/dates";
 import { formatSyncComplete, formatSyncPaused, logSyncInfo } from "./activity-log";
 import { type BackfillPlanState, ensurePlan } from "./backfill-plan";
@@ -133,6 +135,14 @@ async function runBackfillBatchImpl(
   if (!row) return BLOCKED;
   if (row.state === "completed") return IDLE;
   if (row.pausedReason === "user") return BLOCKED;
+  if (await isProjectSyncPaused(input.projectId, "search_console_import")) {
+    // Release a running backfill so the queued-import reconciler can pick it up on resume.
+    await prisma.searchAnalyticsImport.updateMany({
+      data: { state: "queued", workflowId: null },
+      where: { id: row.id, state: "running", pausedReason: null },
+    });
+    return BLOCKED;
+  }
 
   const { connection, problem } = await readSearchInsightsConnection(input.projectId);
   if (!connection) {

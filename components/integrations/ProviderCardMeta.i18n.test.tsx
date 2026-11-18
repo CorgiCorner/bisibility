@@ -5,6 +5,7 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { ProviderCardMeta } from "./ProviderCardMeta";
+import { metaLabel, metaValue } from "./provider-meta-copy";
 
 const base = integrationCategories[0].providers[0] as IntegrationProviderData;
 
@@ -45,4 +46,13 @@ describe("the provider card metadata in a non-English locale", () => {
     expect(screen.getByText("Nigdy")).toBeVisible();
     expect(screen.queryByText("Never")).not.toBeInTheDocument();
   });
+});
+
+it("returns an unlisted meta key instead of an empty label", () => {
+  const labelKey = "notALabel" as Parameters<typeof metaLabel>[0];
+  const valueKey = "notAValue" as Parameters<typeof metaValue>[0];
+  const labels = ((key: string) => key) as Parameters<typeof metaLabel>[1];
+  const values = ((key: string) => key) as Parameters<typeof metaValue>[1];
+  expect(metaLabel(labelKey, labels)).toBe(labelKey);
+  expect(metaValue(valueKey, values)).toBe(valueKey);
 });

@@ -8,6 +8,9 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { reconcilePlannedRunsForSchedule } from "@/lib/rank-check/planner/reconcile-schedule";
+import { ScheduleReviewRequiredError } from "@/lib/schedules/errors";
+import { assessScheduleSpend } from "@/lib/schedules/review-decision";
+import { loadTransfer } from "@/lib/schedules/review-load-transfers";
 import {
   checkScheduleAudit,
   checkScheduleSelect,
@@ -28,75 +31,87 @@ export async function archiveSchedule(
   actorId: string,
   projectId: string,
   input: { scheduleId: string; destinationScheduleId: string | null },
+  client?: Prisma.TransactionClient,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      await prepareResourceCapacity(tx, { projectId, dimensions: [] });
-      await lockProjectForProviderMutation(tx, projectId);
-      const before = await findSchedule(tx, projectId, input.scheduleId);
-      if (before.archivedAt) return { changed: false, publicId: before.publicId };
-      if (input.destinationScheduleId === input.scheduleId)
-        throw new ApiInputError("Choose another schedule or manual checks.");
-      const destination = input.destinationScheduleId
-        ? await tx.checkSchedule.findFirst({
-            select: checkScheduleSelect,
-            where: { archivedAt: null, projectId, publicId: input.destinationScheduleId },
-          })
-        : null;
-      if (input.destinationScheduleId && !destination)
-        throw new ApiNotFoundError("Choose a current schedule for this project.");
-      const members = await tx.keyword.findMany({
-        select: { id: true, publicId: true },
-        where: { projectId, checkScheduleId: before.id },
+  const run = async (tx: Prisma.TransactionClient) => {
+    await prepareResourceCapacity(tx, { projectId, dimensions: [] });
+    await lockProjectForProviderMutation(tx, projectId);
+    const before = await findSchedule(tx, projectId, input.scheduleId);
+    if (before.archivedAt) return { changed: false, publicId: before.publicId };
+    if (input.destinationScheduleId === input.scheduleId)
+      throw new ApiInputError("Choose another schedule or manual checks.");
+    const destination = input.destinationScheduleId
+      ? await tx.checkSchedule.findFirst({
+          select: checkScheduleSelect,
+          where: { archivedAt: null, projectId, publicId: input.destinationScheduleId },
+        })
+      : null;
+    if (input.destinationScheduleId && !destination)
+      throw new ApiNotFoundError("Choose a current schedule for this project.");
+    const members = await tx.keyword.findMany({
+      select: { id: true, publicId: true },
+      where: { projectId, checkScheduleId: before.id },
+    });
+    if (
+      !client &&
+      input.destinationScheduleId &&
+      assessScheduleSpend(
+        (
+          await loadTransfer(
+            tx,
+            projectId,
+            {
+              op: "state",
+              id: input.scheduleId,
+              state: "archived",
+              command: { kind: "rank", destinationScheduleId: input.destinationScheduleId },
+            },
+            new Date(),
+          )
+        ).spend,
+      ).requires_review
+    )
+      throw new ScheduleReviewRequiredError();
+    const keywordIds = members.map((keyword) => keyword.id);
+    const capacity = destination
+      ? await prepareKeywordScheduleChange(tx, projectId, keywordIds, destination)
+      : null;
+    const after = await tx.checkSchedule.update({
+      data: { archivedAt: new Date(), enabled: false },
+      select: checkScheduleSelect,
+      where: { id: before.id },
+    });
+    if (keywordIds.length) {
+      await tx.keyword.updateMany({
+        data: { checkScheduleId: destination?.id ?? null },
+        where: { id: { in: keywordIds }, projectId },
       });
-      const keywordIds = members.map((keyword) => keyword.id);
-      const capacity = destination
-        ? await prepareKeywordScheduleChange(tx, projectId, keywordIds, destination)
-        : null;
-      const after = await tx.checkSchedule.update({
-        data: { archivedAt: new Date(), enabled: false, isDefault: false },
-        select: checkScheduleSelect,
-        where: { id: before.id },
-      });
-      if (keywordIds.length) {
-        await tx.keyword.updateMany({
-          data: { checkScheduleId: destination?.id ?? null },
-          where: { id: { in: keywordIds }, projectId },
-        });
-        if (destination) await mirrorScheduleToKeywords(tx, projectId, destination, keywordIds);
-        else await mirrorManualToKeywords(tx, projectId, keywordIds);
-      }
-      await capacity?.check();
-      if (before.isDefault) {
-        await tx.projectDefaults.upsert({
-          where: { projectId },
-          create: { projectId, frequency: "manual" },
-          update: { frequency: "manual", cronExpression: null, nextCheckAt: null },
-        });
-      }
-      // Accepted runs finish; future occurrences no longer belong in Upcoming.
-      await reconcilePlannedRunsForSchedule(before.id, tx, { deleting: true });
-      if (destination) await reconcilePlannedRunsForSchedule(destination.id, tx);
-      await writeAudit(
-        {
-          action: "check_schedule.archive",
-          actorId,
-          projectId,
-          before: checkScheduleAudit(before),
-          after: {
-            ...checkScheduleAudit(after),
-            keywordIds: members.map((keyword) => keyword.publicId),
-            movedTo: destination?.publicId ?? null,
-          },
-          targetId: requiredPublicAuditId(before.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
+      if (destination) await mirrorScheduleToKeywords(tx, projectId, destination, keywordIds);
+      else await mirrorManualToKeywords(tx, projectId, keywordIds);
+    }
+    await capacity?.check();
+    // Accepted runs finish; future occurrences no longer belong in Upcoming.
+    await reconcilePlannedRunsForSchedule(before.id, tx, { deleting: true });
+    if (destination) await reconcilePlannedRunsForSchedule(destination.id, tx);
+    await writeAudit(
+      {
+        action: "check_schedule.archive",
+        actorId,
+        projectId,
+        before: checkScheduleAudit(before),
+        after: {
+          ...checkScheduleAudit(after),
+          keywordIds: members.map((keyword) => keyword.publicId),
+          movedTo: destination?.publicId ?? null,
         },
-        tx,
-      );
-      return { changed: true, publicId: before.publicId };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+        targetId: requiredPublicAuditId(before.publicId, "sch", "Check schedule"),
+        targetType: "check_schedule",
+      },
+      tx,
+    );
+    return { changed: true, publicId: before.publicId };
+  };
+  return client ? run(client) : prisma.$transaction(run, { maxWait: 10_000, timeout: 60_000 });
 }
 
 export async function restoreSchedule(actorId: string, projectId: string, scheduleId: string) {
@@ -107,7 +122,7 @@ export async function restoreSchedule(actorId: string, projectId: string, schedu
       const before = await findSchedule(tx, projectId, scheduleId);
       if (!before.archivedAt) return { changed: false, publicId: before.publicId };
       const after = await tx.checkSchedule.update({
-        data: { archivedAt: null, enabled: false, isDefault: false },
+        data: { archivedAt: null, enabled: false },
         select: checkScheduleSelect,
         where: { id: before.id },
       });

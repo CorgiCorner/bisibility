@@ -52,7 +52,10 @@ vi.mock("@/lib/api/ai-tracking-service", async (original) => ({
 }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    aiTrackingSchedule: { findMany: async () => [state.schedule] },
+    aiTrackingSchedule: {
+      findFirst: async () => state.schedule,
+      findMany: async () => [state.schedule],
+    },
     aiProjectEngine: { findMany: async () => [] },
     $transaction: async (execute: (tx: unknown) => Promise<unknown>) => {
       state.transaction();
@@ -115,3 +118,7 @@ describe("schedule metadata edit admission", () => {
     expect(state.audit).not.toHaveBeenCalled();
   });
 });
+
+vi.mock("@/lib/schedules/review-load", async () => ({
+  loadScheduleSpend: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));

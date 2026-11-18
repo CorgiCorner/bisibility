@@ -467,3 +467,12 @@ describe("sendWeeklyDigestForProject", () => {
     expect(info).not.toHaveBeenCalled();
   });
 });
+
+it("skips disabled weekly notification mail before claiming recipients", async () => {
+  vi.clearAllMocks();
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  expect(await sendWeeklyDigestForProject("project", now)).toEqual({ status: "skipped", reason: "notifications_disabled" });
+  expect(mocks.prisma.project.findFirst).not.toHaveBeenCalled();
+  expect(mocks.prisma.weeklyDigestSend.createMany).not.toHaveBeenCalled();
+  expect(mocks.sendEmail).not.toHaveBeenCalled();
+});

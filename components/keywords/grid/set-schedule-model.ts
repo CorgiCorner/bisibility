@@ -10,7 +10,6 @@ export type CheckScheduleSummary = Readonly<{
   dayOfMonth?: string | null;
   enabled: boolean;
   frequency: RankCheckFrequency;
-  isDefault: boolean;
   jitterMinutes: number;
   keywordCount: number;
   name: string;

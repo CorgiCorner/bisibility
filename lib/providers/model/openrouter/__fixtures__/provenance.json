@@ -1,0 +1,80 @@
+{
+  "revision": "mp-p07-synthetic-cost-v2",
+  "accessDate": "2026-11-12",
+  "timezone": "Europe/Warsaw",
+  "apiVersion": "OpenRouter HTTP API v1 Chat Completions stream=false",
+  "toolVersion": "plugin id=web engine=exa, no SDK",
+  "exactModel": "openai/gpt-5.2",
+  "liveCaptures": false,
+  "sources": {
+    "chat": "https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion",
+    "models": "https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties",
+    "routing": "https://openrouter.ai/docs/guides/routing/provider-selection",
+    "search": "https://openrouter.ai/docs/guides/features/plugins/web-search",
+    "usage": "https://openrouter.ai/docs/cookbook/administration/usage-accounting",
+    "currency": "https://openrouter.ai/support/",
+    "generation": "https://openrouter.ai/docs/api/api-reference/generations/get-generation"
+  },
+  "fixtures": [
+    {
+      "path": "answer.json",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "usage"],
+      "notes": "Invented content, counts, numeric costs, ID and model/provider pairing. Top-level provider is a synthetic routing variant."
+    },
+    {
+      "path": "catalog.json",
+      "kind": "synthetic",
+      "envelopeSources": ["models", "search"],
+      "notes": "Invented metadata and prices. Additional example/unproven-model is an intentional noncandidate."
+    },
+    {
+      "path": "search.json",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "search"],
+      "notes": "Invented citations, repeated source URLs, counts and null cost. Explicit Exa is tested in the request, not inferred from annotations."
+    },
+    {
+      "path": "../normalize.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "routing", "search", "usage"],
+      "notes": "Synthetic response identity, invalid body, truncation and untruncated citation title canaries. No live capture."
+    },
+    {
+      "path": "../adapter.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "routing", "search"],
+      "notes": "Offline request/control/account-cache variants and safe transport-error stubs."
+    },
+    {
+      "path": "../catalog.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["models"],
+      "notes": "Metadata/price intersection negatives; no rate or entitlement proof."
+    },
+    {
+      "path": "../transport.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "usage"],
+      "notes": "Intercepted P04 network: HTTP 401/403/429/500/503, malformed/oversized/truncated JSON, canary echo, timeout, missing observer, refused admission and settlement ambiguity. No real HTTP requests."
+    },
+    {
+      "path": "../extensions.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "usage", "search", "currency"],
+      "notes": "Post-parser exact decimal strings, scope, explicit zero, missing evidence and inconsistent component bounds. No live charge."
+    },
+    {
+      "path": "../extensions-transport.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["chat", "usage"],
+      "notes": "Raw numeric JSON per documented money paths, with long precision, integer precision, exponent underflow, explicit zero, failure settlement and citation-title canaries. Fetch intercepted; no provider call."
+    },
+    {
+      "path": "../usage.test.ts",
+      "kind": "synthetic",
+      "envelopeSources": ["usage"],
+      "notes": "Relocated usage regressions and post-parser money strings; unprojected numeric values remain unknown."
+    }
+  ]
+}

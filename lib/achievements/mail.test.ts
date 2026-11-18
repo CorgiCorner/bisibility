@@ -251,3 +251,11 @@ describe("milestone mail delivery", () => {
     }
   });
 });
+
+it("skips disabled notification mail before queue claims or transport work", async () => {
+  vi.clearAllMocks();
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  expect(await sweepAchievementMail()).toMatchObject({ sent: 0, skipped: true });
+  for (const fn of [m.pending, m.claim, m.state, m.send, m.token])
+    expect(fn).not.toHaveBeenCalled();
+});

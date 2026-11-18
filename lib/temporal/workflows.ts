@@ -268,5 +268,6 @@ export { checkNotificationSummariesWorkflow } from "./check-summary-maintenance-
 export { collectDomainRatingsWorkflow } from "./domain-rating-workflow";
 export { domainVerificationWorkflow } from "./domain-verification-workflow";
 export { localMonitorRunWorkflow } from "./local-monitor-workflow";
+export { modelPlaygroundWorkflow } from "./model-playground-workflow";
 export { providerComparisonWorkflow } from "./provider-comparison-workflow";
 export { serpUrlRepairWorkflow } from "./serp-url-repair-workflow";

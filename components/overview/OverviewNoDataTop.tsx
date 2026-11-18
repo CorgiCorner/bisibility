@@ -171,72 +171,71 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
   const keywordSubline = trackedKeywordSubline(props, t);
 
   return (
-    <section
-      aria-label={dashboardT("kpisAriaLabel")}
-      className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-    >
-      {kpis.map((kpi) => {
-        const value = kpi.value === "count" ? format.number(keywordCount) : "–";
-        const subline =
-          kpi.id === "visibility"
-            ? kpiT("visibilityDetail", {
-                limited: props.visibilityCoverage.limited ? "true" : "false",
-                measured: props.visibilityCoverage.measured,
-                total: props.visibilityCoverage.total,
-              })
-            : kpi.subline === "status"
-              ? keywordSubline
-              : kpi.subline === "noData"
-                ? t("noData")
-                : kpi.subline;
-        const valueClassName = kpi.muted ? "text-fg-muted" : "text-fg";
-        const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
+    <section aria-label={dashboardT("kpisAriaLabel")} className="@container">
+      <div className="grid grid-cols-1 gap-4 @[360px]:grid-cols-2 @[720px]:grid-cols-4">
+        {kpis.map((kpi) => {
+          const value = kpi.value === "count" ? format.number(keywordCount) : "–";
+          const subline =
+            kpi.id === "visibility"
+              ? kpiT("visibilityDetail", {
+                  limited: props.visibilityCoverage.limited ? "true" : "false",
+                  measured: props.visibilityCoverage.measured,
+                  total: props.visibilityCoverage.total,
+                })
+              : kpi.subline === "status"
+                ? keywordSubline
+                : kpi.subline === "noData"
+                  ? t("noData")
+                  : kpi.subline;
+          const valueClassName = kpi.muted ? "text-fg-muted" : "text-fg";
+          const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
 
-        return (
-          <Card
-            key={kpi.id}
-            size="md"
-            style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
-          >
-            <div className="flex items-center gap-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              <span>
-                {kpi.id === "averagePosition"
-                  ? kpiT("averagePosition")
-                  : kpi.id === "trackedKeywords"
-                    ? kpiT("trackedKeywords")
-                    : kpi.id === "inTop10"
-                      ? kpiT("inTop10")
-                      : kpiT("visibility")}
-              </span>
-              {kpi.id === "visibility" ? (
-                <span className="-my-2.5 inline-flex">
-                  <LocalizedMeasurementHelp
-                    metricId={VISIBILITY_METRIC_ID_V1}
-                    definitionVersion={VISIBILITY_DEFINITION_VERSION_V2}
-                  />
-                </span>
-              ) : kpi.id === "averagePosition" ? (
-                <span className="-my-2.5 inline-flex">
-                  <LocalizedMeasurementHelp
-                    metricId="average_ranked_position"
-                    definitionVersion="help-v1"
-                  />
-                </span>
-              ) : null}
-            </div>
-            <div
-              className={`mt-2 text-[26px] font-semibold leading-none tracking-[-1px] ${valueClassName}`}
+          return (
+            <Card
+              key={kpi.id}
+              size="md"
+              style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
             >
-              {value}
-            </div>
-            <div
-              className={`mt-1 font-sans tabular-nums text-[11px] leading-normal ${sublineClassName}`}
-            >
-              {subline}
-            </div>
-          </Card>
-        );
-      })}
+              <div className="flex items-center gap-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+                <span className="min-w-0 whitespace-normal break-words">
+                  {kpi.id === "averagePosition"
+                    ? kpiT("averagePosition")
+                    : kpi.id === "trackedKeywords"
+                      ? kpiT("trackedKeywords")
+                      : kpi.id === "inTop10"
+                        ? kpiT("inTop10")
+                        : kpiT("visibility")}
+                </span>
+                {kpi.id === "visibility" ? (
+                  <span className="-my-2.5 inline-flex">
+                    <LocalizedMeasurementHelp
+                      metricId={VISIBILITY_METRIC_ID_V1}
+                      definitionVersion={VISIBILITY_DEFINITION_VERSION_V2}
+                    />
+                  </span>
+                ) : kpi.id === "averagePosition" ? (
+                  <span className="-my-2.5 inline-flex">
+                    <LocalizedMeasurementHelp
+                      metricId="average_ranked_position"
+                      definitionVersion="help-v1"
+                    />
+                  </span>
+                ) : null}
+              </div>
+              <div
+                className={`mt-2 text-[26px] font-semibold leading-none tracking-[-1px] ${valueClassName}`}
+              >
+                {value}
+              </div>
+              <div
+                className={`mt-1 whitespace-normal break-words font-sans tabular-nums text-[11px] leading-normal ${sublineClassName}`}
+              >
+                {subline}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
     </section>
   );
 }

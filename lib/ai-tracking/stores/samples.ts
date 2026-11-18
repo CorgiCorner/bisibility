@@ -9,13 +9,8 @@ import { queueTrackingRunUsage } from "@/lib/analytics/tracking-run-usage";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
 import { canonicalReceipt } from "@/lib/metering/usage-read";
-import {
-  jsonInput,
-  lockTrackingProject,
-  prisma,
-  requireFound,
-  type TrackingTransaction,
-} from "./shared";
+import { finishRun } from "./finish-run";
+import { jsonInput, lockTrackingProject, prisma, requireFound } from "./shared";
 
 const NEXT: Record<DispatchState, DispatchState[]> = {
   planned: ["claimed"],
@@ -125,32 +120,6 @@ export function transitionTrackingSample(
       ? tx.aiTrackingSample.findUniqueOrThrow({ where: { id: sampleId } })
       : null;
   });
-}
-async function finishRun(tx: TrackingTransaction, projectId: string, runId: string) {
-  const remaining = await tx.aiTrackingSample.count({
-    where: { projectId, runId, dispatch: { not: "terminal" } },
-  });
-  if (remaining) return false;
-  const samples = await tx.aiTrackingSample.findMany({
-    where: { projectId, runId },
-    select: { measurement: true },
-  });
-  const successes = samples.filter((sample) =>
-    ["answer_present", "aio_not_present"].includes(sample.measurement),
-  ).length;
-  const state =
-    successes === samples.length
-      ? "completed"
-      : successes > 0 || samples.some((sample) => sample.measurement === "partial")
-        ? "partial"
-        : samples.every((sample) => sample.measurement === "unavailable")
-          ? "blocked"
-          : "failed";
-  const changed = await tx.aiTrackingRun.updateMany({
-    where: { projectId, id: runId, state: { in: ["running", "planned"] } },
-    data: { state, finishedAt: new Date() },
-  });
-  return changed.count > 0;
 }
 export function persistTrackingResult(
   projectId: string,

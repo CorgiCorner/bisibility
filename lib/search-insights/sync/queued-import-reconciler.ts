@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { isProjectSyncPaused } from "@/lib/schedules/sync-pauses";
 import {
   startSearchInsightsBackfillWorkflow,
   startSearchInsightsSyncWorkflow,
@@ -42,6 +43,8 @@ async function matchesActiveConnection(row: {
   property: string;
   source: QueuedImportSource;
 }) {
+  if (row.source === "gsc" && (await isProjectSyncPaused(row.projectId, "search_console_import")))
+    return false;
   const connection =
     row.source === "gsc"
       ? await resolveSearchInsightsConnection(row.projectId)

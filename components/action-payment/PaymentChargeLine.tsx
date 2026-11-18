@@ -30,7 +30,7 @@ export function PaymentChargeLine({
           </span>
           <span title={presented?.title}>{amount.text}</span>
           {payment.state === "pending" || payment.state === "unknown" ? (
-            <span>{t(payment.state)}</span>
+            <span>{payment.state === "pending" ? t("pending") : t("unknown")}</span>
           ) : null}
         </>
       ) : (

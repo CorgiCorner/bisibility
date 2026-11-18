@@ -12,6 +12,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.prisma.project.findMany.mockResolvedValue([{ id: "first" }, { id: "second" }]);
   mocks.prisma.project.findFirst.mockImplementation(({ where }) => ({
+    syncPauses: [],
     id: where.OR[0].id,
     defaults: { inspectionBudgetMode: where.OR[0].id === "first" ? "fixed" : "available_quota" },
   }));

@@ -60,7 +60,6 @@ function schedule(overrides: Partial<CheckScheduleSummary> = {}): CheckScheduleS
     dayOfMonth: null,
     enabled: true,
     frequency: "daily",
-    isDefault: false,
     jitterMinutes: 0,
     keywordCount: 1,
     name: "Destination",

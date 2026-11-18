@@ -49,7 +49,14 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
   const { options: savedOptions } = useUsageDisplaySettings();
   const presentationOptions = { ...savedOptions, ...options };
   const numbers = createUsageNumberFormat(locale, presentationOptions);
-  const countTranslator = createTranslator({ locale, messages: labels.unitCounts });
+  const countTranslator = createTranslator({
+    locale,
+    messages: {
+      apiUnits: labels.unitCounts.apiUnits,
+      searches: labels.unitCounts.searches,
+      units: labels.unitCounts.units,
+    },
+  });
   const unit = (value: string, count?: string) => {
     if (numbers.showCurrency(value)) return "";
     if (count !== undefined && value in labels.unitCounts && /^-?\d+(?:\.\d+)?$/.test(count)) {
@@ -58,7 +65,16 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
         /^-?\d+$/.test(count) && count.replace("-", "").length > 15
           ? 1000000 + Number((BigInt(count) < 0n ? -BigInt(count) : BigInt(count)) % 1000000n)
           : Number(count);
-      return countTranslator(value, { count: pluralCount });
+      switch (value) {
+        case "apiUnits":
+          return countTranslator("apiUnits", { count: pluralCount });
+        case "searches":
+          return countTranslator("searches", { count: pluralCount });
+        case "units":
+          return countTranslator("units", { count: pluralCount });
+        default:
+          return units[value] ?? units.units;
+      }
     }
     return units[value] ?? units.units;
   };

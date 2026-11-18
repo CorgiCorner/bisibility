@@ -31,3 +31,15 @@ export class ApiNotFoundError extends Error {
     this.name = "ApiNotFoundError";
   }
 }
+
+export class RequestBodyLimitError extends Error {
+  readonly reason: "too_large" | "unreadable";
+
+  constructor(reason: "too_large" | "unreadable") {
+    super(
+      reason === "too_large" ? "Request body is too large." : "The request body could not be read.",
+    );
+    this.name = "RequestBodyLimitError";
+    this.reason = reason;
+  }
+}

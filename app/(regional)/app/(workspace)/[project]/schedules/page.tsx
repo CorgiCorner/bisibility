@@ -8,11 +8,12 @@ import { getAiTrackingScheduleList } from "@/lib/actions/ai-tracking";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
-import { listCheckScheduleRows } from "@/lib/queries/check-schedule-list";
 import { listScheduleMemberCandidates } from "@/lib/queries/check-schedule-members";
 import { listRankCheckRuns } from "@/lib/queries/rank-check-runs";
 import { asProjectRef } from "@/lib/routing/app-path";
+import { settableDataSyncKinds } from "@/lib/schedules/data-sync-permission";
 import { schedulePlanningMinutes } from "@/lib/schedules/planning-visibility";
+import { listSchedules } from "@/lib/schedules/service";
 import { unstable_rethrow } from "next/navigation";
 
 type SchedulesPageProps = {
@@ -43,8 +44,7 @@ export default async function SchedulesPage({
   const { publicId } = await resolveProjectAccess(project);
   const readable = await requireReadableProject(publicId);
   const projectRef = asProjectRef(publicId);
-  const [schedules, planned, aiResult, candidates] = await Promise.all([
-    listCheckScheduleRows(readable.project.id, status),
+  const [planned, aiResult, candidates] = await Promise.all([
     listRankCheckRuns(
       readable.project.id,
       new URL("http://localhost/api/rank-check-runs?segment=planned&limit=200"),
@@ -62,6 +62,8 @@ export default async function SchedulesPage({
     status === "current" ? listScheduleMemberCandidates(publicId) : Promise.resolve([]),
   ]);
   const ai = aiResult.value;
+  const unified = await listSchedules(readable.project.id, { status, ai: ai?.schedules ?? null });
+  const schedules = unified.filter((row) => row.kind === "rank").map((row) => row.rank);
   const runtime = await loadSchedulesMessages();
   const nextRunBySchedule = new Map(
     [...planned.data]
@@ -80,7 +82,6 @@ export default async function SchedulesPage({
       dayOfMonth: schedule.dayOfMonth,
       enabled: schedule.enabled,
       frequency: schedule.frequency,
-      isDefault: schedule.isDefault,
       jitterMinutes: schedule.jitterMinutes,
       keywordCount: schedule.keywordCount,
       memberDeviceCount: schedule.memberDeviceCount,
@@ -108,11 +109,13 @@ export default async function SchedulesPage({
       <PageContent className="grid gap-4">
         <SchedulesWorkspace
           ai={ai}
+          unifiedSchedules={unified}
           aiUnavailable={aiResult.unavailable}
           aiTarget={typeof query?.ai === "string" ? query.ai : null}
           status={status}
           canManage={canProjectAction(role, "manage", "check_schedule")}
           canUpdate={canProjectAction(role, "update", "check_schedule")}
+          canUpdateSyncs={settableDataSyncKinds(role)}
           projectId={publicId}
           projectRef={projectRef}
           schedules={rows}

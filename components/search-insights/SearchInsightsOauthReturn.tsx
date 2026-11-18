@@ -16,7 +16,7 @@ import type {
 } from "@/lib/actions/providers";
 import {
   type GooglePropertyFailure,
-  googlePropertyFailureMessage,
+  googlePropertyInsightsFailureMessage,
 } from "@/lib/integrations/google-property-failure";
 import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
@@ -126,7 +126,7 @@ export function SearchInsightsOauthReturn({
       });
       if ("status" in result && result.status !== "saved") {
         const failure = result.failure ?? { reason: "auth", action: "reconnect" };
-        setSelectionError(googlePropertyFailureMessage(failure, t));
+        setSelectionError(googlePropertyInsightsFailureMessage(failure, t));
         if (result.status === "reauth_required") setAuthorizationFailure(failure);
         setPending(false);
         return;
@@ -175,9 +175,9 @@ export function SearchInsightsOauthReturn({
         <div className="flex flex-col gap-3 rounded-card border border-border p-4">
           <InlineCallout tint="yellow">
             {authorizationFailure
-              ? googlePropertyFailureMessage(authorizationFailure, t)
+              ? googlePropertyInsightsFailureMessage(authorizationFailure, t)
               : setup.failure
-                ? googlePropertyFailureMessage(setup.failure, t)
+                ? googlePropertyInsightsFailureMessage(setup.failure, t)
                 : t("reauthRequired")}
           </InlineCallout>
           <div className="flex justify-end gap-2">

@@ -1,0 +1,133 @@
+---
+title: "Model Playground"
+description: "Compare model API answers using your own provider keys, with clear cost estimates and tracked-brand context."
+---
+
+Model Playground compares answers to one question in separate model columns.
+Each column uses a connected provider account: OpenAI, Anthropic, OpenRouter,
+or Vercel AI Gateway. Your provider bills your account directly.
+
+## Run comparisons
+
+You can preview an estimate, confirm provider billing and run a comparison using
+your connected keys. Saved run results retain each column separately. The server's
+native composer switch controls availability for both the app and REST API.
+[Prompt Tracker](/guides/prompt-tracker) describes the separate tracking workflow.
+
+The project REST API supports loading the model catalog, estimating or previewing
+a run, creating a run from its saved quote and reading its saved columns:
+
+- `GET /api/v1/projects/{id}/model-playground/catalog`
+- `POST /api/v1/projects/{id}/model-playground/runs/estimate`
+- `POST /api/v1/projects/{id}/model-playground/runs/preview`
+- `POST /api/v1/projects/{id}/model-playground/runs`
+- `GET /api/v1/projects/{id}/model-playground/runs/{run_id}`
+
+An estimate and a preview take the same request body but serve different purposes:
+
+| | Estimate (`runs/estimate`) | Preview (`runs/preview`) |
+|-|-|-|
+| Permission | Read | Write |
+| Stored | Nothing: no quote, no history and no idempotency replay | A quote and a preview |
+| Binding | No. It has no quote ID and cannot start a run | Yes. Its quote ID is required to create a run |
+| Read-only projects | Allowed | Refused |
+
+An estimate uses only model details that the server already has cached. When none
+are cached, the column cost is unknown and no provider call is made. An estimate
+reports only whether the project budget would allow a run right now
+(`budget_available`), never an amount. It is advisory, so a run can still be
+refused when it is created. Estimates are limited to 60 requests per minute for each key and project.
+
+Previewing and creating runs require write permission.
+Creating a run also requires the quote ID, billing consent and an
+`Idempotency-Key` header. Reuse the same key and body to replay an HTTP response.
+A project key acts as the project owner. Quotes, consent records and the content
+deduplication window belong to the owner. This includes requests from different
+project keys or the owner's browser.
+
+If a response is uncertain and you have a run ID, read its saved state. Recover
+with a new key and the identical body, including the same quote and consent.
+Reusing a quote does not authorize another set of paid attempts.
+An accepted quote can replay its saved admission only while its access,
+configuration, consent and saved attempt mappings remain valid.
+A spent confirmation can also prevent replay.
+A failed replay does not prove that earlier attempts were uncharged.
+Unaccepted quotes can be refused when expired, invalidated or out of date.
+Read-only projects can request an estimate but cannot preview or start comparisons.
+An estimate is never a confirmed provider charge.
+
+## Connect a provider key
+
+1. Open **Providers** in your project and find **Model providers**.
+2. Choose **Connect** for the provider you want to use and enter its API key.
+3. Test the connection, then save it. A successful connection test confirms access;
+   it does not run a paid model comparison or guarantee access to every model.
+
+Keys are stored encrypted. Saved keys are masked in the connection drawer; leave
+the field blank when editing to keep the current key. You need permission to
+manage provider connections. See [Provider connections](/api/providers) for the
+connection API.
+
+## Set up columns
+
+Enter your question and choose an answer language. Add up to six columns, then
+open each column's settings to choose its provider and an available model. The
+same model can appear in more than one column, including through different
+providers. Models and settings depend on the connected account and its current
+catalog; not every model is supported.
+
+The settings drawer includes an output token limit and, where supported,
+temperature, web search mode and a maximum number of search calls. A token is a
+piece of text; a larger output limit can increase the estimated cost. Models that
+do not support a setting cannot use it.
+
+For Anthropic, the optional **Workspace ID** selects a workspace when the key is
+not already tied to one. A workspace-scoped key cannot switch workspaces. For
+Vercel AI Gateway, **Allowed providers** accepts comma-separated provider
+identifiers. Leave it blank to let the gateway choose; a supplied list restricts
+eligible providers and allows failover within that list. These are requested
+settings. A returned workspace or provider may be unreported or differ from the
+request; the result labels that distinction.
+
+## Web search and market
+
+Web search is on by default where the selected route supports it. You can turn it
+off. Unsupported routes answer without search and show that search is unavailable.
+Search cost is part of the estimate before a run; it is not a free extra.
+
+The market is a search hint only where supported. It does not target a population
+or reproduce what people in that country see. The answer-language setting asks
+the model to respond in that language.
+
+## Read the estimate
+
+The estimate forecasts provider usage from the question, selected models, output
+limits, search limits and available rate cards. It is not a confirmed charge or a
+guaranteed spending cap. Actual token counts, search activity and provider billing
+can differ. Unknown costs remain unknown; amounts in different currencies are not
+combined into a single total.
+
+Result details distinguish costs reported by a provider from costs estimated from
+usage. A subtotal covers only its listed components. Missing usage or cost evidence
+does not mean zero usage or a free answer.
+
+## Read answers, brands and sources
+
+Each native column is labelled **API response**. It is the selected provider's
+model API output, not a capture of a consumer chat application. The requested
+model and provider do not prove the actual route; returned identity is shown when
+available.
+
+The brand verdict and matrix show the order of first mention **among tracked
+brands**: your project and configured competitors. They do not rank every brand
+in the answer or measure audience exposure. The project row remains in the matrix
+when it is not named. Incomplete or truncated answers can leave the verdict
+unknown rather than establish absence. **Full retained answer** opens the text
+that was saved; notices explain when it is only an excerpt.
+
+**Provider-returned sources** are source records returned by the provider.
+**Citation occurrences** are individual
+references to sources in the answer; the same source can be cited more than once.
+Their counts therefore need not match. Source lists can include records without a
+usable URL, and missing or truncated source evidence is labelled. Expand the
+lists to see all retained records. The matrix CSV keeps each model column separate.

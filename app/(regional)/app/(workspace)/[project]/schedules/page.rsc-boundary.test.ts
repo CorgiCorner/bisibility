@@ -13,7 +13,7 @@ const {
 
 const stubs = {
   "@/components/getting-started/schedule-phrase": "exports.formatScheduledRun = () => 'stub phrase';",
-  "@/lib/queries/check-schedule-list": "exports.listCheckScheduleRows = async () => [{ blocked: false, cronExpression: '0 6 * * 5', dayOfMonth: null, enabled: true, frequency: 'weekly', isDefault: true, jitterMinutes: 15, keywordCount: 2, memberDeviceCount: 1, memberMarketCount: 1, name: 'Friday 06:00', perRunCents: 24, publicId: 'sch_friday', serpDepth: null, sharedTag: null, targetCount: 2, timeOfDay: '06:00', timezone: 'Europe/Warsaw', weekday: 'Friday' }];",
+  "@/lib/schedules/service": "exports.listSchedules = async () => [{ kind: 'rank', id: 'sch_friday', state: 'active', monthly_cost_estimate_cents: 96, rank: { blocked: false, cronExpression: '0 6 * * 5', dayOfMonth: null, enabled: true, frequency: 'weekly', isDefault: true, jitterMinutes: 15, keywordCount: 2, memberDeviceCount: 1, memberMarketCount: 1, name: 'Friday 06:00', perRunCents: 24, publicId: 'sch_friday', serpDepth: null, sharedTag: null, targetCount: 2, timeOfDay: '06:00', timezone: 'Europe/Warsaw', weekday: 'Friday' } }];",
   "@/components/project-runs/ProjectRunsTabs": "exports.ProjectRunsTabs = () => null;",
   "@/components/i18n/FeatureMessagesProvider": "const ref = registerClientReference({}, 'intl-provider-client', 'NextIntlClientProvider'); exports.FeatureMessagesProvider = ({ children, ...props }) => React.createElement(ref, props, children);",
   "@/components/shell/PageContent": "exports.PageContent = ({ children }) => children;",
@@ -31,6 +31,8 @@ const stubs = {
     "exports.listScheduleMemberCandidates = async () => [{ device: 'Mobile', market: 'Poland', name: 'candidate keyword', publicId: 'kw_candidate', scheduleId: null, sourceName: null, tags: [], targetCount: 1 }];",
   "@/lib/queries/rank-check-runs":
     "exports.listRankCheckRuns = async () => ({ data: [], nextCursor: null });",
+  "@/lib/schedules/data-sync-permission":
+    "exports.settableDataSyncKinds = () => ['domain_rating', 'sitemap', 'search_console', 'page_indexing'];",
   "@/lib/schedules/planning-visibility": "exports.schedulePlanningMinutes = () => 15;",
   "@/lib/routing/app-path":
     "exports.appPath = (projectRef, ...segments) => '/app/' + projectRef + '/' + segments.join('/'); exports.asProjectRef = (projectRef) => projectRef;",
@@ -119,6 +121,9 @@ describe("SchedulesPage RSC boundary", () => {
     expect(payload).toContain('"aiUnavailable":false');
     expect(payload).toContain("kw_candidate");
     expect(payload).toContain('"planningMinutes":15');
+    expect(payload).toContain(
+      '"canUpdateSyncs":["domain_rating","sitemap","search_console","page_indexing"]',
+    );
   });
 
   it("names a missing boundary fixture instead of silently supplying an empty module", () => {

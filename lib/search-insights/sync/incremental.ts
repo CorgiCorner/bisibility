@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { createGscSearchAnalyticsSession } from "@/lib/providers/analytics/gsc-search-analytics";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import { isProjectSyncPaused } from "@/lib/schedules/sync-pauses";
 import { dateFromKey, dateKey } from "@/lib/search-insights/dates";
 import { formatSyncResumed, logSyncInfo } from "./activity-log";
 import { fetchAggregateRange, probeFreshness } from "./aggregate";
@@ -70,6 +71,8 @@ async function runIncrementalSyncImpl(input: {
   const syncSessions = input.syncSessions ?? true;
   const connection = await resolveSearchInsightsConnection(input.projectId);
   if (!connection) {
+    // As before the Schedules pause existed: without a Search Console connection the GA4
+    // sessions refresh does not depend on the Search Console import state.
     if (syncSessions) {
       await runOrganicSessionsIncrementalForProject({
         now: input.now ?? new Date(),
@@ -77,6 +80,10 @@ async function runIncrementalSyncImpl(input: {
       });
     }
     return { daysProcessed: 0, projectId: input.projectId, status: "not_connected" };
+  }
+  // Reading the stored connection makes no provider request; the pause stops everything after it.
+  if (await isProjectSyncPaused(input.projectId, "search_console_import")) {
+    return { daysProcessed: 0, projectId: input.projectId, status: "user_paused" };
   }
 
   setAnalyticsSyncConnection(connection.connectionId);

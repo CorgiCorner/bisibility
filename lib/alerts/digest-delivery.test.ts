@@ -864,3 +864,18 @@ describe("queued alert digest delivery", () => {
     expect(mocks.prisma.triggeredAlert.updateManyAndReturn).not.toHaveBeenCalled();
   });
 });
+
+it("skips disabled digest mail before preparation, suppression and reservation", async () => {
+  vi.clearAllMocks();
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  try {
+    expect(
+      await deliverAlertDigestEmailActivity({ job: job(), recipient: job().recipients[0] }),
+    ).toMatchObject({ delivered: false, skipped: true });
+    expect(mocks.prisma.preparedEmailMessage.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.preparedEmailMessage.findUnique).not.toHaveBeenCalled();
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

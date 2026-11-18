@@ -7,6 +7,7 @@ export type MonitorReadinessReason =
   | "keyword_changed"
   | "manual"
   | "paused"
+  | "schedule_archived"
   | "definition_changed"
   | "calendar_changed";
 export type CurrentMonitorSources = Readonly<{
@@ -49,8 +50,8 @@ export function monitorReadiness(input: {
     )
   )
     reasons.push("keyword_changed");
-  if (input.intent.mode === "manual" || input.intent.mode === "paused")
-    reasons.push(input.intent.mode);
+  const intentReason = scheduleIntentReason(input.intent.mode);
+  if (intentReason) reasons.push(intentReason);
   if (input.intent.definitionRevisionId !== input.revisionId) reasons.push("definition_changed");
   if (
     input.intent.mode === "scheduled" &&
@@ -59,10 +60,33 @@ export function monitorReadiness(input: {
   )
     reasons.push("calendar_changed");
   return {
-    configurationCurrent: !reasons.some((reason) => !["manual", "paused"].includes(reason)),
+    configurationCurrent: !reasons.some(
+      (reason) => !["manual", "paused", "schedule_archived"].includes(reason),
+    ),
     scheduledIntentCurrent: reasons.length === 0,
     reasons,
   };
+}
+
+const SCHEDULE_INTENT_MODES = ["manual", "paused", "scheduled", "archived"] as const;
+type ScheduleIntentMode = (typeof SCHEDULE_INTENT_MODES)[number];
+
+/** A new intent mode has to be named here or this switch stops compiling. */
+function scheduleIntentReason(mode: string): MonitorReadinessReason | null {
+  if (!isScheduleIntentMode(mode)) return "paused";
+  switch (mode) {
+    case "manual":
+    case "paused":
+      return mode;
+    case "archived":
+      return "schedule_archived";
+    case "scheduled":
+      return null;
+  }
+}
+
+function isScheduleIntentMode(mode: string): mode is ScheduleIntentMode {
+  return (SCHEDULE_INTENT_MODES as readonly string[]).includes(mode);
 }
 
 export function publicMonitorDefinition(definition: MonitorDefinition) {

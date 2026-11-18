@@ -4,7 +4,6 @@ import { createHash, randomUUID } from "node:crypto";
 import { ActionPaymentError } from "@/lib/action-payment/token";
 import { recordPaidUsage } from "@/lib/analytics/request-usage-context";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
-import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import {
   isProviderAdmissionRefusal,
   type ProviderUsageObserver,
@@ -16,25 +15,10 @@ import type { ProviderRequest } from "@usagekit/providers";
 import { recordRankAccountResponse } from "./account-evidence";
 import { type OwnAttemptGrant, ownAdmission } from "./admission-extension";
 import { captureByokEvidence, discardByokEvidence, recordByokEvidence } from "./byok-evidence";
-import { type RequestCostLimit, requestCostLimit } from "./request-cost-limit";
-import type { ProviderRequestAttribution } from "./tag";
+import { requestCostLimit } from "./request-cost-limit";
+import type { ProviderRequestJournalInput as JournalInput } from "./request-journal-input";
 
-type JournalInput = {
-  logicalOperationKey?: string;
-  beforeReserve?: NativeRequestGuard;
-  beforeFence?: PaidFenceHook;
-  attribution: ProviderRequestAttribution;
-  connectionId: string;
-  keywordId?: string;
-  projectId: string;
-  provider: string;
-  unit: "cents" | "units";
-  estimate?: { cents: string; units: string };
-  queued?: boolean;
-  credentialVersion?: string | null;
-  maxCostCents?: number;
-  costLimit?: RequestCostLimit;
-};
+export { createModelRequestJournal } from "./model-request-journal";
 
 export function createProviderRequestJournal(db: PrismaClient, input: JournalInput) {
   const consent = input.costLimit ?? requestCostLimit(input.maxCostCents);

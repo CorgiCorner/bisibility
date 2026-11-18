@@ -173,5 +173,5 @@ export const researchOperationInputs = {
     }),
   },
   syncProjectTraffic: noInput,
-  updateSitemapMonitor: { body: zodInput(sitemapMonitorUpdateSchema) },
+  updateSitemapMonitor: { body: zodInput(sitemapMonitorUpdateSchema, { keys: "wire" }) },
 } as const satisfies Record<string, OperationInput>;

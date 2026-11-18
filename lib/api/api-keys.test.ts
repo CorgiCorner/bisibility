@@ -15,6 +15,7 @@ vi.mock("@/lib/auth/account-capability-extension", { spy: true });
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { create: vi.fn() },
   },
   writeAudit: vi.fn(),
@@ -102,6 +103,7 @@ function _source(path: string) {
 function context(body: Record<string, unknown>): ApiContext {
   const url = new URL("https://example.test/api/v1/api-keys");
   return {
+    actorId: "user_1",
     auth: {
       apiKey: {
         id: "key_admin",

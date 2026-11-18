@@ -8,10 +8,12 @@ import { Disclosure } from "@/components/ui/Disclosure";
 import type { AgentReportResource } from "@/lib/agent-reports/model";
 import { savedAuditPages } from "@/lib/agent-reports/saved-audit-pages";
 import { parseChallengeReportBody } from "@/lib/challenge-report/schema";
+import { modelPlaygroundReportSchema } from "@/lib/model-playground/report-body";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { siteAuditResultSchema } from "@/lib/site-audit/schema";
 import type { ReactNode } from "react";
 import { AgentReportHeader } from "./AgentReportDetailLayout";
+import { ModelPlaygroundReport } from "./ModelPlaygroundReport";
 import { ReportBody } from "./ReportBody";
 import { ReportShare } from "./ReportShare";
 import { SavedAuditPages } from "./SavedAuditPages";
@@ -50,6 +52,13 @@ export function AgentReportDetail({
   share?: ReactNode;
 }>) {
   const audit = report.kind === "site_audit" ? siteAuditResultSchema.safeParse(report.body) : null;
+  const playground =
+    report.kind === "prompt_explorer" &&
+    report.provenance.source === "model_playground" &&
+    report.modelPlaygroundRunId === report.body.runId &&
+    report.provenance.runId === report.body.runId
+      ? modelPlaygroundReportSchema.safeParse(report.body)
+      : null;
   const challenge =
     report.kind === "challenge_report" ? parseChallengeReportBody(report.body) : null;
   const legacyPages =
@@ -82,6 +91,8 @@ export function AgentReportDetail({
           reportId={report.id}
           saveLessonsAction={saveLessonsAction}
         />
+      ) : playground?.success ? (
+        <ModelPlaygroundReport body={playground.data} />
       ) : audit?.success ? (
         <SiteAuditResults result={audit.data} />
       ) : legacyPages.length ? (

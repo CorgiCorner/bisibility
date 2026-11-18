@@ -7,20 +7,14 @@ import {
 import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import { type RankCheckSchedulerMode, rankCheckSchedulerMode } from "./scheduler-mode";
 import type { SchedulerUpgradeStore } from "./scheduler-upgrade";
-import { repairMissingScheduleAssignments } from "./scheduler-upgrade-repair";
 import { createSchedulerUpgradeStore } from "./scheduler-upgrade-store";
 
-export type SchedulerStartupStore = Pick<
-  SchedulerUpgradeStore,
-  "inventory" | "pauseOwned" | "activate"
-> & {
+export type SchedulerStartupStore = Pick<SchedulerUpgradeStore, "inventory" | "activate"> & {
   retireReconciler(): Promise<unknown>;
-  repair(): Promise<{ assignments: { assigned: boolean }[] }>;
 };
 
 // Old worker processes must be stopped before this version starts polling.
 export async function upgradeRankSchedulerAtStartup(store: SchedulerStartupStore) {
-  await store.retireReconciler();
   const inventory = await store.inventory();
   if (inventory.failed)
     throw new Error("Could not inspect legacy schedules; worker startup will retry.");
@@ -28,18 +22,24 @@ export async function upgradeRankSchedulerAtStartup(store: SchedulerStartupStore
     ...inventory.ambiguousIds,
     ...(inventory.unknownSchedules ?? []).map((schedule) => schedule.id),
   ]);
-  let paused = 0;
-  for (const id of inventory.ownedIds) {
-    if (unknown.has(id)) continue;
-    await store.pauseOwned(id);
-    paused += 1;
+  const paused = new Set(inventory.pausedOwnedIds);
+  const activeOwnedSchedules = inventory.ownedIds.filter(
+    (id) => !unknown.has(id) && !paused.has(id),
+  );
+  if (inventory.reconciler === "active" || activeOwnedSchedules.length) {
+    console.error("[temporal] legacy rank scheduler upgrade required", {
+      activeOwnedSchedules,
+      membershipRepair: "disabled",
+    });
+    throw new Error(
+      "Complete the offline scheduler upgrade (npm run scheduler:upgrade) before starting dispatcher mode.",
+    );
   }
-  const repair = await store.repair();
+  await store.retireReconciler();
   const schedulers = await store.activate();
   return {
     schedulers,
-    pausedLegacySchedules: paused,
-    recoveredKeywords: repair.assignments.filter((assignment) => assignment.assigned).length,
+    ownedLegacySchedules: inventory.ownedIds.filter((id) => !unknown.has(id)).length,
     unrecognizedSchedules: unknown.size,
   };
 }
@@ -52,12 +52,10 @@ export async function startRankCheckSchedulers(
   const result = await upgradeRankSchedulerAtStartup({
     ...createSchedulerUpgradeStore(client),
     retireReconciler: () => retireLegacyRankCheckReconciler(client.schedule),
-    repair: () =>
-      repairMissingScheduleAssignments(true, undefined, { createMissing: true, automatic: true }),
   });
-  console.info("[temporal] automatic rank scheduler upgrade", {
-    pausedLegacySchedules: result.pausedLegacySchedules,
-    recoveredKeywords: result.recoveredKeywords,
+  console.info("[temporal] rank scheduler startup", {
+    membershipRepair: "disabled",
+    ownedLegacySchedules: result.ownedLegacySchedules,
     unrecognizedSchedules: result.unrecognizedSchedules,
   });
   if (result.unrecognizedSchedules)

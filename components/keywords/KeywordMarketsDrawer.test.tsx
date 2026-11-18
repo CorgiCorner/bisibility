@@ -44,8 +44,8 @@ function target(id: string, locationKey: string, device: "Desktop" | "Mobile") {
     keyword: "rank tracker",
     location: {
       canonicalKey: locationKey,
-      displayName: locationKey.includes(":NL:") ? "Netherlands" : "United States",
-      languageLabel: locationKey.includes(":NL:") ? "Dutch" : "English",
+      displayName: locationKey === "NL" ? "Netherlands" : "United States",
+      languageLabel: locationKey === "NL" ? "Dutch" : "English",
     },
     schedule: {
       cron_expression: null,
@@ -65,7 +65,7 @@ const projectMarkets = {
   marketCreation: { registry: [], schedules: [], sources: [] },
   markets: [
     {
-      canonicalKey: "country:US:lang:en",
+      canonicalKey: "US",
       countryCode: "US",
       displayName: "United States",
       id: "pmkt_us",
@@ -75,7 +75,7 @@ const projectMarkets = {
       status: "active",
     },
     {
-      canonicalKey: "country:NL:lang:nl",
+      canonicalKey: "NL",
       countryCode: "NL",
       displayName: "Netherlands",
       id: "pmkt_nl",
@@ -93,10 +93,10 @@ const projectMarkets = {
 
 function setup(
   targets = [
-    target("kw_us_desktop", "country:US:lang:en", "Desktop"),
-    target("kw_us_mobile", "country:US:lang:en", "Mobile"),
-    target("kw_nl_desktop", "country:NL:lang:nl", "Desktop"),
-    target("kw_nl_mobile", "country:NL:lang:nl", "Mobile"),
+    target("kw_us_desktop", "US", "Desktop"),
+    target("kw_us_mobile", "US", "Mobile"),
+    target("kw_nl_desktop", "NL", "Desktop"),
+    target("kw_nl_mobile", "NL", "Mobile"),
   ],
   actions: Partial<
     Pick<
@@ -166,8 +166,8 @@ describe("KeywordMarketsDrawer", () => {
 
   it("adds the selected market-device matrix without deleting retained targets", async () => {
     const actions = setup([
-      target("kw_us_desktop", "country:US:lang:en", "Desktop"),
-      target("kw_us_mobile", "country:US:lang:en", "Mobile"),
+      target("kw_us_desktop", "US", "Desktop"),
+      target("kw_us_mobile", "US", "Mobile"),
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Netherlands / Dutch" }));
@@ -178,7 +178,7 @@ describe("KeywordMarketsDrawer", () => {
       expect.objectContaining({
         devices: ["desktop", "mobile"],
         keywords: ["rank tracker"],
-        locations: [{ locationKey: "country:US:lang:en" }, { locationKey: "country:NL:lang:nl" }],
+        locations: [{ locationKey: "US" }, { locationKey: "NL" }],
         projectId,
       }),
     );
@@ -200,7 +200,7 @@ describe("KeywordMarketsDrawer", () => {
   });
 
   it("keeps the current target when its replacement was not returned", async () => {
-    const actions = setup([target("kw_us_desktop", "country:US:lang:en", "Desktop")]);
+    const actions = setup([target("kw_us_desktop", "US", "Desktop")]);
 
     keepNetherlandsMobile();
     fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
@@ -229,7 +229,7 @@ describe("KeywordMarketsDrawer", () => {
       .fn()
       .mockRejectedValueOnce(new Error("database unavailable"))
       .mockResolvedValueOnce({ deleted: 1 });
-    setup([target("kw_us_desktop", "country:US:lang:en", "Desktop")], {
+    setup([target("kw_us_desktop", "US", "Desktop")], {
       addKeywordsMatrixAction,
       bulkDeleteAction,
     });
@@ -333,12 +333,49 @@ describe("KeywordMarketsDrawer", () => {
       expect.objectContaining({
         devices: ["mobile"],
         keywords: ["rank tracker"],
-        locations: [
-          { locationKey: "country:US:lang:en" },
-          { locationKey: "country:NL:lang:nl" },
-          { locationKey: "ES" },
-        ],
+        locations: [{ locationKey: "US" }, { locationKey: "NL" }, { locationKey: "ES" }],
       }),
     );
   });
+});
+
+import {
+  createSpendPreview,
+  keywordCreateReviewCases,
+} from "@/components/schedules/keyword-create-review.test-support";
+import { beforeEach as reviewBeforeEach } from "vitest";
+
+const reviewPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: reviewPort.preview,
+}));
+reviewBeforeEach(() =>
+  reviewPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+keywordCreateReviewCases("KeywordMarketsDrawer", reviewPort.preview, async () => {
+  const add = vi.fn(async () => ({ keywords: [] }));
+  const result = setup([target("kw_us_desktop", "US", "Desktop")], {
+    addKeywordsMatrixAction: add,
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Netherlands / Dutch" }));
+  return {
+    action: add,
+    start: async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
+    },
+    assertDraft: () => {
+      expect(result.onClose).not.toHaveBeenCalled();
+      expect(result.bulkDeleteAction).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Netherlands / Dutch" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    },
+  };
 });

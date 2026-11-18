@@ -5,6 +5,7 @@ import {
   captureFindingsChecker,
   type ResponseCapture,
 } from "./openapi-response-findings.test-support";
+import { responseValidatorFactory } from "./openapi-response-schemas.test-support";
 import { matchSpecOperation } from "./response-capture.test-support";
 import { bodyShape, scrubBody, scrubString } from "./response-capture-normalize.test-support";
 
@@ -185,6 +186,7 @@ describe("response conformance list", () => {
 describe("response capture normalization", () => {
   it("zero-fills generated values while keeping public-ID and UUID patterns valid", () => {
     expect(scrubString("prj_k3x9m2p8q7r6s5t4u3v2w1y0")).toBe("prj_a00000000000000000000000");
+    expect(scrubString("dsy_k3x9m2p8q7r6s5t4u3v2w1y0")).toBe("dsy_a00000000000000000000000");
     // An ID that breaks the pattern keeps breaking it.
     expect(scrubString("prj_0aaaaaaaaaaaaaaaaaaaaaaa")).toBe("prj_000000000000000000000000");
     expect(scrubString("6f1c2a9e-3b4d-4e5f-8a7b-1c2d3e4f5a6b")).toBe(
@@ -217,4 +219,15 @@ describe("router operation attribution", () => {
     expect(matchSpecOperation("GET", ["health"])?.operationId).toBe("getHealth");
     expect(matchSpecOperation("PUT", ["health"])).toBeUndefined();
   });
+});
+
+it("reuses identical response schemas without merging different constraints", () => {
+  const factory = responseValidatorFactory({ components: { schemas: {} } });
+  const schema = { type: "integer", minimum: 1 };
+  const first = factory(schema);
+  expect(factory(structuredClone(schema))).toBe(first);
+  const different = factory({ ...schema, minimum: 2 });
+  expect(different).not.toBe(first);
+  expect(first.open(1)).toBe(true);
+  expect(different.open(1)).toBe(false);
 });

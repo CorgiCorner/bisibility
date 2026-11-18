@@ -1,4 +1,5 @@
 import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
+import { publicIdSchema } from "./openapi-public-id";
 import { openEnum, sdkName } from "./openapi-sdk-schema";
 
 export const jitterMinutesContractSchema = {
@@ -40,7 +41,14 @@ export const keywordScheduleResourceContractSchema = {
     jitter_minutes: jitterMinutesContractSchema,
     last_checked_at: { format: "date-time", type: ["string", "null"] },
     next_check_at: { format: "date-time", type: ["string", "null"] },
+    schedule_id: { ...publicIdSchema("sch"), type: ["string", "null"] },
+    schedule_state: {
+      enum: ["active", "paused", "archived", null],
+      type: ["string", "null"],
+      ...openEnum("KeywordScheduleState"),
+    },
     source: {
+      deprecated: true,
       description:
         "The keyword's actual project-schedule membership. Unassigned or archived membership reports manual and no next check; disabled membership reports paused. keyword remains the compatibility source value; project_default is retained in the enum for older clients.",
       enum: ["keyword", "project_default"],
@@ -57,6 +65,8 @@ export const keywordScheduleResourceContractSchema = {
     "last_checked_at",
     "next_check_at",
     "source",
+    "schedule_id",
+    "schedule_state",
   ],
   type: ["object", "null"],
   ...sdkName("KeywordSchedule"),

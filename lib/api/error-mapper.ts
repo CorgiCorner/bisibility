@@ -23,10 +23,22 @@ import {
   UnrunnableInlineRankCheckError,
 } from "@/lib/rank-check/runs/launch-types";
 import { SavedViewConflictError } from "@/lib/saved-views/errors";
+import {
+  ScheduleMutationError,
+  ScheduleReviewRequiredError,
+  ScheduleReviewStaleError,
+} from "@/lib/schedules/errors";
+import { SearchIndexConnectionError } from "@/lib/search-index/errors";
 import { ZodError, z } from "zod";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import { ownProviderKeyRequiredResponse } from "./byok-required";
-import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
+import {
+  ApiConflictError,
+  ApiForbiddenError,
+  ApiInputError,
+  ApiNotFoundError,
+  RequestBodyLimitError,
+} from "./errors";
 import { errorResponse } from "./responses";
 
 export function errorFromUnknown(
@@ -113,8 +125,41 @@ export function errorFromUnknown(
       instance,
     });
   }
+  if (error instanceof ScheduleReviewRequiredError) {
+    return errorResponse("schedule_review_required", error.message, 428, { headers, instance });
+  }
+  if (error instanceof ScheduleReviewStaleError) {
+    return errorResponse(error.code, error.message, 409, {
+      headers,
+      instance,
+      problemDetails: { reason: error.reason },
+    });
+  }
+  if (error instanceof SearchIndexConnectionError) {
+    return errorResponse("data_sync_connection_required", error.message, 409, {
+      headers,
+      instance,
+    });
+  }
+  if (error instanceof ScheduleMutationError) {
+    const status =
+      error.code === "schedule_not_found"
+        ? 404
+        : error.code === "schedule_local_conflict"
+          ? 409
+          : error.code === "schedule_local_forbidden"
+            ? 403
+            : 400;
+    return errorResponse(error.code, error.message, status, { headers, instance });
+  }
   if (error instanceof ApiInputError) {
     return errorResponse(error.code, error.message, 400, { headers, instance });
+  }
+  if (error instanceof RequestBodyLimitError) {
+    return errorResponse("bad_request", error.message, error.reason === "too_large" ? 413 : 400, {
+      headers,
+      instance,
+    });
   }
   if (error instanceof SyntaxError) {
     return errorResponse("bad_request", error.message, 400, { headers, instance });

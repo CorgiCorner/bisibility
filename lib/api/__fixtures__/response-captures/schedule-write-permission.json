@@ -1,0 +1,178 @@
+{
+  "captures": [
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/sch_000000000000000000000000",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "No connected Search Console property is available for this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#data_sync_connection_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 409,
+        "title": "Data sync connection required",
+        "type": "https://bisibility.com/problems/data_sync_connection_required",
+        "code": "data_sync_connection_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 409
+    },
+    {
+      "body": {
+        "detail": "Project is in read-only mode while migration hold is active. Release the migration hold before writing to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#project_read_only",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/sch_000000000000000000000000",
+        "status": 423,
+        "title": "Project read-only",
+        "type": "https://bisibility.com/problems/project_read_only"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 423
+    },
+    {
+      "body": {
+        "detail": "You are not authorized to perform this action.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/preview",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 403
+    },
+    {
+      "body": {
+        "id": "dsy_a00000000000000000000000",
+        "kind": "page_indexing",
+        "group": "data_sync",
+        "actions": ["read"],
+        "name": "page_indexing",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "custom_cron",
+          "cron_expression": "45 3 * * *",
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": null
+        },
+        "target": {
+          "type": "project",
+          "domain": "example.com"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "lmn_a00000000000000000000000",
+        "kind": "local_monitor",
+        "group": "tracking",
+        "actions": ["read"],
+        "name": "domain_rating",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "daily",
+          "cron_expression": null,
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": null
+        },
+        "target": {
+          "type": "project",
+          "domain": "example.com"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "sch_a00000000000000000000000",
+        "kind": "rank",
+        "group": "tracking",
+        "actions": ["read"],
+        "name": "domain_rating",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "daily",
+          "cron_expression": null,
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": 60
+        },
+        "target": {
+          "type": "project",
+          "domain": "example.com"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "requires_review": false
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/schedule-write-permission.test.ts"
+}

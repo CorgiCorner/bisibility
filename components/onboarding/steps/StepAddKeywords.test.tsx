@@ -478,7 +478,7 @@ describe("StepAddKeywords", () => {
       keywords: ["rank tracker", "seo api"],
       locations: [{ locationKey: "US" }, { locationKey: "PL" }],
       projectId: "prj_1",
-      schedule: undefined,
+      schedule: { frequency: "manual", cronExpression: null, timezone: "UTC", jitterMinutes: 0 },
       tags: [],
       targetUrl: null,
     });

@@ -1,5 +1,6 @@
 import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { calendarCronExpression } from "@/lib/rank-check/schedule-calendar";
+import { throwScheduleReviewProblem } from "@/lib/schedules/review-problem";
 import type { ScheduleEditorValues } from "./ScheduleEditorModel";
 
 type ApiResponse<T> = { data: T };
@@ -37,7 +38,9 @@ export async function request<T>(url: string, method: "PATCH" | "POST", body: ob
     method,
   });
   if (!response.ok) {
-    publishCapacityProblem(await response.json().catch(() => null));
+    const problem = await response.json().catch(() => null);
+    throwScheduleReviewProblem(problem);
+    publishCapacityProblem(problem);
     throw new ScheduleSaveError(response.status);
   }
   const payload = (await response.json()) as ApiResponse<T>;

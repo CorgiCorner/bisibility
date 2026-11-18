@@ -63,11 +63,10 @@ export async function getProjectMarkets(
           include: {
             checkSchedules: {
               where: { archivedAt: null },
-              orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
+              orderBy: [{ name: "asc" }, { publicId: "asc" }],
               select: {
                 enabled: true,
                 frequency: true,
-                isDefault: true,
                 name: true,
                 publicId: true,
               },

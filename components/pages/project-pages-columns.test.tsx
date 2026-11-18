@@ -64,7 +64,10 @@ describe("project page metric cells", () => {
     expect(screen.queryByText("9")).not.toBeInTheDocument();
     expect(screen.getAllByText("-").length).toBeGreaterThan(0);
 
-    renderColumns(cell(sources, "sitemap"));
+    renderColumns(
+      cell(sources, "sitemap", pageRow({ sitemap: { listed: null, lastSeenAt: null } })),
+    );
+    expect(screen.getByText("sitemapState.notCheckedCell")).toBeInTheDocument();
     expect(screen.queryByText("sitemapState.listed")).not.toBeInTheDocument();
     renderColumns(cell(sources, "index"));
     expect(screen.queryByText("indexGroup.not_checked")).not.toBeInTheDocument();

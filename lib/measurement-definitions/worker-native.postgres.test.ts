@@ -149,6 +149,7 @@ test("project-key execution keeps the exact original caller through null actor a
           prefix: "synthetic",
           hashedKey: randomUUID(),
           scopes: ["write"],
+          createdById: f.project.writer.id,
         },
       });
     const original = await key();

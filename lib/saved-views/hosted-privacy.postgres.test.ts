@@ -107,6 +107,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
     function key(): ApiAuth {
       return {
         kind: "project_key",
+        creatorRole: "owner",
         project,
         apiKey: {
           id: "key-fixture",

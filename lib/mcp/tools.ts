@@ -231,15 +231,20 @@ function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestC
   }
 }
 
+/** Pure canonical mapping for server-owned transports. Local-only tools have no REST route. */
+export function mcpToolRestCall(name: string, input: ToolArgs): RestCall {
+  const internalName = internalMcpToolName(name);
+  if (internalName === "getSessionProfile") throw new Error("Tool has no REST route");
+  return dispatchToRest(internalName, input);
+}
+
 export async function dispatchMcpTool(
   name: string,
   input: ToolArgs,
   authorization: McpApiAuthorization,
   clientHeader?: string,
 ) {
-  const internalName = internalMcpToolName(name);
-  if (internalName === "getSessionProfile") {
+  if (internalMcpToolName(name) === "getSessionProfile")
     return dispatchSessionProfile(authorization);
-  }
-  return dispatchMcpRestCall(dispatchToRest(internalName, input), authorization, clientHeader);
+  return dispatchMcpRestCall(mcpToolRestCall(name, input), authorization, clientHeader);
 }

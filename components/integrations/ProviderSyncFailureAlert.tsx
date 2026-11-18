@@ -4,7 +4,10 @@ import { useTranslations } from "next-intl";
 
 type ProviderSyncFailure = NonNullable<IntegrationProviderData["syncFailure"]>;
 
-function failureClass(value: string, t: ReturnType<typeof useTranslations>) {
+function failureClass(
+  value: string,
+  t: ReturnType<typeof useTranslations<"projectIntegrations.provider">>,
+) {
   return value === "unknown" ? t("failureUnknown") : value.replaceAll("_", " ");
 }
 

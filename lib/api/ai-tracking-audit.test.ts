@@ -63,8 +63,13 @@ describe("tracking append-only audit", () => {
         enabled ? null : { enabled: true, engine: "gemini", source: "consumer_scrape" },
       );
     }
-    expect(new Set(writeAudit.mock.calls.map(([entry]) => entry.action))).toEqual(declared);
-    expect(declared.size).toBe(25);
+    // Restore is written inside the schedule transaction, not by this catalog port.
+    const serviceOwned = new Set(["ai_tracking.schedule.restore"]);
+    expect([...serviceOwned].every((action) => declared.has(action))).toBe(true);
+    expect(new Set(writeAudit.mock.calls.map(([entry]) => entry.action))).toEqual(
+      new Set([...declared].filter((action) => !serviceOwned.has(action))),
+    );
+    expect(declared.size).toBe(26);
   });
   it("records an engine choice by engine and source, never a database id", async () => {
     await auditTrackingEngine(

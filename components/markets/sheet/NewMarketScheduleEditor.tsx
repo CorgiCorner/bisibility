@@ -9,12 +9,7 @@ type NewMarketScheduleEditorProps = {
   context: MarketScheduleContext;
   memberSummary?: string;
   onBack: () => void;
-  onSaved: (schedule: {
-    publicId: string;
-    name: string;
-    frequency: string;
-    isDefault: boolean;
-  }) => void;
+  onSaved: (schedule: { publicId: string; name: string; frequency: string }) => void;
   projectId: string;
 };
 

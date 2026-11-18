@@ -19,6 +19,7 @@ import {
   refreshProjectPagesAction,
 } from "@/lib/actions/pages";
 import { loadPagesCompareAction } from "@/lib/actions/pages-compare";
+import { exportProjectPagesCsv } from "@/lib/actions/pages-export";
 import {
   markProjectChallengeDayAction,
   startProjectChallengeAction,
@@ -72,6 +73,13 @@ export default async function ProjectPagesPage({ params, searchParams }: Readonl
     (await projectSeoChallengeEnabled()) &&
     canProjectAction(role, "create", "project") &&
     !readOnly;
+  if (
+    query.sitemap &&
+    (!view.list.sitemapChecked ||
+      (query.sitemap === "not_listed" && view.list.sitemapComplete === false))
+  ) {
+    redirect(projectPagesHref(publicId, { ...query, sitemap: undefined, page: 1 }));
+  }
   const compareQuery = fillProjectPagesCompareQuery(query, view.compare);
   if (compareQuery) redirect(projectPagesHref(publicId, compareQuery));
 
@@ -93,6 +101,7 @@ export default async function ProjectPagesPage({ params, searchParams }: Readonl
         ) : null}
         <ProjectPagesScreen
           actions={{
+            exportCsv: exportProjectPagesCsv,
             addManual: addManualProjectPagesAction,
             checkVitals: checkSelectedPageVitalsAction,
             load: loadProjectPagesAction,
@@ -110,6 +119,7 @@ export default async function ProjectPagesPage({ params, searchParams }: Readonl
           canDeleteTags={canDeleteTags}
           canEditTags={canEditTags}
           canWrite={canWrite}
+          canExport={canProjectAction(role, "read", "project")}
           initialCompare={view.compare}
           initialComparison={view.comparison}
           initialList={view.list}

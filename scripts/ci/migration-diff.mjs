@@ -40,10 +40,39 @@ export async function verifyProviderIncidentIndex(client, schema) {
     throw new Error("SQL-owned provider incident index does not match its migration contract.");
 }
 
+/** The project/time access path is SQL-owned because Prisma cannot model expression indexes. */
+export async function verifyMeteringProjectIndex(client, schema) {
+  const { rows } = await client.query(`
+    SELECT i.indisvalid AS valid, i.indisready AS ready, i.indisunique AS unique,
+      am.amname AS method, i.indnkeyatts::int AS keys,
+      pg_get_indexdef(i.indexrelid, 1, true) AS namespace,
+      pg_get_indexdef(i.indexrelid, 2, true) AS project,
+      pg_get_indexdef(i.indexrelid, 3, true) AS created,
+      pg_get_indexdef(i.indexrelid, 4, true) AS operation,
+      pg_get_expr(i.indpred, i.indrelid) AS predicate
+    FROM pg_catalog.pg_index i
+    JOIN pg_catalog.pg_class t ON t.oid=i.indrelid
+    JOIN pg_catalog.pg_class idx ON idx.oid=i.indexrelid
+    JOIN pg_catalog.pg_namespace ns ON ns.oid=t.relnamespace
+    JOIN pg_catalog.pg_am am ON am.oid=idx.relam
+    WHERE ns.nspname=$1 AND t.relname='metering_operation'
+      AND idx.relname='metering_operation_platform_project_created_idx'
+  `, [schema]);
+  const expected = {
+    valid: true, ready: true, unique: false, method: "btree", keys: 4,
+    namespace: "namespace", project: "((input -> 'scope'::text) ->> 'group'::text)",
+    created: "created_at", operation: "operation_pk",
+    predicate: "(((input ->> 'fundingSource'::text) = 'platform'::text) AND ((input ->> 'surface'::text) = 'app'::text))",
+  };
+  if (!isDeepStrictEqual(rows, [expected]))
+    throw new Error("SQL-owned metering project index does not match its migration contract.");
+}
+
 export async function verifyMigrationDiff(env, {
   createClient = (connectionString) => new pg.Client({ connectionString }),
   verifyAdditional = verifyAdditionalMigrationConstraints,
   verifyIncidentIndex = verifyProviderIncidentIndex,
+  verifyProjectIndex = verifyMeteringProjectIndex,
   capture = spawnSync,
 } = {}) {
   const schema = new URL(env.DIRECT_URL).searchParams.get("schema") || "public";
@@ -54,6 +83,7 @@ export async function verifyMigrationDiff(env, {
     // Validate SQL-owned objects even when introspection would report no drift.
     expectedScript = await verifyAdditional(client, schema);
     await verifyIncidentIndex(client, schema);
+    await verifyProjectIndex(client, schema);
   } finally {
     await client.end();
   }

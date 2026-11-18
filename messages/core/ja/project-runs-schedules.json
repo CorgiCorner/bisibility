@@ -18,7 +18,6 @@
       "checks": "{count, plural, other {#件のチェック}}",
       "checksLabel": "チェック数",
       "current": "現在",
-      "default": "デフォルト",
       "device": "デバイス",
       "frequency": "頻度",
       "frequencyDaily": "毎日",
@@ -78,7 +77,6 @@
       },
       "archiveDialog": {
         "body": "今後の実行は停止します。開始済みの実行は完了し、過去の結果は引き続き参照できます。",
-        "defaultNotice": "新しいキーワードはスケジュールに追加するまで手動のままです。",
         "manualChecks": "手動チェック",
         "moveKeywords": "{count, plural, other {#件のキーワード}}の移動先",
         "title": "「{name}」をアーカイブしますか？"
@@ -98,6 +96,7 @@
         "withinWindow": "{time} から{minutes, number}分以内"
       },
       "cadenceLabels": {
+        "hourly": "毎時 :{minute}",
         "custom": "カスタム: {expression}",
         "dayOfMonth": "{day, selectordinal, other {#日}}",
         "daily": "毎日 {time}",
@@ -142,10 +141,6 @@
         "cronTooLong": "cron 式は{maximum, number}文字以内で入力してください。",
         "customCron": "カスタム cron",
         "customPreview": "カスタム cron のスケジュールです。",
-        "defaultEnabled": "スケジュール選択時に候補として表示します。キーワードは選択した場合のみ追加されます。",
-        "defaultExisting": "デフォルトの候補",
-        "defaultExistingDescription": "スケジュール選択時の候補です。キーワードが自動で追加されることはありません。",
-        "defaultReplacement": "候補のスケジュールを{name}から変更します。既存の割り当ては変わりません。",
         "depth": "深度",
         "everyWeekday": "平日の 06:00 に実行します。",
         "invalidCron": "5フィールドの有効な cron 式を入力してください。",
@@ -184,7 +179,6 @@
         "thirtyMinuteSteps": "分は :00 または :30 にしてください（例：09:00、09:30）。",
         "time24": "時刻（24時間表記）",
         "topDepth": "上位{depth, number}位",
-        "useAsDefault": "デフォルトの候補にする",
         "nameHelp": "名前のみです。実行間隔を変えるには、下の頻度を変更してください。",
         "saveSessionExpired": "セッションの有効期限が切れました。再度ログインして保存してください。",
         "saveForbidden": "このスケジュールを編集する権限がありません。",
@@ -218,7 +212,6 @@
       "list": {
         "actions": "操作",
         "blocked": "次回の実行はブロック済み · 月間上限",
-        "defaultHint": "スケジュール選択時の候補です。キーワードが自動で追加されることはありません。",
         "memberMeta": "{markets, plural, other {市場#件}} x {devices, plural, other {デバイス#件}}",
         "members": "{keywords, plural, other {キーワード#件}} = {targets, plural, other {1回あたり#件のチェック}}",
         "noAssignedKeywords": "割り当て済みのキーワードなし",
@@ -252,14 +245,60 @@
         "nextRun": "次回の実行",
         "perMonth": "月間の推定使用量",
         "nextPending": "計画中",
-        "makeDefault": "デフォルトに設定",
-        "defaultHint": "デフォルトはスケジュール選択時の候補です。新しいキーワードは明示的に割り当てるまで未設定のままです。",
+        "nonEmptyDeletion": "このスケジュールを削除する前に、すべてのキーワードを移動または削除してください。アーカイブすることもできます。",
         "unscheduledCount": "{count, plural, other {#件のキーワードにスケジュールがありません。}}",
         "addToSchedule": "スケジュールに追加"
       },
       "planning": {
         "delay": "予定された実行は通常 {minutes, number} 分以内に Runs に表示されます。チェックはスケジュールどおりに実行されます。",
         "delayUnknown": "予定された実行が Runs に表示されるまで少し時間がかかることがあります。チェックはスケジュールどおりに実行されます。"
+      },
+      "unified": {
+        "syncSaveFailed": "同期スケジュールを保存できませんでした。",
+        "inspectionSettings": "URL 検査の設定",
+        "checks": "チェック",
+        "data_sync": "データ同期",
+        "monthlyCost": "推定月額費用: {amount}",
+        "unknownCosts": "{count, plural, one {#件の見積もりが不明} other {#件の見積もりが不明}}",
+        "lastRun": "最後に記録された実行",
+        "noRecordedRun": "実行記録なし",
+        "lastEvidenceHint": "最新の保存済み記録",
+        "monitorCount": "{count, plural, one {#件のモニター} other {#件のモニター}}",
+        "states": {
+          "active": "有効",
+          "paused": "一時停止",
+          "archived": "アーカイブ済み"
+        },
+        "reasons": {
+          "approval_expired": "承認の有効期限切れ",
+          "limit_reached": "承認上限に到達",
+          "recurring_disabled": "定期モニターが無効",
+          "instance_disabled": "このインスタンスでは無効",
+          "integration_disconnected": "連携が切断されています",
+          "inspection_budget_off": "バックグラウンド検査はオフです"
+        },
+        "syncs": {
+          "domain_rating": "ドメイン評価",
+          "sitemap": "サイトマップ同期",
+          "search_console": "Search Console インポート",
+          "page_indexing": "ページのインデックス登録"
+        },
+        "frequencies": {
+          "manual": "手動",
+          "daily": "毎日",
+          "weekly": "毎週",
+          "monthly": "毎月"
+        }
+      },
+      "errors": {
+        "commandRequired": "このスケジュールを変更するにはモニターの版が必要です。",
+        "createUnsupported": "作成できるのは順位とプロンプト監視のスケジュールだけです。",
+        "dataSyncArchive": "このデータ同期はアーカイブできません。",
+        "dataSyncUnsupported": "このデータ同期はプロジェクトごとにまだオンまたはオフにできません ({syncKind})。",
+        "kindRequired": "データ同期の種類が必要です。",
+        "notFound": "スケジュールが見つかりません。",
+        "projectRequired": "このスケジュールを変更するにはプロジェクト ID が必要です。",
+        "transition": "有効にする前に、アーカイブしたスケジュールを一時停止へ戻してください。"
       }
     }
   }

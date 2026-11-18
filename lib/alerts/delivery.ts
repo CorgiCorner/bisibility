@@ -150,7 +150,8 @@ export async function sendAlertEmail(
     },
     url,
   );
-  await sendEmail({
+  return sendEmail({
+    purpose: "alert",
     category: "bulk",
     beforeProviderSend,
     from: alertsEmailFrom(),

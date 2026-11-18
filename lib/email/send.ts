@@ -6,6 +6,7 @@ import { notifyOps } from "@/lib/ops/notify";
 import { reserveEmailDailyBudget } from "./budget";
 import { requireEmailFrom } from "./from";
 import { refreshInstanceMailRuntime } from "./instance-mail-store";
+import { type EmailPurpose, skipEmailNotification } from "./notification-policy";
 import { assertMailNotSuppressed, recordMailReceipt } from "./provider-feedback-store";
 import { resolveEmailProvider } from "./registry";
 import {
@@ -24,6 +25,8 @@ export { EmailBudgetExceededError, EmailSendError } from "./types";
 
 export type SendEmailInput = {
   category: EmailCategory;
+  /** Omitted purposes are notifications and fail closed under the notification switch. */
+  purpose?: EmailPurpose;
   beforeProviderSend?: (message: { to: string }) => Promise<void>;
   claimProviderSend?: () => Promise<void>;
   dailyBudgetReserved?: boolean;
@@ -153,7 +156,9 @@ async function prepareEmail({
   }
 }
 
+/** Returns false for a policy skip, before claims, suppression checks or budget reservations. */
 export async function sendEmail(input: SendEmailInput) {
+  if (skipEmailNotification(input.purpose)) return false as const;
   const prepared = await prepareEmail(input);
   if (!prepared) {
     await input.claimProviderSend?.();

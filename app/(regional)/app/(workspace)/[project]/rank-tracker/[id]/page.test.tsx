@@ -119,7 +119,6 @@ vi.mock("@/lib/actions/keyword", () => ({
   updateKeyword: vi.fn(),
 }));
 vi.mock("@/lib/actions/keyword-bulk", () => ({ bulkDeleteKeywords: vi.fn() }));
-vi.mock("@/lib/actions/keyword-schedule", () => ({ updateKeywordSchedule: vi.fn() }));
 vi.mock("@/lib/actions/rankCheck", () => ({ runCheckNow: vi.fn() }));
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,

@@ -1,7 +1,7 @@
 {
   "projectUsageCosts": {
     "lead": "Plan, provider budgets and what SEO costs you in total.",
-    "lifetimeHint": "A lifetime amount is spread evenly over the 36 calendar months that start with the start month. A partial first or last month is prorated by day, then the amount is zero.",
+    "lifetimeHint": "Lifetime cost is spread over 36 months. Partial months are prorated.",
     "dash": "-",
     "tiles": {
       "seo": "SEO cost this month",
@@ -57,14 +57,14 @@
       "addTitle": "Add cost",
       "editTitle": "Edit cost",
       "tool": "Tool",
-      "name": "Name",
+      "name": "Custom tool",
       "suggest": "Not listed? Suggest it",
       "plan": "Plan",
       "planHint": "Type a plan name, or pick a typical one.",
       "billing": "Billing",
-      "amount": "Amount you pay",
+      "amount": "Amount",
       "currency": "Currency",
-      "priceChanges": "Price changes",
+      "priceChanges": "Trial and discounts",
       "trialUntil": "Free trial until",
       "discount": "Discount",
       "percent": "Percent",
@@ -74,7 +74,7 @@
       "months": "Months",
       "none": "None",
       "partial": "Only part of this cost belongs to this project",
-      "partialHint": "Use this when the same tool also serves other sites. Only this part is counted in this project's cost.",
+      "partialHint": "Only the selected share counts toward this project.",
       "lands": "{amount} a month lands in this project",
       "landsOnce": "{amount} lands in this project",
       "started": "Started",
@@ -93,8 +93,13 @@
         "percent": "Enter a percent from 0 to 100, with up to two decimal places.",
         "trial": "The trial must end on or after the start date.",
         "discount": "Enter a discount and when it ends.",
-        "date": "Use a real date."
-      }
+        "date": "Use a real date.",
+        "customType": "Enter up to 80 characters."
+      },
+      "nameHint": "Your name for this tool, shown in the subscriptions list.",
+      "description": "Track project expenses for a clearer cost overview.",
+      "customType": "Custom type",
+      "customTypeHint": "For example, hosting, CRM or design."
     }
   }
 }

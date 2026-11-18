@@ -32,7 +32,7 @@ export const scheduleIntentSchema = z
     ...common,
     monitorId: monitorRef,
     expectedVersion: version,
-    mode: z.enum(["manual", "paused", "scheduled"]),
+    mode: z.enum(["manual", "paused", "scheduled", "archived"]),
     scheduleId: z
       .string()
       .refine((value) => isPublicIdOfType(value, "sch"))

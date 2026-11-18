@@ -87,8 +87,8 @@ async function runDetailRoute(
     if (action === "resume") assertProjectWritable(project);
     const controlActor = {
       actorId: ctx.actorId ?? null,
-      credentialId: ctx.origin.credentialId,
-      credentialKind: ctx.origin.credentialKind,
+      credentialId: ctx.origin.credentialId ?? undefined,
+      credentialKind: ctx.origin.credentialKind ?? undefined,
     };
     let result:
       | Awaited<ReturnType<typeof readSiteAuditRun>>

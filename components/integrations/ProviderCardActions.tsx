@@ -30,17 +30,17 @@ export function ProviderCardActions(props: Readonly<Props>) {
   const t = useTranslations("projectIntegrations.provider");
   const { isHostedSerp, keyRemoval, managementActionKey } = providerCardActions(provider);
   if (isHostedSerp || (!canManageProviders && !props.showSync)) return null;
-  const connected = provider.status === "connected";
-  const buttonClass = "min-h-11 sm:min-h-[30px]";
+  const unavailable = provider.kind === "model" && provider.status === "planned";
+  const connected =
+    provider.status === "connected" || (unavailable && Boolean(provider.connectionId));
   return (
     <div className="mt-auto flex min-w-0 flex-wrap items-center gap-2" data-provider-actions="">
       {provider.secondaryAction && canManageProviders && !connected ? (
         <ProjectReadOnlyTooltip className="inline-flex">
           <Button
-            className={buttonClass}
             disabled={readOnly || testPending}
             onClick={() => void props.onSecondaryAction()}
-            size="xs"
+            size="sm"
             style={outlineActionStyle}
             variant="secondary"
           >
@@ -55,10 +55,9 @@ export function ProviderCardActions(props: Readonly<Props>) {
       {props.showSync ? (
         <ProjectReadOnlyTooltip className="inline-flex">
           <Button
-            className={buttonClass}
             disabled={readOnly || syncPending}
             onClick={() => void props.onSync()}
-            size="xs"
+            size="sm"
             style={outlineActionStyle}
             variant="secondary"
           >
@@ -66,18 +65,21 @@ export function ProviderCardActions(props: Readonly<Props>) {
           </Button>
         </ProjectReadOnlyTooltip>
       ) : null}
-      {canManageProviders ? (
+      {canManageProviders && !unavailable ? (
         <ProjectReadOnlyTooltip className="inline-flex">
           <Button
-            className={buttonClass}
             disabled={readOnly && !connected}
             onClick={props.onManage}
-            size="xs"
+            size="sm"
             style={connected ? outlineActionStyle : undefined}
             variant={connected ? "secondary" : "primary"}
           >
             {connected
-              ? t(managementActionKey)
+              ? {
+                  manageKey: t("manageKey"),
+                  connectionSettings: t("connectionSettings"),
+                  manage: t("manage"),
+                }[managementActionKey]
               : provider.status === "needs_reauth"
                 ? t("reconnect")
                 : t("connect")}

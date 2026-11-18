@@ -37,10 +37,16 @@ function setup(
 ) {
   const binding = definitionBindingFixture(source);
   const execute = vi.fn(async () => 1);
-  const key = vi.fn(async () => ({ scopes: ["write"], revokedAt: null, expiresAt: null }));
+  const key = vi.fn(async () => ({
+    createdById: "creator",
+    scopes: ["write"],
+    revokedAt: null,
+    expiresAt: null,
+  }));
   const tx = {
     $queryRaw: vi.fn(async () => []),
     apiKey: { findFirst: key },
+    membership: { findUnique: vi.fn(async () => ({ role: "member" })) },
     $executeRaw: execute,
     project: { findUnique: vi.fn(async () => ({ writeMode: "active", isSample: false })) },
   } as unknown as DefinitionTransaction;
@@ -154,7 +160,12 @@ describe("trusted definition execution union", () => {
     );
     expect(mocks.actor).not.toHaveBeenCalled();
     expect(f.audit).toHaveBeenCalledWith(f.tx, expect.objectContaining({ actorId: null }));
-    f.key.mockResolvedValueOnce({ scopes: ["read"], revokedAt: null, expiresAt: null });
+    f.key.mockResolvedValueOnce({
+      createdById: "creator",
+      scopes: ["read"],
+      revokedAt: null,
+      expiresAt: null,
+    });
     await expect(assertDefinitionAtDispatch(f.tx, f.binding, f.host)).rejects.toMatchObject({
       code: "measurement_definition_unavailable",
     });

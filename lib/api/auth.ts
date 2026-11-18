@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/generated/prisma/client";
 import { verifyApiKey } from "@/lib/providers/crypto";
+import { effectiveApiKeyAccess } from "./key-creator";
 import { authenticateAppOAuthToken, isOpaqueOAuthAccessToken } from "./oauth-app-auth";
 import { type ApiScope, parseStoredApiScopes } from "./scope-policy";
 
@@ -31,6 +32,8 @@ export type AuthenticatedApiKey = {
     prefix: string;
     projectId: string;
     scopes: readonly ApiScope[];
+    /** Whose current project role caps this key; a key created through another key inherits it. */
+    createdById?: string | null;
   };
   project: {
     createdAt: Date;
@@ -44,7 +47,8 @@ export type AuthenticatedApiKey = {
   };
 };
 
-export type ProjectKeyAuth = AuthenticatedApiKey & { kind: "project_key" };
+type AuthenticatedProjectKey = AuthenticatedApiKey & { creatorRole: Role };
+export type ProjectKeyAuth = AuthenticatedProjectKey & { kind: "project_key" };
 
 export type MembershipFact = { projectId: string; role: Role };
 
@@ -173,13 +177,14 @@ export async function authenticateBearer(req: Request): Promise<ApiAuth> {
   return { kind: "project_key", ...(await authenticateApiKey(req)) };
 }
 
-export async function authenticateApiKey(req: Request): Promise<AuthenticatedApiKey> {
+export async function authenticateApiKey(req: Request): Promise<AuthenticatedProjectKey> {
   const rawKey = bearerToken(req);
   if (!rawKey.startsWith(PROJECT_API_KEY_PREFIX)) {
     throw new ApiAuthError();
   }
   const candidates = await prisma.apiKey.findMany({
     select: {
+      createdById: true,
       expiresAt: true,
       hashedKey: true,
       id: true,
@@ -213,8 +218,15 @@ export async function authenticateApiKey(req: Request): Promise<AuthenticatedApi
     throw new ApiAuthError("API key has expired.");
   }
 
-  const scopes = parseStoredApiScopes(apiKey.scopes);
-  if (!scopes) throw new ApiAuthError();
+  const access = await effectiveApiKeyAccess(prisma, apiKey);
+  if (!access) throw new ApiAuthError();
+  const { creatorRole, scopes } = access;
+  // The creator's role is read on every request: a lowered role lowers the key, a creator who
+  // left the project leaves the key with no rights.
+  if (!creatorRole || scopes.length === 0)
+    throw new ApiAuthError(
+      "The person who created this API key no longer has access to the project.",
+    );
 
   await prisma.apiKey.update({
     data: { lastUsedAt: new Date() },
@@ -223,12 +235,14 @@ export async function authenticateApiKey(req: Request): Promise<AuthenticatedApi
   });
 
   return {
+    creatorRole,
     apiKey: {
       id: apiKey.id,
       name: apiKey.name,
       prefix: apiKey.prefix,
       projectId: apiKey.projectId,
       scopes,
+      createdById: apiKey.createdById,
     },
     project: apiKey.project,
   };

@@ -53,6 +53,8 @@ export default async function AgentReportPage({
       "agentWorkspace",
       "projectSiteAudit",
       "challengeReport",
+      "projectAiResearch",
+      "projectAiTracking",
     ]),
   ]);
   if (!report) notFound();

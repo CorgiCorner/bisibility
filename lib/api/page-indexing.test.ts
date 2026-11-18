@@ -82,6 +82,69 @@ beforeEach(() => {
 });
 
 describe("stored Page indexing REST and MCP", () => {
+  it.each([true, false])(
+    "projects truthful sitemap states through REST and MCP when monitoring=%s",
+    async (enabled) => {
+      vi.setSystemTime(now);
+      mocks.prisma.project.findFirst.mockResolvedValue({
+        id: "project-db",
+        publicId: projectId,
+        domain: "example.com",
+        syncPauses: enabled ? [] : [{ kind: "sitemap_fetch" }],
+      });
+      mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([
+        {
+          sitemapUrl: "https://example.com/sitemap.xml",
+          fetchedAt: new Date(),
+          entries: [{ loc: row.url }],
+          urlCount: 1,
+          complete: true,
+        },
+      ]);
+      mocks.prisma.urlPresence.findMany.mockResolvedValue([
+        row,
+        { ...row, url: `${row.url}/absent` },
+        { ...row, url: `${row.url}/future`, createdAt: new Date("2099-01-01") },
+      ]);
+      mocks.prisma.$queryRaw.mockImplementation(async (query) => {
+        if (query?.sql?.includes('FROM "sitemap_snapshots"'))
+          return mocks.prisma.sitemapSnapshot.findMany();
+        if (query?.sql?.includes("requested(url"))
+          return [row.url, `${row.url}/absent`, `${row.url}/future`].map((url, i) => ({
+            url,
+            listed: enabled ? [true, false, null][i] : null,
+          }));
+        return [{ now }];
+      });
+      const response = await request("GET", "urls");
+      expect(response.status).toBe(200);
+      const expected = enabled
+        ? ["in_sitemap", "not_in_sitemap", "not_checked"]
+        : ["not_checked", "not_checked", "not_checked"];
+      const body = await response.json();
+      expect(body.data.map((item: { sitemap_state: string }) => item.sitemap_state)).toEqual(
+        expected,
+      );
+      expect(body.data.map((item: { sitemap_checked: boolean }) => item.sitemap_checked)).toEqual(
+        expected.map((state) => state !== "not_checked"),
+      );
+      const mcp = await dispatchMcpTool(
+        "list_page_indexing_urls",
+        { project_id: projectId },
+        "test",
+      );
+      expect(mcp).toMatchObject({
+        ok: true,
+        payload: {
+          data: expected.map((sitemap_state) => ({
+            sitemap_state,
+            sitemap_checked: sitemap_state !== "not_checked",
+          })),
+        },
+      });
+      noGoogleCalls();
+    },
+  );
   it("refuses settings without a connection before any write or audit", async () => {
     mocks.prisma.providerConnection.findFirst.mockResolvedValue(null);
     expect((await request("PATCH", "settings", { budget_mode: "off" })).status).toBe(404);
@@ -114,6 +177,8 @@ describe("stored Page indexing REST and MCP", () => {
     expect(readPropertyQuota).toHaveBeenCalledWith(
       propertyQuotaKey("https://example.com/blog/"),
       expect.any(Date),
+      // The settings read now threads its database client (the caller's transaction or prisma).
+      expect.anything(),
     );
     noGoogleCalls();
   });

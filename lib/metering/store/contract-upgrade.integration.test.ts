@@ -52,9 +52,9 @@ test("separate clients persist source/tag alert crossings and replay them after 
       await f.store.reserve({ ...firstInput, operationId: crypto.randomUUID(), source: "api" }),
     ).toMatchObject({ outcome: "reserved", warnings: [], alerts: [] });
     const [row] = await transactions(f.client(), f.schema, f.counters).read((sql) =>
-      sql.query<{ n: bigint }>(Prisma.sql`SELECT count(*) AS n FROM metering_alert`),
+      sql.query<{ n: string }>(Prisma.sql`SELECT count(*) AS n FROM metering_alert`),
     );
-    expect(row?.n).toBe(1n);
+    expect(row?.n).toBe("1");
   } finally {
     await client.$disconnect();
     await f.close();

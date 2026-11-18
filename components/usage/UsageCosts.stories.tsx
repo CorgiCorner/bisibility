@@ -1,31 +1,35 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { costCatalog } from "@/lib/cost-items/catalog";
 import { emptyCostForm } from "@/lib/cost-items/form-state";
 import type { CostFormValues } from "@/lib/cost-items/input";
 import type { UsageCostsView } from "@/lib/cost-items/view";
 import costs from "@/messages/core/en/project-usage-costs.json";
 import shared from "@/messages/core/en/shared.json";
+import esCosts from "@/messages/core/es-ES/project-usage-costs.json";
+import esShared from "@/messages/core/es-ES/shared.json";
+import jaCosts from "@/messages/core/ja/project-usage-costs.json";
+import jaShared from "@/messages/core/ja/shared.json";
+import plCosts from "@/messages/core/pl/project-usage-costs.json";
+import plShared from "@/messages/core/pl/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 import { CostDrawer } from "./CostDrawer";
 import { UsageCosts } from "./UsageCosts";
 
-const messages = mergeMessageCatalogs(shared, costs);
+const catalogs = {
+  en: mergeMessageCatalogs(shared, costs),
+  pl: mergeMessageCatalogs(plShared, plCosts),
+  "es-ES": mergeMessageCatalogs(esShared, esCosts),
+  ja: mergeMessageCatalogs(jaShared, jaCosts),
+};
 const idle = async () => {};
 const projectId = "prj_storycurrent000000000";
 const otherId = "prj_storyother00000000000";
 
 const view: UsageCostsView = {
   canEdit: true,
-  catalog: [
-    {
-      key: "ahrefs",
-      kind: "seo_tool",
-      logoDomain: "ahrefs.com",
-      name: "Ahrefs",
-      plans: ["Lite", "Standard"],
-    },
-  ],
+  catalog: costCatalog(),
   month: "2026-11",
   projectPublicId: projectId,
   projects: [
@@ -56,7 +60,7 @@ const view: UsageCostsView = {
       startedOn: "2026-01-01",
     },
   ],
-  suggestHref: "/roadmap",
+  suggestHref: "mailto:contact@bisibility.com?subject=Tool%20suggestion",
   tiles: {
     custom: [],
     provider: [{ currency: "USD", minor: 125 }],
@@ -66,9 +70,12 @@ const view: UsageCostsView = {
   today: "2026-11-10",
 };
 
-function Frame({ children }: Readonly<{ children: ReactNode }>) {
+function Frame({
+  children,
+  locale,
+}: Readonly<{ children: ReactNode; locale: keyof typeof catalogs }>) {
   return (
-    <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+    <FeatureMessagesProvider locale={locale} messages={catalogs[locale]} timeZone="UTC">
       <div className="bg-bg p-6">{children}</div>
     </FeatureMessagesProvider>
   );
@@ -77,11 +84,16 @@ function Frame({ children }: Readonly<{ children: ReactNode }>) {
 const meta = {
   component: UsageCosts,
   decorators: [
-    (Story) => (
-      <Frame>
-        <Story />
-      </Frame>
-    ),
+    (Story, context) => {
+      const requested = context.globals.locale;
+      const locale =
+        requested === "pl" || requested === "es-ES" || requested === "ja" ? requested : "en";
+      return (
+        <Frame locale={locale}>
+          <Story />
+        </Frame>
+      );
+    },
   ],
   title: "Usage/Costs",
 } satisfies Meta<typeof UsageCosts>;
@@ -111,7 +123,6 @@ function drawer(initial: CostFormValues): Story {
         onSubmit={idle}
         open
         projectPublicId={projectId}
-        suggestHref="/roadmap"
       />
     ),
   };

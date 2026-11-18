@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useTranslations } from "next-intl";
@@ -16,6 +17,7 @@ export type MarketChipsProps = {
   markets: readonly MarketChip[];
   onChange: (selected: string[]) => void;
   onNew?: () => void;
+  newActionSize?: "input";
   selected: readonly string[];
 };
 
@@ -24,6 +26,7 @@ export function MarketChips({
   markets,
   onChange,
   onNew,
+  newActionSize,
   selected,
 }: Readonly<MarketChipsProps>) {
   const t = useTranslations("shared.markets");
@@ -58,13 +61,26 @@ export function MarketChips({
           );
         })}
       {capability === "selection" && onNew ? (
-        <button
-          className="inline-flex min-h-[30px] items-center gap-1 rounded-full border border-dashed border-border px-2.5 text-[12px] text-fg-muted"
-          onClick={onNew}
-          type="button"
-        >
-          <Plus aria-hidden size={11} weight="regular" /> {t("newMarket")}
-        </button>
+        newActionSize ? (
+          <Button
+            className="border-dashed"
+            onClick={onNew}
+            size={newActionSize}
+            startIcon={<Plus aria-hidden size={11} weight="regular" />}
+            type="button"
+            variant="secondary"
+          >
+            {t("newMarket")}
+          </Button>
+        ) : (
+          <button
+            className="inline-flex min-h-[30px] items-center gap-1 rounded-full border border-dashed border-border px-2.5 text-[12px] text-fg-muted"
+            onClick={onNew}
+            type="button"
+          >
+            <Plus aria-hidden size={11} weight="regular" /> {t("newMarket")}
+          </button>
+        )
       ) : null}
     </section>
   );

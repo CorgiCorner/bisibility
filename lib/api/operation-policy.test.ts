@@ -30,6 +30,10 @@ function readOnlyTrackingPost(method: string, path: string[]) {
       path[3] === "runs" &&
       path[4] === "preview" &&
       path.length === 5) ||
+      (path[2] === "model-playground" &&
+        path[3] === "runs" &&
+        path[4] === "estimate" &&
+        path.length === 5) ||
       (path[2] === "prompt-research" &&
         path[3] === "suggestions" &&
         (path.length === 4 || (path[4] === "preview" && path.length === 5))))
@@ -76,7 +80,8 @@ function legacyProjectAccess(method: string, path: string[]): ProjectAccess {
     readOnlyTrackingPost(method, path) ||
     (method === "POST" &&
       path[0] === "projects" &&
-      ["keyword-matches", "keyword-metrics"].includes(path[2]))
+      (["keyword-matches", "keyword-metrics"].includes(path[2]) ||
+        (path[2] === "schedules" && path[3] === "preview")))
     ? "read"
     : "write";
 }
@@ -85,7 +90,10 @@ function documentedOperations(): DocumentedOperation[] {
   const rows: DocumentedOperation[] = [];
   for (const [path, methods] of Object.entries(getOpenApiDocument().paths)) {
     for (const [method, candidate] of Object.entries(methods)) {
-      const operation = candidate as { operationId?: string; security?: object[] };
+      const operation = candidate as {
+        operationId?: string;
+        security?: object[];
+      };
       if (!operation.operationId || !usesApiCredential(operation)) continue;
       const upperMethod = method.toUpperCase();
       const segments = pathSegments(path);
@@ -116,7 +124,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(156);
+    expect(before).toHaveLength(166);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -161,7 +169,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 20, read: 67, write: 69 });
+    expect(counts).toEqual({ admin: 20, read: 72, write: 74 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {
@@ -222,7 +230,10 @@ describe("operation capabilities mirror the app authorization table", () => {
   it("gates notification preferences at the member tier and escalates in the handler", () => {
     const capability = operationPolicy.updateNotificationPreferences.capability;
 
-    expect(capability).toEqual({ action: "update", resourceType: "notification_preference" });
+    expect(capability).toEqual({
+      action: "update",
+      resourceType: "notification_preference",
+    });
     expect(requiredRoleFor("update", "notification_preference")).toBe("member");
   });
 

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AsyncLocalStorage } from "node:async_hooks";
 import { auditTargetPolicy } from "@/lib/audit/target-policy";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId, type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id-resources";
@@ -37,6 +38,14 @@ export type WriteAuditFailureInput = Omit<WriteAuditInput, "status"> & {
   statusReason: string;
 };
 export type AuditClient = Pick<PrismaRuntime.TransactionClient, "auditLog">;
+
+type ProjectKeyAudit = { projectId: string; creatorId: string; credentialId: string };
+const projectKeyAudit = new AsyncLocalStorage<ProjectKeyAudit>();
+
+/** Attribute nested mutation audits to the authenticated key while services check the creator. */
+export function withProjectKeyAudit<T>(attribution: ProjectKeyAudit, run: () => Promise<T>) {
+  return projectKeyAudit.run(attribution, run);
+}
 
 function jsonKeywordId(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -112,7 +121,17 @@ export async function writeAudit(
   validateAuditTarget({ after, targetId, targetType });
   const policy = auditPayloadPolicy(action);
   const declaredBefore = sanitizeDeclaredAuditPayload(before, policy?.before);
-  const declaredAfter = sanitizeDeclaredAuditPayload(after, policy?.after);
+  const payload = sanitizeDeclaredAuditPayload(after, policy?.after);
+  const key = projectKeyAudit.getStore();
+  const fromKey =
+    key && key.projectId === projectId && (actorId === key.creatorId || actorId === null);
+  const declaredAfter = fromKey
+    ? {
+        ...(payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {}),
+        credentialKind: "project_key",
+        credentialId: key.credentialId,
+      }
+    : payload;
   const sanitizedBefore = declaredBefore === null ? PrismaRuntime.JsonNull : declaredBefore;
   const sanitizedAfter = declaredAfter === null ? PrismaRuntime.JsonNull : declaredAfter;
   const context = await resolveRequestContext(requestContext);
@@ -120,7 +139,7 @@ export async function writeAudit(
   return client.auditLog.create({
     data: {
       action,
-      actorId,
+      actorId: fromKey ? null : actorId,
       after: sanitizedAfter,
       appVersion: context.appVersion,
       before: sanitizedBefore,

@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { liveApiKeyScopes } from "@/lib/api/key-creator";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { isScheduledFrequency } from "@/lib/rank-check/schedule-frequency";
 import { hasAsciiControlCharacters } from "@/lib/validation/control-characters";
@@ -58,13 +59,14 @@ async function assertExecutionPrincipal(
     await tx.$queryRaw`SELECT id FROM api_keys WHERE id=${execution.credentialId} FOR SHARE`;
     const key = await tx.apiKey.findFirst({
       where: { id: execution.credentialId, projectId },
-      select: { revokedAt: true, expiresAt: true, scopes: true },
+      select: { revokedAt: true, expiresAt: true, scopes: true, createdById: true },
     });
+    const scopes = await liveApiKeyScopes(tx, key && { ...key, projectId });
     if (
       !key ||
       key.revokedAt ||
       (key.expiresAt && key.expiresAt <= new Date()) ||
-      !key.scopes.some((scope) => scope === "write" || scope === "admin")
+      !scopes?.some((scope) => scope === "write" || scope === "admin")
     )
       throw new DefinitionUnavailableError();
     return;

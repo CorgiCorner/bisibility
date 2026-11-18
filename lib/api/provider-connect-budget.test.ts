@@ -1,4 +1,5 @@
 import type { StoredProviderAllocation } from "@/lib/provider-allocations/types";
+import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,8 +7,11 @@ const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   verify: vi.fn(),
   saveBudget: vi.fn(),
+  storeSaveBudget: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
+    providerConnectionRate: { upsert: vi.fn() },
     $transaction: vi.fn(),
     project: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     providerConnection: {
@@ -23,6 +27,10 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/metering/spending-limit-store", () => ({
   putSpendingBudget: mocks.saveBudget,
   readSpendingBudgets: async () => [],
+}));
+vi.mock("@/lib/metering/store/budgets", async (original) => ({
+  ...(await original()),
+  saveBudget: mocks.storeSaveBudget,
 }));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: () => ({}),
@@ -110,6 +118,55 @@ beforeEach(() => {
 });
 
 describe("starting provider budgets", () => {
+  it.each(["openai", "anthropic", "openrouter", "vercel_ai_gateway"] as const)(
+    "%s initializes only unlimited own-key scaffolding",
+    async (providerId) => {
+      mocks.verify.mockResolvedValue({ ok: true });
+      await connectProviderConnection(
+        { projectId: input.projectId, providerId, enabled: true, secret: "fixture-key" },
+        context,
+      );
+      const budgets = mocks.saveBudget.mock.calls.map(([, budget]) => budget);
+      expect(budgets).toHaveLength(2);
+      expect(budgets.map((budget) => budget.surface)).toEqual(["app", "programmatic"]);
+      for (const budget of budgets)
+        expect(budget).toMatchObject({
+          id: expect.stringMatching(/^own-connection:/),
+          scope: { kind: "tag", tag: ownAllocationTag(providerId, providerId) },
+          unit: "cents",
+          limit: null,
+        });
+      expect(mocks.prisma.project.update).not.toHaveBeenCalled();
+      expect(mocks.prisma.project.updateMany).not.toHaveBeenCalled();
+      vi.clearAllMocks();
+      await connectProviderConnection(
+        { projectId: input.projectId, providerId, enabled: true, secret: "fixture-key" },
+        context,
+      );
+      expect(mocks.saveBudget).not.toHaveBeenCalled();
+      expect(mocks.storeSaveBudget).not.toHaveBeenCalled();
+      expect(mocks.prisma.$executeRaw).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerConnectionRate.upsert).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledOnce();
+      expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerConnection.updateMany).not.toHaveBeenCalled();
+      expect(mocks.prisma.project.update).not.toHaveBeenCalled();
+      expect(mocks.prisma.project.updateMany).not.toHaveBeenCalled();
+      expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(3);
+      for (const [query] of mocks.prisma.$queryRaw.mock.calls)
+        expect(query.join("")).toMatch(/^SELECT /);
+      expect(mocks.audit).toHaveBeenCalledOnce();
+      expect(mocks.audit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: "provider.update", actorId: context.actorId }),
+        mocks.prisma,
+      );
+      expect(
+        mocks.prisma.$queryRaw.mock.calls.some(([query]) =>
+          query.join("").includes("metering_paid_attempt_context"),
+        ),
+      ).toBe(true);
+    },
+  );
   it("seeds whole cents from one account verification and cannot be overwritten by legacy backfill", async () => {
     const result = await connectProviderConnection(input, context);
     expect(mocks.saveBudget).toHaveBeenCalledWith(

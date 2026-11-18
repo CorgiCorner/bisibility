@@ -233,6 +233,126 @@
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openai",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openai.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenAI",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "anthropic",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "anthropic.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Anthropic",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openrouter",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openrouter.ai",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenRouter",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "vercel_ai_gateway",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "vercel.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Vercel AI Gateway",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
           }
         ],
         "meta": {
@@ -475,6 +595,126 @@
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openai",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openai.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenAI",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "anthropic",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "anthropic.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Anthropic",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openrouter",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openrouter.ai",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenRouter",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "vercel_ai_gateway",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "vercel.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Vercel AI Gateway",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
           }
         ],
         "meta": {
@@ -721,6 +961,126 @@
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openai",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openai.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenAI",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "anthropic",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "anthropic.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Anthropic",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openrouter",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openrouter.ai",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenRouter",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "vercel_ai_gateway",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "vercel.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Vercel AI Gateway",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
           }
         ],
         "meta": {
