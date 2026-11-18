@@ -147,7 +147,10 @@ function useColumns({
       minSize: 160,
     },
     {
-      cell: ({ row }) => t(`kinds.${row.original.itemKind}`),
+      cell: ({ row }) =>
+        row.original.itemKind === "custom" && row.original.customType
+          ? row.original.customType
+          : t(`kinds.${row.original.itemKind}`),
       header: t("card.columns.type"),
       id: "type",
     },

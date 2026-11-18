@@ -16,9 +16,12 @@
       "analyticsTitle": "アナリティクスソース",
       "analyticsDescription": "Google Search Console や Google Analytics 4 などの自社データソースを接続すると、トラフィックとクエリのパフォーマンス情報を追加できます。アナリティクスソースは順位の判定には使用されません。",
       "enrichmentTitle": "SEOデータ拡充",
-      "enrichmentDescription": "毎日1回の無料のDomain Rating測定でドメインの評価を追跡します。"
+      "enrichmentDescription": "毎日1回の無料のDomain Rating測定でドメインの評価を追跡します。",
+      "modelTitle": "モデルプロバイダー",
+      "modelDescription": "自分のモデルプロバイダーのキーを接続します。料金はプロバイダーから直接請求されます。"
     },
     "drawer": {
+      "ahrefsSyncSchedule": "ドメイン評価は1日1回チェックされます。スケジュール画面で一時停止できます。",
       "oauthTitleCloud": "Google で読み取り専用としてサインインします。トークンはワークスペース内に暗号化して保存されます。",
       "oauthTitleSelfHost": "Google で読み取り専用としてサインインします。トークンはインスタンス内に暗号化して保存されます。",
       "keyTitle": "ご自身のプロバイダーアカウントを使用します。認証情報はインスタンス内に暗号化して保存されます。",
@@ -68,6 +71,7 @@
       "connectionSavedTraffic": "{provider}への接続を保存しました。トラフィック同期がキューに登録されました。"
     },
     "oauth": {
+      "gscSyncSchedule": "Search Console のインポートとページのインデックス登録状況の確認は、有効な場合に毎日実行されます。スケジュール画面で一時停止できます。",
       "loadPropertiesError": "プロパティを読み込めませんでした。再試行するか、アカウントを再接続してください。",
       "propertySelectionUnavailable": "プロパティの選択は利用できません。",
       "reconnectToChangeProperty": "プロパティを変更するには Google アカウントを再接続してください。",

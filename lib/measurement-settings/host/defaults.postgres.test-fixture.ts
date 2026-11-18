@@ -37,6 +37,8 @@ export async function reviewedDefaultsFixture() {
         prefix: "fixture",
         hashedKey: randomUUID(),
         scopes: ["write"],
+        // The member writer creates the key; the owner holds only a viewer membership here.
+        createdById: f.project.writer.id,
       },
     });
     const keyContext: DefaultsHostContext = {

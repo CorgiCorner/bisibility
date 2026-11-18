@@ -9,6 +9,7 @@ import { nextPacificMidnight } from "@/lib/providers/pacific-reset";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import { syncPauseSelection } from "@/lib/schedules/sync-pauses";
 import { effectiveInspectionMode } from "./budget-mode";
 import { orderInspectionCandidates, refreshInspectionCandidates } from "./candidates";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "./constants";
@@ -42,7 +43,7 @@ type Connection = { credentials: ProviderCredentials; id: string; property: stri
 export type SyncPresenceForProjectResult =
   | {
       projectId: string;
-      reason: "disabled" | "no_connection" | "no_urls" | "project_not_found";
+      reason: "disabled" | "no_connection" | "no_urls" | "project_not_found" | "user_paused";
       status: "skipped";
     }
   | {
@@ -99,10 +100,13 @@ export async function syncPresenceForProject(
     select: {
       defaults: { select: { inspectionDailyLimit: true, inspectionBudgetMode: true } },
       id: true,
+      syncPauses: syncPauseSelection("page_indexing"),
     },
     where: { OR: [{ id: projectId }, { publicId: projectId }] },
   });
   if (!project) return { projectId, reason: "project_not_found", status: "skipped" };
+  if (project.syncPauses.length > 0)
+    return { projectId: project.id, reason: "user_paused", status: "skipped" };
   const dailyLimit = project.defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT;
   const mode = effectiveInspectionMode(project.defaults?.inspectionBudgetMode);
   const connection = await gscConnection(project.id);

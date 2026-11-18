@@ -65,6 +65,7 @@ beforeEach(() => {
   mocks.row = null;
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: {
       id: "key_1",
       name: "Test",

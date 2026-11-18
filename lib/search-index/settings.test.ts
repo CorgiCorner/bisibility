@@ -49,9 +49,11 @@ describe("Cloud Page indexing modes", () => {
       budgetMode: "available_quota",
       availableModes: ["off", "fixed", "available_quota"],
     });
+    // The quota is read through the same client as the settings (the caller's transaction).
     expect(mocks.quota).toHaveBeenCalledWith(
       propertyQuotaKey("sc-domain:example.com"),
       expect.any(Date),
+      expect.objectContaining({ $transaction: expect.any(Function) }),
     );
   });
   it("accepts available quota on Cloud and writes the audited setting", async () => {

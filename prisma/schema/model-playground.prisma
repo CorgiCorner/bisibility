@@ -1,0 +1,197 @@
+// Native own-key snapshots and attempt custody, independent of recurring tracking.
+// Retained consent and accounting identity survive a disconnected connection.
+model ModelPlaygroundPaymentQuote {
+  id String @id
+  projectId String @map("project_id")
+  actorId String @map("actor_id")
+  principal String
+  contentHash String @map("content_hash")
+  snapshot Json
+  createdAt DateTime @map("created_at") @db.Timestamptz
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz
+  rejection String?
+  confirmationKey String? @map("confirmation_key")
+  replayOf String? @map("replay_of")
+  original ModelPlaygroundPaymentQuote? @relation("ModelQuoteReplay", fields: [replayOf], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "model_playground_payment_quotes_replay_of_fkey")
+  replays ModelPlaygroundPaymentQuote[] @relation("ModelQuoteReplay")
+  attempts ModelPlaygroundPaymentAttempt[] @relation("ModelAttemptQuote")
+  rootAttempts ModelPlaygroundPaymentAttempt[] @relation("ModelAttemptRoot")
+  consumedConfirmations ModelPlaygroundPaymentConfirmation[]
+  contentSlots ModelPlaygroundPaymentContent[]
+  // The confirmation uniqueness index is SQL-owned.
+
+  @@index([projectId, actorId, contentHash, createdAt], map: "model_playground_payment_quotes_content_idx")
+  @@map("model_playground_payment_quotes")
+}
+
+model ModelPlaygroundPaymentAttempt {
+  id String @id
+  quoteId String @map("quote_id")
+  columnId String @map("column_id")
+  namespace String
+  principal String
+  binding Json
+  // Finite only. SQL rejects infinity so a driver cannot surface a non-date.
+  dispatchedAt DateTime? @map("dispatched_at") @db.Timestamptz
+  observedAt DateTime? @map("observed_at") @db.Timestamptz
+  refusalReason String? @map("refusal_reason")
+  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz
+  supersededAt DateTime? @map("superseded_at") @db.Timestamptz
+  rootQuoteId String? @map("root_quote_id")
+  rootColumnId String? @map("root_column_id")
+  root ModelPlaygroundPaymentQuote? @relation("ModelAttemptRoot", fields: [rootQuoteId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "model_playground_payment_attempts_root_quote_id_fkey")
+  quote ModelPlaygroundPaymentQuote @relation("ModelAttemptQuote", fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  operation MeteringOperation @relation(fields: [namespace, id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "model_playground_payment_attempts_namespace_id_fkey")
+  observations ModelPlaygroundPaymentObservation[]
+  // The partial active and current-root-column uniqueness indexes are SQL-owned.
+
+  @@unique([quoteId, columnId], map: "model_playground_payment_attempts_quote_id_column_id_key")
+  @@map("model_playground_payment_attempts")
+}
+
+model ModelPlaygroundPaymentConfirmation {
+  nonce String @id
+  projectId String @map("project_id")
+  actorId String @map("actor_id")
+  contentHash String @map("content_hash")
+  attemptIds Json @map("attempt_ids")
+  createdAt DateTime @map("created_at") @db.Timestamptz
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz
+  consumedRootQuoteId String? @map("consumed_root_quote_id")
+  root ModelPlaygroundPaymentQuote? @relation(fields: [consumedRootQuoteId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "model_playground_confirmation_root_fkey")
+
+  @@map("model_playground_payment_confirmations")
+}
+
+model ModelPlaygroundPaymentContent {
+  projectId String @map("project_id")
+  actorId String @map("actor_id")
+  contentHash String @map("content_hash")
+  rootQuoteId String @map("root_quote_id")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  root ModelPlaygroundPaymentQuote @relation(fields: [rootQuoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([projectId, actorId, contentHash])
+  @@map("model_playground_payment_content")
+}
+
+model ModelPlaygroundPaymentObservation {
+  id String @id
+  attemptId String @map("attempt_id")
+  response Json?
+  createdAt DateTime @map("created_at") @db.Timestamptz
+  accountingStatus String @default("pending") @map("accounting_status")
+  accountingReason String? @map("accounting_reason")
+  attempt ModelPlaygroundPaymentAttempt @relation(fields: [attemptId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("model_playground_payment_observations")
+}
+
+model ModelPlaygroundPreview {
+  id String @id @default(uuid())
+  projectId String
+  actorId String
+  snapshot Json
+  configHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  runs ModelPlaygroundRun[]
+
+  @@unique([projectId, id])
+  @@index([projectId, createdAt])
+  @@map("model_playground_previews")
+}
+
+model ModelPlaygroundRun {
+  id String @id @default(uuid())
+  projectId String
+  actorId String
+  requestId String
+  previewId String
+  configHash String
+  snapshot Json
+  reportId String? @unique
+  // SQL constrains custody; saved_stale retains its link and failure. Dismissed cannot revive.
+  reportState String @default("none")
+  // Storage failures back off from this UTC timestamp; too_large/conflict are sweep-terminal.
+  reportAttemptedAt DateTime? @db.Timestamp(3)
+  reportFailure String?
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  preview ModelPlaygroundPreview @relation(fields: [projectId, previewId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction)
+  // SQL limits SET NULL to reportId, preserving the required projectId.
+  report AgentReport? @relation(fields: [projectId, reportId], references: [projectId, id], onDelete: SetNull, onUpdate: NoAction)
+  columns ModelPlaygroundColumn[]
+  preset ModelPlaygroundPreset?
+  workerRequestedAt DateTime?
+  workerProbeAt DateTime?
+  terminalAt DateTime?
+  terminalRevision Int @default(0)
+  terminalHookDeliveredRevision Int @default(0)
+  terminalHookAttemptAt DateTime? @db.Timestamptz(3)
+  terminalHookNextAt DateTime? @db.Timestamptz(3)
+  terminalHookAttempts Int @default(0)
+  // Last delivered attempt count. Failures are attempts minus this base, at most five.
+  terminalHookAttemptBase Int @default(0)
+  terminalHookStoppedAt DateTime? @db.Timestamptz(3)
+  // Give-up applies to this revision. A newer revision may be claimed again.
+  terminalHookStoppedRevision Int @default(0)
+  // Revision stored when the attempt was claimed. A later revision bump does not change it.
+  terminalHookAttemptRevision Int @default(0)
+  workerRecoveryAttempts Int @default(0)
+  recoveryStoppedAt DateTime? @db.Timestamptz(3)
+  // The bounded pending-intent index and paired-null check are SQL-owned.
+
+  @@unique([projectId, id])
+  @@unique([projectId, requestId])
+  @@unique([projectId, reportId])
+  @@index([projectId, createdAt, id])
+  @@map("model_playground_runs")
+}
+
+model ModelPlaygroundColumn {
+  id String @id @default(uuid())
+  projectId String
+  runId String
+  columnId String
+  // Immutable public identity; the nullable relation below is live custody only.
+  connectionId String
+  liveConnectionId String?
+  liveConnectionProjectId String?
+  providerId String
+  config Json
+  operationKey String @unique
+  state String @default("queued")
+  leaseToken String?
+  leaseExpiresAt DateTime?
+  // Finite only. SQL rejects infinity so a driver cannot surface a non-date.
+  dispatchStartedAt DateTime?
+  result Json?
+  finishedAt DateTime?
+  run ModelPlaygroundRun @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  connection ProviderConnection? @relation(fields: [liveConnectionProjectId, liveConnectionId], references: [projectId, id], onDelete: SetNull, onUpdate: NoAction, map: "model_playground_columns_live_connection_fkey")
+
+  @@unique([runId, columnId])
+  @@index([liveConnectionProjectId, liveConnectionId], map: "model_playground_columns_live_connection_idx")
+  @@index([projectId, state, leaseExpiresAt])
+  @@map("model_playground_columns")
+}
+
+model ModelPlaygroundPreset {
+  id String @id @default(uuid())
+  projectId String
+  runId String @unique
+  promptId String
+  config Json
+  mode String @default("manual")
+  scheduleEnabled Boolean @default(false)
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  run ModelPlaygroundRun @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  prompt AiPrompt @relation(fields: [projectId, promptId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([projectId, promptId])
+  @@unique([projectId, runId])
+  @@map("model_playground_presets")
+}

@@ -1,0 +1,361 @@
+{
+  "captures": [
+    {
+      "body": {
+        "cost_after_cents": 0.394521,
+        "cost_before_cents": 0,
+        "requires_review": true,
+        "review_reasons": ["cost_increase", "manual_to_scheduled", "provider_route_change"],
+        "capacity": null,
+        "expected_revision": "0000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "preview_token": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0000000000000000000000000000000000000000000",
+        "window_start": "2026-07-11T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 200
+    },
+    {
+      "body": {
+        "cost_after_cents": null,
+        "cost_before_cents": 0,
+        "requires_review": true,
+        "review_reasons": ["price_unknown"],
+        "capacity": null,
+        "expected_revision": "0000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "preview_token": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0000000000000000000000000000000000000000000",
+        "window_start": "2026-07-11T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/bulk",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSchedule",
+      "path": "/projects/{project_id}/schedules",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/preview",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Keyword not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/bulk",
+        "status": 404,
+        "title": "Schedule not found",
+        "type": "https://bisibility.com/problems/schedule_not_found",
+        "code": "schedule_not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Only rank and prompt monitoring schedules can be created.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_create_unsupported",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 400,
+        "title": "Schedule creation unsupported",
+        "type": "https://bisibility.com/problems/schedule_create_unsupported",
+        "code": "schedule_create_unsupported"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSchedule",
+      "path": "/projects/{project_id}/schedules",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSchedule",
+      "path": "/projects/{project_id}/schedules",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/preview",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Schedule not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 404,
+        "title": "Schedule not found",
+        "type": "https://bisibility.com/problems/schedule_not_found",
+        "code": "schedule_not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/bulk",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 428
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 428
+    },
+    {
+      "body": {
+        "detail": "This data sync cannot be turned on or off per project yet (domain_rating).",
+        "docs_url": "https://bisibility.com/docs/api/errors#data_sync_state_only",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 400,
+        "title": "Data sync state only",
+        "type": "https://bisibility.com/problems/data_sync_state_only",
+        "code": "data_sync_state_only"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "This schedule review is stale. Preview the change again.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_stale",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/bulk",
+        "status": 409,
+        "title": "Schedule review stale",
+        "type": "https://bisibility.com/problems/schedule_review_stale",
+        "code": "schedule_review_stale",
+        "details": {
+          "reason": "preview_mismatch"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 409
+    },
+    {
+      "body": {
+        "detail": "This schedule review is stale. Preview the change again.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_stale",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/schedules/dsy_000000000000000000000000",
+        "status": 409,
+        "title": "Schedule review stale",
+        "type": "https://bisibility.com/problems/schedule_review_stale",
+        "code": "schedule_review_stale",
+        "details": {
+          "reason": "preview_mismatch"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 409
+    },
+    {
+      "body": {
+        "id": "dsy_a00000000000000000000000",
+        "kind": "domain_rating",
+        "group": "data_sync",
+        "actions": ["read"],
+        "name": "domain_rating",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "custom_cron",
+          "cron_expression": "0 * * * *",
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": null
+        },
+        "target": {
+          "type": "project",
+          "domain": "example.com"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateSchedule",
+      "path": "/projects/{project_id}/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "sch_a00000000000000000000000",
+        "kind": "rank",
+        "group": "tracking",
+        "actions": ["read"],
+        "name": "Weekly checks",
+        "state": "active",
+        "state_reason": null,
+        "last_run_at": "2026-10-20T12:00:00.000Z",
+        "last_run_status": "snapshot_saved",
+        "cadence": {
+          "frequency": "manual",
+          "cron_expression": null,
+          "timezone": "UTC",
+          "time_of_day": null,
+          "jitter_minutes": 60
+        },
+        "target": {
+          "type": "keywords"
+        },
+        "settings": {},
+        "next_run_at": null,
+        "monthly_cost_estimate_cents": null,
+        "target_summary": {},
+        "limits": {}
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSchedule",
+      "path": "/projects/{project_id}/schedules",
+      "status": 201
+    },
+    {
+      "body": {
+        "operation": "set_schedule",
+        "results": [
+          {
+            "keyword_id": "kw_a00000000000000000000000",
+            "status": "updated"
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/schedule-writes-router.test.ts"
+}

@@ -66,7 +66,7 @@ export function DialogSurface({
           data-ui-overlay
           aria-modal="true"
           data-side={side ?? "center"}
-          aria-describedby={props["aria-describedby"]}
+          aria-describedby={props["aria-describedby"] ?? contentProps["aria-describedby"]}
           className={cn(styles.panel, contentProps.className)}
           style={{
             "--enter-duration": `${duration?.enter ?? 240}ms`,

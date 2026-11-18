@@ -22,7 +22,7 @@ it("counts unscheduled keywords and requires explicit drawer selection before as
     <UnscheduledKeywordsNotice
       canEdit
       candidates={candidates}
-      schedules={[{ publicId: "sch_default", name: "Daily", enabled: true, isDefault: true }]}
+      schedules={[{ publicId: "sch_default", name: "Daily", enabled: true }]}
       projectId="prj_example"
     />,
   );
@@ -36,7 +36,7 @@ it("does not offer assignment to readers", () => {
     <UnscheduledKeywordsNotice
       canEdit={false}
       candidates={candidates}
-      schedules={[{ publicId: "sch_default", name: "Daily", enabled: true, isDefault: true }]}
+      schedules={[{ publicId: "sch_default", name: "Daily", enabled: true }]}
       projectId="prj_example"
     />,
   );
@@ -48,7 +48,7 @@ it("does not offer assignment to a paused default", () => {
     <UnscheduledKeywordsNotice
       canEdit
       candidates={candidates}
-      schedules={[{ publicId: "sch_default", name: "Daily", enabled: false, isDefault: true }]}
+      schedules={[{ publicId: "sch_default", name: "Daily", enabled: false }]}
       projectId="prj_example"
     />,
   );
@@ -64,8 +64,8 @@ it("offers another enabled schedule when the default is paused", async () => {
       candidates={candidates}
       projectId="prj_example"
       schedules={[
-        { publicId: "sch_default", name: "Paused daily", enabled: false, isDefault: true },
-        { publicId: "sch_weekly", name: "Weekly", enabled: true, isDefault: false },
+        { publicId: "sch_default", name: "Paused daily", enabled: false },
+        { publicId: "sch_weekly", name: "Weekly", enabled: true },
       ]}
     />,
   );

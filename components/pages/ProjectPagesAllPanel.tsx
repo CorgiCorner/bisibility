@@ -1,6 +1,7 @@
 "use client";
 
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import type { ProjectPagesExportAction } from "@/lib/pages/export-csv";
 import type { ActivePageSnapshot } from "@/lib/pages/snapshot-view";
 import type { ProjectPageTagOption } from "@/lib/pages/tag-view";
 import type { ProjectPageColumnSource, ProjectPagesListResult } from "@/lib/pages/types";
@@ -17,6 +18,7 @@ export function ProjectPagesAllPanel({
   canEdit,
   canWrite,
   columns,
+  exportCsv,
   list,
   narrowed,
   onCheckVitals,
@@ -39,6 +41,7 @@ export function ProjectPagesAllPanel({
   canEdit: boolean;
   canWrite: boolean;
   columns: readonly DataTableColumn<ProjectPagesTableRow>[];
+  exportCsv?: ProjectPagesExportAction;
   list: ProjectPagesListResult;
   narrowed: boolean;
   onCheckVitals: (paths: string[]) => Promise<void>;
@@ -64,6 +67,12 @@ export function ProjectPagesAllPanel({
         canWrite={canCreate}
         columns={columns}
         counts={list.counts}
+        exportCsv={exportCsv}
+        total={list.total}
+        sitemapChecked={list.sitemapChecked}
+        sitemapComplete={list.sitemapComplete}
+        sitemapReadAt={list.sitemapReadAt}
+        periodWindow={list.period}
         onFilters={onFilters}
         onNewTag={onNewTag}
         onQuery={onQuery}
@@ -96,7 +105,13 @@ export function ProjectPagesAllPanel({
           canWrite={canEdit}
           columns={columns}
           onCheckVitals={onCheckVitals}
-          empty={t("empty.filtered")}
+          empty={
+            list.sitemapFilterStatus === "sitemap_not_checked"
+              ? t("sitemapState.notCheckedHint")
+              : list.sitemapFilterStatus === "sitemap_incomplete"
+                ? t("sitemapState.freshnessHint")
+                : t("empty.filtered")
+          }
           key={`${query.page}:${query.tag ?? ""}:${query.search}`}
           list={list}
           onQuery={onQuery}

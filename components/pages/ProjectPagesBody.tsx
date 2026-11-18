@@ -2,6 +2,7 @@
 
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import type { CompareView } from "@/lib/pages/compare-model";
+import type { ProjectPagesExportAction } from "@/lib/pages/export-csv";
 import type {
   ActivePageSnapshot,
   ExistingVsNewView,
@@ -31,6 +32,7 @@ export function ProjectPagesBody({
   canEdit,
   canWrite,
   columns,
+  exportCsv,
   compare,
   comparison,
   list,
@@ -61,6 +63,7 @@ export function ProjectPagesBody({
   columns: readonly DataTableColumn<ProjectPagesTableRow>[];
   compare: CompareView | null;
   comparison: ExistingVsNewView | null;
+  exportCsv?: ProjectPagesExportAction;
   list: ProjectPagesListResult;
   narrowed: boolean;
   onCheckVitals: (paths: string[]) => Promise<void>;
@@ -140,6 +143,7 @@ export function ProjectPagesBody({
       canEdit={canEdit}
       canWrite={canWrite}
       columns={columns}
+      exportCsv={exportCsv}
       list={list}
       narrowed={narrowed}
       onCheckVitals={onCheckVitals}

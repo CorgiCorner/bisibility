@@ -102,6 +102,7 @@ describe("current recurring first-send proof", () => {
   });
   it.each([
     { intent: { id: "paused-intent", mode: "paused" } },
+    { intent: { id: "scheduled-intent", mode: "archived" } },
     { connectionStamp: "f".repeat(64) },
     { monitor: { id: "db-monitor", version: 3 } },
     { definition: { immutable: "changed" } },
@@ -124,6 +125,16 @@ describe("current recurring first-send proof", () => {
   });
   it("does not add recurring authority requirements to manual jobs", async () => {
     f.enabled.mockReturnValue(false);
+    await expect(
+      verify({ ...job, origin: "manual", recurringApprovalId: null, recurringOccurrenceKey: null }),
+    ).resolves.toBeUndefined();
+    expect(f.approval).not.toHaveBeenCalled();
+  });
+  it("still allows a manual check when the schedule intent is archived", async () => {
+    f.current.mockResolvedValue({
+      ...current,
+      intent: { id: "scheduled-intent", mode: "archived" },
+    });
     await expect(
       verify({ ...job, origin: "manual", recurringApprovalId: null, recurringOccurrenceKey: null }),
     ).resolves.toBeUndefined();

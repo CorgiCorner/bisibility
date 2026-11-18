@@ -459,3 +459,22 @@ describe("required provider preflight", () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 });
+
+it("does not consume provider send counters or daily budgets on a notification skip", async () => {
+  vi.clearAllMocks();
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  vi.stubEnv("EMAIL_PROVIDER", "resend");
+  vi.stubEnv("RESEND_API_KEY", "test-key");
+  const fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    expect(await sendEmail({ ...input, purpose: "weekly-digest" })).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(recordResendSendMock).not.toHaveBeenCalled();
+    expect(reserveBudgetMock).not.toHaveBeenCalled();
+    expect(isSuppressedMock).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  }
+});

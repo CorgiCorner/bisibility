@@ -13,6 +13,7 @@ vi.mock("./service", () => ({
   previewRecurringFor: f.preview,
   approveRecurringFor: f.approve,
   pauseRecurringFor: f.pause,
+  restoreRecurringFor: vi.fn(),
 }));
 
 import {

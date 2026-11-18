@@ -1,4 +1,5 @@
 import { closeProjectIncidentsSilently } from "@/lib/notifications/close-project-incidents";
+import { projectScopes } from "./context";
 import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
@@ -111,7 +112,7 @@ async function projectReadiness(ctx: ApiContext) {
         status: connection.status,
       }),
     ),
-    tokenScope: tierFromScopes(ctx.auth.apiKey.scopes) === "read" ? "read" : "write",
+    tokenScope: tierFromScopes(projectScopes(ctx.auth)) === "read" ? "read" : "write",
     writeMode: ctx.auth.project.writeMode ?? "active",
   });
 }

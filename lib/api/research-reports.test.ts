@@ -64,6 +64,7 @@ function authenticate(scopes: string[]) {
   mocks.auth.mockResolvedValue({
     apiKey: { id: "key_1", projectId: project.id, scopes },
     kind: "project_key",
+    creatorRole: "owner",
     project,
   });
 }

@@ -3,6 +3,8 @@ import type { AiEngine } from "./engines";
 import { boundAiRow } from "./row-budget";
 import type { AiResearchRow } from "./types";
 
+export const LEGACY_ANSWER_MAX_LENGTH = 4000;
+
 const citation = z.object({ url: z.string(), title: z.string().nullish() }).passthrough();
 const observed = z
   .object({
@@ -76,7 +78,7 @@ function row(
   });
   return boundAiRow({
     prompt: input.prompt.slice(0, 500),
-    answer: input.answer.slice(0, 4000),
+    answer: input.answer.slice(0, LEGACY_ANSWER_MAX_LENGTH),
     model: input.model.slice(0, 120),
     ...(input.engine ? { engine: input.engine } : {}),
     ...(input.requestedModel === undefined
@@ -90,7 +92,7 @@ function row(
     domainCited,
     citations,
     contentTruncated:
-      input.answer.length > 4000 ||
+      input.answer.length > LEGACY_ANSWER_MAX_LENGTH ||
       input.prompt.length > 500 ||
       input.citations.length > citations.length,
   });

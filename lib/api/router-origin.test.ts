@@ -35,6 +35,7 @@ function projectKeyAuth() {
       scopes: ["read", "write", "admin"],
     },
     kind: "project_key" as const,
+    creatorRole: "owner" as const,
     project: {
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       domain: "example.com",

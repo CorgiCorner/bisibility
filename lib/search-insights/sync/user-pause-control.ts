@@ -3,6 +3,7 @@ import "server-only";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { readGscCredentials } from "@/lib/providers/analytics/gsc-credentials";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { formatSyncPaused, formatSyncResumed, logSyncInfo } from "./activity-log";
@@ -42,6 +43,20 @@ function auditSnapshot(row: SearchImportRow) {
   };
 }
 
+function clearedPause(row: Pick<SearchImportRow, "cursorDate" | "earliestTargetDate">) {
+  return {
+    lastError: null,
+    lastErrorClass: null,
+    pauseStartedAt: null,
+    pausedById: null,
+    pausedReason: null,
+    state:
+      row.cursorDate && row.earliestTargetDate && row.cursorDate < row.earliestTargetDate
+        ? "completed"
+        : "queued",
+  };
+}
+
 function transitionData(row: SearchImportRow, input: ExactSearchImportTransition) {
   if (input.transition === "pause") {
     if (row.pausedReason !== null || (row.state !== "queued" && row.state !== "running"))
@@ -55,30 +70,45 @@ function transitionData(row: SearchImportRow, input: ExactSearchImportTransition
   }
   if (input.transition === "resume") {
     if (row.pausedReason !== USER_PAUSE_REASON || row.state !== "paused") return null;
-    return {
-      lastError: null,
-      lastErrorClass: null,
-      pauseStartedAt: null,
-      pausedById: null,
-      pausedReason: null,
-      state:
-        row.cursorDate && row.earliestTargetDate && row.cursorDate < row.earliestTargetDate
-          ? "completed"
-          : "queued",
-    };
+    return clearedPause(row);
   }
   if (row.state !== "failed" && row.pausedReason !== "error") return null;
-  return {
-    lastError: null,
-    lastErrorClass: null,
-    pauseStartedAt: null,
-    pausedById: null,
-    pausedReason: null,
-    state:
-      row.cursorDate && row.earliestTargetDate && row.cursorDate < row.earliestTargetDate
-        ? "completed"
-        : "queued",
-  };
+  return clearedPause(row);
+}
+
+const userPausedImports = (projectId: string) =>
+  ({ pausedReason: USER_PAUSE_REASON, projectId, source: SEARCH_INSIGHTS_SOURCE }) as const;
+
+/** Counts the property-level user pauses that also stop a project's Search Console import. */
+export async function countUserPausedSearchImports(
+  db: Pick<Prisma.TransactionClient, "searchAnalyticsImport">,
+  projectId: string,
+) {
+  return db.searchAnalyticsImport.count({ where: userPausedImports(projectId) });
+}
+
+/**
+ * Clears every property-level user pause of a project's Search Console imports inside the
+ * caller's transaction. The Schedules resume uses it so one switch really restarts the import;
+ * the caller writes the audit row for the whole change.
+ */
+export async function resumeUserPausedSearchImports(
+  tx: Pick<Prisma.TransactionClient, "searchAnalyticsImport">,
+  projectId: string,
+) {
+  const rows = await tx.searchAnalyticsImport.findMany({
+    select: { cursorDate: true, earliestTargetDate: true, id: true },
+    where: userPausedImports(projectId),
+  });
+  let resumed = 0;
+  for (const row of rows) {
+    const updated = await tx.searchAnalyticsImport.updateMany({
+      data: clearedPause(row),
+      where: { id: row.id, ...userPausedImports(projectId) },
+    });
+    resumed += updated.count;
+  }
+  return resumed;
 }
 
 function activeProperty(

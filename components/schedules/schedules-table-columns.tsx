@@ -86,11 +86,6 @@ export function schedulesTableColumns({
                 </PillBadge>
               ) : null}
               {schedule.archivedAt ? <PillBadge size="xs">{t("archived")}</PillBadge> : null}
-              {schedule.scheduleKind === "rank" && schedule.isDefault ? (
-                <PillBadge size="xs" title={t("list.defaultHint")}>
-                  {t("default")}
-                </PillBadge>
-              ) : null}
             </div>
             {state ? (
               <span className={`mt-0.5 block text-[11px] ${states[state].tone}`}>

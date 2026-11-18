@@ -82,6 +82,17 @@ vi.mock("@/lib/challenge-report/feature", () => ({
 vi.mock("@/lib/actions/instance-features", () => ({
   setProjectSeoChallengeEnabled: vi.fn(),
 }));
+vi.mock("@/lib/actions/assistant-kill-switch", () => ({
+  setAssistantKillSwitch: vi.fn(),
+  setAssistantGuard: vi.fn(),
+}));
+vi.mock("@/lib/assistant/funding-extension", () => ({ assistantCreditsEnabled: () => false }));
+vi.mock("@/lib/assistant/kill-switch", () => ({ readAssistantKillSwitch: async () => "off" }));
+vi.mock("@/lib/assistant/guard-config", async (original) => ({
+  ...(await original<typeof import("@/lib/assistant/guard-config")>()),
+  readAssistantGuardConfig: async () =>
+    (await import("@/lib/assistant/guard-config")).ASSISTANT_GUARD_DEFAULTS,
+}));
 vi.mock("@/lib/actions/instance-mail-settings", () => ({
   saveInstanceMailSettings: realPage.save,
   clearInstanceMailSettings: realPage.clear,

@@ -176,6 +176,7 @@ export type PlaygroundColumnRequest = { id: string; label: string; model: string
 
 export type PlaygroundColumn = PlaygroundColumnRequest & {
   answer: string | null;
+  contentTruncated?: boolean;
   citations: PlaygroundCitation[];
   failed: boolean;
   observedAt: string | null;
@@ -190,6 +191,7 @@ export function playgroundColumns(
     engine?: string;
     model: string;
     observedAt: string | null;
+    contentTruncated?: boolean;
   }[],
   unfinished: boolean,
 ): PlaygroundColumn[] {
@@ -201,6 +203,7 @@ export function playgroundColumns(
     return {
       ...column,
       answer: row.answer,
+      contentTruncated: row.contentTruncated ?? false,
       citations: [...row.citations],
       failed: false,
       model: column.model ?? row.model,

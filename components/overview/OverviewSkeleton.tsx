@@ -46,22 +46,21 @@ export function OverviewSkeleton() {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4.5">
-        <section
-          data-testid="overview-kpis"
-          className="grid grid-cols-2 gap-4 lg:grid-cols-[repeat(4,minmax(0,1fr))]"
-        >
-          {kpiKeys.map((key) => (
-            <div
-              className="min-w-0 rounded-card border border-border bg-bg-elev px-4.5 py-4"
-              key={key}
-            >
-              <Bar className="h-2.5 w-[68px]" />
-              <div className="mt-[9px] flex items-end gap-3">
-                <Bar className="h-7 w-[84px]" />
-                <Bar className="h-3 w-9" />
+        <section className="@container" data-testid="overview-kpis">
+          <div className="grid grid-cols-1 gap-4 @[360px]:grid-cols-2 @[720px]:grid-cols-4">
+            {kpiKeys.map((key) => (
+              <div
+                className="min-w-0 rounded-card border border-border bg-bg-elev px-4.5 py-4"
+                key={key}
+              >
+                <Bar className="h-2.5 w-[68px]" />
+                <div className="mt-[9px] flex items-end gap-3">
+                  <Bar className="h-7 w-[84px]" />
+                  <Bar className="h-3 w-9" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
 
         <div className={cn(chartCardClass, "flex min-w-0 flex-col")} data-testid="overview-trend">

@@ -4,6 +4,7 @@ import {
   trackingPaymentQuote,
 } from "@/lib/ai-tracking/payment";
 import "server-only";
+import { TrackingConsentStaleError } from "@/lib/ai-tracking/admission/errors";
 import type { PlanTrackingRunInput, SamplePlan } from "@/lib/ai-tracking/contract";
 import { payloadHash } from "@/lib/ai-tracking/identity";
 import {
@@ -112,8 +113,7 @@ export async function approveTrackingConfiguration(
   if (input.consent !== true) throw new Error("Explicit paid tracking consent is required.");
   const preview = await previewTrackingRun(projectId, input);
   for (const key of ["credentialVersion", "budgetRevision", "consentRevision"] as const)
-    if (input[key] !== preview[key])
-      throw new Error("Tracking preview changed. Review it again before launch.");
+    if (input[key] !== preview[key]) throw new TrackingConsentStaleError();
   await preflightProviderBudget({
     projectId,
     connectionId: preview.credentialConnectionId,

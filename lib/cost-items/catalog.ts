@@ -28,6 +28,13 @@ const providerPlans: Record<string, readonly string[]> = {
 /** Names and typical plan labels only. Amounts are entered by the user. */
 const EXTRA_CATALOG: readonly CostCatalogEntry[] = [
   {
+    key: "datafast",
+    kind: "analytics",
+    logoDomain: "datafa.st",
+    name: "DataFast",
+    plans: ["Starter", "Growth"],
+  },
+  {
     key: "semrush",
     kind: "seo_tool",
     logoDomain: "semrush.com",

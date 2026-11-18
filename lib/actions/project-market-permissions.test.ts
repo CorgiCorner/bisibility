@@ -193,3 +193,13 @@ describe("project market lifecycle permissions and audits", () => {
     },
   );
 });
+
+vi.mock("@/lib/schedules/review-load", async () => ({
+  loadScheduleSpend: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));
+vi.mock("@/lib/schedules/review-load-transfers", async () => ({
+  loadTransfer: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));
+vi.mock("@/lib/provider-allocations/project-lock", () => ({
+  lockProjectForProviderMutation: vi.fn(),
+}));

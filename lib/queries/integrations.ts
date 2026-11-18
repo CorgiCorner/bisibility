@@ -1,4 +1,5 @@
 import "server-only";
+import "@/lib/providers/model/server-registration";
 import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isSelfHost } from "@/lib/deployment/deployment";
@@ -16,10 +17,10 @@ import type {
   GoogleOAuthSetup,
   IntegrationCategoryData as IntegrationCategory,
   IntegrationProviderData as IntegrationProvider,
-  ProviderStatusKind,
 } from "@/lib/integrations/types";
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { accountHealthProviders } from "@/lib/providers/account-health/registry";
+import { isModelProviderRegistered } from "@/lib/providers/model/registry";
 import { PROVIDER_CATALOG, tintFor } from "@/lib/providers/registry";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { loadGscConsumerStatuses } from "@/lib/queries/integration-consumer-status";
@@ -52,16 +53,12 @@ export type IntegrationsView = {
   connectionCount: number;
   timeZone: string;
 };
-
 const activeIntegrationKinds = [
   "serp",
   "analytics",
   "enrichment",
+  "model",
 ] as const satisfies readonly ActiveIntegrationKind[];
-
-function statusFor(itemStatus: ProviderStatusKind, connection?: ProviderConnectionRow) {
-  return connection?.status ?? itemStatus;
-}
 
 function compareConnection(a: ProviderConnectionRow, b: ProviderConnectionRow) {
   const enabledDelta = Number(b.enabled) - Number(a.enabled);
@@ -96,8 +93,9 @@ function integrationProvider(
   consumerStatuses?: ConsumerStatuses,
 ): IntegrationProvider {
   const { connection, item } = row;
+  const available = kind !== "model" || isModelProviderRegistered(item.id);
   const cost = connection?.costPerCheckCents;
-  const primary = connection?.provider === primaryProvider;
+  const primary = kind !== "model" && connection?.provider === primaryProvider;
   const connected = connection?.status === "connected";
   // Only the non-secret identity fields (login, endpoint) may reach the client;
   // password and apiKey stay server-side and are kept out of drawer defaults.
@@ -138,7 +136,7 @@ function integrationProvider(
         secret: "",
       },
       envHint:
-        isSelfHost && item.id !== "local-sequence"
+        isSelfHost && item.kind !== "model" && item.id !== "local-sequence"
           ? "Credentials can also be configured through environment variables."
           : undefined,
       googleOAuth: item.id === (googleOAuth?.provider ?? "gsc") ? googleOAuth : undefined,
@@ -165,10 +163,10 @@ function integrationProvider(
     priority: connection?.priority,
     reauthReason: connection?.status === "needs_reauth" ? reauthReason : undefined,
     secondaryAction:
-      connection?.status === "connected" && connection.credentialSource !== "hosted"
+      available && connection?.status === "connected" && connection.credentialSource !== "hosted"
         ? "Test"
         : undefined,
-    status: statusFor(item.defaultStatus, connection),
+    status: available ? (connection?.status ?? item.defaultStatus) : "planned",
     syncFailure: connection?.status === "needs_reauth" ? undefined : syncFailure,
     tint: `var(--${tintFor(item.id)})`,
   };

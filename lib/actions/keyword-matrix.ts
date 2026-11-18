@@ -1,10 +1,12 @@
 "use server";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { writeAudit } from "@/lib/auth/audit";
-import { prisma } from "@/lib/db/prisma";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
+import { keywordCreateChange } from "@/lib/schedules/keyword-create-change";
+import { commitKeywordCreate } from "@/lib/schedules/keyword-create-write";
 import { type AddKeywordsMatrixInput, addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { countryCodeForMarketName, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -62,7 +64,8 @@ function uniqueWarnings(items: readonly { resolved: { warning: string | null } }
 }
 
 export async function addKeywordsMatrix(input: unknown) {
-  const data = parseActionInput(addKeywordsMatrixSchema, input);
+  const { body, review } = splitScheduleReview(input);
+  const data = parseActionInput(addKeywordsMatrixSchema, body);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
   requireTrackedDomain(project);
@@ -79,81 +82,89 @@ export async function addKeywordsMatrix(input: unknown) {
     })),
   );
 
-  const result = await prisma.$transaction(async (tx) => {
-    const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
-    const rows = locations.flatMap(({ resolved }) =>
-      devices.flatMap((device) =>
-        keywords.map((keyword) => ({
-          device,
-          keyword,
-          location: denormalizedLocationLabel(resolved.location),
-          locationId: resolved.location.id,
-          schedule,
-          tags: data.tags,
-          targetUrl: data.targetUrl,
-          topic: data.topic,
-          intent: data.intent,
-        })),
-      ),
-    );
-    const persisted = await createKeywordBatchSet(tx, project.id, rows);
-    const canonicalKeys = new Map(
-      locations.map(({ resolved }) => [resolved.location.id, resolved.location.canonicalKey]),
-    );
-    const promotedPairs = persisted.accepted.flatMap(({ keyword }) => {
-      const key = canonicalKeys.get(keyword.locationId);
-      return key ? promotedSavedKeywordPairs([keyword], key) : [];
-    });
-    const created: CreatedKeyword[] = persisted.created;
-    const assignmentRows = [...created, ...persisted.restored];
-    if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
-    else if (schedule)
-      await setKeywordCadence(
-        tx,
-        project.id,
-        assignmentRows.map(({ id }) => id),
-        schedule,
-        actor.id,
+  const result = await commitKeywordCreate(
+    project.id,
+    actor,
+    keywordCreateChange(data),
+    review,
+    async (tx, admission) => {
+      const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
+      const rows = locations.flatMap(({ resolved }) =>
+        devices.flatMap((device) =>
+          keywords.map((keyword) => ({
+            device,
+            keyword,
+            location: denormalizedLocationLabel(resolved.location),
+            locationId: resolved.location.id,
+            schedule,
+            tags: data.tags,
+            targetUrl: data.targetUrl,
+            topic: data.topic,
+            intent: data.intent,
+          })),
+        ),
       );
-    const skippedDuplicates = rows.length - created.length;
-    const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
+      const persisted = await createKeywordBatchSet(tx, project.id, rows);
+      const canonicalKeys = new Map(
+        locations.map(({ resolved }) => [resolved.location.id, resolved.location.canonicalKey]),
+      );
+      const promotedPairs = persisted.accepted.flatMap(({ keyword }) => {
+        const key = canonicalKeys.get(keyword.locationId);
+        return key ? promotedSavedKeywordPairs([keyword], key) : [];
+      });
+      const created: CreatedKeyword[] = persisted.created;
+      const assignmentRows = [...created, ...persisted.restored];
+      if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows, admission);
+      else if (schedule)
+        await setKeywordCadence(
+          tx,
+          project.id,
+          assignmentRows.map(({ id }) => id),
+          schedule,
+          actor.id,
+          "schedule",
+          admission,
+        );
+      const skippedDuplicates = rows.length - created.length;
+      const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
     SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
     FROM "keywords"
     WHERE "projectId" = ${project.id}
   `;
 
-    await writeAudit(
-      {
-        action: "keyword.matrix_add",
-        actorId: actor.id,
-        after: {
-          checkScheduleId: assigned?.publicId ?? null,
-          keywordIds: created.map((keyword) => keyword.publicId),
-          intent: data.intent ?? null,
-          skippedDuplicates,
-          tags: data.tags,
-          targetUrl: data.targetUrl ?? null,
-          topic: data.topic ?? null,
+      await writeAudit(
+        {
+          action: "keyword.matrix_add",
+          actorId: actor.id,
+          after: {
+            checkScheduleId: assigned?.publicId ?? null,
+            keywordIds: created.map((keyword) => keyword.publicId),
+            intent: data.intent ?? null,
+            skippedDuplicates,
+            tags: data.tags,
+            targetUrl: data.targetUrl ?? null,
+            topic: data.topic ?? null,
+          },
+          projectId: project.id,
+          targetId: project.publicId,
+          targetType: "project",
         },
-        projectId: project.id,
-        targetId: project.publicId,
-        targetType: "project",
-      },
-      tx,
-    );
-    const consumed = await consumeSavedKeywords(
-      tx,
-      project.id,
-      data.consumeSavedIds,
-      promotedPairs,
-    );
-    return {
-      created,
-      changed: persisted.created.length + persisted.restored.length + consumed > 0,
-      persistedKeywordCount: keywordCountRow?.count ?? 0,
-      skippedDuplicates,
-    };
-  });
+        tx,
+      );
+      const consumed = await consumeSavedKeywords(
+        tx,
+        project.id,
+        data.consumeSavedIds,
+        promotedPairs,
+      );
+      return {
+        created,
+        changed: persisted.created.length + persisted.restored.length + consumed > 0,
+        persistedKeywordCount: keywordCountRow?.count ?? 0,
+        skippedDuplicates,
+      };
+    },
+  );
 
   if (result.changed) recordAppAction(actor);
   revalidateKeywords();

@@ -105,6 +105,28 @@ vi.mock("@/lib/cost-items/read", () => ({
 vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationsView: mocks.getIntegrationsView,
 }));
+vi.mock("@/components/assistant/AssistantFundingSettings", () => ({
+  AssistantFundingSettings: () => <section id="assistant-funding" />,
+}));
+vi.mock("@/lib/assistant/config", () => ({
+  assistantConfig: vi.fn().mockResolvedValue({
+    enabled: false,
+    reason: "not_configured",
+    project: {
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
+      name: "Test",
+      role: "owner",
+      readOnly: false,
+    },
+    models: [],
+    funding: [],
+    fundingPreference: [],
+    creditsEnabled: false,
+    defaults: { modelId: null, funding: null },
+    starters: [],
+    limits: { maxUserTextChars: 8000, maxSteps: 6 },
+  }),
+}));
 vi.mock("@/lib/settings/search-sync-metrics", () => ({
   loadSearchSyncPreflightPlan: mocks.loadSearchSyncPreflightPlan,
 }));

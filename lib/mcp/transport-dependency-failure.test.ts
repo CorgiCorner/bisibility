@@ -41,6 +41,7 @@ describe("MCP dependency failures through real auth and limiter code", () => {
     vi.stubEnv("DSH_PLUGIN_MIN_VERSION", "");
     mocks.bearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { id: "key" },
       project: { ownerId: "owner" },
     });

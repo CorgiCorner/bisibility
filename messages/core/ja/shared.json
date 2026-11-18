@@ -935,6 +935,7 @@
         "archived": "アーカイブ済み"
       },
       "modes": {
+        "archived": "アーカイブ済みスケジュール",
         "manual": "手動",
         "paused": "一時停止",
         "scheduled": "保存済みスケジュール",
@@ -946,6 +947,7 @@
         "keyword_changed": "選択したキーワードが変更されたか利用できません。選択を確認してください。",
         "manual": "定期実行は有効になっていません。",
         "paused": "保存済みスケジュールは一時停止中です。",
+        "schedule_archived": "保存済みスケジュールはアーカイブされています。手動チェックはこのモニターを引き続き使えます。",
         "definition_changed": "スケジュールは以前の設定を参照しています。",
         "calendar_changed": "カレンダーが変更されたか利用できません。予約前に確認してください。"
       },
@@ -2243,6 +2245,31 @@
         "ga4": "Google Analytics 4",
         "plausible": "Plausible"
       }
+    },
+    "scheduleReview": {
+      "title": "スケジュールの費用を確認",
+      "description": "今後30日間のプロバイダー費用の見積もりです。",
+      "before": "変更前",
+      "after": "変更後",
+      "unknown": "不明",
+      "cancel": "キャンセル",
+      "confirm": "確認",
+      "changed": "費用が変わりました。確認する前に更新された見積もりを確認してください。",
+      "emptyScheduleCreated": "空のスケジュールが作成されました。キャンセルすると空のまま残り、キーワードは現在のスケジュールを維持します。",
+      "capacity": "この変更はプランの上限を超えます。確認しても、プランで許可されていなければ保存は拒否されます。",
+      "capacityDetail": "{dimension}: 変更後 {projected}、上限 {limit}。",
+      "reasons": {
+        "cost_increase": "定期的な費用の見積もりが増加します。",
+        "manual_to_scheduled": "手動のキーワードが自動チェックの対象になります。",
+        "provider_route_change": "チェックに使用するプロバイダーが変わります。",
+        "price_unknown": "一部のプロバイダー料金は不明です。最終的な費用は異なる場合があります。"
+      },
+      "dimensions": {
+        "scheduledKeywords": "スケジュール済みキーワード",
+        "scheduleFrequencies": "週あたりのチェック数",
+        "promptSchedules": "週あたりのプロンプトチェック数"
+      },
+      "previewFailed": "変更のプレビューを表示できませんでした。もう一度お試しください。"
     }
   }
 }

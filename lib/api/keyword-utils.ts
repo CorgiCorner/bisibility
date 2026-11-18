@@ -20,15 +20,17 @@ export function scheduleFromPatch(input: ApiKeywordPatch, keywordId?: string) {
     return null;
   }
 
-  return normalizeApiSchedule(
-    {
-      cronExpression: null,
-      frequency: input.frequency,
-      jitterMinutes: 60,
-      timezone: "UTC",
-    } satisfies KeywordScheduleInput,
-    keywordId,
-  );
+  return {
+    ...normalizeApiSchedule(
+      {
+        cronExpression: null,
+        frequency: input.frequency,
+        jitterMinutes: 60,
+        timezone: "UTC",
+      } satisfies KeywordScheduleInput,
+      keywordId,
+    ),
+  };
 }
 
 function normalizeApiSchedule(input: KeywordScheduleInput, keywordId?: string) {
@@ -41,3 +43,19 @@ function normalizeApiSchedule(input: KeywordScheduleInput, keywordId?: string) {
 
 export const scheduleFromBulk = (input: ApiKeywordBulk, keywordId: string) =>
   scheduleFromPatch(input, keywordId);
+
+export const scheduleSource = (input: ApiKeywordPatch): "frequency" | "schedule" =>
+  input.schedule ? "schedule" : "frequency";
+
+/** `schedule_id` replaces the deprecated cadence fields, so a request may not send both. */
+export function assertSingleScheduleInput(input: {
+  frequency?: unknown;
+  schedule?: unknown;
+  schedule_id?: unknown;
+}) {
+  if (
+    input.schedule_id !== undefined &&
+    (input.frequency !== undefined || input.schedule !== undefined)
+  )
+    throw new ApiInputError("Send schedule_id or the deprecated schedule and frequency, not both.");
+}

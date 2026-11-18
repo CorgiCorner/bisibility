@@ -15,19 +15,36 @@ vi.mock("./_shared", () => ({
   parseActionInput: (schema: { parse: (input: unknown) => unknown }, input: unknown) =>
     schema.parse(input),
 }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.audit }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    $transaction: mocks.transaction,
+    project: {
+      findFirst: async () => ({
+        syncPauses: [],
+        publicId: "prj_one",
+      }),
+    },
+  },
+}));
+vi.mock("@/lib/auth/audit", () => ({
+  writeAudit: mocks.audit,
+  writeAuditFailure: async () => undefined,
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 
 import { setDomainRatingTracking } from "./domain-rating";
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.actor.mockResolvedValue({ id: "actor" });
+  mocks.actor.mockResolvedValue({ id: "actor", memberships: [{ projectId: "p1", role: "admin" }] });
   mocks.scope.mockResolvedValue({ id: "p1", publicId: "prj_one" });
-  mocks.read.mockResolvedValue({ domainRatingEnabled: true });
+  mocks.read.mockResolvedValue({ syncPauses: [] });
   mocks.transaction.mockImplementation((callback) =>
-    callback({ project: { findUniqueOrThrow: mocks.read, update: mocks.update } }),
+    callback({
+      $queryRaw: vi.fn(),
+      projectSyncPause: { create: vi.fn(), deleteMany: vi.fn() },
+      project: { findUniqueOrThrow: mocks.read, update: mocks.update },
+    }),
   );
 });
 describe("domain rating settings authorization", () => {
@@ -35,9 +52,14 @@ describe("domain rating settings authorization", () => {
     expect(await setDomainRatingTracking({ projectId: "prj_one", enabled: false })).toEqual({
       ok: true,
     });
-    expect(mocks.scope).toHaveBeenCalledWith({ id: "actor" }, "manage", "prj_one", {
-      type: "provider_connection",
-    });
+    expect(mocks.scope).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "actor" }),
+      "manage",
+      "prj_one",
+      {
+        type: "provider_connection",
+      },
+    );
     expect(mocks.update).toHaveBeenCalledWith({
       where: { id: "p1" },
       data: { domainRatingEnabled: false },

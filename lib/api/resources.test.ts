@@ -134,6 +134,47 @@ describe("keywordResource check state", () => {
   });
 });
 
+describe("keywordResource last checked time", () => {
+  it("uses the completed check when there is no legacy schedule row", () => {
+    const resource = keywordResource(
+      keywordRecord(),
+      projectPublicId,
+      latestSuccessfulRecord(completedCheck),
+    );
+    expect(resource.schedule?.last_checked_at).toBe("2026-08-24T00:00:00.000Z");
+  });
+
+  it("uses the completed check instead of an older legacy schedule timestamp", () => {
+    const resource = keywordResource(
+      keywordRecord({ schedule: { lastCheckedAt: new Date("2026-08-01T00:00:00.000Z") } }),
+      projectPublicId,
+      latestSuccessfulRecord(completedCheck),
+    );
+    expect(resource.schedule?.last_checked_at).toBe("2026-08-24T00:00:00.000Z");
+  });
+
+  it("reports null without a completed check, even after a failed check", () => {
+    const resource = keywordResource(
+      keywordRecord({
+        rankChecks: [failedCheck],
+        schedule: { lastCheckedAt: failedCheck.checkedAt },
+      }),
+      projectPublicId,
+      null,
+    );
+    expect(resource.schedule?.last_checked_at).toBeNull();
+  });
+
+  it("keeps the completed timestamp when the latest check failed", () => {
+    const resource = keywordResource(
+      keywordRecord({ rankChecks: [failedCheck] }),
+      projectPublicId,
+      latestSuccessfulRecord(completedCheck),
+    );
+    expect(resource.schedule?.last_checked_at).toBe("2026-08-24T00:00:00.000Z");
+  });
+});
+
 describe("keywordResource schedule source", () => {
   it("does not schedule an unassigned keyword from project defaults", () => {
     const resource = keywordResource(
@@ -150,6 +191,7 @@ describe("keywordResource schedule source", () => {
         },
       }),
       projectPublicId,
+      null,
     );
 
     expect(resource.schedule).toMatchObject({
@@ -172,6 +214,7 @@ describe("keywordResource schedule source", () => {
         },
       }),
       projectPublicId,
+      null,
     );
 
     expect(resource.schedule).toMatchObject({
@@ -202,6 +245,7 @@ describe("keywordResource schedule source", () => {
           schedule: { frequency: "weekly", lastCheckedAt: null },
         }),
         projectPublicId,
+        null,
       );
       expect(resource.schedule).toMatchObject({ frequency, source: "keyword" });
       if (frequency === "daily")
@@ -224,9 +268,9 @@ describe("keywordResource schedule source", () => {
           jitterMinutes: 0,
         },
       });
-      expect(() => keywordResource(record, projectPublicId)).not.toThrow();
+      expect(() => keywordResource(record, projectPublicId, null)).not.toThrow();
       if (cronExpression === "0 0 31 2 1")
-        expect(keywordResource(record, projectPublicId).schedule).toMatchObject({
+        expect(keywordResource(record, projectPublicId, null).schedule).toMatchObject({
           frequency: "custom_cron",
           next_check_at: null,
         });

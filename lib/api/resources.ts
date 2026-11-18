@@ -18,6 +18,7 @@ import {
   loadLatestSuccessfulChecks,
   RANK_CHECK_FAILED_STATUS,
 } from "./keyword-check-state";
+import { keywordScheduleResource } from "./keyword-schedule-resource";
 import { requireApiPublicId } from "./public-id";
 
 export {
@@ -202,7 +203,7 @@ export function webhookEndpointResource(endpoint: {
 export function keywordResource(
   keyword: KeywordRecord,
   projectPublicId: string,
-  latestSuccessful?: LatestSuccessfulCheckRecord | null,
+  latestSuccessful: LatestSuccessfulCheckRecord | null | undefined,
   projectSchedule = keywordMembershipSchedule,
 ) {
   const latest = keyword.rankChecks[0];
@@ -227,17 +228,7 @@ export function keywordResource(
     previous_position: latest?.previousPosition ?? null,
     project_id: requireApiPublicId(projectPublicId, "prj"),
     ranking_url: latest?.rankingUrl ?? null,
-    schedule: schedule
-      ? {
-          cron_expression: schedule.cronExpression,
-          frequency: schedule.frequency,
-          jitter_minutes: schedule.jitterMinutes,
-          last_checked_at: iso(keyword.schedule?.lastCheckedAt),
-          next_check_at: iso(schedule.nextCheckAt),
-          source: "keyword",
-          timezone: schedule.timezone,
-        }
-      : null,
+    schedule: keywordScheduleResource(schedule, keyword.checkSchedule, latestSuccessful?.checkedAt),
     tags: keyword.tags.map((item) => item.tag.name),
     target_url: keyword.targetUrl,
     text: keyword.text,

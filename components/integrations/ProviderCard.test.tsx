@@ -159,7 +159,7 @@ describe("ProviderCard", () => {
     );
     expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
       "data-size",
-      "xs",
+      "sm",
     );
     const trafficRow = screen.getByRole("group", { name: "Traffic enrichment" });
     expect(trafficRow).toHaveTextContent("Not synced yet");

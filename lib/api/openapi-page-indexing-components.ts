@@ -103,6 +103,16 @@ export const pageIndexingSchemas = {
       ...openEnum("PageIndexingSource"),
     },
     sitemap_url: nullable,
+    sitemap_state: {
+      type: "string",
+      enum: ["in_sitemap", "not_in_sitemap", "not_checked"],
+      ...openEnum("PageSitemapState"),
+      description: "Membership in fresh successful sitemap reads. Unknown is not_checked.",
+    },
+    sitemap_checked: {
+      type: "boolean",
+      description: "Whether sitemap_state is known for this URL.",
+    },
     google_canonical: nullable,
     user_canonical: nullable,
     indexing_state: nullable,

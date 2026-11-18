@@ -166,3 +166,22 @@ describe("joinWaitlist email delivery", () => {
     expect(payload.subject).toBe("bisibility waitlist: user@example.com");
   });
 });
+
+it("quietly skips waitlist notices before rendering recipient details", async () => {
+  vi.clearAllMocks();
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+  try {
+    mocks.prisma.waitlist.upsert.mockResolvedValue(storedWaitlist());
+    mocks.prisma.waitlist.findUnique.mockResolvedValue(null);
+    await joinWaitlist({ email: "person@example.com", source: "landing_capture" });
+    expect(mocks.reserveEmailDailyBudget).not.toHaveBeenCalled();
+    expect(mocks.sesSend).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledExactlyOnceWith(
+      "[email] skipped purpose=waitlist-notice: notifications disabled",
+    );
+  } finally {
+    log.mockRestore();
+    vi.unstubAllEnvs();
+  }
+});

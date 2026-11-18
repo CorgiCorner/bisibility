@@ -4,6 +4,8 @@ import type { DefaultsHostContext } from "./defaults-authority";
 const f = vi.hoisted(() => {
   const key = {
     id: "key",
+    // A member created the key; the project owner below holds only a viewer membership.
+    createdById: "creator",
     scopes: ["write"],
     revokedAt: null as Date | null,
     expiresAt: null as Date | null,
@@ -22,6 +24,7 @@ const f = vi.hoisted(() => {
     keyRead: vi.fn(),
     projectRead: vi.fn(),
     memberRead: vi.fn(async () => ({ role: "viewer" })),
+    creatorRead: vi.fn(async () => ({ role: "member" })),
   };
 });
 vi.mock("@/lib/db/prisma", () => ({
@@ -29,7 +32,7 @@ vi.mock("@/lib/db/prisma", () => ({
     $queryRaw: f.query,
     project: { findUnique: f.projectRead },
     apiKey: { findFirst: f.keyRead },
-    membership: { findFirst: f.memberRead },
+    membership: { findFirst: f.memberRead, findUnique: f.creatorRead },
   },
 }));
 

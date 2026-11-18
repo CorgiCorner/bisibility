@@ -1,5 +1,10 @@
 import { AchievementHeader } from "@/components/achievements/AchievementHeader";
 import {
+  AssistantContentReserve,
+  AssistantProvider,
+  AssistantTrigger,
+} from "@/components/assistant/AssistantProvider";
+import {
   HeaderProviderSpendData,
   HeaderProviderSpendSkeleton,
 } from "@/components/cost-estimate/HeaderProviderSpendData";
@@ -41,6 +46,7 @@ import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getExperimentalModules } from "@/lib/queries/experimental-modules";
+import { optionalShellRead } from "@/lib/queries/optional-shell-read";
 import { readActorReachedProjectLimit } from "@/lib/queries/project-limit";
 import { listProjectMarketOptions } from "@/lib/queries/project-markets";
 import { loadSetupContext } from "@/lib/queries/setup-context";
@@ -77,7 +83,12 @@ export async function WorkspaceShell({
   const demoCapturedAt = demo.kind === "legacy-read-only" ? await demoSnapshotCapturedAt() : null;
 
   const shellI18n = resolveRegionalDocumentLocale().then(async (runtime) => ({
-    messages: await loadCoreMessages(runtime.locale, ["shared", "shell", "projectCostEstimate"]),
+    messages: await loadCoreMessages(runtime.locale, [
+      "shared",
+      "shell",
+      "projectCostEstimate",
+      "assistant",
+    ]),
     runtime,
   }));
   // Workspace chrome reads are independent.
@@ -101,17 +112,28 @@ export async function WorkspaceShell({
     listEnabledInstanceAnnouncements(),
   ]);
   const { messages, runtime } = i18n;
-  const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
-  const temporalIdentityComparison = workerLiveness
-    ? compareWorkerTemporalIdentity(temporalDeploymentConfig(), workerLiveness)
-    : null;
   const active = workspaces.find((workspace) => workspace.id === projectRef);
   if (!active) {
     notFound();
   }
   const canCreateWorkspace = !isDemo && Boolean(session.user.id);
   // Same count the create action enforces, so the switcher blocks only what the server refuses.
-  const reachedProjectLimit = canCreateWorkspace ? await readActorReachedProjectLimit() : null;
+  const [reachedProjectLimit, accountNotice, planStatus, workerLiveness] = await Promise.all([
+    canCreateWorkspace ? optionalShellRead(readActorReachedProjectLimit(), "project_limit") : null,
+    isDemo
+      ? null
+      : optionalShellRead(
+          renderAccountNoticeExtension({ locale: runtime.locale, projectRef }),
+          "account_notice",
+        ),
+    isDemo || !isCloud
+      ? null
+      : optionalShellRead(renderPlanStatusExtension({ userId: session.user.id }), "plan_status"),
+    instanceAdminSession ? getWorkerLivenessDetails() : null,
+  ]);
+  const temporalIdentityComparison = workerLiveness
+    ? compareWorkerTemporalIdentity(temporalDeploymentConfig(), workerLiveness)
+    : null;
   // Only builds with an in-app support channel explain how to raise the limit.
   const projectLimit =
     reachedProjectLimit === null
@@ -119,12 +141,6 @@ export async function WorkspaceShell({
       : { canContactSupport: appExtensions.supportAvailable(), limit: reachedProjectLimit };
   // Demo identities are shared and their account settings are locked server-side.
   const canSetDefault = !isDemo;
-  const accountNotice = isDemo
-    ? null
-    : await renderAccountNoticeExtension({ locale: runtime.locale, projectRef });
-  const planStatus =
-    isDemo || !isCloud ? null : await renderPlanStatusExtension({ userId: session.user.id });
-
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
   const collapsed = isSidebarCollapsed(cookieStore.get("sidebar-collapsed")?.value);
@@ -159,85 +175,37 @@ export async function WorkspaceShell({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <AppThemeRoot
-        defaultTheme={serverThemeMode(theme)}
-        data-shell-root
-        data-collapsed={collapsed ? "true" : "false"}
-        className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] lg:[--app-sidebar-width:270px] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)] data-[collapsed=true]:lg:[--app-sidebar-width:80px]"
-      >
-        <ProjectWriteModeProvider
-          canEditProject={
-            active.writeMode === "active" && canProjectAction(active.role, "update", "project")
-          }
-          projectRef={projectRef}
-          reasons={{
-            migrated: t("shell.writeMode.reasons.migrated"),
-            migration_hold: t("shell.writeMode.reasons.migrationHold"),
-          }}
-          writeMode={active.writeMode}
+      <AssistantProvider key={active.publicId} project={active.publicId}>
+        <AppThemeRoot
+          defaultTheme={serverThemeMode(theme)}
+          data-shell-root
+          data-collapsed={collapsed ? "true" : "false"}
+          className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] lg:[--app-sidebar-width:270px] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)] data-[collapsed=true]:lg:[--app-sidebar-width:80px]"
         >
-          <SessionSpendProvider key={active.publicId}>
-            <CommandPaletteProvider
-              markets={markets}
-              enabledExperimentalModules={enabledExperimentalModules}
-              projectId={active.publicId}
-              projectRef={projectRef}
-            >
-              <AppRealtimeProvider key={active.publicId} projectRef={active.publicId}>
-                <Sidebar
-                  activeProjectId={active.publicId}
-                  canCreateWorkspace={canCreateWorkspace}
-                  projectLimit={projectLimit}
-                  canSetDefault={canSetDefault}
-                  enabledExperimentalModules={enabledExperimentalModules}
-                  planStatus={planStatus}
-                  projectRef={projectRef}
-                  setupCompleted={setupCompleted}
-                  setupDoneCount={setupProgress.doneCount}
-                  setupSettledCount={setupProgress.settledCount}
-                  setupTotalCount={setupProgress.totalCount}
-                  showGettingStarted={showGettingStarted}
-                  showHostedLinks={isCloud}
-                  user={user}
-                  version={appVersion()}
-                  workspaces={workspaces}
-                />
-                <div className="flex min-w-0 flex-col">
-                  {announcements.map((announcement) => (
-                    <InstanceAnnouncementBanner
-                      key={announcement.id}
-                      announcement={announcement}
-                      defaultLinkLabel={t("shell.announcements.learnMore")}
-                    />
-                  ))}
-                  {isDemo ? (
-                    <DemoBanner
-                      actor={demoActor?.kind ?? notFound()}
-                      capturedAt={demoCapturedAt}
-                      mode={demo.kind}
-                    />
-                  ) : null}
-                  {accountNotice?.content}
-                  <AppHeader
-                    accountActions={
-                      <Suspense fallback={null}>
-                        <AchievementHeader />
-                      </Suspense>
-                    }
-                    actions={
-                      <>
-                        {active.role === "owner" ? (
-                          <Suspense fallback={<HeaderProviderSpendSkeleton />}>
-                            <HeaderProviderSpendData projectRef={projectRef} />
-                          </Suspense>
-                        ) : null}
-                      </>
-                    }
+          <ProjectWriteModeProvider
+            canEditProject={
+              active.writeMode === "active" && canProjectAction(active.role, "update", "project")
+            }
+            projectRef={projectRef}
+            reasons={{
+              migrated: t("shell.writeMode.reasons.migrated"),
+              migration_hold: t("shell.writeMode.reasons.migrationHold"),
+            }}
+            writeMode={active.writeMode}
+          >
+            <SessionSpendProvider key={active.publicId}>
+              <CommandPaletteProvider
+                markets={markets}
+                enabledExperimentalModules={enabledExperimentalModules}
+                projectId={active.publicId}
+                projectRef={projectRef}
+              >
+                <AppRealtimeProvider key={active.publicId} projectRef={active.publicId}>
+                  <Sidebar
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}
                     projectLimit={projectLimit}
                     canSetDefault={canSetDefault}
-                    context={<Suspense fallback={<HeaderContextLoading />}>{context}</Suspense>}
                     enabledExperimentalModules={enabledExperimentalModules}
                     planStatus={planStatus}
                     projectRef={projectRef}
@@ -248,35 +216,86 @@ export async function WorkspaceShell({
                     showGettingStarted={showGettingStarted}
                     showHostedLinks={isCloud}
                     user={user}
+                    version={appVersion()}
                     workspaces={workspaces}
                   />
-                  <ProjectWriteModeBanner />
-                  <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">
-                    {children}
-                  </main>
-                  <AppFooter
-                    schemaStatus={
-                      instanceAdminSession && workerLiveness
-                        ? workerLiveness.schemaComparison === "ok"
-                          ? "ok"
-                          : workerLiveness.schemaComparison === "unknown"
-                            ? "unknown"
-                            : "drift"
-                        : undefined
-                    }
-                    showInstanceAdmin={Boolean(instanceAdminSession)}
-                    temporalIdentityDetail={temporalIdentityComparison?.detail}
-                    temporalIdentityStatus={temporalIdentityComparison?.status}
-                    workerStatus={
-                      instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
-                    }
-                  />
-                </div>
-              </AppRealtimeProvider>
-            </CommandPaletteProvider>
-          </SessionSpendProvider>
-        </ProjectWriteModeProvider>
-      </AppThemeRoot>
+                  <AssistantContentReserve>
+                    {announcements.map((announcement) => (
+                      <InstanceAnnouncementBanner
+                        key={announcement.id}
+                        announcement={announcement}
+                        defaultLinkLabel={t("shell.announcements.learnMore")}
+                      />
+                    ))}
+                    {isDemo ? (
+                      <DemoBanner
+                        actor={demoActor?.kind ?? notFound()}
+                        capturedAt={demoCapturedAt}
+                        mode={demo.kind}
+                      />
+                    ) : null}
+                    {accountNotice?.content}
+                    <AppHeader
+                      accountActions={
+                        <Suspense fallback={null}>
+                          <AchievementHeader />
+                        </Suspense>
+                      }
+                      actions={
+                        <>
+                          <AssistantTrigger />
+                          {active.role === "owner" ? (
+                            <Suspense fallback={<HeaderProviderSpendSkeleton />}>
+                              <HeaderProviderSpendData projectRef={projectRef} />
+                            </Suspense>
+                          ) : null}
+                        </>
+                      }
+                      activeProjectId={active.publicId}
+                      canCreateWorkspace={canCreateWorkspace}
+                      projectLimit={projectLimit}
+                      canSetDefault={canSetDefault}
+                      context={<Suspense fallback={<HeaderContextLoading />}>{context}</Suspense>}
+                      enabledExperimentalModules={enabledExperimentalModules}
+                      planStatus={planStatus}
+                      projectRef={projectRef}
+                      setupCompleted={setupCompleted}
+                      setupDoneCount={setupProgress.doneCount}
+                      setupSettledCount={setupProgress.settledCount}
+                      setupTotalCount={setupProgress.totalCount}
+                      showGettingStarted={showGettingStarted}
+                      showHostedLinks={isCloud}
+                      user={user}
+                      workspaces={workspaces}
+                    />
+                    <ProjectWriteModeBanner />
+                    <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">
+                      {children}
+                    </main>
+                    <AppFooter
+                      schemaStatus={
+                        instanceAdminSession && workerLiveness
+                          ? workerLiveness.schemaComparison === "ok"
+                            ? "ok"
+                            : workerLiveness.schemaComparison === "unknown"
+                              ? "unknown"
+                              : "drift"
+                          : undefined
+                      }
+                      showInstanceAdmin={Boolean(instanceAdminSession)}
+                      temporalIdentityDetail={temporalIdentityComparison?.detail}
+                      temporalIdentityStatus={temporalIdentityComparison?.status}
+                      workerStatus={
+                        instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
+                      }
+                    />
+                  </AssistantContentReserve>
+                </AppRealtimeProvider>
+              </CommandPaletteProvider>
+            </SessionSpendProvider>
+          </ProjectWriteModeProvider>
+        </AppThemeRoot>
+      </AssistantProvider>
     </FeatureMessagesProvider>
   );
 }

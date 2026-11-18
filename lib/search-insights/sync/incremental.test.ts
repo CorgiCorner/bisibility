@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   probeFreshness: vi.fn(),
   prisma: {
     project: { findMany: vi.fn() },
+    projectSyncPause: { findUnique: vi.fn() },
     searchAnalyticsImport: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -107,6 +108,7 @@ function importRow(overrides: Record<string, unknown> = {}) {
 describe("runIncrementalSync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.projectSyncPause.findUnique.mockResolvedValue(null);
     mocks.isUserPaused.mockResolvedValue(false);
     mocks.resolveConnection.mockResolvedValue(connection);
     mocks.createSession.mockResolvedValue(session);
@@ -169,6 +171,33 @@ describe("runIncrementalSync", () => {
       source: "ga4",
     });
     expect(mocks.prisma.searchAnalyticsImport.upsert).not.toHaveBeenCalled();
+  });
+
+  it("keeps the GA4 sessions refresh when Search Console is paused and disconnected", async () => {
+    mocks.prisma.projectSyncPause.findUnique.mockResolvedValue({ id: "gsc_pause" });
+    mocks.resolveConnection.mockResolvedValue(null);
+    mocks.resolveSessionsConnection.mockResolvedValue({
+      connectionId: "conn_ga4",
+      credentials: { apiKey: "refresh_token", login: "123456789" },
+      property: "123456789",
+    });
+    await expect(runIncrementalSync({ now, projectId: "project_1" })).resolves.toMatchObject({
+      status: "not_connected",
+    });
+    expect(mocks.sessionsSync).toHaveBeenCalledTimes(1);
+    expect(mocks.createSession).not.toHaveBeenCalled();
+  });
+
+  it("skips the GSC provider when the project import schedule is paused", async () => {
+    mocks.prisma.projectSyncPause.findUnique.mockResolvedValueOnce({ id: "gsc_pause" });
+    mocks.createSession.mockImplementation(() => {
+      throw new Error("Paused import reached the provider");
+    });
+    await expect(runIncrementalSync({ now, projectId: "project_1" })).resolves.toMatchObject({
+      daysProcessed: 0,
+      status: "user_paused",
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
   });
 
   it("skips every provider request while user-paused", async () => {

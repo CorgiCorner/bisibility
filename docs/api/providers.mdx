@@ -1,6 +1,6 @@
 ---
 title: "Provider connections"
-description: "Connect, test, configure, and disconnect SERP providers over the REST API."
+description: "Connect, test, configure, and disconnect project providers over the REST API."
 ---
 
 Paths are relative to `/api/v1`. All routes use a project-scoped API key -
@@ -12,8 +12,25 @@ path. See [Authentication](/authentication) for scopes.
 | `GET` | `/projects/{project_id}/providers` | List the provider catalog and connection state. |
 | `POST` | `/projects/{project_id}/providers/{provider_id}/connect` | Encrypt and save provider credentials or settings. |
 | `POST` | `/projects/{project_id}/providers/{provider_id}/test` | Test credentials without saving a new connection. |
-| `PATCH` | `/projects/{project_id}/providers/{provider_id}` | Change enabled, priority, or cost settings. |
+| `PATCH` | `/projects/{project_id}/providers/{provider_id}` | Change enabled or priority settings. |
 | `DELETE` | `/projects/{project_id}/providers/{provider_id}` | Disconnect the provider and delete stored credentials. |
+
+Model providers are OpenAI (`openai`), Anthropic (`anthropic`), OpenRouter
+(`openrouter`), and Vercel AI Gateway (`vercel_ai_gateway`). All four IDs are
+accepted by the connect, test, settings and disconnect routes above. Connect
+your own provider API key with `credentials.api_key`; credentials are stored
+encrypted and secret values are not returned. PATCH updates only `enabled` and `priority` for every provider;
+it does not update costs. Priority does not select or reorder Model Playground columns:
+each column explicitly selects its provider and model.
+
+SERP and data providers can set `cost_per_check` on connect. Later manual cost
+and feature-rate changes are made in the app's provider settings; there is no
+separate REST cost or rates route. Model connections reject `cost_per_check` on connect
+and do not support those manual cost or feature-rate settings. Model requests
+are billed to your account by the selected provider.
+Column model, workspace and routing settings are configured in Model Playground,
+separately from these connection settings.
+See [Model Playground](/guides/model-playground) for the available comparison UI.
 
 Provider-specific credential fields and fallback behavior are described in
 [Integrations](/integrations). Secret values are accepted on writes but are

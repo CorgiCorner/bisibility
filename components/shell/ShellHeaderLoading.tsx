@@ -18,7 +18,7 @@ export function ShellHeaderLoading() {
       className="relative z-40 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-2.5 border-b border-border bg-bg-sidebar px-4 py-3 sm:flex sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5"
       data-testid="shell-skeleton-header"
     >
-      <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3 sm:overflow-hidden">
+      <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3">
         <Block className="size-9 flex-none lg:hidden" />
         <div className="col-start-2 row-start-1 min-w-0 overflow-hidden">
           <Block

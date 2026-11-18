@@ -1,0 +1,7 @@
+{
+  "error": {
+    "message": "Synthetic prompt and SYNTHETIC_GATEWAY_KEY_ONLY must never escape.",
+    "type": "invalid_request_error",
+    "code": "invalid_request_error"
+  }
+}

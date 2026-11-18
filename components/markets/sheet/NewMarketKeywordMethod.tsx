@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Textarea } from "@/components/ui/Textarea";
@@ -38,8 +39,9 @@ export function NewMarketKeywordMethod({
   return (
     <section aria-label={t("keywordMethod")} className="grid gap-3">
       <SegmentedControl
-        label={t("keywords")}
+        label={<FieldLabel label={t("keywords")} />}
         labelClassName="text-[12px] font-medium text-fg"
+        optionClassName="whitespace-nowrap"
         onChange={(kind) => {
           if (kind === "copy") {
             onChange({ kind, sourceMarketId: "" as `pmkt_${string}` });
@@ -50,9 +52,9 @@ export function NewMarketKeywordMethod({
           }
         }}
         options={[
-          { label: t("copyFromMarket"), value: "copy" },
-          { label: t("pasteKeywords"), value: "paste" },
-          { label: t("startEmpty"), value: "empty" },
+          { ariaLabel: t("copyFromMarket"), label: t("copyMethod"), value: "copy" },
+          { ariaLabel: t("pasteKeywords"), label: t("pasteMethod"), value: "paste" },
+          { ariaLabel: t("startEmpty"), label: t("emptyMethod"), value: "empty" },
         ]}
         size="field"
         value={value?.kind ?? ""}

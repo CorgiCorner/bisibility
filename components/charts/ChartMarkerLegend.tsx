@@ -3,6 +3,7 @@
 import { AnnotationLegendChip } from "@/components/annotations/AnnotationLegendChip";
 import { AnnotationEntryRow } from "@/components/annotations/AnnotationMarkerBadge";
 import { Button } from "@/components/ui/Button";
+import styles from "@/components/ui/FloatingSelectionBar.module.css";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Switch } from "@/components/ui/Switch";
 import {
@@ -19,7 +20,6 @@ import {
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { cn } from "@/lib/ui/cn";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
-import "@/components/ui/FloatingSelectionBar.module.css";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { ChartMarkerPin } from "./chart-marker-layout";
@@ -53,7 +53,10 @@ export function ChartMarkerLegend({
   return (
     <div
       aria-label={t("legendAria")}
-      className="mt-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto"
+      className={cn(
+        styles.tabStrip,
+        "mt-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto",
+      )}
       data-tab-strip=""
     >
       {series}

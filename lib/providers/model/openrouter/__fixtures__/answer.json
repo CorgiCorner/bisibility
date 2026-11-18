@@ -1,0 +1,24 @@
+{
+  "id": "gen-synthetic-p07",
+  "object": "chat.completion",
+  "created": 1794438000,
+  "model": "openai/gpt-5.2",
+  "provider": "OpenAI",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": { "role": "assistant", "content": "Synthetic answer." }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 194,
+    "completion_tokens": 20,
+    "total_tokens": 214,
+    "prompt_tokens_details": { "cached_tokens": 10, "cache_write_tokens": 0 },
+    "completion_tokens_details": { "reasoning_tokens": 2 },
+    "is_byok": false,
+    "cost": 0.000123456789,
+    "cost_details": { "upstream_inference_cost": 0.00012 }
+  }
+}

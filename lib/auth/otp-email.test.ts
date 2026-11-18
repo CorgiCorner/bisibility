@@ -38,6 +38,7 @@ describe("auth OTP email", () => {
     );
 
     expect(sendEmailMock).toHaveBeenCalledExactlyOnceWith({
+      purpose: "sign-in",
       category: "transactional",
       html: expect.stringContaining("482913"),
       sendCounterReserved: true,

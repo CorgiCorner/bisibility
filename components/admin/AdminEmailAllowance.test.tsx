@@ -114,3 +114,20 @@ describe("administrator email allowance", () => {
     expect(screen.getAllByText("Zarezerwowane próby")).toHaveLength(2);
   });
 });
+
+it("explains disabled notifications while preserving sign-in transport allowance", () => {
+  renderWithFeatureMessages(
+    <AdminEmailAllowance
+      allowance={{
+        ...available,
+        notificationsDisabled: true,
+        notificationPolicyMessage:
+          "Notification email is disabled; account-access email remains enabled.",
+      }}
+    />,
+  );
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Notification email is disabled; account-access email remains enabled.",
+  );
+  expect(screen.getAllByText("Reserved attempts")).toHaveLength(2);
+});

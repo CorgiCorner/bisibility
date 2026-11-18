@@ -205,7 +205,8 @@ export function AddKeywordDrawer({
     if (await trigger("keywords")) setCsvReviewOpen(true);
   }
 
-  const save = useAddKeywordDrawerSave({
+  const { save, dialog, isActive } = useAddKeywordDrawerSave({
+    projectId,
     activeTab,
     addKeywordsAction,
     checkScheduleId: markets.scheduleId,
@@ -253,10 +254,13 @@ export function AddKeywordDrawer({
       }
       marketOpen={marketStep.open}
       scheduleStep={markets.scheduleStep}
-      onClose={onClose}
+      onClose={() => {
+        if (!isActive()) onClose();
+      }}
       onExited={handleExited}
       open={open}
     >
+      {dialog}
       <form
         className="flex flex-col gap-5.5"
         id="add-keyword-form"

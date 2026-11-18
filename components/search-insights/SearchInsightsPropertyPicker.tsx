@@ -6,7 +6,7 @@ import type {
   ArchivedSearchInsightsProperty,
   SearchInsightsPropertyOption,
 } from "@/lib/actions/search-insights";
-import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { googlePropertyInsightsFailureMessage } from "@/lib/integrations/google-property-failure";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { searchSyncPreflightFacts } from "@/lib/search-insights/sync/plan";
@@ -82,7 +82,7 @@ export function SearchInsightsPropertyPicker({
       const result = await loadPropertiesAction({ projectId });
       setArchived(result.archived ?? []);
       if (result.failure) {
-        setNotice(googlePropertyFailureMessage(result.failure, t));
+        setNotice(googlePropertyInsightsFailureMessage(result.failure, t));
         return;
       }
       if (result.requiresReauth) {
@@ -112,13 +112,15 @@ export function SearchInsightsPropertyPicker({
         const result = await selectPropertyAction({ projectId, property: option.value });
         if (result.status === "reauth_required") {
           showToast(
-            result.failure ? googlePropertyFailureMessage(result.failure, t) : t("reauthRequired"),
+            result.failure
+              ? googlePropertyInsightsFailureMessage(result.failure, t)
+              : t("reauthRequired"),
             { severity: "connection" },
           );
           return;
         }
         if (result.status === "failed") {
-          showToast(googlePropertyFailureMessage(result.failure, t), { severity: "error" });
+          showToast(googlePropertyInsightsFailureMessage(result.failure, t), { severity: "error" });
           return;
         }
         router.refresh();

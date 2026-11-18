@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   ownBudgets: vi.fn(),
   demo: vi.fn(),
 }));
+vi.mock("./read-snapshot", async () => {
+  const { readProjectBudgetStatuses } = await import("./project-budget-statuses");
+  return { readProjectBudgetSnapshot: readProjectBudgetStatuses };
+});
 vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
 // These actors are never the configured demo owner, so any demo mode locks them.
 vi.mock("@/lib/demo/account-view", () => ({
@@ -566,7 +570,11 @@ it("logs a content-free failure while keeping the observer unavailable", async (
   try {
     mocks.runtime.mockRejectedValue(new Error("private failure detail"));
     expect((await getProjectMeteringUsage("prj_public")).status).toBe("unavailable");
-    expect(log).toHaveBeenCalledWith("[metering] project usage unavailable");
+    expect(log).toHaveBeenCalledWith("[metering] project usage unavailable", {
+      name: "Error",
+      code: undefined,
+      phase: "project_budget",
+    });
     expect(JSON.stringify(log.mock.calls)).not.toContain("private failure detail");
   } finally {
     log.mockRestore();

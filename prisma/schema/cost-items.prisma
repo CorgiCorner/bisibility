@@ -32,6 +32,7 @@ model CostItem {
   ownerId      String
   owner        User              @relation("CostItemOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   name         String            @db.VarChar(120)
+  customType   String?           @db.VarChar(80)
   kind         CostItemKind
   catalogKey   String?           @db.VarChar(64)
   planLabel    String            @default("") @db.VarChar(80)

@@ -52,6 +52,7 @@ const choice = {
 describe("project market actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.getActionActor.mockResolvedValue({ id: "user_1" });
     mocks.requireProjectScope.mockResolvedValue({ id: "project_1", publicId: projectId });
     mocks.resolveKeywordLocation.mockResolvedValue({ location: { id: "location_5" } });
@@ -101,7 +102,7 @@ describe("project market actions", () => {
     mocks.prisma.$transaction
       .mockRejectedValueOnce({ code: "P2034" })
       .mockImplementationOnce(async (callback: (tx: object) => unknown) =>
-        callback({ projectMarket: {} }),
+        callback({ projectMarket: mocks.prisma.projectMarket }),
       );
     mocks.resolveKeywordLocation.mockResolvedValue({ location: { id: "location_6" } });
     mocks.ensureProjectMarketsWithinLimit.mockResolvedValue({
@@ -334,3 +335,13 @@ describe("project market actions", () => {
     ).toEqual({ added: 1, marketIds: [], ok: true });
   });
 });
+
+vi.mock("@/lib/schedules/review-load", async () => ({
+  loadScheduleSpend: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));
+vi.mock("@/lib/schedules/review-load-transfers", async () => ({
+  loadTransfer: (await import("@/lib/schedules/review-noop.test-fixture")).loadNoScheduleSpend,
+}));
+vi.mock("@/lib/provider-allocations/project-lock", () => ({
+  lockProjectForProviderMutation: vi.fn(),
+}));

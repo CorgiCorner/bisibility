@@ -1,4 +1,5 @@
-import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
@@ -23,9 +24,13 @@ const meta = {
     (Story) => {
       installFetchStub();
       return (
-        <ProjectRankTrackerMessages>
+        <FeatureMessagesProvider
+          locale="en"
+          timeZone="UTC"
+          messages={projectRankTrackerFeatureTestMessages}
+        >
           <Story />
-        </ProjectRankTrackerMessages>
+        </FeatureMessagesProvider>
       );
     },
   ],
@@ -135,6 +140,11 @@ export const SharedMarketCreator: Story = {
     projectMarkets: {
       ...projectMarkets,
       marketCreation: {
+        scheduleContext: {
+          connectedProviders: [],
+          projectDefaults: { provider: null, serpDepth: 100 },
+          projectTimezone: "Europe/Warsaw",
+        },
         registry: projectMarkets.markets.map((market) => ({
           canonicalKey: market.canonicalKey,
           id: market.id,

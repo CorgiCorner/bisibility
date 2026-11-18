@@ -1,4 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
+import { getStoredSitemapRead } from "@/lib/pages/sitemap-read";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { takePageSnapshotAction } from "./page-snapshot";
 
@@ -10,8 +11,10 @@ const mocks = vi.hoisted(() => ({
     $transaction: vi.fn(),
     pageSnapshot: { create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     pageSnapshotPage: { createMany: vi.fn() },
+    project: { findFirst: vi.fn() },
     projectPage: { findMany: vi.fn() },
     projectPageSource: { findFirst: vi.fn() },
+    sitemapSnapshot: { findMany: vi.fn() },
   },
   record: vi.fn(),
   requireScope: vi.fn(),
@@ -19,6 +22,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/pages/sitemap-read", () => ({ getStoredSitemapRead: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/activity/app-mutation", () => ({ recordAppAction: mocks.record }));
 vi.mock("@/lib/auth/audit", () => ({
@@ -44,8 +48,28 @@ describe("takePageSnapshotAction", () => {
     );
     mocks.requireScope.mockResolvedValue({ id: "project_1", publicId: "prj_1" });
     mocks.prisma.pageSnapshot.findFirst.mockResolvedValue(null);
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      sitemapMonitoringEnabled: true,
+    });
+    mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([
+      {
+        fetchedAt: new Date(),
+        entries: [{ loc: "https://example.com/a" }],
+        sitemapUrl: "https://example.com/sitemap.xml",
+      },
+    ]);
+    vi.mocked(getStoredSitemapRead).mockImplementation(async () => {
+      const rows = await mocks.prisma.sitemapSnapshot.findMany();
+      return rows.length
+        ? { fetchedAt: new Date(), paths: [], checked: true, complete: true }
+        : null;
+    });
     mocks.prisma.projectPageSource.findFirst.mockResolvedValue({ id: "source_1" });
-    mocks.prisma.$queryRaw.mockResolvedValue([{ id: "page_1" }, { id: "page_2" }]);
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      { id: "page_1", listed: true },
+      { id: "page_2", listed: true },
+    ]);
     mocks.emit.mockResolvedValue({ id: "signal_1", publicId: "sig_storysnapshot000000000" });
     mocks.prisma.pageSnapshot.create.mockResolvedValue({
       id: "snapshot_1",
@@ -107,6 +131,7 @@ describe("takePageSnapshotAction", () => {
 
   it("records a registry source when the project has no sitemap rows", async () => {
     mocks.prisma.projectPageSource.findFirst.mockResolvedValue(null);
+    mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([]);
     mocks.prisma.projectPage.findMany.mockResolvedValue([{ id: "page_1" }]);
     mocks.prisma.pageSnapshot.create.mockResolvedValue({
       id: "snapshot_1",
@@ -131,5 +156,24 @@ describe("takePageSnapshotAction", () => {
       status: "conflict",
     });
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+  it("takes an empty sitemap baseline instead of the registry after a successful empty read", async () => {
+    mocks.prisma.projectPageSource.findFirst.mockResolvedValue(null);
+    mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([]);
+    mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([
+      {
+        entries: [],
+        fetchedAt: new Date(),
+        sitemapUrl: "https://example.com/sitemap.xml",
+      },
+    ]);
+    mocks.prisma.projectPage.findMany.mockResolvedValue([{ id: "page_1" }]);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    await takePageSnapshotAction({ projectId: "prj_1" });
+    expect(mocks.prisma.pageSnapshot.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ source: "sitemap", pageCount: 0 }),
+      }),
+    );
   });
 });

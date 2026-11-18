@@ -18,7 +18,6 @@ function scheduleListSelect(activeLocationIds: Iterable<string>) {
     enabled: true,
     frequency: true,
     id: true,
-    isDefault: true,
     jitterMinutes: true,
     _count: { select: { keywords: { where: runnableKeywordWhere(activeLocationIds) } } },
     name: true,
@@ -197,7 +196,7 @@ export async function listCheckScheduleRows(
     activeMarketLocationIds(projectId, prisma),
   ]);
   const rows = await prisma.checkSchedule.findMany({
-    orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
+    orderBy: [{ name: "asc" }, { publicId: "asc" }],
     select: scheduleListSelect(activeLocationIds),
     where: { archivedAt: status === "archived" ? { not: null } : null, projectId },
   });

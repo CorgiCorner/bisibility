@@ -1,7 +1,9 @@
 "use client";
-import { capacityActionClient } from "@/lib/capacity/action";
+import { useScheduleSpendReview } from "@/components/schedules/useScheduleSpendReview";
+import { scheduleActionClient } from "@/lib/schedules/action-result";
+import { aiScheduleChange } from "@/lib/schedules/web-change";
 
-const mutateAiTrackingAction = capacityActionClient(mutateAiTrackingActionCapacityAction);
+const mutateAiTrackingAction = scheduleActionClient(mutateAiTrackingActionCapacityAction);
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import {
@@ -27,6 +29,7 @@ import type { AiVisibilityPromptsModel } from "@/lib/ai-tracking/prompts-model";
 import type { TrackingEnginePriceCard } from "@/lib/ai-tracking/tracking-engines";
 import { asProjectRef } from "@/lib/routing/app-path";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
+import { useLocale } from "next-intl";
 import { useRef } from "react";
 import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
 import { AiVisibilityPromptsShell } from "./AiVisibilityPromptsShell";
@@ -47,6 +50,8 @@ export function AiTrackingClient({
   model?: AiVisibilityPromptsModel | null;
   moduleTabs?: boolean;
 }>) {
+  const locale = useLocale();
+  const spendReview = useScheduleSpendReview(projectId);
   const launchKeys = useRef(new Map<string, string>());
   const errors = useSharedErrorMessages();
   function actionValue<T>(result: TrackingGenerationActionResult<T>): T {
@@ -56,7 +61,18 @@ export function AiTrackingClient({
   }
   const actions: TrackingWorkspaceActions = {
     save: (resource, method, input, member) =>
-      mutateAiTrackingAction(projectId, resource, method, input, member),
+      resource === "schedules"
+        ? spendReview.run(aiScheduleChange(method, input, member, locale), (review) =>
+            mutateAiTrackingAction(
+              projectId,
+              resource,
+              method,
+              input,
+              member,
+              ...(review ? ([review] as const) : []),
+            ),
+          )
+        : mutateAiTrackingAction(projectId, resource, method, input, member),
     preview: async (promptIds, configurations, payment) =>
       actionValue(
         await previewAiTrackingAction(projectId, { promptIds, configurations, ...payment }),
@@ -100,24 +116,30 @@ export function AiTrackingClient({
   };
   if (moduleTabs) {
     return (
-      <AiVisibilityPromptsShell
-        actions={actions}
-        enginePrices={enginePrices}
-        initialData={data}
-        model={model}
-        projectId={projectId}
-      />
+      <>
+        {spendReview.dialog}
+        <AiVisibilityPromptsShell
+          actions={actions}
+          enginePrices={enginePrices}
+          initialData={data}
+          model={model}
+          projectId={projectId}
+        />
+      </>
     );
   }
   return (
-    <AiTrackingWorkspace
-      initialData={data}
-      initialTab={initialTab}
-      schedulesHref={projectSchedulesPath(asProjectRef(projectId))}
-      researchHref={aiVisibilityTabHref(projectId, "research")}
-      shellOwnsHeading
-      initialDrawer={initialDrawer}
-      actions={actions}
-    />
+    <>
+      {spendReview.dialog}
+      <AiTrackingWorkspace
+        initialData={data}
+        initialTab={initialTab}
+        schedulesHref={projectSchedulesPath(asProjectRef(projectId))}
+        researchHref={aiVisibilityTabHref(projectId, "research")}
+        shellOwnsHeading
+        initialDrawer={initialDrawer}
+        actions={actions}
+      />
+    </>
   );
 }

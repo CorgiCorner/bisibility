@@ -37,7 +37,7 @@ export function MarketDeviceSheet({
       widthVariant="form"
       footer={
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button size="sm" type="button" variant="secondary" onClick={close} disabled={pending}>
+          <Button size="input" type="button" variant="secondary" onClick={close} disabled={pending}>
             {t("cancel")}
           </Button>
           <div ref={setActionsContainer} className="contents" />

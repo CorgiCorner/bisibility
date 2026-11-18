@@ -76,13 +76,6 @@ describe("project page list SQL", () => {
     expect(query().counts.sql).not.toContain('filtered."statusKind"');
   });
 
-  it("keeps sitemap tab counts independent of the sitemap filter", () => {
-    const counts = query({ sitemapState: "not_listed" }).counts;
-    expect(counts.sql).toContain("COUNT(*) FILTER (WHERE NOT COALESCE(sitemap.listed, false))");
-    expect(counts.sql).not.toMatch(/AND NOT COALESCE\(sitemap\.listed, false\)/);
-    expect(query({ sitemapState: "not_listed" }).rows.sql).toContain("NOT filtered.listed");
-  });
-
   it("filters mobile Core Web Vitals without turning a missing row into a zero", () => {
     const rows = query({ cwv: "pass" }).rows;
     expect(rows.sql).toContain("page_vitals");
@@ -122,4 +115,20 @@ describe("project page list SQL", () => {
     expect(rows.values).toContain("ga4");
     expect(rows.sql).not.toContain("'ga4'");
   });
+});
+
+it.each(["counts", "rows"] as const)("does not repeat metric joins in %s coverage", (kind) => {
+  const sql = query({
+    sitemapState: "not_listed",
+    gscProperty: "sc-domain:example.com",
+    ga4Property: "ga4_1",
+    sessions: "ga4",
+    conversionSource: "ga4",
+  })[kind].sql;
+  expect(sql).toContain("sitemap_coverage AS (");
+  for (const join of ["gsc", "sessions", "conversions", "keywords", "citations"]) {
+    expect(sql.match(new RegExp(`LEFT JOIN ${join} ON`, "g"))).toHaveLength(1);
+  }
+  expect(sql.match(/LEFT JOIN "page_vitals"/g)).toHaveLength(1);
+  expect(sql.match(/LEFT JOIN presence ON/g)).toHaveLength(1);
 });

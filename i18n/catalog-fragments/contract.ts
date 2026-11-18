@@ -3,6 +3,7 @@
  * across locales, so a namespace maps to the same fragment list in each of them.
  */
 export type CoreFragmentFile =
+  | "assistant"
   | "resource-capacity"
   | "project-ai-research"
   | "project-ai-tracking"

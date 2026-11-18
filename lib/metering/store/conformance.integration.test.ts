@@ -27,11 +27,11 @@ test("conformance cases reuse a schema with empty accounting tables", async () =
   try {
     expect(second.schema).toBe(schema);
     const [row] = await transactions(second.client(), schema, second.counters).read((sql) =>
-      sql.query<{ count: bigint }>(
+      sql.query<{ count: string }>(
         Prisma.sql`SELECT count(*) AS count FROM queued_rank_check_tasks`,
       ),
     );
-    expect(row?.count).toBe(0n);
+    expect(row?.count).toBe("0");
   } finally {
     await second.close();
   }
@@ -85,11 +85,11 @@ test("conformance cleanup remains atomic after waiting more than five seconds fo
     second = await createConformanceFixture();
     expect(second.schema).toBe(schema);
     const [row] = await transactions(second.client(), schema, second.counters).read((sql) =>
-      sql.query<{ count: bigint }>(
+      sql.query<{ count: string }>(
         Prisma.sql`SELECT count(*) AS count FROM queued_rank_check_tasks`,
       ),
     );
-    expect(row?.count).toBe(0n);
+    expect(row?.count).toBe("0");
   } finally {
     try {
       await blocker.query("ROLLBACK");

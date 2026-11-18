@@ -3,6 +3,7 @@ import { type Actor, AuthorizationError } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { retryTransientDatabaseRead } from "@/lib/db/transient-read";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { ProviderBudgetFundingError } from "@/lib/provider-allocations/validation";
 import type {
   ProviderActionResult,
   ProviderBinding,
@@ -94,7 +95,15 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
       let committed = false;
       try {
         const result = await database.$transaction(async (tx) => {
-          const state = await loadProviderUiState(tx, scope.actor, scope.projectPublicId);
+          const state = await loadProviderUiState(
+            tx,
+            scope.actor,
+            scope.projectPublicId,
+            "mutation",
+            {
+              allocationChanges: command.kind === "allocations" ? command.changes : undefined,
+            },
+          );
           if (!state.binding.canManage)
             return { commandId: command.commandId, outcome: "forbidden" } as const;
           const replay = await retainedCommand(tx, state, command);
@@ -120,6 +129,13 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
         if (committed) onCommitted?.();
         return result;
       } catch (error) {
+        if (error instanceof ProviderBudgetFundingError)
+          return {
+            commandId: command.commandId,
+            outcome: "invalid",
+            field: "command",
+            reason: error.message,
+          };
         return error instanceof AuthorizationError
           ? { commandId: command.commandId, outcome: "forbidden" }
           : unavailable(command.commandId);

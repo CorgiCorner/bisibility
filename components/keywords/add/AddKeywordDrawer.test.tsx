@@ -7,6 +7,20 @@ import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
 
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: vi.fn(async () => ({
+    requires_review: false,
+    preview_token: null,
+    expected_revision: "1",
+    capacity: null,
+    review_reasons: [],
+    cost_before_cents: 0,
+    cost_after_cents: 0,
+    window_start: "2026-10-01T00:00:00.000Z",
+  })),
+}));
+
 const { addKeywordsMatrix, createProjectMarket } = vi.hoisted(() => ({
   addKeywordsMatrix: vi.fn(async (_input: unknown) => ({ created: 1, keywords: [] })),
   createProjectMarket: vi.fn(async () => ({
@@ -159,16 +173,50 @@ function addKeywordForm() {
   return form;
 }
 
+it("uses field geometry for every single-line input and method tabs", () => {
+  renderDrawer({
+    tagSuggestions: ["Product"],
+    projectMarkets: { ...projectMarkets, marketCreation },
+  });
+  const target = addKeywordForm().querySelector('input[name="targetUrl"]');
+  expect.soft(target).toHaveClass("min-h-10", "max-sm:min-h-11");
+  expect.soft(target?.parentElement).toHaveClass("ring-1", "ring-inset", "ring-border-control");
+  expect.soft(target).toHaveClass("border-0");
+  for (const name of ["topic", "intent"]) {
+    const input = addKeywordForm().querySelector(`input[name="${name}"]`);
+    expect.soft(input).toHaveClass("min-h-10", "max-sm:min-h-11");
+  }
+  for (const name of ["New market", "Product"]) {
+    expect.soft(screen.getByRole("button", { name })).toHaveAttribute("data-size", "input");
+  }
+  expect.soft(document.getElementById("add-tags-input")).toHaveClass("min-h-10", "max-sm:min-h-11");
+  const method = screen.getByRole("radio", { name: "Manual" }).closest("fieldset");
+  expect.soft(method?.firstElementChild).toHaveClass("min-h-10", "max-sm:min-h-11");
+  expect
+    .soft(screen.getByRole("radio", { name: "Manual" }).nextElementSibling)
+    .toHaveClass("whitespace-nowrap");
+});
+
+it("keeps the field-sized primary content-width on desktop and full-width only on mobile", () => {
+  renderDrawer();
+  const submit = screen.getByRole("button", { name: "Add keywords" });
+  expect.soft(submit).toHaveAttribute("data-size", "input");
+  expect.soft(submit).toHaveClass("w-full", "sm:w-auto");
+  expect.soft(submit).not.toHaveStyle({ flex: "1" });
+  expect.soft(submit.parentElement).toHaveClass("sm:w-auto", "sm:flex-none");
+  expect.soft(submit.parentElement?.parentElement).toHaveClass("justify-end");
+});
+
 describe("AddKeywordDrawer", () => {
-  it("uses the toolbar SegmentedControl for Manual and API", () => {
+  it("uses the field SegmentedControl for Manual and API", () => {
     renderDrawer();
     const selected = screen.getByRole("radio", { name: "Manual" });
     expect(selected).toBeChecked();
     expect(selected.parentElement?.parentElement).toHaveClass(
       "inline-flex",
-      "min-h-[34px]",
+      "min-h-10",
+      "max-sm:min-h-11",
       "bg-transparent",
-      "text-[12.5px]",
       "border-border-control",
     );
     expect(selected.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border");
@@ -226,6 +274,7 @@ describe("AddKeywordDrawer", () => {
 
     expect(screen.getAllByText("Required")).toHaveLength(3);
     expect(screen.getByText("Keywords").nextElementSibling).toHaveTextContent("Required");
+    expect(screen.getByLabelText("Keywords")).toHaveAttribute("aria-required", "true");
     expect(screen.getByText("Markets").nextElementSibling).toHaveTextContent("Required");
     expect(screen.getByText("Devices").nextElementSibling).toHaveTextContent("Required");
     expect(screen.queryByText("Optional")).not.toBeInTheDocument();

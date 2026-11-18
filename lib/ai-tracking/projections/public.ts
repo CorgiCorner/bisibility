@@ -86,6 +86,8 @@ export function publicTrackingRun(
   return {
     id: run.publicId,
     state: run.state,
+    reasonCode: run.reasonCode,
+    reasonDetails: run.reasonDetails,
     createdAt: run.createdAt,
     updatedAt: run.updatedAt,
     finishedAt: run.finishedAt,

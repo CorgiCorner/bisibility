@@ -146,4 +146,37 @@ describe("HistoryDrawer", () => {
     );
     expect(await screen.findByRole("alert")).toHaveTextContent("History could not be loaded.");
   });
+
+  it("keeps the list visible while filtering by model and keeps pinned independent", async () => {
+    let finishFilter: (result: HistoryPage) => void = () => {};
+    const pending = new Promise<HistoryPage>((resolve) => {
+      finishFilter = resolve;
+    });
+    const load = vi.fn(async ({ filters }: HistoryQuery) =>
+      filters.length ? pending : page([row("first")]),
+    );
+    renderDrawer(adapter(load, { modelOption: (value) => ({ label: "ChatGPT model", value }) }));
+    expect(await screen.findByText("first")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Filter by model" }));
+    fireEvent.click(await screen.findByText("ChatGPT model"));
+    await waitFor(() =>
+      expect(load).toHaveBeenCalledWith(
+        expect.objectContaining({ filters: [{ facet: "engine", value: "chat_gpt" }] }),
+      ),
+    );
+    expect(screen.getByText("first")).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: "Pinned 1" }));
+    await waitFor(() =>
+      expect(load).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filters: [
+            { facet: "engine", value: "chat_gpt" },
+            { facet: "pinned", value: "1" },
+          ],
+        }),
+      ),
+    );
+    finishFilter(page([]));
+    expect(await screen.findByText("No matching runs")).toBeVisible();
+  });
 });

@@ -4,6 +4,7 @@ import { consume } from "@/lib/api/ratelimit";
 import { GscPropertyUrlError } from "@/lib/providers/analytics/gsc-property-membership";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { searchConsolePath } from "@/lib/routing/app-path";
+import { errorLogFields } from "@/lib/search-index/error-log-fields";
 import { notIndexedUrlsCsv } from "@/lib/search-index/not-indexed-csv";
 import { readProjectSitemaps } from "@/lib/search-index/read-sitemaps";
 import { searchIndexInspectionSchema } from "@/lib/search-index/schema";
@@ -84,7 +85,11 @@ export async function readPageIndexingSitemaps(
     if (!rate.success) return { status: "rate_limited" };
     await readProjectSitemaps(project.id);
     return { status: "ok" };
-  } catch {
+  } catch (error) {
+    console.error("[search-index] sitemap read failed", {
+      ...errorLogFields(error),
+      projectId: project.id,
+    });
     return { status: "error" };
   } finally {
     revalidatePath(searchConsolePath(project.publicId));

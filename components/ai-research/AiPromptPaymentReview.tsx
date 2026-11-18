@@ -4,7 +4,7 @@ import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages
 import { Disclosure } from "@/components/ui/Disclosure";
 import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
-import { failureCopyKey } from "./ai-research-failure-copy";
+import { failureMessage } from "./ai-research-failure-copy";
 import type { useAiResearchSubmission } from "./useAiResearchSubmission";
 
 export function AiPromptPaymentReview({
@@ -34,7 +34,7 @@ export function AiPromptPaymentReview({
   const failure = error
     ? t("requestFailure")
     : outcome && !outcome.ok
-      ? presentBudgetDenial(outcome.reason, errors, t(failureCopyKey(outcome.reason)))
+      ? presentBudgetDenial(outcome.reason, errors, failureMessage(outcome.reason, t))
       : undefined;
   return (
     <ActionPaymentReview

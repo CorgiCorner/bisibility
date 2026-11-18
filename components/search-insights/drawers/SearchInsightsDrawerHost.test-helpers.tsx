@@ -166,8 +166,17 @@ export function resetDrawerHostMocks() {
   actions.loadTrackDialogAction.mockResolvedValue({
     costContext: storyCostContext,
     defaultDevice: "desktop",
-    defaultMarketKey: "es-es",
-    projectMarkets: storyProjectMarkets,
+    defaultMarketKey: "ES",
+    projectMarkets: {
+      ...storyProjectMarkets,
+      markets: storyProjectMarkets.markets.map((market) => ({
+        ...market,
+        canonicalKey:
+          ({ "es-es": "ES", "es-en": "ES@en", "be-nl": "BE@nl" } as Record<string, string>)[
+            market.canonicalKey
+          ] ?? market.canonicalKey,
+      })),
+    },
   });
   actions.addKeywordsAction.mockResolvedValue({
     created: 1,

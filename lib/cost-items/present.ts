@@ -16,6 +16,7 @@ export type StoredCostItem = {
   currency: string;
   endedOn: string | null;
   name: string;
+  customType?: string | null;
   kind: CostKind;
   planLabel: string;
   priceChanges: CostPriceChange[];
@@ -33,6 +34,7 @@ export type CostRow = {
   endedOn: string | null;
   id: string;
   itemMonthlyMinor: number;
+  customType?: string | null;
   kind: CostKind;
   logoDomain: string | null;
   name: string;
@@ -93,6 +95,7 @@ export function presentUsageCosts(input: {
         endedOn: item.endedOn,
         id: item.publicId,
         itemMonthlyMinor: itemMonthlyMinor(model, input.month),
+        customType: item.customType ?? null,
         kind: item.kind,
         logoDomain: item.catalogKey ? (logos.get(item.catalogKey) ?? null) : null,
         name: item.name,

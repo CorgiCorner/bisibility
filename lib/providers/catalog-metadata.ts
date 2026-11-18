@@ -1,3 +1,4 @@
+import { MODEL_PROVIDER_CATALOG } from "@/lib/providers/model/catalog-metadata";
 import { PROVIDER_ALLOCATION_METADATA } from "./runtime-allocation-metadata";
 import { localSequenceProviderEnabled } from "./serp/synthetic-mode";
 import type { ProviderCatalogEntry } from "./types";
@@ -94,5 +95,6 @@ const localSequenceEnabled = localSequenceProviderEnabled(
 
 export const PROVIDER_CATALOG = [
   ...BASE_PROVIDER_CATALOG,
+  ...MODEL_PROVIDER_CATALOG,
   ...(localSequenceEnabled ? [LOCAL_SEQUENCE_CATALOG_ITEM] : []),
 ] as const satisfies readonly ProviderCatalogEntry[];

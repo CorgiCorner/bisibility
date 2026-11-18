@@ -16,7 +16,6 @@ const schedules: ScheduleListRow[] = [
   {
     enabled: true,
     frequency: "daily",
-    isDefault: true,
     keywordCount: 248,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -32,7 +31,6 @@ const schedules: ScheduleListRow[] = [
     blocked: true,
     enabled: true,
     frequency: "daily",
-    isDefault: false,
     keywordCount: 350,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -48,7 +46,6 @@ const schedules: ScheduleListRow[] = [
   {
     enabled: false,
     frequency: "weekly",
-    isDefault: false,
     keywordCount: 40,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -66,7 +63,6 @@ const schedules: ScheduleListRow[] = [
     dayOfMonth: 1,
     enabled: true,
     frequency: "monthly",
-    isDefault: false,
     keywordCount: 12,
     memberDeviceCount: 1,
     memberMarketCount: 1,
@@ -82,31 +78,38 @@ const schedules: ScheduleListRow[] = [
 
 const resizeColumnLabels = ["Schedule", "Cadence", "Members", "Per run", "Next"] as const;
 
-function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {}) {
-  return render(
-    <SchedulesList
-      canUpdate
-      projectId="prj_story"
-      projectRef="prj_story"
-      schedules={schedules}
-      {...overrides}
-    />,
-  );
-}
-
-async function tabPastScheduleResizeControls(user: ReturnType<typeof userEvent.setup>) {
-  await user.tab();
-  expect(screen.getByRole("button", { name: "Schedule status" })).toHaveFocus();
-  await user.tab();
-  expect(screen.getByRole("link", { name: "New schedule" })).toHaveFocus();
-
-  for (const label of resizeColumnLabels) {
-    await user.tab();
-    expect(screen.getByRole("separator", { name: `Resize ${label} column` })).toHaveFocus();
+describe.each([false, true])("SchedulesList (unified=%s)", (unified) => {
+  function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {}) {
+    return render(
+      <SchedulesList
+        canUpdate
+        projectId="prj_story"
+        projectRef="prj_story"
+        schedules={schedules}
+        readOnlySchedules={unified ? [] : undefined}
+        {...overrides}
+      />,
+    );
   }
-}
 
-describe("SchedulesList", () => {
+  it("does not badge a legacy default schedule", () => {
+    const legacy = { ...schedules[0], isDefault: true };
+    renderList({ schedules: [legacy] });
+    expect(screen.queryByText("Default")).toBeNull();
+  });
+
+  async function tabPastScheduleResizeControls(user: ReturnType<typeof userEvent.setup>) {
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Schedule status" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "New schedule" })).toHaveFocus();
+
+    for (const label of resizeColumnLabels) {
+      await user.tab();
+      expect(screen.getByRole("separator", { name: `Resize ${label} column` })).toHaveFocus();
+    }
+  }
+
   it("keeps an empty schedule accessible and explains why it has no next check", () => {
     renderList({
       schedules: [{ ...schedules[0], assignedKeywordCount: 0, keywordCount: 0, targetCount: 0 }],
@@ -136,10 +139,10 @@ describe("SchedulesList", () => {
   it("renders the Schedule, Cadence, Members, Per run, and Next columns", () => {
     renderList();
 
-    expect(screen.getByRole("heading", { name: "4 schedules" }).closest("header")).not.toHaveClass(
-      "border-b",
-    );
-    const table = screen.getByRole("table", { name: "Schedules" });
+    expect(
+      screen.getByRole("heading", { name: unified ? "Checks" : "4 schedules" }).closest("header"),
+    ).not.toHaveClass("border-b");
+    const table = screen.getByRole("table", { name: unified ? "Checks" : "Schedules" });
     expect(table.querySelector('[role="rowgroup"] > [role="row"]')).toHaveClass(
       "border-y",
       "border-border",
@@ -181,7 +184,9 @@ describe("SchedulesList", () => {
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "New schedule" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Schedule status" })).toBeVisible();
-    expect(screen.queryByRole("table", { name: "Schedules" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: unified ? "Checks" : "Schedules" }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides New schedule when the viewer cannot create one", () => {

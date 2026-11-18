@@ -1,3 +1,4 @@
+import { AssistantFundingSettings } from "@/components/assistant/AssistantFundingSettings";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { IntegrationCategories } from "@/components/integrations/IntegrationCategories";
 import { PageContent } from "@/components/shell/PageContent";
@@ -16,6 +17,7 @@ import {
   updateProviderSettings,
 } from "@/lib/actions/providers";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
+import { assistantConfig } from "@/lib/assistant/config";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { getResolvedDateFormat } from "@/lib/dates/request";
@@ -61,7 +63,11 @@ export default async function IntegrationsPage({
   searchParams,
 }: Readonly<IntegrationsPageProps>) {
   const [{ project }, runtime] = await Promise.all([routeParams, resolveRegionalDocumentLocale()]);
-  const messages = await loadCoreMessages(runtime.locale, ["shared", "projectIntegrations"]);
+  const messages = await loadCoreMessages(runtime.locale, [
+    "shared",
+    "projectIntegrations",
+    "assistant",
+  ]);
   const t = createIntlTranslator(runtime.locale, messages, runtime);
   const { publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
@@ -98,6 +104,7 @@ export default async function IntegrationsPage({
     loadSearchSyncPreflightPlan(publicId),
   ]);
   const role = getProjectRole(readable.actor, readable.project.id);
+  const assistant = await assistantConfig(publicId, readable.actor.id);
   const canManageProviders = canProjectAction(role, "manage", "provider_connection");
   const canUpdateProject = canProjectAction(role, "update", "project");
   const noProvidersYet = connectionCount === 0;
@@ -109,12 +116,15 @@ export default async function IntegrationsPage({
       timeZone={runtime.timeZone}
     >
       <PageContent className="flex flex-col gap-5">
-        <section aria-label={t("projectIntegrations.tabs.connections")}>
+        <section
+          aria-label={t("projectIntegrations.tabs.connections")}
+          className="flex flex-col gap-5"
+        >
           <IntegrationCategories
             actions={providerActions}
             canManageProviders={canManageProviders}
             canUpdateProject={canUpdateProject}
-            categories={categories}
+            categories={categories.filter((category) => category.id !== "model")}
             deploymentMode={deploymentMode()}
             initialConnectProviderId={canManageProviders ? initialConnectProviderId : undefined}
             key={publicId}
@@ -123,6 +133,23 @@ export default async function IntegrationsPage({
             projectRef={publicId}
             searchSyncPlan={searchSyncPlan}
             timeZone={timeZone}
+          />
+          <AssistantFundingSettings
+            providers={categories
+              .filter((category) => category.id === "model")
+              .flatMap((category) => category.providers)}
+            actions={providerActions}
+            canManage={canManageProviders}
+            initialConnectProviderId={initialConnectProviderId}
+            timeZone={timeZone}
+            config={assistant}
+            key={[
+              ...assistant.fundingPreference.map((item) => `${item.provider}:${item.mode}`),
+              ...assistant.funding
+                .filter((item) => item.mode === "byok")
+                .map((item) => `${item.provider}:${item.credential?.status ?? "none"}`),
+            ].join("|")}
+            projectRef={publicId}
           />
         </section>
       </PageContent>

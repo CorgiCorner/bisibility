@@ -23,6 +23,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { archivedRow, normalRow } from "./market-page-rows";
+import { type ReviewedMarketActions, useMarketSpendReview } from "./useMarketSpendReview";
 
 type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"> & {
   archivedMarkets: ArchivedProjectMarketsView;
@@ -36,15 +37,9 @@ type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"
   marketDeviceActions?: MarketDeviceActions;
   markets: ProjectMarketsView;
   onArchive: (input: { marketId: string; projectId: string }) => Promise<unknown>;
-  onRestore: (input: { marketId: string; projectId: string }) => Promise<unknown>;
   onSave: (input: ProjectMarketEditInput) => Promise<unknown>;
-  onStatusChange: (input: {
-    enabled: boolean;
-    marketId: string;
-    projectId: string;
-  }) => Promise<{ status: string }>;
   openNewMarket?: boolean;
-};
+} & ReviewedMarketActions;
 
 function NewMarketSeam({
   canCreate,
@@ -101,6 +96,12 @@ export function MarketsPageContent({
   const t = useTranslations("projectMarkets");
   const pathname = usePathname();
   const router = useRouter();
+  const spendReview = useMarketSpendReview({
+    projectId: markets.projectId,
+    onRestore,
+    onStatusChange,
+    onRestored: router.refresh,
+  });
   const [archiveTarget, setArchiveTarget] = useState<MarketsPageRow | null>(null);
   const [editTarget, setEditTarget] = useState<MarketsPageRow | null>(null);
   const [deviceTarget, setDeviceTarget] = useState<MarketsPageRow | null>(null);
@@ -138,11 +139,6 @@ export function MarketsPageContent({
     router.refresh();
   }
 
-  async function restore(market: MarketsPageRow) {
-    await onRestore({ marketId: market.id, projectId: markets.projectId });
-    router.refresh();
-  }
-
   async function save(input: ProjectMarketEditInput) {
     await onSave(input);
     router.refresh();
@@ -151,6 +147,7 @@ export function MarketsPageContent({
   return (
     <div className="grid gap-5" data-markets-page="">
       {preflight.dialog}
+      {spendReview.dialog}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border">
         <Tabs
           ariaLabel={t("visibility")}
@@ -213,7 +210,7 @@ export function MarketsPageContent({
               onAddKeywords={setKeywordTarget}
               onAddDevice={canAddKeywords && marketDeviceActions ? setDeviceTarget : undefined}
               onEdit={setEditTarget}
-              onStatusChange={(input) => onStatusChange({ ...input, projectId: markets.projectId })}
+              onStatusChange={spendReview.statusChange}
               onStatusConfirmed={router.refresh}
               projectId={markets.projectId}
               rows={visibleRows.filter((market) => market.status === "active")}
@@ -229,9 +226,7 @@ export function MarketsPageContent({
                 onAddKeywords={setKeywordTarget}
                 onAddDevice={canAddKeywords && marketDeviceActions ? setDeviceTarget : undefined}
                 onEdit={setEditTarget}
-                onStatusChange={(input) =>
-                  onStatusChange({ ...input, projectId: markets.projectId })
-                }
+                onStatusChange={spendReview.statusChange}
                 onStatusConfirmed={router.refresh}
                 projectId={markets.projectId}
                 rows={visibleRows.filter((market) => market.status === "paused")}
@@ -251,7 +246,7 @@ export function MarketsPageContent({
         key={`restore:${restoreTarget?.id ?? "closed"}`}
         market={restoreTarget}
         onClose={() => setRestoreTarget(null)}
-        onRestore={restore}
+        onRestore={spendReview.restore}
       />
       <MarketEditSheet
         canEdit={canEdit}

@@ -3,13 +3,17 @@ import type { DefinitionTransaction } from "./model";
 import { assertDefinitionRunCredential } from "./worker-credential";
 
 vi.mock("server-only", () => ({}));
-function fixture(key: unknown = { scopes: ["write"], revokedAt: null, expiresAt: null }) {
+function fixture(
+  key: unknown = { createdById: "creator", scopes: ["write"], revokedAt: null, expiresAt: null },
+  role: string | null = "member",
+) {
   const findFirst = vi.fn(async () => key);
   const raw = vi.fn(async () => []);
+  const membership = { findUnique: vi.fn(async () => (role ? { role } : null)) };
   return {
     findFirst,
     raw,
-    tx: { $queryRaw: raw, apiKey: { findFirst } } as unknown as DefinitionTransaction,
+    tx: { $queryRaw: raw, apiKey: { findFirst }, membership } as unknown as DefinitionTransaction,
   };
 }
 describe("original caller key is separate from provider secret and owner", () => {
@@ -22,14 +26,27 @@ describe("original caller key is separate from provider secret and owner", () =>
     });
     expect(f.findFirst).toHaveBeenCalledWith({
       where: { id: "original-key", projectId: "project-a" },
-      select: { scopes: true, revokedAt: true, expiresAt: true },
+      select: { scopes: true, revokedAt: true, expiresAt: true, createdById: true },
     });
   });
+  it.each(["viewer", null])(
+    "refuses the launch key once its creator is %s in the project",
+    async (role) => {
+      const f = fixture(undefined, role);
+      await expect(
+        assertDefinitionRunCredential(f.tx, "project-a", {
+          requestedById: null,
+          credentialKind: "project_key",
+          credentialId: "original-key",
+        }),
+      ).rejects.toThrow();
+    },
+  );
   it.each([
     null,
-    { scopes: ["read"], revokedAt: null, expiresAt: null },
-    { scopes: ["admin"], revokedAt: new Date(), expiresAt: null },
-    { scopes: ["write"], revokedAt: null, expiresAt: new Date(0) },
+    { createdById: "creator", scopes: ["read"], revokedAt: null, expiresAt: null },
+    { createdById: "creator", scopes: ["admin"], revokedAt: new Date(), expiresAt: null },
+    { createdById: "creator", scopes: ["write"], revokedAt: null, expiresAt: new Date(0) },
   ])(
     "cannot replace a missing/disabled key with any same-project writable key (%j)",
     async (key) => {

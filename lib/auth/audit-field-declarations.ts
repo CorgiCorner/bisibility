@@ -3,6 +3,7 @@ import {
   registerAiSourceAuditDeclarations,
   registerAiTrackingAuditDeclarations,
 } from "@/lib/auth/audit-field-declarations-ai-tracking";
+import { registerAssistantAuditDeclarations } from "@/lib/auth/audit-field-declarations-assistant";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerDomainVerificationAuditDeclarations } from "@/lib/auth/audit-field-declarations-domain-verification";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
@@ -165,6 +166,7 @@ declare(["settings.budget_updated"], {
   before: f.numbers("capCents"),
 });
 const costItem = {
+  ...strings("customType"),
   ...f.numbers("amountMinor"),
   ...strings("billing", "currency", "endedOn", "id", "kind", "name", "split", "startedOn"),
   projectIds: list("string"),
@@ -298,6 +300,7 @@ registerRankCheckRunAuditDeclarations(declare);
 registerAiTrackingAuditDeclarations(declare);
 registerAiSourceAuditDeclarations(declare);
 registerRecoveryAuditDeclarations(declare);
+registerAssistantAuditDeclarations(declare);
 registerDomainVerificationAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {

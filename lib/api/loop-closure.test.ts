@@ -13,10 +13,13 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     user: { findUnique: vi.fn().mockResolvedValue({ name: "Fixture actor" }) },
     rankCheck: { count: vi.fn(), findMany: vi.fn() },
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn() },
-    project: { findFirst: vi.fn(), update: vi.fn() },
+    project: { findFirst: vi.fn(), findUniqueOrThrow: vi.fn(), update: vi.fn() },
+    projectDefaults: { findUnique: vi.fn(async () => null) },
+    projectSyncPause: { create: vi.fn(), deleteMany: vi.fn() },
     sitemapSnapshot: { findFirst: vi.fn() },
     triggeredAlert: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
   },
@@ -33,6 +36,7 @@ vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
   writeAudit: mocks.writeAudit,
   writeAuditFailure: vi.fn(),
+  withProjectKeyAudit: (_attribution: unknown, run: () => Promise<unknown>) => run(),
 }));
 vi.mock("@/lib/auth/session", () => ({
   getSession: mocks.requireSession,
@@ -57,6 +61,7 @@ let scopes: ("admin" | "read" | "write")[] = ["admin"];
 
 function authRow() {
   return {
+    createdById: "creator_1",
     hashedKey: hashApiKey(rawKey),
     id: "api_key_1",
     name: "Loop closure",
@@ -107,9 +112,8 @@ describe("loop-closure API routes", () => {
           : project(),
       ),
     );
-    mocks.prisma.project.update.mockImplementation(({ data }) =>
-      Promise.resolve({ ...project(), sitemapMonitoringEnabled: data.sitemapMonitoringEnabled }),
-    );
+    mocks.prisma.project.findUniqueOrThrow.mockImplementation(async () => project());
+    mocks.prisma.project.update.mockImplementation(async () => project());
     mocks.prisma.triggeredAlert.updateMany.mockResolvedValue({ count: 2 });
     mocks.prisma.triggeredAlert.findFirst.mockResolvedValue({
       id: "alert_1",
@@ -276,6 +280,7 @@ describe("loop-closure API routes", () => {
         projectId: project().id,
         targetId: project().publicId,
       }),
+      mocks.prisma,
     );
     expect(mocks.prisma.project.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: project().id } }),

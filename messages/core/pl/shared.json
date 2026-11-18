@@ -935,6 +935,7 @@
         "archived": "Archiwalny"
       },
       "modes": {
+        "archived": "Zarchiwizowany harmonogram",
         "manual": "Ręcznie",
         "paused": "Wstrzymany",
         "scheduled": "Zapisany harmonogram",
@@ -946,6 +947,7 @@
         "keyword_changed": "Wybrane słowo zmieniło się lub jest niedostępne. Sprawdź wybór.",
         "manual": "Cykliczne wykonywanie nie jest włączone.",
         "paused": "Zapisany harmonogram jest wstrzymany.",
+        "schedule_archived": "Zapisany harmonogram jest zarchiwizowany. Sprawdzenia ręczne nadal korzystają z tego monitora.",
         "definition_changed": "Harmonogram wskazuje wcześniejszą konfigurację.",
         "calendar_changed": "Kalendarz zmienił się lub jest niedostępny. Sprawdź go przed planowaniem."
       },
@@ -2243,6 +2245,31 @@
         "ga4": "Google Analytics 4",
         "plausible": "Plausible"
       }
+    },
+    "scheduleReview": {
+      "title": "Sprawdź koszt harmonogramu",
+      "description": "Szacowany koszt dostawcy przez następne 30 dni.",
+      "before": "Przed zmianą",
+      "after": "Po zmianie",
+      "unknown": "Nieznany",
+      "cancel": "Anuluj",
+      "confirm": "Potwierdź",
+      "changed": "Koszt się zmienił. Sprawdź nową kwotę przed potwierdzeniem.",
+      "emptyScheduleCreated": "Pusty harmonogram został utworzony. Jeśli anulujesz, pozostanie pusty, a słowa kluczowe zachowają obecne harmonogramy.",
+      "capacity": "Ta zmiana przekracza limit Twojego planu. Jeśli potwierdzisz, zapis zostanie odrzucony, chyba że Twój plan na to pozwala.",
+      "capacityDetail": "{dimension}: po zmianie {projected}, limit {limit}.",
+      "reasons": {
+        "cost_increase": "Szacowany koszt cyklicznych sprawdzeń rośnie.",
+        "manual_to_scheduled": "Ręczne słowa kluczowe będą sprawdzane automatycznie.",
+        "provider_route_change": "Zmienia się dostawca sprawdzeń.",
+        "price_unknown": "Niektóre ceny dostawców są nieznane. Końcowy koszt może się różnić."
+      },
+      "dimensions": {
+        "scheduledKeywords": "Zaplanowane słowa kluczowe",
+        "scheduleFrequencies": "Sprawdzenia tygodniowo",
+        "promptSchedules": "Sprawdzenia promptów tygodniowo"
+      },
+      "previewFailed": "Nie udało się wyświetlić podglądu zmiany. Spróbuj ponownie."
     }
   }
 }

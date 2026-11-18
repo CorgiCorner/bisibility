@@ -21,15 +21,21 @@ export function GooglePropertyDetails({ property }: Readonly<{ property: GoogleP
   );
 }
 
-export function permissionLabel(permissionLevel: string, t?: ReturnType<typeof useTranslations>) {
-  if (!t) return permissionLevel;
-  if (permissionLevel === "siteOwner") return t("permissionOwner");
-  if (permissionLevel === "siteFullUser") return t("permissionFull");
-  if (permissionLevel === "siteRestrictedUser") return t("permissionRestricted");
+export function permissionLabel(
+  permissionLevel: string,
+  t?: ReturnType<typeof useTranslations<"projectIntegrations.oauth">>,
+) {
+  if (permissionLevel === "siteOwner") return t?.("permissionOwner") ?? permissionLevel;
+  if (permissionLevel === "siteFullUser") return t?.("permissionFull") ?? permissionLevel;
+  if (permissionLevel === "siteRestrictedUser")
+    return t?.("permissionRestricted") ?? permissionLevel;
   return permissionLevel;
 }
 
-function scopeLabel(scope: OAuthScope | string, t: ReturnType<typeof useTranslations>) {
+function scopeLabel(
+  scope: OAuthScope | string,
+  t: ReturnType<typeof useTranslations<"projectIntegrations.oauth">>,
+) {
   if (scope === "analytics_readonly") return t("scopeAnalyticsReadonly");
   if (scope === "search_console_readonly") return t("scopeSearchConsoleReadonly");
   if (scope === "account_identity") return t("scopeAccountIdentity");

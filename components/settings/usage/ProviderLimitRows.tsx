@@ -25,8 +25,18 @@ function rowSurface(row: ProjectBudgetRow): LimitSurface | null {
   return row.traffic.kind === "surface" ? row.traffic.surface : null;
 }
 
+type LimitCopy = ReturnType<typeof useTranslations<"projectSettingsUsage.limits">>;
+type LimitUnit = (unit: string, count?: string) => string;
+
 /** Display text for one monthly limit reading, shared by project and provider limits. */
-export function useLimitText() {
+export function useLimitText(): {
+  amount: (value: Figure | "unlimited", unit?: LimitUnit) => string;
+  capped: (row: ProjectBudgetRow) => boolean;
+  estimated: (row: ProjectBudgetRow) => boolean;
+  headline: (row: ProjectBudgetRow, unit?: LimitUnit) => string;
+  status: (row: ProjectBudgetRow, unit?: LimitUnit) => string;
+  t: LimitCopy;
+} {
   const t = useTranslations("projectSettingsUsage.limits");
   const p = useUsagePresentation();
   const locale = useLocale();
@@ -184,7 +194,7 @@ export function ProviderLimitGroup({
   return (
     <section
       aria-label={entry.label}
-      className="min-w-0 space-y-2"
+      className="grid min-w-0 gap-3"
       data-provider-limits={entry.connection.connectionId}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">

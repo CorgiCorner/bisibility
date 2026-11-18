@@ -28,6 +28,7 @@ export type SheetProps = {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  description?: ReactNode;
   /** Overrides the close control's accessible name for a named panel. */
   closeLabel?: string;
   backAction?: DrawerBackAction;
@@ -48,6 +49,7 @@ export function Sheet({
   backAction,
   children,
   closeLabel,
+  description,
   footer,
   heightVariant = "form",
   headerAction,
@@ -61,6 +63,7 @@ export function Sheet({
   const isDesktop = useMediaQuery(FLOATING_DRAWER_DESKTOP_QUERY);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const titleId = useId();
+  const descriptionId = useId();
   const placement: FloatingDrawerPlacement = floatingDrawerPlacement(isDesktop);
   const sheet = placement === "sheet";
   const dataMode = heightVariant === "filters" ? "filters-drawer" : "form-sheet";
@@ -71,6 +74,7 @@ export function Sheet({
     "data-placement": FloatingDrawerPlacement;
   } = {
     "aria-labelledby": titleId,
+    "aria-describedby": description ? descriptionId : undefined,
     className: cn(
       FLOATING_DRAWER_FRAME_CLASS,
       sheet ? FLOATING_DRAWER_SHEET_CLASS : FLOATING_DRAWER_PANEL_CLASS,
@@ -107,12 +111,19 @@ export function Sheet({
         >
           <div className="flex min-w-0 items-center gap-2">
             {backAction ? <DrawerBackButton {...backAction} /> : null}
-            <h2
-              className="m-0 min-w-0 text-[18px] font-semibold leading-tight tracking-[-0.4px] text-fg"
-              id={titleId}
-            >
-              {title}
-            </h2>
+            <div className="min-w-0">
+              <h2
+                className="m-0 min-w-0 text-[18px] font-semibold leading-tight tracking-[-0.4px] text-fg"
+                id={titleId}
+              >
+                {title}
+              </h2>
+              {description ? (
+                <p className="m-0 mt-1 text-ui-caption text-fg-muted" id={descriptionId}>
+                  {description}
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {headerAction}

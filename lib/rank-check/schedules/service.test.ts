@@ -1,12 +1,7 @@
+import { withAppRoute } from "@/lib/api/app-route";
 import { ApiNotFoundError } from "@/lib/api/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createSchedule,
-  DefaultCheckScheduleDeletionError,
-  deleteSchedule,
-  setDefaultSchedule,
-  updateSchedule,
-} from "./service";
+import { createSchedule, deleteSchedule, updateSchedule } from "./service";
 
 const mocks = vi.hoisted(() => {
   const tx = {
@@ -32,6 +27,11 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/auth/session", () => ({ getSession: async () => ({ user: { id: "user_1" } }) }));
+vi.mock("@/lib/actions/_shared", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/actions/_shared")>()),
+  getActionActor: async () => ({ id: "user_1", memberships: [] }),
+}));
 vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
   writeAudit: mocks.writeAudit,
@@ -48,8 +48,6 @@ vi.mock("../planner/reconcile-schedule", () => ({
 }));
 
 const scheduleId = `sch_${"b".repeat(24)}` as `sch_${string}`;
-const fallbackId = `sch_${"f".repeat(24)}` as `sch_${string}`;
-const keywordId = `kw_${"k".repeat(24)}`;
 const schedule = {
   cronExpression: null,
   enabled: true,
@@ -134,7 +132,7 @@ describe("check schedule service", () => {
 
     expect(mocks.tx.checkSchedule.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ enabled: true, isDefault: false, projectId: "project_1" }),
+        data: expect.objectContaining({ enabled: true, projectId: "project_1" }),
       }),
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -184,44 +182,81 @@ describe("check schedule service", () => {
     );
   });
 
-  it("clears and sets the default in one transaction", async () => {
-    mocks.tx.checkSchedule.findFirst
-      .mockResolvedValueOnce(schedule)
-      .mockResolvedValueOnce({ publicId: `sch_${"a".repeat(24)}` });
-    mocks.tx.checkSchedule.update.mockResolvedValue({ ...schedule, isDefault: true });
+  it.each([false, true])(
+    "refuses a non-empty schedule with isDefault=%s without mutations",
+    async (isDefault) => {
+      mocks.tx.checkSchedule.findFirst.mockResolvedValue({ ...schedule, isDefault });
+      mocks.tx.keyword.findMany.mockResolvedValue([{ id: "archived_keyword" }]);
 
-    await setDefaultSchedule("user_1", "project_1", scheduleId);
+      await expect(deleteSchedule("user_1", "project_1", scheduleId)).rejects.toMatchObject({
+        code: "check_schedule_not_empty",
+        message: "Move or remove all keywords before deleting this schedule.",
+      });
+      expect(mocks.tx.keyword.findMany).toHaveBeenCalledWith({
+        select: { id: true },
+        where: { checkScheduleId: schedule.id },
+      });
+      expect(mocks.tx.keyword.updateMany).not.toHaveBeenCalled();
+      expect(mocks.tx.$executeRaw).not.toHaveBeenCalled();
+      expect(mocks.refresh).not.toHaveBeenCalled();
+      expect(mocks.reconcile).not.toHaveBeenCalled();
+      expect(mocks.tx.checkSchedule.delete).not.toHaveBeenCalled();
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+    },
+  );
 
-    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(mocks.tx.checkSchedule.updateMany).toHaveBeenCalledWith({
-      data: { isDefault: false },
-      where: { archivedAt: null, isDefault: true, projectId: "project_1" },
+  it("returns 409 with unchanged membership, then permits an empty schedule deletion", async () => {
+    const member = { id: "keyword_1", checkScheduleId: schedule.id };
+    const before = { ...member };
+    mocks.tx.checkSchedule.findFirst.mockResolvedValue(schedule);
+    mocks.tx.keyword.findMany.mockResolvedValue([member]);
+    mocks.tx.keyword.updateMany.mockImplementation(async () => {
+      member.checkScheduleId = "other_schedule";
+      return { count: 1 };
     });
-    expect(mocks.tx.checkSchedule.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { isDefault: true }, where: { id: "schedule_1" } }),
-    );
+    mocks.tx.checkSchedule.delete.mockImplementation(async () => {
+      member.checkScheduleId = "";
+      return schedule;
+    });
+    const response = await withAppRoute(async () => {
+      await deleteSchedule("user_1", "project_1", scheduleId);
+      return Response.json({ deleted: true });
+    })(new Request("https://example.com/api/app/schedules"));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ errors: { code: "check_schedule_not_empty" } });
+    expect(member).toEqual(before);
+    expect(mocks.tx.keyword.updateMany).not.toHaveBeenCalled();
+    expect(mocks.tx.checkSchedule.delete).not.toHaveBeenCalled();
+    expect(mocks.reconcile).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+
+    mocks.tx.keyword.findMany.mockResolvedValue([]);
+    await expect(deleteSchedule("user_1", "project_1", scheduleId)).resolves.toEqual({
+      deleted: true,
+    });
+    expect(mocks.tx.checkSchedule.delete).toHaveBeenCalledExactlyOnceWith({
+      where: { id: schedule.id },
+    });
+  });
+
+  it.each([false, true])("deletes an empty schedule with isDefault=%s", async (isDefault) => {
+    mocks.tx.checkSchedule.findFirst.mockResolvedValue({ ...schedule, isDefault });
+    await expect(deleteSchedule("user_1", "project_1", scheduleId)).resolves.toEqual({
+      deleted: true,
+    });
+    expect(mocks.reconcile).toHaveBeenCalledExactlyOnceWith("schedule_1", mocks.tx, {
+      deleting: true,
+    });
+    expect(mocks.tx.checkSchedule.delete).toHaveBeenCalledWith({ where: { id: "schedule_1" } });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
-        action: "check_schedule.set_default",
-        after: { publicId: scheduleId },
-        before: { publicId: `sch_${"a".repeat(24)}` },
+        action: "check_schedule.delete",
+        after: { keywordIds: [], movedTo: null },
       }),
       mocks.tx,
     );
-    expect(mocks.writeAudit).toHaveBeenCalledTimes(1);
-  });
-
-  it("rejects deletion of the default before any mutation", async () => {
-    mocks.tx.checkSchedule.findFirst.mockResolvedValue({ ...schedule, isDefault: true });
-
-    await expect(deleteSchedule("user_1", "project_1", scheduleId)).rejects.toBeInstanceOf(
-      DefaultCheckScheduleDeletionError,
-    );
-
     expect(mocks.tx.keyword.updateMany).not.toHaveBeenCalled();
     expect(mocks.tx.$executeRaw).not.toHaveBeenCalled();
-    expect(mocks.tx.checkSchedule.delete).not.toHaveBeenCalled();
-    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -230,7 +265,6 @@ describe("check schedule service", () => {
       () =>
         updateSchedule("user_1", "project_1", { projectId: `prj_${"p".repeat(24)}`, scheduleId }),
     ],
-    ["sets default", () => setDefaultSchedule("user_1", "project_1", scheduleId)],
     ["deletes", () => deleteSchedule("user_1", "project_1", scheduleId)],
   ])("returns a typed not-found error when %s an unknown schedule", async (_operation, invoke) => {
     mocks.tx.checkSchedule.findFirst.mockResolvedValueOnce(null);
@@ -288,42 +322,6 @@ describe("check schedule service", () => {
     expect(mocks.tx.$executeRaw.mock.calls[0][0].values).toEqual(
       expect.arrayContaining(["paused", null]),
     );
-  });
-
-  it("moves deleted-schedule members to the default and mirrors its cadence", async () => {
-    const fallback = { ...schedule, id: "schedule_default", isDefault: true, publicId: fallbackId };
-    mocks.tx.checkSchedule.findFirst
-      .mockResolvedValueOnce(schedule)
-      .mockResolvedValueOnce(fallback);
-    mocks.tx.keyword.findMany.mockResolvedValue([{ id: "keyword_1", publicId: keywordId }]);
-
-    await deleteSchedule("user_1", "project_1", scheduleId);
-
-    expect(mocks.tx.keyword.updateMany).toHaveBeenCalledWith({
-      data: { checkScheduleId: "schedule_default" },
-      where: { id: { in: ["keyword_1"] } },
-    });
-    expect(mocks.tx.$executeRaw.mock.calls[0][0].values).toEqual(
-      expect.arrayContaining(["daily", "keyword_1"]),
-    );
-    expect(mocks.refresh).toHaveBeenCalledWith({ keywordIds: ["keyword_1"] }, mocks.tx);
-    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_1", mocks.tx, { deleting: true });
-    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_default", mocks.tx);
-    expect(mocks.tx.checkSchedule.delete).toHaveBeenCalledWith({ where: { id: "schedule_1" } });
-    expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "check_schedule.delete", targetType: "check_schedule" }),
-      mocks.tx,
-    );
-    expect(mocks.writeAudit).toHaveBeenCalledTimes(1);
-  });
-
-  it("returns a typed not-found error when the default schedule is absent during deletion", async () => {
-    mocks.tx.checkSchedule.findFirst.mockResolvedValueOnce(schedule).mockResolvedValueOnce(null);
-
-    await expect(deleteSchedule("user_1", "project_1", scheduleId)).rejects.toBeInstanceOf(
-      ApiNotFoundError,
-    );
-    expect(mocks.tx.checkSchedule.delete).not.toHaveBeenCalled();
   });
 
   it("reconciles planned runs when only time of day changes", async () => {

@@ -121,6 +121,7 @@ describe("hosted MCP client version floor", () => {
 
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { id: "key" },
       project: { ownerId: "user" },
     });

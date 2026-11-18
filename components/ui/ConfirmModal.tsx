@@ -5,10 +5,10 @@ import { Modal, type ModalSize } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
-import { CONFIRM, type ConfirmKind } from "./confirm-copy";
+import { CONFIRM, type ConfirmKind, confirmCopy } from "./confirm-copy";
 import { dangerIconWellClassName } from "./icon-well-styles";
 
-export { CONFIRM, type ConfirmKind } from "./confirm-copy";
+export { CONFIRM, type ConfirmKind, confirmCopy } from "./confirm-copy";
 
 export type ConfirmModalProps = {
   open: boolean;
@@ -50,10 +50,7 @@ export function ConfirmModal({
   const { showToast } = useToast();
   const config = CONFIRM[kind];
   const Icon = config.icon;
-  const body = t(config.bodyKey);
-  const dangerLabel = t(config.dangerLabelKey);
-  const title = t(config.titleKey);
-  const toastMessage = t(config.toastMessageKey);
+  const { body, dangerLabel, title, toastMessage } = confirmCopy(kind, t);
   const expectedWord = typeWord ?? config.typeWord ?? "";
   const needsType = Boolean(config.requireType);
   const isBusy = busy || pending;

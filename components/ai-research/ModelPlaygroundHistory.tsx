@@ -6,35 +6,59 @@ import type { HistoryAdapter } from "@/components/research-history/history-adapt
 import { ResearchHistoryButton } from "@/components/research-history/ResearchHistoryButton";
 import { toggleHistoryPin } from "@/components/research-history/toggle-history-pin";
 import { loadModelPlaygroundHistoryAction } from "@/lib/actions/research-history";
+import { nativeHistoryLabel, nativeHistoryModel } from "@/lib/model-playground/history-label";
 import type { HistoryRow } from "@/lib/research-history/contract";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+export function historyModelOption(value: string, fallback = value) {
+  const model = nativeHistoryModel(value);
+  return { value, label: model?.model ?? fallback, secondary: model?.provider };
+}
+
 function useModelHistoryAdapter(projectId: string): HistoryAdapter {
   const t = useTranslations("researchHistory");
   const engines = useTranslations("projectAiResearch");
   const router = useRouter();
+  const openHref = (row: HistoryRow) => appPath(projectId, "agent-reports", row.key);
   return {
     allHref: `${appPath(projectId, "agent-reports")}?kind=prompt_explorer`,
-    chipLabel: (chip) =>
-      chip.facet === "engine" ? engineChipLabel(chip.value, engines) : chip.value,
+    chipLabel: (chip) => chip.value,
+    modelOption: (value) => historyModelOption(value, engineChipLabel(value, engines)),
     loadPage: async (input) => {
       const result = await loadModelPlaygroundHistoryAction({ ...input, projectRef: projectId });
       if (!result.ok) throw new Error("History unavailable");
       return result.page;
     },
     noun: "runs",
-    onOpen: (row) => router.push(appPath(projectId, "agent-reports", row.key)),
+    onOpen: (row) => router.push(openHref(row)),
+    openHref,
     onTogglePin: (row, pinned) => toggleHistoryPin(projectId, "model_playground", row.key, pinned),
     renderMeta: (row) =>
-      row.meta.kind === "model" ? <ModelHistoryMeta engines={row.meta.engines} /> : null,
+      row.meta.kind === "model" ? (
+        <ModelHistoryMeta
+          engines={row.meta.engines.map((engine) =>
+            engine.startsWith("api:")
+              ? nativeHistoryLabel(engine, engines("modelPlayground.historyApiResponse"))
+              : engine,
+          )}
+        />
+      ) : null,
     searchPlaceholder: t("searchPrompts"),
   };
 }
 
-export function ModelPlaygroundHistoryButton({ projectId }: Readonly<{ projectId: string }>) {
-  return <ResearchHistoryButton adapter={useModelHistoryAdapter(projectId)} />;
+export function ModelPlaygroundHistoryButton({
+  projectId,
+  outline = false,
+}: Readonly<{ projectId: string; outline?: boolean }>) {
+  return (
+    <ResearchHistoryButton
+      adapter={useModelHistoryAdapter(projectId)}
+      variant={outline ? "outline" : "secondary"}
+    />
+  );
 }
 
 export function ModelPlaygroundSuggestions({

@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "type": "model",
+      "id": "claude-opus-5-5",
+      "max_tokens": 131072,
+      "lifecycle": "active",
+      "capabilities": {
+        "server_tools": { "web_search": { "supported": true } }
+      }
+    }
+  ],
+  "has_more": false,
+  "first_id": "claude-opus-5-5",
+  "last_id": "claude-opus-5-5"
+}

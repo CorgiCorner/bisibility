@@ -6,6 +6,7 @@ import {
 } from "@usagekit/store-postgres";
 import { billingImports } from "./billing";
 import { type Counters, transactions } from "./host-sql";
+import { budgetSnapshotDriver, budgetSnapshotStatusReader } from "./read-snapshot";
 import { utcPostgresDriver } from "./timestamp-policy";
 
 export async function createPostgresStore({
@@ -22,7 +23,7 @@ export async function createPostgresStore({
   testHooks?: { afterOperationWrite?: () => void };
 }) {
   const store = await createSharedPostgresStore({
-    driver: utcPostgresDriver(createPrismaPostgresDriver(prisma), schema),
+    driver: budgetSnapshotDriver(utcPostgresDriver(createPrismaPostgresDriver(prisma), schema)),
     clock,
     schema,
     counters,
@@ -34,5 +35,9 @@ export async function createPostgresStore({
     clock,
     testHooks?.afterOperationWrite,
   );
-  return { ...store, importBilling };
+  return {
+    ...store,
+    importBilling,
+    applicableBudgets: budgetSnapshotStatusReader(store.applicableBudgets),
+  };
 }

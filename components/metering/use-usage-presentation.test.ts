@@ -1,5 +1,7 @@
 import { budgetFixture } from "@/lib/metering/shared-view-fixtures";
 import en from "@/messages/core/en/shared.json";
+import es from "@/messages/core/es-ES/shared.json";
+import ja from "@/messages/core/ja/shared.json";
 import pl from "@/messages/core/pl/shared.json";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UsagePresentationFigure, UsagePresentationOptions } from "./usage-number-format";
@@ -150,6 +152,16 @@ describe("funding-aware credit presentation", () => {
     expect(p.figure(amount("1000", "budget_cents"))).toBe("$10.00");
     expect(p.figure(amount("3", "units"))).toBe("3");
     expect(p.unit("units")).toBe("Billing units");
+  });
+
+  it("pluralises only the unit count keys present in every locale", () => {
+    for (const catalog of [en, es, ja, pl]) {
+      expect(Object.keys(catalog.shared.usageViews.unitCounts).sort()).toEqual([
+        "apiUnits",
+        "searches",
+        "units",
+      ]);
+    }
   });
 
   it("uses count-aware provider units and nominative headers", () => {

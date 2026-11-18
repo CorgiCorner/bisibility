@@ -610,12 +610,6 @@
     "location": "body"
   },
   {
-    "operation": "setKeywordTargetUrl",
-    "detail": "validator reads city, country, device, frequency, intent, keyword, location, location_key, schedule, tags, target_url, topic",
-    "kind": "spec-missing-body",
-    "location": "body"
-  },
-  {
     "operation": "testProviderConnection",
     "kind": "spec-missing-field",
     "path": "login",

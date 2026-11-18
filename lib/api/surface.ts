@@ -1,10 +1,17 @@
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { CapacityLimitError } from "@/lib/capacity/errors";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ZodError, type z } from "zod";
 import { type ApiContext, forbidden, projectMatches } from "./context";
-import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
+import {
+  ApiConflictError,
+  ApiForbiddenError,
+  ApiInputError,
+  ApiNotFoundError,
+  RequestBodyLimitError,
+} from "./errors";
 
 type PlainRecord = Record<string, unknown>;
 
@@ -54,8 +61,17 @@ export function snakeizeKeys(value: unknown): unknown {
   );
 }
 
-export async function readJsonBody(ctx: Pick<ApiContext, "req">) {
-  const raw = await ctx.req.text();
+export async function readBoundedRequest(req: Pick<Request, "headers" | "body">, limit: number) {
+  const read = await readBodyWithLimit(req, limit);
+  if (!read.ok) throw new RequestBodyLimitError(read.reason);
+  return read.bytes;
+}
+
+export async function readJsonBody(ctx: Pick<ApiContext, "req">, options?: { limit?: number }) {
+  const raw =
+    options?.limit === undefined
+      ? await ctx.req.text()
+      : new TextDecoder().decode(await readBoundedRequest(ctx.req, options.limit));
   return raw ? JSON.parse(raw) : {};
 }
 

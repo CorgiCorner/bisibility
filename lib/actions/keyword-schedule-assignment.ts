@@ -1,6 +1,10 @@
 import { prepareKeywordScheduleChange } from "@/lib/capacity/schedule-change";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { mirrorScheduleToKeywords } from "@/lib/rank-check/schedules/service-membership";
+import {
+  assertKeywordCreateAdmission,
+  type KeywordCreateReview,
+} from "@/lib/schedules/keyword-create-write";
 
 type CreatedKeyword = { id: string; publicId: string };
 
@@ -42,9 +46,23 @@ export async function linkCheckSchedule(
   projectId: string,
   schedule: NonNullable<Awaited<ReturnType<typeof resolveCheckSchedule>>>,
   created: readonly CreatedKeyword[],
+  review?: KeywordCreateReview,
 ) {
   if (created.length === 0) return;
   const keywordIds = created.map((keyword) => keyword.id);
+  if (schedule.enabled)
+    await assertKeywordCreateAdmission(
+      tx,
+      projectId,
+      keywordIds,
+      {
+        ...schedule,
+        timezone: schedule.timezone ?? "UTC",
+        nextCheckAt: null,
+        serpDepth: schedule.serpDepth as import("@/lib/serp/constants").SerpDepth | null,
+      },
+      review,
+    );
   const capacity = await prepareKeywordScheduleChange(tx, projectId, keywordIds, schedule);
   await tx.keyword.updateMany({
     data: { checkScheduleId: schedule.id },

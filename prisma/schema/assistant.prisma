@@ -1,0 +1,170 @@
+model AssistantConversation {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  title       String
+  activeRunId String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  messages    AssistantMessage[]
+  runs        AssistantRun[]
+  /// Project and account deletion remove the transcript, tool results and run evidence with them.
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, userId, updatedAt])
+  @@map("assistant_conversations")
+}
+
+model AssistantMessage {
+  id             String @id @default(cuid())
+  conversationId String
+  seq            Int
+  role           String
+  parts          Json
+  runId          String?
+  partial        Boolean @default(false)
+  createdAt      DateTime @default(now())
+  conversation   AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, seq])
+  @@map("assistant_messages")
+}
+
+model AssistantRun {
+  id                String @id @default(cuid())
+  conversationId    String
+  projectId         String
+  userId            String
+  status            String
+  provider          String
+  modelId           String
+  funding           String
+  credentialId      String?
+  credentialVersion String?
+  /// Reasoning effort the run was started with; null for a model without reasoning.
+  reasoningEffort   String?
+  /// Per-turn output cap the run was started with, never above the model's catalog maximum.
+  maxOutputTokens   Int?
+  requestId         String
+  stepCount         Int @default(0)
+  inputTokens       Int @default(0)
+  outputTokens      Int @default(0)
+  costMicroUsd      Decimal? @db.Decimal(38, 0)
+  costCertainty     String @default("unknown")
+  errorCode         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  finishedAt        DateTime?
+  conversation      AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attempts          AssistantAttempt[]
+  toolCalls         AssistantToolCall[]
+
+  @@unique([conversationId, requestId])
+  @@index([projectId, userId, createdAt])
+  @@map("assistant_runs")
+}
+
+model AssistantAttempt {
+  id                String @id @default(cuid())
+  operationId       String @unique
+  runId             String
+  step              Int
+  providerRequestId String?
+  status            String
+  reservedMicroUsd  Decimal @db.Decimal(38, 0)
+  settledMicroUsd   Decimal? @db.Decimal(38, 0)
+  /// Open wallet hold for a credits attempt. Null for your-key attempts.
+  creditHoldId      String?
+  /// Platform key the attempt was dispatched on, frozen at dispatch: a stored key id, "env" for
+  /// the environment key, null for your-key attempts and attempts dispatched before keys existed.
+  providerKeyId     String?
+  /// 0 for the step's first call; n for the n-th next key after pre-run key refusals.
+  keyAttempt        Int @default(0)
+  usage             Json?
+  dispatchedAt      DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  run               AssistantRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, step, keyAttempt])
+  @@index([status, createdAt])
+  @@map("assistant_attempts")
+}
+
+model AssistantToolCall {
+  id                 String @id @default(cuid())
+  runId              String
+  conversationId     String
+  projectId          String
+  userId             String
+  toolName           String
+  args               Json
+  argsHash           String
+  category           String
+  maxCostCents       Int?
+  estimatedCostCents Int?
+  status             String
+  result             Json?
+  /// Model step that requested the call; calls of one step replay as one assistant turn.
+  step               Int?
+  /// Signed reasoning blocks of that step, replayed before its tool calls (Anthropic thinking).
+  providerReasoning  Json?
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  run                AssistantRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, status])
+  @@index([conversationId, status])
+  @@map("assistant_tool_calls")
+}
+
+model AssistantCredential {
+  id              String @id @default(cuid())
+  userId          String
+  provider        String
+  encryptedSecret String
+  last4           String
+  versionHash     String
+  status          String @default("active")
+  monthlyLimitMicroUsd Decimal? @db.Decimal(38, 0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  /// Account deletion removes the user's encrypted provider keys.
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("assistant_credentials")
+}
+
+/// Who pays for this user's assistant turns for one provider in one project. Absent means the default rule.
+model AssistantFundingPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  provider  String
+  mode      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId, provider])
+  @@map("assistant_funding_preferences")
+}
+
+
+/// Shared funding choice for Assistant and Model Playground. Missing means automatic selection.
+model ProjectAiFundingPreference {
+  id        String   @id @default(cuid())
+  projectId String
+  provider  String
+  mode      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, provider])
+  @@map("project_ai_funding_preferences")
+}

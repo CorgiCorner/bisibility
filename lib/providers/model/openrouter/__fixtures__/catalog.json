@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "id": "openai/gpt-5.2",
+      "architecture": { "input_modalities": ["text", "image"], "output_modalities": ["text"] },
+      "supported_parameters": ["max_tokens", "temperature"],
+      "top_provider": { "max_completion_tokens": 16384 },
+      "pricing": {
+        "prompt": "0.000000125",
+        "completion": "0.000000375",
+        "request": null,
+        "web_search": null
+      }
+    },
+    {
+      "id": "example/unproven-model",
+      "architecture": { "input_modalities": ["text"], "output_modalities": ["text"] },
+      "supported_parameters": ["max_tokens"],
+      "top_provider": { "max_completion_tokens": 4096 }
+    }
+  ]
+}

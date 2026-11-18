@@ -9,6 +9,7 @@ export type ProviderCardProps = {
   consumerDetails?: "inline" | "separate";
   deploymentMode?: "cloud" | "self-host";
   initialOpen?: boolean;
+  layout?: "subgrid" | "stack";
   noProvidersYet?: boolean;
   projectId?: string;
   projectRef?: ProjectRef;

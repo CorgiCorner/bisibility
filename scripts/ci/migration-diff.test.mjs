@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertMigrationDiff, verifyMigrationDiff } from "./migration-diff.mjs";
+import { assertMigrationDiff, verifyMigrationDiff, verifyMeteringProjectIndex } from "./migration-diff.mjs";
 
 const empty = { status: 0, stdout: "-- This is an empty migration.\n" };
 const sql = '-- DropForeignKey\nALTER TABLE "fixture" DROP CONSTRAINT "fixture_reference";';
@@ -29,6 +29,7 @@ test("validates additional constraints before diff, closes the client and never 
     createClient: () => ({ connect: async () => trace.push("connect"), end: async () => trace.push("end") }),
     verifyAdditional: async (_client, schema) => { trace.push(schema); return ""; },
     verifyIncidentIndex: async () => { trace.push("incident index"); },
+    verifyProjectIndex: async () => { trace.push("project index"); },
     capture: (command, args) => {
       trace.push(command);
       assert.deepEqual(args, ["prisma", "migrate", "diff", "--from-config-datasource", "--to-schema", "./prisma/schema", "--script", "--exit-code"]);
@@ -36,10 +37,23 @@ test("validates additional constraints before diff, closes the client and never 
     },
   };
   await verifyMigrationDiff(env, options);
-  assert.deepEqual(trace, ["connect", "owned_fixture", "incident index", "end", "npx"]);
+  assert.deepEqual(trace, ["connect", "owned_fixture", "incident index", "project index", "end", "npx"]);
   trace.length = 0;
   await assert.rejects(verifyMigrationDiff(env, { ...options,
     verifyAdditional: async () => { trace.push("missing constraint"); throw new Error("missing constraint"); },
   }), /missing constraint/);
   assert.deepEqual(trace, ["connect", "missing constraint", "end"]);
+});
+
+
+test("requires the ready partial project index, including expression and predicate", async () => {
+  const good = { valid: true, ready: true, unique: false, method: "btree", keys: 4,
+    namespace: "namespace", project: "((input -> 'scope'::text) ->> 'group'::text)",
+    created: "created_at", operation: "operation_pk",
+    predicate: "(((input ->> 'fundingSource'::text) = 'platform'::text) AND ((input ->> 'surface'::text) = 'app'::text))" };
+  const client = (rows) => ({ query: async () => ({ rows }) });
+  await verifyMeteringProjectIndex(client([good]), "fixture");
+  for (const rows of [[], [{ ...good, ready: false }], [{ ...good, valid: false }],
+    [{ ...good, project: "namespace" }], [{ ...good, predicate: null }]])
+    await assert.rejects(verifyMeteringProjectIndex(client(rows), "fixture"), /migration contract/);
 });

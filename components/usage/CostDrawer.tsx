@@ -22,20 +22,20 @@ export function CostDrawer({
   initial,
   mode,
   onClose,
+  onExited,
   onSubmit,
   open,
   projectPublicId,
-  suggestHref,
 }: Readonly<{
   catalog: readonly CostCatalogEntry[];
   editingId?: string;
   initial: CostFormValues;
   mode: "create" | "edit";
   onClose: () => void;
+  onExited?: () => void;
   onSubmit: (input: CostItemInput) => Promise<void>;
   open: boolean;
   projectPublicId: string;
-  suggestHref: string | null;
 }>) {
   const t = useTranslations("projectUsageCosts.drawer");
   const formId = useId();
@@ -74,17 +74,14 @@ export function CostDrawer({
         </div>
       }
       onClose={onClose}
+      onExited={onExited}
+      description={t("description")}
       open={open}
       title={mode === "create" ? t("addTitle") : t("editTitle")}
       widthVariant="form"
     >
       <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
-        <CostDrawerFields
-          catalog={catalog}
-          form={form}
-          projectPublicId={projectPublicId}
-          suggestHref={suggestHref}
-        />
+        <CostDrawerFields catalog={catalog} form={form} projectPublicId={projectPublicId} />
         <CostLiveSummary projectPublicId={projectPublicId} values={form.watch()} />
         {failed ? <p className="text-sm text-danger">{t("saveError")}</p> : null}
       </form>

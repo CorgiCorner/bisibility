@@ -1,4 +1,5 @@
 import "server-only";
+import "@/lib/providers/model/server-registration";
 import { prisma } from "@/lib/db/prisma";
 import { centsToDollars } from "@/lib/format/currency";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/integrations/category-copy";
 import type { ProviderAreaCapabilities } from "@/lib/projects/readiness";
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
+import { isModelProviderRegistered } from "@/lib/providers/model/registry";
 import {
   getAnalyticsProvider,
   PROVIDER_CATALOG,
@@ -103,6 +105,7 @@ function compareConnection(a: ProviderConnectionRow, b: ProviderConnectionRow) {
 const activeIntegrationKinds = [
   "serp",
   "analytics",
+  "model",
 ] as const satisfies readonly ActiveIntegrationKind[];
 
 function orderedCatalog(kind: ActiveIntegrationKind, connections: ProviderConnectionRow[]) {
@@ -123,9 +126,19 @@ function orderedCatalog(kind: ActiveIntegrationKind, connections: ProviderConnec
   return [...connectedCatalog, ...remainingCatalog];
 }
 
-function providerMeta(kind: ProviderKind, connection?: ProviderConnectionRow) {
-  let state = "Ready";
-  if (connection) state = connection.enabled ? "Enabled" : "Disabled";
+function providerMeta(kind: ProviderKind, available: boolean, connection?: ProviderConnectionRow) {
+  const state = !available
+    ? "Not available yet"
+    : connection
+      ? connection.enabled
+        ? "Enabled"
+        : "Disabled"
+      : "Ready";
+  if (kind === "model")
+    return [
+      { label: "Billing", value: "Billed by your provider" },
+      { label: "State", value: state },
+    ];
   return [
     {
       label: kind === "serp" ? "Last rank check" : "Last sync",
@@ -152,6 +165,7 @@ function providerResource(
   primaryProvider: string | null,
 ) {
   const { connection, item } = row;
+  const available = kind !== "model" || isModelProviderRegistered(item.id);
   return {
     capabilities: providerCapabilities(kind, item.id, connection),
     connected: connectionStatus(connection) === "connected",
@@ -162,11 +176,11 @@ function providerResource(
     kind,
     lastUsedAt: connection?.lastUsedAt ? connection.lastUsedAt.toISOString() : null,
     logoDomain: item.logoDomain,
-    meta: providerMeta(kind, connection),
+    meta: providerMeta(kind, available, connection),
     name: item.label,
-    primary: connection?.provider === primaryProvider || undefined,
+    primary: (kind !== "model" && connection?.provider === primaryProvider) || undefined,
     priority: connection?.priority,
-    status: connection?.status ?? item.defaultStatus,
+    status: available ? (connection?.status ?? item.defaultStatus) : "planned",
   };
 }
 

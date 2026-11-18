@@ -1,6 +1,8 @@
 "use client";
 
 import type { ProviderIconName } from "@/lib/integrations/types";
+import { readTheme, subscribeTheme } from "@/lib/theme/browser-theme";
+import { cn } from "@/lib/ui/cn";
 import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
 import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/csr/Database";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
@@ -8,8 +10,8 @@ import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { TableIcon as Table } from "@phosphor-icons/react/dist/csr/Table";
 import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/csr/TrendUp";
-import { useState } from "react";
-import { buildLogoDevUrl } from "./provider-logo-url";
+import { useState, useSyncExternalStore } from "react";
+import { buildProviderLogoUrl } from "./provider-logo-url";
 
 export type ProviderLogoProps = {
   alt: string;
@@ -17,6 +19,9 @@ export type ProviderLogoProps = {
   fallbackIcon: ProviderIconName;
   size?: "default" | "sm" | "xs";
   tint: string;
+  appearance?: "tile" | "bare";
+  /** Auto follows the app theme; omission retains the provider's ordinary logo. */
+  theme?: "auto" | "light" | "dark";
 };
 
 const icons = {
@@ -35,26 +40,31 @@ export function ProviderLogo({
   fallbackIcon,
   size = "default",
   tint,
+  appearance = "tile",
+  theme,
 }: Readonly<ProviderLogoProps>) {
   const [failed, setFailed] = useState(false);
+  const appTheme = useSyncExternalStore(subscribeTheme, readTheme, () => "light" as const);
   const FallbackIcon = icons[fallbackIcon];
   const src = failed
     ? null
-    : buildLogoDevUrl({
+    : buildProviderLogoUrl({
         domain,
+        theme: theme === "auto" ? appTheme : theme,
         token: process.env.NEXT_PUBLIC_LOGODEV_TOKEN,
       });
 
   return (
     <span
       aria-label={alt}
-      className={
+      className={cn(
         size === "xs"
           ? "grid h-5 w-5 shrink-0 place-items-center rounded-control bg-bg-elev"
           : size === "sm"
             ? "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-control bg-bg-elev"
-            : "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken"
-      }
+            : "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken",
+        appearance === "bare" && "bg-transparent",
+      )}
       role="img"
       style={{ color: tint }}
     >
@@ -62,13 +72,14 @@ export function ProviderLogo({
         // biome-ignore lint/performance/noImgElement: Logo.dev URLs are dynamic and require an onError fallback.
         <img
           alt=""
-          className={
+          className={cn(
             size === "xs"
               ? "h-4 w-4 rounded-control bg-white object-contain"
               : size === "sm"
                 ? "h-6 w-6 rounded-control bg-white object-contain"
-                : "h-8 w-8 rounded-control bg-white object-contain"
-          }
+                : "h-8 w-8 rounded-control bg-white object-contain",
+            appearance === "bare" && "bg-transparent",
+          )}
           decoding="async"
           height={size === "xs" ? 16 : size === "sm" ? 24 : 32}
           onError={() => setFailed(true)}

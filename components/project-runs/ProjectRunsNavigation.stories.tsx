@@ -27,7 +27,6 @@ function RunsNavigation({ active }: Readonly<{ active: "runs" | "upcoming" | "sc
                 {
                   enabled: true,
                   frequency: "daily",
-                  isDefault: true,
                   keywordCount: 10,
                   name: "Daily 06:00",
                   publicId: "sch_daily",

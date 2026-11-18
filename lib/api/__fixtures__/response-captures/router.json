@@ -4485,6 +4485,8 @@
           "jitter_minutes": 0,
           "last_checked_at": null,
           "next_check_at": null,
+          "schedule_id": null,
+          "schedule_state": null,
           "source": "keyword",
           "timezone": "UTC"
         },
@@ -4523,6 +4525,8 @@
           "jitter_minutes": 0,
           "last_checked_at": null,
           "next_check_at": null,
+          "schedule_id": null,
+          "schedule_state": null,
           "source": "keyword",
           "timezone": "UTC"
         },
@@ -4561,6 +4565,8 @@
           "jitter_minutes": 0,
           "last_checked_at": null,
           "next_check_at": null,
+          "schedule_id": null,
+          "schedule_state": null,
           "source": "keyword",
           "timezone": "UTC"
         },
@@ -4603,6 +4609,8 @@
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -4650,6 +4658,8 @@
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -4684,6 +4694,8 @@
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -4731,6 +4743,8 @@
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -4765,6 +4779,8 @@
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -4807,58 +4823,13 @@
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
               "schedule": {
-                "cron_expression": "15 6 * * 1",
-                "frequency": "custom_cron",
-                "jitter_minutes": 0,
-                "last_checked_at": null,
-                "next_check_at": "2026-07-15T07:13:04.000Z",
-                "source": "keyword",
-                "timezone": "Europe/Warsaw"
-              },
-              "tags": [],
-              "target_url": null,
-              "text": "rank tracker",
-              "topic": null,
-              "updated_at": "2026-01-04T00:00:00.000Z"
-            },
-            "status": "created"
-          }
-        ],
-        "skipped": 0
-      },
-      "contentType": "application/json",
-      "method": "POST",
-      "operationId": "addKeywords",
-      "path": "/projects/{project_id}/keywords",
-      "status": 201
-    },
-    {
-      "body": {
-        "created": 1,
-        "results": [
-          {
-            "keyword": {
-              "country": "United States",
-              "created_at": "2026-01-03T00:00:00.000Z",
-              "device": "desktop",
-              "id": "kw_a00000000000000000000000",
-              "intent": null,
-              "latest_check": null,
-              "latest_position": null,
-              "latest_successful_check": null,
-              "location": "United States",
-              "location_key": "US",
-              "language_code": "en",
-              "language_label": "English",
-              "previous_position": null,
-              "project_id": "prj_a00000000000000000000000",
-              "ranking_url": null,
-              "schedule": {
                 "cron_expression": null,
                 "frequency": "manual",
                 "jitter_minutes": 0,
                 "last_checked_at": null,
                 "next_check_at": null,
+                "schedule_id": null,
+                "schedule_state": null,
                 "source": "keyword",
                 "timezone": "UTC"
               },
@@ -5154,6 +5125,126 @@
             "status": "optional",
             "category_id": "analytics",
             "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openai",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openai.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenAI",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "anthropic",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "anthropic.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Anthropic",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "openrouter",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "openrouter.ai",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "OpenRouter",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "vercel_ai_gateway",
+            "kind": "model",
+            "last_used_at": null,
+            "logo_domain": "vercel.com",
+            "meta": [
+              {
+                "label": "Billing",
+                "value": "Billed by your provider"
+              },
+              {
+                "label": "State",
+                "value": "Not available yet"
+              }
+            ],
+            "name": "Vercel AI Gateway",
+            "status": "planned",
+            "category_id": "model",
+            "category_title": "Model providers"
           }
         ],
         "meta": {
@@ -5191,6 +5282,8 @@
               "jitter_minutes": 0,
               "last_checked_at": null,
               "next_check_at": null,
+              "schedule_id": null,
+              "schedule_state": null,
               "source": "keyword",
               "timezone": "UTC"
             },
@@ -5222,6 +5315,8 @@
               "jitter_minutes": 0,
               "last_checked_at": null,
               "next_check_at": null,
+              "schedule_id": null,
+              "schedule_state": null,
               "source": "keyword",
               "timezone": "UTC"
             },
@@ -5267,6 +5362,8 @@
               "jitter_minutes": 0,
               "last_checked_at": null,
               "next_check_at": null,
+              "schedule_id": null,
+              "schedule_state": null,
               "source": "keyword",
               "timezone": "UTC"
             },
@@ -5485,6 +5582,54 @@
       "operationId": "runRankCheck",
       "path": "/keywords/{keyword_id}/checks",
       "status": 422
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/bulk",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "bulkUpdateKeywords",
+      "path": "/keywords/bulk",
+      "status": 428
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/kw_000000000000000000000000",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "setKeywordTargetUrl",
+      "path": "/keywords/{keyword_id}",
+      "status": 428
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keywords",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "addKeywords",
+      "path": "/projects/{project_id}/keywords",
+      "status": 428
     },
     {
       "body": {

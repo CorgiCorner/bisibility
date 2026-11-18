@@ -13,11 +13,14 @@ import {
   refreshProjectPagesAction,
 } from "@/lib/actions/pages";
 import { loadPagesCompareAction } from "@/lib/actions/pages-compare";
+import { exportProjectPagesCsv } from "@/lib/actions/pages-export";
+import { redirect } from "@/tests/next-navigation";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectPagesPage from "./page";
 
 const serverActions = [
+  exportProjectPagesCsv,
   addManualProjectPagesAction,
   checkSelectedPageVitalsAction,
   loadExistingVsNewAction,
@@ -189,6 +192,7 @@ describe("ProjectPagesPage", () => {
     expect(functions.map(([path]) => path).sort()).toEqual([
       "actions.addManual",
       "actions.checkVitals",
+      "actions.exportCsv",
       "actions.load",
       "actions.loadCompare",
       "actions.loadComparison",
@@ -204,4 +208,36 @@ describe("ProjectPagesPage", () => {
       functions.filter(([, fn]) => !isServerActionReference(fn)).map(([path]) => path),
     ).toEqual([]);
   });
+  it.each([
+    { state: "unread", sitemap: "listed", checked: false },
+    { state: "partial", sitemap: "not_listed", checked: true },
+  ])(
+    "clears unsupported $state membership filters and page number",
+    async ({ sitemap, checked }) => {
+      mocks.requireReadableProject.mockResolvedValue({
+        actor: { memberships: [{ projectId: "project_1", role: "viewer" }] },
+        project: { id: "project_1", writeMode: "active" },
+      });
+      mocks.load.mockResolvedValue({
+        list: {
+          sitemapChecked: checked,
+          sitemapComplete: false,
+          counts: { all: 2 },
+          rows: [],
+          total: 2,
+        },
+        sources: [],
+      });
+      redirect.mockImplementationOnce(() => {
+        throw new Error("NEXT_REDIRECT");
+      });
+      await expect(
+        ProjectPagesPage({
+          params: Promise.resolve({ project: "prj_1" }),
+          searchParams: Promise.resolve({ sitemap, page: "3", q: "docs" }),
+        }),
+      ).rejects.toThrow("NEXT_REDIRECT");
+      expect(redirect).toHaveBeenCalledWith("/app/prj_1/pages?q=docs");
+    },
+  );
 });

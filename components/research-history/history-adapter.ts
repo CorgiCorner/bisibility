@@ -1,3 +1,4 @@
+import type { MenuSelectOption } from "@/components/ui/MenuSelect";
 import type {
   HistoryChip,
   HistoryPage,
@@ -8,7 +9,9 @@ import type { ReactNode } from "react";
 
 export type HistoryAdapter = {
   allHref?: string;
-  chipLabel: (chip: HistoryChip) => string;
+  chipLabel: (chip: HistoryChip) => ReactNode;
+  modelOption?: (value: string) => MenuSelectOption;
+  openHref?: (row: HistoryRow) => string;
   loadPage: (input: HistoryQuery) => Promise<HistoryPage>;
   noun: "checks" | "runs";
   onOpen: (row: HistoryRow) => void | Promise<void>;

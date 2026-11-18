@@ -139,8 +139,8 @@ export function projectPagesColumns({
     },
     {
       cell: ({ row }) =>
-        disconnected(sitemap) ? (
-          <PageMissingValue source={t("sourceKind.sitemap")} />
+        row.original.sitemap.listed === null ? (
+          <StatusChip label={t("sitemapState.notCheckedCell")} size="sm" tone="neutral" />
         ) : (
           <StatusChip
             label={
@@ -159,8 +159,8 @@ export function projectPagesColumns({
       ),
       id: "sitemap",
       meta: { sortable: false, title: t("columns.sitemap") },
-      minSize: 120,
-      size: 128,
+      minSize: 168,
+      size: 176,
     },
     {
       cell: ({ row }) => {

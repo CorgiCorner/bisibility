@@ -2,6 +2,7 @@ import { promptTrackerSchemas } from "@/lib/mcp/tracking-contract";
 import { paymentRequestFields } from "./openapi-action-payment";
 import { apiCredentialSecurity } from "./openapi-pat";
 import { problemResponse } from "./openapi-problem";
+import { scheduleReviewProblems } from "./openapi-schedule-writes";
 import { appOwnedTrackingParameters } from "./openapi-tracking-parameters";
 import { appOwnedTrackingRunOperations } from "./openapi-tracking-run-inputs";
 import { promptTrackerResponseSchema } from "./openapi-tracking-schemas";
@@ -115,6 +116,7 @@ export function promptTrackerPaths() {
     }
     delete properties.idempotency_key;
     const mutation = operation.method !== "GET";
+    const scheduleAlias = operation.path.includes("/prompt-tracker/schedules");
     if (!mutation) {
       parameters.push(...queryParameters(properties, input.required ?? []));
     } else {
@@ -160,6 +162,7 @@ export function promptTrackerPaths() {
     paths[operation.path][operation.method.toLowerCase()] = {
       operationId,
       summary: summaries[operationId],
+      ...(scheduleAlias ? { deprecated: true } : {}),
       ...(operationId === "cancelPromptTrackerRun" || operationId === "suggestPromptResearchPrompts"
         ? { description: "No request body fields are used. An optional JSON body is ignored." }
         : {}),
@@ -192,6 +195,7 @@ export function promptTrackerPaths() {
         "422": problem("Unsupported source, model, consent or cost policy"),
         "423": problem("Project is read-only"),
         "429": problem("Rate limited"),
+        ...(scheduleAlias && mutation ? scheduleReviewProblems : {}),
       },
     };
   }

@@ -207,6 +207,7 @@ describe("rank-check API router", () => {
         scopes: ["read"],
       },
       kind: "project_key",
+      creatorRole: "owner",
       project: {
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         domain: "example.com",
@@ -236,6 +237,7 @@ describe("rank-check API router", () => {
   it.each([false, true])("captures a successful launch with inline=%s", async (inline) => {
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { id: "key_1", projectId: "project_1", scopes: ["write"] },
       project: {
         id: "project_1",

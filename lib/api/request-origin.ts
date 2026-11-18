@@ -4,12 +4,14 @@ import type { ApiAuth } from "./auth";
 
 export const SOURCE_HEADER = "x-bisibility-source";
 
-export type ApiRequestOrigin = Readonly<{
-  credentialKind: ProviderCredentialKind;
-  credentialId: string;
-  source: ProviderRequestSource;
-  surface: "programmatic";
-}>;
+export type ApiRequestOrigin =
+  | Readonly<{
+      credentialKind: ProviderCredentialKind;
+      credentialId: string;
+      source: ProviderRequestSource;
+      surface: "programmatic";
+    }>
+  | Readonly<{ credentialKind: null; credentialId: null; source: "app"; surface: "app" }>;
 
 export function parseSourceHeader(value: string | null | undefined): ProviderRequestSource {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -34,8 +36,10 @@ export function apiRequestOrigin(auth: ApiAuth, headers: Headers): ApiRequestOri
 }
 
 export function providerOrigin(origin: ApiRequestOrigin): ProviderRequestOrigin {
-  return {
-    credential: { id: origin.credentialId, kind: origin.credentialKind },
-    source: origin.source,
-  };
+  return origin.surface === "app"
+    ? { source: "app" }
+    : {
+        credential: { id: origin.credentialId, kind: origin.credentialKind },
+        source: origin.source,
+      };
 }

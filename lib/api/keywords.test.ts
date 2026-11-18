@@ -1,8 +1,13 @@
+import { CapacityLimitError } from "@/lib/capacity/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { errorFromUnknown } from "./error-mapper";
 import { deleteKeyword, getKeyword, listKeywords, patchKeyword } from "./keywords";
 
 const mocks = vi.hoisted(() => ({
   addTags: vi.fn(),
+  findMembership: vi.fn(),
+  prepareCapacity: vi.fn(),
+  setCadence: vi.fn(),
   $transaction: vi.fn(),
   delete: vi.fn(),
   deleteMany: vi.fn(),
@@ -17,6 +22,9 @@ const mocks = vi.hoisted(() => ({
   writeAudit: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/capacity/capacity-extension", () => ({
+  prepareResourceCapacity: mocks.prepareCapacity,
+}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $transaction: mocks.$transaction,
@@ -35,9 +43,15 @@ vi.mock("@/lib/db/prisma", () => ({
     },
   },
 }));
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setCadence,
+}));
 vi.mock("@/lib/actions/keyword-helpers", () => ({ addTags: mocks.addTags }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
-vi.mock("@/lib/serp/location-service", () => ({ resolveKeywordLocation: mocks.resolveLocation }));
+vi.mock("@/lib/serp/location-service", () => ({
+  resolveKeywordLocation: mocks.resolveLocation,
+  resolveKeywordLocationUsingStore: mocks.resolveLocation,
+}));
 vi.mock("./resources", () => ({
   keywordInclude: {},
   keywordResource: (keyword: { publicId: string }) => ({ id: keyword.publicId, type: "keyword" }),
@@ -63,6 +77,8 @@ function context(query = "", body?: unknown) {
 describe("keyword API list filters", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prepareCapacity.mockReset();
+    mocks.prepareCapacity.mockResolvedValue({ check: vi.fn() });
     mocks.findMany.mockResolvedValue([]);
     mocks.findFirst.mockResolvedValue(null);
     mocks.findMany.mockResolvedValue([
@@ -75,8 +91,15 @@ describe("keyword API list filters", () => {
       async (callback: (tx: Record<string, unknown>) => unknown) =>
         callback({
           $queryRaw: vi.fn(),
-          keyword: { deleteMany: mocks.delete, findMany: mocks.findMany, update: mocks.update },
+          keyword: {
+            deleteMany: mocks.delete,
+            findMany: mocks.findMany,
+            findUnique: mocks.findMembership,
+            update: mocks.update,
+          },
           keywordTag: { deleteMany: mocks.deleteMany },
+          projectDefaults: { findUnique: vi.fn(async () => ({ serpDepth: 100 })) },
+          providerConnection: { findFirst: vi.fn(async () => null) },
           rankCheckRun: { update: mocks.rankCheckRunUpdate },
           rankCheckRunItem: {
             findMany: mocks.rankCheckRunItemFindMany,
@@ -132,6 +155,7 @@ describe("keyword API list filters", () => {
         updatedAt: new Date("2026-08-14T00:00:00.000Z"),
       } as never,
       "prj_a00000000000000000000000",
+      null,
     );
 
     expect(resource).toMatchObject({
@@ -255,6 +279,97 @@ describe("keyword API list filters", () => {
       ).rejects.toThrow("Cursor must be a valid v3 cursor");
     },
   );
+
+  it("refuses an update that increases cadence before metadata or tag writes", async () => {
+    mocks.findFirst.mockResolvedValue({
+      id: "keyword_1",
+      publicId: "kw_a00000000000000000000000",
+      text: "rank tracker",
+      location: "United States",
+      locationId: "location_1",
+      device: "desktop",
+    });
+    mocks.findMembership.mockResolvedValue({
+      checkSchedule: {
+        frequency: "weekly",
+        enabled: true,
+        archivedAt: null,
+        cronExpression: null,
+        serpDepth: null,
+      },
+    });
+    const response = await patchKeyword(
+      context("", { frequency: "daily", topic: "new topic", tags: ["Core"] }),
+      "kw_a00000000000000000000000",
+    );
+    expect(response.status).toBe(428);
+    expect(await response.json()).toMatchObject({ code: "schedule_review_required" });
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.addTags).not.toHaveBeenCalled();
+    expect(mocks.setCadence).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  // The capacity mock covers only the outer project gate in patchKeyword
+  // (prepareResourceCapacity with no dimensions). setKeywordCadence is mocked, so the
+  // scheduledKeywords and scheduleFrequencies checks inside it are not exercised here.
+  it.each([
+    [
+      "an unreviewed increase gets 428 before the outer project capacity gate runs",
+      "weekly",
+      "daily",
+      428,
+      "schedule_review_required",
+      0,
+    ],
+    [
+      "a non-increase passes review and reaches the outer project capacity gate",
+      "daily",
+      "weekly",
+      403,
+      "plan_limit_reached",
+      1,
+    ],
+  ])("%s (%s to %s)", async (_label, before, frequency, status, code, capacityCalls) => {
+    mocks.findFirst.mockResolvedValue({
+      id: "keyword_1",
+      publicId: "kw_a00000000000000000000000",
+      text: "rank tracker",
+      location: "United States",
+      locationId: "location_1",
+      device: "desktop",
+    });
+    mocks.findMembership.mockResolvedValue({
+      checkSchedule: {
+        frequency: before,
+        enabled: true,
+        archivedAt: null,
+        cronExpression: null,
+        serpDepth: null,
+      },
+    });
+    const capacityError = new CapacityLimitError({
+      dimension: "scheduledKeywords",
+      limit: 0,
+      used: 1,
+      requested: 0,
+      scope: "project",
+    });
+    mocks.prepareCapacity.mockRejectedValue(capacityError);
+    const ctx = context("", { frequency, topic: "new topic", tags: ["Core"] });
+    const response = await patchKeyword(ctx, "kw_a00000000000000000000000").catch((error) =>
+      errorFromUnknown(error, new Headers(), new URL("https://example.com/api/keywords")),
+    );
+    expect(response.status).toBe(status);
+    expect(await response.json()).toMatchObject({ code });
+    expect(mocks.prepareCapacity).toHaveBeenCalledTimes(capacityCalls);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.addTags).not.toHaveBeenCalled();
+    expect(mocks.setCadence).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
 
   it("returns not-found responses for get, patch, and delete", async () => {
     expect((await getKeyword(context(), "missing")).status).toBe(404);

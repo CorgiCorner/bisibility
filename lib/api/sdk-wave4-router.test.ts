@@ -220,6 +220,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key-db", scopes: ["read", "write", "admin"], projectId: project.id },
     project,
   });

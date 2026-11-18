@@ -18,6 +18,7 @@ import {
   capacityLimitDetailsSchema,
   capacityLimitProblemSchema,
   problemSchema,
+  scheduleReviewProblemSchema,
   subscriptionRequiredProblemSchema,
 } from "./openapi-problem";
 import { projectSchemas } from "./openapi-project-components";
@@ -169,6 +170,7 @@ export const schemas = {
   },
   KeywordPatch: keywordPatchSchema,
   Problem: problemSchema,
+  ScheduleReviewRequiredProblem: scheduleReviewProblemSchema(problemSchema),
   CapacityLimitDetails: capacityLimitDetailsSchema,
   CapacityLimitProblem: capacityLimitProblemSchema,
   SubscriptionRequiredProblem: subscriptionRequiredProblemSchema,

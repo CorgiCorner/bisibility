@@ -4,6 +4,7 @@ import { putSpendingBudget, readSpendingBudgets } from "@/lib/metering/spending-
 import { fundingSpendingBudgets } from "@/lib/metering/spending-limits";
 import type { ProviderCatalogEntry, ProviderTestResult } from "@/lib/providers/types";
 import { initialProviderAllocation } from "./initial-allocation";
+import { assertProviderBudgetFunding } from "./validation";
 
 /** Initializes missing funding budgets in the caller transaction, preserving existing limits. */
 export async function initializeConnectionBudgets(
@@ -13,6 +14,7 @@ export async function initializeConnectionBudgets(
   verification?: ProviderTestResult,
   funding: "byok" | "platform" = "byok",
 ) {
+  assertProviderBudgetFunding([provider], provider.id, funding === "platform" ? {} : undefined);
   if (provider.allocation.kind !== "billable") return 0;
   const initial = initialProviderAllocation(provider, verification);
   const budgets = fundingSpendingBudgets(

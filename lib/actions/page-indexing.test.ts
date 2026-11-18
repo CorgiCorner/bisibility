@@ -121,7 +121,23 @@ describe("explicit sitemap read", () => {
     expect(mocks.readSitemaps).not.toHaveBeenCalled();
   });
   it("does not expose raw provider failures", async () => {
-    mocks.readSitemaps.mockRejectedValueOnce(new Error("private transport context"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.readSitemaps.mockRejectedValueOnce(
+      Object.assign(new Error("Sitemap unavailable"), {
+        code: "UNAVAILABLE",
+        status: 503,
+        config: { headers: { Authorization: "Bearer test-secret" } },
+        response: { data: "private response" },
+      }),
+    );
     expect(await readPageIndexingSitemaps({ projectId: "prj_test" })).toEqual({ status: "error" });
+    expect(log).toHaveBeenCalledExactlyOnceWith("[search-index] sitemap read failed", {
+      name: "Error",
+      code: "UNAVAILABLE",
+      status: 503,
+      message: "Sitemap unavailable",
+      projectId: "internal",
+    });
+    log.mockRestore();
   });
 });

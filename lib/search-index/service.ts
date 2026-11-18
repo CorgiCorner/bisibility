@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { effectiveInspectionMode } from "@/lib/presence/budget-mode";
 import {
   assertInspectionReservationCurrent,
@@ -28,17 +29,16 @@ import { nextPacificMidnight } from "@/lib/providers/pacific-reset";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
 import { trafficRuntimeCredentials } from "@/lib/traffic/runtime-credentials";
+import { SearchIndexConnectionError } from "./errors";
 import { searchIndexInspectionSchema, searchIndexSitemapPathSchema } from "./schema";
 
-export class SearchIndexConnectionError extends Error {
-  constructor() {
-    super("No connected Search Console property is available for this project.");
-    this.name = "SearchIndexConnectionError";
-  }
-}
+export { SearchIndexConnectionError };
 
-export async function connectionForProject(projectId: string) {
-  const connection = await prisma.providerConnection.findFirst({
+export async function connectionForProject(
+  projectId: string,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const connection = await db.providerConnection.findFirst({
     orderBy: providerChainOrderBy(),
     select: { credentialsEncrypted: true, id: true, provider: true },
     where: { ...providerChainWhere("analytics"), projectId, provider: "gsc" },

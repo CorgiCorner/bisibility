@@ -1,0 +1,3768 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "kind": "admitted",
+          "quote_id": "00000000-0000-4000-8000-000000000000",
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "column_attempts": {
+            "019a70b2-0000-7000-8000-000000000001": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001"
+          },
+          "attempts": [
+            {
+              "id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "column_id": "00000000-0000-4000-8000-000000000000",
+              "state": "admitted"
+            }
+          ],
+          "replayed": false,
+          "earlier_attempt_unconfirmed": false
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "kind": "confirmation_required",
+          "nonce": "00000000-0000-4000-8000-000000000000",
+          "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "attempt_ids": [
+            "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001"
+          ],
+          "earlier_attempt_unconfirmed": true
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "kind": "not_dispatched",
+          "reason": "quote_expired",
+          "quote_invalidated": true
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "quote_id": "00000000-0000-4000-8000-000000000000",
+          "expires_at": "2026-11-13T12:10:00Z",
+          "forecasts": [
+            {
+              "column_id": "00000000-0000-4000-8000-000000000000",
+              "money": {
+                "amount": null,
+                "currency": "USD",
+                "certainty": "unknown",
+                "basis": "unknown",
+                "rate_card_version": null
+              },
+              "complete": false
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": "0.12",
+                  "currency": "USD",
+                  "certainty": "reported",
+                  "basis": "provider_response",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "settled",
+                  "charge": {
+                    "value": "0.125",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  },
+                  "provider_cost": {
+                    "value": null,
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "unknown"
+                  },
+                  "cost_evidence": "mismatch"
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-019a70b2-0000-7000-8000-000000000004",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": "0.20",
+                  "currency": "USD",
+                  "certainty": "reported",
+                  "basis": "provider_response",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "settled",
+                  "charge": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  },
+                  "provider_cost": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  }
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-a",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": {
+                    "amount": "0.11",
+                    "currency": "USD",
+                    "certainty": "estimated",
+                    "basis": "rate_card",
+                    "rate_card_version": "v3"
+                  }
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-a",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": {
+                    "amount": "0.11",
+                    "currency": "USD",
+                    "certainty": "estimated",
+                    "basis": "rate_card",
+                    "rate_card_version": "v3"
+                  }
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "settled",
+                  "charge": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  },
+                  "provider_cost": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  }
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-a",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": {
+                    "amount": "0.11",
+                    "currency": "USD",
+                    "certainty": "estimated",
+                    "basis": "rate_card",
+                    "rate_card_version": "v3"
+                  }
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "settled",
+                  "charge": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  },
+                  "provider_cost": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  }
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-a",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": "0.12",
+                  "currency": "USD",
+                  "certainty": "reported",
+                  "basis": "provider_response",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "unknown",
+                  "charge": {
+                    "value": null,
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "unknown"
+                  },
+                  "provider_cost": {
+                    "value": null,
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "unknown"
+                  }
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": "0.20",
+                  "currency": "USD",
+                  "certainty": "reported",
+                  "basis": "provider_response",
+                  "rate_card_version": null
+                },
+                "payment_receipt": {
+                  "action_id": "attempt",
+                  "quote_id": null,
+                  "option": {
+                    "id": "own:example",
+                    "connection_id": "conn_a00000000000000000000000",
+                    "provider_id": "openrouter",
+                    "provider_label": "Native provider",
+                    "funding_source": "byok",
+                    "payable_unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    }
+                  },
+                  "state": "settled",
+                  "charge": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  },
+                  "provider_cost": {
+                    "value": "0.20",
+                    "unit": {
+                      "kind": "currency",
+                      "code": "USD"
+                    },
+                    "certainty": "measured"
+                  }
+                },
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-a",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Kept paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": null,
+              "result_issue": "unprojectable"
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": "1.25",
+                  "currency": "USD",
+                  "certainty": "reported",
+                  "basis": "original_request_readback",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": {
+                    "amount": "1.25",
+                    "currency": "USD",
+                    "certainty": "estimated",
+                    "basis": "rate_card",
+                    "rate_card_version": "v1"
+                  }
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": {
+                    "total": null,
+                    "input": null,
+                    "output": null
+                  },
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": {
+                    "total": null,
+                    "input": null,
+                    "output": {
+                      "amount": "1.25",
+                      "currency": "USD",
+                      "certainty": "reported",
+                      "basis": "original_request_readback",
+                      "rate_card_version": null
+                    }
+                  },
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": {
+                    "total": null,
+                    "input": {
+                      "amount": "1.25",
+                      "currency": "USD",
+                      "certainty": "reported",
+                      "basis": "original_request_readback",
+                      "rate_card_version": null
+                    },
+                    "output": null
+                  },
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": {
+                    "total": {
+                      "amount": "1.25",
+                      "currency": "USD",
+                      "certainty": "reported",
+                      "basis": "original_request_readback",
+                      "rate_card_version": null
+                    },
+                    "input": null,
+                    "output": null
+                  },
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": {
+                    "money": {
+                      "amount": "1.25",
+                      "currency": "USD",
+                      "certainty": "reported",
+                      "basis": "original_request_readback",
+                      "rate_card_version": null
+                    },
+                    "scope": {
+                      "kind": "unknown",
+                      "includes": [],
+                      "excludes": [],
+                      "unknown": [
+                        "inference",
+                        "tools",
+                        "routing",
+                        "reporting_writes",
+                        "zero_data_retention",
+                        "other"
+                      ]
+                    }
+                  },
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "attempt-b",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "Other column paid answer.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": "unprojectable"
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "queued",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "failed",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "unknown",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "cancelled",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": null
+            },
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "claimed",
+              "attempt_id": null,
+              "attempt_state": null,
+              "result": null,
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Model Playground is not available yet.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/catalog",
+        "status": 503,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable",
+        "details": {
+          "reason": "not_available_yet",
+          "retryable": false
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundCatalog",
+      "path": "/projects/{project_id}/model-playground/catalog",
+      "status": 503
+    },
+    {
+      "body": {
+        "detail": "Model Playground is not available yet.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 503,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable",
+        "details": {
+          "reason": "not_available_yet",
+          "retryable": false
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 503
+    },
+    {
+      "body": {
+        "detail": "Model Playground is not available yet.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/019a70b2-0000-7000-8000-000000000003",
+        "status": 503,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable",
+        "details": {
+          "reason": "not_available_yet",
+          "retryable": false
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 503
+    },
+    {
+      "body": {
+        "detail": "Model Playground is not available yet.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 503,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable",
+        "details": {
+          "reason": "not_available_yet",
+          "retryable": false
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 503
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request body is too large.",
+        "docs_url": "https://bisibility.com/docs/api/errors#bad_request",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 413,
+        "title": "Bad request",
+        "type": "https://bisibility.com/problems/bad_request"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 413
+    },
+    {
+      "body": {
+        "detail": "This Idempotency-Key is not bound to these body bytes. Use a new key for a different body.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 422,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Unexpected API error.",
+        "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/catalog",
+        "status": 500,
+        "title": "Internal server error",
+        "type": "https://bisibility.com/problems/internal_server_error"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundCatalog",
+      "path": "/projects/{project_id}/model-playground/catalog",
+      "status": 500
+    },
+    {
+      "body": {
+        "detail": "Unexpected API error.",
+        "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 500,
+        "title": "Internal server error",
+        "type": "https://bisibility.com/problems/internal_server_error"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 500
+    },
+    {
+      "body": {
+        "detail": "Unexpected API error.",
+        "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/019a70b2-0000-7000-8000-000000000003",
+        "status": 500,
+        "title": "Internal server error",
+        "type": "https://bisibility.com/problems/internal_server_error"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 500
+    },
+    {
+      "body": {
+        "detail": "Unexpected API error.",
+        "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 500,
+        "title": "Internal server error",
+        "type": "https://bisibility.com/problems/internal_server_error"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 500
+    },
+    {
+      "body": {
+        "detail": "Unexpected end of JSON input",
+        "docs_url": "https://bisibility.com/docs/api/errors#bad_request",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 400,
+        "title": "Bad request",
+        "type": "https://bisibility.com/problems/bad_request"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/model-playground-review-router.test.ts"
+}

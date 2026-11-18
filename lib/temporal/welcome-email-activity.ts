@@ -1,5 +1,4 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { resolveFounderEmailIdentity } from "@/lib/email/founder-email-identity";
 import { createMarketingUnsubscribeToken } from "@/lib/email/marketing-unsubscribe";
@@ -12,10 +11,12 @@ import {
 import { NotificationType } from "@/lib/generated/prisma/client";
 import { createNotification } from "@/lib/notifications/create";
 import { absoluteUrl, resolveCanonicalOrigin } from "@/lib/seo/origin";
+import { skipEmailNotification } from "../email/notification-policy";
 
 const OAUTH_PROVIDERS = new Set(["github", "google"]);
 
 export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
+  if (skipEmailNotification("welcome")) return { status: "notifications_disabled" as const };
   const user = await prisma.user.findUnique({
     select: {
       accounts: { select: { providerId: true } },
@@ -74,7 +75,10 @@ export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
   if (!claim) return { status: "already_sent" as const };
 
   try {
-    await sendPreparedWelcomeEmail(prepared);
+    if ((await sendPreparedWelcomeEmail(prepared)) === false) {
+      await prisma.notification.delete({ where: { id: claim.id } });
+      return { status: "notifications_disabled" as const };
+    }
   } catch (error) {
     if (error instanceof EmailSendError && error.ambiguous) return { status: "unknown" as const };
     try {
@@ -89,6 +93,8 @@ export async function sendWelcomeEmailActivity({ userId }: { userId: string }) {
 }
 
 export async function sendWelcomeFollowupActivity({ userId }: { userId: string }) {
+  if (skipEmailNotification("founder-followup"))
+    return { status: "notifications_disabled" as const };
   const user = await prisma.user.findUnique({
     select: {
       accounts: { select: { providerId: true } },
@@ -132,12 +138,16 @@ export async function sendWelcomeFollowupActivity({ userId }: { userId: string }
   if (!claim) return { status: "already_sent" as const };
 
   try {
-    await sendWelcomeFollowupEmail({
+    const submitted = await sendWelcomeFollowupEmail({
       email: user.email,
       name: user.name,
       profileNameTrusted: user.accounts.some(({ providerId }) => OAUTH_PROVIDERS.has(providerId)),
       unsubscribeUrl,
     });
+    if (submitted === false) {
+      await prisma.notification.delete({ where: { id: claim.id } });
+      return { status: "notifications_disabled" as const };
+    }
   } catch (error) {
     if (error instanceof EmailSendError && error.ambiguous) return { status: "unknown" as const };
     if (error instanceof EmailSuppressedError) return { status: "suppressed" as const };

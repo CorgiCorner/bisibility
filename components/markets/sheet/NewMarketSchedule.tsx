@@ -7,7 +7,6 @@ import type { NewMarketCreateInput } from "@/lib/markets/create-input";
 import { useTranslations } from "next-intl";
 
 export type NewMarketScheduleOption = {
-  isDefault?: boolean;
   frequency: string;
   id: string;
   name: string;
@@ -31,7 +30,7 @@ export function NewMarketSchedule({
     <section aria-label={t("schedule")} className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
         <FieldLabel label={t("schedule")} />
-        <Button onClick={onNewSchedule} size="xs" type="button" variant="ghost">
+        <Button onClick={onNewSchedule} size="input" type="button" variant="secondary">
           {t("newSchedule")}
         </Button>
       </div>

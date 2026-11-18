@@ -10,7 +10,11 @@ import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { TargetSwitcher } from "./TargetSwitcher";
 
 type KeywordHeaderContextProps = {
-  addKeywordsMatrixAction: KeywordAction<AddKeywordsMatrixInput>;
+  addKeywordsMatrixAction: KeywordAction<
+    AddKeywordsMatrixInput & {
+      review?: import("@/lib/schedules/review-commit").ScheduleReviewSubmission;
+    }
+  >;
   bulkDeleteAction: KeywordAction<BulkKeywordIdsInput>;
   canCreateKeyword: boolean;
   canUpdateKeyword: boolean;

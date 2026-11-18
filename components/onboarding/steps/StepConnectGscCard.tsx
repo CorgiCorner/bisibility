@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { InlineCallout, InlineCode } from "@/components/ui/InlineCallout";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { googlePropertyOauthFailureMessage } from "@/lib/integrations/google-property-failure";
 import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type {
   GoogleOAuthSetup,
@@ -144,7 +144,7 @@ export function StepConnectGscCard({
         return;
       }
       if ("status" in result && result.status === "failed") {
-        setError(googlePropertyFailureMessage(result.failure, oauthT));
+        setError(googlePropertyOauthFailureMessage(result.failure, oauthT));
         return;
       }
       setSetup(null);
@@ -256,7 +256,7 @@ export function StepConnectGscCard({
                 weight="regular"
               />
               {setup.failure
-                ? googlePropertyFailureMessage(setup.failure, oauthT)
+                ? googlePropertyOauthFailureMessage(setup.failure, oauthT)
                 : (setup.error ?? t("drawer.noProperties"))}
             </p>
           )}

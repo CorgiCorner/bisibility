@@ -39,6 +39,18 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+// Membership fixtures isolate admission; the owned PostgreSQL suite runs the real gate.
+vi.mock("@/lib/schedules/keyword-create-write", () => ({
+  commitKeywordCreate: (
+    _project: unknown,
+    _actor: unknown,
+    _change: unknown,
+    _review: unknown,
+    run: (tx: unknown) => unknown,
+  ) => mocks.prisma.$transaction(run),
+  assertKeywordCreateAdmission: vi.fn(),
+}));
+
 vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({ setKeywordCadence: vi.fn() }));
 
 vi.mock("@/lib/rank-check/schedules/service-membership", () => ({

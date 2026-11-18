@@ -34,6 +34,8 @@ export function registerAdditionalAuditDeclarations(
   declare(["settings.usage_display.update"], { before: usageDisplay, after: usageDisplay });
   const list = (policy: AuditFieldPolicy): readonly [AuditFieldPolicy] => [policy];
   const strings = (...names: string[]) => f.strings(...names);
+  const syncState = { ...f.booleans("enabled"), ...f.numbers("importPauses"), ...strings("kind") };
+  declare(["project.data_sync.update"], { before: syncState, after: syncState });
   const schedule = {
     ...strings("cronExpression", "frequency", "timezone"),
     ...f.numbers("jitterMinutes", "serpDepth"),
@@ -41,8 +43,8 @@ export function registerAdditionalAuditDeclarations(
   const checkSchedule = {
     ...schedule,
     ...f.dates("archivedAt"),
-    ...strings("movedTo", "name", "providerPolicy", "publicId", "timeOfDay"),
-    ...f.booleans("enabled", "isDefault"),
+    ...strings("clientConsent", "movedTo", "name", "providerPolicy", "publicId", "timeOfDay"),
+    ...f.booleans("enabled"),
     keywordIds: list("string"),
     movedFrom: list("string"),
   };
@@ -53,7 +55,6 @@ export function registerAdditionalAuditDeclarations(
     after: withReviewedConsent(checkSchedule),
   });
   declare(["check_schedule.delete", "check_schedule.assign"], checkSchedulePolicy);
-  declare(["check_schedule.set_default"], checkSchedulePolicy);
   declare(["check_schedule.remove"], checkSchedulePolicy);
   declare(["check_schedule.archive", "check_schedule.restore"], checkSchedulePolicy);
   const notificationPreference = {

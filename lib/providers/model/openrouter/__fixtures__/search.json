@@ -1,0 +1,41 @@
+{
+  "id": "gen-synthetic-p07-search",
+  "object": "chat.completion",
+  "model": "openai/gpt-5.2",
+  "provider": "OpenAI",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Source one. Source one again. Source two.",
+        "annotations": [
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://example.com/source",
+              "title": "One",
+              "start_index": 0,
+              "end_index": 10
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://example.com/source",
+              "title": "One again",
+              "start_index": 12,
+              "end_index": 28
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": { "url": "https://example.org/source", "title": "Two" }
+          }
+        ]
+      }
+    }
+  ],
+  "usage": { "prompt_tokens": 120, "completion_tokens": 20, "cost": null }
+}

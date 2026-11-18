@@ -1,15 +1,20 @@
 "use client";
-
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { AddKeywordTrackingControls } from "@/components/keywords/add/AddKeywordTrackingControls";
 import { useAddKeywordDrawerMarkets } from "@/components/keywords/add/useAddKeywordDrawerMarkets";
 import { NewMarketCreator } from "@/components/markets/sheet/NewMarketCreator";
+import {
+  ScheduleReviewCancelled,
+  useScheduleSpendReview,
+} from "@/components/schedules/useScheduleSpendReview";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/toast-context";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { keywordCreateChange } from "@/lib/schedules/keyword-create-change";
+import type { ScheduleReviewSubmission } from "@/lib/schedules/review-commit";
 import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
 import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
@@ -19,7 +24,9 @@ import { deviceValue, type KeywordAction } from "./action-utils";
 import { presentSafeActionError } from "./safe-action-error";
 
 type KeywordMarketsDrawerProps = {
-  addKeywordsMatrixAction: KeywordAction<AddKeywordsMatrixInput>;
+  addKeywordsMatrixAction: KeywordAction<
+    AddKeywordsMatrixInput & { review?: ScheduleReviewSubmission }
+  >;
   bulkDeleteAction: KeywordAction<BulkKeywordIdsInput>;
   canCreateKeyword: boolean;
   keyword: KeywordRow;
@@ -93,6 +100,7 @@ export function KeywordMarketsDrawer({
 }: Readonly<KeywordMarketsDrawerProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.add");
   const sharedErrors = useSharedErrorMessages();
+  const review = useScheduleSpendReview(projectId);
   const router = useRouter();
   const { showToast } = useToast();
   const uniqueTargets = [...new Map(targets.map((target) => [target.id, target])).values()];
@@ -138,7 +146,7 @@ export function KeywordMarketsDrawer({
     let addedIds = reusableAddition?.keywordIds ?? [];
     try {
       if (addsTargets && !reusableAddition) {
-        const result = await addKeywordsMatrixAction({
+        const input: AddKeywordsMatrixInput = {
           devices: selection.devices,
           intent: keyword.intent,
           keywords: [keyword.keyword],
@@ -148,7 +156,10 @@ export function KeywordMarketsDrawer({
           tags: keyword.tags,
           targetUrl: keyword.targetUrl,
           topic: keyword.topic,
-        });
+        };
+        const result = await review.run(keywordCreateChange(input), (submission) =>
+          addKeywordsMatrixAction({ ...input, review: submission }),
+        );
         addedIds = createdKeywordIds(result);
         if (addedIds.length > 0) {
           setPendingAddition({ keywordIds: addedIds, selectionKey: currentSelectionKey });
@@ -176,6 +187,7 @@ export function KeywordMarketsDrawer({
         router.refresh();
       }
     } catch (cause) {
+      if (cause instanceof ScheduleReviewCancelled) return;
       if (addedIds.length > 0) {
         setError(t("marketDrawerPartialUpdate"));
         router.refresh();
@@ -206,70 +218,73 @@ export function KeywordMarketsDrawer({
   );
 
   return (
-    <NewMarketCreator {...marketFlow.creator} definitionOnly={{ devices: selection.devices }}>
-      {(market) => (
-        <Sheet
-          backAction={
-            marketFlow.step.open
-              ? { label: t("marketDrawerBack"), onClick: market.onBack }
-              : undefined
-          }
-          footer={marketFlow.step.open ? market.footer : footer}
-          onClose={onClose}
-          onExited={market.onClose}
-          open={open}
-          title={
-            marketFlow.step.open ? (
-              market.title
-            ) : (
-              <span className="block min-w-0">
-                <span className="block">{t("marketDrawerTitle")}</span>
-                <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
-                  {keyword.keyword}
+    <>
+      {review.dialog}
+      <NewMarketCreator {...marketFlow.creator} definitionOnly={{ devices: selection.devices }}>
+        {(market) => (
+          <Sheet
+            backAction={
+              marketFlow.step.open
+                ? { label: t("marketDrawerBack"), onClick: market.onBack }
+                : undefined
+            }
+            footer={marketFlow.step.open ? market.footer : footer}
+            onClose={onClose}
+            onExited={market.onClose}
+            open={open}
+            title={
+              marketFlow.step.open ? (
+                market.title
+              ) : (
+                <span className="block min-w-0">
+                  <span className="block">{t("marketDrawerTitle")}</span>
+                  <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
+                    {keyword.keyword}
+                  </span>
                 </span>
-              </span>
-            )
-          }
-        >
-          {marketFlow.step.open ? (
-            market.content
-          ) : (
-            <>
-              <p className="m-0 mb-4 text-[12px] text-fg-muted">
-                {t("marketDrawerKeywordDescription")}
-              </p>
-              <div className="grid gap-4">
-                <AddKeywordTrackingControls
-                  {...marketFlow.tracking(1, setSelection)}
-                  schedules={[]}
-                  showSchedule={false}
-                />
-              </div>
-              <div
-                aria-label={t("marketDrawerTargetChange")}
-                className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
-              >
-                <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
-                  {t("marketDrawerChecksPerRun", {
-                    checks: nextCount,
-                    devices: selection.devices.length,
-                    markets: selection.locationKeys.length,
-                  })}
+              )
+            }
+          >
+            {marketFlow.step.open ? (
+              market.content
+            ) : (
+              <>
+                <p className="m-0 mb-4 text-[12px] text-fg-muted">
+                  {t("marketDrawerKeywordDescription")}
                 </p>
-                <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
-                  {checkDeltaLabel(uniqueTargets.length, nextCount, t)}
-                </p>
-              </div>
-              {!valid ? (
-                <p className="mt-3 text-[12px] text-red-text">
-                  {t("marketDrawerSelectionRequired")}
-                </p>
-              ) : null}
-              {error ? <p className="mt-3 text-[12px] text-red-text">{error}</p> : null}
-            </>
-          )}
-        </Sheet>
-      )}
-    </NewMarketCreator>
+                <div className="grid gap-4">
+                  <AddKeywordTrackingControls
+                    {...marketFlow.tracking(1, setSelection)}
+                    schedules={[]}
+                    showSchedule={false}
+                  />
+                </div>
+                <div
+                  aria-label={t("marketDrawerTargetChange")}
+                  className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
+                >
+                  <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
+                    {t("marketDrawerChecksPerRun", {
+                      checks: nextCount,
+                      devices: selection.devices.length,
+                      markets: selection.locationKeys.length,
+                    })}
+                  </p>
+                  <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
+                    {checkDeltaLabel(uniqueTargets.length, nextCount, t)}
+                  </p>
+                </div>
+                {!valid ? (
+                  <p className="mt-3 text-[12px] text-red-text">
+                    {t("marketDrawerSelectionRequired")}
+                  </p>
+                ) : null}
+                {error ? <p className="mt-3 text-[12px] text-red-text">{error}</p> : null}
+              </>
+            )}
+          </Sheet>
+        )}
+      </NewMarketCreator>
+    </>
   );
 }

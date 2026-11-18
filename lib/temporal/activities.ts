@@ -49,6 +49,7 @@ export {
 } from "./maintenance-activities";
 export type { MeteringMaintenanceActivityResult } from "./metering-maintenance-activity";
 export { maintainMeteringReservationsActivity } from "./metering-maintenance-activity";
+export { executeModelPlaygroundActivity } from "./model-playground-activities";
 export type { OpsHeartbeatActivityResult } from "./ops-activities";
 export { opsHeartbeatActivity } from "./ops-activities";
 export { checkProviderAccountsActivity } from "./provider-account-check-activity";

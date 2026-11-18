@@ -13,7 +13,6 @@ const schedules = [
     cronExpression: null,
     enabled: true,
     frequency: "daily",
-    isDefault: true,
     jitterMinutes: 60,
     keywordCount: 1,
     name: "Daily 06:00",

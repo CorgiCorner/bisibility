@@ -1,0 +1,60 @@
+{
+  "object": "response",
+  "id": "resp_synthetic_search",
+  "model": "gpt-5-2025-08-07",
+  "status": "completed",
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    { "type": "reasoning", "id": "rs_synthetic_search", "summary": [] },
+    {
+      "type": "web_search_call",
+      "id": "ws_synthetic_search",
+      "status": "completed",
+      "action": {
+        "type": "search",
+        "queries": ["synthetic documentation"],
+        "sources": [
+          { "type": "url", "url": "https://example.org/source" },
+          { "type": "url", "url": "https://example.org/consulted-only" }
+        ]
+      }
+    },
+    {
+      "id": "msg_synthetic_search",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "First [1]. Again [1].",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "start_index": 6,
+              "end_index": 9,
+              "url": "https://EXAMPLE.org:443/source",
+              "title": "Synthetic source"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 17,
+              "end_index": 20,
+              "url": "https://example.org/source",
+              "title": "Synthetic source"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 100,
+    "input_tokens_details": { "cached_tokens": 20, "cache_write_tokens": 0 },
+    "output_tokens": 40,
+    "output_tokens_details": { "reasoning_tokens": 10 },
+    "total_tokens": 140
+  },
+  "tool_usage": { "web_search": { "num_requests": 1 } }
+}

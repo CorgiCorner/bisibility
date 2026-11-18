@@ -21,6 +21,7 @@ model MeteringOperation {
   commands               MeteringCommand[]
   events                 MeteringEvent[]
   paidAttemptContext     MeteringPaidAttemptContext?
+  modelPlaygroundPaymentAttempts ModelPlaygroundPaymentAttempt[]
   providerDispatchIdentity ProviderDispatchIdentity?
   providerOperationEvidence ProviderOperationEvidence?
   providerIncidentOperations ProviderIncidentOperation[]
@@ -30,6 +31,7 @@ model MeteringOperation {
   unknownCloseout        MeteringUnknownCloseout?
 
   @@unique([namespace, operation_id])
+  // Migration-managed partial expression index: platform project scope and created_at.
   @@index([namespace, principal, created_at], map: "metering_operation_principal_created_idx")
   @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")
   @@map("metering_operation")
@@ -47,6 +49,7 @@ model MeteringReceipt {
   occurred_at    DateTime              @db.Timestamptz
   recorded_at    DateTime              @db.Timestamptz
   cost_units     BigInt?
+  cost_scale     Int                   @default(4)
   cost_certainty String
   sequence       Int
   operation      MeteringOperation     @relation(fields: [operation_pk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
@@ -220,4 +223,11 @@ model MeteringPaidAttemptContext {
   @@map("metering_paid_attempt_context")
 
   local_original_submit_proofs LocalOriginalSubmitProof[]
+}
+
+model MeteringSchemaVersion {
+  version  Int    @id
+  checksum String
+
+  @@map("metering_schema_version")
 }

@@ -57,6 +57,7 @@ function cost(document: Document, operationId: string, operation: Json) {
   return {
     kind: "paid",
     timing: spend.timing,
+    ...(spend.payer ? { payer: spend.payer } : {}),
     ...(spend.estimate && estimate
       ? {
           estimate: {

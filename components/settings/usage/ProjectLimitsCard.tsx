@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { useLimitText } from "./ProviderLimitRows";
 
 export type ProjectLimitItem = {
-  id: "own" | "credits" | "single";
+  id: "own" | "credits" | "single" | "ai";
   label: string;
   scope: string;
   row: ProjectBudgetRow | undefined;
@@ -20,6 +20,8 @@ export type ProjectLimitItem = {
   status?: string;
   onEdit?: () => void;
   editLabel?: string;
+  /** Cross-cutting limits sit below the funding columns rather than inside either one. */
+  fullWidth?: boolean;
 };
 
 function ProjectLimitCell({ item }: { item: ProjectLimitItem }) {
@@ -87,6 +89,8 @@ export function ProjectLimitsCard({
 }) {
   const text = useLimitText();
   if (!items.length) return null;
+  const columns = items.filter((item) => !item.fullWidth);
+  const shared = items.filter((item) => item.fullWidth);
   return (
     <Card className="min-w-0 space-y-4" data-project-limits>
       <div>
@@ -97,13 +101,20 @@ export function ProjectLimitsCard({
           {text.t("projectDescription", { project: projectName })}
         </p>
       </div>
-      <div
-        className={`grid min-w-0 gap-4 ${items.length > 1 ? "sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-border sm:[&>*:first-child]:pr-4 sm:[&>*+*]:pl-4" : ""}`}
-      >
-        {items.map((item) => (
-          <ProjectLimitCell key={item.id} item={item} />
-        ))}
-      </div>
+      {columns.length > 0 && (
+        <div
+          className={`grid min-w-0 gap-4 ${columns.length > 1 ? "sm:grid-cols-2 sm:gap-8" : ""}`}
+        >
+          {columns.map((item) => (
+            <ProjectLimitCell key={item.id} item={item} />
+          ))}
+        </div>
+      )}
+      {shared.map((item) => (
+        <div key={item.id} className="min-w-0 border-t border-border pt-4">
+          <ProjectLimitCell item={item} />
+        </div>
+      ))}
       {children}
     </Card>
   );

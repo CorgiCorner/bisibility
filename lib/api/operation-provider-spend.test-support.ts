@@ -33,15 +33,25 @@ function resolveImport(from: string, specifier: string) {
   );
 }
 
-export function importGraph() {
-  const sources = new Map<string, string>();
+export function importGraph(
+  options: { runtimeOnly?: boolean; sources?: Map<string, string> } = {},
+) {
+  const sources =
+    options.sources ??
+    new Map(
+      sourceFiles(path.join(repositoryRoot, "lib")).map((file) => [
+        path.relative(repositoryRoot, file),
+        readFileSync(file, "utf8"),
+      ]),
+    );
   const edges = new Map<string, Set<string>>();
-  for (const file of sourceFiles(path.join(repositoryRoot, "lib"))) {
-    const relative = path.relative(repositoryRoot, file);
-    const source = readFileSync(file, "utf8");
-    sources.set(relative, source);
+  for (const [relative, source] of sources) {
+    const file = path.join(repositoryRoot, relative);
     const targets = new Set<string>();
-    for (const match of source.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)["']([^"']+)["']/g)) {
+    const imports = options.runtimeOnly
+      ? source.replace(/import\s+type\s+[\s\S]*?from\s*["'][^"']+["'];?/g, "")
+      : source;
+    for (const match of imports.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)["']([^"']+)["']/g)) {
       const target = resolveImport(file, match[1]);
       if (target) targets.add(path.relative(repositoryRoot, target));
     }

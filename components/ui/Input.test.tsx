@@ -25,6 +25,11 @@ describe("Input", () => {
     );
   });
 
+  it("keeps a date field at the height of a text field", () => {
+    render(<Input aria-label="Expiry" type="date" />);
+    expect(screen.getByLabelText("Expiry")).toHaveClass("[&::-webkit-datetime-edit]:leading-none");
+  });
+
   it("uses the existing compact geometry without leaking density to the native field", () => {
     render(<Input aria-label="Threshold" density="compact" />);
     const input = screen.getByRole("textbox", { name: "Threshold" });

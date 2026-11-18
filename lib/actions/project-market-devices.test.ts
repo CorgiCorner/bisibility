@@ -8,7 +8,9 @@ const host = vi.hoisted(() => ({
   tx: vi.fn(),
   revalidate: vi.fn(),
   domain: vi.fn(),
+  commit: vi.fn(),
 }));
+vi.mock("@/lib/schedules/keyword-create-write", () => ({ commitKeywordCreate: host.commit }));
 vi.mock("./_shared", () => ({
   getActionActor: host.actor,
   requireProjectScope: host.scope,
@@ -39,6 +41,7 @@ beforeEach(() => {
   host.actor.mockResolvedValue({ id: "member" });
   host.scope.mockResolvedValue({ id: "internal-project", domain: "example.com" });
   host.tx.mockImplementation(async (run) => run("tx"));
+  host.commit.mockImplementation(async (_project, _actor, _change, _review, run) => host.tx(run));
   host.preview.mockResolvedValue({ outcome: "ready" });
   host.add.mockResolvedValue({ outcome: "created", created: 1 });
 });
@@ -82,10 +85,16 @@ it("accepts optional public keyword selections without replacing server-resolved
   await previewProjectMarketDeviceTargets(selection);
   expect(host.preview).toHaveBeenCalledWith("tx", "internal-project", selection);
   await addProjectMarketDeviceTargets({ ...selection, fingerprint: "a".repeat(64) });
-  expect(host.add).toHaveBeenCalledWith("tx", "member", "internal-project", {
-    ...selection,
-    fingerprint: "a".repeat(64),
-  });
+  expect(host.add).toHaveBeenCalledWith(
+    "tx",
+    "member",
+    "internal-project",
+    {
+      ...selection,
+      fingerprint: "a".repeat(64),
+    },
+    undefined,
+  );
 });
 it("keeps an explicit empty public selection through the action schema", async () => {
   await previewProjectMarketDeviceTargets({ ...input, keywordIds: [] });

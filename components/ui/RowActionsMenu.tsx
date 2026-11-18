@@ -6,6 +6,7 @@ import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
+import { cva } from "class-variance-authority";
 import { type KeyboardEvent as ReactKeyboardEvent, useId, useState } from "react";
 
 export type RowActionItem = {
@@ -15,12 +16,21 @@ export type RowActionItem = {
   onSelect: () => void;
 };
 
+const triggerStyle = cva(
+  "grid flex-none place-items-center rounded-control border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent-solid focus-visible:outline-offset-[-2px]",
+  {
+    variants: { size: { xs: "h-[30px] w-[30px]", sm: "h-[34px] w-[34px]" } },
+    defaultVariants: { size: "xs" },
+  },
+);
+
 type RowActionsMenuProps = {
+  size?: "xs" | "sm";
   ariaLabel: string;
   items: readonly RowActionItem[];
 };
 
-export function RowActionsMenu({ ariaLabel, items }: Readonly<RowActionsMenuProps>) {
+export function RowActionsMenu({ ariaLabel, items, size = "xs" }: Readonly<RowActionsMenuProps>) {
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchor);
   const menuId = useId();
@@ -43,7 +53,7 @@ export function RowActionsMenu({ ariaLabel, items }: Readonly<RowActionsMenuProp
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={ariaLabel}
-        className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent-solid focus-visible:outline-offset-[-2px]"
+        className={triggerStyle({ size })}
         onClick={(event) => {
           event.stopPropagation();
           setAnchor(event.currentTarget);

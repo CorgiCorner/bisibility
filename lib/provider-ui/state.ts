@@ -9,10 +9,13 @@ import { platformAllocationTag } from "@/lib/metering/paid-quote";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { readSpendingBudgets } from "@/lib/metering/spending-limit-store";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
+import { assertProviderBudgetFunding } from "@/lib/provider-allocations/validation";
 import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
+import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderBinding, ProviderRate } from "@usagekit/views";
 import { platformAllocationEvidence, platformAllocationProviders } from "./allocation-extension";
 import type { NativeAllocationRow } from "./native-allocation-evidence";
+import type { ProviderUiCommand } from "./schema";
 
 export const fingerprint = (input: unknown) =>
   createHash("sha256").update(JSON.stringify(input)).digest("hex");
@@ -37,7 +40,10 @@ export async function loadProviderUiState(
   actor: Actor,
   publicId: string,
   mode: "read" | "mutation" | "binding" = "mutation",
-  options: { financialEvidence?: boolean } = {},
+  options: {
+    financialEvidence?: boolean;
+    allocationChanges?: Extract<ProviderUiCommand, { kind: "allocations" }>["changes"];
+  } = {},
 ) {
   const financialEvidence = mode !== "binding" && options.financialEvidence !== false;
   const reference = await tx.project.findUnique({
@@ -69,6 +75,11 @@ export async function loadProviderUiState(
     projectId: project.id,
     type: "provider_connection",
   });
+  const canManage =
+    canProjectAction(grant.role, "manage", "provider_connection") &&
+    project.writeMode === "active" &&
+    !project.isSample;
+  if (options.allocationChanges && !canManage) throw new AuthorizationError("forbidden");
   const platforms = await platformAllocationProviders(tx, {
     actor: currentActor,
     projectId: project.id,
@@ -80,6 +91,14 @@ export async function loadProviderUiState(
       COALESCE((SELECT jsonb_agg(jsonb_build_object('feature',r.feature,'amountCents',r."amountCents"::text,'updatedAt',r."updatedAt") ORDER BY r.feature)
         FROM provider_connection_rates r WHERE r."connectionId"=c.id),'[]'::jsonb) AS rates
     FROM provider_connections c WHERE c."projectId"=${project.id} ORDER BY c.id`;
+  for (const change of options.allocationChanges ?? []) {
+    const connection = candidates.find((row) =>
+      ["app", "programmatic"].some(
+        (surface) => change.rowId === `${row.publicId}:platform:${surface}`,
+      ),
+    );
+    if (connection) assertProviderBudgetFunding(PROVIDER_CATALOG, connection.provider, {});
+  }
   const namespace = meteringNamespace();
   const budgets =
     mode === "binding"
@@ -152,10 +171,7 @@ export async function loadProviderUiState(
       project.providerUiRevision.toString(),
       platforms,
     ]),
-    canManage:
-      canProjectAction(grant.role, "manage", "provider_connection") &&
-      project.writeMode === "active" &&
-      !project.isSample,
+    canManage,
   };
   return {
     ...displayEvidence,

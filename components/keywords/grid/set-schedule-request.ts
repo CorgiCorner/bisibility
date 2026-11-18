@@ -1,4 +1,6 @@
 import type { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { publishCapacityProblem } from "@/lib/capacity/notice-store";
+import { throwScheduleReviewProblem } from "@/lib/schedules/review-problem";
 import type { useTranslations } from "next-intl";
 import { presentBulkActionError } from "./bulk-action-error";
 
@@ -59,6 +61,8 @@ export async function requestApi<T>(url: string, init: RequestInit): Promise<T> 
   });
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    throwScheduleReviewProblem(body);
+    publishCapacityProblem(body);
     throw new ScheduleRequestError(scheduleRequestProblem(response, body));
   }
   if (!body || typeof body !== "object" || !("data" in body) || body.data === undefined) {

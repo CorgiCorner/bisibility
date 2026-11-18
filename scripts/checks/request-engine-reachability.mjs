@@ -9,6 +9,7 @@ import entries05 from "./request-engine-reachability-dispositions-05.mjs";
 import entries06 from "./request-engine-reachability-dispositions-06.mjs";
 import entries07 from "./request-engine-reachability-dispositions-07.mjs";
 import entries08 from "./request-engine-reachability-dispositions-08.mjs";
+import entries09 from "./request-engine-reachability-dispositions-09.mjs";
 import {
   inspectRepository as inspectRequestEngineReachability,
   runGuard,
@@ -55,6 +56,7 @@ export const DISPOSITION_ENTRIES = currentEntries([
   ...entries06,
   ...entries07,
   ...entries08,
+  ...entries09,
 ]);
 
 export function inspectRepository(root = process.cwd(), dispositions = new Map(DISPOSITION_ENTRIES)) {

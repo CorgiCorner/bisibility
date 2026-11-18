@@ -12,7 +12,6 @@ const messages = mergeMessageCatalogs(sharedControlTestMessages, costs);
 function renderDrawer(
   amount: string,
   split: "equal" | "percent" | "single_project" = "single_project",
-  suggestHref: string | null = null,
 ) {
   return renderWithFeatureMessages(
     <CostDrawer
@@ -29,7 +28,6 @@ function renderDrawer(
       onSubmit={async () => undefined}
       open
       projectPublicId="prj_current"
-      suggestHref={suggestHref}
     />,
     { messages },
   );
@@ -50,21 +48,10 @@ describe("add cost drawer", () => {
     expect(view.getByRole("button", { name: "Add cost" })).toHaveAttribute("data-size", "input");
   });
 
-  it("puts the suggestion link in the Tool caption before the name field", () => {
-    const view = renderDrawer("120.00", "single_project", "/roadmap");
-    const link = view.getByRole("link", { name: "Not listed? Suggest it" });
-    expect(link.parentElement).toHaveClass("text-ui-caption");
-    expect(link.closest("[data-form-field]")).toContainElement(
-      view.getByRole("button", { name: "Tool" }),
-    );
-    expect(link.closest("[data-form-field]")).not.toContainElement(
-      view.getByRole("textbox", { name: "Name" }),
-    );
-  });
-
-  it("hides the suggest control when there is no link", () => {
+  it("omits the retired tool-suggestion prompt", () => {
     const view = renderDrawer("120.00");
-    expect(view.queryByRole("link", { name: "Not listed? Suggest it" })).toBeNull();
+    expect(view.queryByText("Not listed? Suggest it")).toBeNull();
+    expect(view.getByRole("textbox", { name: "Custom tool" })).toBeVisible();
   });
 
   it("keeps a partial share hidden until the switch is on", async () => {

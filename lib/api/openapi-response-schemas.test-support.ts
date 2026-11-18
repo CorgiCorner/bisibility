@@ -135,6 +135,8 @@ const formats: Record<string, (value: string) => boolean> = {
 function createAjv(document: OpenApiDocument, closed: boolean) {
   const ajv = new Ajv2020({
     allErrors: true,
+    // Compile shared component references once instead of repeatedly expanding them.
+    inlineRefs: false,
     strict: true,
     strictRequired: false,
     strictTypes: false,
@@ -162,15 +164,17 @@ export function responseValidatorFactory(document: OpenApiDocument) {
   const open = createAjv(document, false);
   const closed = createAjv(document, true);
   const components = document.components.schemas;
-  const cache = new Map<unknown, ResponseValidator>();
+  // Equal response schemas occur across many operations and captures. Compile each once.
+  const cache = new Map<string | undefined, ResponseValidator>();
   return (schema: unknown): ResponseValidator => {
-    let validator = cache.get(schema);
+    const key = JSON.stringify(schema);
+    let validator = cache.get(key);
     if (!validator) {
       validator = {
         closed: closed.compile(transform(schema, true, true, components) as Schema),
         open: open.compile(transform(schema, true, false, components) as Schema),
       };
-      cache.set(schema, validator);
+      cache.set(key, validator);
     }
     return validator;
   };

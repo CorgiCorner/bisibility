@@ -5,7 +5,7 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
 import { PillBadge } from "@/components/ui/Pill";
 import { useZodForm } from "@/lib/forms/use-zod-form";
-import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { googlePropertyOauthFailureMessage } from "@/lib/integrations/google-property-failure";
 import {
   googlePropertyDisplayName,
   googlePropertyMatchesDomain,
@@ -188,6 +188,9 @@ export function ConnectDrawerOauthSelection({
           <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">
             {isGa4 ? t("selectGa4Help") : t("selectGscHelp")}
           </p>
+          {isGa4 ? null : (
+            <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">{t("gscSyncSchedule")}</p>
+          )}
         </div>
         {propertyOptions.length > 0 ? (
           !manualEntry ? (
@@ -273,7 +276,7 @@ export function ConnectDrawerOauthSelection({
             />
             <span>
               {setup.failure ? (
-                googlePropertyFailureMessage(setup.failure, t)
+                googlePropertyOauthFailureMessage(setup.failure, t)
               ) : isGa4 && setup.failureClass ? (
                 <span className="flex flex-col gap-1">
                   <span>{t("loadGa4Error")}</span>

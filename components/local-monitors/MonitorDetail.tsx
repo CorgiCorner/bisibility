@@ -139,9 +139,11 @@ function MonitorDetailContent({
               ? "modes.scheduled"
               : monitor.schedule.mode === "paused"
                 ? "modes.paused"
-                : monitor.schedule.mode === "manual"
-                  ? "modes.manual"
-                  : "modes.unknown",
+                : monitor.schedule.mode === "archived"
+                  ? "modes.archived"
+                  : monitor.schedule.mode === "manual"
+                    ? "modes.manual"
+                    : "modes.unknown",
           )}
         </p>
         <MonitorCapturedScope monitor={monitor} />

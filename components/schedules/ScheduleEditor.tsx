@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { suggestedScheduleName } from "@/lib/schedules/suggested-name";
+import { rankMembershipChange, rankScheduleChange } from "@/lib/schedules/web-change";
 import { VIEWER_PREVIEW_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -25,12 +26,12 @@ import { ScheduleSaveConfirmation } from "./SchedulePlanningNotice";
 import { payload, request, saveErrorKey } from "./schedule-editor-request";
 import { useScheduleMemberRemoval } from "./useScheduleMemberRemoval";
 import { useScheduleNameLabels } from "./useScheduleNameLabels";
+import { ScheduleReviewCancelled, useScheduleSpendReview } from "./useScheduleSpendReview";
 
 export function ScheduleEditor({
   canEdit = true,
   candidates = [],
   connectedProviders,
-  defaultScheduleName,
   embedded = false,
   isNew = false,
   initialSaveConfirmed = false,
@@ -45,11 +46,12 @@ export function ScheduleEditor({
   projectTimezone,
   referenceIso,
   schedule,
-  showDefaultControl = true,
 }: Readonly<ScheduleEditorProps>) {
   const t = useTranslations("projectRuns.schedules");
   const scheduleNames = useScheduleNameLabels();
   const router = useRouter();
+  const spendReview = useScheduleSpendReview(projectId);
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const { showToast } = useToast();
   const editorDefaults = scheduleEditorDefaults(schedule);
   const form = useForm<ScheduleEditorValues>({
@@ -58,7 +60,6 @@ export function ScheduleEditor({
       // A brand-new schedule arrives without a name, so the suggestion is built from the
       // viewer's catalog rather than an English literal in the defaults module.
       name: editorDefaults.name || suggestedScheduleName(editorDefaults, scheduleNames),
-      isDefault: (isNew && defaultScheduleName === null) || schedule.isDefault,
     },
     resolver: zodResolver(scheduleEditorSchema),
   });
@@ -107,26 +108,31 @@ export function ScheduleEditor({
     setMessage(null);
     setSaveConfirmed(false);
     try {
-      const saved = isNew
-        ? await request<{ publicId: string }>(
-            "/api/check-schedules",
-            "POST",
-            payload(values, projectId),
-          )
-        : await request<{ publicId: string }>(
-            `/api/check-schedules/${schedule.publicId}`,
-            "PATCH",
-            payload(values, projectId),
-          );
+      const data = payload(values, projectId);
+      const existingId = createdId ?? (isNew ? null : schedule.publicId);
+      const saved = await spendReview.run(
+        rankScheduleChange(projectId, existingId, data),
+        (review) =>
+          request<{ publicId: string }>(
+            existingId ? `/api/check-schedules/${existingId}` : "/api/check-schedules",
+            existingId ? "PATCH" : "POST",
+            { ...data, ...(review ? { review } : {}) },
+          ),
+      );
       const scheduleId = saved.publicId;
-      if (values.isDefault && !schedule.isDefault) {
-        await request(`/api/check-schedules/${scheduleId}/set-default`, "POST", { projectId });
-      }
+      if (isNew) setCreatedId(scheduleId);
       if (pendingMembers.length) {
-        await request(`/api/check-schedules/${scheduleId}/keywords`, "POST", {
-          keywordIds: pendingMembers.map((member) => member.publicId),
-          projectId,
-        });
+        const keywordIds = pendingMembers.map((member) => member.publicId);
+        await spendReview.run(
+          rankMembershipChange(projectId, scheduleId, keywordIds),
+          (review) =>
+            request(`/api/check-schedules/${scheduleId}/keywords`, "POST", {
+              keywordIds,
+              projectId,
+              ...(review ? { review } : {}),
+            }),
+          { emptyScheduleCreated: isNew },
+        );
       }
       form.reset(values);
       setPendingMembers([]);
@@ -137,11 +143,11 @@ export function ScheduleEditor({
           publicId: scheduleId,
           name: values.name,
           frequency: values.frequency,
-          isDefault: values.isDefault,
         });
       else if (isNew) router.replace(`${projectSchedulesPath(projectId, scheduleId)}?saved=1`);
       else router.refresh();
     } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       setMessage(t(`editor.${saveErrorKey(error)}`));
     }
   }
@@ -150,12 +156,10 @@ export function ScheduleEditor({
     <form
       className="grid min-w-0 gap-[18px]"
       noValidate
-      onSubmit={
-        canEdit
-          ? form.handleSubmit((values) => void save(values))
-          : (event) => event.preventDefault()
-      }
+      onSubmit={canEdit ? form.handleSubmit(save) : (event) => event.preventDefault()}
     >
+      {spendReview.dialog}
+      {memberRemoval.dialog}
       {saveConfirmed && !formState.isDirty && pendingMembers.length === 0 ? (
         <ScheduleSaveConfirmation
           minutes={planningMinutes}
@@ -178,12 +182,10 @@ export function ScheduleEditor({
           <fieldset className="contents" disabled={!canEdit}>
             <ScheduleEditorFields
               connectedProviders={connectedProviders}
-              defaultScheduleName={defaultScheduleName}
               form={form}
               projectDefaults={projectDefaults}
               projectTimezone={projectTimezone}
               referenceIso={referenceIso}
-              showDefaultControl={showDefaultControl}
             />
           </fieldset>
         </section>
@@ -216,6 +218,7 @@ export function ScheduleEditor({
         {!embedded ? (
           <Button
             size="input"
+            disabled={formState.isSubmitting}
             onClick={() =>
               onCancel ? onCancel() : router.replace(projectSchedulesPath(projectId))
             }

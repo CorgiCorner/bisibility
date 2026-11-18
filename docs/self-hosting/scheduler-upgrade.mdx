@@ -3,39 +3,45 @@ title: "Upgrade the rank scheduler"
 description: "Replace legacy per-keyword Temporal schedules with the named-schedule planner and dispatcher."
 ---
 
-The new release removes the legacy reconciler. The worker upgrades scheduling
-at startup; no migration command or temporary service is required.
+The new release removes the legacy reconciler. Legacy installations must complete
+an offline upgrade before starting the worker in `dispatcher` mode. Startup does
+not assign keywords to schedules or create schedules.
 
 ## Upgrade on Docker, Railway or another host
 
-1. Stop every old worker instance, including replicas. Avoid a rolling worker
-   update: an old worker can still execute the removed scheduler.
-2. Update the app, then update and start the worker on the same release. Keep
-   their database and Temporal namespace configuration.
-3. Check **Schedules** and the worker logs for the next scheduled run.
+1. Stop every old app and worker instance, including replicas. Avoid a rolling
+   worker update: an old worker can still execute the removed scheduler.
+2. Run the offline preview from the new worker image or a configured checkout.
+   Review conflicts and explicitly choose which keywords to schedule using the
+   procedures below. To leave a `missing_assignment` keyword unscheduled, set it
+   to Manual in the web app instead of assigning it. Keep the installation's
+   database and Temporal configuration.
+3. Apply the offline upgrade with all app and worker processes stopped. The
+   `--workers-stopped` flag is your acknowledgement, not a remote stop command.
+4. Update and start the app and worker on the same release. Check **Schedules**
+   and worker logs for the next scheduled run.
 
-The app remains available with old scheduler variables. `legacy` now selects the
-new scheduler; retired boolean switches produce a warning instead of a startup
-error. You can remove them later. Keep `RANK_CHECK_SCHEDULER_MODE=cutover` only
-when you intentionally want automatic checks stopped.
+```bash
+npm run scheduler:upgrade -- --dry-run
+npm run scheduler:upgrade -- --apply --workers-stopped
+```
 
-The worker pauses the old reconciler and recognized per-keyword Temporal schedules
-belonging to this database, restores missing named-schedule assignments, and starts
-the planner and dispatcher. Existing named Schedules are authoritative, including
-disabled schedules. Their configuration and existing assignments are never overwritten.
+The offline upgrade checks ownership and conflicts, pauses legacy producers,
+and checks for running workflows before activating the new scheduler. If it
+reports running workflows, drain them using the new worker in `cutover` mode,
+stop it, then retry. It does not edit configuration, restart services or call a provider.
 
-For unassigned keywords, an exact enabled match is reused. When none exists, a
-non-default schedule is created with the saved legacy frequency, timezone, jitter
-and cron, including any keyword-specific SERP depth. Multiple matches or invalid legacy settings leave only those keywords
-without automatic checks. Project managers see a warning at the top of project
-pages, a list of affected keywords, and a link to **Schedules**. Choose the intended
-schedule there. Manual and paused keywords remain manual or paused. Inactive
-projects, deactivated owners and archived keywords keep their saved intent too.
+Existing named Schedules and assignments remain authoritative. Startup refuses
+an active legacy reconciler or recognized active per-keyword schedule and directs
+the operator to the offline upgrade. Unrecognized Temporal schedules remain
+untouched and are reported in worker logs. Old schedules and ranking history are
+retained. New workers reject automatic provider execution from legacy workflows.
+AI schedules and manual checks are unchanged.
 
-Startup can be repeated safely. Old schedules and ranking history are retained.
-Unrecognized Temporal schedules are left untouched and reported in worker logs;
-they do not block the upgrade. New workers reject automatic provider execution
-from legacy workflows. AI schedules and manual checks are unchanged.
+`RANK_CHECK_SCHEDULER_MODE=legacy` selects the new `dispatcher` scheduler. Retired
+scheduler boolean switches and `legacy` produce a warning, not a startup error;
+remove these settings from app and worker configuration. Keep
+`RANK_CHECK_SCHEDULER_MODE=cutover` only when you intentionally want automatic checks stopped.
 
 ### Maintenance opt-out
 
@@ -45,31 +51,23 @@ Set `SCHEDULED_MAINTENANCE_ENABLED=0` before removing that old variable, or `1` 
 explicitly enable maintenance. Run reconciliation required by the new rank
 scheduler stays enabled independently.
 
-## Optional offline diagnostics
-
-The commands below are for investigation or a controlled offline upgrade. They
-are not required for the normal update above. Run them from the new worker image
-or a checkout with this installation's database and Temporal connectivity.
-The offline apply command requires all app and worker processes stopped;
-`--workers-stopped` is your acknowledgement, not a remote stop command.
-
-```bash
-npm run scheduler:upgrade -- --dry-run
-npm run scheduler:upgrade -- --apply --workers-stopped
-```
-
-Unlike automatic startup, this conservative offline command requires exact
-ownership review and resolution of legacy-versus-named conflicts before activation.
-If it reports running workflows, drain them using the new worker in `cutover`,
-stop it, then retry. It does not edit configuration, restart services or call a provider.
-
 ## Resolve missing assignments and conflicts
 
 The preview includes `conflictDetails`: keyword and project IDs, the reason,
 legacy settings, and selected named-schedule settings. Inactive projects,
 deactivated owners and archived keywords are included so reactivation preserves intent.
 
-For missing membership, preview and apply the optional repair from the same new
+For missing membership, review the intended assignments first. To leave a
+`missing_assignment` keyword unscheduled, set its cadence to Manual in the web
+app. In **Keywords**, select the keyword, open **Set schedule**, and choose
+**Remove from schedule** when that keyword is on a named schedule. On
+**Schedules**, open the schedule and choose **Remove from schedule** for that
+member. Both actions clear the named-schedule membership and store Manual: the
+keyword shows **Manual** and is checked only when you launch a run. If it is
+not on a named schedule, record the same Manual cadence with a keyword update
+or bulk `set_frequency` using `frequency: "manual"`. Repair does not convert
+Manual into automatic checks. If the legacy settings represent the intended
+choices, preview and explicitly apply the optional repair from the same new
 worker container or configured checkout:
 
 ```bash

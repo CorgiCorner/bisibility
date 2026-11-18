@@ -109,7 +109,7 @@ export type ProjectPageRow = {
     value: number;
     windowNote?: "rolling_28_days";
   } | null;
-  sitemap: { lastSeenAt: Date | null; listed: boolean };
+  sitemap: { lastSeenAt: Date | null; listed: boolean | null };
   sources: Partial<Record<ProjectPageSourceKind, ProjectPageSourceStamp>>;
   status: ProjectPageStatus | null;
   url: string;
@@ -127,7 +127,7 @@ export type ProjectPagesCounts = {
   inSnapshot: number;
   listed: number;
   new: number;
-  notListed: number;
+  notListed: number | null;
   removed: number;
 };
 
@@ -136,11 +136,18 @@ export const emptyProjectPagesCounts: ProjectPagesCounts = {
   inSnapshot: 0,
   listed: 0,
   new: 0,
-  notListed: 0,
+  notListed: null,
   removed: 0,
 };
 
+export type ProjectPagesSitemapFilterStatus = "ok" | "sitemap_not_checked" | "sitemap_incomplete";
+
 export type ProjectPagesListResult = {
+  sitemapFilterStatus?: ProjectPagesSitemapFilterStatus;
+  sitemapComplete?: boolean;
+  sitemapChecked: boolean;
+  sitemapReadAt?: Date | null;
+  period?: { from: string; to: string };
   conversions: ResolvedConversionSource;
   counts: ProjectPagesCounts;
   rows: ProjectPageRow[];
@@ -160,6 +167,7 @@ export const projectPageColumnKinds = [
 export type ProjectPageColumnKind = (typeof projectPageColumnKinds)[number];
 
 export type ProjectPageColumnSource = {
+  sitemapChecked?: boolean;
   kind: ProjectPageColumnKind;
   note: string;
   pages: number;

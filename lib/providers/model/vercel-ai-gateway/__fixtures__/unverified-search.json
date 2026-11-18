@@ -1,0 +1,12 @@
+{
+  "model": "anthropic/claude-sonnet-5",
+  "tools": [
+    {
+      "type": "vercel:perplexity_search",
+      "config": {
+        "query": "Synthetic query",
+        "max_results": 1
+      }
+    }
+  ]
+}

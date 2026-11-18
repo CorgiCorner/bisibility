@@ -60,9 +60,10 @@ export function billingImports(
         );
         if (!prepared.stored) return structuredClone(prepared.result);
         for (const { before: prior, after } of prepared.changes) {
-          // Existing snapshots retain their receipt prefix byte-for-byte.
+          // Native settlement owns its measurements; only policy-free receipts use host projection.
           after.receipts = after.receipts.map((receipt, index) =>
             index < (prior?.receipts.length ?? 0) ||
+            after.settlementPolicy ||
             !after.estimate.some((q) => q.unit === "budget_cents")
               ? receipt
               : projectAdmissionMeasurements(after, receipt),

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
@@ -11,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { scheduleLifecycleRequest } from "./ScheduleLifecycleActions";
 import type { ScheduleListRow } from "./SchedulesList";
+import { ScheduleReviewCancelled, useScheduleSpendReview } from "./useScheduleSpendReview";
 
 const formSchema = archiveCheckScheduleSchema.pick({ destinationScheduleId: true });
 
@@ -37,6 +39,7 @@ export function ArchiveScheduleModal({
 }>) {
   const t = useTranslations("projectRuns.schedules");
   const router = useRouter();
+  const spendReview = useScheduleSpendReview(projectId);
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const form = useZodForm<{ destinationScheduleId: string | null }>(formSchema, {
@@ -56,11 +59,27 @@ export function ArchiveScheduleModal({
   const submit = form.handleSubmit(async (values) => {
     setError(null);
     try {
-      await scheduleLifecycleRequest(projectId, schedule.publicId, "archive", values);
+      await spendReview.run(
+        {
+          op: "state",
+          id: schedule.publicId,
+          state: "archived",
+          command: {
+            kind: "rank",
+            archive: { ...values, scheduleId: schedule.publicId, projectId },
+          },
+        },
+        (review) =>
+          scheduleLifecycleRequest(projectId, schedule.publicId, "archive", {
+            ...values,
+            ...(review ? { review } : {}),
+          }),
+      );
       showToast(t("lifecycle.archived"), { severity: "success" });
       onClose();
       router.refresh();
     } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       setError(
         archiveErrorMessage(
           error,
@@ -71,53 +90,56 @@ export function ArchiveScheduleModal({
     }
   });
   return (
-    <Modal
-      open
-      onClose={onClose}
-      dismissDisabled={form.formState.isSubmitting}
-      title={t("archiveDialog.title", { name: schedule.name })}
-      footer={
-        <>
-          <Button variant="ghost" disabled={form.formState.isSubmitting} onClick={onClose}>
-            {t("cancel")}
-          </Button>
-          <Button
-            loading={form.formState.isSubmitting}
-            loadingLabel={t("lifecycle.archiving")}
-            onClick={() => void submit()}
-          >
-            {t("archiveSchedule")}
-          </Button>
-        </>
-      }
-    >
-      <div className="grid gap-4">
-        <p className="m-0 text-sm text-fg-muted">{t("archiveDialog.body")}</p>
-        {count > 0 ? (
-          <div className="grid gap-2">
-            <span className="text-sm font-medium text-fg">
-              {t("archiveDialog.moveKeywords", { count })}
-            </span>
-            <MenuSelect
-              ariaLabel={t("archiveDialog.moveKeywords", { count })}
+    <>
+      {spendReview.dialog}
+      <Modal
+        open
+        onClose={onClose}
+        dismissDisabled={form.formState.isSubmitting}
+        title={t("archiveDialog.title", { name: schedule.name })}
+        footer={
+          <>
+            <Button
               size="input"
-              value={destination ?? ""}
-              options={options}
-              onChange={(value) =>
-                form.setValue("destinationScheduleId", value || null, { shouldValidate: true })
-              }
-            />
-          </div>
-        ) : null}
-        {schedule.isDefault ? (
-          <p className="m-0 text-sm text-fg-muted">{t("archiveDialog.defaultNotice")}</p>
-        ) : null}
-        {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </Modal>
+              variant="ghost"
+              disabled={form.formState.isSubmitting}
+              onClick={onClose}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              size="input"
+              loading={form.formState.isSubmitting}
+              loadingLabel={t("lifecycle.archiving")}
+              onClick={() => void submit()}
+            >
+              {t("archiveSchedule")}
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-4">
+          <p className="m-0 text-sm text-fg-muted">{t("archiveDialog.body")}</p>
+          {count > 0 ? (
+            <FormField label={t("archiveDialog.moveKeywords", { count })}>
+              <MenuSelect
+                ariaLabel={t("archiveDialog.moveKeywords", { count })}
+                size="input"
+                value={destination ?? ""}
+                options={options}
+                onChange={(value) =>
+                  form.setValue("destinationScheduleId", value || null, { shouldValidate: true })
+                }
+              />
+            </FormField>
+          ) : null}
+          {error ? (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </Modal>
+    </>
   );
 }

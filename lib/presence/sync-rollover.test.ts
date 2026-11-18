@@ -10,7 +10,7 @@ const admissionAt = new Date("2026-10-25T07:00:01Z");
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.prisma.project.findFirst.mockResolvedValue({ id: "project", defaults: {} });
+  mocks.prisma.project.findFirst.mockResolvedValue({ syncPauses: [], id: "project", defaults: {} });
   mocks.prisma.providerConnection.findFirst.mockResolvedValue({
     id: "connection",
     credentialsEncrypted: "fixture",

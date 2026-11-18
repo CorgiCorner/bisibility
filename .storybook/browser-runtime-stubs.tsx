@@ -193,6 +193,10 @@ export async function launchRankCheckRunAction() {
   };
 }
 
+export function useLinkStatus() {
+  return { pending: false };
+}
+
 export default function Link({ children, href = "#", ...props }: LinkProps) {
   return React.createElement("a", { ...props, href }, children);
 }
@@ -728,7 +732,6 @@ export async function syncProjectTraffic() {
 export const addManagedCompetitor = asyncNoop;
 export const addKeywords = asyncNoop;
 export const bulkDeleteKeywords = asyncNoop;
-export const bulkSetFrequency = asyncNoop;
 export const bulkSetTargetUrl = asyncNoop;
 export const bulkTagKeywords = asyncNoop;
 export const changeMemberRole = asyncNoop;

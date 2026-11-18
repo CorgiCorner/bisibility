@@ -65,6 +65,7 @@ async function sendInviteEmail(input: InviteEmail) {
     role: input.role,
   });
   await sendEmail({
+    purpose: "team-invitation",
     category: "transactional",
     ...message,
     to: input.email,

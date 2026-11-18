@@ -15,14 +15,14 @@ export function UnscheduledKeywordsNotice({
 }: Readonly<{
   canEdit: boolean;
   candidates: readonly ScheduleEditorCandidate[];
-  schedules: readonly { publicId: string; name: string; enabled: boolean; isDefault?: boolean }[];
+  schedules: readonly { publicId: string; name: string; enabled: boolean }[];
   projectId: string;
 }>) {
   const t = useTranslations("projectRuns.schedules");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const destinations = schedules.filter((schedule) => schedule.enabled);
-  const initialSchedule = destinations.find((schedule) => schedule.isDefault) ?? destinations[0];
+  const initialSchedule = destinations[0];
   const unscheduled = candidates.filter((candidate) => candidate.scheduleId === null);
   if (!unscheduled.length) return null;
   return (

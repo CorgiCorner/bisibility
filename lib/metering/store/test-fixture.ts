@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { PrismaClient } from "@/lib/generated/prisma/client";
+import {
+  applyFixtureMigration,
+  initializeFixtureSchema,
+  moneyMigration,
+  resetFixtureTables,
+} from "@/lib/metering/store/fixture-schema.test-fixture";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { Budget } from "@usagekit/core";
 import { createManualClock } from "@usagekit/store";
@@ -24,39 +29,32 @@ export async function fixture(
     schema: string;
     pooledClient: PrismaClient;
     resetOnClose: () => Promise<void>;
+    url?: string;
+    connect?: () => PrismaClient;
   },
   session?: { timeZone: "Europe/Warsaw" | "America/New_York" | "UTC" },
+  setupTimeoutMs = 30000,
 ) {
-  const url = testDatabaseUrl(),
+  const url = options?.url ?? testDatabaseUrl(),
     schema = options?.schema ?? `metering_${randomUUID().replaceAll("-", "")}`;
   const ingress = new URL(url);
   if (session) ingress.searchParams.set("options", `-c TimeZone=${session.timeZone}`);
-  const connect = () =>
-    new PrismaClient({ adapter: new PrismaPg({ connectionString: ingress.toString(), max: 5 }) });
+  const connect =
+    options?.connect ??
+    (() =>
+      new PrismaClient({
+        adapter: new PrismaPg({ connectionString: ingress.toString(), max: 5 }),
+      }));
   let prisma = options?.pooledClient ?? connect();
   if (!options) {
     await prisma.$executeRaw(Prisma.sql`CREATE SCHEMA ${Prisma.raw(schema)}`);
-    const migrations = [
-      "../../../prisma/migrations/20260924011626_metering_shadow/migration.sql",
-      "../../../prisma/migrations/20261006070000_metering_contract/migration.sql",
-      "../../../prisma/migrations/20261006072000_byok_metering_evidence/migration.sql",
-      "../../../prisma/migrations/20261006072500_byok_metering_namespace/migration.sql",
-      "../../../prisma/migrations/20261006072800_byok_metering_proof_revision/migration.sql",
-      "../../../prisma/migrations/20261006075800_metering_imports/migration.sql",
-      "../../../prisma/migrations/20261011010000_shared_paid_attempt_context/migration.sql",
-      "../../../prisma/migrations/20261011020000_accounting_history_snapshot/migration.sql",
-      "../../../prisma/migrations/20261012001000_metering_utc_writers/migration.sql",
-      "../../../prisma/migrations/20261018190000_historical_financial_closeout/migration.sql",
-      "../../../prisma/migrations/20261028190200_metering_unknown_closeout/migration.sql",
-    ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
-    await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
-      await tx.$executeRaw(Prisma.sql`CREATE TABLE queued_rank_check_tasks (id text PRIMARY KEY)`);
-      for (const migration of migrations)
-        for (const statement of migrationStatements(migration))
-          await tx.$executeRaw(Prisma.raw(statement));
-      await tx.$executeRaw`DROP TABLE IF EXISTS metering_shadow`;
-    });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
+        await initializeFixtureSchema(tx);
+      },
+      { timeout: setupTimeoutMs, maxWait: 10000 },
+    );
   }
   const clock = createManualClock(),
     budgets: Budget[] = [],
@@ -85,7 +83,7 @@ export async function fixture(
       };
     },
   });
-  return {
+  const result = {
     store,
     clock,
     budgets,
@@ -95,6 +93,24 @@ export async function fixture(
     connect,
     counters,
     syncBudgets: sync,
+    async moneyColumns() {
+      const rows = await transactions(prisma, schema, counters).read((sql) =>
+        sql.query<{ cost_units: string; cost_scale: number }>(Prisma.sql`
+          SELECT cost_units::text,cost_scale FROM metering_receipt ORDER BY recorded_at,receipt_pk`),
+      );
+      return rows.sort((a, b) => a.cost_scale - b.cost_scale);
+    },
+    async replayMoneyMigration() {
+      await prisma.$transaction(
+        async (tx) => {
+          await tx.$executeRaw(Prisma.sql`SET LOCAL TIME ZONE 'UTC'`);
+          await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
+          // Retry the actual migration against current rows; never fabricate a downgrade.
+          await applyFixtureMigration(tx, moneyMigration);
+        },
+        { timeout: 30000, maxWait: 10000 },
+      );
+    },
     async restart() {
       await prisma.$disconnect();
       prisma = connect();
@@ -111,6 +127,7 @@ export async function fixture(
       }
     },
   };
+  return result satisfies Required<Awaited<ReturnType<StoreFactory>>>;
 }
 export const createFixture: StoreFactory = fixture;
 let conformancePool: Promise<Awaited<ReturnType<typeof fixture>>> | undefined;
@@ -126,31 +143,7 @@ export async function createConformanceFixture() {
       pooledClient: base.client(),
       async resetOnClose() {
         try {
-          const tables = [
-            "metering_history_reference",
-            "metering_history_import",
-            "metering_paid_attempt_context",
-            "metering_operation",
-            "metering_receipt",
-            "metering_measurement",
-            "metering_command",
-            "metering_budget",
-            "metering_budget_usage",
-            "metering_event",
-            "metering_metadata",
-            "metering_alert",
-            "metering_request_command",
-            "metering_request_count",
-            "metering_usage_evidence",
-            "metering_import_family",
-            "metering_import",
-            "queued_rank_check_tasks",
-          ].map((table) => Prisma.raw(`"${base.schema}"."${table}"`));
-          await base
-            .client()
-            .$executeRaw(
-              Prisma.sql`TRUNCATE TABLE ${Prisma.join(tables)} RESTART IDENTITY CASCADE`,
-            );
+          await resetFixtureTables(base.client(), base.schema);
         } finally {
           conformanceInUse = false;
         }
@@ -184,25 +177,4 @@ export async function createScalingFixture(): Promise<ScalingFixture> {
       await run();
     },
   };
-}
-
-/**
- * Function bodies and line comments contain semicolons; keep dollar-quoted SQL intact and never
- * split inside a `--` comment for real fixture migrations.
- */
-function migrationStatements(source: string) {
-  const statements: string[] = [];
-  let quoted = false,
-    start = 0;
-  for (const token of source.matchAll(/\$\$|--[^\n]*|;/g)) {
-    if (token[0] === "$$") quoted = !quoted;
-    else if (token[0] === ";" && !quoted) {
-      const statement = source.slice(start, token.index).trim();
-      if (statement) statements.push(statement);
-      start = token.index + 1;
-    }
-  }
-  const final = source.slice(start).trim();
-  if (final) statements.push(final);
-  return statements;
 }

@@ -26,7 +26,11 @@ afterEach(() => {
 function prepare() {
   vi.clearAllMocks();
   mocks.lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
-  mocks.prisma.project.findFirst.mockResolvedValue({ id: "project_1", domain: "example.com" });
+  mocks.prisma.project.findFirst.mockResolvedValue({
+    id: "project_1",
+    domain: "example.com",
+    syncPauses: [],
+  });
   mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue(null);
   mocks.prisma.sitemapSnapshot.create.mockResolvedValue({ id: "snapshot_new" });
   mocks.emitSignal.mockResolvedValue({ id: "signal_new" });

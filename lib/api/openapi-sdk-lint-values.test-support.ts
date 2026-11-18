@@ -16,6 +16,7 @@ import {
   publicIdPrefix,
   sdkOperationExtensionKeys,
   sdkSchemaExtensionKeys,
+  strictPublicIdUnionPrefixes,
 } from "./openapi-sdk-schema";
 
 /**
@@ -83,12 +84,12 @@ function unionProblems(document: SdkDocument, schema: Json, union: unknown, at: 
       : [];
   }
   if (union.style === "public_id") {
-    const prefixes = members.map((member) => member["x-bisibility-public-id"]);
+    const prefixes = strictPublicIdUnionPrefixes(members);
     const valid =
       casesValid &&
       Object.keys(union).length === 2 &&
-      prefixes.every((prefix) => typeof prefix === "string") &&
-      new Set(prefixes).size === prefixes.length;
+      prefixes !== undefined &&
+      prefixes.length === members.length;
     return valid ? [] : [`invalid x-bisibility-union ${at}`];
   }
   if (union.style === "tagged" && typeof union.tag === "string") {

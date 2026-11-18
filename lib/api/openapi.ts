@@ -17,6 +17,7 @@ import { localMonitorResultSchemas } from "./openapi-local-monitor-results";
 import { locationSearchPaths } from "./openapi-locations";
 import { loopClosurePaths } from "./openapi-loop-closure";
 import { migrationPaths, migrationSecuritySchemes } from "./openapi-migration";
+import { modelPlaygroundPaths, modelPlaygroundSchemas } from "./openapi-model-playground";
 import { pageIndexingPaths } from "./openapi-page-indexing";
 import {
   idempotencyParameterComponents,
@@ -37,11 +38,12 @@ import { publicIdSchema } from "./openapi-public-id";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
 import { researchReportsPaths, researchReportsSchemas } from "./openapi-research-reports";
 import { researchWorkspacePaths } from "./openapi-research-workspace";
-import { resourcePaths } from "./openapi-resource-paths";
+import { resourceList as list, resourcePaths } from "./openapi-resource-paths";
 import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
+import { schedulePaths, scheduleSchemas } from "./openapi-schedules";
 import { withSdkCost } from "./openapi-sdk-cost";
-import { sdkName, withPublicIdExtensions } from "./openapi-sdk-schema";
+import { withPublicIdExtensions } from "./openapi-sdk-schema";
 import { searchIndexPaths } from "./openapi-search-index";
 import {
   sourceHeaderParameterComponents,
@@ -58,25 +60,6 @@ const response = (schema: object, description = "JSON response") => ({
   content: json(schema),
   description,
 });
-/** A cursor page. Pages of a component are named `<Component>Page` for SDK generators. */
-function list(schema: object) {
-  const meta = {
-    properties: { next_cursor: { type: ["string", "null"] } },
-    required: ["next_cursor"],
-    type: "object",
-    ...sdkName("PageMeta"),
-  };
-  const item = "$ref" in schema ? String(schema.$ref).split("/").pop() : undefined;
-  return {
-    properties: {
-      data: { items: schema, type: "array" },
-      meta,
-    },
-    required: ["data", "meta"],
-    type: "object",
-    ...(item ? sdkName(`${item}Page`) : {}),
-  };
-}
 function bearerOperation(
   summary: string,
   operationId: string,
@@ -133,6 +116,8 @@ export function getOpenApiDocument() {
           schemas: {
             AccountAnalyticsConsent: accountAnalyticsConsentSchema,
             ...schemas,
+            ...scheduleSchemas,
+            ...modelPlaygroundSchemas,
             ...backlinksSchemas,
             ...domainOverviewSchemas,
             ...researchReportsSchemas,
@@ -176,6 +161,8 @@ export function getOpenApiDocument() {
                     ref: (name) => ref(name as keyof typeof schemas),
                   }),
                   ...publicPaths,
+                  ...schedulePaths(bearerOperation, list, createdBearerOperation),
+                  ...modelPlaygroundPaths(),
                   ...researchWorkspacePaths(),
                   ...promptTrackerPaths(),
                   ...locationSearchPaths({ bearer: bearerOperation, ref }),

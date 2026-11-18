@@ -1,4 +1,5 @@
 import type { DateWindow } from "@/lib/search-insights/dates";
+import { datedCsvFilename } from "@/lib/ui/export-filename";
 import { propertyDisplayName } from "./context-model";
 
 export type QueryExportInput = {
@@ -31,16 +32,10 @@ export function queryExportRows(rows: readonly QueryExportInput[]) {
   });
 }
 
-function propertySlug(property: string) {
-  return (
-    propertyDisplayName(property)
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/^-|-$/g, "") || "property"
-  );
-}
-
 export function exportFilename(property: string, window: DateWindow | null) {
-  const range = window ? `${window.start}-${window.end}` : "no-window";
-  return `search-insights-queries-${propertySlug(property)}-${range}.csv`;
+  return datedCsvFilename(
+    "search-insights-queries",
+    propertyDisplayName(property) || "property",
+    window,
+  );
 }

@@ -198,7 +198,7 @@ v.describe("SearchInsightsDrawerHost", () => {
         devices: ["desktop"],
         intent: null,
         keywords: ["rank tracking software"],
-        locations: [{ locationKey: "es-es" }],
+        locations: [{ locationKey: "ES" }],
         projectId: "prj_1",
         schedule: v.expect.objectContaining({ frequency: "daily", serpDepth: 100 }),
         tags: [],
@@ -284,4 +284,41 @@ v.describe("SearchInsightsDrawerHost", () => {
     v.expect(await r.screen.findByText("Add a tracked domain first.")).toBeInTheDocument();
     v.expect(r.screen.getByTestId("tracked")).toHaveTextContent("none");
   });
+});
+
+import {
+  createSpendPreview,
+  keywordCreateReviewCases,
+} from "@/components/schedules/keyword-create-review.test-support";
+import { beforeEach as reviewBeforeEach, vi } from "vitest";
+
+const reviewPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: reviewPort.preview,
+}));
+reviewBeforeEach(() =>
+  reviewPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+keywordCreateReviewCases("SearchInsightsDrawerHost", reviewPort.preview, async () => {
+  t.resetDrawerHostMocks();
+  const user = userEvent.setup();
+  t.renderHost();
+  await user.click(r.screen.getByRole("button", { name: "row track" }));
+  await r.screen.findByRole("button", { name: "Use project default: daily" });
+  return {
+    action: t.actions.addKeywordsAction,
+    start: async () => {
+      await user.click(r.screen.getByRole("button", { name: "Use project default: daily" }));
+    },
+    assertDraft: () => {
+      v.expect(r.screen.getByRole("dialog", { name: /Add to Rank Tracker/ })).toBeVisible();
+      v.expect(r.screen.getByRole("button", { name: "Use project default: daily" })).toBeVisible();
+    },
+  };
 });

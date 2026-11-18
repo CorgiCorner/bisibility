@@ -70,7 +70,11 @@ describe("presence quota handling", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     sleep.mockResolvedValue(undefined);
-    mocks.prisma.project.findFirst.mockResolvedValue({ id: "project_1", defaults: null });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      syncPauses: [],
+      id: "project_1",
+      defaults: null,
+    });
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }]);
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       id: "connection_1",
@@ -242,7 +246,7 @@ describe("presence quota handling", () => {
       const projects = Array.from({ length: 7 }, (_, i) => ({ id: `project_${i}` }));
       mocks.prisma.project.findMany.mockResolvedValue(projects);
       mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
-        Promise.resolve({ id: where.OR[0].id, defaults: null }),
+        Promise.resolve({ syncPauses: [], id: where.OR[0].id, defaults: null }),
       );
       mocks.provider.inspectUrl.mockRejectedValue(
         limited(scope, scope === "minute" ? 60_000 : 40_000),
@@ -279,7 +283,7 @@ describe("presence quota handling", () => {
       Array.from({ length: 7 }, (_, i) => ({ id: `project_${i}` })),
     );
     mocks.prisma.project.findFirst.mockImplementation(({ where }) =>
-      Promise.resolve({ id: where.OR[0].id, defaults: null }),
+      Promise.resolve({ syncPauses: [], id: where.OR[0].id, defaults: null }),
     );
     mocks.provider.inspectUrl.mockRejectedValue(limited("minute", 110_000));
 

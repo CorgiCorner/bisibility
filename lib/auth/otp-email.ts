@@ -63,6 +63,7 @@ export async function sendOtpEmail({ email, otp, type }: OtpEmail) {
   }
 
   await sendEmail({
+    purpose: type,
     category: "transactional",
     html: `<p>Your bisibility code is <strong>${otp}</strong>.</p><p>It expires in 5 minutes.</p>`,
     sendCounterReserved,

@@ -71,12 +71,7 @@ describe("dispatcher persistence contract", () => {
       "lib/actions/keyword-matrix.ts",
       "lib/api/keyword-create.ts",
     ];
-    const schedulePaths = [
-      "lib/actions/keyword-bulk.ts",
-      "lib/actions/keyword-schedule.ts",
-      "lib/api/keyword-bulk.ts",
-      "lib/api/keywords.ts",
-    ];
+    const schedulePaths = ["lib/api/keyword-bulk.ts", "lib/api/keywords.ts"];
     const defaultsPaths = [
       "lib/actions/project.ts",
       "lib/actions/settings.ts",

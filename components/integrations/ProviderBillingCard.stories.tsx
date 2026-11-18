@@ -42,3 +42,31 @@ export const Polish: Story = {
     ),
   ],
 };
+
+export const AiFunding: Story = {
+  args: {
+    connections: [
+      {
+        connectionId: "ai:openai",
+        providerId: "openai",
+        label: "OpenAI",
+        credentialSource: "hosted",
+        billable: true,
+      },
+      {
+        connectionId: "ai:anthropic",
+        providerId: "anthropic",
+        label: "Anthropic",
+        credentialSource: "own",
+        billable: true,
+      },
+      {
+        connectionId: "ai:openrouter",
+        providerId: "openrouter",
+        label: "OpenRouter",
+        credentialSource: "hosted",
+        billable: true,
+      },
+    ],
+  },
+};

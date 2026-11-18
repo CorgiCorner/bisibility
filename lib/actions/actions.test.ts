@@ -3,8 +3,8 @@ import { appPath } from "@/lib/routing/app-path";
 import type { ResolveKeywordLocationInput } from "@/lib/serp/location-service";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { issueApiKey } from "./apiKey";
-import { addKeyword, addKeywords, updateKeyword } from "./keyword";
-import { bulkDeleteKeywords, bulkSetFrequency } from "./keyword-bulk";
+import { addKeywords, updateKeyword } from "./keyword";
+import { bulkDeleteKeywords } from "./keyword-bulk";
 import { testConnection } from "./providers";
 
 const mocks = vi.hoisted(() => {
@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     keyword: {
       count: vi.fn(),
@@ -104,6 +105,17 @@ const mocks = vi.hoisted(() => {
 
 // Stub location resolution to a deterministic country row so these tests stay
 // focused on authorization and scheduling.
+// Existing mutation/audit tests isolate admission; real gates run against the owned PostgreSQL fixture.
+vi.mock("@/lib/schedules/keyword-create-write", () => ({
+  commitKeywordCreate: (
+    _project: unknown,
+    _actor: unknown,
+    _change: unknown,
+    _review: unknown,
+    run: (tx: unknown) => unknown,
+  ) => mocks.prisma.$transaction(run),
+  assertKeywordCreateAdmission: vi.fn(),
+}));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveKeywordLocation,
 }));
@@ -254,14 +266,6 @@ describe("server actions", () => {
     vi.unstubAllEnvs();
   });
 
-  it("rejects invalid input with Zod before reading the session", async () => {
-    await expect(
-      addKeyword({ keyword: "", projectId: "prj_a00000000000000000000000" }),
-    ).rejects.toThrow();
-
-    expect(mocks.requireSession).not.toHaveBeenCalled();
-  });
-
   it("denies destructive actions for the wrong project role", async () => {
     mockActor("viewer");
 
@@ -273,146 +277,6 @@ describe("server actions", () => {
     ).rejects.toBeInstanceOf(mocks.AuthorizationError);
 
     expect(mocks.prisma.keyword.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it("denies mutations when the actor is not a project member", async () => {
-    mockActor("member", "");
-
-    await expect(
-      addKeyword({
-        keyword: "rank tracker",
-        location: "United States",
-        projectId: "prj_a00000000000000000000000",
-      }),
-    ).rejects.toBeInstanceOf(mocks.AuthorizationError);
-
-    expect(mocks.prisma.keyword.upsert).not.toHaveBeenCalled();
-  });
-
-  it("blocks keyword mutations while project migration hold is active", async () => {
-    mocks.prisma.project.findFirst.mockResolvedValue({
-      id: "project_1",
-      ownerId: "user_1",
-      publicId: "prj_a00000000000000000000000",
-      writeMode: "migration_hold",
-    });
-
-    await expect(
-      addKeyword({
-        keyword: "rank tracker",
-        location: "United States",
-        projectId: "prj_a00000000000000000000000",
-      }),
-    ).rejects.toMatchObject({ code: "project_read_only" });
-
-    expect(mocks.prisma.keyword.upsert).not.toHaveBeenCalled();
-  });
-
-  it("writes audit records after keyword mutations", async () => {
-    mocks.prisma.tag.findMany.mockResolvedValue([]);
-
-    await addKeyword({
-      intent: "commercial",
-      keyword: "rank tracker",
-      location: "United States",
-      projectId: "prj_a00000000000000000000000",
-      topic: "Product",
-    });
-
-    expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: [
-          expect.objectContaining({
-            intent: "commercial",
-            location: "United States",
-            topic: "Product",
-          }),
-        ],
-      }),
-    );
-    expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "keyword.add",
-        after: expect.objectContaining({
-          intent: "commercial",
-          text: "rank tracker",
-          topic: "Product",
-        }),
-        targetId: expect.stringMatching(/^kw_/),
-      }),
-      mocks.prisma,
-    );
-  });
-
-  it("adds a language suffix only for a non-default market row", async () => {
-    mocks.resolveKeywordLocation.mockResolvedValue({
-      degraded: false,
-      location: {
-        canonicalKey: "ES/Andalusia/Malaga@en",
-        cityName: "Malaga",
-        countryCode: "ES",
-        displayName: "Malaga, Andalusia, Spain",
-        gl: "es",
-        hl: "en",
-        id: "loc_es_en",
-        kind: "city",
-        languageCode: "en",
-        languageLabel: "English",
-        primaryGeoCode: 1000080,
-        primaryGeoName: "Malaga,Andalusia,Spain",
-        regionCode: "AN",
-        secondaryGeoName: "Malaga, Andalusia, Spain",
-      },
-      warning: null,
-    });
-
-    await addKeyword({
-      keyword: "rank tracker",
-      locationKey: "ES/Andalusia/Malaga@en",
-      projectId: "prj_a00000000000000000000000",
-    });
-
-    expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: [expect.objectContaining({ location: "Malaga, Andalusia, Spain (English)" })],
-      }),
-    );
-  });
-
-  it("revalidates keyword, dependent alert/competitor, activity, and audit views after keyword mutations", async () => {
-    mocks.prisma.tag.findMany.mockResolvedValue([]);
-
-    await addKeyword({
-      keyword: "rank tracker",
-      location: "United States",
-      projectId: "prj_a00000000000000000000000",
-    });
-
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/rank-tracker/[id]", "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "dashboard"), "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "alerts"), "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "competitors"), "page");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      appPath("[project]", "settings", "audit"),
-      "page",
-    );
-  });
-
-  it("resolves add keyword locations by selected canonical key before legacy fields", async () => {
-    mocks.prisma.tag.findMany.mockResolvedValue([]);
-
-    await addKeyword({
-      keyword: "rank tracker",
-      location: "Germany",
-      locationKey: "US/Texas/Austin",
-      projectId: "prj_a00000000000000000000000",
-    });
-
-    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
-      projectId: "project_1",
-      selection: { canonicalKey: "US/Texas/Austin", kind: "city" },
-    });
   });
 
   it("persists keyword topic and intent after adding keywords in bulk", async () => {
@@ -677,27 +541,6 @@ describe("server actions", () => {
     });
   });
 
-  it("persists schedule intent after bulk frequency changes", async () => {
-    mocks.prisma.keyword.findMany.mockResolvedValue([
-      { id: "keyword_1", publicId: "kw_a00000000000000000000000" },
-      { id: "keyword_2", publicId: "kw_b00000000000000000000000" },
-    ]);
-
-    await bulkSetFrequency({
-      keywordIds: ["kw_a00000000000000000000000", "kw_b00000000000000000000000"],
-      projectId: "prj_a00000000000000000000000",
-      schedule: scheduleInput({ frequency: "paused" }),
-    });
-
-    expect(mocks.setKeywordCadence).toHaveBeenCalledExactlyOnceWith(
-      mocks.prisma,
-      "project_1",
-      ["keyword_1", "keyword_2"],
-      expect.objectContaining({ frequency: "paused", timezone: "UTC" }),
-      "user_1",
-    );
-  });
-
   it("does not include targetUrl when keyword update input omits it", async () => {
     mocks.prisma.keyword.findFirst.mockResolvedValue({
       id: "keyword_1",
@@ -770,42 +613,16 @@ describe("server actions", () => {
     );
   });
 
-  it("writes keyword intent without app-side Temporal sync", async () => {
-    mocks.prisma.tag.findMany.mockResolvedValue([]);
-
-    await addKeyword({
-      keyword: "rank tracker",
-      location: "United States",
-      projectId: "prj_a00000000000000000000000",
-    });
-
-    expect(mocks.prisma.keyword.createMany).toHaveBeenCalled();
-  });
-
-  it("delegates bulk frequency intent to the canonical cadence service", async () => {
+  it("deletes keyword intent without fetching provider ranks", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { id: "keyword_1", publicId: "kw_a00000000000000000000000", text: "rank tracker" },
     ]);
-
     await bulkDeleteKeywords({
       keywordIds: ["kw_a00000000000000000000000"],
       projectId: "prj_a00000000000000000000000",
     });
-    await bulkSetFrequency({
-      keywordIds: ["kw_a00000000000000000000000"],
-      projectId: "prj_a00000000000000000000000",
-      schedule: scheduleInput({ frequency: "paused" }),
-    });
-
     expect(mocks.prisma.keyword.deleteMany).toHaveBeenCalled();
     expect(mocks.provider.fetchRank).not.toHaveBeenCalled();
-    expect(mocks.setKeywordCadence).toHaveBeenCalledExactlyOnceWith(
-      mocks.prisma,
-      "project_1",
-      ["keyword_1"],
-      expect.objectContaining({ frequency: "paused" }),
-      "user_1",
-    );
   });
 
   it("tests providers through the mocked adapter and audits the attempt", async () => {

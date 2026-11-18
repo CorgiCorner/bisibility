@@ -9,6 +9,7 @@ import type {
   ProviderCredentials,
   ProviderTestResult,
 } from "@/lib/providers/types";
+import { probeModelProviderConnection } from "./model-provider-probe";
 
 export type ProviderProbeResult =
   | (ProviderTestResult & { rateLimited?: false })
@@ -36,6 +37,8 @@ export async function probeProviderConnection({
   provider: ProviderCatalogItem;
   analytics?: { actorId?: string | null; trigger?: "manual" | "api" | "unknown" };
 }): Promise<ProviderProbeResult> {
+  if (provider.kind === "model")
+    return probeModelProviderConnection(provider.id, credentials, projectId);
   const credentialError = providerCredentialRequirementMessage(provider, credentials);
   if (credentialError) {
     throw new Error(credentialError);

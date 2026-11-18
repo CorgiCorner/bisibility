@@ -4,20 +4,18 @@ import "server-only";
 
 import { scheduleForKeyword } from "@/lib/actions/_schedule";
 import { writeAudit } from "@/lib/auth/audit";
-import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
 import { normalizeResearchKeyword } from "@/lib/keyword-research/context";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { commitKeywordCreate } from "@/lib/schedules/keyword-create-write";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { MarketArchivedError } from "./archived";
-import {
-  type MarketPasteRow,
-  type NewMarketCreateInput,
-  newMarketCreateSchema,
-  parseNewMarketPaste,
-} from "./create-input";
+import { newMarketCreateSchema } from "./create-input";
 import { MarketLocationError, resolveMarketLocation } from "./create-location";
+import { marketCreateChange } from "./create-review-change";
+import { termsForMarketCreate } from "./create-source";
 import { MAX_PROJECT_MARKETS, ProjectMarketLimitExceededError } from "./limits";
 
 export type {
@@ -32,6 +30,7 @@ export {
   parseNewMarketPaste,
 } from "./create-input";
 export { MarketLocationError } from "./create-location";
+export { MarketSourceError } from "./create-source";
 
 export class MarketExistsError extends Error {
   readonly code = "market_exists";
@@ -39,15 +38,6 @@ export class MarketExistsError extends Error {
   constructor() {
     super("This location is already tracked or has existing keywords in the project.");
     this.name = "MarketExistsError";
-  }
-}
-
-export class MarketSourceError extends Error {
-  readonly code = "market_source_invalid";
-
-  constructor() {
-    super("The source market is no longer available to copy.");
-    this.name = "MarketSourceError";
   }
 }
 
@@ -62,28 +52,6 @@ export class MarketScheduleError extends Error {
 
 type CreateHooks = { afterKeywordInsert?: () => void; afterMarketInsert?: () => void };
 
-async function termsForCreate(
-  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  projectId: string,
-  method: NewMarketCreateInput["method"],
-) {
-  if (method.kind === "empty") return [];
-  if (method.kind === "paste") return parseNewMarketPaste(method.text);
-  const source = await tx.projectMarket.findFirst({
-    include: { location: { select: { canonicalKey: true } } },
-    where: { projectId, publicId: method.sourceMarketId, status: ProjectMarketStatus.active },
-  });
-  if (!source) throw new MarketSourceError();
-  const keywords = await tx.keyword.findMany({
-    select: { text: true },
-    where: { archivedAt: null, locationId: source.locationId, projectId },
-  });
-  const unique = new Map<string, MarketPasteRow>();
-  for (const keyword of keywords)
-    unique.set(normalizeResearchKeyword(keyword.text), { targetUrl: null, text: keyword.text });
-  return [...unique.values()];
-}
-
 /**
  * `projectId` is the project's internal id, resolved by the caller's authorization step; the
  * public `prj_` id inside `input` only names the project the caller was authorized for.
@@ -94,9 +62,14 @@ export async function createProjectMarket(
   input: unknown,
   hooks: CreateHooks = {},
 ) {
-  const data = newMarketCreateSchema.parse(input);
+  const { body, review } = splitScheduleReview(input);
+  const data = newMarketCreateSchema.parse(body);
   const resolved = await resolveMarketLocation(projectId, data);
-  return prisma.$transaction(
+  return commitKeywordCreate(
+    projectId,
+    { id: actorId, memberships: [] },
+    marketCreateChange(data),
+    review,
     async (tx) => {
       const capacity = await prepareResourceCapacity(tx, {
         projectId,
@@ -137,7 +110,7 @@ export async function createProjectMarket(
       });
       if (visibleCount >= MAX_PROJECT_MARKETS)
         throw new ProjectMarketLimitExceededError(MAX_PROJECT_MARKETS);
-      const terms = await termsForCreate(tx, projectId, data.method);
+      const terms = await termsForMarketCreate(tx, projectId, data.method);
       const existingKeywords = await tx.keyword.findMany({
         select: { text: true },
         where: { locationId: location.id, projectId },
@@ -167,7 +140,6 @@ export async function createProjectMarket(
                 cronExpression: inlineCron(selectedSchedule),
                 enabled: true,
                 frequency: selectedSchedule.frequency,
-                isDefault: false,
                 jitterMinutes: 60,
                 name: inlineScheduleName(selectedSchedule),
                 projectId,
@@ -303,6 +275,5 @@ export async function createProjectMarket(
         publicId: market.publicId,
       };
     },
-    { isolationLevel: "Serializable" },
   );
 }

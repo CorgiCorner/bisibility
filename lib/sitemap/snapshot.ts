@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import type { SitemapEntry } from "./parse";
 
+export const SITEMAP_SNAPSHOT_RETENTION_DAYS = 90;
+
 export function jsonEntries(value: unknown): SitemapEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {

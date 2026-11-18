@@ -7,6 +7,10 @@ import { escapeHtml } from "@/lib/email/escape-html";
 import { alertsEmailFrom } from "@/lib/email/from";
 import { describeEmailTransport } from "@/lib/email/idempotency";
 import {
+  NOTIFICATIONS_DISABLED_REASON,
+  skipEmailNotification,
+} from "@/lib/email/notification-policy";
+import {
   notificationUnsubscribeFooter,
   notificationUnsubscribeUrl,
 } from "@/lib/email/notification-unsubscribe";
@@ -73,6 +77,10 @@ export async function deliverAlertEmailActivity(input: {
   ruleId?: string;
 }) {
   try {
+    if (skipEmailNotification("alert")) {
+      await recordDeliveryAttempt(input.alertId, "email", "skipped", NOTIFICATIONS_DISABLED_REASON);
+      return { delivered: false, skipped: true, reason: NOTIFICATIONS_DISABLED_REASON };
+    }
     const ids = await resolveAlertEmailIds(input);
     const gate = await alertEmailSendGate({ alertIds: [input.alertId], ...ids });
     if (!gate.allowed) {
@@ -102,8 +110,9 @@ export async function deliverAlertEmailActivity(input: {
         prismaPreparedEmailStore.releaseUnconsumedBudgetClaim(id),
       render: () => renderAlertEmail(latest?.email ?? gate.email, gate, input.payload),
       reserveBudget: () => reserveEmailDailyBudget("bulk"),
-      send: (message, claimProviderSend) =>
-        sendEmail({
+      send: async (message, claimProviderSend) => {
+        const submitted = await sendEmail({
+          purpose: "alert",
           beforeProviderSend: () =>
             requireAlertEmailSend({
               alertIds: [input.alertId],
@@ -122,7 +131,9 @@ export async function deliverAlertEmailActivity(input: {
           subject: message.subject,
           text: message.text,
           to: message.to,
-        }),
+        });
+        if (submitted === false) throw new AlertDeliverySkipped(NOTIFICATIONS_DISABLED_REASON);
+      },
       store: prismaPreparedEmailStore,
       transport: describeEmailTransport(provider?.id ?? null),
     });

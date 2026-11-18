@@ -32,7 +32,6 @@ export const scheduleEditorSchema = z
     cronExpression: z.string().trim().max(120, scheduleEditorValidationCode.cronTooLong),
     dayOfMonth: z.enum(monthDays),
     frequency: z.enum(scheduleFrequencies),
-    isDefault: z.boolean(),
     jitterMinutes: z.enum(["0", "15", "60"]),
     name: z
       .string()
@@ -79,7 +78,6 @@ export type ScheduleEditorSchedule = {
   cronExpression: string | null;
   enabled: boolean;
   frequency: string;
-  isDefault: boolean;
   jitterMinutes: number;
   keywordCount: number;
   name: string;
@@ -118,21 +116,14 @@ export type ScheduleEditorProjectDefaults = {
 export type ScheduleEditorProps = {
   canEdit?: boolean;
   candidates?: readonly ScheduleEditorCandidate[];
-  defaultScheduleName?: string | null;
   isNew?: boolean;
   initialSaveConfirmed?: boolean;
   planningMinutes?: number | null;
   members?: readonly ScheduleEditorMember[];
   memberSummary?: string;
   embedded?: boolean;
-  showDefaultControl?: boolean;
   onCancel?: () => void;
-  onSaved?: (schedule: {
-    publicId: string;
-    name: string;
-    frequency: string;
-    isDefault: boolean;
-  }) => void;
+  onSaved?: (schedule: { publicId: string; name: string; frequency: string }) => void;
   pendingMembers?: readonly ScheduleEditorMember[];
   connectedProviders: readonly ScheduleEditorProvider[];
   projectId: string;
@@ -146,7 +137,6 @@ export const newEditorSchedule: ScheduleEditorSchedule = {
   ...newScheduleDefaults,
   cronExpression: null,
   enabled: true,
-  isDefault: false,
   keywordCount: 0,
   providerPolicy: null,
   publicId: "new",
@@ -169,7 +159,6 @@ export function scheduleEditorDefaults(schedule: ScheduleEditorSchedule): Schedu
     cronExpression: schedule.cronExpression ?? "0 6 * * 1-5",
     dayOfMonth: monthDays[Math.min(Math.max(day, 1), 28) - 1] ?? "1st",
     frequency,
-    isDefault: schedule.isDefault,
     jitterMinutes: String(schedule.jitterMinutes) as ScheduleEditorValues["jitterMinutes"],
     name: schedule.name,
     providerPolicy: schedule.providerPolicy ?? "project",

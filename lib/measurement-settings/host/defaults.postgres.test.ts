@@ -137,7 +137,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
       });
       expect(await f.db.measurementSettingsMutation.count()).toBe(1);
     }, 120000);
-    it("writes as a scoped project key despite viewer owner; revalidates revocation and forbids a User alias", async () => {
+    it("writes as a member-created project key despite viewer owner; revalidates revocation and forbids a User alias", async () => {
       const request = defaultsForm(f.project.project.publicId),
         ctx = f.keyContext;
       const quote = await previewDefaultsHost(ctx, request, f.db),
@@ -153,6 +153,13 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
       await expect(
         previewDefaultsHost({ ...ctx, actor: { id: f.project.owner.id } }, request, f.db),
       ).rejects.toMatchObject({ code: "forbidden" });
+      // Lowering the creator's role lowers the key: a viewer creator leaves it read-only.
+      const creator = { projectId: f.project.project.id, userId: f.project.writer.id };
+      await f.db.membership.updateMany({ where: creator, data: { role: "viewer" } });
+      await expect(previewDefaultsHost(ctx, request, f.db)).rejects.toMatchObject({
+        code: "forbidden",
+      });
+      await f.db.membership.updateMany({ where: creator, data: { role: "member" } });
       await f.db.apiKey.update({ where: { id: f.key.id }, data: { revokedAt: new Date() } });
       await expect(saveDefaultsHost(ctx, request, command, f.db)).rejects.toMatchObject({
         code: "forbidden",

@@ -17,6 +17,7 @@ beforeEach(() => {
 });
 it("skips projects whose inspection limit is zero", async () => {
   mocks.prisma.project.findFirst.mockResolvedValue({
+    syncPauses: [],
     defaults: { inspectionDailyLimit: 0 },
     id: "project_1",
   });
@@ -33,6 +34,7 @@ it("skips projects whose inspection limit is zero", async () => {
 
 it("disables background inspection in off mode without discovery or live provider calls", async () => {
   mocks.prisma.project.findFirst.mockResolvedValue({
+    syncPauses: [],
     id: "project_1",
     defaults: { inspectionDailyLimit: 50, inspectionBudgetMode: "off" },
   });
@@ -50,6 +52,7 @@ it("disables background inspection in off mode without discovery or live provide
 });
 it("records the project allowance as quota rather than off", async () => {
   mocks.prisma.project.findFirst.mockResolvedValue({
+    syncPauses: [],
     id: "project_1",
     defaults: { inspectionDailyLimit: 0, inspectionBudgetMode: "fixed" },
   });
@@ -60,7 +63,11 @@ it("records the project allowance as quota rather than off", async () => {
 it.each(["daily", "minute", "unknown"] as const)(
   "maps a %s stop to the stored daily summary",
   async (scope) => {
-    mocks.prisma.project.findFirst.mockResolvedValue({ id: "project_1", defaults: null });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      syncPauses: [],
+      id: "project_1",
+      defaults: null,
+    });
     mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/a" }]);
     mocks.prisma.urlPresence.findMany.mockResolvedValue([]);
     configurePresenceDatabase(mocks.prisma, mocks.tx);

@@ -48,7 +48,10 @@ function matches(row: Record<string, unknown>, where: Record<string, unknown>): 
 }
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $queryRaw: async () => [],
     $executeRaw: state.lock,
+    project: { findFirst: async () => ({ domain: "example.com", syncPauses: [] }) },
+    sitemapSnapshot: { findMany: async () => [] },
     $transaction: async (callback: (tx: unknown) => unknown) => {
       const { prisma } = await import("@/lib/db/prisma");
       return callback(prisma);

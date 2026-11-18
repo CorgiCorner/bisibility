@@ -53,7 +53,10 @@ describe("rank-check scheduler mode", () => {
       { RANK_CHECK_SCHEDULER_MODE: "legacy", RANK_CHECK_RECONCILER_ENABLED: "false" },
       warn,
     );
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("automatically"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Retired configuration is ignored"));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("Missing assignments must be resolved by the operator"),
+    );
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("SCHEDULED_MAINTENANCE_ENABLED=0"));
     warn.mockClear();
     warnRetiredRankSchedulerConfiguration({}, warn);

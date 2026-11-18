@@ -28,6 +28,14 @@ export function isNextBuildMemoryCapped(env: Record<string, string | undefined>)
 }
 
 export function resolveNextBuildCpus(env: Record<string, string | undefined>) {
+  // The hosted CI runner and its container builds keep the compiled app and page worker in 7 GB.
+  if (
+    !env.VERCEL &&
+    !env.AMPLIFY_HOSTING &&
+    (env.NEXT_BUILD_MEMORY_CAPPED ||
+      (env.GITHUB_ACTIONS === "true" && env.RUNNER_ENVIRONMENT === "github-hosted"))
+  )
+    return 1;
   return isNextBuildMemoryCapped(env) ? 2 : undefined;
 }
 

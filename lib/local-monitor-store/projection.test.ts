@@ -71,6 +71,28 @@ describe("monitor readiness is not a provider dispatch permit", () => {
     ]);
     expect(monitorReadiness({ ...baseline, state: "archived" }).reasons).toEqual(["archived"]);
   });
+  it("keeps an archived intent configurable for manual checks without treating it as scheduled", () => {
+    expect(
+      monitorReadiness({
+        ...baseline,
+        intent: { ...baseline.intent, mode: "archived", snapshot: null },
+        currentCalendar: null,
+      }),
+    ).toEqual({
+      configurationCurrent: true,
+      scheduledIntentCurrent: false,
+      reasons: ["schedule_archived"],
+    });
+  });
+  it("reports an unknown intent mode as non-scheduled instead of failing the read", () => {
+    expect(
+      monitorReadiness({
+        ...baseline,
+        intent: { ...baseline.intent, mode: "retired", snapshot: null },
+        currentCalendar: null,
+      }),
+    ).toEqual({ configurationCurrent: true, scheduledIntentCurrent: false, reasons: ["paused"] });
+  });
   it.each(["manual", "paused"])("preserves %s as an explicit non-scheduled state", (mode) => {
     expect(
       monitorReadiness({

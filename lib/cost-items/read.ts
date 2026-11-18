@@ -50,6 +50,7 @@ export async function readUsageCosts(projectPublicId: string): Promise<UsageCost
       catalogKey: item.catalogKey,
       currency: item.currency,
       endedOn: item.endedOn ? day(item.endedOn) : null,
+      customType: item.customType ?? null,
       kind: item.kind,
       name: item.name,
       planLabel: item.planLabel,

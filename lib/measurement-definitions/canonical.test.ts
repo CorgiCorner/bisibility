@@ -9,6 +9,7 @@ import {
 } from "./canonical";
 import { definitionHorizonCompatibility } from "./compatibility";
 import {
+  assignedDefinitionSourceFixture,
   definitionBindingFixture,
   definitionHeadFixture,
   definitionSourceFixture,
@@ -222,5 +223,30 @@ describe("persisted measurement definition proof", () => {
   });
   it("retains timestamps in byte comparisons", () => {
     expect(sameDefinitionBytes(new Date(0), new Date(1))).toBe(false);
+  });
+  it("includes the emitted schedule isDefault key in the canonical hash", () => {
+    const source = assignedDefinitionSourceFixture();
+    const changed = structuredClone(source);
+    if (!changed.policy.checkSchedule || !source.policy.checkSchedule)
+      throw new Error("Assigned source requires a check schedule.");
+    changed.policy.checkSchedule.isDefault = !source.policy.checkSchedule.isDefault;
+    expect(definitionFingerprint(source)).not.toBe(definitionFingerprint(changed));
+  });
+
+  it.each([true, false])("preserves the canonical bytes of isDefault=%s", (isDefault) => {
+    const source = assignedDefinitionSourceFixture();
+    if (!source.policy.checkSchedule) throw new Error("Assigned source requires a check schedule.");
+    source.policy.checkSchedule.isDefault = isDefault;
+    const parsed = definitionSourceSchema.parse(source);
+    expect(sameDefinitionBytes(parsed, source)).toBe(true);
+    expect(definitionFingerprint(parsed)).toBe(definitionFingerprint(source));
+  });
+
+  it("parses an assigned schedule without the retired flag", () => {
+    const source = assignedDefinitionSourceFixture();
+    if (!source.policy.checkSchedule) throw new Error("Assigned source requires a check schedule.");
+    const { isDefault: _legacyDefault, ...checkSchedule } = source.policy.checkSchedule;
+    const withoutFlag = { ...source, policy: { ...source.policy, checkSchedule } };
+    expect(definitionSourceSchema.parse(withoutFlag)).toEqual(withoutFlag);
   });
 });

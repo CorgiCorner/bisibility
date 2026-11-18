@@ -99,6 +99,7 @@ describe("account analytics consent API", () => {
   it("rejects project credentials and read-only personal writes", async () => {
     mocks.authenticate.mockResolvedValueOnce({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { id: "key", scopes: ["admin"] },
       project: {},
     });

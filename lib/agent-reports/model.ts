@@ -1,6 +1,8 @@
 import { isReservedAgentReportKind } from "@/lib/agent-reports/kinds";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
+import { modelPlaygroundReportSchema } from "@/lib/model-playground/report-body";
 import { z } from "zod";
+import { boundedJson } from "./json-budget";
 
 export type ReportJson =
   | null
@@ -10,37 +12,13 @@ export type ReportJson =
   | ReportJson[]
   | { [key: string]: ReportJson };
 
-function boundedJson(value: unknown, maxBytes: number): value is Record<string, ReportJson> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const pending: Array<{ value: unknown; depth: number }> = [{ value, depth: 0 }];
-  let nodes = 0;
-  const seen = new Set<object>();
-  while (pending.length) {
-    const item = pending.pop();
-    if (!item || ++nodes > 20000 || item.depth > 16) return false;
-    const current = item.value;
-    if (current === null || typeof current === "string" || typeof current === "boolean") continue;
-    if (typeof current === "number") {
-      if (!Number.isFinite(current)) return false;
-      continue;
-    }
-    if (typeof current !== "object" || seen.has(current)) return false;
-    seen.add(current);
-    if (!Array.isArray(current) && Object.getPrototypeOf(current) !== Object.prototype)
-      return false;
-    for (const child of Object.values(current))
-      pending.push({ value: child, depth: item.depth + 1 });
-  }
-  return new TextEncoder().encode(JSON.stringify(value)).byteLength <= maxBytes;
-}
-
 const jsonObject = (bytes: number) =>
   z.custom<Record<string, ReportJson>>(
     (value) => boundedJson(value, bytes),
     "Expected a bounded JSON object (maximum depth 16).",
   );
 
-export const agentReportSchema = z
+export const storedAgentReportSchema = z
   .object({
     kind: z
       .string()
@@ -54,12 +32,34 @@ export const agentReportSchema = z
   })
   .strict();
 
-export const externalAgentReportSchema = agentReportSchema.extend({
-  kind: agentReportSchema.shape.kind.refine(
-    (kind) => !isReservedAgentReportKind(kind),
-    "This report kind is reserved for application-generated analyses. Use an external analysis kind.",
-  ),
+export const agentReportSchema = storedAgentReportSchema.superRefine((report, ctx) => {
+  if (
+    report.body.format === "model_playground" &&
+    (report.kind !== "prompt_explorer" ||
+      !modelPlaygroundReportSchema.safeParse(report.body).success)
+  )
+    ctx.addIssue({
+      code: "custom",
+      path: ["body"],
+      message: "Invalid versioned Model Playground report.",
+    });
 });
+
+export const externalAgentReportSchema = agentReportSchema
+  .safeExtend({
+    kind: agentReportSchema.shape.kind.refine(
+      (kind) => !isReservedAgentReportKind(kind),
+      "This report kind is reserved for application-generated analyses. Use an external analysis kind.",
+    ),
+  })
+  .superRefine((report, ctx) => {
+    if (report.body.format === "model_playground")
+      ctx.addIssue({
+        code: "custom",
+        path: ["body"],
+        message: "Model Playground reports require a stored run.",
+      });
+  });
 
 export const agentReportListSchema = z.object({
   kind: agentReportSchema.shape.kind.optional(),
@@ -75,4 +75,5 @@ export type AgentReportSummary = { id: string; kind: string; title: string; crea
 export type AgentReportResource = AgentReportSummary & {
   body: Record<string, ReportJson>;
   provenance: Record<string, ReportJson>;
+  modelPlaygroundRunId?: string;
 };

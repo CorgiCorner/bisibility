@@ -1,0 +1,62 @@
+{
+  "id": "msg_synthetic_search",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-5-5",
+  "content": [
+    { "type": "text", "text": "Searching 😀. " },
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_synthetic1",
+      "name": "web_search",
+      "input": { "query": "synthetic example" }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_synthetic1",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://example.org/source",
+          "title": "Example source",
+          "encrypted_content": "synthetic-not-encrypted",
+          "page_age": "2026-11-11"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "The answer.",
+      "citations": [
+        {
+          "type": "web_search_result_location",
+          "url": "https://example.org/source",
+          "title": "Example source",
+          "encrypted_index": "synthetic-index",
+          "cited_text": "Source excerpt, not an answer offset."
+        },
+        {
+          "type": "web_search_result_location",
+          "url": "https://example.org/source",
+          "title": "Repeated occurrence",
+          "encrypted_index": "synthetic-index",
+          "cited_text": "Source excerpt, not an answer offset."
+        }
+      ]
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 10,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 20,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 20,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 12,
+    "output_tokens_details": { "thinking_tokens": 2 },
+    "server_tool_use": { "web_search_requests": 1 }
+  }
+}

@@ -11,6 +11,7 @@ export const bakedRuntimeEnvKeys = [
   "APP_REVISION",
   "APP_VERSION",
   "METERING_NAMESPACE",
+  "MODEL_PLAYGROUND_WORKER_ENABLED",
   "PROVIDER_RECOVERY",
   "PROVIDER_RECOVERY_DIGEST",
   "LOCAL_MONITOR_RECURRING_ENABLED",
@@ -77,6 +78,7 @@ export const bakedRuntimeEnvKeys = [
   "EMAIL_FOUNDER_NAME",
   "EMAIL_FROM",
   "EMAIL_PROVIDER",
+  "EMAIL_NOTIFICATIONS_DISABLED",
   "GITHUB_API_TOKEN",
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
@@ -148,7 +150,9 @@ function formatBakedEnv(values) {
 
 export function collectBakedEnvironment(env = process.env) {
   const baked = {};
+  const editableDemo = env.DEMO_MODE === "editable" && env.DEPLOYMENT_MODE !== "cloud";
   for (const key of bakedRuntimeEnvKeys) {
+    if (key === "EMAIL_NOTIFICATIONS_DISABLED" && !editableDemo) continue;
     const value = env[key];
     if (value != null && value !== "") {
       baked[key] = value;

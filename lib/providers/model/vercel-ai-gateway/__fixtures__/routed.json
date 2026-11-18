@@ -1,0 +1,54 @@
+{
+  "id": "chatcmpl-synthetic-route",
+  "object": "chat.completion",
+  "model": "anthropic/claude-sonnet-5",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "A routed synthetic answer.",
+        "provider_metadata": {
+          "gateway": {
+            "routing": {
+              "originalModelId": "anthropic/claude-sonnet-5",
+              "canonicalSlug": "anthropic/claude-sonnet-5",
+              "resolvedProvider": "anthropic",
+              "finalProvider": "bedrock",
+              "modelAttemptCount": 1,
+              "modelAttempts": [
+                {
+                  "canonicalSlug": "anthropic/claude-sonnet-5",
+                  "success": true,
+                  "providerAttempts": [
+                    {
+                      "provider": "bedrock",
+                      "success": true,
+                      "credentialType": "system"
+                    }
+                  ]
+                }
+              ]
+            },
+            "cost": "0.00454050000000000001",
+            "marketCost": "0.0045405",
+            "generationId": "gen_SYNTHETICONLY"
+          }
+        }
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 100,
+    "completion_tokens": 40,
+    "total_tokens": 140,
+    "prompt_tokens_details": {
+      "cached_tokens": 30,
+      "cache_write_tokens": 10
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 12
+    }
+  }
+}

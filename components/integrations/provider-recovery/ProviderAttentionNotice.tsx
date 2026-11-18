@@ -37,10 +37,29 @@ export function ProviderAttentionNotice({
   accountUrl,
 }: Props) {
   const t = useTranslations("projectIntegrations.recovery");
-  const copy = suppliedCopy ?? {
-    heading: t(`${state}Heading`, { provider: "" }),
-    description: t(`${state}Description`),
-  };
+  const copyByState = {
+    billing: () => ({
+      heading: t("billingHeading", { provider: "" }),
+      description: t("billingDescription"),
+    }),
+    checking: () => ({
+      heading: t("checkingHeading", { provider: "" }),
+      description: t("checkingDescription"),
+    }),
+    ready: () => ({
+      heading: t("readyHeading"),
+      description: t("readyDescription"),
+    }),
+    review: () => ({
+      heading: t("reviewHeading"),
+      description: t("reviewDescription"),
+    }),
+    internal: () => ({
+      heading: t("internalHeading"),
+      description: t("internalDescription"),
+    }),
+  } satisfies Record<AttentionState, () => { heading: string; description: string }>;
+  const copy = suppliedCopy ?? copyByState[state]();
   const labels = suppliedLabels ?? {
     free: t("free"),
     owner: t("owner"),
@@ -102,7 +121,7 @@ export function ProviderAttentionNotice({
         ) : null}
         <div className="grid w-full grid-cols-2 items-center gap-2 @min-[420px]:ml-auto @min-[420px]:flex @min-[420px]:w-auto @min-[420px]:justify-end">
           <Button
-            className={`${checkable && canManage ? "" : "col-span-2"} min-h-11 w-full @min-[520px]:min-h-8.5 @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap`}
+            className={`${checkable && canManage ? "" : "col-span-2"} w-full @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap`}
             onClick={onDismiss}
             size="sm"
             style={dismissStyle}
@@ -113,7 +132,7 @@ export function ProviderAttentionNotice({
           {checkable && canManage ? (
             <>
               <Button
-                className="min-h-11 w-full @min-[520px]:min-h-8.5 @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
+                className="w-full @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
                 loading={checking}
                 loadingLabel={labels.checking}
                 onClick={onCheck}
@@ -132,7 +151,7 @@ export function ProviderAttentionNotice({
             </>
           ) : !billing ? (
             <Button
-              className="col-span-2 row-start-1 min-h-11 w-full @min-[520px]:min-h-8.5 @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
+              className="col-span-2 row-start-1 w-full @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
               onClick={onViewChecks}
               size="sm"
               variant={ready ? "primary" : "outline"}
@@ -142,7 +161,7 @@ export function ProviderAttentionNotice({
           ) : null}
           {accountUrl && canManage && !ready ? (
             <Button
-              className="col-span-2 row-start-1 min-h-11 w-full @min-[520px]:min-h-8.5 @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
+              className="col-span-2 row-start-1 w-full @min-[420px]:w-auto @min-[420px]:shrink-0 @min-[420px]:whitespace-nowrap"
               href={accountUrl}
               rel="noopener noreferrer"
               size="sm"
@@ -179,7 +198,7 @@ export function DismissedProviderNotice({
       <p aria-live="polite" className="m-0 text-[12px] text-fg-muted" role="status">
         {message}
       </p>
-      <Button className="min-h-10 sm:min-h-8.5" onClick={onShow} size="sm" variant="outline">
+      <Button className="" onClick={onShow} size="sm" variant="outline">
         {t("showDetails")}
       </Button>
     </div>

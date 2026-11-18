@@ -2,11 +2,11 @@ import "server-only";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { LocalMonitorConflictError } from "@/lib/local-monitor-store/model";
-import type { LocalStoreContext } from "@/lib/local-monitoring-store/context";
+import type { LocalStoreContext, LocalTransaction } from "@/lib/local-monitoring-store/context";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
 import { z } from "zod";
 import { approveRecurringMonitor } from "./approve";
-import { pauseRecurringMonitor } from "./pause";
+import { pauseRecurringMonitor, restoreRecurringMonitor } from "./pause";
 import { previewRecurringMonitor } from "./preview";
 
 function failure(error: unknown) {
@@ -36,9 +36,25 @@ export async function approveRecurringFor(input: unknown, context: LocalStoreCon
     return failure(error);
   }
 }
-export async function pauseRecurringFor(input: unknown, context: LocalStoreContext) {
+export async function pauseRecurringFor(
+  input: unknown,
+  context: LocalStoreContext,
+  tx?: LocalTransaction,
+) {
   try {
-    const result = await pauseRecurringMonitor(input, context);
+    const result = await pauseRecurringMonitor(input, context, undefined, tx);
+    return { kind: "saved" as const, ...result };
+  } catch (error) {
+    return failure(error);
+  }
+}
+export async function restoreRecurringFor(
+  input: unknown,
+  context: LocalStoreContext,
+  tx?: LocalTransaction,
+) {
+  try {
+    const result = await restoreRecurringMonitor(input, context, undefined, tx);
     return { kind: "saved" as const, ...result };
   } catch (error) {
     return failure(error);

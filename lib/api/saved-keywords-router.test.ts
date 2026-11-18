@@ -48,6 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key_1", projectId: "project_1", scopes: ["read", "write"] },
     project: { id: "project_1", publicId: projectId, domain: "example.com", writeMode: "writable" },
   });

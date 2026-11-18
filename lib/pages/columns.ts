@@ -23,6 +23,7 @@ export type PageColumnConnections = {
   plausibleConnected: boolean;
   rankConnected: boolean;
   sitemapEnabled: boolean;
+  sitemapChecked?: boolean;
 };
 
 function count(value: number) {
@@ -42,6 +43,7 @@ export function projectPageColumnSources(
   return [
     {
       kind: "sitemap",
+      sitemapChecked: connections.sitemapChecked,
       note: "",
       pages: count(facts.listed),
       state: connections.sitemapEnabled ? "connected" : "not_connected",

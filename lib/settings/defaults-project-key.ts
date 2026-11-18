@@ -1,5 +1,6 @@
 import "server-only";
-import { hasApiScope, parseStoredApiScopes } from "@/lib/api/scope-policy";
+import { liveApiKeyScopes } from "@/lib/api/key-creator";
+import { hasApiScope } from "@/lib/api/scope-policy";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
@@ -21,14 +22,14 @@ export async function assertDefaultsProjectKey(
   const [key, current] = await Promise.all([
     tx.apiKey.findFirst({
       where: { id: keyId, projectId: project.id },
-      select: { id: true, scopes: true, revokedAt: true, expiresAt: true },
+      select: { id: true, scopes: true, revokedAt: true, expiresAt: true, createdById: true },
     }),
     tx.project.findUnique({
       where: { id: project.id },
       select: { publicId: true, writeMode: true, isSample: true },
     }),
   ]);
-  const scopes = key ? parseStoredApiScopes(key.scopes) : null;
+  const scopes = await liveApiKeyScopes(tx, key && { ...key, projectId: project.id }, now);
   if (
     !key ||
     key.revokedAt ||

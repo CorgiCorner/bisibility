@@ -13,7 +13,7 @@ const {
 
 const stubs = {
   "@/components/getting-started/schedule-phrase": "exports.formatScheduledRun = () => 'stub phrase';",
-  "@/lib/queries/check-schedule-list": "exports.listCheckScheduleRows = async () => [{ blocked: false, cronExpression: '0 6 * * 5', dayOfMonth: null, enabled: true, frequency: 'weekly', isDefault: true, jitterMinutes: 15, keywordCount: 2, memberDeviceCount: 1, memberMarketCount: 1, name: 'Friday 06:00', perRunCents: 24, publicId: 'sch_friday', serpDepth: null, sharedTag: null, targetCount: 2, timeOfDay: '06:00', timezone: 'Europe/Warsaw', weekday: 'Friday' }];",
+  "@/lib/schedules/service": "exports.listSchedules = async () => [{ kind: 'rank', id: 'sch_friday', state: 'active', monthly_cost_estimate_cents: 96, rank: { blocked: false, cronExpression: '0 6 * * 5', dayOfMonth: null, enabled: true, frequency: 'weekly', isDefault: true, jitterMinutes: 15, keywordCount: 2, memberDeviceCount: 1, memberMarketCount: 1, name: 'Friday 06:00', perRunCents: 24, publicId: 'sch_friday', serpDepth: null, sharedTag: null, targetCount: 2, timeOfDay: '06:00', timezone: 'Europe/Warsaw', weekday: 'Friday' } }];",
   "@/components/project-runs/ProjectRunsTabs": "exports.ProjectRunsTabs = () => null;",
   "@/components/i18n/FeatureMessagesProvider": "const ref = registerClientReference({}, 'intl-provider-client', 'NextIntlClientProvider'); exports.FeatureMessagesProvider = ({ children, ...props }) => React.createElement(ref, props, children);",
   "@/components/shell/PageContent": "exports.PageContent = ({ children }) => children;",

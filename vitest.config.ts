@@ -5,7 +5,13 @@ import { defineConfig } from "vitest/config";
 import { runtimeAliases, runtimeStubPlugin } from "./.storybook/main";
 import { attachedOpera } from "./tests/config/vitest.attached-opera";
 import { testModuleCache } from "./tests/config/vitest.module-cache";
-import { isolatedNodeRenderTests, nodeRenderTests } from "./tests/config/vitest.node-render-tests";
+import {
+  isolatedCompilerScanTests,
+  isolatedNodeRenderTests,
+  nodeRenderTests,
+} from "./tests/config/vitest.node-render-tests";
+
+const isolatedNodeTests = [...isolatedNodeRenderTests, ...isolatedCompilerScanTests];
 
 const emptyModule = fileURLToPath(new URL("./tests/config/vitest.empty.ts", import.meta.url));
 const rootDir = fileURLToPath(new URL("./", import.meta.url));
@@ -163,14 +169,14 @@ export default defineConfig({
             "lib/roadmap/*.integration.test.ts",
             "lib/metering/**/*.integration.test.ts",
             ...domUnitTests,
-            ...isolatedNodeRenderTests,
+            ...isolatedNodeTests,
           ],
           setupFiles: ["./tests/config/vitest.setup.common.ts"],
         },
         {
           name: "unit-isolated",
           environment: "node",
-          include: isolatedNodeRenderTests,
+          include: isolatedNodeTests,
           setupFiles: ["./tests/config/vitest.setup.common.ts"],
         },
         {
@@ -205,9 +211,15 @@ export default defineConfig({
           // jsdom files reuse worker processes through vm contexts; node files keep forks.
           pool: test.environment === "jsdom" ? ("vmForks" as const) : ("forks" as const),
           // Node unit files share worker processes; the common setup resets modules, mocks,
-          // environment and global test doubles at each file. Render-sensitive tests keep a
-          // process per file (see isolatedNodeRenderTests).
+          // environment and global test doubles at each file. Render-sensitive tests and
+          // compiler scans keep a process per file (see isolatedNodeTests).
           isolate: test.name !== "unit",
+          runner:
+            test.name === "unit"
+              ? fileURLToPath(
+                  new URL("./tests/config/vitest.shared-worker-runner.ts", import.meta.url),
+                )
+              : undefined,
           deps: {
             optimizer: {
               [test.environment === "node" ? "ssr" : "client"]: {

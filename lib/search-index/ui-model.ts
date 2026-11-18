@@ -6,7 +6,11 @@ import type { listPageIndexingUrls } from "./urls";
 
 export type IndexingReport = Awaited<ReturnType<typeof getPageIndexingReport>>;
 export type IndexingSettings = Awaited<ReturnType<typeof getPageIndexingSettings>>;
-export type IndexingUrl = Awaited<ReturnType<typeof listPageIndexingUrls>>["data"][number] & {
+// The inspection UI does not render the API's optional sitemap membership projection.
+export type IndexingUrl = Omit<
+  Awaited<ReturnType<typeof listPageIndexingUrls>>["data"][number],
+  "sitemapState" | "sitemapChecked"
+> & {
   /** Calendar date through which the retained history is displayed. */
   historyThrough?: string;
   historyAsOf?: Date;
@@ -94,7 +98,9 @@ export type LoadUrlsAction = (input: {
     sort_by?: "url" | "state" | "crawl" | "change";
     sort_direction?: "asc" | "desc";
   };
-}) => Promise<Awaited<ReturnType<typeof listPageIndexingUrls>>>;
+}) => Promise<
+  Omit<Awaited<ReturnType<typeof listPageIndexingUrls>>, "data"> & { data: IndexingUrl[] }
+>;
 export type LoadDetailAction = (input: {
   projectId: string;
   url: string;

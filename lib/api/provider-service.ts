@@ -1,5 +1,4 @@
 import "server-only";
-
 import { auditConnection, auditProviderMutation } from "@/lib/api/provider-audit";
 import {
   connectedProviderChainSettings,
@@ -22,6 +21,7 @@ import {
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
+import { assertNoModelManualRate } from "@/lib/providers/model/connection-policy";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { connectProviderSchema, providerConnectionRefSchema } from "@/lib/schemas/provider";
 import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
@@ -29,7 +29,6 @@ import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
 
 const prioritySchema = z.coerce.number().int().min(0).max(1000);
-
 export const connectProviderActionSchema = connectProviderSchema.extend({
   enabled: z.coerce.boolean().default(true),
   priority: prioritySchema.optional(),
@@ -76,6 +75,7 @@ export async function connectProviderConnection(
   onCommitted?: () => void,
 ) {
   const item = providerCatalogItem(input.providerId);
+  if (input.costPerCheck !== undefined) assertNoModelManualRate(item.id);
   const stored = await findConnection(context.projectId, item.id);
   if (
     options.restoreStoredCredentials &&

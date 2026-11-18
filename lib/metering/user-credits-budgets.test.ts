@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   owner: vi.fn(),
 }));
+vi.mock("./read-snapshot", async () => {
+  const { readProjectBudgetStatuses } = await import("./project-budget-statuses");
+  return { readProjectBudgetSnapshot: readProjectBudgetStatuses };
+});
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.auth }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {

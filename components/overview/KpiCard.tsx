@@ -95,7 +95,7 @@ export function KpiCard({
   return (
     <Card className="min-w-0 rounded-card px-4.5 py-4" size="md">
       <div className="flex min-h-11 items-center sm:min-h-7 gap-1 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
-        <span className="truncate">{label}</span>
+        <span className="min-w-0 whitespace-normal break-words">{label}</span>
         {id === "visibility" && qualityReport ? (
           <span className="inline-flex">
             <LocalizedMeasurementHelp
@@ -113,8 +113,8 @@ export function KpiCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-[9px] flex items-end gap-3">
-        <span className="min-w-0">
+      <div className="mt-[9px] flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="min-w-0 whitespace-normal">
           <span
             className={`bv-countup text-[28px] font-bold leading-none tracking-[-0.8px] ${valueClassName}`}
           >

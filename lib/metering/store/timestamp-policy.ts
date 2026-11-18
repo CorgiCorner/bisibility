@@ -1,4 +1,5 @@
 import type { PostgresDriver, PostgresExecutor } from "@usagekit/store-postgres";
+import { exactNumericExecutor } from "./numeric";
 import { ensureTimestampContract, requireTimestampContract } from "./timestamp-history";
 
 /** Prisma's timestamp binding and projection require a canonical UTC session. */
@@ -11,7 +12,8 @@ export function utcPostgresDriver(driver: PostgresDriver, schema: string): Postg
   return {
     async transaction(readOnly, body) {
       const initializing = !initialized;
-      const result = await driver.transaction(readOnly, async (executor) => {
+      const result = await driver.transaction(readOnly, async (raw) => {
+        const executor = exactNumericExecutor(raw);
         await setLocalUtc(executor);
         if (initializing) {
           await executor.query({

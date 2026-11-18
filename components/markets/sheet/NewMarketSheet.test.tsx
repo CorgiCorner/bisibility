@@ -104,7 +104,6 @@ function renderSheet({
       projectId={projectId}
       scheduleContext={{
         connectedProviders: [],
-        defaultScheduleName: "Weekly Monday",
         projectDefaults: { provider: null, serpDepth: 100 },
         projectTimezone: "Europe/Warsaw",
       }}
@@ -114,6 +113,17 @@ function renderSheet({
   );
   return { onClose, onCreate, onCreated };
 }
+
+it("matches field-sized footer actions and gives schedule creation a visible button boundary", () => {
+  renderSheet();
+  fireEvent.click(screen.getByRole("radio", { name: "Paste keywords" }));
+  for (const name of ["Cancel", "Create market", "New schedule"]) {
+    expect.soft(screen.getByRole("button", { name })).toHaveAttribute("data-size", "input");
+  }
+  expect
+    .soft(screen.getByRole("button", { name: "New schedule" }))
+    .toHaveAttribute("data-variant", "secondary");
+});
 
 async function pickDevice(user: ReturnType<typeof userEvent.setup>, label: string) {
   await user.click(screen.getByRole("button", { name: "Devices" }));
@@ -492,3 +502,50 @@ it("marks tracked US English and opens its market without offering a second Mobi
   expect(screen.queryByText(/prospective keyword/i)).toBeNull();
   expect(onCreate).not.toHaveBeenCalled();
 });
+
+import {
+  createSpendPreview,
+  keywordCreateReviewCases,
+} from "@/components/schedules/keyword-create-review.test-support";
+import { beforeEach as reviewBeforeEach } from "vitest";
+
+const reviewPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: reviewPort.preview,
+}));
+reviewBeforeEach(() =>
+  reviewPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+for (const method of ["paste", "copy"] as const)
+  keywordCreateReviewCases(`NewMarketCreator ${method}`, reviewPort.preview, async () => {
+    const user = userEvent.setup();
+    const result = renderSheet();
+    await user.click(screen.getByRole("button", { name: "Complete definition" }));
+    await pickDevice(user, "Desktop");
+    if (method === "paste") {
+      await user.click(screen.getByRole("radio", { name: "Paste keywords" }));
+      await user.type(screen.getByRole("textbox", { name: "Paste keywords" }), "rank tracker");
+    } else {
+      await user.click(screen.getByRole("radio", { name: "Copy from market" }));
+      await user.click(screen.getByRole("button", { name: "Copy from" }));
+      await user.click(screen.getByRole("menuitem", { name: /Madrid core/ }));
+    }
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+    await user.click(screen.getByRole("menuitem", { name: "Weekly Monday" }));
+    return {
+      action: result.onCreate,
+      start: async () => {
+        await user.click(screen.getByRole("button", { name: "Create market" }));
+      },
+      assertDraft: () => {
+        expect(result.onClose).not.toHaveBeenCalled();
+        expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Weekly Monday");
+      },
+    };
+  });

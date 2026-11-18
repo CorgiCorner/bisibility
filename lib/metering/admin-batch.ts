@@ -26,3 +26,34 @@ export async function mapAdminQueries<Input, Output>(
   if (failed) throw firstError;
   return output;
 }
+
+/** Log only safe classification, never database messages, SQL or request content. */
+export function logBudgetReadFailure(error: unknown, phase: string) {
+  const code =
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    /^P\d{4}$/.test(error.code)
+      ? error.code
+      : undefined;
+  const log = code === "P2028" || code === "P2024" ? console.warn : console.error;
+  const locations =
+    error instanceof TypeError
+      ? (error.stack ?? "")
+          .split("\n")
+          .filter((line) => /^\s+at\s/.test(line))
+          .flatMap(
+            (line) =>
+              line.match(/(?:lib\/metering|lib\/private-adapters|@usagekit)\/[\w./-]+:\d+:\d+/g) ??
+              [],
+          )
+          .slice(0, 5)
+      : [];
+  log("[metering] project usage unavailable", {
+    phase,
+    name: error instanceof Error ? error.name : "UnknownError",
+    code,
+    ...(locations.length ? { locations } : {}),
+  });
+}

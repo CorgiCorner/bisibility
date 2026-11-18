@@ -44,6 +44,7 @@ enum ProviderKind {
   serp
   analytics
   enrichment
+  model
 }
 
 enum ProviderStatus {
@@ -65,6 +66,7 @@ enum ProviderAllocationUnit {
 }
 
 enum ProviderCostFeature {
+  model_playground
   ai_tracking
   ai_visibility
   prompt_explorer
@@ -76,6 +78,7 @@ enum ProviderCostFeature {
   local_scan
   rank_check
   ranked_keywords
+  ai_assistant
 }
 
 enum ProviderCredentialSource {
@@ -218,6 +221,9 @@ enum OnboardingQuizStatus {
 }
 
 model User {
+  assistantConversations AssistantConversation[]
+  assistantCredentials   AssistantCredential[]
+  assistantFundingPreferences AssistantFundingPreference[]
   achievementState AchievementState?
   achievementDays AchievementDay[]
   achievementAwards AchievementAward[]
@@ -228,6 +234,7 @@ model User {
   providerComparisonPreviews ProviderComparisonPreview[]
   providerComparisonRuns ProviderComparisonRun[]
   measurementSettingsMutations MeasurementSettingsMutation[]
+  scheduleReviewReceipts       ScheduleReviewReceipt[]
   id                           String                   @id @default(cuid())
   publicId                     String                   @unique
   name                         String
@@ -266,6 +273,7 @@ model User {
   costItemsCreated             CostItem[]               @relation("CostItemCreator")
   memberships                  Membership[]
   auditLogs                    AuditLog[]               @relation("AuditActor")
+  createdApiKeys               ApiKey[]                 @relation("ApiKeyCreator")
   tagPageRulesUpdated          TagPageRule[]            @relation("TagPageRuleUpdatedBy")
   aiSourceTypesSet             AiSourceTypeOverride[]   @relation("AiSourceTypeSetBy")
   aiSourcePlanItemsAdded       AiSourcePlanItem[]       @relation("AiSourcePlanAddedBy")
@@ -581,6 +589,12 @@ model WaitlistInterest {
 }
 
 model Project {
+  assistantConversations AssistantConversation[]
+  aiFundingPreferences ProjectAiFundingPreference[]
+  assistantFundingPreferences AssistantFundingPreference[]
+  modelPlaygroundPreviews ModelPlaygroundPreview[]
+  modelPlaygroundRuns ModelPlaygroundRun[]
+  modelPlaygroundPresets ModelPlaygroundPreset[]
   seoChallenges ProjectSeoChallenge[]
   providerResponseCaptures ProviderResponseCapture[]
   domainVerifications ProjectDomainVerification[]
@@ -589,6 +603,7 @@ model Project {
   historyEvidenceReplayRuns HistoryEvidenceReplayRun[]
   historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
   measurementSettingsMutations MeasurementSettingsMutation[]
+  scheduleReviewReceipts ScheduleReviewReceipt[]
   measurementTargetEpoch BigInt @default(0)
   measurementPolicyEpoch BigInt @default(0)
   measurementPolicyConfig Json?
@@ -669,6 +684,7 @@ model Project {
   alertRules                       AlertRule[]
   signals                          Signal[]
   sitemapMonitoringEnabled         Boolean                          @default(true)
+  syncPauses                        ProjectSyncPause[]
   sitemapSnapshots                 SitemapSnapshot[]
   pages                            ProjectPage[]
   pageVitals                       PageVitals[]
@@ -1581,6 +1597,7 @@ model KeywordTrafficSnapshot {
 }
 
 model ProviderConnection {
+  modelPlaygroundColumns ModelPlaygroundColumn[]
   recoveryAccount ProviderConnectionRecovery?
   accountIncidents ProviderAccountIncident[]
   blockedAttempts ProviderBlockedAttempt[]
@@ -1666,6 +1683,10 @@ model ApiKey {
   hashedKey  String    @unique
   prefix     String
   scopes     String[]  @default(["read", "write", "admin"])
+  /// The person whose current project role caps what this key can do. Null after that
+  /// person's account is deleted, which leaves the key without rights.
+  createdById String?
+  createdBy   User?     @relation("ApiKeyCreator", fields: [createdById], references: [id], onDelete: SetNull)
   expiresAt  DateTime?
   lastUsedAt DateTime?
   revokedAt  DateTime?
@@ -1674,6 +1695,7 @@ model ApiKey {
 
   @@index([projectId])
   @@index([prefix])
+  @@index([createdById])
   @@map("api_keys")
 }
 
@@ -1799,6 +1821,7 @@ model SitemapSnapshot {
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sitemapUrl  String
   urlCount    Int
+  complete    Boolean  @default(false)
   entries     Json
   contentHash String
   fetchedAt   DateTime @default(now())
@@ -2869,6 +2892,7 @@ model ProjectContext {
 }
 
 model AgentReport {
+  modelPlaygroundRun ModelPlaygroundRun?
   siteAuditRun SiteAuditRun?
   shareLinkReports AgentReportShareLinkReport[]
   cacheReuseUntil DateTime?
@@ -2884,6 +2908,7 @@ model AgentReport {
   createdAt   DateTime @default(now())
 
   @@index([projectId, createdAt, id])
+  @@unique([projectId, id], map: "agent_reports_project_id_model_unique")
   @@index([projectId, kind, createdAt, id])
   @@map("agent_reports")
 }
@@ -2991,6 +3016,18 @@ model InspectionPropertyQuota {
   @@map("inspection_property_quotas")
 }
 
+model ProjectSyncPause {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind      String
+  pausedAt  DateTime @default(now())
+  actorId   String?
+
+  @@unique([projectId, kind])
+  @@map("project_sync_pauses")
+}
+
 model DomainRatingCheck {
   id String @id @default(cuid())
   projectId String
@@ -3061,4 +3098,19 @@ model ProjectDomainVerification {
   @@unique([projectId, domain])
   @@index([nextCheckAt])
   @@map("project_domain_verifications")
+}
+
+model ScheduleReviewReceipt {
+  id        String   @id
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @db.Char(64)
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  revision  String
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("schedule_review_receipts")
 }

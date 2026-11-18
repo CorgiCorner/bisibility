@@ -55,17 +55,21 @@ export function IntegrationCategory({
     return rank(a.id) - rank(b.id);
   });
   const title =
-    category.id === "enrichment"
-      ? t("enrichmentTitle")
-      : category.id === "serp"
-        ? t("serpTitle")
-        : t("analyticsTitle");
+    category.id === "model"
+      ? t("modelTitle")
+      : category.id === "enrichment"
+        ? t("enrichmentTitle")
+        : category.id === "serp"
+          ? t("serpTitle")
+          : t("analyticsTitle");
   const description =
-    category.id === "enrichment"
-      ? t("enrichmentDescription")
-      : category.id === "serp"
-        ? t("serpDescription")
-        : t("analyticsDescription");
+    category.id === "model"
+      ? t("modelDescription")
+      : category.id === "enrichment"
+        ? t("enrichmentDescription")
+        : category.id === "serp"
+          ? t("serpDescription")
+          : t("analyticsDescription");
   return (
     <section className="space-y-3" data-integration-category={category.id}>
       <div className="space-y-1">

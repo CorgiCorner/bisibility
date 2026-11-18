@@ -35,15 +35,19 @@ export async function domainVerificationActivity(
     if (!row.revokedAt) continue;
     try {
       const message = `Verification for ${row.domain} has been lost. Check the domain verification settings for your project.`;
-      await sendEmail({
-        category: "transactional",
-        to: row.project.owner.email,
-        subject: "Domain verification lost",
-        text: message,
-        html: `<p>${message}</p>`,
-        requireProvider: true,
-        idempotencyKey: `domain-verification:${row.id}:${row.revokedAt.toISOString()}`,
-      });
+      if (
+        (await sendEmail({
+          purpose: "domain-verification-lost",
+          category: "transactional",
+          to: row.project.owner.email,
+          subject: "Domain verification lost",
+          text: message,
+          html: `<p>${message}</p>`,
+          requireProvider: true,
+          idempotencyKey: `domain-verification:${row.id}:${row.revokedAt.toISOString()}`,
+        })) === false
+      )
+        continue;
       const updated = await prisma.projectDomainVerification.updateMany({
         where: { id: row.id, revokedAt: row.revokedAt, noticeSentAt: null },
         data: { noticeSentAt: new Date() },

@@ -1,7 +1,9 @@
 import { Prisma } from "@/lib/generated/prisma/client";
+import type { StoredSitemapRead } from "./sitemap-read-model";
+import { sitemapListedSql, sitemapObservationCtes } from "./sitemap-sql";
 
 /** Active snapshot and the newest sitemap observation. Shared by the list and tag queries. */
-export function snapshotStatusCtes(projectId: string) {
+export function snapshotStatusCtes(projectId: string, read: StoredSitemapRead | null = null) {
   return Prisma.sql`
     active_snapshot AS (
       SELECT id, "takenOn"::date AS "takenOn", "pageCount"
@@ -9,12 +11,7 @@ export function snapshotStatusCtes(projectId: string) {
       WHERE "projectId" = ${projectId} AND "archivedAt" IS NULL
       LIMIT 1
     ),
-    newest_sitemap AS (
-      SELECT MAX(source."lastSeenAt") AS seen
-      FROM "project_page_sources" source
-      JOIN "project_pages" observed ON observed.id = source."pageId"
-      WHERE observed."projectId" = ${projectId} AND source.source = 'sitemap'::"ProjectPageSourceKind"
-    )
+    ${sitemapObservationCtes(projectId, read)}
   `;
 }
 
@@ -39,6 +36,7 @@ export function pageBucketSql() {
       AND ${last} IS NOT NULL
       AND ${newest} IS NOT NULL
       AND ${last}::date < ${newest}::date
+      AND ${sitemapListedSql()} IS FALSE
     THEN 'removed'
     WHEN ${inSnapshot} THEN 'in_snapshot'
     WHEN ${firstSeen}::date > ${taken} THEN 'new'

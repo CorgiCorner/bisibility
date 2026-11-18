@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 import { AiSourceRetry } from "./AiCatalogNotice";
 import { AiResearchHistory, type AiResearchHistoryEntry } from "./AiResearchHistory";
 import { AiResearchResults } from "./AiResearchResults";
-import { failureCopyKey } from "./ai-research-failure-copy";
+import { failureMessage } from "./ai-research-failure-copy";
 import type { useAiResearchSubmission } from "./useAiResearchSubmission";
 
 type Submission = ReturnType<typeof useAiResearchSubmission>;
@@ -69,7 +69,7 @@ export function AiResearchWorkspaceOutcome({
           {error
             ? t("requestFailure")
             : outcome && !outcome.ok
-              ? presentBudgetDenial(outcome.reason, errors, t(failureCopyKey(outcome.reason)))
+              ? presentBudgetDenial(outcome.reason, errors, failureMessage(outcome.reason, t))
               : ""}
         </Card>
       ) : null}

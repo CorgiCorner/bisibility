@@ -1,6 +1,21 @@
+import { readFileSync } from "node:fs";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
+import type { Operation } from "@usagekit/core";
 import { expect, test, vi } from "vitest";
-import { createSql, lock, transactions } from "./host-sql";
+import { appendReceipt } from "./records";
+import { receipt, request } from "./test-data";
+
+const { version } = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.resolve("@usagekit/store-postgres")), "utf8"),
+);
+const [release, prerelease] = version.split("-");
+expect(
+  release.localeCompare("0.12.0", undefined, { numeric: true }) > 0 ||
+    (release === "0.12.0" && prerelease === undefined),
+  "This branch requires the published 0.12.0 lockfile; install store-postgres >= 0.12.0",
+).toBe(true);
+
+const { createSql, lock, transactions } = await import("./host-sql");
 
 function client(marker: string | null = "utc-core-v2-fence-presence-v1") {
   const order: string[] = [];
@@ -74,9 +89,11 @@ test("direct SQL verifies once after setting UTC and never bootstraps history", 
   await sql.execute(Prisma.sql`UPDATE host_mutation SET value = 42`);
   await lock(sql, "host-mutation");
   expect(f.order[0]).toBe("SET LOCAL TIME ZONE 'UTC'");
-  expect(f.order.findIndex((text) => text.includes("FROM pg_trigger"))).toBeLessThan(
-    f.order.indexOf("SELECT 42 AS value"),
-  );
+  const verificationIndex = f.order.findIndex((text) => text.includes("FROM pg_trigger"));
+  const queryIndex = f.order.indexOf("SELECT 42 AS value");
+  expect(verificationIndex).toBeGreaterThanOrEqual(0);
+  expect(queryIndex).toBeGreaterThanOrEqual(0);
+  expect(verificationIndex).toBeLessThan(queryIndex);
   expect(
     f.raw.$queryRawUnsafe.mock.calls.filter(([text]) => text.includes("FROM pg_trigger")),
   ).toHaveLength(1);
@@ -98,3 +115,35 @@ test("read transactions establish controls before verifying and cannot bootstrap
   ]);
   expect(f.order.some((text) => /LOCK TABLE|INSERT INTO metering_metadata/.test(text))).toBe(false);
 });
+
+test.each([4, 8])(
+  "active port adapts the pinned receipt writer at scale %i after verification",
+  async (scale) => {
+    const f = client();
+    const sql = createSql(f.tx, f.counters);
+    const value = {
+      ...receipt(),
+      cost: {
+        certainty: "measured" as const,
+        money: { currency: "USD" as const, units: 13n, scale },
+      },
+    };
+    await appendReceipt(sql, { ...request("mapped") } as Operation, value, 0);
+    const mapped = f.raw.$executeRaw.mock.calls.find(([query]) =>
+      query.text.startsWith("INSERT INTO metering_receipt"),
+    )?.[0];
+    expect(mapped?.text).toContain("sequence,cost_scale)");
+    expect(mapped?.values.at(-1)).toBe(scale);
+    expect(JSON.parse(String(mapped?.values[4])).cost.money.scale).toBe(
+      scale === 4 ? undefined : scale,
+    );
+    const verificationIndex = f.order.findIndex((text) => text.includes("FROM pg_trigger"));
+    const insertIndex = f.order.findIndex((text) =>
+      text.startsWith("INSERT INTO metering_receipt"),
+    );
+    expect(verificationIndex).toBeGreaterThanOrEqual(0);
+    expect(insertIndex).toBeGreaterThanOrEqual(0);
+    expect(verificationIndex).toBeLessThan(insertIndex);
+    expect(value.cost.money.scale).toBe(scale);
+  },
+);

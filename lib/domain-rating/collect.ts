@@ -5,6 +5,7 @@ import { queueRequestUsageEvent } from "@/lib/analytics/request-usage-delivery";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
+import { syncPauseSelection } from "@/lib/schedules/sync-pauses";
 import { resolveDomainRatingCredentials } from "./credentials";
 import { DOMAIN_RATING_VERSION, DomainRatingError, fetchDomainRating } from "./provider";
 
@@ -28,6 +29,10 @@ async function collect(
   actorId?: string | null,
   trigger: "manual" | "scheduled" | "api" = "scheduled",
 ) {
+  // Always selected so the result type is exact; only scheduled runs honour the pause, because
+  // the initial check is the explicit collection a user or API caller asked for.
+  const syncPauses = syncPauseSelection("domain_rating");
+  const paused = (row: { syncPauses: readonly unknown[] }) => !initial && row.syncPauses.length > 0;
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: {
@@ -35,7 +40,7 @@ async function collect(
       ownerId: true,
       isSample: true,
       writeMode: true,
-      domainRatingEnabled: true,
+      syncPauses,
       owner: { select: { deactivatedAt: true } },
     },
   });
@@ -46,7 +51,7 @@ async function collect(
     project.isSample ||
     project.owner?.deactivatedAt ||
     project.writeMode !== "active" ||
-    (!initial && !project.domainRatingEnabled)
+    paused(project)
   )
     return "disabled";
   if (
@@ -69,10 +74,13 @@ async function collect(
   });
   if (!claimed.count) return "already_checked";
   // Recheck intent after claiming, so a queued job cannot override a pause or domain change.
-  const current = await prisma.project.findUnique({ where: { id: projectId } });
+  const current = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { domain: true, isSample: true, writeMode: true, syncPauses },
+  });
   if (
     !current ||
-    (!initial && !current.domainRatingEnabled) ||
+    paused(current) ||
     current.isSample ||
     current.writeMode !== "active" ||
     normalizeDomain(current.domain ?? "") !== domain

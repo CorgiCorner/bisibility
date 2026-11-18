@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   getAiTrackingScheduleList: vi.fn(),
   getProjectRole: vi.fn(),
   listCheckScheduleRows: vi.fn(),
+  listSchedules: vi.fn(),
   listRankCheckRuns: vi.fn(),
   loadCoreMessages: vi.fn(),
   requireReadableProject: vi.fn(),
@@ -47,9 +48,7 @@ vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: mocks.canProjectAc
 vi.mock("@/lib/queries/check-schedule-members", () => ({
   listScheduleMemberCandidates: async () => [],
 }));
-vi.mock("@/lib/queries/check-schedule-list", () => ({
-  listCheckScheduleRows: mocks.listCheckScheduleRows,
-}));
+vi.mock("@/lib/schedules/service", () => ({ listSchedules: mocks.listSchedules }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
   listRankCheckRuns: mocks.listRankCheckRuns,
 }));
@@ -83,6 +82,20 @@ describe("SchedulesPage", () => {
     vi.clearAllMocks();
     capturedListProps = {};
     capturedDrawerProps = null;
+    mocks.listSchedules.mockImplementation(async (...args: unknown[]) => {
+      const rows = await mocks.listCheckScheduleRows(
+        args[0],
+        (args[1] as { status: string }).status,
+      );
+      return rows.map((rank: Record<string, unknown>) => ({
+        kind: "rank",
+        id: rank.publicId,
+        group: "checks",
+        state: rank.enabled ? "active" : "paused",
+        monthly_cost_estimate_cents: 1440,
+        rank,
+      }));
+    });
     mocks.getAiTrackingScheduleList.mockResolvedValue(null);
     mocks.resolveRegionalDocumentLocale.mockResolvedValue({ locale: "en", timeZone: "UTC" });
     mocks.loadCoreMessages.mockResolvedValue(projectRunsFeatureTestMessages);
@@ -130,7 +143,7 @@ describe("SchedulesPage", () => {
       projectRef: "prj_1",
       schedules: [expect.objectContaining({ name: "Daily 06:00" })],
     });
-    expect(mocks.listCheckScheduleRows).toHaveBeenCalledWith("project_1", "current");
+    expect(mocks.listSchedules).toHaveBeenCalledWith("project_1", { status: "current", ai: null });
   });
 
   it("passes the next-run instant to the locale-aware list", async () => {

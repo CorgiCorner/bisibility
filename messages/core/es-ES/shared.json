@@ -935,6 +935,7 @@
         "archived": "Archivado"
       },
       "modes": {
+        "archived": "Programación archivada",
         "manual": "Manual",
         "paused": "Pausado",
         "scheduled": "Programación guardada",
@@ -946,6 +947,7 @@
         "keyword_changed": "Una palabra cambió o ya no está disponible. Revisa la selección.",
         "manual": "La ejecución periódica no está activada.",
         "paused": "La programación guardada está pausada.",
+        "schedule_archived": "La programación guardada está archivada. Las comprobaciones manuales siguen usando este monitor.",
         "definition_changed": "La programación corresponde a una configuración anterior.",
         "calendar_changed": "El calendario cambió o no está disponible. Revísalo antes de programar."
       },
@@ -2243,6 +2245,31 @@
         "ga4": "Google Analytics 4",
         "plausible": "Plausible"
       }
+    },
+    "scheduleReview": {
+      "title": "Revisar el coste de la programación",
+      "description": "Coste estimado del proveedor durante los próximos 30 días.",
+      "before": "Antes",
+      "after": "Después",
+      "unknown": "Desconocido",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "changed": "El coste ha cambiado. Revisa la nueva estimación antes de confirmar.",
+      "emptyScheduleCreated": "Se ha creado la programación vacía. Si cancelas, seguirá vacía y estas palabras clave conservarán sus programaciones actuales.",
+      "capacity": "Este cambio supera el límite de tu plan. Si confirmas, se rechazará el guardado a menos que tu plan lo permita.",
+      "capacityDetail": "{dimension}: previsión {projected}, límite {limit}.",
+      "reasons": {
+        "cost_increase": "Aumenta el coste periódico estimado.",
+        "manual_to_scheduled": "Las palabras clave manuales recibirán comprobaciones automáticas.",
+        "provider_route_change": "Cambia el proveedor utilizado para las comprobaciones.",
+        "price_unknown": "Se desconocen algunos precios de los proveedores. El coste final puede variar."
+      },
+      "dimensions": {
+        "scheduledKeywords": "Palabras clave programadas",
+        "scheduleFrequencies": "Comprobaciones por semana",
+        "promptSchedules": "Comprobaciones de prompts por semana"
+      },
+      "previewFailed": "No se pudo obtener la vista previa del cambio. Inténtalo de nuevo."
     }
   }
 }

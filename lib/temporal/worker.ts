@@ -1,3 +1,4 @@
+import "../model-playground/runtime-registration";
 import { hostname } from "node:os";
 import { NativeConnection } from "@temporalio/worker";
 import { assertMigrationsReady } from "../data-migrations/readiness";
@@ -7,6 +8,7 @@ import {
   compareMigrationState,
 } from "../db/migration-state";
 import { warnDeprecatedInspectionDailyBudget } from "../deployment/deprecated-inspection-budget";
+import { startModelPlaygroundRecoverySweep } from "../model-playground/recovery-schedule";
 import { notifyOps } from "../ops/notify";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { queuedRankCheckConfig } from "../rank-check/queued-config";
@@ -70,7 +72,6 @@ import {
 import { reportWorkerStartup, safeOpsHeartbeatBootstrap } from "./worker-startup-report";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
-// Worker uses the TS transform because parameter properties reject strip-only mode.
 // temporal:worker loads the register hook. Load env first: set -a; . ./.env.local; set +a
 
 const connectionOptions = temporalConnectionOptions();
@@ -265,6 +266,7 @@ async function run() {
       scheduler_driver: schedulerDriverValue,
       task_queues: taskQueues,
     });
+    startModelPlaygroundRecoverySweep();
     await withSiteAuditIntentProcessor(async () => {
       await runWelcomeIntentRuntime({
         connectionOptions,
@@ -274,8 +276,7 @@ async function run() {
       });
     });
   } finally {
-    // Swallow close failures so `finally` cannot replace the original startup error;
-    // report them separately.
+    // Swallow close failures so finally cannot replace the original startup error.
     try {
       await connection.close();
     } catch (closeError) {
@@ -284,8 +285,7 @@ async function run() {
   }
 }
 
-// The offline smoke test imports this entry to validate the graph without
-// connecting to Temporal.
+// Smoke import validates the module graph and does not connect.
 if (!smokeMode) {
   try {
     await run();

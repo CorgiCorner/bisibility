@@ -1,6 +1,7 @@
 import { evidenceProjectionSchema } from "./openapi-evidence-projection";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankHistoryReportSchemas } from "./openapi-rank-history-report";
+import { publicScheduleReviewSchema } from "./openapi-schedule-writes";
 
 const dateTime = { format: "date-time", type: "string" } as const;
 const nullableDateTime = { format: "date-time", type: ["string", "null"] } as const;
@@ -77,7 +78,7 @@ export const loopClosureSchemas = {
     type: "object",
   },
   SitemapMonitorPatch: {
-    properties: { enabled: { type: "boolean" } },
+    properties: { enabled: { type: "boolean" }, review: publicScheduleReviewSchema },
     required: ["enabled"],
     type: "object",
   },
