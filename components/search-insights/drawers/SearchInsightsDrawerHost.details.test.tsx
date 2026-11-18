@@ -193,7 +193,7 @@ v.describe("SearchInsightsDrawerHost", () => {
     settle({
       costContext: d.storyCostContext,
       defaultDevice: "desktop",
-      defaultMarketKey: "es-es",
+      defaultMarketKey: "ES",
       projectMarkets: d.storyProjectMarkets,
     });
     v.expect(

@@ -159,16 +159,18 @@ describe("AddKeywordsDrawer", () => {
     const { assignKeywordsAction } = renderDrawer({
       initialFilters: { tag: "commercial" },
       schedules: [
-        { publicId: "sch_abcdefghijklmnopqrstuvwx", name: "Daily 06:00", isDefault: true },
-        { publicId: "sch_weekly", name: "Weekly review", isDefault: false },
+        { publicId: "sch_abcdefghijklmnopqrstuvwx", name: "Daily 06:00" },
+        { publicId: "sch_weekly", name: "Weekly review" },
       ],
     });
     expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Daily 06:00");
-    expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Default");
+    expect(screen.getByRole("button", { name: "Schedule" })).not.toHaveTextContent("Default");
     fireEvent.click(screen.getByRole("button", { name: "Select all 2 matching" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
-    expect(screen.getByRole("menuitem", { name: /Daily 06:00.*Default/ })).toBeVisible();
+    expect(screen.getByRole("menuitem", { name: "Daily 06:00" })).toBeVisible();
+    expect(screen.queryByText("Default")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("menuitem", { name: "Weekly review" }));
+    expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Weekly review");
     expect(screen.getByRole("button", { name: "Add 2 keywords" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Add 2 keywords" }));
     await waitFor(() =>
@@ -204,8 +206,10 @@ describe("AddKeywordsDrawer", () => {
       }),
     );
   });
-  it("does not silently assign to the default if the chosen destination disappears", () => {
+  it("requires an explicit destination when the chosen schedule disappears", async () => {
+    const assignKeywordsAction = vi.fn().mockResolvedValue({ updated: 1 });
     const props = {
+      assignKeywordsAction,
       candidates,
       initialSelectedKeywordIds: ["kw_content"],
       onClose: vi.fn(),
@@ -218,15 +222,28 @@ describe("AddKeywordsDrawer", () => {
       <AddKeywordsDrawer {...props} schedules={[{ publicId: "sch_selected", name: "Selected" }]} />,
     );
     rerender(
-      <AddKeywordsDrawer
-        {...props}
-        schedules={[{ publicId: "sch_default", name: "Daily", isDefault: true }]}
-      />,
+      <AddKeywordsDrawer {...props} schedules={[{ publicId: "sch_daily", name: "Daily" }]} />,
     );
     expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
+    expect(assignKeywordsAction).not.toHaveBeenCalled();
+    const form = document.getElementById("schedule-add-keywords-form");
+    if (!form) throw new Error("Missing assignment form.");
+    fireEvent.submit(form);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Schedule" })).toBeEnabled());
+    expect(assignKeywordsAction).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Daily, Default" }));
+    expect(screen.queryByText("Default")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Daily" }));
     expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
+    await waitFor(() =>
+      expect(assignKeywordsAction).toHaveBeenCalledExactlyOnceWith({
+        keywordIds: ["kw_content"],
+        projectId: "prj_current",
+        scheduleId: "sch_daily",
+      }),
+    );
   });
   it("keeps selection and destination after a failed assignment", async () => {
     const assignKeywordsAction = vi.fn().mockRejectedValue(new Error("failed"));

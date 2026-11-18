@@ -23,12 +23,12 @@ vi.mock("@/lib/providers/admission-error-details", () => ({
   loadAdmissionErrorDetails: mocks.admissionDetails,
 }));
 vi.mock("@/lib/rank-check/schedules/service", () => ({
-  DefaultCheckScheduleDeletionError: class DefaultCheckScheduleDeletionError extends Error {
-    readonly code = "default_check_schedule";
+  CheckScheduleNotEmptyError: class CheckScheduleNotEmptyError extends Error {
+    readonly code = "check_schedule_not_empty";
 
     constructor() {
-      super("The default check schedule cannot be deleted.");
-      this.name = "DefaultCheckScheduleDeletionError";
+      super("Move or remove all keywords before deleting this schedule.");
+      this.name = "CheckScheduleNotEmptyError";
     }
   },
 }));
@@ -47,7 +47,12 @@ import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { quoteRankRunReservationForLaunch } from "@/lib/rank-check/runs/launch-preflight";
 import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
-import { DefaultCheckScheduleDeletionError } from "@/lib/rank-check/schedules/service";
+import { CheckScheduleNotEmptyError } from "@/lib/rank-check/schedules/service";
+import {
+  DataSyncStateError,
+  ScheduleTransitionError,
+  scheduleNotFound,
+} from "@/lib/schedules/errors";
 import { z } from "zod";
 import { withAppRoute } from "./app-route";
 
@@ -317,16 +322,17 @@ describe("withAppRoute", () => {
     log.mockRestore();
   });
 
-  it("maps default schedule deletion to a safe conflict response", async () => {
+  it("maps non-empty schedule deletion to a coded conflict response", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const response = await withAppRoute(async () => {
-      throw new DefaultCheckScheduleDeletionError();
+      throw new CheckScheduleNotEmptyError();
     })(request);
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual(
       expect.objectContaining({
-        detail: "The default check schedule cannot be deleted.",
+        detail: "Move or remove all keywords before deleting this schedule.",
+        errors: { code: "check_schedule_not_empty" },
         status: 409,
         title: "Conflict",
       }),
@@ -334,6 +340,22 @@ describe("withAppRoute", () => {
     expect(log).not.toHaveBeenCalled();
     log.mockRestore();
   });
+
+  it.each([
+    [new ScheduleTransitionError(), 409, "schedule_transition_invalid"],
+    [new DataSyncStateError("search_console"), 422, "data_sync_state_unsupported"],
+    [scheduleNotFound(), 404, "schedule_not_found"],
+  ] as const)("maps %s to a coded schedule response", async (error, status, code) => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const response = await withAppRoute(async () => {
+      throw error;
+    })(request);
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual(expect.objectContaining({ errors: { code }, status }));
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
   it("budget regression: preserves a launch missing-budget reason without reset advice", async () => {
     const response = await withAppRoute(async () => {
       throw new LaunchRankCheckRunError("budget_exhausted", undefined, "budget_missing");

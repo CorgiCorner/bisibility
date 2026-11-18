@@ -65,6 +65,7 @@ describe("MCP awaited failure boundary", () => {
     });
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: { id: "test" },
       project: { ownerId: "owner" },
     });
@@ -323,6 +324,7 @@ describe("MCP awaited failure boundary", () => {
         accountScoped
           ? {
               kind: "project_key",
+              creatorRole: "owner",
               apiKey: { id: "test" },
               project: { ownerId: "owner" },
             }

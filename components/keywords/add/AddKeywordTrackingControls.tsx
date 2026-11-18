@@ -87,6 +87,7 @@ export function AddKeywordTrackingControls({
           }))}
           onChange={selectMarkets}
           onNew={onNewMarket}
+          newActionSize="input"
           selected={selectedIds}
         />
       </div>

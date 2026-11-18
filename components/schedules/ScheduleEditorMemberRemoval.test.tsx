@@ -12,7 +12,6 @@ const schedule = {
   cronExpression: null,
   enabled: true,
   frequency: "daily",
-  isDefault: false,
   jitterMinutes: 15,
   keywordCount: 1,
   providerPolicy: null,

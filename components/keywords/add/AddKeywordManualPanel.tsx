@@ -1,9 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import {
   type AddKeywordDrawerForm,
-  fieldClass,
   fieldLabelClass,
   fieldMetaClass,
 } from "@/lib/keywords/add-keyword-drawer-shared";
@@ -39,17 +41,18 @@ export function AddKeywordManualPanel({
     <>
       <div>
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <label className={fieldLabelClass} htmlFor="add-keywords-input">
-              {t("keywords")}
-            </label>
-            <span className={fieldMetaClass}>{t("required")}</span>
-          </div>
+          <FieldLabel
+            className={`${fieldLabelClass} gap-2`}
+            htmlFor="add-keywords-input"
+            label={t("keywords")}
+            suffix={<span className={fieldMetaClass}>{t("required")}</span>}
+          />
           <span className="font-sans tabular-nums text-[11px] text-fg-muted">
             {t("keywordCount", { count })}
           </span>
         </div>
         <Textarea
+          aria-required="true"
           className="mt-2 min-h-[128px]"
           id="add-keywords-input"
           placeholder={t("keywordPlaceholder")}
@@ -70,15 +73,16 @@ export function AddKeywordManualPanel({
       {trackingControls}
 
       <div>
-        <label className={fieldLabelClass} htmlFor="add-target-input">
-          {t("targetUrl")}
-        </label>
-        <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
+        <FieldLabel className={fieldLabelClass} htmlFor="add-target-input" label={t("targetUrl")} />
+        <div
+          data-input-frame=""
+          className="mt-2 flex items-center rounded-control bg-transparent ring-1 ring-inset ring-border-control transition-colors focus-within:ring-accent"
+        >
           {domain ? (
-            <span className="font-sans tabular-nums text-[13px] text-fg-muted">{domain}</span>
+            <span className="ps-3 font-sans tabular-nums text-[13px] text-fg-muted">{domain}</span>
           ) : null}
-          <input
-            className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-sans tabular-nums text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none"
+          <Input
+            className="min-w-0 flex-1 border-0"
             id="add-target-input"
             placeholder={t("targetPathPlaceholder")}
             {...register("targetUrl")}
@@ -110,11 +114,9 @@ export function AddKeywordManualPanel({
       </div>
 
       <div>
-        <label className={fieldLabelClass} htmlFor="add-tags-input">
-          {t("tags")}
-        </label>
-        <input
-          className={`${fieldClass} mt-2`}
+        <FieldLabel className={fieldLabelClass} htmlFor="add-tags-input" label={t("tags")} />
+        <Input
+          className="mt-2"
           id="add-tags-input"
           onChange={(event) => onTagsChange(event.target.value)}
           placeholder={t("tagsPlaceholder")}
@@ -124,14 +126,15 @@ export function AddKeywordManualPanel({
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
             <span className={fieldMetaClass}>{t("inProject")}</span>
             {tagSuggestions.map((tag) => (
-              <button
-                className="rounded-full bg-bg-sunken px-2.5 py-1 text-[11.5px] text-fg-muted"
+              <Button
+                size="input"
+                variant="secondary"
                 key={tag}
                 onClick={() => onAppendTag(tag)}
                 type="button"
               >
                 {tag}
-              </button>
+              </Button>
             ))}
           </div>
         ) : null}
@@ -155,11 +158,9 @@ function MetadataField({
 }>) {
   return (
     <div>
-      <label className={fieldLabelClass} htmlFor={`add-${name}-input`}>
-        {label}
-      </label>
-      <input
-        className={`${fieldClass} mt-2`}
+      <FieldLabel className={fieldLabelClass} htmlFor={`add-${name}-input`} label={label} />
+      <Input
+        className="mt-2"
         id={`add-${name}-input`}
         placeholder={placeholder}
         {...register(name)}

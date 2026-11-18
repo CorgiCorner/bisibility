@@ -150,6 +150,7 @@ const writes = operations.filter(([name]) =>
 function auth(scopes = key.scopes, writeMode = "active") {
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { ...key, scopes },
     project: { ...project, writeMode },
   });

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
     },
     alertRuleTarget: { deleteMany: vi.fn() },
     alertRuleMarket: { deleteMany: vi.fn() },
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { findMany: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn() },
@@ -77,6 +78,7 @@ function project() {
 
 function authRow() {
   return {
+    createdById: "creator_1",
     hashedKey: hashApiKey(rawKey),
     id: "api_key_1",
     name: "Production",

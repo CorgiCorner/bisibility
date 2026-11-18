@@ -304,6 +304,21 @@
     "status": "201"
   },
   {
+    "details": [
+      "missing-required /capacity",
+      "missing-required /cost_after_cents",
+      "missing-required /cost_before_cents",
+      "missing-required /expected_revision",
+      "missing-required /preview_token",
+      "missing-required /review_reasons",
+      "missing-required /window_start"
+    ],
+    "kinds": ["missing-required"],
+    "operation": "previewSchedule",
+    "sources": ["lib/api/schedule-write-permission.test.ts"],
+    "status": "200"
+  },
+  {
     "kinds": ["no-capture"],
     "operation": "promptResearchSuggestionsGenerate",
     "status": "none"
@@ -397,6 +412,13 @@
     "operation": "updateProviderSettings",
     "sources": ["lib/api/router.test.ts"],
     "status": "200"
+  },
+  {
+    "details": ["undeclared-status status 423"],
+    "kinds": ["undeclared-status"],
+    "operation": "updateSchedule",
+    "sources": ["lib/api/schedule-write-permission.test.ts"],
+    "status": "423"
   },
   {
     "details": ["undeclared-property /latest_snapshot/id"],

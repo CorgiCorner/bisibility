@@ -4,6 +4,7 @@ import { ApiAuthError, authenticateApiKey, authenticateBearer } from "./auth";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: {
       findMany: vi.fn(),
       update: vi.fn(),
@@ -35,6 +36,7 @@ function apiKeyRow(
 ) {
   return {
     expiresAt,
+    createdById: "creator_1",
     hashedKey: hashApiKey(key),
     id: "key_1",
     name: "Production",
@@ -64,7 +66,14 @@ describe("authenticateApiKey", () => {
 
     const result = await authenticateApiKey(requestWithKey());
 
-    expect(result.apiKey).toMatchObject({ id: "key_1", projectId: "project_1" });
+    expect(result).toMatchObject({
+      creatorRole: "owner",
+      apiKey: { id: "key_1", projectId: "project_1" },
+    });
+    expect(mocks.prisma.membership.findUnique).toHaveBeenCalledExactlyOnceWith({
+      where: { userId_projectId: { userId: "creator_1", projectId: "project_1" } },
+      select: { role: true },
+    });
     expect(result.project.publicId).toBe("prj_1");
     expect(mocks.prisma.apiKey.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -166,6 +175,7 @@ describe("authenticateBearer", () => {
     await expect(authenticateBearer(requestWithKey())).resolves.toMatchObject({
       apiKey: { id: "key_1" },
       kind: "project_key",
+      creatorRole: "owner",
     });
     expect(mocks.prisma.personalAccessToken.findMany).not.toHaveBeenCalled();
   });

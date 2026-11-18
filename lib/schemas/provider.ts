@@ -1,3 +1,4 @@
+import { NATIVE_MODEL_PROVIDERS } from "@/lib/providers/model/types";
 import { z } from "zod";
 
 const idSchema = z.string().trim().min(1).max(120);
@@ -11,6 +12,7 @@ export const providerIdSchema = z.enum([
   "pagespeed",
   "ga4",
   "plausible",
+  ...NATIVE_MODEL_PROVIDERS,
 ]);
 
 export type CredentialValidationMessages = {

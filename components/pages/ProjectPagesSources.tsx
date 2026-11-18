@@ -52,9 +52,12 @@ export function ProjectPagesSources({
         const name = sourceLabel(source, t);
         const extra =
           source.kind === "analytics" && source.note === "Plausible" ? t("plausibleWindow") : "";
-        const detail = [t(`sourcesLine.state.${source.state}`), format.number(source.pages), extra]
-          .filter(Boolean)
-          .join(" · ");
+        const detail =
+          source.kind === "sitemap" && source.sitemapChecked === false
+            ? t("sitemapState.notChecked")
+            : [t(`sourcesLine.state.${source.state}`), format.number(source.pages), extra]
+                .filter(Boolean)
+                .join(" · ");
         return (
           <span className="inline-flex items-center gap-1.5" key={source.kind}>
             <Tooltip content={detail} semantics="description">
@@ -62,7 +65,7 @@ export function ProjectPagesSources({
                 <span
                   aria-hidden
                   className={
-                    source.state === "connected"
+                    source.state === "connected" && source.sitemapChecked !== false
                       ? "size-1.5 rounded-full bg-green"
                       : source.state === "beta"
                         ? "size-1.5 rounded-full bg-yellow"

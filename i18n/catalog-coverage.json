@@ -281,6 +281,7 @@
     "components/admin/AdminTemporalSchedules.tsx",
     "components/admin/AdminWorkerHealth.tsx",
     "components/admin/AnnouncementEditor.tsx",
+    "components/admin/AssistantSafeguards.tsx",
     "components/admin/DangerousActionGate.tsx",
     "components/admin/InstanceFeatures.tsx",
     "components/admin/InstanceMailSettingsField.tsx",
@@ -306,6 +307,7 @@
     "components/agent-reports/AgentReportDetailLoading.tsx",
     "components/agent-reports/AgentReportKindFilter.tsx",
     "components/agent-reports/challenge-report-layout.ts",
+    "components/agent-reports/ModelPlaygroundReport.tsx",
     "components/agent-reports/SavedAuditPages.tsx",
     "components/ai-research/ai-research-failure-copy.ts",
     "components/ai-research/AiCatalogNotice.tsx",
@@ -314,13 +316,19 @@
     "components/ai-research/AiResearchWorkspaceOutcome.tsx",
     "components/ai-research/model-playground-layout.ts",
     "components/ai-research/ModelPlayground.tsx",
+    "components/ai-research/ModelPlaygroundColumnFooter.tsx",
+    "components/ai-research/ModelPlaygroundColumnFrame.tsx",
     "components/ai-research/ModelPlaygroundColumns.tsx",
     "components/ai-research/ModelPlaygroundComposer.tsx",
     "components/ai-research/ModelPlaygroundHistory.tsx",
     "components/ai-research/ModelPlaygroundLoading.tsx",
     "components/ai-research/ModelPlaygroundMatrix.tsx",
     "components/ai-research/ModelPlaygroundResults.tsx",
+    "components/ai-research/ModelPlaygroundRoutingFields.tsx",
+    "components/ai-research/ModelPlaygroundSetupState.tsx",
     "components/ai-research/ModelPlaygroundSources.tsx",
+    "components/ai-research/ModelPlaygroundTrackDialog.tsx",
+    "components/ai-research/ModelPlaygroundViewTabs.tsx",
     "components/ai-research/useAiResearchCatalogRefresh.ts",
     "components/ai-tracking/ai-visibility-column-layout.ts",
     "components/ai-tracking/AiTrackingPageContent.tsx",
@@ -423,6 +431,22 @@
     "components/annotations/AnnotationsBoard.tsx",
     "components/annotations/AnnotationsLoading.tsx",
     "components/annotations/AnnotationsRuler.tsx",
+    "components/assistant/AssistantFrame.tsx",
+    "components/assistant/AssistantFundingSettings.tsx",
+    "components/assistant/AssistantPanel.tsx",
+    "components/assistant/AssistantProvider.tsx",
+    "components/assistant/AssistantProviderCard.tsx",
+    "components/assistant/AssistantSetupState.tsx",
+    "components/assistant/Composer.tsx",
+    "components/assistant/ComposerControls.tsx",
+    "components/assistant/funding-format.ts",
+    "components/assistant/FundingDetails.tsx",
+    "components/assistant/KeySettings.tsx",
+    "components/assistant/MessageList.tsx",
+    "components/assistant/RunCost.tsx",
+    "components/assistant/SafeMarkdown.tsx",
+    "components/assistant/ToolCard.tsx",
+    "components/assistant/useAssistantConversation.ts",
     "components/audit/audit-columns.tsx",
     "components/audit/audit-export.ts",
     "components/audit/audit-filtering.ts",
@@ -1019,6 +1043,7 @@
     "components/markets/page/MarketTrackingStatus.tsx",
     "components/markets/page/ProjectMarketsMessagesBoundary.tsx",
     "components/markets/page/RestoreMarketDialog.tsx",
+    "components/markets/page/useMarketSpendReview.ts",
     "components/markets/sheet/MarketDeviceKeywordPicker.tsx",
     "components/markets/sheet/new-market-creator-copy.ts",
     "components/markets/sheet/new-market-creator-model.ts",
@@ -1171,6 +1196,7 @@
     "components/pages/ProjectPagesAllPanel.tsx",
     "components/pages/ProjectPagesBody.tsx",
     "components/pages/ProjectPagesEmpty.tsx",
+    "components/pages/ProjectPagesExportButton.tsx",
     "components/pages/ProjectPagesFilters.tsx",
     "components/pages/ProjectPagesLoading.tsx",
     "components/pages/ProjectPagesOverlays.tsx",
@@ -1299,8 +1325,13 @@
     "components/schedules/ArchivedScheduleDetails.tsx",
     "components/schedules/ArchiveScheduleModal.tsx",
     "components/schedules/MarketLabel.tsx",
+    "components/schedules/ReadOnlyScheduleCell.tsx",
     "components/schedules/schedule-editor-field-options.ts",
+    "components/schedules/schedule-keyword-candidates.ts",
+    "components/schedules/schedule-keyword-request.ts",
     "components/schedules/schedule-members-table-columns.tsx",
+    "components/schedules/schedule-state-request.ts",
+    "components/schedules/ScheduleCostReviewDialog.tsx",
     "components/schedules/ScheduleDetailsSummary.tsx",
     "components/schedules/ScheduleEditor.tsx",
     "components/schedules/ScheduleEditorFieldPrimitives.tsx",
@@ -1315,9 +1346,12 @@
     "components/schedules/SchedulerUpgradeBanner.tsx",
     "components/schedules/schedules-table-columns.tsx",
     "components/schedules/SchedulesList.tsx",
+    "components/schedules/SchedulesListActions.tsx",
+    "components/schedules/UnifiedScheduleTable.tsx",
     "components/schedules/UnscheduledKeywordsNotice.tsx",
     "components/schedules/useScheduleMemberRemoval.ts",
     "components/schedules/useScheduleNameLabels.ts",
+    "components/schedules/useScheduleSpendReview.tsx",
     "components/search-insights/drawers/drawer-model.ts",
     "components/search-insights/drawers/drawer-story-fixtures.ts",
     "components/search-insights/drawers/drawer-table-columns.tsx",
@@ -3817,6 +3851,907 @@
       {
         "arguments": [],
         "key": "agentWorkspace.whoCanOpen",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.addKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.aiLimitLink",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.approve",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.ask",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.byok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.categories.destructive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.categories.excluded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.categories.mutation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.categories.paid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.categories.read",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ],
+          [
+            "limit",
+            1
+          ]
+        ],
+        "key": "assistant.characterCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "assistant.charged",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "assistant.chargedEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.chooseFunding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.close",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.connect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.connected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.copy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.credentialActive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.credentialInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.credits",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "limit",
+            1
+          ],
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "assistant.creditsUsed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "used",
+            1
+          ]
+        ],
+        "key": "assistant.creditsUsedOpen",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.deny",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortDefault",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.high",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.low",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.max",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.medium",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.effortHints.xhigh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.high",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.low",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.max",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.medium",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.none",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.efforts.xhigh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.emptyHistory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.accounting_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.approval_conflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.approval_expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.assistant_paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.byok_invalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.byok_missing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.cancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.conversation_busy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.credits_insufficient",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.credits_not_permitted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.credits_paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.credits_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.duplicate_request",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.internal",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.invalid_request",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.limit_exceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.model_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.not_configured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.permission_denied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.pool_exhausted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.pricing_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.project_read_only",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.provider_rate_limited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.provider_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.seo_credits_insufficient",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.team_concurrency_limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.team_daily_limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.timeout",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.errors.usage_unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.estimate",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "assistant.estimated",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "assistant.expiresAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.funding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.fundingKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.fundingNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.fundingSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.fundingSettingsLink",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.fundingSource",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.history",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.input",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.jump",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.keyInput",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.keyInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "last4",
+            1
+          ],
+          [
+            "status",
+            1
+          ]
+        ],
+        "key": "assistant.keyLast4",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.keySaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.manageKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.manageKeys",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "assistant.maximum",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.model",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.modelEffort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.modelNoEffort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.networkError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.networkRetry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.newChat",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.notConnected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.paidWithCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.paidWithKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.pendingDecision",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.placeholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.providerSectionDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.providerSectionTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.removeConfirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.removeKey",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "status",
+            1
+          ]
+        ],
+        "key": "assistant.resultJob",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.retry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.saveFunding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.saveKey",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "seconds",
+            1
+          ]
+        ],
+        "key": "assistant.secondsRemaining",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.selectProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.send",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.checkFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.connectAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.connectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.connectTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.limitsAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.limitsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.limitsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.memberConnectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.memberLimitsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.notReady",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.ready",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.startAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.startDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.startTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.setup.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.sourceCreditsUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.sourceOwn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.sourceTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.approved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.awaiting_approval",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.blocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.cancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.completed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.denied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.proposed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.running",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.running_tool",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.streaming",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.statuses.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.stop",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "minutes",
+            1
+          ]
+        ],
+        "key": "assistant.stopChargeNote",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "target",
+            1
+          ]
+        ],
+        "key": "assistant.target",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.tokenLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.tokenLimitHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.tokenLimitMax",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "assistant.tokenLimitTokens",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "input",
+            1
+          ],
+          [
+            "output",
+            1
+          ]
+        ],
+        "key": "assistant.tokens",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "funding",
+            1
+          ]
+        ],
+        "key": "assistant.toolFunding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.toolFundingSeparate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "assistant.unknown",
         "tags": []
       },
       {
@@ -9372,6 +10307,144 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.features.assistant.all_off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.apply",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.debtAlert",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.hosted_off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.level",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.on",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.platformDaily",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.platformHourly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.reason",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.reasonPlaceholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.reasonRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.saving",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.teamConcurrent",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.teamDaily",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "at",
+            1
+          ],
+          [
+            "reason",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.features.assistant.tripBanner",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.tripReasonCap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.tripReasonManual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.tripReasonUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "cap",
+            1
+          ],
+          [
+            "spend",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.features.assistant.tripSpend",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.features.assistant.unsettled",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.features.challenge",
         "tags": []
       },
@@ -14815,12 +15888,67 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.actualRoute",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.addEngine",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.addModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.allowedProviders",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "providers",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.allowedProviderSet",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.allowedProvidersHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.allowedProvidersInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.answers",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.answersHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.apiResponse",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.applicationTruncated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.basis",
         "tags": []
       },
       {
@@ -14839,6 +15967,46 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.brandsHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.cacheAccounting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.cacheRead",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.cacheTtl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.cacheWrite",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.citationOccurrences",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.citationsTruncated",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -14850,7 +16018,64 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.compareLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.connectAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.connectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.connectTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.costEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ],
+          [
+            "certainty",
+            5
+          ],
+          [
+            "qualifier",
+            1
+          ],
+          [
+            "scope",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.costLine",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.costUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.credits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.duration",
         "tags": []
       },
       {
@@ -14860,7 +16085,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.emptySource",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.emptyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.estimatedUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.excludes",
         "tags": []
       },
       {
@@ -14875,7 +16115,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.fundingCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.fundingOwnKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.hideCitations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.hideSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.history",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.historyApiResponse",
         "tags": []
       },
       {
@@ -14885,7 +16150,27 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.includes",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.inputTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.lead",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.legacyExcerpt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.localEstimate",
         "tags": []
       },
       {
@@ -14900,7 +16185,61 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.memberConnectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ],
+          [
+            "certainty",
+            5
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.moneyAmount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.noRetainedSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.notNamed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.notStarted",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "workspace",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.observedWorkspace",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "retained",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.omittedUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.outputTokens",
         "tags": []
       },
       {
@@ -14935,7 +16274,286 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetCapacity",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetConflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetForbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetFutureSupport",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetInvalidTopic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetOpen",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetSave",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.presetSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.promptLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.providerSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.providerTruncated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.rateCard",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reasoningTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.refreshModels",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.remove",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.reportBrandsCaptured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportBrandsUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "language",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.reportCaption",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportedProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.check_failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.dismissed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.read_only",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.saving",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.storage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.too_large",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportHints.unclassified",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportOpen",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportPendingHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportSavedHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.check_failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.dismissed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.read_only",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.saving",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.storage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.too_large",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportStatus.unclassified",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "cost",
+            1
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.reportTotalCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.reportUnknownCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.retainedAnswer",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "omitted",
+            2
+          ],
+          [
+            "retained",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.retentionCounts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.routingViolation",
         "tags": []
       },
       {
@@ -14980,7 +16598,71 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.scopeUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.scrollAnswers",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.searchCalls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.searchTokens",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.seconds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.sharedPayment",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.showCitations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.showSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.sourceListTruncated",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "end",
+            2
+          ],
+          [
+            "start",
+            2
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.sourceRange",
         "tags": []
       },
       {
@@ -15005,6 +16687,51 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.sourcesHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.spendNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.subtotal",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectAiResearch.modelPlayground.tokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.tokensUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.total",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.totalUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.trackedScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.trackError",
         "tags": []
       },
@@ -15020,6 +16747,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelPlayground.trackRequiresRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPlayground.trackSaved",
         "tags": []
       },
@@ -15031,6 +16763,41 @@
       {
         "arguments": [],
         "key": "projectAiResearch.modelPlayground.trackUnassigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.unknownComponents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.unlinkedSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.unreported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.upstreamInference",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.usageCompleteness",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.usageDetails",
         "tags": []
       },
       {
@@ -15066,6 +16833,26 @@
       {
         "arguments": [],
         "key": "projectAiResearch.modelPlayground.viewLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.workspaceHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.workspaceId",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.workspaceInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPlayground.workspaceMismatch",
         "tags": []
       },
       {
@@ -21020,6 +22807,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleRestore",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.aiScheduleUpdate",
         "tags": []
       },
@@ -21131,6 +22923,36 @@
       {
         "arguments": [],
         "key": "projectAudit.presentation.event.apiKeyRolled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantActionApproved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantActionDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantActionExecuted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantFundingUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantKeyRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.assistantKeySaved",
         "tags": []
       },
       {
@@ -29594,6 +31416,16 @@
       },
       {
         "arguments": [],
+        "key": "projectIntegrations.categories.modelDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.categories.modelTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectIntegrations.categories.serpDescription",
         "tags": []
       },
@@ -29610,6 +31442,11 @@
           ]
         ],
         "key": "projectIntegrations.drawer.accountBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.drawer.ahrefsSyncSchedule",
         "tags": []
       },
       {
@@ -30296,6 +32133,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.oauth.gscSelecting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.gscSyncSchedule",
         "tags": []
       },
       {
@@ -31667,6 +33509,11 @@
       },
       {
         "arguments": [],
+        "key": "projectMarkets.copyMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectMarkets.country",
         "tags": []
       },
@@ -31884,6 +33731,11 @@
           ]
         ],
         "key": "projectMarkets.editTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.emptyMethod",
         "tags": []
       },
       {
@@ -32119,6 +33971,11 @@
           ]
         ],
         "key": "projectMarkets.pasteLineMissingKeyword",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.pasteMethod",
         "tags": []
       },
       {
@@ -33534,6 +35391,36 @@
       },
       {
         "arguments": [],
+        "key": "projectPages.export.csv",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.export.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.export.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.export.hint",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectPages.export.tooLarge",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectPages.filters.any",
         "tags": []
       },
@@ -33822,7 +35709,42 @@
       },
       {
         "arguments": [],
+        "key": "projectPages.sitemapState.absenceNotChecked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.sitemapState.freshnessHint",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectPages.sitemapState.lastRead",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectPages.sitemapState.listed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.sitemapState.notChecked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.sitemapState.notCheckedCell",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectPages.sitemapState.notCheckedHint",
         "tags": []
       },
       {
@@ -45381,11 +47303,6 @@
       },
       {
         "arguments": [],
-        "key": "projectRankTracker.keywordImport.management.schedule.default",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.schedule.depth",
         "tags": []
       },
@@ -51358,11 +53275,6 @@
       },
       {
         "arguments": [],
-        "key": "projectRuns.schedules.archiveDialog.defaultNotice",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectRuns.schedules.archiveDialog.manualChecks",
         "tags": []
       },
@@ -51449,6 +53361,16 @@
           ]
         ],
         "key": "projectRuns.schedules.cadenceLabels.every",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "minute",
+            1
+          ]
+        ],
+        "key": "projectRuns.schedules.cadenceLabels.hourly",
         "tags": []
       },
       {
@@ -51540,11 +53462,6 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.dayOfMonth",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.default",
         "tags": []
       },
       {
@@ -51710,31 +53627,6 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.editor.customPreview",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.editor.defaultEnabled",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.editor.defaultExisting",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.editor.defaultExistingDescription",
-        "tags": []
-      },
-      {
-        "arguments": [
-          [
-            "name",
-            1
-          ]
-        ],
-        "key": "projectRuns.schedules.editor.defaultReplacement",
         "tags": []
       },
       {
@@ -52055,11 +53947,6 @@
       },
       {
         "arguments": [],
-        "key": "projectRuns.schedules.editor.useAsDefault",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectRuns.schedules.empty.archivedDescription",
         "tags": []
       },
@@ -52076,6 +53963,51 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.empty.currentTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.commandRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.createUnsupported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.dataSyncArchive",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "syncKind",
+            1
+          ]
+        ],
+        "key": "projectRuns.schedules.errors.dataSyncUnsupported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.kindRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.notFound",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.projectRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.errors.transition",
         "tags": []
       },
       {
@@ -52181,11 +54113,6 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.list.blocked",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.list.defaultHint",
         "tags": []
       },
       {
@@ -52489,22 +54416,17 @@
       },
       {
         "arguments": [],
-        "key": "projectRuns.schedules.summary.defaultHint",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRuns.schedules.summary.makeDefault",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectRuns.schedules.summary.nextPending",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectRuns.schedules.summary.nextRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.nonEmptyDeletion",
         "tags": []
       },
       {
@@ -52550,6 +54472,156 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.timezoneSearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.checks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.data_sync",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.frequencies.daily",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.frequencies.manual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.frequencies.monthly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.frequencies.weekly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.inspectionSettings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.lastEvidenceHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.lastRun",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.schedules.unified.monitorCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "projectRuns.schedules.unified.monthlyCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.noRecordedRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.approval_expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.inspection_budget_off",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.instance_disabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.integration_disconnected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.limit_reached",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.reasons.recurring_disabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.states.active",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.states.archived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.states.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.syncs.domain_rating",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.syncs.page_indexing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.syncs.search_console",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.syncs.sitemap",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.unified.syncSaveFailed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.schedules.unified.unknownCosts",
         "tags": []
       },
       {
@@ -57376,6 +59448,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleRestore",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.aiScheduleUpdate",
         "tags": []
       },
@@ -57487,6 +59564,36 @@
       {
         "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.apiKeyRolled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantActionApproved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantActionDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantActionExecuted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantFundingUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantKeyRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.assistantKeySaved",
         "tags": []
       },
       {
@@ -66798,6 +68905,21 @@
       },
       {
         "arguments": [],
+        "key": "projectUsageCosts.drawer.customType",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectUsageCosts.drawer.customTypeHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectUsageCosts.drawer.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectUsageCosts.drawer.discount",
         "tags": []
       },
@@ -66809,6 +68931,11 @@
       {
         "arguments": [],
         "key": "projectUsageCosts.drawer.errors.amount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectUsageCosts.drawer.errors.customType",
         "tags": []
       },
       {
@@ -66884,6 +69011,11 @@
       {
         "arguments": [],
         "key": "projectUsageCosts.drawer.name",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectUsageCosts.drawer.nameHint",
         "tags": []
       },
       {
@@ -67082,6 +69214,11 @@
       },
       {
         "arguments": [],
+        "key": "researchHistory.allModels",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "researchHistory.cached",
         "tags": []
       },
@@ -67127,6 +69264,11 @@
       },
       {
         "arguments": [],
+        "key": "researchHistory.filterModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "researchHistory.loading",
         "tags": []
       },
@@ -67147,7 +69289,22 @@
       },
       {
         "arguments": [],
+        "key": "researchHistory.noMatches",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "researchHistory.noMatchesDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "researchHistory.openAllRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "researchHistory.openingRun",
         "tags": []
       },
       {
@@ -67168,6 +69325,11 @@
           ]
         ],
         "key": "researchHistory.pinned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "researchHistory.pinnedTab",
         "tags": []
       },
       {
@@ -67193,6 +69355,11 @@
       {
         "arguments": [],
         "key": "researchHistory.searchLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "researchHistory.searchModels",
         "tags": []
       },
       {
@@ -72374,6 +74541,11 @@
       },
       {
         "arguments": [],
+        "key": "shared.localMonitors.modes.archived",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.localMonitors.modes.manual",
         "tags": []
       },
@@ -72500,6 +74672,11 @@
       {
         "arguments": [],
         "key": "shared.localMonitors.readiness.paused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.readiness.schedule_archived",
         "tags": []
       },
       {
@@ -76563,6 +78740,114 @@
           ]
         ],
         "key": "shared.scheduleName.weekly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.after",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.before",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.capacity",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "dimension",
+            1
+          ],
+          [
+            "limit",
+            1
+          ],
+          [
+            "projected",
+            1
+          ]
+        ],
+        "key": "shared.scheduleReview.capacityDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.changed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.dimensions.promptSchedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.dimensions.scheduledKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.dimensions.scheduleFrequencies",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.emptyScheduleCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.previewFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.reasons.cost_increase",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.reasons.manual_to_scheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.reasons.price_unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.reasons.provider_route_change",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.scheduleReview.unknown",
         "tags": []
       },
       {

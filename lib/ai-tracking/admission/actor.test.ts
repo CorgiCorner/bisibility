@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const db = vi.hoisted(() => ({
   apiKey: { findFirst: vi.fn() },
+  membership: { findUnique: vi.fn(async () => ({ role: "member" })) },
   personalAccessToken: { findFirst: vi.fn() },
   oauthClient: { findUnique: vi.fn() },
   oauthConsent: { findFirst: vi.fn() },
@@ -32,7 +33,12 @@ it("fails closed when original membership is removed, without owner fallback", a
   );
 });
 it("checks project-key affinity, revocation, expiry and current write scope", async () => {
-  db.apiKey.findFirst.mockResolvedValue({ scopes: ["read"], revokedAt: null, expiresAt: null });
+  db.apiKey.findFirst.mockResolvedValue({
+    createdById: "creator",
+    scopes: ["read"],
+    revokedAt: null,
+    expiresAt: null,
+  });
   await expect(
     reauthorizeTrackingActor("project", {
       actorId: "synthetic",
@@ -40,6 +46,7 @@ it("checks project-key affinity, revocation, expiry and current write scope", as
     }),
   ).rejects.toThrow(/write scope/);
   db.apiKey.findFirst.mockResolvedValue({
+    createdById: "creator",
     scopes: ["write"],
     revokedAt: new Date(),
     expiresAt: null,
@@ -50,7 +57,12 @@ it("checks project-key affinity, revocation, expiry and current write scope", as
       actorCredential: { id: "key", kind: "project_key" },
     }),
   ).rejects.toThrow(/revoked/);
-  db.apiKey.findFirst.mockResolvedValue({ scopes: ["write"], revokedAt: null, expiresAt: null });
+  db.apiKey.findFirst.mockResolvedValue({
+    createdById: "creator",
+    scopes: ["write"],
+    revokedAt: null,
+    expiresAt: null,
+  });
   await reauthorizeTrackingActor("project", {
     actorId: "synthetic",
     actorCredential: { id: "key", kind: "project_key" },
@@ -80,4 +92,19 @@ it("checks personal token identity and user deactivation independently", async (
   expect(db.personalAccessToken.findFirst).toHaveBeenCalledWith(
     expect.objectContaining({ where: { id: "token", userId: "user" } }),
   );
+});
+it("a write key whose creator was lowered to viewer loses its write scope", async () => {
+  db.apiKey.findFirst.mockResolvedValue({
+    createdById: "creator",
+    scopes: ["read", "write"],
+    revokedAt: null,
+    expiresAt: null,
+  });
+  db.membership.findUnique.mockResolvedValueOnce({ role: "viewer" });
+  await expect(
+    reauthorizeTrackingActor("project", {
+      actorId: "synthetic",
+      actorCredential: { id: "key", kind: "project_key" },
+    }),
+  ).rejects.toThrow(/write scope/);
 });

@@ -2,8 +2,9 @@
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { publishCapacityProblem } from "@/lib/capacity/notice-store";
 import { useZodForm } from "@/lib/forms/use-zod-form";
+import type { ScheduleReviewSubmission } from "@/lib/schedules/review-commit";
+import { rankMembershipChange } from "@/lib/schedules/web-change";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
@@ -13,6 +14,9 @@ import {
 } from "./ScheduleAssignmentDestination";
 import { ScheduleKeywordCandidateRow } from "./ScheduleKeywordCandidateRow";
 import { ScheduleKeywordFilters } from "./ScheduleKeywordFilters";
+import { filterCandidates } from "./schedule-keyword-candidates";
+import { assignScheduleKeywords } from "./schedule-keyword-request";
+import { ScheduleReviewCancelled, useScheduleSpendReview } from "./useScheduleSpendReview";
 export type ScheduleKeywordCandidate = {
   assigned?: boolean;
   checks: number;
@@ -41,32 +45,12 @@ const selectedKeywordsSchema = z
   .object({ keywordIds: z.array(z.string().min(1)).min(1).max(500) })
   .strict();
 type SelectedKeywordsForm = z.infer<typeof selectedKeywordsSchema>;
-type AssignScheduleKeywordsForm = SelectedKeywordsForm & { projectId: string; scheduleId: string };
+export type AssignScheduleKeywordsForm = SelectedKeywordsForm & {
+  projectId: string;
+  scheduleId: string;
+  review?: ScheduleReviewSubmission;
+};
 type Scope = "all" | "selected";
-async function assignScheduleKeywords(input: AssignScheduleKeywordsForm) {
-  const response = await fetch(`/api/check-schedules/${input.scheduleId}/keywords`, {
-    body: JSON.stringify({ keywordIds: input.keywordIds, projectId: input.projectId }),
-    headers: { "content-type": "application/json" },
-    method: "POST",
-  });
-  if (!response.ok) {
-    publishCapacityProblem(await response.json().catch(() => null));
-    throw new Error("schedule_add_keywords_failed");
-  }
-}
-function filterCandidates(
-  candidates: readonly ScheduleKeywordCandidate[],
-  filters: { device: string; market: string; search: string; tag: string },
-) {
-  const query = filters.search.trim().toLowerCase();
-  return candidates.filter(
-    (candidate) =>
-      (!query || candidate.keyword.toLowerCase().includes(query)) &&
-      (filters.tag === "all" || candidate.tags.includes(filters.tag)) &&
-      (filters.market === "all" || candidate.market === filters.market) &&
-      (filters.device === "all" || candidate.device === filters.device),
-  );
-}
 export function AddKeywordsDrawer({
   assignKeywordsAction = assignScheduleKeywords,
   candidates,
@@ -82,6 +66,7 @@ export function AddKeywordsDrawer({
   schedules,
 }: Readonly<AddKeywordsDrawerProps>) {
   const t = useTranslations("projectRuns.schedules");
+  const spendReview = useScheduleSpendReview(projectId);
   const [selectedScheduleId, setSelectedScheduleId] = useState(scheduleId);
   const destination = schedules?.find((schedule) => schedule.publicId === selectedScheduleId);
   const destinationId = schedules ? (destination?.publicId ?? "") : scheduleId;
@@ -115,12 +100,16 @@ export function AddKeywordsDrawer({
     form.setValue("keywordIds", next, { shouldValidate: true });
   }
 
-  function close() {
+  function resetAndClose() {
     setScope("all");
     setSelectedIds([]);
     setSubmitError(null);
     form.reset({ keywordIds: [] });
     onClose();
+  }
+
+  function close() {
+    if (!form.formState.isSubmitting) resetAndClose();
   }
 
   function toggleCandidate(candidate: ScheduleKeywordCandidate) {
@@ -142,136 +131,162 @@ export function AddKeywordsDrawer({
       if (onSelect) onSelect(values.keywordIds);
       else {
         if (!destinationId) return;
-        await assignKeywordsAction({ ...values, projectId, scheduleId: destinationId });
+        await spendReview.run(
+          rankMembershipChange(projectId, destinationId, values.keywordIds),
+          (review) =>
+            assignKeywordsAction({
+              ...values,
+              projectId,
+              scheduleId: destinationId,
+              ...(review ? { review } : {}),
+            }),
+        );
         onAssigned?.();
       }
-      close();
-    } catch {
+      resetAndClose();
+    } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       setSubmitError(t("drawer.submitFailed"));
     }
   }
   return (
-    <AppDrawer
-      footer={
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <span className="min-w-0 text-[11.5px] leading-5 text-fg-muted">
-            {selectedIds.length
-              ? t("drawer.selected", { count: selectedIds.length })
-              : t("drawer.choose")}
-          </span>
-          <div className="flex shrink-0 items-center gap-2.5">
-            <Button onClick={close} type="button" variant="ghost">
-              {t("cancel")}
-            </Button>
-            <Button
-              disabled={selectedIds.length === 0 || (!onSelect && !destinationId)}
-              form="schedule-add-keywords-form"
-              loading={form.formState.isSubmitting}
-              loadingLabel={t("drawer.adding")}
-              type="submit"
-            >
+    <>
+      {spendReview.dialog}
+      <AppDrawer
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <span className="min-w-0 text-[11.5px] leading-5 text-fg-muted">
               {selectedIds.length
-                ? t("drawer.add", { count: selectedIds.length })
-                : t("drawer.addKeywords")}
-            </Button>
-          </div>
-        </div>
-      }
-      onClose={close}
-      open={open}
-      title={
-        <span className="block">
-          <span className="block">{t("drawer.addKeywords")}</span>
-          {!schedules || destination ? (
-            <span className="mt-1 block text-[12px] font-normal text-fg-muted">
-              {t("drawer.toSchedule", { name: destination?.name ?? scheduleName })}
+                ? t("drawer.selected", { count: selectedIds.length })
+                : t("drawer.choose")}
             </span>
-          ) : null}
-        </span>
-      }
-    >
-      <form
-        className="flex min-h-0 flex-1 flex-col"
-        id="schedule-add-keywords-form"
-        onSubmit={(event) => {
-          event.stopPropagation();
-          void form.handleSubmit(submit)(event);
-        }}
+            <div className="flex shrink-0 items-center gap-2.5">
+              <Button
+                disabled={form.formState.isSubmitting}
+                onClick={close}
+                type="button"
+                variant="ghost"
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                disabled={selectedIds.length === 0 || (!onSelect && !destinationId)}
+                form="schedule-add-keywords-form"
+                loading={form.formState.isSubmitting}
+                loadingLabel={t("drawer.adding")}
+                type="submit"
+              >
+                {selectedIds.length
+                  ? t("drawer.add", { count: selectedIds.length })
+                  : t("drawer.addKeywords")}
+              </Button>
+            </div>
+          </div>
+        }
+        onClose={close}
+        open={open}
+        title={
+          <span className="block">
+            <span className="block">{t("drawer.addKeywords")}</span>
+            {!schedules || destination ? (
+              <span className="mt-1 block text-[12px] font-normal text-fg-muted">
+                {t("drawer.toSchedule", { name: destination?.name ?? scheduleName })}
+              </span>
+            ) : null}
+          </span>
+        }
       >
-        {schedules ? (
-          <ScheduleAssignmentDestination
-            disabled={form.formState.isSubmitting}
-            onChange={setSelectedScheduleId}
-            schedules={schedules}
-            value={destinationId}
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          id="schedule-add-keywords-form"
+          onSubmit={(event) => {
+            event.stopPropagation();
+            void form.handleSubmit(submit)(event);
+          }}
+        >
+          {schedules ? (
+            <ScheduleAssignmentDestination
+              disabled={form.formState.isSubmitting}
+              onChange={setSelectedScheduleId}
+              schedules={schedules}
+              value={destinationId}
+            />
+          ) : null}
+          <ScheduleKeywordFilters
+            device={device}
+            market={market}
+            tag={tag}
+            search={search}
+            devices={devices}
+            markets={markets}
+            tags={tags}
+            matchingCount={matchingCandidates.length}
+            onDeviceChange={setDevice}
+            onMarketChange={setMarket}
+            onTagChange={setTag}
+            onSearchChange={setSearch}
           />
-        ) : null}
-        <ScheduleKeywordFilters
-          device={device}
-          market={market}
-          tag={tag}
-          search={search}
-          devices={devices}
-          markets={markets}
-          tags={tags}
-          matchingCount={matchingCandidates.length}
-          onDeviceChange={setDevice}
-          onMarketChange={setMarket}
-          onTagChange={setTag}
-          onSearchChange={setSearch}
-        />
-        {activeFilters || selectedIds.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5">
-            <div className="flex items-center gap-1.5">
-              {activeFilters ? (
-                <Button onClick={selectAllMatching} size="xs" type="button" variant="secondary">
-                  {allMatchesSelected
-                    ? t("drawer.clearSelection", { count: selectedIds.length })
-                    : t("drawer.selectAll", { count: selectableMatches.length })}
-                </Button>
-              ) : null}
+          {activeFilters || selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5">
+              <div className="flex items-center gap-1.5">
+                {activeFilters ? (
+                  <Button onClick={selectAllMatching} size="xs" type="button" variant="secondary">
+                    {allMatchesSelected
+                      ? t("drawer.clearSelection", { count: selectedIds.length })
+                      : t("drawer.selectAll", { count: selectableMatches.length })}
+                  </Button>
+                ) : null}
+                {selectedIds.length ? (
+                  <Button
+                    onClick={() => updateSelected([])}
+                    size="xs"
+                    type="button"
+                    variant="ghost"
+                  >
+                    {t("drawer.clear")}
+                  </Button>
+                ) : null}
+              </div>
               {selectedIds.length ? (
-                <Button onClick={() => updateSelected([])} size="xs" type="button" variant="ghost">
-                  {t("drawer.clear")}
-                </Button>
+                <SegmentedControl
+                  ariaLabel={t("drawer.listScope")}
+                  fitContent
+                  onChange={setScope}
+                  options={[
+                    { label: t("all"), value: "all" },
+                    {
+                      label: t("drawer.selected", { count: selectedIds.length }),
+                      value: "selected",
+                    },
+                  ]}
+                  size="xs"
+                  value={scope}
+                />
               ) : null}
             </div>
-            {selectedIds.length ? (
-              <SegmentedControl
-                ariaLabel={t("drawer.listScope")}
-                fitContent
-                onChange={setScope}
-                options={[
-                  { label: t("all"), value: "all" },
-                  { label: t("drawer.selected", { count: selectedIds.length }), value: "selected" },
-                ]}
-                size="xs"
-                value={scope}
-              />
-            ) : null}
-          </div>
-        ) : null}
-        {submitError ? (
-          <p className="m-0 pt-3 text-[12px] text-red-text" role="alert">
-            {submitError}
-          </p>
-        ) : null}
-        <div className="mt-1.5 min-h-0 flex-1 overflow-y-auto">
-          {visibleCandidates.map((candidate) => (
-            <ScheduleKeywordCandidateRow
-              candidate={candidate}
-              key={candidate.id}
-              onToggle={() => toggleCandidate(candidate)}
-              selected={selectedSet.has(candidate.id)}
-            />
-          ))}
-          {visibleCandidates.length === 0 ? (
-            <p className="m-0 px-3 py-8 text-center text-[12px] text-fg-muted">
-              {t("drawer.noMatches")}
+          ) : null}
+          {submitError ? (
+            <p className="m-0 pt-3 text-[12px] text-red-text" role="alert">
+              {submitError}
             </p>
           ) : null}
-        </div>
-      </form>
-    </AppDrawer>
+          <div className="mt-1.5 min-h-0 flex-1 overflow-y-auto">
+            {visibleCandidates.map((candidate) => (
+              <ScheduleKeywordCandidateRow
+                candidate={candidate}
+                key={candidate.id}
+                onToggle={() => toggleCandidate(candidate)}
+                selected={selectedSet.has(candidate.id)}
+              />
+            ))}
+            {visibleCandidates.length === 0 ? (
+              <p className="m-0 px-3 py-8 text-center text-[12px] text-fg-muted">
+                {t("drawer.noMatches")}
+              </p>
+            ) : null}
+          </div>
+        </form>
+      </AppDrawer>
+    </>
   );
 }

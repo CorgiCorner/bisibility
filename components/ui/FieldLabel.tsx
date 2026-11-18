@@ -7,12 +7,14 @@ export type FieldLabelProps = {
   help?: string;
   htmlFor?: string;
   label: ReactNode;
+  suffix?: ReactNode;
 };
 
-export function FieldLabel({ className, help, htmlFor, label }: Readonly<FieldLabelProps>) {
+export function FieldLabel({ className, help, htmlFor, label, suffix }: Readonly<FieldLabelProps>) {
   return (
     <span className={cn("inline-flex items-center gap-1", className)}>
       {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : <span>{label}</span>}
+      {suffix}
       {help ? <InfoTooltip size="label" text={help} /> : null}
     </span>
   );

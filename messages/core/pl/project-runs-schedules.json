@@ -18,7 +18,6 @@
       "checks": "{count, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}}",
       "checksLabel": "Sprawdzenia",
       "current": "Bieżące",
-      "default": "Domyślny",
       "device": "Urządzenie",
       "frequency": "Częstotliwość",
       "frequencyDaily": "Codziennie",
@@ -78,7 +77,6 @@
       },
       "archiveDialog": {
         "body": "Przyszłe przebiegi zostaną zatrzymane. Już uruchomione przebiegi mogą się zakończyć, a wcześniejsze wyniki pozostaną dostępne.",
-        "defaultNotice": "Nowe słowa pozostają ręczne, dopóki nie dodasz ich do harmonogramu.",
         "manualChecks": "Sprawdzenia ręczne",
         "moveKeywords": "Przenieś {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} do",
         "title": "Zarchiwizować harmonogram „{name}”?"
@@ -98,6 +96,7 @@
         "withinWindow": "W ciągu {minutes, number} min od {time}"
       },
       "cadenceLabels": {
+        "hourly": "Co godzinę, :{minute}",
         "custom": "Własny – {expression}",
         "dayOfMonth": "{day, selectordinal, other {#.}}",
         "daily": "Codziennie, {time}",
@@ -142,10 +141,6 @@
         "cronTooLong": "Wyrażenie cron może mieć najwyżej {maximum, number} znaków.",
         "customCron": "Własny cron",
         "customPreview": "Harmonogram z własnym wyrażeniem cron.",
-        "defaultEnabled": "Podpowiadaj ten harmonogram przy planowaniu. Słowa są dodawane tylko po ich wybraniu.",
-        "defaultExisting": "Domyślna sugestia",
-        "defaultExistingDescription": "Podpowiadany przy wyborze harmonogramu. Słowa nie dołączają automatycznie.",
-        "defaultReplacement": "Zastępuje {name} jako sugerowany harmonogram. Obecne przypisania pozostają bez zmian.",
         "depth": "Głębokość",
         "everyWeekday": "W każdy dzień roboczy o 06:00.",
         "invalidCron": "Podaj prawidłowe pięcioczłonowe wyrażenie cron.",
@@ -184,7 +179,6 @@
         "thirtyMinuteSteps": "Użyj :00 lub :30, np. 09:00 lub 09:30.",
         "time24": "Godzina, format 24-godzinny",
         "topDepth": "Top {depth, number}",
-        "useAsDefault": "Użyj jako domyślnej sugestii",
         "nameHelp": "To tylko nazwa. Częstotliwość sprawdzeń zmienisz poniżej.",
         "saveSessionExpired": "Sesja wygasła. Zaloguj się ponownie i spróbuj zapisać.",
         "saveForbidden": "Nie masz już uprawnień do edycji tego harmonogramu.",
@@ -218,7 +212,6 @@
       "list": {
         "actions": "Akcje",
         "blocked": "Następny przebieg zablokowany – miesięczny limit",
-        "defaultHint": "Podpowiadany przy wyborze harmonogramu. Słowa nie dołączają automatycznie.",
         "memberMeta": "{markets, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}} x {devices, plural, one {# urządzenie} few {# urządzenia} many {# urządzeń} other {# urządzenia}}",
         "members": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} = {targets, plural, one {# sprawdzenie na przebieg} few {# sprawdzenia na przebieg} many {# sprawdzeń na przebieg} other {# sprawdzenia na przebieg}}",
         "noAssignedKeywords": "Brak przypisanych słów kluczowych",
@@ -252,14 +245,60 @@
         "nextRun": "Następne uruchomienie",
         "perMonth": "Szacunkowo miesięcznie",
         "nextPending": "Planowanie w toku",
-        "makeDefault": "Ustaw jako domyślny",
-        "defaultHint": "Domyślny harmonogram to sugestia przy wyborze. Nowe słowa pozostają bez harmonogramu, dopóki ich nie przypiszesz.",
+        "nonEmptyDeletion": "Przenieś lub usuń wszystkie słowa kluczowe przed usunięciem tego harmonogramu. Możesz też go zarchiwizować.",
         "unscheduledCount": "{count, plural, one {# słowo nie ma harmonogramu.} few {# słowa nie mają harmonogramu.} many {# słów nie ma harmonogramu.} other {# słowa nie mają harmonogramu.}}",
         "addToSchedule": "Dodaj do harmonogramu"
       },
       "planning": {
         "delay": "Planowane uruchomienia zwykle pojawiają się w Runs w ciągu {minutes, number} min. Sprawdzenia odbywają się zgodnie z harmonogramem.",
         "delayUnknown": "Planowane uruchomienia mogą pojawić się w Runs z krótkim opóźnieniem. Sprawdzenia odbywają się zgodnie z harmonogramem."
+      },
+      "unified": {
+        "syncSaveFailed": "Nie udało się zapisać harmonogramu synchronizacji.",
+        "inspectionSettings": "Ustawienia sprawdzania adresów URL",
+        "checks": "Kontrole",
+        "data_sync": "Synchronizacja danych",
+        "monthlyCost": "Szacowany koszt miesięczny: {amount}",
+        "unknownCosts": "{count, plural, one {# wycena niedostępna} few {# wyceny niedostępne} many {# wycen niedostępnych} other {# wyceny niedostępnej}}",
+        "lastRun": "Ostatni zapisany przebieg",
+        "noRecordedRun": "Brak zapisanego przebiegu",
+        "lastEvidenceHint": "Najnowszy zachowany zapis",
+        "monitorCount": "{count, plural, one {# monitor} few {# monitory} many {# monitorów} other {# monitora}}",
+        "states": {
+          "active": "Aktywny",
+          "paused": "Wstrzymany",
+          "archived": "Zarchiwizowany"
+        },
+        "reasons": {
+          "approval_expired": "Zgoda wygasła",
+          "limit_reached": "Limit zgody wyczerpany",
+          "recurring_disabled": "Cykliczne monitory wyłączone",
+          "instance_disabled": "Wyłączone w tej instancji",
+          "integration_disconnected": "Integracja rozłączona",
+          "inspection_budget_off": "Inspekcja w tle jest wyłączona"
+        },
+        "syncs": {
+          "domain_rating": "Ocena domeny",
+          "sitemap": "Synchronizacja mapy witryny",
+          "search_console": "Import z Search Console",
+          "page_indexing": "Indeksowanie stron"
+        },
+        "frequencies": {
+          "manual": "Ręcznie",
+          "daily": "Codziennie",
+          "weekly": "Co tydzień",
+          "monthly": "Co miesiąc"
+        }
+      },
+      "errors": {
+        "commandRequired": "Do zmiany tego harmonogramu potrzebna jest wersja monitora.",
+        "createUnsupported": "Można tworzyć tylko harmonogramy rankingu i monitorowania promptów.",
+        "dataSyncArchive": "Tej synchronizacji danych nie można zarchiwizować.",
+        "dataSyncUnsupported": "Tej synchronizacji danych nie można jeszcze włączyć ani wyłączyć dla projektu ({syncKind}).",
+        "kindRequired": "Rodzaj synchronizacji danych jest wymagany.",
+        "notFound": "Nie znaleziono harmonogramu.",
+        "projectRequired": "Do zmiany tego harmonogramu potrzebny jest identyfikator projektu.",
+        "transition": "Przywróć zarchiwizowany harmonogram do wstrzymania, zanim go aktywujesz."
       }
     }
   }

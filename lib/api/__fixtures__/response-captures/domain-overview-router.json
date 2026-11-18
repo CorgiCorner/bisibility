@@ -143,7 +143,7 @@
         "errors": {
           "formErrors": [],
           "fieldErrors": {
-            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+            "max_cost_cents": ["A provider cost cap or accepted payment quote is required."]
           }
         }
       },
@@ -185,7 +185,7 @@
         "errors": {
           "formErrors": [],
           "fieldErrors": {
-            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+            "max_cost_cents": ["A provider cost cap or accepted payment quote is required."]
           }
         }
       },
@@ -227,7 +227,7 @@
         "errors": {
           "formErrors": [],
           "fieldErrors": {
-            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+            "max_cost_cents": ["A provider cost cap or accepted payment quote is required."]
           }
         }
       },

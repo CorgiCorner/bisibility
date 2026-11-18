@@ -3,6 +3,7 @@
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { useToast } from "@/components/ui/toast-context";
 import type { CompareView } from "@/lib/pages/compare-model";
+import type { ProjectPagesCsvResult, ProjectPagesExportColumn } from "@/lib/pages/export-csv";
 import type {
   ActivePageSnapshot,
   ExistingVsNewView,
@@ -19,7 +20,7 @@ import type {
 import {
   type ProjectPagesQuery,
   projectPagesHref,
-  type projectPagesLoadRequest,
+  projectPagesLoadRequest,
 } from "@/lib/pages/url-state";
 import type { PageVitalsActionResult } from "@/lib/pagespeed/view";
 import type { PageTagFormValues } from "@/lib/schemas/page-tag";
@@ -34,6 +35,12 @@ import { useProjectPagesColumns } from "./project-pages-columns";
 import { projectPagesBlocks, projectPagesLayoutClassName } from "./project-pages-layout";
 
 export type ProjectPagesActions = {
+  exportCsv?: (
+    input: ReturnType<typeof projectPagesLoadRequest> & {
+      columns: ProjectPagesExportColumn[];
+      window: { from: string; to: string };
+    },
+  ) => Promise<ProjectPagesCsvResult>;
   addManual: (input: { projectId: string; text: string }) => Promise<AddManualProjectPagesResult>;
   checkVitals: (input: { paths: string[]; projectId: string }) => Promise<PageVitalsActionResult>;
   load: (input: ReturnType<typeof projectPagesLoadRequest>) => Promise<ProjectPagesListResult>;
@@ -80,6 +87,7 @@ function ProjectPagesPanel({
   canDeleteTags,
   canEditTags,
   canWrite,
+  canExport = true,
   initialComparison: comparison = null,
   initialCompare: compare = null,
   initialList: list,
@@ -94,6 +102,7 @@ function ProjectPagesPanel({
   canDeleteTags: boolean;
   canEditTags: boolean;
   canWrite: boolean;
+  canExport?: boolean;
   initialComparison?: ExistingVsNewView | null;
   initialCompare?: CompareView | null;
   initialList: ProjectPagesListResult;
@@ -118,6 +127,8 @@ function ProjectPagesPanel({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
+  const exportAction = actions.exportCsv;
+  const exportWindow = list.period;
   const columns = useProjectPagesColumns(projectId, sources, snapshot !== null, list.conversions);
   const narrowed = Boolean(
     query.search || query.index || query.coverage || query.cwv || query.source || query.tag,
@@ -174,6 +185,16 @@ function ProjectPagesPanel({
         canEdit={editTags}
         canWrite={writable}
         columns={columns}
+        exportCsv={
+          canExport && exportAction && exportWindow
+            ? (columns) =>
+                exportAction({
+                  ...projectPagesLoadRequest(projectId, query),
+                  columns,
+                  window: exportWindow,
+                })
+            : undefined
+        }
         compare={compare}
         comparison={comparison}
         list={list}
@@ -218,6 +239,8 @@ function ProjectPagesPanel({
         canWrite={drawer?.tagId ? editTags : createTags}
         drawer={drawer}
         filtersOpen={filtersOpen}
+        sitemapChecked={list.sitemapChecked}
+        sitemapComplete={list.sitemapComplete}
         onAdded={() => void load(query)}
         onCloseDrawer={() => setDrawer(null)}
         onCloseFilters={() => setFiltersOpen(false)}

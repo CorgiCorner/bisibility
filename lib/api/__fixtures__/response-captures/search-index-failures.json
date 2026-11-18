@@ -124,7 +124,7 @@
             "error": {
               "code": "provider_rate_limited",
               "message": "Search Console rate limit reached; no further URLs in this request were sent.",
-              "reset_at": "2026-10-25T00:00:00.000Z",
+              "reset_at": "2026-07-11T07:00:00.000Z",
               "scope": "daily"
             }
           },
@@ -134,7 +134,7 @@
             "error": {
               "code": "provider_rate_limited",
               "message": "Search Console rate limit reached; no further URLs in this request were sent.",
-              "reset_at": "2026-10-25T00:00:00.000Z",
+              "reset_at": "2026-07-11T07:00:00.000Z",
               "scope": "daily"
             }
           },
@@ -144,7 +144,7 @@
             "error": {
               "code": "provider_rate_limited",
               "message": "Search Console rate limit reached; no further URLs in this request were sent.",
-              "reset_at": "2026-10-25T00:00:00.000Z",
+              "reset_at": "2026-07-11T07:00:00.000Z",
               "scope": "daily"
             }
           }

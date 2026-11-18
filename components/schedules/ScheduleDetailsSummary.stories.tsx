@@ -9,7 +9,6 @@ const messages = mergeMessageCatalogs(sharedMessages, projectRunsMessages);
 const schedule = {
   enabled: true,
   frequency: "weekly" as const,
-  isDefault: true,
   keywordCount: 2,
   name: "Weekly",
   nativeEstimate: { providerId: "serpapi", quantity: 2, unit: "units" as const, unknownTargets: 0 },

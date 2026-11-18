@@ -52,6 +52,8 @@ export { ProviderLookupSignal } from "./lookup-failure";
 export { preflightProviderBudget } from "./paid-call-budget";
 export { requiredEstimatedCostCents } from "./paid-call-estimate";
 
+/** Features that never run through a provider lookup; each has its own execution path. */
+type NativeOnlyFeature = "model_playground" | "ai_assistant";
 async function executePaidProviderCall<
   T extends { costCents: number; providerRequestId?: string; usageQuantity?: number },
 >(input: {
@@ -63,7 +65,7 @@ async function executePaidProviderCall<
   credential?: ProviderCredential;
   correlationId?: string;
   onNotDispatched?: () => void;
-  feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan">;
+  feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan" | NativeOnlyFeature>;
   includeClickstream?: boolean;
   historyWindow?: ProviderHistoryWindow;
   itemCount: number;
@@ -78,6 +80,10 @@ async function executePaidProviderCall<
   source: ProviderRequestSource;
   trigger: ProviderRequestTrigger;
 }) {
+  if (["model_playground"].includes(input.feature))
+    throw new TypeError("Model Playground requires native model execution.");
+  if (["ai_assistant"].includes(input.feature))
+    throw new TypeError("Assistant usage is not a provider lookup.");
   await assertOperationAccess(input.projectId);
   const currentConnection = await prisma.providerConnection.findUnique({
     select: { credentialSource: true, projectId: true, provider: true, credentialsEncrypted: true },

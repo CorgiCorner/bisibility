@@ -35,15 +35,15 @@ test.each(["history_batch", "history_reference", "history_verification"])(
         await tx().write((sql) => runHistoricalImport(sql, "test", 10));
       await killAtBarrier(f.url, f.schema, phase);
       await f.restart();
-      const count = phase === "history_verification" ? 3n : 1n;
+      const count = phase === "history_verification" ? "3" : "1";
       const before = await tx().read((sql) =>
-        sql.query<{ count: bigint }>(Prisma.sql`SELECT count(*) FROM metering_operation`),
+        sql.query<{ count: string }>(Prisma.sql`SELECT count(*) FROM metering_operation`),
       );
       expect(before).toEqual([{ count }]);
       const progress = await tx().read((sql) =>
         sql.query(Prisma.sql`SELECT cursor,verified_at FROM metering_history_progress`),
       );
-      expect(progress).toEqual([{ cursor: count === 1n ? "a" : "c", verified_at: null }]);
+      expect(progress).toEqual([{ cursor: count === "1" ? "a" : "c", verified_at: null }]);
       for (;;) {
         if ((await tx().write((sql) => runHistoricalImport(sql, "test", 1))).done) break;
       }
@@ -56,9 +56,9 @@ test.each(["history_batch", "history_reference", "history_verification"])(
         (SELECT count(*) FROM metering_history_reference) AS refs,
         (SELECT settled_value::text FROM metering_budget_usage WHERE budget_id='project:project:monthly') AS used`),
         );
-      expect(await read()).toEqual([{ operations: 3n, receipts: 3n, refs: 3n, used: "37035" }]);
+      expect(await read()).toEqual([{ operations: "3", receipts: "3", refs: "3", used: "37035" }]);
       await tx().write((sql) => runHistoricalImport(sql, "test", 1));
-      expect(await read()).toEqual([{ operations: 3n, receipts: 3n, refs: 3n, used: "37035" }]);
+      expect(await read()).toEqual([{ operations: "3", receipts: "3", refs: "3", used: "37035" }]);
       const references = await tx().read((sql) =>
         sql.query(Prisma.sql`SELECT id,receipt FROM ai_tracking_samples ORDER BY id`),
       );

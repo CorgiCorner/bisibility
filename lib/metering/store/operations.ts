@@ -32,7 +32,7 @@ export function operationsReader(clock: Clock, secret: string) {
       identity = canonical(query);
     const [watermark] = cursor
       ? []
-      : await sql.query<{ n: bigint }>(
+      : await sql.query<{ n: string }>(
           Prisma.sql`SELECT COALESCE(MAX(event_id),0) AS n FROM metering_event`,
         );
     const snapshot: Cursor = cursor

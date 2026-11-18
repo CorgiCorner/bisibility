@@ -5,6 +5,7 @@ import {
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StatusChip } from "./StatusChip";
+import { statusMessage } from "./status-chip-mapping";
 
 function render(ui: React.ReactElement) {
   return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
@@ -104,4 +105,10 @@ describe("StatusChip", () => {
     render(<StatusChip label="Running" live />);
     expect(screen.getByRole("status", { name: "Running" })).toBeInTheDocument();
   });
+});
+
+it("returns an unlisted status key instead of an empty label", () => {
+  const key = "notAStatus" as Parameters<typeof statusMessage>[0];
+  const t = ((value: string) => value) as Parameters<typeof statusMessage>[1];
+  expect(statusMessage(key, t)).toBe(key);
 });

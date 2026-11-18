@@ -1,5 +1,7 @@
+// Chromium gives the native date and time editor a taller line box than the 20px field line, which
+// grows a date field to 42px next to 40px inputs; collapsing that editor line keeps one height.
 export const inputClassName =
-  "border border-border-control bg-transparent text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus:border-accent disabled:cursor-not-allowed disabled:border-dashed disabled:bg-bg-sunken disabled:text-fg-muted";
+  "[&::-webkit-datetime-edit]:leading-none border border-border-control bg-transparent text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus:border-accent disabled:cursor-not-allowed disabled:border-dashed disabled:bg-bg-sunken disabled:text-fg-muted";
 
 /** Standard form-field geometry, shared by inputs and adjacent actions. */
 export const inputControlSizeClassName =

@@ -21,6 +21,7 @@ export const WORKER_INTENT_KINDS = [
   "rank_run",
   "local_monitor",
   "provider_comparison",
+  "model_playground",
 ] as const;
 
 export type WorkerIntentKind = (typeof WORKER_INTENT_KINDS)[number];

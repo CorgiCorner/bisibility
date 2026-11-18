@@ -6,6 +6,7 @@ import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Button } from "./Button";
 import { EmptyState } from "./EmptyState";
 import { ProviderAccessActions } from "./ProviderAccessActions";
@@ -22,15 +23,23 @@ export function ProviderAccessEmptyState({
   providers = [],
   reconnect = false,
   surface = "keywords",
+  title: suppliedTitle,
+  description,
+  actionLabel,
 }: Readonly<{
   href: string;
   providers?: readonly string[];
   reconnect?: boolean;
   surface?: keyof typeof moduleIcons;
+  title?: string;
+  description?: ReactNode;
+  actionLabel?: string;
 }>) {
   const t = useTranslations("shared.providerAccess");
   const available = providers.length > 0 || reconnect;
-  const title = t(available ? (reconnect ? "reconnectTitle" : "emptyTitle") : "unavailableTitle");
+  const title =
+    suppliedTitle ??
+    t(available ? (reconnect ? "reconnectTitle" : "emptyTitle") : "unavailableTitle");
   const Icon = moduleIcons[surface];
   return (
     <section aria-label={title} data-provider-empty-state>
@@ -38,7 +47,8 @@ export function ProviderAccessEmptyState({
         title={title}
         icon={<Icon aria-hidden size={28} weight="regular" />}
         description={
-          available ? (
+          description ??
+          (available ? (
             <div className="grid gap-1.5">
               <span>{t(reconnect ? "reconnectDescription" : "emptyDescription")}</span>
               {providers.length ? (
@@ -47,7 +57,7 @@ export function ProviderAccessEmptyState({
             </div>
           ) : (
             t("unavailable")
-          )
+          ))
         }
         action={
           <ProviderAccessActions
@@ -58,7 +68,8 @@ export function ProviderAccessEmptyState({
           >
             <Button asChild>
               <Link href={href}>
-                {t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
+                {actionLabel ??
+                  t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
               </Link>
             </Button>
           </ProviderAccessActions>

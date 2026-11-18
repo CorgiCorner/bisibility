@@ -18,7 +18,7 @@ vi.mock("@/lib/keywords/export-audit", () => ({ auditKeywordExport: audit }));
 function context(query = "") {
   const ctx = exportTestContext(query);
   ctx.auth.project.id = "synthetic-project";
-  ctx.auth.apiKey.projectId = ctx.auth.project.id;
+  if ("apiKey" in ctx.auth) ctx.auth.apiKey.projectId = ctx.auth.project.id;
   return ctx;
 }
 const selection = (kind: LocalMonitorReadSelection["kind"], targetId?: string) => ({

@@ -13,7 +13,6 @@ const dailySchedule = {
   cronExpression: null,
   enabled: true,
   frequency: "daily" as const,
-  isDefault: true,
   jitterMinutes: 15,
   keywordCount: 248,
   name: "Daily 06:00",
@@ -47,7 +46,6 @@ const base: ScheduleEditorProps = {
     },
   ],
   connectedProviders: [{ label: "SerpApi", value: "serpapi" }],
-  defaultScheduleName: "Daily 06:00",
   members: [
     {
       name: "headless cms",
@@ -115,12 +113,10 @@ export const EditorNew: Story = {
   name: "editor-new",
   args: {
     isNew: true,
-    defaultScheduleName: null,
     members: [],
     memberSummary: undefined,
     schedule: {
       ...dailySchedule,
-      isDefault: false,
       keywordCount: 0,
       name: "Daily 06:00",
       publicId: "new",
@@ -131,14 +127,14 @@ export const EditorNew: Story = {
 export const EditorFrequencyWeekly: Story = {
   name: "editor-frequency-weekly",
   args: {
-    schedule: { ...dailySchedule, frequency: "weekly", isDefault: false, name: "Weekly Mon" },
+    schedule: { ...dailySchedule, frequency: "weekly", name: "Weekly Mon" },
   },
 };
 
 export const EditorFrequencyMonthly: Story = {
   name: "editor-frequency-monthly",
   args: {
-    schedule: { ...dailySchedule, frequency: "monthly", isDefault: false, name: "Monthly 1st" },
+    schedule: { ...dailySchedule, frequency: "monthly", name: "Monthly 1st" },
   },
 };
 
@@ -149,7 +145,6 @@ export const EditorFrequencyCron: Story = {
       ...dailySchedule,
       cronExpression: "0 6 * * 1-5",
       frequency: "custom_cron",
-      isDefault: false,
       name: "Custom - 0 6 * * 1-5",
       timezone: "Europe/Madrid",
     },

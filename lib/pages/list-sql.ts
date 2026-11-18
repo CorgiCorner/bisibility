@@ -1,8 +1,17 @@
 import { conversionsCte } from "@/lib/conversions/page-sql";
 import type { ConversionSource } from "@/lib/conversions/types";
 import { Prisma } from "@/lib/generated/prisma/client";
-import { sessionsCte, vitalsPredicate } from "./list-sql-clauses";
+import {
+  searchFilter,
+  sessionsCte,
+  sitemapPredicate,
+  sourceFilter,
+  tagFilter,
+  vitalsPredicate,
+} from "./list-sql-clauses";
 import { canonicalPagePathSql } from "./page-path";
+import type { StoredSitemapRead } from "./sitemap-read-model";
+import { sitemapListedSql } from "./sitemap-sql";
 import {
   pageBucketSql,
   pageStatusDaySql,
@@ -32,6 +41,7 @@ export type ProjectPagesQueryInput = {
   search?: string;
   sessions: "ga4" | "none" | "plausible";
   sitemapState?: "listed" | "not_listed";
+  sitemapRead?: StoredSitemapRead | null;
   sort: { by: ProjectPageSortKey; dir: "asc" | "desc" };
   status?: ProjectPageStatusFilter;
   source?: ProjectPageSourceKind;
@@ -39,7 +49,6 @@ export type ProjectPagesQueryInput = {
   to: Date;
 };
 
-/** Same decision as `pageIndexingGroup`, except a missing presence row stays null. */
 export function sqlIndexGroup(row: {
   checkedAt: Date | null;
   id: string | null;
@@ -72,32 +81,6 @@ const sortExpressions: Record<ProjectPageSortKey, Prisma.Sql> = {
   sessions: Prisma.sql`filtered."sessionValue"`,
 };
 
-function searchFilter(search: string | undefined) {
-  const value = search?.trim();
-  if (!value) return Prisma.sql`TRUE`;
-  const pattern = `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
-  return Prisma.sql`page.path ILIKE ${pattern} ESCAPE '\\'`;
-}
-
-function sourceFilter(source: ProjectPageSourceKind | undefined) {
-  if (!source) return Prisma.empty;
-  return Prisma.sql`AND EXISTS (
-    SELECT 1 FROM "project_page_sources" source_filter
-    WHERE source_filter."pageId" = page.id
-      AND source_filter.source = ${source}::"ProjectPageSourceKind"
-  )`;
-}
-
-function tagFilter(tagId: string | undefined) {
-  if (!tagId) return Prisma.empty;
-  return Prisma.sql`AND EXISTS (
-    SELECT 1 FROM "page_tags" page_tag
-    JOIN "tags" tag_row ON tag_row.id = page_tag."tagId"
-    WHERE page_tag."pageId" = page.id
-      AND (tag_row.id = ${tagId} OR tag_row."publicId" = ${tagId})
-  )`;
-}
-
 function indexFilter(group: ProjectPageIndexGroup | undefined) {
   if (!group) return Prisma.empty;
   return Prisma.sql`AND ${indexGroupSql} = ${group}`;
@@ -106,12 +89,6 @@ function indexFilter(group: ProjectPageIndexGroup | undefined) {
 function statusPredicate(status: ProjectPageStatusFilter | undefined, kind: Prisma.Sql) {
   if (status === "in_snapshot" || status === "new") return Prisma.sql`${kind} = ${status}`;
   if (status === "removed") return Prisma.sql`${kind} IN ('removed', 'redirected', 'gone')`;
-  return Prisma.sql`TRUE`;
-}
-
-function sitemapPredicate(state: ProjectPagesQueryInput["sitemapState"]) {
-  if (state === "listed") return Prisma.sql`COALESCE(sitemap.listed, false)`;
-  if (state === "not_listed") return Prisma.sql`NOT COALESCE(sitemap.listed, false)`;
   return Prisma.sql`TRUE`;
 }
 
@@ -142,15 +119,22 @@ function gscCte(input: ProjectPagesQueryInput) {
   )`;
 }
 
-function fromClause(input: ProjectPagesQueryInput) {
+function fromClause(input: ProjectPagesQueryInput, includeMetrics = true) {
   return Prisma.sql`
     FROM "project_pages" page
-    LEFT JOIN presence ON presence.path = page.path
+    ${
+      includeMetrics || input.indexGroup || input.coverageState
+        ? Prisma.sql`LEFT JOIN presence ON presence.path = page.path`
+        : Prisma.empty
+    }
     LEFT JOIN LATERAL (
       SELECT source."firstSeenAt", source."lastSeenAt", source.detail->>'listed' = 'true' AS listed
       FROM "project_page_sources" source
       WHERE source."pageId" = page.id AND source.source = 'sitemap'
     ) sitemap ON true
+    ${
+      includeMetrics
+        ? Prisma.sql`
     LEFT JOIN gsc ON gsc.path = page.path
     LEFT JOIN sessions ON sessions.path = page.path
     LEFT JOIN conversions ON conversions.path = page.path
@@ -158,6 +142,9 @@ function fromClause(input: ProjectPagesQueryInput) {
     LEFT JOIN citations ON citations.path = page.path
     LEFT JOIN "page_vitals" vitals
       ON vitals."pageId" = page.id AND vitals.strategy = 'mobile'
+    `
+        : Prisma.empty
+    }
     WHERE page."projectId" = ${input.projectId}
       AND ${searchFilter(input.search)}
       ${sourceFilter(input.source)}
@@ -169,7 +156,7 @@ function fromClause(input: ProjectPagesQueryInput) {
 
 function withClause(input: ProjectPagesQueryInput) {
   return Prisma.sql`
-    WITH ${snapshotStatusCtes(input.projectId)},
+    WITH ${snapshotStatusCtes(input.projectId, input.sitemapRead)},
     presence AS (
       SELECT DISTINCT ON (path)
         path, id, "coverageState", "pageFetchState", "checkedAt", verdict, "inspectionError"
@@ -225,6 +212,11 @@ function withClause(input: ProjectPagesQueryInput) {
       ) raw
       WHERE path IS NOT NULL
       GROUP BY path
+    ),
+    sitemap_coverage AS (
+      SELECT COALESCE((SELECT complete FROM sitemap_read), FALSE)
+        AND COUNT(*) FILTER (WHERE ${sitemapListedSql()} IS NULL) = 0 AS complete
+      ${fromClause(input, false)}
     )
   `;
 }
@@ -239,8 +231,11 @@ export function projectPagesListQuery(input: ProjectPagesQueryInput) {
       ${withClause(input)}
       SELECT
         COUNT(*)::int AS "all",
-        COUNT(*) FILTER (WHERE COALESCE(sitemap.listed, false))::int AS listed,
-        COUNT(*) FILTER (WHERE NOT COALESCE(sitemap.listed, false))::int AS "notListed",
+        (SELECT seen IS NOT NULL FROM newest_sitemap) AS "sitemapChecked",
+        (SELECT complete FROM sitemap_coverage) AS "sitemapComplete",
+        COUNT(*) FILTER (WHERE ${sitemapListedSql()} IS TRUE)::int AS listed,
+        CASE WHEN (SELECT complete FROM sitemap_coverage)
+          THEN COUNT(*) FILTER (WHERE ${sitemapListedSql()} IS FALSE)::int END AS "notListed",
         COUNT(*) FILTER (WHERE ${pageBucketSql()} = 'in_snapshot')::int AS "inSnapshot",
         COUNT(*) FILTER (WHERE ${pageBucketSql()} = 'new')::int AS "newCount",
         COUNT(*) FILTER (WHERE ${pageBucketSql()} = 'removed')::int AS "removed",
@@ -255,7 +250,7 @@ export function projectPagesListQuery(input: ProjectPagesQueryInput) {
       ${withClause(input)},
       filtered AS (
         SELECT page.id, page.path, page."firstSeenAt", page."lastSeenAt",
-          COALESCE(sitemap.listed, false) AS listed,
+          ${sitemapListedSql()} AS listed,
           sitemap."lastSeenAt" AS "sitemapLastSeenAt",
           ${indexGroupSql} AS "indexGroup",
           presence.id AS "presenceId",
@@ -285,13 +280,7 @@ export function projectPagesListQuery(input: ProjectPagesQueryInput) {
         ${fromClause(input)}
       )
       SELECT * FROM filtered
-      WHERE ${
-        input.sitemapState === "listed"
-          ? Prisma.sql`filtered.listed`
-          : input.sitemapState === "not_listed"
-            ? Prisma.sql`NOT filtered.listed`
-            : Prisma.sql`TRUE`
-      }
+      WHERE ${sitemapPredicate(input.sitemapState, Prisma.sql`filtered.listed`)}
         AND ${statusPredicate(input.status, Prisma.sql`filtered."statusKind"`)}
         AND ${vitalsPredicate(input.cwv, Prisma.sql`filtered."vitalsStatus"`)}
       ORDER BY ${order}

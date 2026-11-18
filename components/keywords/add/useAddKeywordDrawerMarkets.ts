@@ -1,7 +1,7 @@
 "use client";
-import { capacityActionClient } from "@/lib/capacity/action";
+import { scheduleActionClient } from "@/lib/schedules/action-result";
 
-const createProjectMarket = capacityActionClient(createProjectMarketAction);
+const createProjectMarket = scheduleActionClient(createProjectMarketAction);
 
 import type { NewMarketCreatorProps } from "@/components/markets/sheet/NewMarketCreator";
 import type { NewMarketScheduleOption } from "@/components/markets/sheet/NewMarketSchedule";
@@ -52,12 +52,7 @@ export function useAddKeywordDrawerMarkets({
     open: scheduleOpen,
     start: () => setScheduleOpen(true),
     close: () => setScheduleOpen(false),
-    onSaved: (schedule: {
-      publicId: string;
-      name: string;
-      frequency: string;
-      isDefault: boolean;
-    }) => {
+    onSaved: (schedule: { publicId: string; name: string; frequency: string }) => {
       setCreatedSchedules((current) => [...current, { ...schedule, id: schedule.publicId }]);
       setScheduleId(schedule.publicId);
       setScheduleOpen(false);
@@ -98,14 +93,7 @@ export function useAddKeywordDrawerMarkets({
       })),
     ],
     schedules: availableSchedules,
-    scheduleContext: markets.marketCreation?.scheduleContext
-      ? {
-          ...markets.marketCreation.scheduleContext,
-          defaultScheduleName:
-            [...createdSchedules].reverse().find((schedule) => schedule.isDefault)?.name ??
-            markets.marketCreation.scheduleContext.defaultScheduleName,
-        }
-      : undefined,
+    scheduleContext: markets.marketCreation?.scheduleContext,
     sources: [
       ...(markets.marketCreation?.sources ?? []),
       ...newMarkets.map((market) => ({

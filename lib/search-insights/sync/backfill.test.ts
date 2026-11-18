@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   loadImportRow: vi.fn(),
   probeFreshness: vi.fn(),
   prisma: {
+    projectSyncPause: { findUnique: vi.fn().mockResolvedValue(null) },
     projectDefaults: { findUnique: vi.fn() },
     searchAnalyticsImport: { update: vi.fn(), updateMany: vi.fn() },
   },
@@ -117,6 +118,23 @@ describe("runBackfillBatch", () => {
       },
     });
     mocks.refreshWindowFacts.mockResolvedValue({ failed: [], written: [7, 90] });
+  });
+
+  it("requeues a paused GSC batch without opening a provider session", async () => {
+    mocks.loadImportRow.mockResolvedValueOnce(importRow({ state: "running" }));
+    mocks.prisma.projectSyncPause.findUnique.mockResolvedValueOnce({ id: "gsc_pause" });
+    mocks.createSession.mockImplementation(() => {
+      throw new Error("Paused backfill reached the provider");
+    });
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      blocked: true,
+      daysProcessed: 0,
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.prisma.searchAnalyticsImport.updateMany).toHaveBeenLastCalledWith({
+      data: { state: "queued", workflowId: null },
+      where: { id: "imp_1", state: "running", pausedReason: null },
+    });
   });
 
   it("probes freshness, plans the window and pulls every total before any day partition", async () => {

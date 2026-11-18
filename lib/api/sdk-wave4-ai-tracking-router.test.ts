@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import "./ai-tracking";
+import "./schedule-write-routes";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
@@ -35,7 +37,28 @@ vi.mock("./ratelimit", () => ({
   checkRateLimit: vi.fn(async () => ({ headers: new Headers(), success: true })),
 }));
 vi.mock("./idempotency", () => ({ withIdempotency: vi.fn((_ctx, execute) => execute()) }));
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: vi.fn(), writeAuditFailure: vi.fn() }));
+vi.mock("@/lib/providers/crypto", async (original) => ({
+  ...(await original<typeof import("@/lib/providers/crypto")>()),
+  getPurposeSecretKeys: () => [Buffer.from("synthetic-schedule-review-key-0123456789")],
+}));
+vi.mock("@/lib/schedules/service", () => ({
+  getSchedule: async (_project: string, id: string) => (id === scheduleId ? schedule : null),
+}));
+vi.mock("@/lib/db/prisma", () => {
+  const db = {
+    $queryRaw: async () => [],
+    projectDefaults: { findUnique: async () => null },
+    aiTrackingSchedule: { findFirst: async () => schedule },
+    aiPrompt: { findMany: async () => [prompt] },
+    scheduleReviewReceipt: { create: async () => ({}), findMany: async () => [] },
+  };
+  return { prisma: { ...db, $transaction: (run: (tx: typeof db) => unknown) => run(db) } };
+});
+vi.mock("@/lib/auth/audit", () => ({
+  writeAudit: vi.fn(),
+  writeAuditFailure: vi.fn(),
+  withProjectKeyAudit: (_attribution: unknown, run: () => Promise<unknown>) => run(),
+}));
 vi.mock("@/lib/actions/_shared", () => ({ requireProjectScope: mocks.scope }));
 vi.mock("@/lib/ai-tracking/stores/topics", () => ({
   listTopics: mocks.topics,
@@ -179,6 +202,7 @@ beforeEach(() => {
   };
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key-db", projectId: project.id, scopes: ["read", "write", "admin"] },
     project,
   });
@@ -294,16 +318,33 @@ describe("SDK wave 4 Prompt Tracker through the real router and projections", ()
           credentialConnectionId: "connection-db",
         }),
       }),
+      expect.any(Object),
     );
     expect((await call("PATCH", `schedules/${scheduleId}`, { next_run_at: null })).status).toBe(
       200,
     );
+    const enable = { configuration: plan, enabled: true, consent: true };
+    const missing = await call("PATCH", `schedules/${scheduleId}`, enable);
+    expect(missing.status).toBe(428);
+    const preview = await call(
+      "POST",
+      "preview",
+      {
+        operation: "update",
+        schedule_id: scheduleId,
+        schedule: { kind: "ai", ...enable },
+      },
+      false,
+      "schedules",
+    );
+    expect(preview.status).toBe(200);
+    const { preview_token, expected_revision, window_start } = await preview.json();
+    expect(preview_token).toEqual(expect.any(String));
     expect(
       (
         await call("PATCH", `schedules/${scheduleId}`, {
-          configuration: plan,
-          enabled: true,
-          consent: true,
+          ...enable,
+          review: { preview_token, expected_revision, window_start },
         })
       ).status,
     ).toBe(200);

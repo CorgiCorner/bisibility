@@ -75,7 +75,7 @@ export type ProviderCredentials = {
 
 export type ProviderCredentialRequirement = "apiKey" | "endpoint" | "login" | "password";
 export type ProviderStatus = "connected" | "needs_reauth" | "ready" | "planned" | "optional";
-export type ProviderKind = "serp" | "analytics" | "enrichment";
+export type ProviderKind = "serp" | "analytics" | "enrichment" | "model";
 export type SerpDevice = "desktop" | "mobile";
 
 export type ProviderTestResult = {
@@ -286,6 +286,7 @@ type ProviderCatalogItemBase = {
   /** What the provider bills in when it counts its own units instead of money. */
   billingUnit?: ProviderBillingUnit;
   accountUrl?: string;
+  billingNotice?: "Billed by your provider";
 };
 
 /** Provider-defined billed quantities; one request can bill zero or many of them. */

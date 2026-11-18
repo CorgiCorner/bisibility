@@ -48,6 +48,12 @@ const storySnapshot = {
 };
 
 const actions = {
+  exportCsv: fn(async () => ({
+    status: "ok" as const,
+    csv: "url,path",
+    filename: "pages.csv",
+    rows: 1,
+  })),
   addManual: fn(async () => ({ added: 1, existing: 0, rejected: [] })),
   checkVitals: fn(async () => ({ checked: 1, ok: true as const })),
   load: fn(async () => pagesList([pageRow()])),
@@ -172,5 +178,52 @@ export const EmptyRegistry: Story = {
     initialQuery: pagesQuery,
     projectId: "prj_story",
     sources: sitemapOnlySources(),
+  },
+};
+
+export const SitemapNotChecked: Story = {
+  args: {
+    ...AllSourcesConnected.args,
+    sources: connectedSources().map((source) =>
+      source.kind === "sitemap" ? { ...source, sitemapChecked: false } : source,
+    ),
+    initialList: pagesList([
+      pageRow({ sitemap: { listed: null, lastSeenAt: null } }),
+      pageRow({
+        pageId: "page_pricing",
+        path: "/pricing",
+        url: "https://example.com/pricing",
+        sitemap: { listed: null, lastSeenAt: null },
+      }),
+    ]),
+  },
+};
+export const SitemapCheckedMixed: Story = {
+  args: {
+    ...AllSourcesConnected.args,
+    initialList: pagesList([
+      pageRow(),
+      pageRow({
+        pageId: "page_pricing",
+        path: "/pricing",
+        url: "https://example.com/pricing",
+        sitemap: { listed: false, lastSeenAt: null },
+      }),
+    ]),
+  },
+};
+
+export const SitemapIncomplete: Story = {
+  args: {
+    ...AllSourcesConnected.args,
+    initialList: pagesList([
+      pageRow(),
+      pageRow({
+        pageId: "unknown",
+        path: "/unknown",
+        url: "https://example.com/unknown",
+        sitemap: { listed: null, lastSeenAt: null },
+      }),
+    ]),
   },
 };

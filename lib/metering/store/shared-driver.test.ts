@@ -1,15 +1,31 @@
+import { readFileSync } from "node:fs";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 import { createManualClock } from "@usagekit/store";
 import { type PostgresDriver, prismaPostgresExecutor } from "@usagekit/store-postgres";
 import { expect, test, vi } from "vitest";
-import { createPostgresStore } from "./index";
 import { interceptExecute } from "./intercept-execute.test-fixture";
 import { utcPostgresDriver } from "./timestamp-policy";
-import { createTransactionBoundStore } from "./transactional";
 
-function client() {
+const { version } = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.resolve("@usagekit/store-postgres")), "utf8"),
+);
+const [release, prerelease] = version.split("-");
+expect(
+  release.localeCompare("0.12.0", undefined, { numeric: true }) > 0 ||
+    (release === "0.12.0" && prerelease === undefined),
+  "This branch requires the published 0.12.0 lockfile; install store-postgres >= 0.12.0",
+).toBe(true);
+
+const { createPostgresStore } = await import("./index");
+const { createTransactionBoundStore } = await import("./transactional");
+
+function client(version = 2) {
   const transaction = {
     $queryRawUnsafe: vi.fn(async (query: string, ...values: unknown[]) => {
+      if (query.includes("to_regclass"))
+        return [{ name: version ? "metering_schema_version" : null }];
+      if (query.includes("SELECT version FROM metering_schema_version"))
+        return Array.from({ length: version }, (_, index) => ({ version: index + 1 }));
       if (query.includes("FROM pg_trigger"))
         return [
           {
@@ -90,6 +106,18 @@ test("initialization failure reaches the caller without selecting a native fallb
     createPostgresStore({ prisma: f.database, clock: createManualClock() }),
   ).rejects.toThrow("missing host schema");
   expect(f.transaction.$executeRaw).not.toHaveBeenCalled();
+});
+
+test.each([0, 1, 3])("refuses schema version %i before initializing metadata", async (version) => {
+  const f = client(version);
+  await expect(
+    createPostgresStore({ prisma: f.database, clock: createManualClock() }),
+  ).rejects.toMatchObject({
+    name: "PostgresSchemaVersionError",
+    actualVersion: version,
+    requiredVersion: 2,
+  });
+  expect(f.execute.mock.calls.flat().join(" ")).not.toContain("INSERT");
 });
 
 test("receipt crash barriers cover the shared executor and preserve bound parameters", async () => {

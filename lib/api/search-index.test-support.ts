@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
     inspectUrl: vi.fn(),
   },
   prisma: {
+    sitemapSnapshot: { findMany: vi.fn() },
     keyword: { findMany: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
     project: { findFirst: vi.fn(), findUniqueOrThrow: vi.fn() },
@@ -73,10 +74,12 @@ export const project = {
   ownerId: "owner",
   writeMode: "active",
   isSample: false,
+  syncPauses: [],
 };
 export function authenticate(scopes = ["read", "write", "admin"]) {
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key-db", scopes, projectId: project.id },
     project,
   });
@@ -108,6 +111,7 @@ export function noGoogleCalls() {
 beforeEach(() => {
   vi.resetAllMocks();
   authenticate();
+  mocks.prisma.sitemapSnapshot.findMany.mockResolvedValue([]);
   mocks.prisma.keyword.findMany.mockResolvedValue([]);
   mocks.prisma.project.findFirst.mockResolvedValue(project);
   mocks.prisma.providerConnection.findFirst.mockResolvedValue({
@@ -130,7 +134,11 @@ beforeEach(() => {
   });
   mocks.prisma.urlPresence.count.mockResolvedValue(0);
   mocks.prisma.auditLog.findMany.mockResolvedValue([]);
-  mocks.prisma.$queryRaw.mockResolvedValue([{ now: new Date() }]);
+  mocks.prisma.$queryRaw.mockImplementation(async (query) => {
+    if (query?.sql?.includes('FROM "sitemap_snapshots"'))
+      return mocks.prisma.sitemapSnapshot.findMany();
+    return [{ now: new Date() }];
+  });
   mocks.audit.mockResolvedValue({ id: "audit-db" });
   mocks.provider.listSitemaps.mockResolvedValue([normalizeGscSitemap(documentedSitemap)]);
   mocks.provider.getSitemapStatus.mockResolvedValue(normalizeGscSitemap(documentedSitemap));

@@ -4,9 +4,13 @@ import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { emitSignal } from "@/lib/signals/emit";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
+import { getStoredSitemapRead } from "./sitemap-read";
+import type { StoredSitemapRead } from "./sitemap-read-model";
+import { sitemapListedSql } from "./sitemap-sql";
 import { PageSnapshotConflictError } from "./snapshot-errors";
 import { utcDateKey } from "./snapshot-series";
 import type { ActivePageSnapshot, TakePageSnapshotResult } from "./snapshot-view";
+import { snapshotStatusCtes } from "./status-sql";
 
 const CHUNK = 1_000;
 
@@ -14,29 +18,33 @@ function dateOnly(value: Date) {
   return new Date(`${utcDateKey(value)}T00:00:00.000Z`);
 }
 
-async function sourceKind(projectId: string) {
-  const sitemap = await prisma.projectPageSource.findFirst({
-    select: { id: true },
-    where: { page: { projectId }, source: "sitemap" },
-  });
-  return sitemap ? ("sitemap" as const) : ("registry" as const);
+async function sourceKind(projectId: string, sitemapRead?: StoredSitemapRead | null) {
+  const read = sitemapRead === undefined ? await getStoredSitemapRead(projectId) : sitemapRead;
+  return read && read.checked !== false && read.complete !== false
+    ? ("sitemap" as const)
+    : ("registry" as const);
 }
 
 async function listedPageIds(projectId: string) {
-  const source = await sourceKind(projectId);
+  const sitemapRead = await getStoredSitemapRead(projectId);
+  const source = await sourceKind(projectId, sitemapRead);
   if (source === "registry") {
     const pages = await prisma.projectPage.findMany({ select: { id: true }, where: { projectId } });
     return { ids: pages.map((page) => page.id), source };
   }
-  const rows = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT page.id
+  const rows = await prisma.$queryRaw<{ id: string; listed: boolean | null }[]>`
+    WITH ${snapshotStatusCtes(projectId, sitemapRead)}
+    SELECT page.id, ${sitemapListedSql(Prisma.sql`source.detail->>'listed' = 'true'`, Prisma.sql`source."lastSeenAt"`)} AS listed
     FROM "project_pages" page
-    JOIN "project_page_sources" source ON source."pageId" = page.id
-    WHERE page."projectId" = ${projectId}
+    LEFT JOIN "project_page_sources" source ON source."pageId" = page.id
       AND source.source = 'sitemap'::"ProjectPageSourceKind"
-      AND source.detail->>'listed' = 'true'
+    WHERE page."projectId" = ${projectId}
   `;
-  return { ids: rows.map((row) => row.id), source };
+  if (rows.some((row) => row.listed === null)) {
+    const pages = await prisma.projectPage.findMany({ select: { id: true }, where: { projectId } });
+    return { ids: pages.map((page) => page.id), source: "registry" as const };
+  }
+  return { ids: rows.filter((row) => row.listed === true).map((row) => row.id), source };
 }
 
 async function ownedPageIds(projectId: string, pageIds: readonly string[]) {

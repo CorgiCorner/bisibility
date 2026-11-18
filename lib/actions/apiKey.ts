@@ -2,6 +2,7 @@
 import { randomBytes } from "node:crypto";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { inheritedApiKeyExpiry, resolveApiKeyExpiry } from "@/lib/api/api-key-policy";
+import { apiKeyTierAllowedForRole } from "@/lib/api/key-creator";
 import { scopesForTier, tierFromScopes } from "@/lib/api/key-scope";
 import { projectCapabilityAvailable } from "@/lib/auth/account-capability-extension";
 import { writeAudit } from "@/lib/auth/audit";
@@ -22,6 +23,15 @@ import {
   revalidateSettingsViews,
 } from "./_shared";
 
+/** A new or regenerated key never exceeds the creator's current role in the project. */
+async function requireKeyTierForActor(actorId: string, projectId: string, scope: ApiKeyScope) {
+  const membership = await prisma.membership.findUnique({
+    where: { userId_projectId: { userId: actorId, projectId } },
+    select: { role: true },
+  });
+  if (!apiKeyTierAllowedForRole(scope, membership?.role)) throw new AuthorizationError("forbidden");
+}
+
 function newRawApiKey() {
   return `bsb_key_live_${randomBytes(24).toString("base64url")}`;
 }
@@ -36,8 +46,10 @@ function apiKeyCreateData(
   projectId: string,
   scope: ApiKeyScope,
   expiresAt: Date | null,
+  createdById: string,
 ) {
   return {
+    createdById,
     expiresAt,
     hashedKey: hashApiKey(raw),
     name,
@@ -54,10 +66,11 @@ export async function issueApiKey(input: unknown) {
   const project = await requireProjectScope(actor, "manage", data.projectId, { type: "api_key" });
   if (!(await projectCapabilityAvailable(project.id, actor.id)))
     throw new AuthorizationError("forbidden");
+  await requireKeyTierForActor(actor.id, project.id, data.scope);
   const raw = newRawApiKey();
   const expiresAt = resolveApiKeyExpiry(data.expiresInDays);
   const apiKey = await prisma.apiKey.create({
-    data: apiKeyCreateData(raw, data.name, project.id, data.scope, expiresAt),
+    data: apiKeyCreateData(raw, data.name, project.id, data.scope, expiresAt, actor.id),
     select: {
       createdAt: true,
       expiresAt: true,
@@ -143,6 +156,7 @@ export async function regenerateApiKey(input: unknown) {
   if (!before) {
     throw new Error("API key not found.");
   }
+  await requireKeyTierForActor(actor.id, project.id, tierFromScopes(before.scopes));
 
   const raw = newRawApiKey();
   const now = new Date();
@@ -154,7 +168,7 @@ export async function regenerateApiKey(input: unknown) {
       where: { id: before.id },
     }),
     prisma.apiKey.create({
-      data: apiKeyCreateData(raw, before.name, project.id, scope, policy.expiresAt),
+      data: apiKeyCreateData(raw, before.name, project.id, scope, policy.expiresAt, actor.id),
       select: {
         createdAt: true,
         expiresAt: true,

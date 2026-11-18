@@ -1,7 +1,11 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/lib/generated/prisma/client";
-import type { LocalDatabase, LocalStoreContext } from "@/lib/local-monitoring-store/context";
+import type {
+  LocalDatabase,
+  LocalStoreContext,
+  LocalTransaction,
+} from "@/lib/local-monitoring-store/context";
 import { assertMonitorDefinition } from "./definition";
 import {
   LocalMonitorConflictError,
@@ -18,7 +22,13 @@ export async function setLocalMonitorScheduleIntent(
   command: unknown,
   context: LocalStoreContext,
   consent: MonitorScheduleConsent,
-  options: { db?: LocalDatabase; clock?: () => Date; approvalBodyHash?: string } = {},
+  options: {
+    db?: LocalDatabase;
+    tx?: LocalTransaction;
+    clock?: () => Date;
+    approvalBodyHash?: string;
+    restore?: boolean;
+  } = {},
 ) {
   const data = scheduleIntentSchema.parse(command);
   return mutateMonitor({
@@ -44,6 +54,12 @@ export async function setLocalMonitorScheduleIntent(
         },
       });
       if (!previous || !monitor.currentRevisionId) throw new LocalMonitorConflictError();
+      if (
+        previous.mode === "archived" &&
+        (data.mode === "scheduled" || (data.mode === "paused" && !options.restore))
+      ) {
+        throw new LocalMonitorConflictError();
+      }
       if (data.mode === "scheduled") {
         const revision = await tx.localMonitorRevision.findFirstOrThrow({
           where: { projectId: scope.project.id, id: monitor.currentRevisionId },

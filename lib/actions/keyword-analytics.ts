@@ -5,13 +5,15 @@ import {
   trackServerEvent,
 } from "@/lib/analytics/server";
 import { type AddKeywordsMatrixInput, addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { getActionActor, parseActionInput } from "./_shared";
 import { addKeywordsMatrix as addKeywordsMatrixImpl } from "./keyword-matrix";
 
 export async function addKeywordsMatrixWithAnalytics(input: unknown) {
-  const data = parseActionInput(addKeywordsMatrixSchema, input);
+  const { body, review } = splitScheduleReview(input);
+  const data = parseActionInput(addKeywordsMatrixSchema, body);
   const actor = await getActionActor();
-  const result = await addKeywordsMatrixImpl(data);
+  const result = await addKeywordsMatrixImpl({ ...data, review });
   await emitMatrixKeywordsAdded({ actorId: actor.id, data, result });
   return result;
 }

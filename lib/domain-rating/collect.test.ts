@@ -33,7 +33,7 @@ const project = {
   domain: "example.com",
   isSample: false,
   writeMode: "active",
-  domainRatingEnabled: true,
+  syncPauses: [],
 };
 const now = new Date("2026-10-28T12:00:00Z");
 beforeEach(() => {
@@ -44,6 +44,36 @@ beforeEach(() => {
   mocks.credentials.mockResolvedValue({ key: "fixture", source: "own", connectionId: "c1" });
   mocks.gate.mockResolvedValue({ success: true });
   mocks.fetch.mockResolvedValue(0);
+});
+
+it("skips provider work when the recurring sync has a pause row", async () => {
+  mocks.project.findUnique.mockResolvedValue({
+    ...project,
+    syncPauses: [{ kind: "domain_rating" }],
+  });
+  mocks.fetch.mockImplementation(() => {
+    throw new Error("Paused rating reached the provider");
+  });
+  expect(await collectDomainRating("p1", now)).toBe("disabled");
+  expect(mocks.fetch).not.toHaveBeenCalled();
+  // The read is filtered to this sync's own pause kind.
+  expect(mocks.project.findUnique).toHaveBeenCalledWith(
+    expect.objectContaining({
+      select: expect.objectContaining({
+        syncPauses: { where: { kind: "domain_rating" }, select: { kind: true } },
+      }),
+    }),
+  );
+});
+
+it("still runs the explicit initial check while the recurring sync is paused", async () => {
+  mocks.project.findUnique.mockResolvedValue({
+    ...project,
+    syncPauses: [{ kind: "domain_rating" }],
+  });
+  mocks.domainRatingCheck.findFirst.mockResolvedValue(null);
+  expect(await collectInitialDomainRating("p1", now)).toBe("succeeded");
+  expect(mocks.fetch).toHaveBeenCalledTimes(1);
 });
 
 describe("daily rating collection", () => {
@@ -69,7 +99,7 @@ describe("daily rating collection", () => {
     );
   });
   it.each([
-    { domainRatingEnabled: false },
+    { syncPauses: [{ kind: "domain_rating" }] },
     { writeMode: "read_only" },
     { isSample: true },
     { domain: null },
@@ -92,7 +122,7 @@ describe("daily rating collection", () => {
   it("honors a pause after the job was queued", async () => {
     mocks.project.findUnique
       .mockResolvedValueOnce(project)
-      .mockResolvedValueOnce({ ...project, domainRatingEnabled: false });
+      .mockResolvedValueOnce({ ...project, syncPauses: [{ kind: "domain_rating" }] });
     expect(await collectDomainRating("p1", now)).toBe("disabled");
     expect(mocks.fetch).not.toHaveBeenCalled();
     expect(mocks.domainRatingCheck.delete).toHaveBeenCalled();
@@ -136,7 +166,10 @@ describe("daily rating collection", () => {
 
 describe("first measurement after connecting", () => {
   it("collects once even when daily tracking is off", async () => {
-    mocks.project.findUnique.mockResolvedValue({ ...project, domainRatingEnabled: false });
+    mocks.project.findUnique.mockResolvedValue({
+      ...project,
+      syncPauses: [{ kind: "domain_rating" }],
+    });
     mocks.domainRatingCheck.findFirst.mockResolvedValue(null);
     expect(await collectInitialDomainRating("p1", now)).toBe("succeeded");
     expect(mocks.fetch).toHaveBeenCalledTimes(1);

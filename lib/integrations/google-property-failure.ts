@@ -1,3 +1,5 @@
+import type { useTranslations } from "next-intl";
+
 export type GooglePropertyFailureReason =
   | "auth"
   | "scope"
@@ -19,19 +21,60 @@ export type GooglePropertyFailure = {
   httpStatus?: number;
   code?: string;
 };
-const messageKeys = {
-  auth: "googlePropertyAuth",
-  scope: "googlePropertyScope",
-  permission: "googlePropertyPermission",
-  api_disabled: "googlePropertyApiDisabled",
-  configuration: "googlePropertyApiDisabled",
-  quota: "googlePropertyQuota",
-  temporary: "googlePropertyTemporary",
-  unknown: "googlePropertyUnknown",
-} as const;
-export function googlePropertyFailureMessage(
+
+type OauthTranslator = ReturnType<typeof useTranslations<"projectIntegrations.oauth">>;
+type InsightsTranslator = ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
+
+export function googlePropertyOauthFailureMessage(
   failure: GooglePropertyFailure,
-  translate: (key: (typeof messageKeys)[GooglePropertyFailureReason]) => string,
+  translate: OauthTranslator,
 ) {
-  return translate(messageKeys[failure.reason]);
+  switch (failure.reason) {
+    case "auth":
+      return translate("googlePropertyAuth");
+    case "scope":
+      return translate("googlePropertyScope");
+    case "permission":
+      return translate("googlePropertyPermission");
+    case "api_disabled":
+    case "configuration":
+      return translate("googlePropertyApiDisabled");
+    case "quota":
+      return translate("googlePropertyQuota");
+    case "temporary":
+      return translate("googlePropertyTemporary");
+    case "unknown":
+      return translate("googlePropertyUnknown");
+    default: {
+      const unreachable: never = failure.reason;
+      return unreachable;
+    }
+  }
+}
+
+export function googlePropertyInsightsFailureMessage(
+  failure: GooglePropertyFailure,
+  translate: InsightsTranslator,
+) {
+  switch (failure.reason) {
+    case "auth":
+      return translate("googlePropertyAuth");
+    case "scope":
+      return translate("googlePropertyScope");
+    case "permission":
+      return translate("googlePropertyPermission");
+    case "api_disabled":
+    case "configuration":
+      return translate("googlePropertyApiDisabled");
+    case "quota":
+      return translate("googlePropertyQuota");
+    case "temporary":
+      return translate("googlePropertyTemporary");
+    case "unknown":
+      return translate("googlePropertyUnknown");
+    default: {
+      const unreachable: never = failure.reason;
+      return unreachable;
+    }
+  }
 }

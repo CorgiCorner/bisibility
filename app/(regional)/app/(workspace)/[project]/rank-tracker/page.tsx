@@ -21,7 +21,7 @@ import { deleteSavedView } from "@/lib/actions/saved-views";
 import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
-import { addKeywords, bulkSetFrequency } from "@/lib/capacity/client-actions";
+import { addKeywords } from "@/lib/capacity/client-actions";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { rankTrackerNavigationHref } from "@/lib/keywords/rank-tracker-navigation";
@@ -229,7 +229,6 @@ export default async function KeywordsPage({
               addKeywordsAction={addKeywords}
               bulkClearTargetAction={bulkClearTargetUrls}
               bulkDeleteAction={bulkDeleteKeywords}
-              bulkSetFrequencyAction={bulkSetFrequency}
               bulkSetTargetAction={bulkSetTargetUrl}
               bulkTagAction={bulkTagKeywords}
               checkHealth={checkHealth}

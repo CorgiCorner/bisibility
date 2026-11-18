@@ -61,7 +61,13 @@
     "lib/email/budget.ts",
     "lib/email/from.ts",
     "lib/email/instance-mail-store.ts",
+    "lib/email/notification-policy.ts",
     "lib/email/registry.ts"
+  ],
+  "lib/email/notification-policy.ts": ["lib/rank-check/dispatcher-config.ts"],
+  "lib/rank-check/dispatcher-config.ts": [
+    "lib/deployment/runtime-env.generated.ts",
+    "lib/rank-check/scheduler-mode.ts"
   ],
   "lib/demo/config.ts": ["lib/db/public-id.ts"],
   "lib/email/budget.ts": ["lib/db/prisma.ts"],

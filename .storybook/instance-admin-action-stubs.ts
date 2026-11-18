@@ -32,3 +32,15 @@ export async function sendTestSlackNotification() {
 export async function runOpsSweepNow() {
   return { status: "not_configured" as const };
 }
+
+/**
+ * Preview transport for the assistant safeguards card: it never writes application data. The
+ * reason is required by the real action and ignored here.
+ */
+export async function setAssistantKillSwitch(level: "off" | "credits" | "all", _reason: string) {
+  return { ok: true as const, level };
+}
+
+export async function setAssistantGuard() {
+  return { ok: false as const };
+}

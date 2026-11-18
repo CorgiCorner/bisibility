@@ -9,6 +9,7 @@ import { trackedProjectDomain } from "@/lib/schemas/project";
 import { readSearchInsightsConnection } from "@/lib/search-insights/sync/credentials";
 import { readOrganicSessionsConnection } from "@/lib/search-insights/sync/sessions-credentials";
 import { canonicalProjectHost } from "./page-path";
+import { getStoredSitemapRead } from "./sitemap-read";
 import { existingVsNewQueries } from "./snapshot-query";
 import {
   cumulativeMembership,
@@ -159,7 +160,9 @@ export async function loadExistingVsNew(
   const domain = trackedProjectDomain(project.domain);
   const host = domain ? canonicalProjectHost(domain) : null;
   if (!snapshot || !selected || !host) return view;
+  const sitemapRead = await getStoredSitemapRead(project.id);
   const queries = existingVsNewQueries({
+    sitemapRead,
     conversionSource: conversionSelection.selected,
     from: window.from,
     ga4Property: sessionsConnection.connection?.property ?? null,

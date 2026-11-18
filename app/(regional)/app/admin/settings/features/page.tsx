@@ -8,10 +8,12 @@ export default async function Page() {
   await requireInstanceAdmin();
   return (
     <AdminRouteFrame view="Features">
-      <InstanceFeatures
-        enabled={await projectSeoChallengeEnabled()}
-        editable={readDemoConfig().kind === "disabled"}
-      />
+      <div className="grid gap-4">
+        <InstanceFeatures
+          enabled={await projectSeoChallengeEnabled()}
+          editable={readDemoConfig().kind === "disabled"}
+        />
+      </div>
     </AdminRouteFrame>
   );
 }

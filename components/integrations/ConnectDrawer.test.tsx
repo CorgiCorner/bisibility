@@ -5,6 +5,9 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
+import { credentialsFromInput } from "@/lib/providers/credentials-input";
+import { NATIVE_MODEL_PROVIDERS } from "@/lib/providers/model/types";
+import { connectProviderSchema } from "@/lib/schemas/provider";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
@@ -25,7 +28,7 @@ vi.mock("@/components/provider-management/ConnectionRatePanel", () => ({
 }));
 
 const actions = {
-  connectProvider: vi.fn(async () => undefined),
+  connectProvider: vi.fn(async (_input: unknown) => undefined),
   disconnectProvider: vi.fn(async () => undefined),
   testProviderConnection: vi.fn(async () => ({ message: "ok", ok: true })),
   updateProviderCost: vi.fn(async () => undefined),
@@ -341,6 +344,36 @@ describe("ConnectDrawer", () => {
     expect(screen.getByLabelText("API password")).toHaveValue("");
   });
 
+  it.each(NATIVE_MODEL_PROVIDERS)(
+    "submits %s API key through the real drawer and server mapping",
+    async (id) => {
+      const original = connectableSerpApi();
+      const model: IntegrationProviderData = {
+        ...original,
+        id,
+        kind: "model",
+        name: id,
+        drawer: {
+          ...original.drawer,
+          credentialFields: providerCredentialFieldsFor(id, { connected: false }),
+          defaults: { ...original.drawer.defaults, login: "", endpoint: "", secret: "" },
+        },
+      };
+      renderDrawer(model);
+      fireEvent.change(screen.getByLabelText("API key"), {
+        target: { value: "fixture-model-drawer-key" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+      await waitFor(() => expect(actions.testProviderConnection).toHaveBeenCalledOnce());
+      fireEvent.click(screen.getByRole("button", { name: "Connect provider" }));
+      await waitFor(() => expect(actions.connectProvider).toHaveBeenCalledOnce());
+      const payload = connectProviderSchema.parse(actions.connectProvider.mock.calls[0][0]);
+      expect(payload.providerId).toBe(id);
+      expect(payload.costPerCheck).toBeUndefined();
+      expect(credentialsFromInput(payload)).toEqual({ apiKey: "fixture-model-drawer-key" });
+    },
+  );
+
   it("submits a blank cost field as undefined without a validation error", async () => {
     renderDrawer(connectableSerpApi());
 
@@ -584,4 +617,37 @@ describe("ConnectDrawer", () => {
       screen.queryByText("Credentials can also be configured through environment variables."),
     ).not.toBeInTheDocument();
   });
+});
+
+it.each([false, true])("unavailable model has no credential form (stored: %s)", async (stored) => {
+  const provider: IntegrationProviderData = {
+    ...connectableSerpApi(),
+    id: "openai",
+    name: "OpenAI",
+    kind: "model",
+    status: "planned",
+    connectionId: stored ? "conn_a00000000000000000000000" : undefined,
+    hasStoredCredentials: stored,
+    description: "Billed by your provider. Not available yet.",
+    drawer: {
+      ...connectableSerpApi().drawer,
+      credentialFields: providerCredentialFieldsFor("openai", { connected: stored }),
+      defaults: { ...connectableSerpApi().drawer.defaults, secret: "", login: "" },
+    },
+  };
+  vi.clearAllMocks();
+  renderDrawer(provider);
+  const dialog = screen.getByRole("dialog");
+  const form = dialog.querySelector("form");
+  if (form) fireEvent.submit(form);
+  await userEvent.type(dialog, "{Enter}");
+  expect(actions.connectProvider).not.toHaveBeenCalled();
+  expect(actions.testProviderConnection).not.toHaveBeenCalled();
+  expect(feedback.toast).not.toHaveBeenCalled();
+  expect(form).toBeNull();
+  expect(dialog.querySelector("input")).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: /Connect provider|Save changes|Test connection/ }),
+  ).toBeNull();
+  expect(screen.getByText(provider.description)).toBeInTheDocument();
 });

@@ -7,6 +7,7 @@ import { Button, type ButtonProps } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import type { IntegrationProviderData, ProviderTestResult } from "@/lib/integrations/types";
+import { NATIVE_MODEL_PROVIDERS } from "@/lib/providers/model/types";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useTranslations } from "next-intl";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
@@ -22,8 +23,17 @@ const labelClass = "flex flex-col gap-[7px] text-[10px] uppercase tracking-[0.5p
 function localizedCredentialField(
   providerId: string,
   field: ReturnType<typeof providerCredentialFields>[number],
-  t: ReturnType<typeof useTranslations>,
+  t: ReturnType<typeof useTranslations<"projectIntegrations.drawer">>,
 ) {
+  if (NATIVE_MODEL_PROVIDERS.some((id) => id === providerId) && field.name === "secret") {
+    const saved = field.placeholder === "••••••••";
+    return {
+      ...field,
+      label: t("credentialApiKey"),
+      placeholder: saved ? field.placeholder : t("credentialApiKeyPlaceholder"),
+      description: saved ? t("credentialSavedSecret") : field.description,
+    };
+  }
   const key = `${providerId}:${field.name}`;
   const copy = {
     "dataforseo:login": { label: t("credentialApiLogin") },

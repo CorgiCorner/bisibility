@@ -23,7 +23,15 @@ import {
 import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { LaunchRankCheckRunError, SampleProjectError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
-import { DefaultCheckScheduleDeletionError } from "@/lib/rank-check/schedules/service";
+import { CheckScheduleNotEmptyError } from "@/lib/rank-check/schedules/service";
+import { scheduleActionStatus } from "@/lib/schedules/action-result";
+import {
+  DataSyncStateError,
+  ScheduleMutationError,
+  ScheduleReviewRequiredError,
+  ScheduleReviewStaleError,
+  ScheduleTransitionError,
+} from "@/lib/schedules/errors";
 import { ZodError } from "zod";
 
 const CACHE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -177,8 +185,28 @@ function mappedError(
   if (error instanceof ApiConflictError) {
     return problem("conflict", error.message, 409);
   }
-  if (error instanceof DefaultCheckScheduleDeletionError) {
-    return problem("conflict", error.message, 409);
+  if (error instanceof CheckScheduleNotEmptyError) {
+    return problem("conflict", error.message, 409, { code: error.code });
+  }
+  if (error instanceof ScheduleReviewRequiredError || error instanceof ScheduleReviewStaleError) {
+    return problem(
+      error instanceof ScheduleReviewRequiredError ? "schedule_review_required" : "conflict",
+      error.message,
+      error instanceof ScheduleReviewRequiredError ? 428 : 409,
+      { code: error.code, preview: error.preview },
+    );
+  }
+  if (error instanceof ScheduleMutationError) {
+    const status = scheduleActionStatus(error);
+    const code =
+      error instanceof ScheduleTransitionError
+        ? "conflict"
+        : error instanceof DataSyncStateError
+          ? "validation_failed"
+          : status === 404
+            ? "not_found"
+            : "validation_failed";
+    return problem(code, error.message, status, { code: error.code });
   }
   return null;
 }

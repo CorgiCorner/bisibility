@@ -99,3 +99,21 @@ export function canDeleteProjectSavedView(
 ): boolean {
   return canProjectAction(role, createdById === actorId ? "update" : "delete", "saved_view");
 }
+
+/**
+ * Named capabilities that are granted by role on their own, never derived from the
+ * read/write action ladder above. `assistant.use` lets a member spend AI Credits in
+ * the assistant; viewers and auditors do not get it by default.
+ */
+export type Capability = "assistant.use";
+
+const minimumRoleByCapability = {
+  "assistant.use": "member",
+} satisfies Record<Capability, Role>;
+
+export function hasProjectCapability(
+  role: Role | null | undefined,
+  capability: Capability,
+): boolean {
+  return Boolean(role && roleRank[role] >= roleRank[minimumRoleByCapability[capability]]);
+}

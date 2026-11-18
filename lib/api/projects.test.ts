@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { findFirst: vi.fn() },
     $transaction: vi.fn(),
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
@@ -235,6 +236,7 @@ describe("project write API routes", () => {
     );
     mocks.prisma.apiKey.findFirst.mockResolvedValue({
       id: "key_1",
+      createdById: "creator_1",
       scopes: ["admin"],
       revokedAt: null,
       expiresAt: null,
@@ -243,6 +245,7 @@ describe("project write API routes", () => {
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Key",
@@ -357,6 +360,7 @@ describe("project write API routes", () => {
       jitter_minutes: 60,
       timezone: "UTC",
     });
+    if (ctx.origin.surface !== "programmatic") throw new Error("Expected a programmatic origin");
     const mismatched = { ...ctx, origin: { ...ctx.origin, credentialId: "other-key" } };
     await expect(
       projectHandlers.updateProjectDefaults(mismatched, project.publicId),
@@ -376,6 +380,7 @@ describe("project write API routes", () => {
     mocks.prisma.$queryRaw.mockClear();
     mocks.prisma.apiKey.findFirst.mockResolvedValue({
       id: "key_1",
+      createdById: "creator_1",
       scopes: ["admin"],
       revokedAt: new Date(),
       expiresAt: null,

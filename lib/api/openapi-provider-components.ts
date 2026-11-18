@@ -106,7 +106,11 @@ export const providerSchemas = {
         ],
         type: "object",
       },
-      category_id: { enum: ["serp", "analytics"], type: "string" },
+      category_id: {
+        enum: ["serp", "analytics", "model"],
+        type: "string",
+        ...openEnum("ProviderCategoryId"),
+      },
       category_title: { type: "string" },
       connected: {
         description: "Credentials on file are valid; enabled may still be false.",
@@ -123,7 +127,7 @@ export const providerSchemas = {
         type: "boolean",
       },
       id: { description: "Natural provider catalog ID.", type: "string" },
-      kind: { enum: ["serp", "analytics"], type: "string" },
+      kind: { enum: ["serp", "analytics", "model"], type: "string", ...openEnum("ProviderKind") },
       last_used_at: { format: "date-time", type: ["string", "null"] },
       name: { type: "string" },
       primary: { type: "boolean" },

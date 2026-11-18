@@ -1,4 +1,5 @@
 import { domainVerificationPolicies } from "./domain-verification-policy";
+import { modelPlaygroundPolicies } from "./model-playground-registry";
 import * as caps from "./operation-capabilities";
 import { promptResearchPolicies, promptTrackerPolicies } from "./operation-policy-ai-tracking";
 import { type OperationPolicy, policy } from "./operation-policy-helpers";
@@ -7,6 +8,12 @@ import { rankRunOperationPolicies } from "./operation-policy-rank-runs";
 import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 
 export const operationPolicy = {
+  previewSchedule: policy("POST", "/projects/{project_id}/schedules/preview", "write", "read"),
+  createSchedule: policy("POST", "/projects/{project_id}/schedules", "write"),
+  updateSchedule: policy("PATCH", "/projects/{project_id}/schedules/{schedule_id}", "write"),
+  listSchedules: policy("GET", "/projects/{project_id}/schedules", "read"),
+  getSchedule: policy("GET", "/projects/{project_id}/schedules/{schedule_id}", "read"),
+  ...modelPlaygroundPolicies,
   ...domainVerificationPolicies,
   ...localMonitorReadPolicies,
   ...rankRunOperationPolicies,

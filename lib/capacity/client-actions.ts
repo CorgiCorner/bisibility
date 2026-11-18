@@ -1,7 +1,8 @@
 "use client";
 import { addKeywordsMatrix as addKeywordsMatrixAction } from "@/lib/actions/keyword";
+import { scheduleActionClient } from "@/lib/schedules/action-result";
 import { capacityActionClient } from "./action";
-export const addKeywordsMatrix = capacityActionClient(addKeywordsMatrixAction);
+export const addKeywordsMatrix = scheduleActionClient(addKeywordsMatrixAction);
 
 import { createAlertRule as createAlertRuleAction } from "@/lib/actions/alerts";
 export const createAlertRule = capacityActionClient(createAlertRuleAction);
@@ -10,10 +11,7 @@ import { upsertWebhookEndpoint as upsertWebhookEndpointAction } from "@/lib/acti
 export const upsertWebhookEndpoint = capacityActionClient(upsertWebhookEndpointAction);
 
 import { addKeywords as addKeywordsAction } from "@/lib/actions/keyword";
-export const addKeywords = capacityActionClient(addKeywordsAction);
-
-import { bulkSetFrequency as bulkSetFrequencyAction } from "@/lib/actions/keyword-bulk";
-export const bulkSetFrequency = capacityActionClient(bulkSetFrequencyAction);
+export const addKeywords = scheduleActionClient(addKeywordsAction);
 
 import { addManualCompetitor as addManualCompetitorAction } from "@/lib/actions/competitor-set";
 export const addManualCompetitor = capacityActionClient(addManualCompetitorAction);
@@ -42,7 +40,7 @@ import { createCloudImportWorkspace as createCloudImportWorkspaceAction } from "
 export const createCloudImportWorkspace = capacityActionClient(createCloudImportWorkspaceAction);
 
 import { addProjectMarketDeviceTargets as addProjectMarketDeviceTargetsAction } from "@/lib/actions/project-market-devices";
-export const addProjectMarketDeviceTargets = capacityActionClient(
+export const addProjectMarketDeviceTargets = scheduleActionClient(
   addProjectMarketDeviceTargetsAction,
 );
 
@@ -50,4 +48,4 @@ import { updateAlertRule as updateAlertRuleAction } from "@/lib/actions/alerts";
 export const updateAlertRule = capacityActionClient(updateAlertRuleAction);
 
 import { createProjectMarket as createProjectMarketAction } from "@/lib/actions/project-market-create";
-export const createProjectMarket = capacityActionClient(createProjectMarketAction);
+export const createProjectMarket = scheduleActionClient(createProjectMarketAction);

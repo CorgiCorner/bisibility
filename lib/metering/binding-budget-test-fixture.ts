@@ -26,6 +26,7 @@ export async function bindingBudgetFixture(
     "20261011010000_shared_paid_attempt_context",
     "20261011020000_accounting_history_snapshot",
     "20261012001000_metering_utc_writers",
+    "20261112220000_metering_native_settlement",
   ])
     await db.exec(
       readFileSync(

@@ -3,6 +3,7 @@ import type { schemas } from "./openapi-components";
 import { keywordBulkRequest, keywordBulkResponse } from "./openapi-keyword-bulk";
 import { keywordCreateRequest } from "./openapi-keyword-create";
 import { withRequiredBody } from "./openapi-operations";
+import { problemResponse } from "./openapi-problem";
 import { publicIdSchema } from "./openapi-public-id";
 import { openEnum, sdkName } from "./openapi-sdk-schema";
 import { KEYWORD_MATCH_MAX_TEXTS } from "./schemas";
@@ -209,6 +210,18 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
       { $ref: "#/components/parameters/IdempotencyKey" },
     ]),
   );
+  const withScheduleReview = (operation: Record<string, unknown>) => ({
+    ...operation,
+    responses: {
+      ...(operation.responses as object),
+      "409":
+        (operation.responses as Record<string, unknown>)["409"] ??
+        problemResponse("Schedule review is stale."),
+      "428": problemResponse("Recurring spend increase requires review", {
+        $ref: "#/components/schemas/ScheduleReviewRequiredProblem",
+      }),
+    },
+  });
   const matchOperation = bearer(
     "Match exact tracked keyword texts across project markets",
     "matchProjectKeywords",
@@ -220,16 +233,25 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
     "/keywords/{keyword_id}": {
       delete: bearer("Delete one keyword", "deleteKeyword", ref("Keyword")),
       get: bearer("Get one keyword", "getKeyword", ref("Keyword")),
-      patch: bearer("Set keyword target URL or metadata", "setKeywordTargetUrl", ref("Keyword")),
+      patch: withScheduleReview(
+        bearer(
+          "Set keyword target URL or metadata",
+          "setKeywordTargetUrl",
+          ref("Keyword"),
+          ref("KeywordPatch"),
+        ),
+      ),
     },
     "/keywords/bulk": {
-      post: withRequiredBody(
-        bearer(
-          "Bulk mutate keywords",
-          "bulkUpdateKeywords",
-          keywordBulkResponse,
-          keywordBulkRequest,
-          [{ $ref: "#/components/parameters/IdempotencyKey" }],
+      post: withScheduleReview(
+        withRequiredBody(
+          bearer(
+            "Bulk mutate keywords",
+            "bulkUpdateKeywords",
+            keywordBulkResponse,
+            keywordBulkRequest,
+            [{ $ref: "#/components/parameters/IdempotencyKey" }],
+          ),
         ),
       ),
     },
@@ -248,6 +270,10 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
         ...addOperation,
         responses: {
           ...(addOperation.responses as object),
+          "409": problemResponse("Schedule review is stale."),
+          "428": problemResponse("Recurring spend increase requires review", {
+            $ref: "#/components/schemas/ScheduleReviewRequiredProblem",
+          }),
           "201": {
             description: "At least one keyword created",
             content: { "application/json": { schema: keywordMutationResult } },

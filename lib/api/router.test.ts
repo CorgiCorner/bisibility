@@ -34,6 +34,7 @@ const mocks = vi.hoisted(() => {
       $transaction: vi.fn(),
       $queryRawUnsafe: vi.fn(),
       $queryRaw: vi.fn(),
+      membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
       apiKey: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
       auditLog: { create: vi.fn() },
       keyword: {
@@ -58,6 +59,7 @@ const mocks = vi.hoisted(() => {
       projectDefaults: { findUnique: vi.fn() },
       project: { findUnique: vi.fn(), updateMany: vi.fn() },
       providerConnection: {
+        findFirst: vi.fn(async () => null),
         findUnique: vi.fn(),
         findMany: vi.fn(),
         update: vi.fn(),
@@ -143,6 +145,7 @@ vi.mock("@/lib/db/prisma", () => ({
 // deterministic.
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveKeywordLocation,
+  resolveKeywordLocationUsingStore: mocks.resolveKeywordLocation,
 }));
 
 vi.mock("@/lib/providers/registry", async (importOriginal) => ({
@@ -171,6 +174,7 @@ function project() {
 
 function authRow() {
   return {
+    createdById: "creator_1",
     hashedKey: hashApiKey(rawKey),
     scopes: ["read", "write", "admin"],
     id: "api_key_1",
@@ -340,6 +344,7 @@ describe("public API router", () => {
                   publicId: "sch_a00000000000000000000000",
                 };
       }
+      return new Map(ids.map((id: string) => [id, null]));
     });
     mocks.prisma.keywordSchedule.createMany.mockImplementation(({ data }) => {
       for (const schedule of data) {
@@ -796,7 +801,7 @@ describe("public API router", () => {
     );
   });
 
-  it("executes documented snake-case schedules for keyword creation", async () => {
+  it("requires review before creating a keyword with a snake-case schedule", async () => {
     const response = await call(
       authedRequest("POST", "/projects/prj_a00000000000000000000000/keywords", {
         keyword: "rank tracker",
@@ -810,35 +815,11 @@ describe("public API router", () => {
       "/projects/prj_a00000000000000000000000/keywords",
     );
 
-    expect(response.status).toBe(201);
-    expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: [expect.objectContaining({ text: "rank tracker" })],
-      }),
-    );
-    expect(mocks.prisma.keywordSchedule.createMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: [
-          expect.objectContaining({
-            cronExpression: "15 6 * * 1",
-            frequency: "custom_cron",
-            jitterMinutes: 0,
-          }),
-        ],
-      }),
-    );
-    await expect(response.json()).resolves.toMatchObject({
-      results: [
-        {
-          keyword: {
-            schedule: {
-              cron_expression: "15 6 * * 1",
-              jitter_minutes: 0,
-            },
-          },
-        },
-      ],
-    });
+    expect(response.status).toBe(428);
+    await expect(response.json()).resolves.toMatchObject({ code: "schedule_review_required" });
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.keywordSchedule.createMany).not.toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
   });
 
   it("creates keywords with location_key and returns resolver warnings", async () => {
@@ -1067,14 +1048,13 @@ describe("public API router", () => {
     });
   });
 
-  it("executes documented snake-case schedules for patch and bulk requests", async () => {
+  it("requires review before patch and bulk schedule increases", async () => {
     const existing = keywordRow("kw_a00000000000000000000000");
+    mocks.keywordStore.set(existing.id, existing);
     mocks.prisma.keyword.findFirst.mockResolvedValue(existing);
-    mocks.prisma.keyword.update.mockResolvedValue(existing);
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { id: existing.id, publicId: existing.publicId },
     ]);
-    mocks.prisma.keywordSchedule.upsert.mockResolvedValue({});
 
     const patchResponse = await call(
       authedRequest("PATCH", "/keywords/kw_a00000000000000000000000", {
@@ -1101,24 +1081,86 @@ describe("public API router", () => {
       "/keywords/bulk",
     );
 
+    expect(patchResponse.status).toBe(428);
+    expect(bulkResponse.status).toBe(428);
+    await expect(patchResponse.json()).resolves.toMatchObject({ code: "schedule_review_required" });
+    await expect(bulkResponse.json()).resolves.toMatchObject({ code: "schedule_review_required" });
+    expect(mocks.prisma.keyword.update).not.toHaveBeenCalled();
+    expect(mocks.prisma.keywordSchedule.upsert).not.toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
+  });
+
+  it("parses documented snake-case schedules for unchanged patch and bulk cadences", async () => {
+    const existing = keywordRow("kw_a00000000000000000000000");
+    const current = {
+      archivedAt: null,
+      enabled: true,
+      frequency: "custom_cron",
+      cronExpression: "15 6 * * 1",
+      serpDepth: null,
+      jitterMinutes: 0,
+      publicId: "sch_a00000000000000000000000",
+      timeOfDay: null,
+      timezone: "Europe/Warsaw",
+    };
+    mocks.keywordStore.set(existing.id, { ...existing, checkSchedule: current });
+    mocks.prisma.keyword.findFirst.mockResolvedValue(existing);
+    mocks.prisma.keyword.update.mockResolvedValue(existing);
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      { id: existing.id, publicId: existing.publicId, checkSchedule: current },
+    ]);
+    const schedule = {
+      cron_expression: "15 6 * * 1",
+      frequency: "custom_cron",
+      jitter_minutes: 0,
+      timezone: "Europe/Warsaw",
+    };
+
+    const patchResponse = await call(
+      authedRequest("PATCH", "/keywords/kw_a00000000000000000000000", { schedule }),
+      "/keywords/kw_a00000000000000000000000",
+    );
+    const bulkResponse = await call(
+      authedRequest("POST", "/keywords/bulk", {
+        keyword_ids: [existing.publicId],
+        operation: "set_frequency",
+        schedule,
+      }),
+      "/keywords/bulk",
+    );
+
     expect(patchResponse.status).toBe(200);
     expect(bulkResponse.status).toBe(200);
-    expect(mocks.setKeywordCadence).toHaveBeenNthCalledWith(
-      1,
-      mocks.prisma,
-      "project_1",
-      [existing.id],
-      expect.objectContaining({ cronExpression: "0 7 * * *", jitterMinutes: 0 }),
-      null,
-    );
-    expect(mocks.setKeywordCadence).toHaveBeenNthCalledWith(
-      2,
-      mocks.prisma,
-      "project_1",
-      [existing.id],
-      expect.objectContaining({ cronExpression: "30 8 * * 1", jitterMinutes: 0 }),
-      null,
-    );
+    await expect(bulkResponse.json()).resolves.toEqual({
+      operation: "set_frequency",
+      results: [{ keyword_id: existing.publicId, status: "updated" }],
+    });
+    // Characterization of the legacy PATCH alias: the keyword resource keeps its v1 shape and the
+    // nullable membership fields, with the cadence served from the (mocked) stored keyword.
+    await expect(patchResponse.json()).resolves.toMatchObject({
+      id: existing.publicId,
+      project_id: "prj_a00000000000000000000000",
+      text: "rank tracker",
+      schedule: {
+        cron_expression: null,
+        frequency: "manual",
+        jitter_minutes: 0,
+        last_checked_at: null,
+        next_check_at: null,
+        schedule_id: null,
+        schedule_state: null,
+        source: "keyword",
+        timezone: "UTC",
+      },
+    });
+    expect(mocks.setKeywordCadence).toHaveBeenCalledTimes(2);
+    for (const invocation of mocks.setKeywordCadence.mock.calls) {
+      expect(invocation[3]).toMatchObject({
+        cronExpression: "15 6 * * 1",
+        jitterMinutes: 0,
+        timezone: "Europe/Warsaw",
+      });
+    }
   });
 
   it("connects providers with API-key auth without using session actions", async () => {

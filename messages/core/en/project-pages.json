@@ -306,7 +306,13 @@
     },
     "sitemapState": {
       "listed": "Listed",
-      "notListed": "Not listed"
+      "notListed": "Not listed",
+      "notChecked": "Sitemap not checked",
+      "notCheckedCell": "Not checked",
+      "notCheckedHint": "Available after the project sitemap has been read by its sitemap monitor.",
+      "lastRead": "Last successful read: {date} UTC",
+      "freshnessHint": "Membership uses successful reads from the last 48 hours. Pages first seen after a sitemap read remain not checked until every sitemap is read again.",
+      "absenceNotChecked": "Not in sitemap: not checked"
     },
     "sourceKind": {
       "ai_citation": "AI cites",
@@ -345,6 +351,13 @@
     "tags": {
       "all": "All tags",
       "new": "New tag"
+    },
+    "export": {
+      "csv": "Export CSV",
+      "hint": "Export all matching rows and visible columns, up to 5,000 rows. Tags use a space-pipe-space separator ( | ).",
+      "empty": "No matching pages to export.",
+      "tooLarge": "This view has more than {count, number} pages. Narrow the search or filters, then export again. No file was downloaded.",
+      "failed": "Could not export pages. Try again."
     }
   }
 }

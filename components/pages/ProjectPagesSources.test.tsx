@@ -49,6 +49,22 @@ describe("ProjectPagesPasteDialog", () => {
 });
 
 describe("ProjectPagesSources", () => {
+  it("describes an enabled but unread sitemap without a fabricated page count", async () => {
+    const user = userEvent.setup();
+    renderPages(
+      <ProjectPagesSources
+        canWrite={false}
+        onPaste={vi.fn()}
+        onRefresh={vi.fn()}
+        pending={false}
+        projectId="prj_1"
+        sources={[{ ...pageSource("sitemap", "connected"), sitemapChecked: false }]}
+      />,
+    );
+    await user.hover(screen.getByText("Sitemap"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Sitemap not checked");
+    expect(screen.getByRole("tooltip")).not.toHaveTextContent("Connected");
+  });
   it("hides write actions without permission", () => {
     renderPages(
       <ProjectPagesSources

@@ -8,9 +8,11 @@
  * operations are listed there as known gaps until they get their entries here.
  */
 
+import { modelPlaygroundPolicies, modelPlaygroundSdkOperations } from "./model-playground-registry";
 import { sdkWave2Operations, sdkWave2ReadyOperationIds } from "./openapi-sdk-wave2";
 import { sdkWave3Operations, sdkWave3ReadyOperationIds } from "./openapi-sdk-wave3";
 import { sdkWave4Operations, sdkWave4ReadyOperationIds } from "./openapi-sdk-wave4";
+import { sdkWave5Operations, sdkWave5ReadyOperationIds } from "./openapi-sdk-wave5";
 
 type Legacy = { go: string[]; python: string[]; ts: string[] };
 type Pagination =
@@ -53,6 +55,7 @@ const legacy = (ts: string, python: string, go: string): Legacy => ({
 });
 
 export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions>> = {
+  ...modelPlaygroundSdkOperations,
   getDomainVerification: read("projects.domainVerification", "get", { go: [], python: [], ts: [] }),
   issueDomainVerification: read("projects.domainVerification", "start", {
     go: [],
@@ -90,6 +93,7 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
   ...sdkWave2Operations,
   ...sdkWave3Operations,
   ...sdkWave4Operations,
+  ...sdkWave5Operations,
   acceptPromptResearchSuggestions: {
     "x-bisibility-idempotency": "optional",
     "x-bisibility-pagination": single,
@@ -224,6 +228,7 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
 
 /** The first operations to be generated; each must pass every extension rule. */
 export const sdkFirstWaveOperationIds = [
+  ...Object.keys(modelPlaygroundPolicies),
   "getAnalyticsConsent",
   "updateAnalyticsConsent",
   "registerDevicePushToken",
@@ -234,6 +239,7 @@ export const sdkFirstWaveOperationIds = [
   ...sdkWave2ReadyOperationIds,
   ...sdkWave3ReadyOperationIds,
   ...sdkWave4ReadyOperationIds,
+  ...sdkWave5ReadyOperationIds,
   "analyzeBacklinks",
   "analyzeDomainOverview",
   "getPromptTrackerHistory",

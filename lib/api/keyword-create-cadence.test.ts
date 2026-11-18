@@ -25,6 +25,7 @@ it("groups a 500-keyword explicit batch into one membership mutation", async () 
     accepted.map((row) => row.keyword.id),
     daily,
     null,
+    "schedule",
   );
 });
 it("does not schedule omitted input or skipped existing duplicates", async () => {
@@ -51,6 +52,61 @@ it("preserves an explicit cadence on restored rows and separates depth selection
     "actor1",
   );
   expect(mocks.set).toHaveBeenCalledTimes(2);
-  expect(mocks.set).toHaveBeenNthCalledWith(1, tx, "project1", ["restored"], daily, "actor1");
-  expect(mocks.set).toHaveBeenNthCalledWith(2, tx, "project1", ["depth"], explicitDepth, "actor1");
+  expect(mocks.set).toHaveBeenNthCalledWith(
+    1,
+    tx,
+    "project1",
+    ["restored"],
+    daily,
+    "actor1",
+    "schedule",
+  );
+  expect(mocks.set).toHaveBeenNthCalledWith(
+    2,
+    tx,
+    "project1",
+    ["depth"],
+    explicitDepth,
+    "actor1",
+    "schedule",
+  );
+});
+
+it("keeps input forms separate without adding them to the cadence", async () => {
+  await assignCreatedKeywordCadences(
+    tx,
+    "project1",
+    [
+      {
+        created: true,
+        keyword: { id: "shorthand" },
+        row: { schedule: daily, scheduleSource: "frequency" },
+      },
+      {
+        created: true,
+        keyword: { id: "explicit" },
+        row: { schedule: daily, scheduleSource: "schedule" },
+      },
+    ],
+    null,
+  );
+  expect(mocks.set).toHaveBeenCalledTimes(2);
+  expect(mocks.set).toHaveBeenNthCalledWith(
+    1,
+    tx,
+    "project1",
+    ["shorthand"],
+    daily,
+    null,
+    "frequency",
+  );
+  expect(mocks.set).toHaveBeenNthCalledWith(
+    2,
+    tx,
+    "project1",
+    ["explicit"],
+    daily,
+    null,
+    "schedule",
+  );
 });

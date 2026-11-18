@@ -251,14 +251,15 @@ export function ProviderAllocationDialog(props: ProviderAllocationDialogProps) {
                       ? t("saved")
                       : code === "empty"
                         ? t("empty")
-                        : common(
-                            code === "forbidden" ||
-                              code === "conflict" ||
-                              code === "ambiguous" ||
-                              code === "loading"
-                              ? code
-                              : "unavailable",
-                          )
+                        : code === "forbidden"
+                          ? common("forbidden")
+                          : code === "conflict"
+                            ? common("conflict")
+                            : code === "ambiguous"
+                              ? common("ambiguous")
+                              : code === "loading"
+                                ? common("loading")
+                                : common("unavailable")
                 }
                 onReload={() => {
                   onReload();

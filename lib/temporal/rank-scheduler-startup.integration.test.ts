@@ -19,7 +19,7 @@ it.skipIf(
   process.env.BISIBILITY_RANK_SCHEDULER_STARTUP_INTEGRATION !== "1" ||
     !process.env.PROVIDER_UI_TEST_DATABASE_URL,
 )(
-  "automatically upgrades on real PostgreSQL and Temporal, preserving named intent and retrying safely",
+  "requires offline upgrade and leaves startup membership unchanged on PostgreSQL and Temporal",
   async () => {
     const url = process.env.PROVIDER_UI_TEST_DATABASE_URL;
     if (!url) throw new Error("Missing fixture database URL.");
@@ -32,6 +32,7 @@ it.skipIf(
     const environment = await TestWorkflowEnvironment.createLocal();
     const ownerId = randomUUID();
     const projectId = randomUUID();
+    const projectPublicId = makePublicId("prj");
     const locationId = randomUUID();
     try {
       await db.user.create({
@@ -46,7 +47,7 @@ it.skipIf(
       await db.project.create({
         data: {
           id: projectId,
-          publicId: makePublicId("prj"),
+          publicId: projectPublicId,
           ownerId,
           domain: "example.test",
           name: "Upgrade fixture",
@@ -71,6 +72,29 @@ it.skipIf(
           canonicalKey: randomUUID(),
         },
       });
+      const unassigned = await db.keyword.create({
+        data: {
+          publicId: makePublicId("kw"),
+          projectId,
+          text: "unassigned default",
+          location: "United States",
+          locationId,
+        },
+      });
+      const cleanStore = {
+        ...createSchedulerUpgradeStore(environment.client, db),
+        retireReconciler: () => retireLegacyRankCheckReconciler(environment.client.schedule),
+      };
+      await upgradeRankSchedulerAtStartup(cleanStore);
+      expect(await db.keyword.findUniqueOrThrow({ where: { id: unassigned.id } })).toMatchObject({
+        checkScheduleId: null,
+      });
+      expect(
+        await db.keywordSchedule.findUnique({ where: { keywordId: unassigned.id } }),
+      ).toBeNull();
+      expect(await db.checkSchedule.count({ where: { projectId } })).toBe(0);
+      // Remove the fixture so the existing offline repair cases remain independent.
+      await db.keyword.delete({ where: { id: unassigned.id } });
       const named = await db.checkSchedule.create({
         data: {
           publicId: makePublicId("sch"),
@@ -164,8 +188,20 @@ it.skipIf(
         repair: () =>
           repairMissingScheduleAssignments(true, db, { automatic: true, createMissing: true }),
       };
+      await expect(upgradeRankSchedulerAtStartup(store)).rejects.toThrow(
+        "offline scheduler upgrade",
+      );
+      await environment.client.schedule.getHandle(legacy.scheduleId).pause();
+      await environment.client.schedule.getHandle(RECONCILER_SCHEDULE_ID).pause();
+      const repairResult = await store.repair();
+      // The repair is instance-wide and the lane database is shared: count this fixture's rows only.
+      expect(
+        repairResult.assignments.filter(
+          (assignment) => assignment.assigned && assignment.projectId === projectPublicId,
+        ),
+      ).toHaveLength(2);
       const result = await upgradeRankSchedulerAtStartup(store);
-      expect(result).toMatchObject({ recoveredKeywords: 2, pausedLegacySchedules: 1 });
+      expect(result).toMatchObject({ ownedLegacySchedules: 1 });
       expect(
         (await environment.client.schedule.getHandle(legacy.scheduleId).describe()).state.paused,
       ).toBe(true);
@@ -287,7 +323,7 @@ it.skipIf(
         where: { keywordId: recovered.id },
         data: { frequency: "manual" },
       });
-      expect(await upgradeRankSchedulerAtStartup(store)).toMatchObject({ recoveredKeywords: 0 });
+      await upgradeRankSchedulerAtStartup(store);
       expect(await db.keyword.findUnique({ where: { id: recovered.id } })).toMatchObject({
         checkScheduleId: null,
       });

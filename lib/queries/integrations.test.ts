@@ -1,4 +1,7 @@
 import { encryptSecret } from "@/lib/providers/crypto";
+import * as registry from "@/lib/providers/model/registry";
+import { getModelProvider, registerModelProvider } from "@/lib/providers/model/registry";
+import { NATIVE_MODEL_PROVIDERS } from "@/lib/providers/model/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getIntegrationCategories, getIntegrationsView, isProviderConnected } from "./integrations";
 
@@ -109,6 +112,100 @@ const selectorFacts = {
 };
 
 describe("integration queries", () => {
+  it.each(NATIVE_MODEL_PROVIDERS)(
+    "%s starts registered and remains lazy when replaced",
+    async (id) => {
+      mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
+      const listing = async () =>
+        (await getIntegrationCategories("project_1", { now }))
+          .find((category) => category.id === "model")
+          ?.providers.find((provider) => provider.id === id);
+      expect(await listing()).toMatchObject({
+        status: "ready",
+        meta: [{ labelKey: "state", valueKey: "ready" }],
+      });
+      const original = await getModelProvider(id);
+      const load = vi.fn();
+      const unregister = registerModelProvider(id, load);
+      try {
+        expect(await listing()).toMatchObject({
+          status: "ready",
+          meta: [{ labelKey: "state", valueKey: "ready" }],
+        });
+        expect(load).not.toHaveBeenCalled();
+      } finally {
+        unregister();
+        if (original) registerModelProvider(id, async () => original);
+      }
+    },
+  );
+  it.each(NATIVE_MODEL_PROVIDERS)(
+    "%s retains an unregistered connection identity for removal",
+    async (id) => {
+      mocks.prisma.providerConnection.findMany.mockResolvedValue([
+        connection({ provider: id, kind: "model", publicId: "conn_a00000000000000000000000" }),
+      ]);
+      const registration = vi
+        .spyOn(registry, "isModelProviderRegistered")
+        .mockImplementation(() => false);
+      const provider = (await getIntegrationCategories("project_1", { now }))
+        .find((category) => category.id === "model")
+        ?.providers.find((item) => item.id === id);
+      expect(provider).toMatchObject({
+        status: "planned",
+        connectionId: "conn_a00000000000000000000000",
+      });
+      expect(provider?.secondaryAction).toBeUndefined();
+      registration.mockRestore();
+    },
+  );
+  it("lists the four model connections with masked keys and no analytics or rank controls", async () => {
+    vi.stubEnv("BISIBILITY_SECRETS_KEY", secretsKey(5));
+    const canary = "fixture-model-projection-canary";
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      connection({
+        provider: "openai",
+        kind: "model",
+        publicId: "conn_a00000000000000000000000",
+        credentialsEncrypted: encryptSecret(JSON.stringify({ apiKey: canary })),
+      }),
+    ]);
+    const original = await getModelProvider("openai");
+    const unregister = registerModelProvider("openai", vi.fn());
+    let categories: Awaited<ReturnType<typeof getIntegrationCategories>>;
+    try {
+      categories = await getIntegrationCategories("project_1", { now });
+    } finally {
+      unregister();
+      if (original) registerModelProvider("openai", async () => original);
+    }
+    const category = categories.find((item) => item.id === "model");
+    expect(category?.providers.map((item) => item.id)).toEqual([
+      "openai",
+      "anthropic",
+      "openrouter",
+      "vercel_ai_gateway",
+    ]);
+    const provider = category?.providers[0];
+    expect(provider).toMatchObject({
+      kind: "model",
+      hasStoredCredentials: true,
+      status: "connected",
+      description: "OpenAI API connection. Billed by your provider.",
+      neverSynced: undefined,
+      primary: undefined,
+    });
+    expect(provider?.drawer).toMatchObject({
+      activities: [],
+      envHint: undefined,
+      defaults: { endpoint: "", login: "", secret: "" },
+      credentialFields: [{ name: "secret", type: "password", placeholder: "••••••••" }],
+    });
+    expect(provider?.meta).toEqual([{ labelKey: "state", valueKey: "enabled" }]);
+    expect(JSON.stringify(categories)).not.toContain(canary);
+    expect(JSON.stringify(categories)).not.toContain("apiKey");
+  });
+
   afterEach(() => vi.unstubAllEnvs());
 
   beforeEach(() => {
@@ -193,7 +290,12 @@ describe("integration queries", () => {
 
     const categories = await getIntegrationCategories("prj_1", { now });
 
-    expect(categories.map((category) => category.id)).toEqual(["serp", "analytics", "enrichment"]);
+    expect(categories.map((category) => category.id)).toEqual([
+      "serp",
+      "analytics",
+      "enrichment",
+      "model",
+    ]);
     expect(categories.find((category) => category.id === "enrichment")?.providers).toEqual([
       expect.objectContaining({ id: "ahrefs", status: "ready" }),
     ]);
@@ -697,4 +799,12 @@ describe("integration queries", () => {
       where: { projectId_provider: { projectId: "project_1", provider: "gsc" } },
     });
   });
+});
+
+it("temporary loader replacements preserve all four server registrations", async () => {
+  mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
+  const models = (await getIntegrationCategories("project_1", { now })).find(
+    (c) => c.id === "model",
+  );
+  expect(models?.providers.map((p) => p.status)).toEqual(["ready", "ready", "ready", "ready"]);
 });

@@ -59,6 +59,7 @@ export async function createKeywordAfterDefault(
     keywordSchedule: { createMany: async () => ({ count: 0 }) },
     keywordTag: { createMany: async () => ({ count: 0 }) },
     projectDefaults: { findUnique: async () => defaults },
+    providerConnection: { findFirst: async () => null },
     projectMarket: {
       findMany: async () => [],
       upsert: async () => ({ publicId: "pmkt_a00000000000000000000000" }),

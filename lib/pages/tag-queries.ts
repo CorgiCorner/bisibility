@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { getStoredSitemapRead } from "./sitemap-read";
 import { pageBucketSql, snapshotStatusCtes } from "./status-sql";
 import type { TagPageRuleKind } from "./tag-pattern";
 import { tagPageRuleKinds } from "./tag-pattern";
@@ -53,9 +54,10 @@ export async function listProjectSitemapUrls(projectId: string) {
 }
 
 export async function getProjectPageTagView(projectId: string): Promise<ProjectPageTagView> {
+  const sitemapRead = await getStoredSitemapRead(projectId);
   const [rows, keywordOnly, counts, sitemaps] = await Promise.all([
     prisma.$queryRaw<RuleRow[]>`
-      WITH ${snapshotStatusCtes(projectId)}
+      WITH ${snapshotStatusCtes(projectId, sitemapRead)}
       SELECT tag."publicId" AS "tagId", tag.name, rule.kind, rule.pattern,
         rule."sitemapUrl" AS "sitemapUrl", rule."excludePatterns" AS "excludePatterns",
         rule.urls, rule."autoJoin" AS "autoJoin",

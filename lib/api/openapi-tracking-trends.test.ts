@@ -124,6 +124,7 @@ it("serves the trend comparison through the API router", async () => {
       scopes: ["read"],
     },
     kind: "project_key",
+    creatorRole: "owner",
     project: {
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       domain: "example.com",

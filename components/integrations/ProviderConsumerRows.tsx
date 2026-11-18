@@ -76,7 +76,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
           <div className="mt-auto pt-3">
             <Button
               href={searchConsolePath(props.projectRef)}
-              size="xs"
+              size="sm"
               style={consumerActionStyle}
               variant="secondary"
             >
@@ -97,7 +97,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
             <Button
               disabled={props.readOnly || props.syncPending}
               onClick={props.onSync}
-              size="xs"
+              size="sm"
               style={consumerActionStyle}
               type="button"
               variant="secondary"

@@ -190,6 +190,7 @@ describe("public API remaining app surface routes", () => {
     vi.clearAllMocks();
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Key",

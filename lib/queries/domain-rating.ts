@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { resolveDomainRatingCredentials } from "@/lib/domain-rating/credentials";
 import type { DomainRatingView } from "@/lib/domain-rating/history";
 import { normalizeDomain } from "@/lib/domains/normalize";
+import { syncPauseSelection } from "@/lib/schedules/sync-pauses";
 import { requireReadableProject } from "./_auth";
 
 export async function getDomainRating(
@@ -13,7 +14,7 @@ export async function getDomainRating(
   const { project } = await requireReadableProject(projectRef);
   const settings = await prisma.project.findUniqueOrThrow({
     where: { id: project.id },
-    select: { domain: true, domainRatingEnabled: true },
+    select: { domain: true, syncPauses: syncPauseSelection("domain_rating") },
   });
   const domain = settings.domain ? normalizeDomain(settings.domain) : null;
   const [rows, credentials, ownConnections] = await Promise.all([
@@ -32,7 +33,7 @@ export async function getDomainRating(
   return {
     projectId: project.publicId,
     domain,
-    enabled: settings.domainRatingEnabled,
+    enabled: settings.syncPauses.length === 0,
     source: credentials?.source ?? null,
     hasOwnConnection: ownConnections > 0,
     points: [...rows]

@@ -1,0 +1,38 @@
+@layer theme, base, components, utilities;
+@layer components {
+  .viewport {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    overflow: clip;
+    contain: paint;
+    pointer-events: none;
+  }
+  .panel {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(calc(100% + 12px));
+    pointer-events: none;
+    transition:
+      transform var(--assistant-exit-duration) var(--ease-out),
+      opacity var(--assistant-exit-duration) var(--ease-out),
+      visibility 0s var(--assistant-exit-duration);
+  }
+  .panel[data-open="true"] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      transform var(--assistant-enter-duration) var(--ease-out),
+      opacity var(--assistant-enter-duration) var(--ease-out),
+      visibility 0s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel,
+    .panel[data-open="true"] {
+      transform: none;
+      transition: none;
+    }
+  }
+}

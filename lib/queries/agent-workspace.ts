@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getAgentReport, listAgentReports } from "@/lib/agent-reports/service";
+import { getAgentReportRecord, listAgentReports } from "@/lib/agent-reports/service";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { readChallengeReportDefaults } from "@/lib/challenge-report/build";
@@ -78,7 +78,7 @@ export async function getAgentReportsPage(
 
 export async function getAgentReportPage(projectId: string, reportId: string) {
   const { project } = await requireReadableProject(projectId);
-  return getAgentReport({ projectId: project.id, reportId });
+  return (await getAgentReportRecord({ projectId: project.id, reportId }))?.report ?? null;
 }
 
 export async function getReportShareSummary(projectId: string, reportId: string) {

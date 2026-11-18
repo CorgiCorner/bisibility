@@ -73,8 +73,8 @@ export const nativeReceipt = (unknown = false): Receipt => ({
   occurredAt: "2026-09-01T00:00:00.000Z",
   recordedAt: "2026-09-01T00:00:00.000Z",
 });
-export async function paidFixture() {
-  const f = await fixture();
+export async function paidFixture(setupTimeoutMs = 30000) {
+  const f = await fixture(undefined, undefined, setupTimeoutMs);
   const run = <T>(body: (tx: Prisma.TransactionClient) => Promise<T>) =>
     f.client().$transaction(
       async (tx) => {

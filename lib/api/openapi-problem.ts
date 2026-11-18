@@ -93,3 +93,16 @@ export const capacityLimitProblemSchema = {
   },
   required: [...problemSchema.required, "code", "details"],
 };
+
+export function scheduleReviewProblemSchema<T extends { properties: object; required: string[] }>(
+  problem: T,
+) {
+  return {
+    ...problem,
+    properties: {
+      ...problem.properties,
+      code: { const: "schedule_review_required", type: "string" },
+    },
+    required: [...problem.required, "code"],
+  };
+}

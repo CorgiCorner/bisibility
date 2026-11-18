@@ -70,7 +70,7 @@ const subtitleKeys = {
   "Theme and personal defaults.": "subtitles.preferences",
   "Rank checks and Search Console imports for this project.": "subtitles.runs",
   "What Google reported, what it withheld, and what you keep.": "subtitles.searchConsole",
-  "Every URL of the project, one row each.": "subtitles.pages",
+  "Known project URLs, one row each.": "subtitles.pages",
   "Password, sessions and account protection.": "subtitles.security",
   "Your notes plus Google updates, deploys, content and sitemap changes.": "subtitles.annotations",
   "Move data into this project with a one-time migration token.":

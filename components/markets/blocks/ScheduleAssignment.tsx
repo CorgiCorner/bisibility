@@ -42,7 +42,7 @@ export function ScheduleAssignment({
       <div className="flex items-center justify-between gap-3">
         <FieldLabel className="text-[12px] font-semibold text-fg" label={t("schedule")} />
         {onNewSchedule ? (
-          <Button onClick={onNewSchedule} size="xs" type="button" variant="ghost">
+          <Button onClick={onNewSchedule} size="input" type="button" variant="secondary">
             {t("newSchedule")}
           </Button>
         ) : null}

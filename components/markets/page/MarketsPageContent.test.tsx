@@ -1,3 +1,4 @@
+import { createSpendPreview } from "@/components/schedules/keyword-create-review.test-support";
 import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateResult } from "@/lib/markets/create-input";
 import type { ArchivedProjectMarketsView, ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -56,7 +57,7 @@ vi.mock("./MarketsTable", () => ({
     onAddKeywords?: (market: (typeof rows)[number]) => void;
     onStatusChange: (input: { enabled: boolean; marketId: string }) => Promise<{ status: string }>;
     onStatusConfirmed?: () => void;
-    rows: { id: string; name: string }[];
+    rows: { id: string; name: string; status: string }[];
     title: string;
   }) => (
     <section aria-label={title}>
@@ -65,13 +66,14 @@ vi.mock("./MarketsTable", () => ({
           <span>{market.name}</span>
           <button
             onClick={() => {
-              void onStatusChange({ enabled: false, marketId: market.id }).then(() =>
-                onStatusConfirmed?.(),
-              );
+              void onStatusChange({
+                enabled: market.status !== "active",
+                marketId: market.id,
+              }).then(() => onStatusConfirmed?.());
             }}
             type="button"
           >
-            Pause {market.name}
+            {market.status === "active" ? "Pause" : "Resume"} {market.name}
           </button>
           {onAddKeywords ? (
             <button onClick={() => onAddKeywords(market)} type="button">
@@ -355,3 +357,52 @@ describe("MarketsPageContent", () => {
     expect(screen.queryByText("Market could not be restored. Try again.")).not.toBeInTheDocument();
   });
 });
+
+const spendPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: spendPort.preview,
+}));
+beforeEach(() =>
+  spendPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+it.each(["resume", "restore"] as const)(
+  "market %s waits for shared spend confirmation",
+  async (mode) => {
+    spendPort.preview.mockResolvedValue(createSpendPreview);
+    const actions = renderPage(mode === "resume" ? [pausedMarket] : [], {
+      markets: [activeMarket],
+      projectId: "prj_abcdefghijklmnopqrstuvwx",
+    });
+    if (mode === "resume") fireEvent.click(screen.getByRole("button", { name: "Resume Seville" }));
+    else {
+      fireEvent.click(screen.getByRole("tab", { name: "Archived" }));
+      fireEvent.click(screen.getByRole("button", { name: "Restore" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Restore market" }));
+    }
+    const confirm = await screen.findByRole("button", { name: "Confirm" });
+    const action = mode === "resume" ? actions.onStatusChange : actions.onRestore;
+    expect(action).not.toHaveBeenCalled();
+    expect(spendPort.preview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        change: {
+          op: "market-reactivate",
+          marketIds: [mode === "resume" ? pausedMarket.id : activeMarket.id],
+          mode,
+        },
+      }),
+    );
+    fireEvent.click(confirm);
+    await waitFor(() => expect(action).toHaveBeenCalledOnce());
+    expect(action).toHaveBeenCalledWith(
+      expect.objectContaining({
+        review: expect.objectContaining({ preview_token: createSpendPreview.preview_token }),
+      }),
+    );
+  },
+);

@@ -1,4 +1,5 @@
 "use client";
+import { ScheduleReviewCancelled } from "@/components/schedules/useScheduleSpendReview";
 import type {
   TrackingPromptDraft,
   TrackingPromptRow,
@@ -51,6 +52,7 @@ export function useTrackingWorkspace(
       setData(await actions.save(resource, method, input, member));
       setDrawer(null);
     } catch (cause) {
+      if (cause instanceof ScheduleReviewCancelled) return;
       setError(cause instanceof Error ? cause.message : t("couldNotSaveChanges"));
     }
   }

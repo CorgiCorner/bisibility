@@ -1,5 +1,6 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import {
   availableInspectionModes,
   effectiveInspectionMode,
@@ -18,14 +19,15 @@ async function settingsForConnection(
   projectId: string,
   selected: Awaited<ReturnType<typeof connectionForProject>>,
   now = new Date(),
+  db: Prisma.TransactionClient = prisma,
 ) {
-  const defaults = await prisma.projectDefaults.findUnique({ where: { projectId } });
+  const defaults = await db.projectDefaults.findUnique({ where: { projectId } });
   return {
     property: selected.property,
     budgetMode: effectiveInspectionMode(defaults?.inspectionBudgetMode),
     inspectionDailyLimit: defaults?.inspectionDailyLimit ?? DEFAULT_INSPECTION_DAILY_LIMIT,
     availableModes: availableInspectionModes(),
-    ...(await readPropertyQuota(propertyQuotaKey(selected.property), now)),
+    ...(await readPropertyQuota(propertyQuotaKey(selected.property), now, db)),
   };
 }
 
@@ -33,11 +35,13 @@ export async function updatePageIndexingSettings(
   projectId: string,
   body: unknown,
   actorId: string | null,
+  existingTx?: Prisma.TransactionClient,
 ) {
   const input = pageIndexingSettingsPatchSchema.parse(body);
   validateInspectionMode(input.budget_mode);
-  const selected = await connectionForProject(projectId);
-  const project = await prisma.project.findUniqueOrThrow({
+  const db = existingTx ?? prisma;
+  const selected = await connectionForProject(projectId, db);
+  const project = await db.project.findUniqueOrThrow({
     where: { id: projectId },
     select: { publicId: true },
   });
@@ -47,7 +51,7 @@ export async function updatePageIndexingSettings(
       ? {}
       : { inspectionDailyLimit: input.inspection_daily_limit }),
   };
-  await prisma.$transaction(async (tx) => {
+  const run = async (tx: Prisma.TransactionClient) => {
     const before = await tx.projectDefaults.findUnique({ where: { projectId } });
     const after = await tx.projectDefaults.upsert({
       where: { projectId },
@@ -74,6 +78,8 @@ export async function updatePageIndexingSettings(
       },
       tx,
     );
-  });
-  return settingsForConnection(projectId, selected);
+  };
+  if (existingTx) await run(existingTx);
+  else await prisma.$transaction(run);
+  return settingsForConnection(projectId, selected, undefined, db);
 }

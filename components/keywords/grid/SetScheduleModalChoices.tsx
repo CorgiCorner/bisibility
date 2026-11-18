@@ -158,9 +158,6 @@ export function SetScheduleModalChoices({
                 {current ? (
                   <StatusPill label={t("current")} showDot={false} size="sm" status="disabled" />
                 ) : null}
-                {!current && schedule.isDefault ? (
-                  <StatusPill label={t("default")} showDot={false} size="sm" status="primary" />
-                ) : null}
               </span>
               <span className="mt-[3px] block text-[11.5px] leading-[17px] text-fg-muted">
                 {current

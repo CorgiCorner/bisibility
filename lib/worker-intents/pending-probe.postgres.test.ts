@@ -23,7 +23,7 @@ describe("shipped worker intent pending probe against isolated PostgreSQL", () =
     const previousUrl = process.env.AI_TRACKING_TEST_DATABASE_URL;
     process.env.AI_TRACKING_TEST_DATABASE_URL = requiredDatabaseUrl();
     try {
-      database = await isolatedTrackingDatabase();
+      database = await isolatedTrackingDatabase({ checkFunctionBodies: false });
       client = database.client;
     } finally {
       if (previousUrl === undefined) delete process.env.AI_TRACKING_TEST_DATABASE_URL;

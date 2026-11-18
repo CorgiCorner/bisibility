@@ -2,6 +2,23 @@
   "captures": [
     {
       "body": {
+        "cost_after_cents": null,
+        "cost_before_cents": 0,
+        "requires_review": true,
+        "review_reasons": ["price_unknown"],
+        "capacity": null,
+        "expected_revision": "00000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "preview_token": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0000000000000000000000000000000000000000000",
+        "window_start": "2026-07-11T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewSchedule",
+      "path": "/projects/{project_id}/schedules/preview",
+      "status": 200
+    },
+    {
+      "body": {
         "data": [
           {
             "id": "air_a00000000000000000000000",
@@ -483,6 +500,22 @@
       "operationId": "retryPromptTrackerRun",
       "path": "/projects/{project_id}/prompt-tracker/runs/{run_id}/retry",
       "status": 422
+    },
+    {
+      "body": {
+        "detail": "This change may increase recurring spend. Review it in the web app for now.",
+        "docs_url": "https://bisibility.com/docs/api/errors#schedule_review_required",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/prompt-tracker/schedules/ais_000000000000000000000000",
+        "status": 428,
+        "title": "Schedule review required",
+        "type": "https://bisibility.com/problems/schedule_review_required",
+        "code": "schedule_review_required"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updatePromptTrackerSchedule",
+      "path": "/projects/{project_id}/prompt-tracker/schedules/{schedule_id}",
+      "status": 428
     },
     {
       "body": {

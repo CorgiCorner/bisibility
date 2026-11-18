@@ -9,6 +9,18 @@ vi.mock("./runtime", () => ({
   meteringNamespace: () => "test",
 }));
 vi.mock("@/lib/ops/notify", () => ({ notifyOps: vi.fn() }));
+vi.mock("@/lib/assistant/accounting-recovery", () => ({
+  releaseStaleAssistantAttempts: vi.fn(async () => 0),
+}));
+vi.mock("@/lib/assistant/stop-settlement", () => ({
+  settleDueStoppedAssistantAttempts: vi.fn(async () => ({ settled: 0, waiting: 0, late: 0 })),
+}));
+vi.mock("@/lib/model-playground/funding-extension", () => ({
+  maintainModelFunding: vi.fn(async () => ({ checked: 0, corrected: 0 })),
+}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: { $transaction: async (body: (tx: object) => unknown) => body({}) },
+}));
 test("bounded public expiry resumes after process loss and never releases possible paid acceptance", async () => {
   const f = await paidFixture();
   try {

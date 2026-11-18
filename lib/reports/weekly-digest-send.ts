@@ -1,4 +1,5 @@
 import "server-only";
+import { skipEmailNotification } from "@/lib/email/notification-policy";
 import { recordResultReceipt } from "@/lib/activity/result-receipt-extension";
 import { prisma } from "@/lib/db/prisma";
 import { isLocalDevelopmentDeployment } from "@/lib/deployment/deployment";
@@ -19,7 +20,7 @@ import { claimDigest, finishDigest } from "./weekly-digest-records";
 const idempotencyWindowMs = 6 * 24 * 60 * 60 * 1000;
 export type WeeklyDigestSendResult =
   | {
-      reason: "demo" | "no_activity" | "no_project" | "no_recipients" | "recently_sent";
+      reason: "notifications_disabled" | "demo" | "no_activity" | "no_project" | "no_recipients" | "recently_sent";
       status: "skipped";
     }
   | {
@@ -51,7 +52,7 @@ export async function sendWeeklyDigestForProject(
   now: Date,
   incidentDigest = recoverySwitches().incidentDigest,
 ): Promise<WeeklyDigestSendResult> {
-  // Only the legacy read-only snapshot has no mail; editable demo filters the Viewer per recipient.
+  if (skipEmailNotification("weekly-digest")) return { status: "skipped", reason: "notifications_disabled" };
   if (readOnlyDemoConfig()) return { status: "skipped", reason: "demo" };
   const period = weeklyDigestPeriod(now);
   const userSelect = {
@@ -94,7 +95,11 @@ export async function sendWeeklyDigestForProject(
       } catch (error) {
         throw new EmailNotSubmittedError(error);
       }
-      await sendEmail({ ...email, ...notificationUnsubscribeFooter(email, url), listUnsubscribeUrl: url, category: "bulk", to, requireProvider: true });
+      const submitted = await sendEmail({ purpose: "weekly-digest", ...email, ...notificationUnsubscribeFooter(email, url), listUnsubscribeUrl: url, category: "bulk", to, requireProvider: true });
+      if (submitted === false) {
+        await finishDigest(key, { status: "skipped" });
+        continue;
+      }
     } catch (error) {
       if (
         error instanceof EmailNotSubmittedError &&

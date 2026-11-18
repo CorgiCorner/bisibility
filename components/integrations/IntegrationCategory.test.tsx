@@ -24,6 +24,29 @@ const actions = {
 } satisfies ProviderActionHandlers;
 
 describe("IntegrationCategory", () => {
+  it("uses model category copy without analytics or fallback controls", () => {
+    render(
+      <IntegrationCategory
+        canManageProviders
+        canUpdateProject
+        projectId="prj_category"
+        category={{
+          id: "model",
+          title: "Model providers",
+          eyebrow: "Model providers",
+          description: "Connect your own model provider keys. Billed by your provider.",
+          providers: [{ ...integrationCategories[0].providers[0], id: "openai", kind: "model" }],
+        }}
+        timeZone="UTC"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Model providers" })).toBeVisible();
+    expect(
+      screen.getByText("Connect your own model provider keys. Billed by your provider."),
+    ).toBeVisible();
+    expect(screen.queryByTestId("serp-fallback-order")).not.toBeInTheDocument();
+  });
+
   it("passes provider actions through to provider cards", () => {
     render(
       <IntegrationCategory

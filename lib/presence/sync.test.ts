@@ -46,7 +46,11 @@ describe("presence sync", () => {
     mocks.emitSignal.mockResolvedValue({ id: "signal_1" });
     mocks.markProviderNeedsReauth.mockResolvedValue(true);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.tx));
-    mocks.prisma.project.findFirst.mockResolvedValue({ defaults: null, id: "project_1" });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      syncPauses: [],
+      defaults: null,
+      id: "project_1",
+    });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       credentialsEncrypted: "encrypted",
       id: "connection_1",
@@ -57,6 +61,27 @@ describe("presence sync", () => {
     mocks.provider.createUrlInspectionSession.mockResolvedValue({
       inspectUrl: mocks.provider.inspectUrl,
     });
+  });
+
+  it("skips sitemap discovery and URL inspection when indexing is paused", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      defaults: null,
+      id: "project_1",
+      syncPauses: [{ kind: "page_indexing" }],
+    });
+    mocks.prisma.keyword.findMany.mockResolvedValue([{ targetUrl: "https://example.com/page" }]);
+    const provider = {
+      listSitemaps: vi.fn(() => {
+        throw new Error("Paused indexing reached sitemap discovery");
+      }),
+      createUrlInspectionSession: vi.fn(() => {
+        throw new Error("Paused indexing reached URL inspection");
+      }),
+    };
+    const result = await syncPresenceForProject("project_1", now, provider);
+    expect(provider.listSitemaps).not.toHaveBeenCalled();
+    expect(provider.createUrlInspectionSession).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ reason: "user_paused", status: "skipped" });
   });
 
   afterEach(() => {
@@ -168,6 +193,7 @@ describe("presence sync", () => {
   it("respects the per-project inspection limit", async () => {
     mocks.getInspectionBudget.mockResolvedValue({ remaining: 2 });
     mocks.prisma.project.findFirst.mockResolvedValue({
+      syncPauses: [],
       defaults: { inspectionDailyLimit: 2 },
       id: "project_1",
     });

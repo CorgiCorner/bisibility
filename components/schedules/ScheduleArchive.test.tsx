@@ -1,3 +1,4 @@
+import { createSpendPreview } from "@/components/schedules/keyword-create-review.test-support";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -13,7 +14,6 @@ const schedule: ScheduleListRow = {
   name: "Weekly review",
   frequency: "weekly",
   enabled: true,
-  isDefault: true,
   keywordCount: 2,
   assignedKeywordCount: 3,
 };
@@ -21,7 +21,6 @@ const other = {
   ...schedule,
   name: "Monthly review",
   publicId: `sch_${"b".repeat(24)}`,
-  isDefault: false,
 };
 describe("schedule archive UI", () => {
   beforeEach(() => {
@@ -42,7 +41,7 @@ describe("schedule archive UI", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Archived" }));
     expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectId}/schedules?status=archived`);
   });
-  it("archives to manual by default and explains the default schedule change", async () => {
+  it("archives to manual without a default schedule notice", async () => {
     const close = vi.fn();
     render(
       <ArchiveScheduleModal
@@ -53,9 +52,7 @@ describe("schedule archive UI", () => {
       />,
     );
     expect(screen.getByText("Move 3 keywords to")).toBeInTheDocument();
-    expect(
-      screen.getByText("New keywords stay manual until assigned to a schedule."),
-    ).toBeInTheDocument();
+    expect(screen.queryByText("New keywords stay manual until assigned to a schedule.")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Archive schedule" }));
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(
@@ -113,7 +110,7 @@ describe("schedule archive UI", () => {
     expect(close).not.toHaveBeenCalled();
   });
   it("shows Restore instead of Resume for archived rows and hides management from readers", async () => {
-    const archived = { ...schedule, archivedAt: "2026-09-01", enabled: false, isDefault: false };
+    const archived = { ...schedule, archivedAt: "2026-09-01", enabled: false };
     const view = render(
       <SchedulesList
         projectId={projectId}
@@ -161,3 +158,66 @@ describe("schedule archive UI", () => {
     expect(routerMock.push).not.toHaveBeenCalled();
   });
 });
+
+const spendPort = vi.hoisted(() => ({ preview: vi.fn() }));
+vi.mock("@/lib/schedules/preview-client", async (original) => ({
+  ...(await original<typeof import("@/lib/schedules/preview-client")>()),
+  requestScheduleChangePreview: spendPort.preview,
+}));
+beforeEach(() =>
+  spendPort.preview.mockResolvedValue({
+    ...createSpendPreview,
+    requires_review: false,
+    preview_token: null,
+  }),
+);
+
+it.each(["cancel", "confirm"] as const)(
+  "archive transfer %s uses the shared spend review before POST",
+  async (decision) => {
+    spendPort.preview.mockResolvedValue(createSpendPreview);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    const close = vi.fn();
+    render(
+      <ArchiveScheduleModal
+        projectId={projectId}
+        schedule={schedule}
+        schedules={[schedule, other]}
+        onClose={close}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Move 3 keywords to" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: other.name }));
+    fireEvent.click(screen.getByRole("button", { name: "Archive schedule" }));
+    const confirm = await screen.findByRole("button", { name: "Confirm" });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(spendPort.preview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        change: expect.objectContaining({
+          op: "state",
+          state: "archived",
+          command: expect.objectContaining({
+            archive: expect.objectContaining({ destinationScheduleId: other.publicId }),
+          }),
+        }),
+      }),
+    );
+    if (decision === "cancel") {
+      const dialog = confirm.closest("[role=dialog]");
+      if (!dialog) throw new Error("Missing shared cost dialog");
+      fireEvent.click(within(dialog as HTMLElement).getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(screen.queryByRole("button", { name: "Confirm" })).toBeNull());
+      expect(fetch).not.toHaveBeenCalled();
+      expect(close).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Move 3 keywords to" })).toHaveTextContent(
+        other.name,
+      );
+    } else {
+      fireEvent.click(confirm);
+      await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+      expect(
+        JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string).review.preview_token,
+      ).toBe(createSpendPreview.preview_token);
+    }
+  },
+);

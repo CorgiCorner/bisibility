@@ -19,6 +19,8 @@ export type OperationProviderSpend = {
   features: readonly ProviderRequestFeature[];
   handler: string;
   timing: "deferred" | "inline";
+  /** Present only for native requests billed directly to the customer's provider account. */
+  payer?: "customer_provider";
 };
 
 const inline = (
@@ -46,6 +48,10 @@ const estimateOnly = (response?: string) => ({
 /** Explicit free classifications for operations added while integrating the contract stack. */
 export const operationProviderFree = {
   ...deploymentFreeOperationProviderSpend,
+  getModelPlaygroundCatalog: { handler: "lib/api/model-playground.ts", kind: "free" },
+  estimateModelPlaygroundRun: { handler: "lib/api/model-playground.ts", kind: "free" },
+  previewModelPlaygroundRun: { handler: "lib/api/model-playground.ts", kind: "free" },
+  getModelPlaygroundRun: { handler: "lib/api/model-playground.ts", kind: "free" },
   deleteMe: { handler: "lib/api/me.ts", kind: "free" },
   deleteDevicePushToken: { handler: "lib/api/push-tokens.ts", kind: "free" },
   listDevicePushTokens: { handler: "lib/api/push-tokens.ts", kind: "free" },
@@ -55,6 +61,10 @@ export const operationProviderFree = {
 } as const;
 
 export const operationProviderSpend = {
+  createModelPlaygroundRun: {
+    ...deferred("lib/api/model-playground.ts", ["model_playground"]),
+    payer: "customer_provider",
+  },
   addKeywords: deferred("lib/api/keyword-create.ts", ["rank_check"]),
   promptResearchSuggestionsGenerate: inline("lib/api/ai-tracking-suggestions.ts", ["ai_tracking"]),
   analyzeBrandVisibility: inline("lib/api/ai-research.ts", ["ai_visibility"], estimateOnly()),
@@ -71,6 +81,8 @@ export const operationProviderSpend = {
   bulkUpdateKeywords: deferred("lib/api/keyword-bulk.ts", ["rank_check"]),
   compareAiPrompts: inline("lib/api/ai-research.ts", ["prompt_explorer"], estimateOnly()),
   createPromptTrackerRun: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
+  createSchedule: deferred("lib/api/schedule-write-routes.ts", ["rank_check", "ai_tracking"]),
+  updateSchedule: deferred("lib/api/schedule-write-routes.ts", ["rank_check", "ai_tracking"]),
   createPromptTrackerSchedule: deferred("lib/api/ai-tracking.ts", ["ai_tracking"]),
   getKeywordMetrics: inline(
     "lib/api/keyword-research.ts",
@@ -112,6 +124,7 @@ export const nonApiProviderFeatures: readonly ProviderRequestFeature[] = [
  * one for each of its features.
  */
 export const deferredSpendAnchors: Partial<Record<ProviderRequestFeature, readonly string[]>> = {
+  model_playground: ["lib/model-playground/admission.ts"],
   ai_tracking: ["lib/ai-tracking/admission/launch.ts"],
   rank_check: ["lib/rank-check/dispatcher-state.ts"],
 };

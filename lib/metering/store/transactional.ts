@@ -6,6 +6,7 @@ import {
 } from "@usagekit/store-postgres";
 import { billingImports } from "./billing";
 import { createSql } from "./host-sql";
+import { exactNumericExecutor } from "./numeric";
 import { ensureTimestampContract } from "./timestamp-history";
 import { setLocalUtc } from "./timestamp-policy";
 
@@ -20,7 +21,7 @@ export async function createTransactionBoundStore({
   afterOperationWrite?: () => void;
 }): Promise<Store> {
   const counters = { statements: 0, changes: 0n, rowsRead: 0 };
-  const executor = prismaPostgresExecutor(transaction);
+  const executor = exactNumericExecutor(prismaPostgresExecutor(transaction));
   await setLocalUtc(executor);
   await ensureTimestampContract(executor);
   const store = await createSharedTransactionBoundStore({

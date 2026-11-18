@@ -146,7 +146,12 @@ export function StepAddKeywords({
           keywords: submitted.uniqueKeywords,
           locations: values.locations.map(locationSelectionInputForKey),
           projectId: values.projectId,
-          schedule: undefined,
+          schedule: {
+            frequency: "manual",
+            cronExpression: null,
+            timezone: "UTC",
+            jitterMinutes: 0,
+          },
           tags: [],
           targetUrl: null,
         });

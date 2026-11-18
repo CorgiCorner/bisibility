@@ -1,18 +1,14 @@
 "use server";
 import { recordAppAction } from "@/lib/activity/app-mutation";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
-import { withCapacityFailure } from "@/lib/capacity/action";
 import { captureProjectWork } from "@/lib/challenge-report/capture-project-work";
 import { prisma } from "@/lib/db/prisma";
 import { deleteKeywordTargets } from "@/lib/keywords/delete";
-import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import {
-  bulkKeywordFrequencySchema,
   bulkKeywordIdsSchema,
   bulkKeywordTagSchema,
   bulkKeywordTargetSchema,
 } from "@/lib/schemas/keyword";
-import { normalizeSchedule } from "./_schedule";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 import { addTags, keywordIdsWhere, revalidateKeywords } from "./keyword-helpers";
 
@@ -139,42 +135,4 @@ export async function bulkClearTargetUrls(input: unknown) {
   revalidateKeywords();
 
   return { updated: before.length };
-}
-
-export async function bulkSetFrequency(input: unknown) {
-  return withCapacityFailure(async () => {
-    const data = parseActionInput(bulkKeywordFrequencySchema, input);
-    const actor = await getActionActor();
-    const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
-    const schedule = normalizeSchedule(data.schedule);
-    const keywords = await prisma.keyword.findMany({
-      select: { id: true, publicId: true },
-      where: keywordIdsWhere(project.id, data.keywordIds),
-    });
-
-    await prisma.$transaction(async (tx) => {
-      await setKeywordCadence(
-        tx,
-        project.id,
-        keywords.map((keyword) => keyword.id),
-        schedule,
-        actor.id,
-      );
-    });
-    if (keywords.length > 0) {
-      recordAppAction(actor);
-      captureProjectWork(actor.id, project.id);
-    }
-    await writeAudit({
-      action: "keyword.bulk_set_frequency",
-      actorId: actor.id,
-      after: { keywordIds: keywords.map((keyword) => auditKeyword(keyword).id), schedule },
-      projectId: project.id,
-      targetId: project.publicId,
-      targetType: "project",
-    });
-    revalidateKeywords();
-
-    return { updated: keywords.length };
-  });
 }

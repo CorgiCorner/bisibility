@@ -121,6 +121,10 @@ const run = object({
   planned_at: nullableDate,
   sample_count: { type: ["integer", "null"], minimum: 0 },
 });
+Object.assign(run.properties, {
+  reason_code: nullableText,
+  reason_details: { type: ["object", "null"], additionalProperties: true },
+});
 const preview = object({
   configurations: array(named("PromptTrackerConfiguration", configuration)),
   credential_connection_id: id("conn"),

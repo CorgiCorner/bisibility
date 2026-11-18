@@ -2,6 +2,7 @@ import { assertProviderCostLimit } from "@/lib/providers/cost-limit";
 import type { ReserveInput } from "@usagekit/core";
 import { decimalQuantity } from "@usagekit/providers";
 import { z } from "zod";
+import { prepareModelPaidAttempt } from "./model-payment";
 import type { PaidAttemptInput } from "./paid-attempt-types";
 import {
   paidAttemptContextSchema as historicalContext,
@@ -48,6 +49,7 @@ const contextSchema = historicalContext.extend({
 
 /** Keep checksum-covered historical migration inputs immutable as live admission evolves. */
 export function preparePaidAttempt(input: PaidAttemptInput): ReserveInput {
+  if (input.context.feature === "model_playground") return prepareModelPaidAttempt(input);
   const result = prepareCurrentAttempt(input);
   // Tags are attribution, not reserve semantics, so earlier reservations still replay.
   if (!result.scope.group) throw new Error("Paid attempt requires a project");

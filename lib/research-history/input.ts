@@ -5,7 +5,7 @@ import { researchHistorySurfaces } from "./contract";
 const filterSchema = z
   .object({
     facet: z.enum(["device", "engine", "market", "mode", "pinned"]),
-    value: z.string().trim().min(1).max(160),
+    value: z.string().trim().min(1).max(512),
   })
   .strict();
 

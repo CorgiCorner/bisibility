@@ -279,3 +279,17 @@ describe("sendWelcomeEmailActivity", () => {
     expect(mocks.sendPrepared).not.toHaveBeenCalled();
   });
 });
+
+it("quietly skips welcome mail before delivery claims", async () => {
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  try {
+    vi.clearAllMocks();
+    expect(await sendWelcomeEmailActivity({ userId: "user" })).toEqual({
+      status: "notifications_disabled",
+    });
+    expect(mocks.prepareWelcome).not.toHaveBeenCalled();
+    expect(mocks.sendPrepared).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

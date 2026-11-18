@@ -19,6 +19,11 @@ export async function register() {
   registerRequestDiagnosticSink(undefined);
 
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./lib/model-playground/runtime-registration");
+    const { startModelPlaygroundRecoverySweep } = await import(
+      "./lib/model-playground/recovery-schedule"
+    );
+    startModelPlaygroundRecoverySweep();
     const { assertCanonicalHostedMcpOrigin } = await import(
       "./lib/deployment/canonical-mcp-origin"
     );

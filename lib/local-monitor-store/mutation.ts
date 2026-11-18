@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { type LocalProjectScope, localProjectScope } from "@/lib/local-monitoring-store/access";
 import { localDigest, requireLocalTime } from "@/lib/local-monitoring-store/canonical";
 import type {
@@ -19,6 +19,7 @@ export async function mutateMonitor<
   context: LocalStoreContext;
   operation: "create" | "revise" | "archive" | "schedule";
   db?: LocalDatabase;
+  tx?: LocalTransaction;
   clock?: () => Date;
   execute(
     tx: LocalTransaction,
@@ -27,7 +28,7 @@ export async function mutateMonitor<
   ): Promise<MonitorMutationReceipt>;
 }) {
   const data = structuredClone(input.data);
-  return (input.db ?? prisma).$transaction(async (tx) => {
+  const run = async (tx: LocalTransaction) => {
     const scope = await localProjectScope(
       tx,
       input.context,
@@ -86,5 +87,6 @@ export async function mutateMonitor<
       },
     });
     return { receipt: result, replayed: false };
-  });
+  };
+  return input.tx ? run(input.tx) : (input.db ?? prisma).$transaction(run);
 }

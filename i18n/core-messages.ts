@@ -1,6 +1,7 @@
 import account from "@/messages/core/en/account.json";
 import accountPreferences from "@/messages/core/en/account-preferences.json";
 import agentWorkspace from "@/messages/core/en/agent-workspace.json";
+import assistant from "@/messages/core/en/assistant.json";
 import auth from "@/messages/core/en/auth.json";
 import challengeReport from "@/messages/core/en/challenge-report.json";
 import cloudImport from "@/messages/core/en/cloud-import.json";
@@ -44,6 +45,8 @@ import projectSettingsTracking from "@/messages/core/en/project-settings-trackin
 import projectSettingsUsage from "@/messages/core/en/project-settings-usage.json";
 import projectSiteAudit from "@/messages/core/en/project-site-audit.json";
 import projectTimeline from "@/messages/core/en/project-timeline.json";
+import projectUsageCosts from "@/messages/core/en/project-usage-costs.json";
+import researchHistory from "@/messages/core/en/research-history.json";
 import resourceCapacity from "@/messages/core/en/resource-capacity.json";
 import setup from "@/messages/core/en/setup.json";
 import shared from "@/messages/core/en/shared.json";
@@ -60,8 +63,11 @@ export type AppMessages = CoreMessages & HostedMessageExtensions;
 export const sharedMessages = shared as unknown as Pick<CoreMessages, "shared">;
 export const coreMessages = mergeMessageCatalogs(
   resourceCapacity,
+  researchHistory,
+  projectUsageCosts,
   shared,
   agentWorkspace,
+  assistant,
   challengeReport,
   projectAiResearch,
   projectSiteAudit,

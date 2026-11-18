@@ -1,0 +1,26 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "anthropic/claude-sonnet-5",
+      "object": "model",
+      "type": "language",
+      "max_tokens": 128000,
+      "modalities": {
+        "input": ["text", "image"],
+        "output": ["text"]
+      }
+    },
+    {
+      "id": "unverified/text-model",
+      "object": "model",
+      "type": "language",
+      "tags": ["tool-use", "web-search"]
+    },
+    {
+      "id": "synthetic/image-only",
+      "object": "model",
+      "type": "image"
+    }
+  ]
+}

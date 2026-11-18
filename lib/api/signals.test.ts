@@ -78,6 +78,7 @@ describe("signal API", () => {
     vi.clearAllMocks();
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
+      creatorRole: "owner",
       apiKey: {
         id: "key_1",
         name: "Key",

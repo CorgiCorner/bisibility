@@ -1,5 +1,6 @@
 import "server-only";
 import type { PlanTrackingRunInput } from "@/lib/ai-tracking/contract";
+import { liveApiKeyScopes } from "@/lib/api/key-creator";
 import { authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 
@@ -15,13 +16,15 @@ export async function reauthorizeTrackingActor(
   if (credential?.kind === "project_key") {
     const key = await prisma.apiKey.findFirst({
       where: { id: credential.id, projectId },
-      select: { scopes: true, revokedAt: true, expiresAt: true },
+      select: { scopes: true, revokedAt: true, expiresAt: true, createdById: true },
     });
+    const scopes = await liveApiKeyScopes(prisma, key && { ...key, projectId });
     if (
       !key ||
       key.revokedAt ||
       (key.expiresAt && key.expiresAt <= new Date()) ||
-      !writable(key.scopes)
+      !scopes ||
+      !writable(scopes)
     )
       throw new Error("Original tracking project credential was revoked or lost write scope.");
     authorize({ id: input.actorId, memberships: [{ projectId, role: "admin" }] }, "update", {

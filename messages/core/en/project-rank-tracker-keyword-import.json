@@ -488,7 +488,6 @@
           "currentUnavailable": "The current schedule is unavailable. Refresh and try again.",
           "ariaLabel": "Schedule",
           "current": "Current",
-          "default": "Default",
           "alreadyAssigned": "All {count, plural, one {# target is} other {# targets are}} already here.",
           "moveFrom": "All {count, plural, one {# target} other {# targets}} move from {name}.",
           "assignTo": "Assign {count, plural, one {this target} other {these # targets}} to this schedule.",

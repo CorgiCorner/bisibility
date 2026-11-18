@@ -1278,13 +1278,9 @@
   },
   {
     "problems": [
-      "enum-without-kind /properties/category_id",
       "enum-without-kind /properties/connection_status",
-      "enum-without-kind /properties/kind",
       "unnamed /properties/capabilities",
-      "unnamed /properties/category_id",
-      "unnamed /properties/connection_status",
-      "unnamed /properties/kind"
+      "unnamed /properties/connection_status"
     ],
     "subject": "schema Provider"
   },

@@ -186,6 +186,18 @@ describe("site audit REST contract", () => {
       });
     },
   );
+  it("omits credential attribution for an in-app session cancel", async () => {
+    mocks.requireScope.mockResolvedValue({ id: "internal1", writeMode: "active" });
+    mocks.cancel.mockResolvedValue({ state: "cancelled" });
+    const context = ctx("POST", ["projects", "prj_one", "site-audits", "agr_one", "cancel"]);
+    context.origin = { credentialId: null, credentialKind: null, source: "app", surface: "app" };
+    await siteAuditsRoute(context);
+    expect(mocks.cancel.mock.calls[0]?.[2]).toStrictEqual({
+      actorId: "user",
+      credentialId: undefined,
+      credentialKind: undefined,
+    });
+  });
   it.each(["cancel", "resume"] as const)(
     "does not call %s after denied authorization",
     async (action) => {

@@ -7,19 +7,22 @@ export function ProviderCardDescription({
   provider,
 }: Readonly<{ provider: IntegrationProviderData }>) {
   const t = useTranslations("projectIntegrations.provider");
+  const funding = useTranslations("projectIntegrations.billingSources");
   if (provider.credentialSource === "hosted") return null;
   const description =
-    provider.id === "dataforseo"
-      ? t("dataforseoDescription")
-      : provider.id === "ahrefs"
-        ? t("ahrefsDescription")
-        : provider.id === "gsc"
-          ? t("gscDescription")
-          : provider.id === "local-sequence"
-            ? t("localDescription")
-            : provider.kind === "serp"
-              ? t("serpDescription", { provider: provider.name })
-              : t("analyticsDescription", { provider: provider.name });
+    provider.kind === "model"
+      ? funding("ownHelp")
+      : provider.id === "dataforseo"
+        ? t("dataforseoDescription")
+        : provider.id === "ahrefs"
+          ? t("ahrefsDescription")
+          : provider.id === "gsc"
+            ? t("gscDescription")
+            : provider.id === "local-sequence"
+              ? t("localDescription")
+              : provider.kind === "serp"
+                ? t("serpDescription", { provider: provider.name })
+                : t("analyticsDescription", { provider: provider.name });
 
   return <p className="m-0 text-[12px] leading-5 text-fg-muted">{description}</p>;
 }

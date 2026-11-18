@@ -10,7 +10,6 @@ const schedule = {
   cronExpression: null,
   enabled: true,
   frequency: "daily" as const,
-  isDefault: false,
   jitterMinutes: 15,
   keywordCount: 2,
   name: "Commercial daily",
@@ -28,7 +27,6 @@ function renderEditor(value: ScheduleEditorSchedule = schedule) {
   return render(
     <ScheduleEditor
       connectedProviders={connectedProviders}
-      defaultScheduleName="Daily 06:00"
       projectId="prj_story"
       projectDefaults={projectDefaults}
       projectTimezone="Europe/Madrid"
@@ -65,19 +63,18 @@ describe("ScheduleEditor submission", () => {
     expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("keeps a restored schedule nondefault when the project has no default", async () => {
+  it("saves a restored schedule without a default action", async () => {
     const fetchMock = mockScheduleUpdate();
     render(
       <ScheduleEditor
         connectedProviders={connectedProviders}
-        defaultScheduleName={null}
         projectId="prj_story"
         projectDefaults={projectDefaults}
         projectTimezone="Europe/Warsaw"
         schedule={{ ...schedule, enabled: false }}
       />,
     );
-    expect(screen.getByRole("switch", { name: /^Use as default suggestion/ })).not.toBeChecked();
+    expect(screen.queryByRole("switch", { name: /default suggestion/ })).toBeNull();
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Restored daily" } });
     fireEvent.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));

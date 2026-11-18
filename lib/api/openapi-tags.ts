@@ -5,6 +5,17 @@ import { assertOperationPolicy } from "./operation-policy";
 
 export const openApiTags = [
   {
+    name: "schedules",
+    description: "Read project schedules and their server cost estimates.",
+    "x-group": "Schedules",
+  },
+  {
+    name: "model-playground",
+    description:
+      "Preview and run native models on your own provider keys, then read retained results.",
+    "x-group": "Model Playground",
+  },
+  {
     name: "prompt-tracker",
     description:
       "Configure AI observations and inspect project-scoped answers, citations and comparable history.",

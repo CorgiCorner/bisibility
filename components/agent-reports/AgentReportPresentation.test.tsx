@@ -100,7 +100,7 @@ describe("shared report page presentation", () => {
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     renderDetail();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(report.title);
-    expect(screen.getByText(messages.agentWorkspace.membersOnly)).toBeInTheDocument();
+    expect(screen.queryByText(messages.agentWorkspace.membersOnly)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: messages.agentWorkspace.copyLink }));
     await waitFor(() =>
       expect(writeText).toHaveBeenCalledWith(

@@ -61,6 +61,7 @@ beforeAll(async () => {
       prefix: "synthetic",
       hashedKey: randomUUID(),
       scopes: ["write"],
+      createdById: fixture.project.writer.id,
     },
   });
   keyId = key.id;

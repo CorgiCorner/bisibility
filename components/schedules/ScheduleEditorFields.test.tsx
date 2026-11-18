@@ -15,7 +15,6 @@ function ScheduleEditorFieldsHarness() {
       cronExpression: "0 6 * * 1-5",
       dayOfMonth: "1st",
       frequency: "daily",
-      isDefault: false,
       jitterMinutes: "15",
       name: "Commercial daily",
       providerPolicy: "project",
@@ -29,7 +28,6 @@ function ScheduleEditorFieldsHarness() {
   return (
     <ScheduleEditorFields
       connectedProviders={[{ label: "SerpApi", value: "serpapi" }]}
-      defaultScheduleName="Daily 06:00"
       form={form}
       projectDefaults={{ provider: { label: "SerpApi", value: "serpapi" }, serpDepth: 20 }}
       projectTimezone="Europe/Madrid"

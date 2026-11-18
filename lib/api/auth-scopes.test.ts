@@ -3,6 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { authenticateBearer } from "./auth";
 
 const mocks = vi.hoisted(() => ({
+  membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
   apiKey: { findMany: vi.fn(), update: vi.fn() },
   personalAccessToken: { findMany: vi.fn(), update: vi.fn() },
 }));
@@ -23,6 +24,7 @@ for (const kind of ["apiKey", "personalAccessToken"] as const) {
   function authenticate(scopes: unknown) {
     mocks[kind].findMany.mockResolvedValue([
       {
+        createdById: "creator_1",
         hashedKey: hashApiKey(raw),
         id: "key",
         prefix: raw.slice(0, 21),

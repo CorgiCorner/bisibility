@@ -150,3 +150,35 @@ describe("Storybook recent-run dismissal boundary", () => {
     );
   });
 });
+
+it("provides browser fixtures for every tracking action export", async () => {
+  const aliases = await configuredAliases();
+  const fixturePath = aliases.get("@/lib/actions/ai-tracking");
+  expect(fixturePath).toBeTruthy();
+  const fixture = await import(fixturePath as string);
+  const source = readFileSync("lib/actions/ai-tracking.ts", "utf8");
+  const actionNames = [...source.matchAll(/export async function (\w+)/g)]
+    .map((match) => match[1])
+    .sort();
+  expect(actionNames.length).toBeGreaterThan(1);
+  expect(Object.keys(fixture).sort()).toEqual(actionNames);
+});
+
+it.each(["ScheduleEditor.tsx", "SchedulesList.tsx"])(
+  "isolates schedule previews loaded by %s",
+  async (component) => {
+    const config = await configuredViteConfig();
+    const plugin = config.plugins?.find(
+      (candidate) => candidate.name === "storybook-runtime-stubs",
+    );
+    const importer = join(process.cwd(), "components/schedules", component);
+    for (const source of [
+      "@/lib/schedules/preview-client",
+      join(process.cwd(), "lib/schedules/preview-client.ts"),
+    ]) {
+      expect(plugin?.resolveId?.(source, importer)).toMatch(
+        /[\\/]\.storybook[\\/]schedule-review-action-stubs\.ts$/,
+      );
+    }
+  },
+);

@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/Button";
-import { FormField } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -10,21 +9,19 @@ import type { CostFormValues } from "@/lib/cost-items/input";
 import { COST_KINDS, landingMinor, toCostItemInput } from "@/lib/cost-items/input";
 import { COST_CURRENCIES } from "@/lib/cost-items/money";
 import { COST_BILLINGS } from "@/lib/cost-items/monthly";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { Field } from "./CostFormField";
+import { CostPriceChanges } from "./CostPriceChanges";
 import { useMinorMoney } from "./cost-money";
 export function CostDrawerFields({
   catalog,
   form,
   projectPublicId,
-  suggestHref,
 }: Readonly<{
   catalog: readonly CostCatalogEntry[];
   form: UseFormReturn<CostFormValues>;
   projectPublicId: string;
-  suggestHref: string | null;
 }>) {
   const t = useTranslations("projectUsageCosts");
   const values = form.watch();
@@ -32,16 +29,7 @@ export function CostDrawerFields({
   const errors = form.formState.errors;
   return (
     <div className="flex flex-col gap-4">
-      <Field
-        label={t("drawer.tool")}
-        caption={
-          suggestHref ? (
-            <Link className="w-fit underline underline-offset-2" href={suggestHref}>
-              {t("drawer.suggest")}
-            </Link>
-          ) : undefined
-        }
-      >
+      <Field label={t("drawer.tool")}>
         <MenuSelect
           size="input"
           ariaLabel={t("drawer.tool")}
@@ -55,7 +43,7 @@ export function CostDrawerFields({
         />
       </Field>
       {values.catalogKey ? null : (
-        <Field label={t("drawer.name")} error={errors.name?.message}>
+        <Field label={t("drawer.name")} hint={t("drawer.nameHint")} error={errors.name?.message}>
           <Input aria-label={t("drawer.name")} {...form.register("name")} />
         </Field>
       )}
@@ -70,6 +58,19 @@ export function CostDrawerFields({
           />
         </Field>
       )}
+      {!values.catalogKey && values.kind === "custom" ? (
+        <Field
+          label={t("drawer.customType")}
+          hint={t("drawer.customTypeHint")}
+          error={errors.customType?.message}
+        >
+          <Input
+            aria-label={t("drawer.customType")}
+            maxLength={80}
+            {...form.register("customType")}
+          />
+        </Field>
+      ) : null}
       <Field error={errors.planLabel?.message} hint={t("drawer.planHint")} label={t("drawer.plan")}>
         <Input aria-label={t("drawer.plan")} {...form.register("planLabel")} />
         {entry?.plans.length ? (
@@ -116,24 +117,7 @@ export function CostDrawerFields({
           </div>
         </div>
       </Field>
-      <Field error={errors.trialUntil?.message} label={t("drawer.priceChanges")}>
-        <span className="text-sm text-fg-muted">{t("drawer.trialUntil")}</span>
-        <Input aria-label={t("drawer.trialUntil")} type="date" {...form.register("trialUntil")} />
-        <SegmentedControl
-          ariaLabel={t("drawer.discount")}
-          onChange={(mode) => form.setValue("discountMode", mode)}
-          options={[
-            { label: t("drawer.none"), value: "none" },
-            { label: t("drawer.percent"), value: "percent" },
-            { label: t("drawer.money"), value: "amount" },
-          ]}
-          size="field"
-          value={values.discountMode}
-        />
-        {values.discountMode === "none" ? null : (
-          <DiscountFields error={errors.discountAmount?.message} form={form} values={values} />
-        )}
-      </Field>
+      <CostPriceChanges form={form} />
       <Field error={errors.startedOn?.message} label={t("drawer.started")}>
         <Input aria-label={t("drawer.started")} type="date" {...form.register("startedOn")} />
       </Field>
@@ -164,9 +148,23 @@ function ProjectShareField({
         label={t("drawer.partial")}
         onChange={(event) => setPartial(form, projectPublicId, values, event.currentTarget.checked)}
       />
-      <p className="text-ui-caption text-fg-muted">{t("drawer.partialHint")}</p>
       {partial ? (
-        <Field error={form.formState.errors.projectIds?.message} label={t("card.columns.project")}>
+        <Field
+          error={form.formState.errors.projectIds?.message}
+          label={t("card.columns.project")}
+          caption={
+            <div className="grid gap-2">
+              <span>{t("drawer.partialHint")}</span>
+              {share !== null && input && typeof input !== "string" ? (
+                <p className="text-ui-caption text-fg-muted" data-testid="cost-lands">
+                  {input.billing === "one_off"
+                    ? t("drawer.landsOnce", { amount: money(input.currency, share) })
+                    : t("drawer.lands", { amount: money(input.currency, share) })}
+                </p>
+              ) : null}
+            </div>
+          }
+        >
           <Input
             aria-label={t("card.columns.project")}
             inputMode="numeric"
@@ -183,13 +181,6 @@ function ProjectShareField({
               values.split === "percent" ? (values.percents[projectPublicId] ?? percent) : percent
             }
           />
-          {share !== null && input && typeof input !== "string" ? (
-            <p className="text-ui-caption text-fg-muted" data-testid="cost-lands">
-              {input.billing === "one_off"
-                ? t("drawer.landsOnce", { amount: money(input.currency, share) })
-                : t("drawer.lands", { amount: money(input.currency, share) })}
-            </p>
-          ) : null}
         </Field>
       ) : null}
     </div>
@@ -233,62 +224,4 @@ function chooseTool(
   form.setValue("catalogKey", key);
   form.setValue("name", entry?.name ?? "");
   form.setValue("kind", entry?.kind ?? "custom");
-}
-function DiscountFields({
-  error,
-  form,
-  values,
-}: Readonly<{ error?: string; form: UseFormReturn<CostFormValues>; values: CostFormValues }>) {
-  const t = useTranslations("projectUsageCosts.drawer");
-  return (
-    <div className="flex flex-col gap-2">
-      <Input
-        aria-invalid={Boolean(error)}
-        aria-label={values.discountMode === "percent" ? t("percent") : t("money")}
-        inputMode="decimal"
-        {...form.register(values.discountMode === "percent" ? "discountPercent" : "discountAmount")}
-      />
-      <SegmentedControl
-        ariaLabel={t("discount")}
-        onChange={(span) => form.setValue("discountSpan", span)}
-        options={[
-          { label: t("forMonths"), value: "months" },
-          { label: t("untilDate"), value: "until" },
-        ]}
-        size="field"
-        value={values.discountSpan}
-      />
-      {values.discountSpan === "months" ? (
-        <Input aria-label={t("months")} inputMode="numeric" {...form.register("discountMonths")} />
-      ) : (
-        <Input aria-label={t("untilDate")} type="date" {...form.register("discountUntil")} />
-      )}
-      <ErrorText code={error} />
-    </div>
-  );
-}
-function Field({
-  children,
-  caption,
-  error,
-  hint,
-  label,
-}: Readonly<{
-  children: ReactNode;
-  caption?: ReactNode;
-  error?: string;
-  hint?: string;
-  label: string;
-}>) {
-  return (
-    <FormField help={hint} label={label} caption={caption}>
-      {children}
-      <ErrorText code={error} />
-    </FormField>
-  );
-}
-function ErrorText({ code }: Readonly<{ code?: string }>) {
-  const t = useTranslations("projectUsageCosts.drawer.errors");
-  if (!code || code === "root") return null;
-  return <p className="text-sm text-danger">{t(code as "amount")}</p>;
 }

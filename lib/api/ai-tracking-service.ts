@@ -93,7 +93,11 @@ export async function mutateTrackingCatalog(
   publicId?: string,
   transaction?: TrackingTransaction,
 ) {
-  if (transaction && (publicId || method !== "POST" || !["topics", "prompts"].includes(resource)))
+  if (
+    transaction &&
+    resource !== "schedules" &&
+    (publicId || method !== "POST" || !["topics", "prompts"].includes(resource))
+  )
     throw new Error("Only catalog creates support a shared transaction.");
   if (resource === "topics") {
     const id = publicId ? await resolveTrackingId(projectId, "topics", publicId) : null;
@@ -128,7 +132,11 @@ export async function mutateTrackingCatalog(
   }
   if (resource === "schedules") {
     const id = publicId ? await resolveTrackingId(projectId, "schedules", publicId) : null;
-    if (id && method === "DELETE") return archiveSchedule(projectId, id);
+    if (id && method === "DELETE") {
+      return transaction
+        ? archiveSchedule(projectId, id, transaction)
+        : archiveSchedule(projectId, id);
+    }
     const input = (id ? scheduleInputSchema.partial() : scheduleInputSchema).parse(value);
     const saved = id
       ? (await listSchedules(projectId)).find(
@@ -145,7 +153,9 @@ export async function mutateTrackingCatalog(
           (input.timezone !== undefined && input.timezone !== saved?.timezone))
       )
         throw new Error("Changing cadence requires a new recurring payment review.");
-      return updateSchedule(projectId, id, input);
+      return transaction
+        ? updateSchedule(projectId, id, input, transaction)
+        : updateSchedule(projectId, id, input);
     }
     let configuration = await trackingPlan(projectId, input.configuration);
     if (configuration.requirePayment || configuration.acceptedPayment) {
@@ -169,9 +179,16 @@ export async function mutateTrackingCatalog(
       };
     }
     configuration = { ...configuration, acceptedPayment: undefined };
-    return id
-      ? updateSchedule(projectId, id, { ...input, configuration })
-      : createSchedule(projectId, { ...scheduleInputSchema.parse(value), configuration });
+    if (id) {
+      const savedInput = { ...input, configuration };
+      return transaction
+        ? updateSchedule(projectId, id, savedInput, transaction)
+        : updateSchedule(projectId, id, savedInput);
+    }
+    const createdInput = { ...scheduleInputSchema.parse(value), configuration };
+    return transaction
+      ? createSchedule(projectId, createdInput, transaction)
+      : createSchedule(projectId, createdInput);
   }
   throw new Error("Tracking resource not found.");
 }

@@ -1,10 +1,13 @@
 "use client";
 
 import { useToast } from "@/components/ui/toast-context";
+import { throwScheduleReviewProblem } from "@/lib/schedules/review-problem";
+import { rankMembershipChange } from "@/lib/schedules/web-change";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import type { ScheduleEditorMember } from "./ScheduleEditorModel";
+import { ScheduleReviewCancelled, useScheduleSpendReview } from "./useScheduleSpendReview";
 
 export function useScheduleMemberRemoval({
   canEdit,
@@ -20,6 +23,7 @@ export function useScheduleMemberRemoval({
   setPendingMembers: Dispatch<SetStateAction<readonly ScheduleEditorMember[]>>;
 }) {
   const router = useRouter();
+  const spendReview = useScheduleSpendReview(projectId);
   const t = useTranslations("projectRuns.schedules");
   const { showToast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -36,19 +40,32 @@ export function useScheduleMemberRemoval({
     }
     setPendingId(member.publicId);
     try {
-      const response = await fetch(`/api/check-schedules/${scheduleId}/keywords`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, keywordIds: [member.publicId] }),
-      });
-      if (!response.ok) throw new Error("schedule_member_removal_failed");
+      await spendReview.run(
+        rankMembershipChange(projectId, scheduleId, [member.publicId], "remove"),
+        async (review) => {
+          const response = await fetch(`/api/check-schedules/${scheduleId}/keywords`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              projectId,
+              keywordIds: [member.publicId],
+              ...(review ? { review } : {}),
+            }),
+          });
+          if (!response.ok) {
+            throwScheduleReviewProblem(await response.json().catch(() => null));
+            throw new Error("schedule_member_removal_failed");
+          }
+        },
+      );
       showToast(t("editor.memberRemoved"), { severity: "success" });
       router.refresh();
-    } catch {
+    } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       setError(t("editor.memberRemoveFailed"));
     } finally {
       setPendingId(null);
     }
   }
-  return { error, pendingId, remove };
+  return { error, pendingId, remove, dialog: spendReview.dialog };
 }

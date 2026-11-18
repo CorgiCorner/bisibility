@@ -124,7 +124,17 @@ export function ProviderRecovery({
                 ? "checkingHeading"
                 : state === "ready"
                   ? "readyHeading"
-                  : `${reasonKey}Heading`,
+                  : reasonKey === "billingSearches"
+                    ? "billingSearchesHeading"
+                    : reasonKey === "billing"
+                      ? "billingHeading"
+                      : reasonKey === "credentials"
+                        ? "credentialsHeading"
+                        : reasonKey === "restricted"
+                          ? "restrictedHeading"
+                          : reasonKey === "review"
+                            ? "reviewHeading"
+                            : "unverifiedHeading",
               { provider: providerName },
             ),
             description: t(
@@ -136,7 +146,17 @@ export function ProviderRecovery({
                       view.scope?.kind === "capability" &&
                       view.scope.capability === "rank_check"
                     ? "restrictedRankDescription"
-                    : `${reasonKey}Description`,
+                    : reasonKey === "billingSearches"
+                      ? "billingSearchesDescription"
+                      : reasonKey === "billing"
+                        ? "billingDescription"
+                        : reasonKey === "credentials"
+                          ? "credentialsDescription"
+                          : reasonKey === "restricted"
+                            ? "restrictedDescription"
+                            : reasonKey === "review"
+                              ? "reviewDescription"
+                              : "unverifiedDescription",
             ),
           }}
           labels={{

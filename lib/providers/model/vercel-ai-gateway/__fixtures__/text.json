@@ -1,0 +1,20 @@
+{
+  "id": "chatcmpl-synthetic-example",
+  "object": "chat.completion",
+  "model": "anthropic/claude-sonnet-5",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "A bounded synthetic answer."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 28,
+    "total_tokens": 43
+  }
+}

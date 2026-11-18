@@ -33,7 +33,22 @@ async function loadSource(
     tx.projectDefaults.findUnique({ where: { projectId: project.id } }),
     tx.checkSchedule.findMany({
       where: { projectId: project.id, archivedAt: null },
-      orderBy: [{ isDefault: "desc" }, { publicId: "asc" }],
+      orderBy: [{ publicId: "asc" }],
+      select: {
+        id: true,
+        publicId: true,
+        projectId: true,
+        name: true,
+        frequency: true,
+        cronExpression: true,
+        timezone: true,
+        timeOfDay: true,
+        jitterMinutes: true,
+        enabled: true,
+        archivedAt: true,
+        providerPolicy: true,
+        serpDepth: true,
+      },
     }),
     tx.providerConnection.findMany({
       where: { projectId: project.id, kind: "serp" },
@@ -57,9 +72,7 @@ async function loadSource(
   });
   if (targets.some((row) => row.projectId !== project.id))
     throw new SettingsHostError("source_unavailable");
-  const schedule = scheduleRef
-    ? schedules.find((row) => row.publicId === scheduleRef)
-    : schedules.find((row) => row.isDefault);
+  const schedule = scheduleRef ? schedules.find((row) => row.publicId === scheduleRef) : undefined;
   if (scheduleRef && !schedule) throw new SettingsHostError("source_unavailable");
   const membership = authorized
     ? null
@@ -97,7 +110,7 @@ async function loadSource(
           serpStopOnMatch: defaults.serpStopOnMatch,
         }
       : null,
-    schedules: schedules.map(({ createdAt: _created, updatedAt: _updated, ...row }) => row),
+    schedules,
     targets,
     priceInputs,
     markets: markets.map((row) => ({

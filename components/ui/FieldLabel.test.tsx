@@ -34,4 +34,17 @@ describe("FieldLabel", () => {
     expect(screen.getByLabelText("Tags")).toHaveAttribute("id", "tags");
     expect(screen.getByRole("button", { name: "Comma-separated labels." })).toBeInTheDocument();
   });
+
+  it("keeps required metadata beside the label without changing the field name", () => {
+    render(
+      <>
+        <FieldLabel htmlFor="keywords" label="Keywords" suffix={<span>Required</span>} />
+        <textarea id="keywords" />
+      </>,
+    );
+
+    expect(screen.getByText("Keywords").nextElementSibling).toHaveTextContent("Required");
+    expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveAttribute("id", "keywords");
+    expect(screen.getByLabelText("Keywords")).toBeVisible();
+  });
 });

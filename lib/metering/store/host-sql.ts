@@ -1,5 +1,7 @@
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import { prismaPostgresExecutor } from "@usagekit/store-postgres";
+import { exactNumericRows } from "./numeric";
+import { receiptWrite } from "./receipt-write";
 import { type Counters, lock as immutableLock, createSql as immutableSql, Prisma } from "./sql";
 import { ensureTimestampContract, requireTimestampContract } from "./timestamp-history";
 
@@ -33,11 +35,11 @@ export function createSql(tx: Prisma.TransactionClient, counters: Counters) {
     },
     async query<T>(query: Prisma.Sql): Promise<T[]> {
       await verify();
-      return core.query<T>(query);
+      return exactNumericRows(await core.query<T>(query));
     },
     async execute(query: Prisma.Sql): Promise<number> {
       await verify();
-      return core.execute(query);
+      return core.execute(receiptWrite(query));
     },
   };
 }

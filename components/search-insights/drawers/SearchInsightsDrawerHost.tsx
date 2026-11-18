@@ -1,5 +1,9 @@
 "use client";
 import { trackingScheduleValueWithDepthOverride } from "@/components/keywords/add/AddKeywordDrawerExtensions";
+import {
+  ScheduleReviewCancelled,
+  useScheduleSpendReview,
+} from "@/components/schedules/useScheduleSpendReview";
 import { useToast } from "@/components/ui/toast-context";
 import type {
   LoadSearchInsightsTrackDialogAction,
@@ -7,6 +11,9 @@ import type {
 } from "@/lib/actions/search-insights-drawers";
 import { track } from "@/lib/analytics/client";
 import type { addKeywordsMatrix } from "@/lib/capacity/client-actions";
+import { unwrapScheduleActionResult } from "@/lib/schedules/action-result";
+import { keywordCreateChange } from "@/lib/schedules/keyword-create-change";
+import type { AddKeywordsMatrixInput } from "@/lib/schemas/keyword";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
@@ -56,6 +63,7 @@ export function SearchInsightsDrawerHost({
   property,
   ...actions
 }: Readonly<SearchInsightsDrawerHostProps>) {
+  const review = useScheduleSpendReview(projectId);
   const router = useRouter();
   const { showToast } = useToast();
   const format = useFormatter();
@@ -81,11 +89,10 @@ export function SearchInsightsDrawerHost({
 
   async function confirm(query: string, choice: TrackQueryConfirm) {
     if (!trackDialog) return;
-    setTarget(null);
     // One entry per write in flight: two rows started together must each keep their own label.
     setAdding((current) => new Set(current).add(query));
     try {
-      const result = await addKeywordsAction({
+      const input: AddKeywordsMatrixInput = {
         devices: [choice.device],
         intent: null,
         keywords: [query],
@@ -98,7 +105,19 @@ export function SearchInsightsDrawerHost({
         tags: [],
         targetUrl: null,
         topic: null,
+      };
+      const result = await review.run(keywordCreateChange(input), async (submission) => {
+        if (!submission?.preview_token) setTarget(null);
+        try {
+          return unwrapScheduleActionResult(
+            await addKeywordsAction({ ...input, review: submission }),
+          );
+        } catch (error) {
+          setTarget(query);
+          throw error;
+        }
       });
+      setTarget(null);
       // An add the project already had is still an answer to "is this tracked", so the row flips
       // either way; only a refusal leaves it as it was.
       if (result.created > 0 || result.skippedDuplicates > 0) {
@@ -119,6 +138,7 @@ export function SearchInsightsDrawerHost({
         router.refresh();
       }
     } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       showToast(actionErrorMessage(error, t("trackFailed")), { severity: "error" });
     } finally {
       setAdding((current) => {
@@ -204,6 +224,7 @@ export function SearchInsightsDrawerHost({
       ) : (
         <TrackQueryDialogLoading onCancel={() => setTarget(null)} query={target} />
       )}
+      {review.dialog}
     </SearchInsightsDrawerContext.Provider>
   );
 }

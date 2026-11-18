@@ -4,6 +4,18 @@ import type { AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
 import { ApiForbiddenError } from "./errors";
 import type { ApiRequestOrigin } from "./request-origin";
 import { errorResponse } from "./responses";
+import type { ApiScope } from "./scope-policy";
+
+export type NativeProjectAuth = {
+  kind: "native_session";
+  project: AuthenticatedApiKey["project"];
+  scopes: readonly ApiScope[];
+};
+export type ApiProjectAuth = AuthenticatedApiKey | NativeProjectAuth;
+
+export function projectScopes(auth: ApiProjectAuth): readonly ApiScope[] {
+  return "apiKey" in auth ? auth.apiKey.scopes : auth.scopes;
+}
 
 export type ApiContext = {
   analyticsIdentity?: ApiAnalyticsIdentity;
@@ -11,7 +23,7 @@ export type ApiContext = {
   // User id when the request is authenticated by a personal token; null for
   // project keys (which carry no user identity). Used for audit attribution.
   actorId?: string | null;
-  auth: AuthenticatedApiKey;
+  auth: ApiProjectAuth;
   headers: Headers;
   instance: string;
   method: string;
@@ -35,14 +47,14 @@ export type PersonalApiContext = {
 
 /**
  * Membership role the router resolved for the scoped project: the caller's own role for a
- * personal token, `admin` for a project key. Undefined when the context carries no actor.
+ * personal token, the creator's role capped at `admin` for a project key.
  */
 export function actorProjectRole(ctx: Pick<ApiContext, "actor" | "auth">) {
   return ctx.actor?.memberships?.find((membership) => membership.projectId === ctx.auth.project.id)
     ?.role;
 }
 
-export function projectMatches(auth: AuthenticatedApiKey, projectId: string) {
+export function projectMatches(auth: Pick<AuthenticatedApiKey, "project">, projectId: string) {
   return projectId === auth.project.publicId;
 }
 

@@ -1,0 +1,151 @@
+@layer theme, base, components, utilities;
+@layer components {
+  .model-playground-frame {
+    position: relative;
+    min-width: 0;
+  }
+  .model-playground-scroll {
+    container-type: inline-size;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline-end: calc(4 * var(--spacing));
+  }
+  .model-playground-track {
+    display: flex;
+    align-items: stretch;
+    width: max-content;
+  }
+  .model-playground-column {
+    /* Leave gap-4 plus a spacing-6 peek of the following card. */
+    width: min(400px, calc(100cqi - 10 * var(--spacing)));
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    overflow-wrap: anywhere;
+  }
+  .model-playground-add {
+    width: max-content;
+    max-width: min(240px, 100cqi);
+    align-self: flex-start;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    scroll-snap-align: end;
+    overflow-wrap: anywhere;
+  }
+  /* Keep a single answer fully readable; its add action remains a separate scroll item. */
+  @media (max-width: 639px) {
+    /* At the preceding snap, keep the Add tile beyond the normal card peek. */
+    .model-playground-column:not(:first-child):has(+ .model-playground-add) {
+      scroll-margin-inline-start: calc(6 * var(--spacing));
+    }
+    .model-playground-column:first-child:has(+ .model-playground-add:last-child) {
+      width: 100cqi;
+    }
+  }
+  .model-playground-column:only-child {
+    width: min(400px, 100cqi);
+  }
+  .model-playground-model-label {
+    padding-top: 0;
+  }
+  .model-playground-metrics[hidden] {
+    display: none;
+  }
+  .model-playground-fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    max-width: calc(8 * var(--spacing));
+    pointer-events: none;
+  }
+  .model-playground-start {
+    width: var(--model-playground-start-fade, 0px);
+    left: 0;
+    background: linear-gradient(to right, var(--bg), transparent);
+  }
+  .model-playground-end {
+    width: var(--model-playground-end-fade, 0px);
+    right: 0;
+    background: linear-gradient(to left, var(--bg), transparent);
+  }
+  .model-playground-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    margin-top: auto;
+  }
+  .model-playground-metrics {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0;
+  }
+  .model-playground-metrics dt,
+  .model-playground-metrics dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .model-playground-metrics dd {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .model-playground-wrap {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .model-playground-answer {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .model-playground-matrix {
+    --model-matrix-columns: 1;
+    display: grid;
+    grid-template-columns: repeat(var(--model-matrix-columns), minmax(192px, 1fr));
+    width: 100%;
+    min-width: calc(var(--model-matrix-columns) * 192px);
+  }
+  .model-playground-matrix[data-model-matrix-columns="2"] {
+    --model-matrix-columns: 2;
+  }
+  .model-playground-matrix[data-model-matrix-columns="3"] {
+    --model-matrix-columns: 3;
+  }
+  .model-playground-matrix[data-model-matrix-columns="4"] {
+    --model-matrix-columns: 4;
+  }
+  .model-playground-matrix[data-model-matrix-columns="5"] {
+    --model-matrix-columns: 5;
+  }
+  .model-playground-matrix[data-model-matrix-columns="6"] {
+    --model-matrix-columns: 6;
+  }
+  .model-playground-matrix[data-model-matrix-columns="7"] {
+    --model-matrix-columns: 7;
+  }
+  .model-playground-matrix-group,
+  .model-playground-matrix-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+  .model-playground-matrix-row {
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .model-playground-matrix-group:last-child .model-playground-matrix-row:last-child {
+    border-bottom: 0;
+  }
+  .model-playground-matrix-cell {
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+  @media (min-width: 640px) {
+    .model-playground-column,
+    .model-playground-column:only-child {
+      width: 400px;
+    }
+  }
+}

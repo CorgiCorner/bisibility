@@ -1,7 +1,6 @@
 import type { RunCheckNowResult } from "@/lib/rank-check/manual-run-result";
 import type {
   AddKeywordsInput,
-  BulkKeywordFrequencyInput,
   BulkKeywordIdsInput,
   BulkKeywordTagInput,
   BulkKeywordTargetInput,
@@ -16,10 +15,11 @@ export type { AddKeywordsInput };
 export type CreateKeywordAlertInput = { keywordId: string; projectId: string };
 
 export type KeywordWorkspaceActions = {
-  addKeywordsAction: KeywordAction<AddKeywordsInput>;
+  addKeywordsAction: KeywordAction<
+    AddKeywordsInput & { review?: import("@/lib/schedules/review-commit").ScheduleReviewSubmission }
+  >;
   bulkClearTargetAction: KeywordAction<BulkKeywordIdsInput>;
   bulkDeleteAction: KeywordAction<BulkKeywordIdsInput>;
-  bulkSetFrequencyAction: KeywordAction<BulkKeywordFrequencyInput>;
   bulkSetTargetAction: KeywordAction<BulkKeywordTargetInput>;
   bulkTagAction: KeywordAction<BulkKeywordTagInput>;
 };

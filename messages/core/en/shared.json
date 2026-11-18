@@ -935,6 +935,7 @@
         "archived": "Archived"
       },
       "modes": {
+        "archived": "Archived schedule",
         "manual": "Manual",
         "paused": "Paused",
         "scheduled": "Scheduled intent",
@@ -946,6 +947,7 @@
         "keyword_changed": "A selected keyword changed or is unavailable. Review the selection.",
         "manual": "No recurring execution is enabled.",
         "paused": "The saved schedule intent is paused.",
+        "schedule_archived": "The saved schedule is archived. Manual checks still use this monitor.",
         "definition_changed": "The schedule refers to an earlier configuration.",
         "calendar_changed": "The calendar changed or is unavailable. Review it before scheduling."
       },
@@ -2243,6 +2245,31 @@
         "ga4": "Google Analytics 4",
         "plausible": "Plausible"
       }
+    },
+    "scheduleReview": {
+      "title": "Review schedule cost",
+      "description": "Estimated provider cost for the next 30 days.",
+      "before": "Before",
+      "after": "After",
+      "unknown": "Unknown",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "changed": "The cost changed. Review the updated estimate before confirming.",
+      "emptyScheduleCreated": "The empty schedule has been created. If you cancel, it stays empty and these keywords keep their current schedules.",
+      "capacity": "This change goes over your plan limit. If you confirm, the save is refused unless your plan allows it.",
+      "capacityDetail": "{dimension}: projected {projected}, limit {limit}.",
+      "reasons": {
+        "cost_increase": "The estimated recurring cost increases.",
+        "manual_to_scheduled": "Manual keywords will receive automatic checks.",
+        "provider_route_change": "The provider used for checks changes.",
+        "price_unknown": "Some provider prices are unknown. The final cost may vary."
+      },
+      "dimensions": {
+        "scheduledKeywords": "Scheduled keywords",
+        "scheduleFrequencies": "Checks per week",
+        "promptSchedules": "Prompt checks per week"
+      },
+      "previewFailed": "Could not preview this change. Try again."
     }
   }
 }

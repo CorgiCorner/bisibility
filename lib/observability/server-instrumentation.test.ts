@@ -9,6 +9,9 @@ const serverConfigLoaded = vi.hoisted(() => vi.fn());
 const edgeConfigLoaded = vi.hoisted(() => vi.fn());
 const sdkModuleLoaded = vi.hoisted(() => vi.fn());
 const bakedRuntimeEnv = vi.hoisted(() => ({ sentryDsn: undefined as string | undefined }));
+// A real sweep would keep an interval alive in the shared unit worker and later resolve another
+// file's database mock, so startup is observed without starting it.
+const startModelPlaygroundRecoverySweep = vi.hoisted(() => vi.fn(() => ({ close() {} })));
 
 vi.mock("@sentry/nextjs", () => {
   sdkModuleLoaded();
@@ -35,6 +38,10 @@ vi.mock("../../lib/deployment/runtime-env.generated", () => {
 vi.mock("../../lib/data-migrations/startup", () => ({
   enforceMigrationsAtStartup: vi.fn(async () => {}),
 }));
+vi.mock("../../lib/model-playground/recovery-schedule", () => ({
+  startModelPlaygroundRecoverySweep,
+}));
+vi.mock("../../lib/model-playground/runtime-registration", () => ({}));
 
 const ENV_KEYS = [
   "NEXT_RUNTIME",
@@ -98,7 +105,7 @@ describe("server instrumentation", () => {
     }
   });
 
-  it("warns about legacy settings and continues the automatic-upgrade startup", async () => {
+  it("warns that retired scheduler settings are ignored and startup continues", async () => {
     process.env.NEXT_RUNTIME = "nodejs";
     process.env.RANK_CHECK_SCHEDULER_MODE = "legacy";
     const instrumentation = await import("../../instrumentation");
@@ -108,8 +115,9 @@ describe("server instrumentation", () => {
     try {
       await expect(instrumentation.register()).resolves.toBeUndefined();
       expect(enforceMigrationsAtStartup).toHaveBeenCalledOnce();
+      expect(startModelPlaygroundRecoverySweep).toHaveBeenCalled();
       expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining("upgrades scheduling automatically"),
+        expect.stringContaining("Retired configuration is ignored"),
       );
     } finally {
       warn.mockRestore();

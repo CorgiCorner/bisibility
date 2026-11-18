@@ -129,6 +129,7 @@ it("allows a member PAT to delete its own view without a browser session", async
 it("creates project-key views without attributing them to the project owner", async () => {
   mocks.authenticate.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     project,
     apiKey: { id: "key", scopes: ["read", "write", "admin"] },
   });

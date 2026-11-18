@@ -99,7 +99,6 @@ export async function repairMissingScheduleAssignments(
               conflict.legacyCronExpression,
             ),
             enabled: true,
-            isDefault: false,
           };
           const key = JSON.stringify(data);
           newSchedules.set(key, { ...data, projectId: conflict.projectId });

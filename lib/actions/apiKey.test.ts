@@ -11,6 +11,7 @@ vi.mock("@/lib/auth/account-capability-extension", { spy: true });
 const mocks = vi.hoisted(() => {
   const prisma = {
     $transaction: vi.fn(),
+    membership: { findUnique: vi.fn(async () => ({ role: "owner" })) },
     apiKey: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     project: { findFirst: vi.fn() },
     user: { findUnique: vi.fn() },

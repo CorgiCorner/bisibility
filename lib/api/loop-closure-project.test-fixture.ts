@@ -6,7 +6,7 @@ export function project() {
     name: "Example",
     ownerId: "user_1",
     publicId: "prj_abcdefghijklmnopqrstuvwx",
-    sitemapMonitoringEnabled: true,
+    syncPauses: [],
     updatedAt: new Date("2026-01-02T00:00:00.000Z"),
     writeMode: "active",
   };

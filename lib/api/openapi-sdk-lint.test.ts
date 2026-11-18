@@ -172,6 +172,13 @@ describe("x-bisibility value rules", () => {
     expect(problems(json({ oneOf: [id("kw"), id("kw")], ...publicIdUnion(["a", "b"]) }))).toEqual([
       "invalid x-bisibility-union /paths/~1things/get/responses/200/content/application~1json/schema",
     ]);
+    const loose = { pattern: "^sync:.+$", type: "string", "x-bisibility-public-id": "sync" };
+    expect(
+      problems(json({ oneOf: [id("kw"), loose], ...publicIdUnion(["keyword", "sync"]) })),
+    ).toEqual([
+      "invalid x-bisibility-public-id /paths/~1things/get/responses/200/content/application~1json/schema/oneOf/1",
+      "invalid x-bisibility-union /paths/~1things/get/responses/200/content/application~1json/schema",
+    ]);
   });
 
   it("checks tagged unions: distinct tags, at most one default case, one case name each", () => {
@@ -295,6 +302,47 @@ describe("x-bisibility path parameter rule", () => {
     expect(
       check("/providers/{provider_id}", [{ ...provider, schema: { type: "string" } }]),
     ).toEqual(["path-id-without-public-id provider_id getThing"]);
+  });
+
+  it("accepts only a union of strict single-prefix public IDs", () => {
+    const strict = (prefix: string) => ({
+      pattern: `^${prefix}_[a-z][a-z0-9]{23}$`,
+      type: "string",
+      "x-bisibility-public-id": prefix,
+    });
+    const schedule = {
+      in: "path",
+      name: "schedule_id",
+      required: true,
+      schema: {
+        oneOf: ["sch", "ais", "lmn", "dsy"].map(strict),
+        "x-bisibility-union": {
+          cases: ["rank", "ai", "localMonitor", "dataSync"],
+          style: "public_id",
+        },
+      },
+    };
+    const path = "/projects/{project_id}/schedules/{schedule_id}";
+    expect(check(path, [project, schedule])).toEqual([]);
+    expect(check(path, [project, { ...schedule, schema: { type: "string" } }])).toEqual([
+      "path-id-without-public-id schedule_id getThing",
+    ]);
+    expect(
+      check(path, [
+        project,
+        {
+          ...schedule,
+          schema: {
+            oneOf: [
+              strict("sch"),
+              { pattern: "^sync:.+$", type: "string", "x-bisibility-public-id": "sync" },
+            ],
+            "x-bisibility-public-id": "sch",
+            "x-bisibility-union": { cases: ["rank", "sync"], style: "public_id" },
+          },
+        },
+      ]),
+    ).toEqual(["path-id-without-public-id schedule_id getThing"]);
   });
 
   it("rejects undeclared, misnamed, plain-string and extra path parameters", () => {

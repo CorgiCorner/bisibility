@@ -5,6 +5,10 @@ import { linkCheckSchedule, resolveCheckSchedule } from "@/lib/actions/keyword-s
 import { writeAudit } from "@/lib/auth/audit";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
+import {
+  type KeywordCreateReview,
+  keywordCreateIsReviewed,
+} from "@/lib/schedules/keyword-create-write";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import type {
   MarketDeviceConfirm,
@@ -12,65 +16,8 @@ import type {
   MarketDeviceResult,
   MarketDeviceSelection,
 } from "./device-targets-input";
-import { MARKET_DEVICE_SOURCE_MAX, marketDevicePlan } from "./device-targets-plan";
+import { loadMarketDeviceTargets as load, unavailable } from "./device-targets-load";
 
-const unavailable = (
-  reason:
-    | "market_unavailable"
-    | "selection_too_large"
-    | "selection_changed"
-    | "schedule_unavailable",
-) => ({ outcome: "unavailable" as const, reason });
-async function load(tx: Prisma.TransactionClient, projectId: string, input: MarketDeviceSelection) {
-  const market = await tx.projectMarket.findFirst({
-    where: { publicId: input.marketId, projectId, status: "active" },
-    include: { location: true },
-  });
-  if (!market) return unavailable("market_unavailable");
-  const schedule = input.scheduleId
-    ? await tx.checkSchedule.findFirst({
-        where: {
-          publicId: input.scheduleId,
-          projectId,
-          archivedAt: null,
-          enabled: true,
-          frequency: { notIn: ["manual", "paused"] },
-        },
-      })
-    : null;
-  if (input.scheduleId && !schedule) return unavailable("schedule_unavailable");
-  const keywords = await tx.keyword.findMany({
-    where: { projectId, locationId: market.locationId },
-    orderBy: { publicId: "asc" },
-    take: MARKET_DEVICE_SOURCE_MAX + 1,
-    select: {
-      publicId: true,
-      text: true,
-      device: true,
-      archivedAt: true,
-      targetUrl: true,
-      topic: true,
-      intent: true,
-      tags: { orderBy: { tagId: "asc" }, select: { tag: { select: { name: true } } } },
-    },
-  });
-  const scheduleScope = schedule
-    ? [
-        schedule.publicId,
-        schedule.name,
-        schedule.frequency,
-        schedule.cronExpression,
-        schedule.timeOfDay,
-        schedule.timezone,
-        schedule.jitterMinutes,
-        schedule.serpDepth,
-        schedule.providerPolicy,
-        schedule.updatedAt,
-      ]
-    : null;
-  const plan = marketDevicePlan(keywords, input, scheduleScope);
-  return plan.outcome === "ready" ? { outcome: "loaded" as const, market, schedule, plan } : plan;
-}
 export async function previewMarketDeviceTargets(
   tx: Prisma.TransactionClient,
   projectId: string,
@@ -87,6 +34,7 @@ export async function addMarketDeviceTargets(
   actorId: string,
   projectId: string,
   raw: MarketDeviceConfirm,
+  admission?: KeywordCreateReview,
 ): Promise<MarketDeviceResult> {
   const { fingerprint, ...input } = raw;
   await prepareResourceCapacity(tx, { projectId, dimensions: [] });
@@ -97,7 +45,8 @@ export async function addMarketDeviceTargets(
   await tx.$queryRaw`SELECT id FROM keywords WHERE "projectId"=${projectId} AND "locationId"=${initial.market.locationId} ORDER BY id FOR UPDATE`;
   const current = await load(tx, projectId, input);
   if (current.outcome !== "loaded") return current;
-  if (current.plan.fingerprint !== fingerprint) return unavailable("selection_changed");
+  if (!keywordCreateIsReviewed(tx, admission) && current.plan.fingerprint !== fingerprint)
+    return unavailable("selection_changed");
   if (!current.plan.missing.length) return { outcome: "created", created: 0 };
   const assigned = await resolveCheckSchedule(tx, projectId, input.scheduleId);
   const result = await createKeywordBatchSet(
@@ -117,7 +66,10 @@ export async function addMarketDeviceTargets(
   );
   if (result.restored.length || result.created.length !== current.plan.newCheckCount)
     throw new Error("Device target selection changed.");
-  if (assigned) await linkCheckSchedule(tx, projectId, assigned, result.created);
+  if (assigned) {
+    if (admission) await linkCheckSchedule(tx, projectId, assigned, result.created, admission);
+    else await linkCheckSchedule(tx, projectId, assigned, result.created);
+  }
   if (result.created.length)
     await writeAudit(
       {

@@ -10,6 +10,7 @@ import { resolveApiKeyExpiry } from "./api-key-policy";
 import { apiKeyAuditResource } from "./audit-resources";
 import { type ApiContext, notFound } from "./context";
 import { ApiForbiddenError } from "./errors";
+import { apiKeyTierAllowedForRole } from "./key-creator";
 import { scopesForTier } from "./key-scope";
 import { decodeCursor, encodeCursor, parseLimit, splitPage } from "./pagination";
 import { requireApiPublicId } from "./public-id";
@@ -63,11 +64,22 @@ export async function createApiKey(ctx: ApiContext) {
     throw new ApiForbiddenError("Account access is required.");
   const body = await readJsonBody(ctx);
   const data = parseApiInput(apiKeyCreateSchema, objectBody(body));
+  // A key made through another key belongs to that key's creator and stays within that role.
+  const createdById =
+    ctx.actorId ?? ("apiKey" in ctx.auth ? (ctx.auth.apiKey.createdById ?? null) : null);
+  if (!createdById) throw new ApiForbiddenError("The creator of this API key is unknown.");
+  const creator = await prisma.membership.findUnique({
+    where: { userId_projectId: { userId: createdById, projectId: ctx.auth.project.id } },
+    select: { role: true },
+  });
+  if (!apiKeyTierAllowedForRole(data.scope, creator?.role))
+    throw new ApiForbiddenError("An API key cannot exceed its creator's project role.");
   const raw = newRawApiKey();
   const expiresAt = resolveApiKeyExpiry(data.expiresInDays);
   const publicId = makePublicId("key");
   const apiKey = await prisma.apiKey.create({
     data: {
+      createdById,
       expiresAt,
       hashedKey: hashApiKey(raw),
       name: data.name,

@@ -57,6 +57,7 @@ describe("email changed notice", () => {
     });
 
     expect(sendEmailMock).toHaveBeenCalledExactlyOnceWith({
+      purpose: "email-changed-notice",
       category: "transactional",
       from: "Security <security@example.com>",
       html: expect.stringContaining("next@example.com"),

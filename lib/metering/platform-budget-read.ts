@@ -125,7 +125,7 @@ export async function readPlatformConnectionBudgets(input: {
       }
       return results;
     },
-    { isolationLevel: "RepeatableRead" },
+    { isolationLevel: "RepeatableRead", maxWait: 15_000, timeout: 15_000 },
   );
 }
 

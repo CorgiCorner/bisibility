@@ -1,58 +1,135 @@
 "use client";
 
-import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { AiVisibilityAnswerText } from "@/components/ai-tracking/AiVisibilityAnswerText";
-import { sourceTypeLabel } from "@/components/ai-tracking/source-copy";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { IconButton } from "@/components/ui/IconButton";
 import { Modal } from "@/components/ui/Modal";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { Tooltip } from "@/components/ui/Tooltip";
-import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import type { PlaygroundEntity } from "@/lib/ai-research/model-playground-view";
 import {
-  type PlaygroundColumn,
-  type PlaygroundEntity,
-  type PlaygroundSourceOverride,
-  type PlaygroundVerdict,
-  playgroundCitedDomains,
-  playgroundMentions,
-  playgroundVerdict,
-} from "@/lib/ai-research/model-playground-view";
-import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+  hasCompleteAnswer,
+  type ResultColumn,
+  resultMentions,
+  resultVerdict,
+} from "@/lib/model-playground/result-view";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-
-type ClassContext = {
-  competitorDomains: readonly string[];
-  excludedNames: readonly string[];
-  overrides: readonly PlaygroundSourceOverride[];
-  ownDomain: string | null;
-};
+import { type ReactNode, useState } from "react";
+import { ModelPlaygroundColumnFooter } from "./ModelPlaygroundColumnFooter";
+import { ModelPlaygroundColumnFrame } from "./ModelPlaygroundColumnFrame";
+import {
+  type ModelPlaygroundDraftCard,
+  ModelPlaygroundIdleColumn,
+} from "./ModelPlaygroundIdleColumn";
+import "./ModelPlaygroundColumns.css";
+import { ModelPlaygroundSources } from "./ModelPlaygroundSources";
+import { useModelPlaygroundScroll } from "./useModelPlaygroundScroll";
 
 export function ModelPlaygroundColumns({
   columns,
   entities,
-  funding,
   onRemove,
-  payment,
-  running,
-  sourceContext,
+  onSettings,
+  running = false,
+  draftCards,
+  addColumn,
+  disabled,
+  previousRunNotice,
+  previousAnswerTemplate,
 }: Readonly<{
-  columns: readonly PlaygroundColumn[];
+  columns: readonly ResultColumn[];
   entities: readonly PlaygroundEntity[];
-  funding: "byok" | "platform" | null;
   onRemove: (id: string) => void;
-  payment?: ActionPaymentReceipt;
+  onSettings?: (id: string) => void;
+  running?: boolean;
+  draftCards?: readonly ModelPlaygroundDraftCard[];
+  addColumn?: ReactNode;
+  disabled?: boolean;
+  previousRunNotice?: string;
+  previousAnswerTemplate?: string;
+}>) {
+  const c = useTranslations("projectAiResearch.modelPlayground");
+  const { edges, ref, onScroll } = useModelPlaygroundScroll();
+  return (
+    <div className="model-playground-frame">
+      <section
+        aria-label={c("scrollAnswers")}
+        className="model-playground-scroll"
+        onScroll={onScroll}
+        ref={ref}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: The scroll viewport must be keyboard reachable.
+        tabIndex={0}
+      >
+        <div className="model-playground-track gap-4">
+          {(draftCards ?? columns).map((card) => {
+            const column = columns.find((item) => item.id === card.id);
+            return column ? (
+              <AnswerColumn
+                key={card.id}
+                column={column}
+                entities={entities}
+                onRemove={onRemove}
+                onSettings={onSettings}
+                running={running}
+                disabled={disabled}
+                draftCard={draftCards?.find((item) => item.id === card.id)}
+                previousRunNotice={previousRunNotice}
+                previousAnswerTemplate={previousAnswerTemplate}
+              />
+            ) : (
+              <ModelPlaygroundIdleColumn
+                key={card.id}
+                column={card as ModelPlaygroundDraftCard}
+                onRemove={onRemove}
+                onSettings={onSettings}
+                disabled={disabled}
+              />
+            );
+          })}
+          {addColumn}
+        </div>
+      </section>
+      <span
+        aria-hidden
+        className="model-playground-fade model-playground-start"
+        data-edge="start"
+        hidden={!edges.start}
+      />
+      <span
+        aria-hidden
+        className="model-playground-fade model-playground-end"
+        data-edge="end"
+        hidden={!edges.end}
+      />
+    </div>
+  );
+}
+const ANSWER_PREVIEW_LENGTH = 360;
+
+function AnswerColumn({
+  column,
+  entities,
+  onRemove,
+  onSettings,
+  running,
+  disabled,
+  draftCard,
+  previousRunNotice,
+  previousAnswerTemplate,
+}: Readonly<{
+  column: ResultColumn;
+  entities: readonly PlaygroundEntity[];
+  onRemove: (id: string) => void;
+  onSettings?: (id: string) => void;
   running: boolean;
-  sourceContext: ClassContext;
+  disabled?: boolean;
+  draftCard?: ModelPlaygroundDraftCard;
+  previousRunNotice?: string;
+  previousAnswerTemplate?: string;
 }>) {
   const t = useTranslations("projectAiResearch");
-  const tracking = useTranslations("projectAiTracking");
-  const highlight = entities.map((entity) => ({
-    id: entity.id,
-    kind: entity.kind,
-    label: entity.label,
+  const c = useTranslations("projectAiResearch.modelPlayground");
+  const [open, setOpen] = useState(false);
+  const verdict = resultVerdict(column, entities);
+  const mentions = resultMentions(column, entities);
+  const highlights = entities.map((entity) => ({
+    ...entity,
     names: {
       aliases: entity.aliases,
       domain: entity.domain,
@@ -60,153 +137,127 @@ export function ModelPlaygroundColumns({
       label: entity.label,
     },
   }));
-  return (
-    <div className="min-w-0 overflow-x-auto">
-      <div className="flex w-max gap-4">
-        {columns.map((column) => (
-          <Card className="grid w-96 shrink-0 content-start gap-3" key={column.id}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="m-0 text-ui-body font-medium">{column.label}</p>
-                {column.model ? (
-                  <p className="m-0 text-ui-caption text-fg-muted">{column.model}</p>
-                ) : null}
-              </div>
-              <div className="flex items-center gap-1">
-                {funding ? (
-                  <Tooltip content={t("modelPlayground.sharedPayment")}>
-                    <span>
-                      <StatusChip
-                        dot={false}
-                        label={t(
-                          funding === "byok"
-                            ? "modelPlayground.yourKey"
-                            : "modelPlayground.credits",
-                        )}
-                        tone={funding === "byok" ? "info" : "positive"}
-                      />
-                    </span>
-                  </Tooltip>
-                ) : null}
-                <IconButton
-                  aria-label={t("modelPlayground.remove")}
-                  onClick={() => onRemove(column.id)}
-                  size="small"
-                  type="button"
-                >
-                  <X size={16} weight="regular" />
-                </IconButton>
-              </div>
-            </div>
-            {running ? (
-              <div className="grid gap-2" role="status">
-                <span className="h-4 animate-pulse rounded-control bg-bg-sunken" />
-                <span className="h-16 animate-pulse rounded-control bg-bg-sunken" />
-              </div>
-            ) : column.failed || column.answer === null ? (
-              <p className="m-0 text-ui-body text-red-text" role="alert">
-                {t("partialFailure")}
-              </p>
-            ) : (
-              <AnswerBody
-                answer={column.answer}
-                citations={column.citations}
-                entities={entities}
-                highlight={highlight}
-                observedAt={column.observedAt}
-                payment={payment}
-                sourceContext={sourceContext}
-                tracking={tracking}
-                verdict={playgroundVerdict(column.answer, column.citations, entities)}
-              />
-            )}
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AnswerBody({
-  answer,
-  citations,
-  entities,
-  highlight,
-  observedAt,
-  payment,
-  sourceContext,
-  tracking,
-  verdict,
-}: Readonly<{
-  answer: string;
-  citations: PlaygroundColumn["citations"];
-  entities: readonly PlaygroundEntity[];
-  highlight: Parameters<typeof AiVisibilityAnswerText>[0]["entities"];
-  observedAt: string | null;
-  payment?: ActionPaymentReceipt;
-  sourceContext: ClassContext;
-  tracking: ReturnType<typeof useTranslations<"projectAiTracking">>;
-  verdict: PlaygroundVerdict;
-}>) {
-  const t = useTranslations("projectAiResearch");
-  const [open, setOpen] = useState(false);
-  const mentions = playgroundMentions(answer, citations, entities);
-  const sources = playgroundCitedDomains([{ citations, label: "" }], sourceContext);
   const verdictText =
-    verdict.kind === "named_cited"
-      ? t("modelPlayground.verdictNamedCited", { position: verdict.position ?? 0 })
-      : verdict.kind === "named"
-        ? t("modelPlayground.verdictNamed", { position: verdict.position ?? 0 })
-        : t(
-            verdict.kind === "cited"
-              ? "modelPlayground.verdictCited"
-              : "modelPlayground.verdictAbsent",
-          );
+    verdict.kind === "unknown"
+      ? c("unknown")
+      : verdict.kind === "named_cited"
+        ? t("modelPlayground.verdictNamedCited", { position: verdict.position ?? 0 })
+        : verdict.kind === "named"
+          ? t("modelPlayground.verdictNamed", { position: verdict.position ?? 0 })
+          : t(
+              verdict.kind === "cited"
+                ? "modelPlayground.verdictCited"
+                : "modelPlayground.verdictAbsent",
+            );
   return (
-    <>
-      <p className="m-0 text-ui-body font-medium">{verdictText}</p>
-      <div className="max-h-36 overflow-hidden">
-        <AiVisibilityAnswerText entities={highlight} text={answer} />
-      </div>
-      <div className="grid gap-1">
-        <p className="m-0 text-ui-caption font-medium">{t("modelPlayground.brandsHeading")}</p>
-        {mentions.length ? (
-          <ol className="m-0 grid gap-1 pl-5 text-ui-body">
-            {mentions.map((mention) => (
-              <li key={mention.entity.id}>
-                {mention.entity.label}
-                {mention.entity.kind === "project" ? ` (${t("modelPlayground.you")})` : ""}
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="m-0 text-ui-caption text-fg-muted">{t("modelPlayground.verdictAbsent")}</p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <p className="m-0 text-ui-caption font-medium">{t("modelPlayground.sourcesHeading")}</p>
-        {sources.map((source) => (
-          <div className="flex flex-wrap items-center gap-2" key={source.domain}>
-            <span className="text-ui-body">{source.domain}</span>
-            <span className="text-ui-caption tabular-nums text-fg-muted">
-              {t("modelPlayground.citedTimes", { count: source.count })}
-            </span>
-            <StatusChip dot={false} label={sourceTypeLabel(source.type, tracking)} tone="neutral" />
+    <ModelPlaygroundColumnFrame
+      column={draftCard ? { ...column, ...draftCard } : column}
+      onRemove={onRemove}
+      onSettings={onSettings}
+      disabled={disabled}
+    >
+      {previousRunNotice ? (
+        <p className="m-0 text-ui-caption text-fg-muted" data-previous-run>
+          {previousRunNotice}{" "}
+          {previousAnswerTemplate
+            ?.replace("{model}", column.modelId ?? column.label)
+            .replace("{provider}", column.providerLabel ?? column.providerId ?? "")}
+        </p>
+      ) : null}
+      {draftCard?.blocked ? (
+        <p className="m-0 text-ui-caption text-red-text" role="alert">
+          {draftCard.description}
+        </p>
+      ) : null}
+      {running && column.state === "pending" ? (
+        <p className="m-0 text-ui-body" role="status">
+          {t("modelPlayground.answers")}
+        </p>
+      ) : null}
+      {column.state === "cancelled" ? (
+        <p className="m-0 text-ui-body" role="status">
+          {c("notStarted")}
+        </p>
+      ) : null}
+      {column.state === "failed" || (column.state === "pending" && !running) ? (
+        <p className="m-0 text-ui-body text-red-text" role="alert">
+          {t("partialFailure")}
+        </p>
+      ) : null}
+      {column.answer !== null ? (
+        <div className="model-playground-answer">
+          <AiVisibilityAnswerText
+            entities={highlights}
+            text={`${column.answer.slice(0, ANSWER_PREVIEW_LENGTH)}${column.answer.length > ANSWER_PREVIEW_LENGTH ? "…" : ""}`}
+          />
+        </div>
+      ) : null}
+      <p className="m-0 text-ui-body font-medium" data-column-verdict>
+        {verdictText}
+      </p>
+      {!column.provenance ? (
+        <>
+          <div className="grid min-w-0 gap-1">
+            <h3 className="m-0 text-ui-caption font-medium">
+              {t("modelPlayground.brandsHeading")}
+            </h3>
+            {mentions.length ? (
+              <ol className="m-0 grid gap-1 pl-5 text-ui-body">
+                {mentions.map((mention) => (
+                  <li key={mention.entity.id}>
+                    {mention.entity.label}
+                    {mention.entity.kind === "project" ? ` (${t("modelPlayground.you")})` : ""}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="m-0 text-ui-caption text-fg-muted">
+                {hasCompleteAnswer(column) ? c("notNamed") : c("unknown")}
+              </p>
+            )}
           </div>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 text-ui-caption text-fg-muted">
-        {observedAt ? <span className="tabular-nums">{observedAt.slice(0, 16)}</span> : null}
-        <span>
-          {t("modelPlayground.runCost")} <PaymentChargeLine payment={payment} />
-        </span>
-        <Button onClick={() => setOpen(true)} type="button" variant="ghost">
-          {t("modelPlayground.fullAnswer")}
-        </Button>
-      </div>
-      <Modal onClose={() => setOpen(false)} open={open} title={t("modelPlayground.fullAnswer")}>
-        <AiVisibilityAnswerText entities={highlight} text={answer} />
+          <ModelPlaygroundSources columns={[column]} compact />
+        </>
+      ) : null}
+      <ModelPlaygroundColumnFooter
+        column={column}
+        onFullAnswer={
+          column.answer !== null &&
+          (!column.provenance ||
+            column.answer.length > ANSWER_PREVIEW_LENGTH ||
+            Object.values(column.truncation).some(Boolean))
+            ? () => setOpen(true)
+            : undefined
+        }
+      />
+      <Modal
+        onClose={() => setOpen(false)}
+        open={open}
+        size="lg"
+        title={
+          column.provenance || column.legacyExcerpt
+            ? c("retainedAnswer")
+            : t("modelPlayground.fullAnswer")
+        }
+      >
+        <div className="grid min-w-0 gap-3">
+          {column.legacyExcerpt ? (
+            <p className="m-0 text-ui-caption">{c("legacyExcerpt")}</p>
+          ) : null}
+          {column.truncation.provider ? (
+            <p className="m-0 text-ui-caption">{c("providerTruncated")}</p>
+          ) : null}
+          {column.truncation.application ? (
+            <p className="m-0 text-ui-caption">{c("applicationTruncated")}</p>
+          ) : null}
+          {column.truncation.citations ? (
+            <p className="m-0 text-ui-caption">{c("citationsTruncated")}</p>
+          ) : null}
+          <div className="model-playground-answer">
+            <AiVisibilityAnswerText entities={highlights} text={column.answer ?? ""} />
+          </div>
+        </div>
       </Modal>
-    </>
+    </ModelPlaygroundColumnFrame>
   );
 }

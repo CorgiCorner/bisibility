@@ -45,6 +45,7 @@ export function ProviderCardDisconnectMenu({
       keyRemoval={keyRemoval}
       renderTrigger={({ disabled, onOpen }) => (
         <DeveloperActionsMenu
+          size="sm"
           ariaLabel={t("actions", { provider: providerName })}
           items={[
             ...(hasTest

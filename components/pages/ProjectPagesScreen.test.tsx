@@ -92,6 +92,24 @@ describe("Pages server navigation", () => {
     expect(screen.getByText("/docs")).toBeInTheDocument();
   });
 
+  it.each([
+    ["sitemap_not_checked", /Available after the project sitemap has been read/],
+    ["sitemap_incomplete", /Membership uses successful reads from the last 48 hours/],
+  ] as const)("explains a refused %s filter in the empty table", (status, hint) => {
+    const full = pagesList([pageRow()]);
+    renderWithFeatureMessages(
+      <ProjectPagesScreen
+        {...props}
+        initialList={{ ...full, rows: [], total: 0, sitemapFilterStatus: status }}
+        initialQuery={{ ...pagesQuery, sitemap: "not_listed" }}
+      />,
+      { messages, wrapper: TooltipProvider },
+    );
+    expect(screen.queryByText("/docs")).not.toBeInTheDocument();
+    expect(screen.getAllByText(hint).length).toBeGreaterThan(0);
+    expect(screen.queryByText(pagesMessages.projectPages.empty.filtered)).not.toBeInTheDocument();
+  });
+
   it("sends an in-page search through the router and waits for server data", () => {
     renderWithFeatureMessages(<ProjectPagesScreen {...props} />, {
       messages,

@@ -26,6 +26,11 @@ export function AdminEmailAllowance({
   if (allowance.status === "disabled") return null;
   return (
     <Panel id="admin-email-allowance" title={t("title")} description={t("description")}>
+      {allowance.notificationsDisabled ? (
+        <p role="status" className="mb-3 text-xs text-fg-muted">
+          {allowance.notificationPolicyMessage}
+        </p>
+      ) : null}
       {allowance.status === "not_configured" ? (
         <div className="space-y-2 text-xs text-fg-muted">
           <p>{t("notConfigured")}</p>

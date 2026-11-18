@@ -88,7 +88,7 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
   }
 
   if (matches(sectionPath, "/pages")) {
-    return sectionMeta("Pages", "Every URL of the project, one row each.");
+    return sectionMeta("Pages", "Known project URLs, one row each.");
   }
 
   if (matches(sectionPath, "/search-console")) {

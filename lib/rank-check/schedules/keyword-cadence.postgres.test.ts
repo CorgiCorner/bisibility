@@ -1,8 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { normalizeSchedule } from "@/lib/actions/_schedule";
 import { createKeywordBatchSet } from "@/lib/actions/keyword-batch";
+import { bulkKeywords } from "@/lib/api/keyword-bulk";
+import { createKeywords } from "@/lib/api/keyword-create";
 import { assignCreatedKeywordCadences } from "@/lib/api/keyword-create-cadence";
-import { keywordInclude, keywordResource } from "@/lib/api/resources";
+import { scheduleFromCreate, scheduleFromPatch } from "@/lib/api/keyword-utils";
+import { keywordInclude, keywordResources } from "@/lib/api/resources";
 import { makePublicId } from "@/lib/db/public-id";
 import { type Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
@@ -22,6 +25,11 @@ vi.mock("@/lib/db/prisma", () => ({
       },
     },
   ),
+}));
+vi.mock("@/lib/schedules/keyword-create-write", () => ({
+  // This suite calls private cadence primitives to seed and exercise membership algorithms.
+  // Real admission, refusal and receipt behavior lives in keyword-create-review.postgres.test.ts.
+  assertKeywordCreateAdmission: vi.fn(),
 }));
 vi.mock("@/lib/notifications/realtime", () => ({ publishOperationChanged: vi.fn() }));
 const url = process.env.PROVIDER_UI_TEST_DATABASE_URL ?? process.env.DATABASE_URL;
@@ -45,8 +53,12 @@ const daily = () =>
     jitterMinutes: 60,
     timezone: "UTC",
   });
-const apply = (ids: string[], cadence = daily()) =>
-  db.$transaction((tx) => setKeywordCadence(tx, projectId, ids, cadence, userId), {
+const apply = (
+  ids: string[],
+  cadence: ReturnType<typeof daily> = daily(),
+  source: "frequency" | "schedule" = "schedule",
+) =>
+  db.$transaction((tx) => setKeywordCadence(tx, projectId, ids, cadence, userId, source), {
     timeout: 30_000,
   });
 async function keyword(text: string, project = projectId) {
@@ -62,7 +74,7 @@ async function keyword(text: string, project = projectId) {
 }
 async function resource(id = keywordId) {
   const row = await db.keyword.findUniqueOrThrow({ include: keywordInclude, where: { id } });
-  return keywordResource(row, projectPublicId);
+  return (await keywordResources([row], projectPublicId))[0];
 }
 beforeEach(async () => {
   store.db = db;
@@ -74,7 +86,7 @@ beforeEach(async () => {
     data: {
       id: userId,
       publicId: makePublicId("usr"),
-      email: `${userId}@example.test`,
+      email: `${userId}@example.com`,
       name: "Cadence fixture",
     },
   });
@@ -84,7 +96,7 @@ beforeEach(async () => {
       publicId: projectPublicId,
       ownerId: userId,
       name: "Cadence fixture",
-      domain: "example.test",
+      domain: "example.com",
     },
   });
   await db.location.create({
@@ -111,7 +123,376 @@ afterEach(async () => {
 });
 afterAll(() => db.$disconnect());
 
+describe("public API cadence review transaction", () => {
+  it("rejects increases without changing keywords or schedules and permits a decrease", async () => {
+    await apply([keywordId], scheduleFromPatch({ frequency: "weekly" })!, "frequency");
+    const keywordRow = await db.keyword.findUniqueOrThrow({ where: { id: keywordId } });
+    const context = (body: unknown, method = "POST") =>
+      ({
+        actor: { id: userId, memberships: [{ projectId, role: "admin" }] },
+        actorId: userId,
+        auth: { project: { id: projectId, publicId: projectPublicId } },
+        headers: new Headers(),
+        instance: "urn:test",
+        method,
+        req: new Request("https://example.com/api/v1/keywords", {
+          method,
+          body: JSON.stringify(body),
+        }),
+      }) as never;
+    const snapshot = async () => ({
+      locations: await db.location.findMany({ orderBy: { id: "asc" } }),
+      keywords: await db.keyword.findMany({ where: { projectId }, orderBy: { id: "asc" } }),
+      schedules: await db.checkSchedule.findMany({ where: { projectId }, orderBy: { id: "asc" } }),
+      keywordSchedules: await db.keywordSchedule.findMany({
+        where: { keyword: { projectId } },
+        orderBy: { id: "asc" },
+      }),
+    });
+    const before = await snapshot();
+    const bulk = await bulkKeywords(
+      context({
+        operation: "set_frequency",
+        keyword_ids: [keywordRow.publicId],
+        frequency: "daily",
+      }),
+    );
+    expect(bulk.status).toBe(428);
+    expect(await snapshot()).toEqual(before);
+    const create = await createKeywords(
+      context({ keyword: "new review keyword", frequency: "daily", location: "United States" }),
+      projectPublicId,
+    );
+    expect(create.status).toBe(428);
+    expect(await snapshot()).toEqual(before);
+    const decrease = await bulkKeywords(
+      context({
+        operation: "set_frequency",
+        keyword_ids: [keywordRow.publicId],
+        frequency: "monthly",
+      }),
+    );
+    expect(decrease.status).toBe(200);
+    const membership = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(membership.checkSchedule?.frequency).toBe("monthly");
+  });
+});
+
 describe("explicit keyword cadence membership", () => {
+  it.each(["frequency", "schedule"] as const)(
+    "persists and assigns a created keyword with %s input",
+    async (source) => {
+      const input =
+        source === "frequency"
+          ? { keyword: "created shorthand", frequency: "daily" as const, tags: [] }
+          : {
+              keyword: "created explicit",
+              schedule: {
+                frequency: "daily" as const,
+                timezone: "UTC",
+                jitterMinutes: 60,
+                cronExpression: null,
+              },
+              tags: [],
+            };
+      const cadence = scheduleFromCreate(input)!;
+      const result = await db.$transaction(async (tx) => {
+        const result = await createKeywordBatchSet(tx, projectId, [
+          {
+            keyword: input.keyword,
+            location: "United States",
+            locationId,
+            device: "desktop",
+            schedule: cadence,
+            scheduleSource: source,
+            tags: [],
+          },
+        ]);
+        await assignCreatedKeywordCadences(tx, projectId, result.accepted, userId);
+        return result;
+      });
+      const id = result.created[0].id;
+      const row = await db.keyword.findUniqueOrThrow({
+        where: { id },
+        include: { checkSchedule: true, schedule: true },
+      });
+      expect(row.checkSchedule).toMatchObject({
+        frequency: "daily",
+        timezone: "UTC",
+        jitterMinutes: 60,
+      });
+      expect(row.schedule).toMatchObject({
+        frequency: "daily",
+        timezone: "UTC",
+        jitterMinutes: 60,
+      });
+      const audits = await db.auditLog.findMany({
+        where: { projectId, action: "keyword.bulk_set_frequency" },
+      });
+      expect(audits).toHaveLength(1);
+      expect(audits[0]?.action).toBe("keyword.bulk_set_frequency");
+      expect(JSON.stringify(audits)).not.toContain('"source"');
+    },
+  );
+
+  it.each([false, true])(
+    "reuses a null timezone schedule with inherited UTC for member=%s",
+    async (member) => {
+      const existing = await db.checkSchedule.create({
+        data: {
+          projectId,
+          publicId: makePublicId("sch"),
+          name: "Inherited daily",
+          frequency: "daily",
+          enabled: true,
+          timezone: null,
+          timeOfDay: null,
+          jitterMinutes: 60,
+          serpDepth: null,
+          providerPolicy: null,
+        },
+      });
+      if (member)
+        await db.keyword.update({
+          where: { id: keywordId },
+          data: { checkScheduleId: existing.id },
+        });
+      await apply([keywordId], daily());
+      const row = await db.keyword.findUniqueOrThrow({ where: { id: keywordId } });
+      expect(row.checkScheduleId).toBe(existing.id);
+      expect(await db.checkSchedule.count({ where: { projectId } })).toBe(1);
+    },
+  );
+
+  async function timedMember() {
+    const schedule = await db.checkSchedule.create({
+      data: {
+        projectId,
+        publicId: makePublicId("sch"),
+        name: "Timed daily",
+        frequency: "daily",
+        timezone: "Europe/Warsaw",
+        timeOfDay: "09:00",
+        jitterMinutes: 5,
+        serpDepth: 100,
+      },
+    });
+    await db.keyword.update({ where: { id: keywordId }, data: { checkScheduleId: schedule.id } });
+    return schedule;
+  }
+
+  it("characterizes same-frequency shorthand on a timed member", async () => {
+    const original = await timedMember();
+    await apply([keywordId], scheduleFromPatch({ frequency: "daily" })!, "frequency");
+    const row = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(row.checkScheduleId).toBe(original.id);
+    expect(row.checkSchedule).toMatchObject({
+      frequency: "daily",
+      timeOfDay: "09:00",
+      timezone: "Europe/Warsaw",
+      jitterMinutes: 5,
+      serpDepth: 100,
+      name: "Timed daily",
+    });
+    expect(await db.checkSchedule.count({ where: { projectId } })).toBe(1);
+    expect(await db.keywordSchedule.findUnique({ where: { keywordId } })).toBeNull();
+    expect(await db.auditLog.count({ where: { projectId } })).toBe(0);
+  });
+
+  it("characterizes weekly shorthand on a timed daily member", async () => {
+    await timedMember();
+    await apply([keywordId], scheduleFromPatch({ frequency: "weekly" })!, "frequency");
+    const row = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(row.checkSchedule).toMatchObject({
+      frequency: "weekly",
+      timeOfDay: "09:00",
+      timezone: "Europe/Warsaw",
+      jitterMinutes: 5,
+      serpDepth: 100,
+      name: "Weekly, top 100",
+    });
+  });
+
+  it("characterizes shorthand on an unassigned keyword", async () => {
+    await apply([keywordId], scheduleFromPatch({ frequency: "daily" })!, "frequency");
+    const row = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(row.checkSchedule).toMatchObject({
+      frequency: "daily",
+      timeOfDay: null,
+      timezone: "UTC",
+      jitterMinutes: 60,
+      serpDepth: null,
+      name: "Daily, project depth",
+    });
+  });
+
+  it("shares shorthand schedules by retained depth and repeats without creating another", async () => {
+    const second = await keyword("second");
+    const third = await keyword("third");
+    for (const [id, depth] of [
+      [keywordId, 10],
+      [second.id, 10],
+      [third.id, 100],
+    ] as const) {
+      await db.keywordSchedule.create({
+        data: { keywordId: id, frequency: "manual", timezone: "UTC", serpDepth: depth },
+      });
+    }
+    const shorthand = scheduleFromPatch({ frequency: "daily" })!;
+    await apply([keywordId, second.id, third.id], shorthand, "frequency");
+    await apply([keywordId, second.id, third.id], shorthand, "frequency");
+    const rows = await db.keyword.findMany({
+      where: { projectId },
+      include: { checkSchedule: true },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row.checkSchedule]));
+    expect(byId.get(keywordId)).toMatchObject({
+      name: "Daily, top 10",
+      timezone: "UTC",
+      jitterMinutes: 60,
+      serpDepth: 10,
+    });
+    expect(byId.get(second.id)?.id).toBe(byId.get(keywordId)?.id);
+    expect(byId.get(third.id)).toMatchObject({ name: "Daily, top 100", serpDepth: 100 });
+    expect(await db.checkSchedule.count({ where: { projectId } })).toBe(2);
+  });
+
+  it("uses explicit schedule settings when the timezone changes", async () => {
+    const original = await timedMember();
+    const explicit = scheduleFromPatch({
+      schedule: {
+        frequency: "daily",
+        cronExpression: null,
+        timezone: "America/New_York",
+        jitterMinutes: 5,
+      },
+    })!;
+    await apply([keywordId], explicit);
+    const result = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(result.checkScheduleId).not.toBe(original.id);
+    expect(result.checkSchedule).toMatchObject({
+      timezone: "America/New_York",
+      timeOfDay: null,
+      jitterMinutes: 5,
+      name: "Daily, top 100",
+    });
+    await apply([keywordId], explicit);
+    expect(await db.checkSchedule.count({ where: { projectId } })).toBe(2);
+  });
+
+  it("retains inherited timezone and provider when frequency changes", async () => {
+    const original = await timedMember();
+    await db.checkSchedule.update({
+      where: { id: original.id },
+      data: { timezone: null, providerPolicy: "serpapi" },
+    });
+    await apply([keywordId], scheduleFromPatch({ frequency: "weekly" })!, "frequency");
+    const row = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(row.checkSchedule).toMatchObject({
+      frequency: "weekly",
+      timeOfDay: "09:00",
+      timezone: null,
+      jitterMinutes: 5,
+      providerPolicy: "serpapi",
+    });
+  });
+
+  it.each(["disabled", "archived"])("does not keep a %s current schedule", async (state) => {
+    const original = await timedMember();
+    await db.checkSchedule.update({
+      where: { id: original.id },
+      data: state === "disabled" ? { enabled: false } : { archivedAt: new Date(), enabled: false },
+    });
+    await apply([keywordId], scheduleFromPatch({ frequency: "daily" })!, "frequency");
+    const row = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(row.checkScheduleId).not.toBe(original.id);
+    expect(row.checkSchedule).toMatchObject({
+      enabled: true,
+      archivedAt: null,
+      timeOfDay: "09:00",
+      timezone: "Europe/Warsaw",
+      jitterMinutes: 5,
+    });
+  });
+
+  it("requires the same cron and requested depth to keep membership", async () => {
+    const first = normalizeSchedule({
+      frequency: "custom_cron",
+      cronExpression: "0 9 * * 1",
+      timezone: "UTC",
+      jitterMinutes: 60,
+      serpDepth: 10,
+    });
+    await apply([keywordId], first);
+    const before = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(before.checkSchedule?.name).toBe("Cron 0 9 * * 1, top 10");
+    await apply([keywordId], first);
+    expect((await db.keyword.findUniqueOrThrow({ where: { id: keywordId } })).checkScheduleId).toBe(
+      before.checkScheduleId,
+    );
+    await apply([keywordId], { ...first, cronExpression: "0 9 * * 2" });
+    const after = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(after.checkScheduleId).not.toBe(before.checkScheduleId);
+    expect(after.checkSchedule?.name).toBe("Cron 0 9 * * 2, top 10");
+    await apply([keywordId], { ...first, cronExpression: "0 9 * * 2", serpDepth: 100 });
+    const depthChanged = await db.keyword.findUniqueOrThrow({
+      where: { id: keywordId },
+      include: { checkSchedule: true },
+    });
+    expect(depthChanged.checkScheduleId).not.toBe(after.checkScheduleId);
+    expect(depthChanged.checkSchedule?.name).toBe("Cron 0 9 * * 2, top 100");
+  });
+
+  it("names new monthly and paused schedules using depth", async () => {
+    for (const [frequency, name] of [
+      ["monthly", "Monthly, top 10"],
+      ["paused", "Paused, top 10"],
+    ] as const) {
+      await apply(
+        [keywordId],
+        normalizeSchedule({
+          frequency,
+          cronExpression: null,
+          timezone: "UTC",
+          jitterMinutes: 60,
+          serpDepth: 10,
+        }),
+      );
+      const row = await db.keyword.findUniqueOrThrow({
+        where: { id: keywordId },
+        include: { checkSchedule: true },
+      });
+      expect(row.checkSchedule?.name).toBe(name);
+    }
+  });
+
   it("does not inherit an available default or stale legacy Daily row", async () => {
     await db.projectDefaults.create({ data: { projectId, frequency: "daily" } });
     await db.checkSchedule.create({
@@ -525,7 +906,7 @@ describe("explicit keyword cadence membership", () => {
         ownerId: userId,
         publicId: makePublicId("prj"),
         name: "Other",
-        domain: "other.example.test",
+        domain: "example.org",
       },
     });
     const other = await keyword("foreign", foreign.id);
@@ -539,7 +920,7 @@ describe("explicit keyword cadence membership", () => {
   it("rolls back both the membership and cadence mirror on caller failure", async () => {
     await expect(
       db.$transaction(async (tx: Prisma.TransactionClient) => {
-        await setKeywordCadence(tx, projectId, [keywordId], daily(), userId);
+        await setKeywordCadence(tx, projectId, [keywordId], daily(), userId, "schedule");
         throw new Error("caller rollback");
       }),
     ).rejects.toThrow("caller rollback");

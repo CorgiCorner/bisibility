@@ -1,6 +1,8 @@
+import type { ScheduleMutationCode } from "@/lib/schedules/errors";
 import { NextResponse } from "next/server";
 
 export type ApiErrorCode =
+  | ScheduleMutationCode
   | "bad_request"
   | "budget_exhausted"
   | "byok_required"
@@ -19,7 +21,9 @@ export type ApiErrorCode =
   | "provider_unavailable"
   | "weekly_request_cap_reached"
   | "rate_limited"
+  | "schedule_review_required"
   | "scheduler_unavailable"
+  | "data_sync_connection_required"
   | "self_import"
   | "sample_project"
   | "snapshot_expired"
@@ -83,7 +87,23 @@ const errorTitles = {
   provider_unavailable: "Provider unavailable",
   weekly_request_cap_reached: "Weekly request capacity reached",
   rate_limited: "Rate limit exceeded",
+  data_sync_state_only: "Data sync state only",
+  data_sync_state_unsupported: "Data sync state unsupported",
+  schedule_command_required: "Schedule command required",
+  schedule_create_unsupported: "Schedule creation unsupported",
+  schedule_local_approval_required: "Local recurring approval required",
+  schedule_local_conflict: "Local schedule conflict",
+  schedule_local_forbidden: "Local schedule forbidden",
+  schedule_local_invalid: "Invalid local schedule command",
+  schedule_not_found: "Schedule not found",
+  schedule_project_required: "Schedule project required",
+  schedule_review_gate_required: "Schedule review gate required",
+  schedule_review_invalid: "Invalid schedule review",
+  schedule_review_stale: "Schedule review stale",
+  schedule_transition_invalid: "Invalid schedule transition",
+  schedule_review_required: "Schedule review required",
   scheduler_unavailable: "Scheduler unavailable",
+  data_sync_connection_required: "Data sync connection required",
   self_import: "Self import blocked",
   snapshot_expired: "Snapshot expired",
   plan_limit_reached: "Capacity limit reached",
@@ -140,6 +160,7 @@ export function errorResponse(
     title: errorTitles[code],
     type: `https://bisibility.com/problems/${slug}`,
   };
+  if (code.startsWith("schedule_") || code.startsWith("data_sync_")) body.code = code;
   if (code === "plan_limit_reached") body.code = code;
   if (code === "subscription_required") {
     body.code = code;

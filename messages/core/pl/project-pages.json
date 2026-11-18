@@ -306,7 +306,13 @@
     },
     "sitemapState": {
       "listed": "Na liście",
-      "notListed": "Poza listą"
+      "notListed": "Poza listą",
+      "notChecked": "Mapa witryny niesprawdzona",
+      "notCheckedCell": "Nie sprawdzono",
+      "notCheckedHint": "Dostępne po odczytaniu mapy witryny przez monitor projektu.",
+      "lastRead": "Ostatni udany odczyt: {date} UTC",
+      "freshnessHint": "Obecność jest określana na podstawie udanych odczytów z ostatnich 48 godzin. Strony wykryte po odczycie pozostają niesprawdzone do ponownego odczytania wszystkich map witryny.",
+      "absenceNotChecked": "Poza mapą witryny: nie sprawdzono"
     },
     "sourceKind": {
       "ai_citation": "Cytowania AI",
@@ -345,6 +351,13 @@
     "tags": {
       "all": "Wszystkie tagi",
       "new": "Nowy tag"
+    },
+    "export": {
+      "csv": "Eksportuj CSV",
+      "hint": "Eksportuje wszystkie pasujące wiersze i widoczne kolumny, do 5000 wierszy. Tagi są rozdzielone spacją, pionową kreską i spacją ( | ).",
+      "empty": "Brak pasujących stron do eksportu.",
+      "tooLarge": "Ten widok zawiera więcej niż {count, number} stron. Zawęź wyszukiwanie lub filtry i wyeksportuj ponownie. Nie pobrano pliku.",
+      "failed": "Nie udało się wyeksportować stron. Spróbuj ponownie."
     }
   }
 }

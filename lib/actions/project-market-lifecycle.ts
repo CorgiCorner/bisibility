@@ -22,6 +22,9 @@ import {
   restoreProjectMarket,
   resumeProjectMarket,
 } from "@/lib/markets/registry";
+import { withScheduleReviewActionResult } from "@/lib/schedules/action-result";
+import { commitMarketReactivation } from "@/lib/schedules/market-reactivation";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { z } from "zod";
 
 class ProjectMarketLocationImmutableError extends Error {
@@ -71,38 +74,50 @@ async function scopedMarket(projectId: string, marketId: string, action: "delete
 }
 
 export async function setProjectMarketEnabled(input: unknown) {
-  const data = parseActionInput(
-    projectMarketActionSchema.extend({ enabled: z.boolean(), locationId: z.string().optional() }),
-    input,
-  );
-  const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "update");
-  assertProjectMarketLocationUnchanged(market, data);
-  const expectedStatus = data.enabled ? ProjectMarketStatus.paused : ProjectMarketStatus.active;
-  if (market.status !== expectedStatus) throw new Error("Project market lifecycle changed.");
-  const nextStatus = data.enabled ? ProjectMarketStatus.active : ProjectMarketStatus.paused;
-  const result = await prisma.$transaction(async (tx) => {
-    const changed = data.enabled
-      ? await resumeProjectMarket({ locationId: market.locationId, projectId: project.id }, tx)
-      : await pauseProjectMarket({ locationId: market.locationId, projectId: project.id }, tx);
-    if (changed.count !== 1) throw new Error("Project market lifecycle changed.");
-    await writeAudit(
-      {
-        action: data.enabled ? "settings.project_market.resume" : "settings.project_market.pause",
-        actorId: actor.id,
-        after: { status: nextStatus },
-        before: { status: market.status },
-        projectId: project.id,
-        targetId: market.publicId,
-        targetType: "project_market",
-      },
-      tx,
+  return withScheduleReviewActionResult(async () => {
+    const { body, review } = splitScheduleReview(input);
+    const data = parseActionInput(
+      projectMarketActionSchema.extend({ enabled: z.boolean(), locationId: z.string().optional() }),
+      body,
     );
-    return { status: nextStatus };
-  });
-  recordAppAction(actor);
-  revalidateMarketViews();
+    const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "update");
+    assertProjectMarketLocationUnchanged(market, data);
+    const expectedStatus = data.enabled ? ProjectMarketStatus.paused : ProjectMarketStatus.active;
+    if (market.status !== expectedStatus) throw new Error("Project market lifecycle changed.");
+    const nextStatus = data.enabled ? ProjectMarketStatus.active : ProjectMarketStatus.paused;
+    const run = async (tx: import("@/lib/generated/prisma/client").Prisma.TransactionClient) => {
+      const changed = data.enabled
+        ? await resumeProjectMarket({ locationId: market.locationId, projectId: project.id }, tx)
+        : await pauseProjectMarket({ locationId: market.locationId, projectId: project.id }, tx);
+      if (changed.count !== 1) throw new Error("Project market lifecycle changed.");
+      await writeAudit(
+        {
+          action: data.enabled ? "settings.project_market.resume" : "settings.project_market.pause",
+          actorId: actor.id,
+          after: { status: nextStatus },
+          before: { status: market.status },
+          projectId: project.id,
+          targetId: market.publicId,
+          targetType: "project_market",
+        },
+        tx,
+      );
+      return { status: nextStatus };
+    };
+    const result = data.enabled
+      ? await commitMarketReactivation(
+          project.id,
+          actor,
+          { op: "market-reactivate", marketIds: [market.publicId], mode: "resume" },
+          review,
+          run,
+        )
+      : await prisma.$transaction(run);
+    recordAppAction(actor);
+    revalidateMarketViews();
 
-  return result;
+    return result;
+  });
 }
 
 export async function updateProjectMarket(input: unknown) {
@@ -136,52 +151,58 @@ export async function updateProjectMarket(input: unknown) {
 }
 
 export async function restoreProjectMarketFromProject(input: unknown) {
-  const data = parseActionInput(projectMarketActionSchema, input);
-  const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "delete");
-  if (market.status !== ProjectMarketStatus.removed) {
-    throw new Error("Only an archived market can be restored.");
-  }
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      const resumedKeywords = await prisma.$transaction(
-        async (tx) => {
-          const visible = await listProjectMarkets(project.id, tx);
-          if (visible.length >= MAX_PROJECT_MARKETS) {
-            throw new ProjectMarketLimitExceededError(MAX_PROJECT_MARKETS);
-          }
-          const resuming = await tx.keyword.count({
-            where: { archivedAt: null, locationId: market.locationId, projectId: project.id },
-          });
-          const restored = await restoreProjectMarket(
-            { locationId: market.locationId, projectId: project.id },
-            tx,
-          );
-          if (restored.count === 0) throw new Error("Only an archived market can be restored.");
-          await writeAudit(
-            {
-              action: "settings.project_market.restore",
-              actorId: actor.id,
-              after: { resumedKeywords: resuming, status: ProjectMarketStatus.active },
-              before: { status: market.status },
-              projectId: project.id,
-              targetId: market.publicId,
-              targetType: "project_market",
-            },
-            tx,
-          );
-          return resuming;
-        },
-        { isolationLevel: "Serializable" },
-      );
-      recordAppAction(actor);
-      revalidateMarketViews();
-
-      return { resumedKeywords };
-    } catch (error) {
-      if (attempt === 2 || !isSerializableConflict(error)) throw error;
+  return withScheduleReviewActionResult(async () => {
+    const { body, review } = splitScheduleReview(input);
+    const data = parseActionInput(projectMarketActionSchema, body);
+    const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "delete");
+    if (market.status !== ProjectMarketStatus.removed) {
+      throw new Error("Only an archived market can be restored.");
     }
-  }
-  throw new Error("Project market restore did not complete.");
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const resumedKeywords = await commitMarketReactivation(
+          project.id,
+          actor,
+          { op: "market-reactivate", marketIds: [market.publicId], mode: "restore" },
+          review,
+          async (tx) => {
+            const visible = await listProjectMarkets(project.id, tx);
+            if (visible.length >= MAX_PROJECT_MARKETS) {
+              throw new ProjectMarketLimitExceededError(MAX_PROJECT_MARKETS);
+            }
+            const resuming = await tx.keyword.count({
+              where: { archivedAt: null, locationId: market.locationId, projectId: project.id },
+            });
+            const restored = await restoreProjectMarket(
+              { locationId: market.locationId, projectId: project.id },
+              tx,
+            );
+            if (restored.count === 0) throw new Error("Only an archived market can be restored.");
+            await writeAudit(
+              {
+                action: "settings.project_market.restore",
+                actorId: actor.id,
+                after: { resumedKeywords: resuming, status: ProjectMarketStatus.active },
+                before: { status: market.status },
+                projectId: project.id,
+                targetId: market.publicId,
+                targetType: "project_market",
+              },
+              tx,
+            );
+            return resuming;
+          },
+        );
+        recordAppAction(actor);
+        revalidateMarketViews();
+
+        return { resumedKeywords };
+      } catch (error) {
+        if (attempt === 2 || !isSerializableConflict(error)) throw error;
+      }
+    }
+    throw new Error("Project market restore did not complete.");
+  });
 }
 
 export async function removeProjectMarketFromProject(input: unknown) {

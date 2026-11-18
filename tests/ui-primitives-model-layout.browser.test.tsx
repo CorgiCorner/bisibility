@@ -140,10 +140,7 @@ it.each(sizes.flatMap(([width, height]) => themes.map((theme) => ({ width, heigh
             <Card role="alert">Reports could not be loaded</Card>
           </AgentReportsLayout>
           <AgentReportsLoading description="All reports" addReportLabel="Save an analysis" />
-          <AgentReportDetailLoading
-            backLabel={messages.agentWorkspace.back}
-            membersOnlyLabel={messages.agentWorkspace.membersOnly}
-          />
+          <AgentReportDetailLoading backLabel={messages.agentWorkspace.back} />
           <PageContent variant="form">
             <ProjectContextLoading />
           </PageContent>

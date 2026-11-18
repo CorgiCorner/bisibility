@@ -25,13 +25,14 @@ export function AddKeywordDrawerFooter({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <ProjectReadOnlyTooltip className="inline-flex flex-1 whitespace-nowrap">
+      <div className="flex items-center justify-end gap-2.5">
+        <ProjectReadOnlyTooltip className="inline-flex w-full flex-1 whitespace-nowrap sm:w-auto sm:flex-none">
           <Button
             disabled={readOnly || submitDisabled}
             form={isReviewMode ? undefined : "add-keyword-form"}
             onClick={isReviewMode ? onReview : undefined}
-            style={{ flex: 1 }}
+            className="w-full sm:w-auto"
+            size="input"
             type={isReviewMode ? "button" : "submit"}
           >
             {isSubmitting ? t("adding") : ctaLabel}

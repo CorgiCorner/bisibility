@@ -8,15 +8,15 @@ import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-sc
 import { getRequestPrimarySerpProvider } from "@/lib/queries/workspace-request-data";
 import type { AccessContext } from "@usagekit/core";
 import { cache } from "react";
-import { mapAdminQueries } from "./admin-batch";
+import { logBudgetReadFailure, mapAdminQueries } from "./admin-batch";
 import { readOwnConnectionBudgets } from "./own-budget-read";
 import { readOwnerUsage } from "./owner-reads";
 import { selectPaidWorkBlocked } from "./paid-work-block";
 import { readPlatformConnectionBudgets } from "./platform-budget-read";
 import type { ProjectBudgetRow } from "./project-budget-display";
 import { projectFundingStatuses } from "./project-budget-read";
-import { readProjectBudgetStatuses } from "./project-budget-statuses";
 import { parseProjectFundingBudgetId, projectBudgetId } from "./project-funding-budgets";
+import { readProjectBudgetSnapshot } from "./read-snapshot";
 import { meteringNamespace, meteringRuntime } from "./runtime";
 import { projectBudgetFigures, projectBudgetRow } from "./user-model";
 import { emptyProjectUsage, type ProjectUsageViews } from "./user-views";
@@ -75,7 +75,7 @@ async function readProjectBudgetState(projectRef: string, header = false) {
     const scope = { kind: "group" as const, namespace, group: project.id };
     const selected = connections.slice(0, connectionLimit);
     const refs = new Map(connections.map((connection) => [connection.id, connection.publicId]));
-    const statuses = await readProjectBudgetStatuses(meter, access, project, selected, concurrency);
+    const statuses = await readProjectBudgetSnapshot(meter, access, project, selected, concurrency);
     const funding = await projectFundingStatuses(project.id, new Date(to));
     const split = funding.some(
       (status) => parseProjectFundingBudgetId(status.budget.id)?.fundingSource === "byok",
@@ -238,8 +238,8 @@ async function readProjectBudgetState(projectRef: string, header = false) {
       },
       usageContext: { meter, access, scope, refs, owner: project.ownerId },
     };
-  } catch {
-    console.error("[metering] project usage unavailable");
+  } catch (error) {
+    logBudgetReadFailure(error, "project_budget");
     // A failed observer or authority read cannot turn missing data into a confirmed zero.
     return {
       data: { ...empty, status: restricted ? ("restricted" as const) : ("unavailable" as const) },

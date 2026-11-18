@@ -58,7 +58,14 @@ it("forwards user and project-key audit identities on checks", async () => {
   expect(mocks.check).toHaveBeenLastCalledWith("internal", actor, "user", undefined);
   const keyed = context();
   keyed.actorId = null;
-  keyed.auth.apiKey = { id: "key-id" } as ApiContext["auth"]["apiKey"];
+  keyed.auth = { ...keyed.auth, apiKey: { id: "key-id" } } as unknown as ApiContext["auth"];
   await domainVerification(keyed, "check");
   expect(mocks.check).toHaveBeenLastCalledWith("internal", actor, null, "key-id");
+});
+it("forwards no key identity for an in-app session check", async () => {
+  const native = context();
+  native.actorId = null;
+  native.auth = { ...native.auth, kind: "native_session", scopes: [] } as ApiContext["auth"];
+  await domainVerification(native, "check");
+  expect(mocks.check).toHaveBeenLastCalledWith("internal", actor, null, undefined);
 });

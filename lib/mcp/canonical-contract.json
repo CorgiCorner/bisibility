@@ -4558,7 +4558,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         },
         "secret": {
           "type": "string",
@@ -4626,7 +4626,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         },
         "secret": {
           "type": "string",
@@ -4679,7 +4679,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         }
       },
       "required": ["project_id", "provider_id"]
@@ -4719,7 +4719,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         }
       },
       "required": ["enabled", "project_id", "provider_id"]
@@ -4761,7 +4761,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         }
       },
       "required": ["priority", "project_id", "provider_id"]
@@ -4801,7 +4801,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         }
       },
       "required": ["project_id", "provider_id"]
@@ -4837,7 +4837,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, plausible."
+          "description": "Provider id. Known values: dataforseo, serpapi, ga4, gsc, pagespeed, plausible."
         }
       },
       "required": ["project_id", "provider_id"]
@@ -5126,6 +5126,10 @@
                   },
                   "type": "object",
                   "properties": {
+                    "ai_overview_shown": {
+                      "description": "Include only keywords whose latest result shows an AI Overview when true.",
+                      "type": "boolean"
+                    },
                     "change": {
                       "default": "any",
                       "type": "string",

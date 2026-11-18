@@ -9,7 +9,6 @@ const schedules: ScheduleListRow[] = [
   {
     enabled: true,
     frequency: "daily",
-    isDefault: true,
     keywordCount: 248,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -25,7 +24,6 @@ const schedules: ScheduleListRow[] = [
     blocked: true,
     enabled: true,
     frequency: "daily",
-    isDefault: false,
     keywordCount: 350,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -41,7 +39,6 @@ const schedules: ScheduleListRow[] = [
   {
     enabled: true,
     frequency: "weekly",
-    isDefault: false,
     keywordCount: 12,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -57,7 +54,6 @@ const schedules: ScheduleListRow[] = [
   {
     enabled: false,
     frequency: "weekly",
-    isDefault: false,
     keywordCount: 40,
     memberDeviceCount: 1,
     memberMarketCount: 2,
@@ -96,6 +92,7 @@ const meta = {
   ],
   args: {
     canUpdate: true,
+    canUpdateSyncs: ["domain_rating", "sitemap", "search_console", "page_indexing"],
     canManage: true,
     projectId: "prj_story",
     projectRef: "prj_story",
@@ -206,7 +203,6 @@ export const Archived: Story = {
         ...schedules[0],
         archivedAt: "2026-09-08T17:00:00.000Z",
         enabled: false,
-        isDefault: false,
         keywordCount: 0,
         targetCount: 0,
         nextRunAt: null,

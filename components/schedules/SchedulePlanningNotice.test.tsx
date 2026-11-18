@@ -46,7 +46,6 @@ it.each([
             publicId: "sch_a",
             name: "Daily",
             frequency: "daily",
-            isDefault: false,
           } as ScheduleListRow,
         ]}
         status={status as "current" | "archived"}

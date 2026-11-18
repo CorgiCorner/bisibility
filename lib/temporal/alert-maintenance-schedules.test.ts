@@ -201,3 +201,28 @@ describe("alert and optional sync schedules", () => {
     );
   });
 });
+
+it("keeps daily registry and sitemap defaults separate from a custom sitemap cadence", async () => {
+  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "1");
+  vi.stubEnv("SITEMAP_SYNC_ENABLED", "1");
+  vi.stubEnv("SITEMAP_SYNC_CRON", "");
+  const client = clientMock();
+  try {
+    await ensureSitemapSyncSchedule(client);
+    await ensureProjectPagesSyncSchedule(client);
+    expect(client.create.mock.calls.map(([input]) => [input.scheduleId, input.spec])).toEqual([
+      [SITEMAP_SYNC_SCHEDULE_ID, { calendars: [{ hour: 4, minute: 45 }] }],
+      [PROJECT_PAGES_SYNC_SCHEDULE_ID, { calendars: [{ hour: 5, minute: 0 }] }],
+    ]);
+    client.create.mockClear();
+    vi.stubEnv("SITEMAP_SYNC_CRON", "0 */6 * * *");
+    await ensureSitemapSyncSchedule(client);
+    await ensureProjectPagesSyncSchedule(client);
+    expect(client.create.mock.calls.map(([input]) => input.spec)).toEqual([
+      { cronExpressions: ["0 */6 * * *"] },
+      { calendars: [{ hour: 5, minute: 0 }] },
+    ]);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

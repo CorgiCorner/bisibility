@@ -44,7 +44,10 @@ vi.mock("@/lib/site-audit/worker-config", () => ({ siteAuditWorkerEnabled: async
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { providerConnection: { findMany: mocks.connections } },
 }));
-vi.mock("@/lib/providers/registry", () => ({ getAnalyticsProvider: mocks.provider }));
+vi.mock("@/lib/providers/registry", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/registry")>()),
+  getAnalyticsProvider: mocks.provider,
+}));
 vi.mock("@/lib/traffic/runtime-credentials", () => ({ trafficRuntimeCredentials: () => ({}) }));
 vi.mock("@/lib/providers/auth-state", () => ({ markProviderNeedsReauth: mocks.reauth }));
 
@@ -139,6 +142,7 @@ beforeEach(() => {
   };
   mocks.auth.mockResolvedValue({
     kind: "project_key",
+    creatorRole: "owner",
     apiKey: { id: "key-db", projectId: project.id, scopes: ["read", "write", "admin"] },
     project,
   });

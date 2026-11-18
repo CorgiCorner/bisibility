@@ -24,7 +24,7 @@ export async function domainVerification(ctx: ApiContext, action: "read" | "issu
               ctx.auth.project.id,
               actor,
               ctx.actorId ?? null,
-              ctx.actorId ? undefined : ctx.auth.apiKey.id,
+              ctx.actorId || !("apiKey" in ctx.auth) ? undefined : ctx.auth.apiKey.id,
             )
           : await issueDomainVerification(
               ctx.auth.project.id,

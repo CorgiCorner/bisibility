@@ -1,5 +1,8 @@
+import "server-only";
+import "@/lib/providers/model/server-registration";
 import type { ProviderMetaRow, ProviderStatusKind } from "@/lib/integrations/types";
 import { normalizeGscProperty } from "@/lib/providers/analytics/gsc-property";
+import { isModelProviderRegistered } from "@/lib/providers/model/registry";
 import type { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials, ProviderKind } from "@/lib/providers/types";
 
@@ -19,6 +22,7 @@ export type ProviderConnectionRow = {
 };
 
 export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
+  if (item.kind === "model") return `${item.label} API connection. ${item.billingNotice}.`;
   if (item.id === "ahrefs") return "Free daily Domain Rating with your own Ahrefs API key.";
   if (item.id === "pagespeed") {
     return "Free Core Web Vitals field data with your own PageSpeed Insights API key.";
@@ -52,6 +56,12 @@ export function providerMeta(
   credentials: ProviderCredentials,
   now: Date,
 ): ProviderMetaRow[] {
+  if (item.kind === "model")
+    return [
+      isModelProviderRegistered(item.id)
+        ? { labelKey: "state", valueKey: stateValueKey(connection) }
+        : { labelKey: "state", value: "Not available yet" },
+    ];
   if (item.id === "pagespeed") {
     return [
       elapsedRow("lastSync", connection?.lastUsedAt, now),

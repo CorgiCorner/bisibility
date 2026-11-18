@@ -54,7 +54,7 @@ export const promptTrackerOperationInputs = {
   },
   createPromptTrackerSchedule: {
     body: zodInput(scheduleInputSchema, {
-      alsoReads: ["consent"],
+      alsoReads: ["consent", "review"],
       serverKeys: scheduleServerKeys,
     }),
   },
@@ -86,7 +86,7 @@ export const promptTrackerOperationInputs = {
   updatePromptTrackerPrompt: { body: zodInput(trackingPromptForm.partial()) },
   updatePromptTrackerSchedule: {
     body: zodInput(scheduleInputSchema.partial(), {
-      alsoReads: ["consent"],
+      alsoReads: ["consent", "review"],
       serverKeys: scheduleServerKeys,
     }),
   },

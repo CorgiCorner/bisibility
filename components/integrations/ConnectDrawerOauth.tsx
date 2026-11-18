@@ -2,7 +2,7 @@
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { googlePropertyOauthFailureMessage } from "@/lib/integrations/google-property-failure";
 import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
@@ -182,7 +182,7 @@ export function ConnectDrawerOauth({
         return;
       }
       if ("status" in result && result.status === "failed") {
-        setError(googlePropertyFailureMessage(result.failure, t));
+        setError(googlePropertyOauthFailureMessage(result.failure, t));
         return;
       }
       if (!("property" in result)) throw new Error(t("propertySelectionUnavailable"));

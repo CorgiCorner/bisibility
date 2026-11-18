@@ -1,7 +1,6 @@
 import { paymentFailure } from "@/lib/action-payment/session";
 import { paymentResource } from "./action-payment";
 import "server-only";
-import { randomUUID } from "node:crypto";
 import { collectTrackingDownload } from "@/lib/ai-tracking/exports/download";
 import { trackingSampleProjection } from "@/lib/ai-tracking/projections/evidence";
 import { trackingPageSchema } from "@/lib/ai-tracking/projections/forms";
@@ -21,6 +20,9 @@ import type {
   AiTopic,
   AiTrackingSchedule,
 } from "@/lib/generated/prisma/client";
+import { ScheduleMutationError, ScheduleReviewRequiredError } from "@/lib/schedules/errors";
+import { mutateAiSchedule } from "@/lib/schedules/mutations";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { z } from "zod";
 import { trackingAcceptedDrafts } from "./ai-tracking-acceptance";
 import {
@@ -47,10 +49,13 @@ import {
 } from "./ai-tracking-service";
 import { handlePromptTrackerSuggestionGeneration } from "./ai-tracking-suggestions";
 import { trackingTrends } from "./ai-tracking-trends";
+import { apiAiScheduleInput } from "./api-ai-schedule-input";
 import type { ApiContext } from "./context";
-import { requireApiActor } from "./context";
+import { projectScopes, requireApiActor } from "./context";
 import { paginateItems } from "./pagination";
+import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse, listResponse } from "./responses";
+import { apiScheduleReviewer, withApiScheduleAudit } from "./schedule-reviewer";
 import { domainError, readJsonBody, scopedProject } from "./surface";
 
 export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | null> {
@@ -63,7 +68,7 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
     return await (async () => {
       const actor = requireApiActor(ctx);
       const project = await trackingScope(actor, projectPublicId, policy.scope === "write");
-      if (!ctx.auth.apiKey.scopes.includes(policy.scope))
+      if (!projectScopes(ctx.auth).includes(policy.scope))
         return errorResponse("forbidden", `The ${policy.scope} scope is required.`, 403, {
           headers: ctx.headers,
         });
@@ -71,10 +76,8 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
       const member = ctx.path[4];
       const action = ctx.path[5];
       const page = Object.fromEntries(ctx.url.searchParams);
-      const body =
-        ctx.method === "GET" || ctx.method === "DELETE"
-          ? {}
-          : camelizeKeys(await readJsonBody(ctx));
+      const raw = ctx.method === "GET" || ctx.method === "DELETE" ? {} : await readJsonBody(ctx);
+      const body = camelizeKeys(raw);
       const response = (data: unknown, status = 200) =>
         dataResponse(snakeizeKeys(data), { headers: ctx.headers, status });
       const publicCatalog = async (row: unknown) =>
@@ -97,28 +100,10 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
             { headers: ctx.headers },
           );
         }
-        const result = await mutateTrackingCatalog(
-          project.id,
-          resource,
-          ctx.method,
-          resource === "schedules" && (body as { configuration?: unknown }).configuration
-            ? {
-                ...(body as object),
-                configuration: {
-                  ...(body as { configuration: object }).configuration,
-                  idempotencyKey: `schedule-template-${randomUUID()}`,
-                  actorId: actor.id,
-                  actorCredential: {
-                    id: ctx.origin.credentialId,
-                    kind: ctx.origin.credentialKind,
-                  },
-                  entrySource: ctx.origin.source,
-                  origin: "manual",
-                },
-              }
-            : body,
-          member,
-        );
+        const result =
+          resource === "schedules"
+            ? await writeLegacySchedule(ctx, project.id, actor, raw, member)
+            : await mutateTrackingCatalog(project.id, resource, ctx.method, body, member);
         await auditTrackingCatalog(
           actor,
           project,
@@ -152,7 +137,7 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
               entrySource: ctx.origin.source,
               origin: "manual",
               actorId: actor.id,
-              actorCredential: { id: ctx.origin.credentialId, kind: ctx.origin.credentialKind },
+              actorCredential: providerOrigin(ctx.origin).credential,
             },
             false,
           );
@@ -166,7 +151,7 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
             entrySource: ctx.origin.source,
             origin: "manual",
             actorId: actor.id,
-            actorCredential: { id: ctx.origin.credentialId, kind: ctx.origin.credentialKind },
+            actorCredential: providerOrigin(ctx.origin).credential,
           });
           await auditTrackingRun(actor, project, action as "cancel" | "retry", result);
           return response(publicTrackingRun(result));
@@ -249,6 +234,8 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
       return null;
     })();
   } catch (error) {
+    if (error instanceof ScheduleReviewRequiredError || error instanceof ScheduleMutationError)
+      throw error;
     const payment = paymentFailure(error);
     if (payment)
       return errorResponse("conflict", "Review the current payment quote before starting.", 409, {
@@ -275,4 +262,31 @@ export async function promptTrackerRoute(ctx: ApiContext): Promise<Response | nu
       return errorResponse("validation_failed", message, 422, { headers: ctx.headers });
     domainError(error);
   }
+}
+
+async function writeLegacySchedule(
+  ctx: ApiContext,
+  projectId: string,
+  actor: ReturnType<typeof requireApiActor>,
+  raw: unknown,
+  id?: string,
+) {
+  const { body, review } = splitScheduleReview(raw);
+  const method = ctx.method as "POST" | "PATCH" | "DELETE";
+  const input = method === "DELETE" ? {} : apiAiScheduleInput(ctx, body, method === "PATCH");
+  const result = await withApiScheduleAudit(ctx, () =>
+    mutateAiSchedule(projectId, actor, method, input, id, {
+      atomic: true,
+      gate: true,
+      review,
+      reviewPrincipal: apiScheduleReviewer(ctx),
+    }),
+  );
+  if ("unchanged" in result) {
+    const row = ((await trackingCatalog(projectId, "schedules")) as AiTrackingSchedule[]).find(
+      (schedule) => schedule.publicId === id,
+    );
+    if (row) return row;
+  }
+  return result;
 }

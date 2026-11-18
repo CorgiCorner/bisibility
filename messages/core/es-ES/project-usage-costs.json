@@ -1,7 +1,7 @@
 {
   "projectUsageCosts": {
     "lead": "Plan, presupuestos de proveedores y lo que el SEO te cuesta en total.",
-    "lifetimeHint": "Un importe de por vida se reparte a partes iguales entre los 36 meses naturales que empiezan en el mes de inicio. Un mes inicial o final incompleto se prorratea por días y después el importe es cero.",
+    "lifetimeHint": "El coste vitalicio se reparte en 36 meses. Los meses parciales se prorratean.",
     "dash": "-",
     "tiles": {
       "seo": "Coste SEO este mes",
@@ -57,14 +57,14 @@
       "addTitle": "Añadir coste",
       "editTitle": "Editar coste",
       "tool": "Herramienta",
-      "name": "Nombre",
+      "name": "Herramienta personalizada",
       "suggest": "¿No está en la lista? Sugiérelo",
       "plan": "Plan",
       "planHint": "Escribe un plan o elige uno habitual.",
       "billing": "Facturación",
-      "amount": "Importe que pagas",
+      "amount": "Importe",
       "currency": "Moneda",
-      "priceChanges": "Cambios de precio",
+      "priceChanges": "Prueba y descuentos",
       "trialUntil": "Prueba gratuita hasta",
       "discount": "Descuento",
       "percent": "Porcentaje",
@@ -74,7 +74,7 @@
       "months": "Meses",
       "none": "Ninguno",
       "partial": "Solo una parte de este coste pertenece a este proyecto",
-      "partialHint": "Úsalo cuando la misma herramienta también sirve a otros sitios. Solo esta parte se cuenta en el coste de este proyecto.",
+      "partialHint": "Solo la parte elegida se incluye en este proyecto.",
       "lands": "{amount} al mes entra en este proyecto",
       "landsOnce": "{amount} entra en este proyecto",
       "started": "Inicio",
@@ -93,8 +93,13 @@
         "percent": "Introduce un porcentaje de 0 a 100, con hasta dos decimales.",
         "trial": "La prueba debe terminar en la fecha de inicio o después.",
         "discount": "Escribe un descuento y cuándo termina.",
-        "date": "Usa una fecha real."
-      }
+        "date": "Usa una fecha real.",
+        "customType": "Introduce hasta 80 caracteres."
+      },
+      "nameHint": "Tu nombre para esta herramienta, visible en la lista de suscripciones.",
+      "description": "Registra gastos del proyecto para ver mejor sus costes.",
+      "customType": "Tipo personalizado",
+      "customTypeHint": "Por ejemplo, alojamiento, CRM o diseño."
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   MAX_ALLOCATION_AMOUNT,
   type ProviderConnectionAllocationUpdate,
 } from "@/lib/provider-allocations/types";
+import { assertProviderBudgetFunding } from "@/lib/provider-allocations/validation";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { providerChainOrderBy } from "@/lib/rank-check/provider-chain-order";
 import { z } from "zod";
@@ -137,6 +138,7 @@ export async function updateProviderBudgets(
   const patch = parseApiInput(providerBudgetsPatchSchema, objectBody(body));
   const { actor, auditActorId } = apiMutationContext(ctx);
   const budgets = await runDomain(async () => {
+    assertProviderBudgetFunding(PROVIDER_CATALOG, providerId, patch.credits);
     const connection = await prisma.providerConnection.findUnique({
       select: { publicId: true },
       where: { projectId_provider: { projectId: ctx.auth.project.id, provider: providerId } },

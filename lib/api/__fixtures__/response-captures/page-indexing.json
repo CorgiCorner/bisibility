@@ -40,34 +40,66 @@
             "inspection_error": null,
             "inspection_failed_at": null,
             "group": "indexed",
-            "history": {
-              "changes": [
-                {
-                  "at": "2026-10-24T12:00:00.000Z",
-                  "previous": {
-                    "verdict": "FAIL",
-                    "coverage_state": "Not indexed",
-                    "google_canonical": null,
-                    "indexing_state": null,
-                    "robots_txt_state": null,
-                    "page_fetch_state": null
-                  },
-                  "next": {
-                    "verdict": "PASS",
-                    "coverage_state": "Submitted and indexed",
-                    "google_canonical": "https://example.com/blog/a",
-                    "indexing_state": "INDEXING_ALLOWED",
-                    "robots_txt_state": "ALLOWED",
-                    "page_fetch_state": "SUCCESSFUL"
-                  }
-                }
-              ],
-              "complete": true
-            }
+            "sitemap_state": "in_sitemap",
+            "sitemap_checked": true
+          },
+          {
+            "url": "https://example.com/blog/a/absent",
+            "source": "sitemap",
+            "sitemap_url": "https://example.com/blog/sitemap.xml",
+            "verdict": "PASS",
+            "coverage_state": "Submitted and indexed",
+            "checked_at": "2026-10-24T12:00:00.000Z",
+            "created_at": "2026-10-24T12:00:00.000Z",
+            "updated_at": "2026-10-24T12:00:00.000Z",
+            "last_crawl_at": "2026-10-24T12:00:00.000Z",
+            "canonical_ok": true,
+            "google_canonical": "https://example.com/blog/a",
+            "user_canonical": null,
+            "indexing_state": "INDEXING_ALLOWED",
+            "robots_txt_state": "ALLOWED",
+            "page_fetch_state": "SUCCESSFUL",
+            "crawled_as": "MOBILE",
+            "referring_urls": [],
+            "sitemaps": [],
+            "rich_results_summary": null,
+            "inspection_result_link": null,
+            "inspection_error": null,
+            "inspection_failed_at": null,
+            "group": "indexed",
+            "sitemap_state": "not_in_sitemap",
+            "sitemap_checked": true
+          },
+          {
+            "url": "https://example.com/blog/a/future",
+            "source": "sitemap",
+            "sitemap_url": "https://example.com/blog/sitemap.xml",
+            "verdict": "PASS",
+            "coverage_state": "Submitted and indexed",
+            "checked_at": "2026-10-24T12:00:00.000Z",
+            "created_at": "2099-01-01T00:00:00.000Z",
+            "updated_at": "2026-10-24T12:00:00.000Z",
+            "last_crawl_at": "2026-10-24T12:00:00.000Z",
+            "canonical_ok": true,
+            "google_canonical": "https://example.com/blog/a",
+            "user_canonical": null,
+            "indexing_state": "INDEXING_ALLOWED",
+            "robots_txt_state": "ALLOWED",
+            "page_fetch_state": "SUCCESSFUL",
+            "crawled_as": "MOBILE",
+            "referring_urls": [],
+            "sitemaps": [],
+            "rich_results_summary": null,
+            "inspection_result_link": null,
+            "inspection_error": null,
+            "inspection_failed_at": null,
+            "group": "indexed",
+            "sitemap_state": "not_checked",
+            "sitemap_checked": false
           }
         ],
         "meta": {
-          "next_cursor": "https://example.com/blog/a"
+          "next_cursor": null
         }
       },
       "contentType": "application/json",
@@ -102,11 +134,37 @@
             "inspection_result_link": null,
             "inspection_error": null,
             "inspection_failed_at": null,
-            "group": "indexed"
+            "group": "indexed",
+            "sitemap_state": "not_checked",
+            "sitemap_checked": false,
+            "history": {
+              "changes": [
+                {
+                  "at": "2026-10-24T12:00:00.000Z",
+                  "previous": {
+                    "verdict": "FAIL",
+                    "coverage_state": "Not indexed",
+                    "google_canonical": null,
+                    "indexing_state": null,
+                    "robots_txt_state": null,
+                    "page_fetch_state": null
+                  },
+                  "next": {
+                    "verdict": "PASS",
+                    "coverage_state": "Submitted and indexed",
+                    "google_canonical": "https://example.com/blog/a",
+                    "indexing_state": "INDEXING_ALLOWED",
+                    "robots_txt_state": "ALLOWED",
+                    "page_fetch_state": "SUCCESSFUL"
+                  }
+                }
+              ],
+              "complete": true
+            }
           }
         ],
         "meta": {
-          "next_cursor": null
+          "next_cursor": "https://example.com/blog/a"
         }
       },
       "contentType": "application/json",

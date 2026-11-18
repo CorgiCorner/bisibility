@@ -19,6 +19,10 @@ const ROLE_SCOPE: Record<Role, ApiScope> = {
   viewer: "read",
 };
 
+export function scopesForRole(role: Role): readonly ApiScope[] {
+  return scopesForTier(ROLE_SCOPE[role]);
+}
+
 export function effectiveScopes(tokenScopes: readonly ApiScope[], role: Role): readonly ApiScope[] {
   const tokenTier = tierFromScopes(tokenScopes);
   const roleTier = ROLE_SCOPE[role];

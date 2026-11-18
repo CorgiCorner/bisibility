@@ -72,6 +72,7 @@ export function DataTable<TRow extends DataTableRowBase>({
   pending = false,
   renderSection,
   rowClassName,
+  rowClickable,
   rowHeight,
   rows,
   selectable,
@@ -212,6 +213,7 @@ export function DataTable<TRow extends DataTableRowBase>({
           renderSection={renderSection}
           rootId={id}
           rowClassName={rowClassName}
+          rowClickable={rowClickable}
           rowHeight={rowHeight}
           rows={renderedRows}
           scrollElement={container.scrollElement}

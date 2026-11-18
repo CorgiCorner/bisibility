@@ -1,5 +1,6 @@
 "use client";
 
+import { ScheduleReviewCancelled } from "@/components/schedules/useScheduleSpendReview";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { type MarketsPageRow, type MarketsSortKey, sortMarkets } from "@/lib/markets/page-model";
@@ -87,8 +88,10 @@ export function MarketsTable({
         setStatuses((current) =>
           new Map(current).set(market.id, confirmed.current.get(market.id) ?? market.status),
         );
-        setError(actionErrorMessage(cause, t("updateFailed")));
-        onStatusConfirmed();
+        if (!(cause instanceof ScheduleReviewCancelled)) {
+          setError(actionErrorMessage(cause, t("updateFailed")));
+          onStatusConfirmed();
+        }
       }
     };
     const previous = queues.current.get(market.id) ?? Promise.resolve();

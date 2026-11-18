@@ -1,287 +1,147 @@
 "use client";
-
-import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPaymentOptionPicker";
-import { CountrySelect } from "@/components/locations/CountrySelect";
 import { Button } from "@/components/ui/Button";
-import { ChoiceGroup } from "@/components/ui/ChoiceGroup";
-import { FormField } from "@/components/ui/FieldLabel";
+import { Card } from "@/components/ui/Card";
+import { FieldLabel, FormField } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { StatusChip } from "@/components/ui/StatusChip";
 import { Switch } from "@/components/ui/Switch";
 import { Textarea } from "@/components/ui/Textarea";
-import type { ActionPaymentOption } from "@/lib/action-payment/contract";
-import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
-import { appPath } from "@/lib/routing/app-path";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { Controller } from "react-hook-form";
-import { AiCostPolicyFields } from "./AiCostPolicyFields";
-import { AiEngineFields, type AiEngineOption } from "./AiEngineFields";
-import { AiResearchCostCap } from "./AiResearchCostCap";
-import type { AiResearchForm } from "./AiVisibilityFields";
-import { ModelPlaygroundSuggestions } from "./ModelPlaygroundHistory";
+import { useToast } from "@/components/ui/toast-context";
+import type { ModelPlaygroundCopy } from "@/lib/model-playground/composer-copy";
+import { utf8Bytes } from "@/lib/model-playground/schema";
+import { useEffect } from "react";
+import { ModelPlaygroundEstimate } from "./ModelPlaygroundEstimate";
+import { ModelPlaygroundRetry } from "./ModelPlaygroundRetry";
+import type { ModelPlaygroundController } from "./useModelPlayground";
 
+export type ModelPlaygroundChoice = { code: string; name: string };
 export function ModelPlaygroundComposer({
-  form,
-  projectId,
-  catalog,
-  engineOptions,
+  controller: h,
+  blockers,
+  copy,
   disabled,
-  pending,
-  runDisabled,
-  estimateText,
-  paymentOptions,
-  paymentOptionId,
-  funding,
-  onOptionChange,
-  onRun,
-  onCatalogInteract,
+  languages,
+  markets,
 }: Readonly<{
-  form: AiResearchForm;
-  projectId: string;
-  catalog?: AiResearchCatalog;
-  engineOptions: readonly AiEngineOption[];
+  controller: ModelPlaygroundController;
+  blockers: readonly string[];
+  copy: ModelPlaygroundCopy;
   disabled: boolean;
-  pending: boolean;
-  runDisabled: boolean;
-  estimateText: string | null;
-  paymentOptions: ActionPaymentOption[];
-  paymentOptionId?: string;
-  funding: "byok" | "platform" | null;
-  onOptionChange: (id: string) => void;
-  onRun: () => void;
-  onCatalogInteract: () => void;
+  languages: readonly ModelPlaygroundChoice[];
+  markets: readonly ModelPlaygroundChoice[];
 }>) {
-  const t = useTranslations("projectAiResearch");
-  const [promptFocused, setPromptFocused] = useState(false);
-  const values = form.watch();
-  const promptField = form.register("prompt");
-  const prompt = "prompt" in values ? (values.prompt ?? "") : "";
-  const engineMode = "engines" in values && (values.engines?.length ?? 0) > 0;
-  const models = "models" in values ? (values.models ?? []) : [];
-  const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
-  const selected = catalog?.models.filter((model) => models.includes(model.id)) ?? [];
-  const expanded =
-    Boolean(catalog) &&
-    selected.length === models.length &&
-    selected.length > 0 &&
-    selected.every((model) =>
-      actual
-        ? catalog?.actualCostAvailable && model.actualCostEnabled
-        : model.priceAvailable && model.admissionEnabled,
-    );
-  const searchDisabled = engineMode
-    ? disabled
-    : disabled || !actual || !expanded || !selected.every((model) => model.webSearch);
-  const searchNeedsKey = !engineMode && !actual;
-  const searchHint = t(
-    engineMode ? "engineWebSearchHint" : actual ? "actualSearchForecast" : "webSearchPolicyPending",
-  );
-  const selectable = (catalog?.models ?? []).filter(
-    (model) => model.priceAvailable && model.admissionEnabled,
-  );
+  const { showToast } = useToast();
+  const failureMessage = h.failed
+    ? h.failure === "not_dispatched"
+      ? copy.runRejected
+      : copy.runFailed
+    : null;
+  useEffect(() => {
+    if (failureMessage) showToast(failureMessage, { severity: "error" });
+  }, [failureMessage, showToast]);
+  const prompt = h.input.prompt.trim();
+  const promptError = h.form.formState.errors.prompt?.message;
   return (
-    <form
-      className="grid gap-4 lg:grid-cols-3"
-      onChange={onCatalogInteract}
-      onFocus={onCatalogInteract}
-      onSubmit={(event) => {
-        event.preventDefault();
-        onRun();
-      }}
-    >
-      <input type="hidden" {...form.register("brand")} />
-      <input type="hidden" {...form.register("domain")} />
-      <div data-composer-row="prompt">
-        <FormField className="relative" htmlFor="model-playground-prompt" label={t("prompt")}>
-          <Textarea
-            disabled={disabled}
-            id="model-playground-prompt"
-            maxLength={500}
-            placeholder={t("promptPlaceholder")}
-            {...promptField}
-            onBlur={(event) => {
-              void promptField.onBlur(event);
-              setPromptFocused(false);
-            }}
-            onFocus={() => setPromptFocused(true)}
-          />
-          <ModelPlaygroundSuggestions
-            focused={promptFocused}
-            projectId={projectId}
-            prompt={prompt}
-          />
-        </FormField>
-      </div>
-      <div
-        className="grid items-start gap-4 sm:grid-cols-2 lg:col-span-2"
-        data-composer-row="controls"
-      >
-        <div className="grid min-w-0 gap-2">
-          <Controller
-            control={form.control}
-            name="response_language"
-            render={({ field }) => (
-              <FormField label={t("responseLanguage")} caption={t("responseLanguageHint")}>
-                <MenuSelect
-                  ariaLabel={t("responseLanguage")}
-                  disabled={disabled || (!expanded && !(engineMode && catalog))}
-                  onChange={field.onChange}
-                  options={(expanded || (engineMode && catalog)
-                    ? (catalog?.responseLanguages ?? [])
-                    : [{ code: "en", name: t("legacyPromptLanguage") }]
-                  ).map((language) => ({
-                    label: language.name,
-                    searchText: language.code,
-                    value: language.code,
-                  }))}
-                  searchable
-                  size="input"
-                  value={field.value ?? "en"}
-                />
-              </FormField>
-            )}
-          />
-        </div>
-        <FormField
-          label={t("webSearchLabel")}
-          help={searchHint}
-          captionId="model-playground-web-search-hint"
-          caption={
-            searchNeedsKey
-              ? t.rich("webSearchNeedsKey", {
-                  link: (chunks) => (
-                    <Link
-                      className="underline underline-offset-2"
-                      href={appPath(projectId, "settings", "advanced")}
-                    >
-                      {chunks}
-                    </Link>
-                  ),
-                })
-              : t(engineMode ? "webSearchIncluded" : "webSearchOwnKey")
-          }
-        >
-          <Controller
-            control={form.control}
-            name="web_search"
-            render={({ field }) => (
-              <div className="flex h-10 items-center max-sm:h-11">
-                <Switch
-                  checked={field.value ?? false}
-                  className="w-fit border-0 bg-transparent p-0"
-                  disabled={searchDisabled}
-                  label={t("webSearch")}
-                  onChange={(event) => {
-                    field.onChange(event.target.checked);
-                    form.setValue(
-                      "country_iso_code",
-                      event.target.checked
-                        ? (catalog?.responseCountries.find((country) => country.code === "US")
-                            ?.code ?? catalog?.responseCountries[0]?.code)
-                        : undefined,
-                    );
-                  }}
-                />
-              </div>
-            )}
-          />
-        </FormField>
-      </div>
-      <div className="col-span-full space-y-4" data-composer-row="details">
-        {"web_search" in values && values.web_search ? (
-          <Controller
-            control={form.control}
-            name="country_iso_code"
-            render={({ field }) => (
-              <div className="grid w-full max-w-sm gap-2 text-ui-body">
-                <span>{t("searchCountry")}</span>
-                <CountrySelect
-                  ariaLabel={t("searchCountry")}
-                  countries={(catalog?.responseCountries ?? []).map((country) => ({
-                    code: country.code,
-                    label: country.name,
-                  }))}
-                  disabled={disabled}
-                  onChange={field.onChange}
-                  size="input"
-                  value={field.value ?? ""}
-                />
-              </div>
-            )}
-          />
-        ) : null}
-        {paymentOptions.length > 0 ? (
-          <div className="grid gap-2 text-ui-body">
-            <span>{t("modelPlayground.payWith")}</span>
-            <ActionPaymentOptionPicker
-              size="input"
-              disabled={disabled}
-              onChange={onOptionChange}
-              options={paymentOptions}
-              value={paymentOptionId ?? paymentOptions[0]?.id ?? ""}
-            />
+    <Card data-model-playground-block="composer">
+      <form className="grid min-w-0 gap-4" onSubmit={h.form.handleSubmit(() => h.run())}>
+        <div className="grid min-w-0 gap-2 text-ui-body" data-form-field>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <FieldLabel htmlFor="native-model-prompt" label={copy.prompt} help={copy.promptHint} />
+            <span className="text-ui-caption tabular-nums text-fg-muted" aria-live="off">
+              {Array.from(prompt).length}/500 · {utf8Bytes(prompt)}/2,000 B
+            </span>
           </div>
-        ) : null}
-        {engineOptions.length ? (
-          <AiEngineFields
+          <Textarea
+            id="native-model-prompt"
             disabled={disabled}
-            engineOptions={engineOptions}
-            form={form}
-            label={t("modelPlayground.samePrompt", {
-              count: "engines" in values ? (values.engines?.length ?? 0) : 0,
-            })}
+            invalid={Boolean(h.form.formState.errors.prompt)}
+            aria-invalid={Boolean(promptError)}
+            aria-describedby={promptError ? "native-model-prompt-error" : undefined}
+            {...h.form.register("prompt")}
           />
-        ) : selectable.length ? (
-          <ChoiceGroup
-            disabled={disabled}
-            label={t("modelPlayground.sameModels", { count: models.length })}
-            max={catalog?.limits.maxModels ?? 2}
-            maxHint={t("modelLimit")}
-            mode="multiple"
-            onChange={(next) => {
-              if (!next.length) return;
-              form.setValue("models", next, { shouldValidate: true });
-            }}
-            options={selectable.map((model) => ({ label: model.label, value: model.id }))}
-            value={models}
-          />
-        ) : null}
-        {engineMode ? (
-          <AiResearchCostCap className="max-w-sm" disabled={disabled} form={form} />
-        ) : (
-          <AiCostPolicyFields
-            catalog={catalog}
-            className="max-w-sm"
-            disabled={disabled}
-            form={form}
-          />
-        )}
-        {Object.values(form.formState.errors).length ? (
-          <p className="text-ui-body text-red-text" role="alert">
-            {t("validation")}
-          </p>
-        ) : null}
-      </div>
-      <div
-        className="col-span-full flex flex-wrap items-center gap-3 border-t border-border pt-4"
-        data-composer-row="footer"
-      >
-        <Button disabled={runDisabled} loading={pending} size="input" type="submit">
-          {t("modelPlayground.run")}
-        </Button>
-        {estimateText ? (
-          <span className="text-ui-body tabular-nums text-fg-muted">{estimateText}</span>
-        ) : null}
-        {funding ? (
-          <StatusChip
-            dot={false}
-            label={t(funding === "byok" ? "modelPlayground.yourKey" : "modelPlayground.credits")}
-            tone={funding === "byok" ? "info" : "positive"}
-          />
-        ) : null}
-      </div>
-    </form>
+          {promptError ? (
+            <p id="native-model-prompt-error" className="m-0 text-ui-caption text-red-text">
+              {promptError}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-wrap items-start gap-x-6 gap-y-4" data-composer-controls>
+          <FormField className="content-start" label={copy.language}>
+            <MenuSelect
+              ariaLabel={copy.language}
+              disabled={disabled}
+              onChange={(value) =>
+                h.form.setValue("responseLanguage", value, { shouldValidate: true })
+              }
+              options={languages.map((language) => ({
+                label: language.name,
+                value: language.code,
+              }))}
+              size="input"
+              triggerClassName="w-fit max-w-full"
+              value={h.input.responseLanguage}
+            />
+          </FormField>
+          <FormField className="content-start" label={copy.market} help={copy.marketHint}>
+            <MenuSelect
+              ariaLabel={copy.market}
+              disabled={disabled}
+              onChange={h.setMarket}
+              options={markets.map((market) => ({ label: market.name, value: market.code }))}
+              size="input"
+              triggerClassName="w-fit max-w-full"
+              value={h.market}
+            />
+          </FormField>
+          <FormField
+            className="content-start"
+            label={copy.webSearch}
+            htmlFor="native-model-search"
+            help={copy.searchHint}
+          >
+            <div className="flex min-h-10 items-center max-sm:min-h-11">
+              <Switch
+                checked={h.search}
+                className="w-fit border-0 bg-transparent p-0"
+                disabled={disabled}
+                id="native-model-search"
+                onChange={(event) => h.setSearch(event.target.checked)}
+              />
+            </div>
+          </FormField>
+        </div>
+        <div className="grid gap-2 border-t border-border pt-4">
+          {blockers.map((blocker, index) => (
+            <p
+              key={`${index}-${blocker}`}
+              className="m-0 text-ui-caption text-red-text"
+              role="alert"
+            >
+              {blocker}
+            </p>
+          ))}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {!h.issues.length ? (
+              <ModelPlaygroundEstimate
+                quote={h.quote}
+                input={h.input}
+                failed={h.quoteFailed}
+                copy={copy}
+              />
+            ) : null}
+            <Button
+              className="ml-auto"
+              disabled={!h.canLaunch || disabled}
+              loading={h.pending}
+              size="input"
+              type="submit"
+              title={disabled ? copy.readOnly : `${copy.limits} ${copy.historyNotice}`}
+            >
+              {copy.run}
+            </Button>
+          </div>
+        </div>
+      </form>
+      <ModelPlaygroundRetry controller={h} copy={copy} />
+    </Card>
   );
 }

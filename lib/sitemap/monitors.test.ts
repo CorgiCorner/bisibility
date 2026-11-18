@@ -3,7 +3,10 @@ import { listSitemapMonitors, updateSitemapMonitor } from "./monitors";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
-    project: { findFirst: vi.fn(), update: vi.fn() },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    project: { findFirst: vi.fn(), findUniqueOrThrow: vi.fn(), update: vi.fn() },
+    projectSyncPause: { create: vi.fn(), deleteMany: vi.fn() },
     sitemapSnapshot: { findFirst: vi.fn() },
   },
   writeAudit: vi.fn(),
@@ -19,7 +22,7 @@ const project = {
   domain: "example.com",
   id: "project_1",
   publicId: projectPublicId,
-  sitemapMonitoringEnabled: true,
+  syncPauses: [],
   writeMode: "active",
 };
 
@@ -27,9 +30,8 @@ describe("sitemap monitor core", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.project.findFirst.mockResolvedValue(project);
-    mocks.prisma.project.update.mockImplementation(({ data }) =>
-      Promise.resolve({ ...project, sitemapMonitoringEnabled: data.sitemapMonitoringEnabled }),
-    );
+    mocks.prisma.project.findUniqueOrThrow.mockResolvedValue(project);
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
       fetchedAt: new Date("2026-07-21T04:45:00.000Z"),
       sitemapUrl: "https://example.com/sitemap.xml",
@@ -48,7 +50,7 @@ describe("sitemap monitor core", () => {
     ]);
   });
 
-  it("updates only the persisted enable flag and audits before and after", async () => {
+  it("writes the pause and legacy flag and audits before and after", async () => {
     const result = await updateSitemapMonitor({
       actor,
       auditActorId: null,
@@ -57,6 +59,9 @@ describe("sitemap monitor core", () => {
       projectId: projectPublicId,
     });
     expect(result).toMatchObject({ enabled: false, status: "disabled" });
+    expect(mocks.prisma.projectSyncPause.create).toHaveBeenCalledWith({
+      data: { actorId: null, kind: "sitemap_fetch", projectId: "project_1" },
+    });
     expect(mocks.prisma.project.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { sitemapMonitoringEnabled: false } }),
     );
@@ -67,6 +72,7 @@ describe("sitemap monitor core", () => {
         after: { enabled: false },
         before: { enabled: true },
       }),
+      mocks.prisma,
     );
   });
 

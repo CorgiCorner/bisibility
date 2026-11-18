@@ -217,3 +217,13 @@ describe("installation email allowance", () => {
     },
   );
 });
+
+it("reports disabled notifications with account-access transport still available", async () => {
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "true");
+  expect(await getInstanceAdminEmailAllowance(now)).toMatchObject({
+    status: "available",
+    notificationsDisabled: true,
+    notificationPolicyMessage:
+      "Notification email is disabled; sign-in and other account-access email remain enabled.",
+  });
+});

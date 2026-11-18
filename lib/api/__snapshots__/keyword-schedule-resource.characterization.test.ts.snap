@@ -1,0 +1,253 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`public keyword schedule response characterization > records every existing field for active membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "daily",
+    "jitter_minutes": 15,
+    "last_checked_at": null,
+    "next_check_at": "2026-10-08T06:14:37.000Z",
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for archived membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "manual",
+    "jitter_minutes": 0,
+    "last_checked_at": null,
+    "next_check_at": null,
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for custom cron membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": "0 9 * * 1",
+    "frequency": "custom_cron",
+    "jitter_minutes": 15,
+    "last_checked_at": null,
+    "next_check_at": "2026-10-12T09:14:37.000Z",
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for disabled membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "paused",
+    "jitter_minutes": 0,
+    "last_checked_at": null,
+    "next_check_at": null,
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for manual membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "manual",
+    "jitter_minutes": 0,
+    "last_checked_at": null,
+    "next_check_at": null,
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for paused membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "paused",
+    "jitter_minutes": 0,
+    "last_checked_at": null,
+    "next_check_at": null,
+    "source": "keyword",
+    "timezone": "UTC",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;
+
+exports[`public keyword schedule response characterization > records every existing field for unassigned membership 1`] = `
+{
+  "country": "US",
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "device": "desktop",
+  "id": "kw_a00000000000000000000000",
+  "intent": "commercial",
+  "language_code": "en",
+  "language_label": "English",
+  "latest_check": null,
+  "latest_position": null,
+  "latest_successful_check": null,
+  "location": "US",
+  "location_key": "US",
+  "previous_position": null,
+  "project_id": "prj_a00000000000000000000000",
+  "ranking_url": null,
+  "schedule": {
+    "cron_expression": null,
+    "frequency": "manual",
+    "jitter_minutes": 0,
+    "last_checked_at": null,
+    "next_check_at": null,
+    "source": "keyword",
+    "timezone": "Europe/Warsaw",
+  },
+  "tags": [
+    "Product",
+  ],
+  "target_url": "https://example.com/tracker",
+  "text": "rank tracker",
+  "topic": "tracking",
+  "updated_at": "2026-10-08T00:00:00.000Z",
+}
+`;

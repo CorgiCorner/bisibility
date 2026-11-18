@@ -33,3 +33,13 @@ export function buildLogoDevUrl({
 
   return `https://img.logo.dev/${encodeURIComponent(safeDomain)}?${params.toString()}`;
 }
+
+/** Official theme variants; omission keeps the ordinary provider artwork. */
+export function buildProviderLogoUrl(input: LogoDevUrlInput) {
+  if (input.domain?.trim().toLowerCase() === "openrouter.ai" && input.theme) {
+    return input.theme === "dark"
+      ? "/brand/providers/openrouter-cloud.svg"
+      : "/brand/providers/openrouter-ink.svg";
+  }
+  return buildLogoDevUrl(input);
+}

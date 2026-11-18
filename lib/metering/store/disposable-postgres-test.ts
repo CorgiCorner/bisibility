@@ -5,9 +5,10 @@ import { promisify } from "node:util";
 
 const run = promisify(execFile);
 
-/** Owns only this named fixture container and its anonymous volume. */
+/** Owns only this named fixture container and its in-memory data directory. */
 export async function disposablePostgres() {
   const name = `metering-restart-${randomUUID()}`;
+  const password = randomUUID();
   const docker = (...args: string[]) => run("docker", args);
   const ready = async () => {
     for (let attempt = 0; attempt < 100; attempt++) {
@@ -27,8 +28,10 @@ export async function disposablePostgres() {
       "--detach",
       "--name",
       name,
+      "--tmpfs",
+      "/var/lib/postgresql/data:rw,size=1g",
       "--env",
-      "POSTGRES_HOST_AUTH_METHOD=trust",
+      `POSTGRES_PASSWORD=${password}`,
       "--publish",
       "127.0.0.1::5432",
       "--entrypoint",
@@ -41,7 +44,7 @@ export async function disposablePostgres() {
     const { stdout } = await docker("port", name, "5432/tcp");
     const port = stdout.trim().split(":").at(-1);
     return {
-      url: `postgresql://postgres@127.0.0.1:${port}/postgres`,
+      url: `postgresql://postgres:${password}@127.0.0.1:${port}/postgres`,
       async restart() {
         await docker(
           "exec",

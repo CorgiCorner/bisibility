@@ -4,6 +4,22 @@ export function registerInstanceAdminAuditDeclarations(
   declare: (actions: readonly string[], policy?: AuditPayloadPolicy) => void,
 ) {
   declare(["instance_admin.project_seo_challenge.set"], { after: f.booleans("enabled") });
+  declare(["instance_admin.assistant_kill_switch.set"], {
+    before: f.strings("level"),
+    after: f.strings("level", "reason"),
+  });
+  declare(["instance_admin.assistant_guard.set"], {
+    before: { ...f.strings("key"), ...f.numbers("value") },
+    after: { ...f.strings("key"), ...f.numbers("value") },
+  });
+  // Written by the spend breaker itself (no actor) when it pauses Credits.
+  declare(["assistant.spend_breaker.tripped"], {
+    before: f.strings("level"),
+    after: {
+      ...f.strings("level", "reason"),
+      ...f.numbers("hourlyCents", "dailyCents", "unsettledAttempts", "threshold"),
+    },
+  });
   declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
   const announcement = { ...f.strings("announcementId", "contentHash"), ...f.booleans("enabled") };
   declare(["instance_admin.announcement_created"], { after: announcement });

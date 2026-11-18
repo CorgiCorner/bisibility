@@ -60,3 +60,6 @@ export const isolatedNodeRenderTests = [
   "components/account/PersonalTokensSection.server.test.tsx",
   "components/ui/ZonedTime.server.test.tsx",
 ];
+
+// Compiler scans need a fresh process so their graph does not overlap retained shared-worker state.
+export const isolatedCompilerScanTests = ["i18n/model-playground-catalogs.test.ts"];

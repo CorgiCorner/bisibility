@@ -49,7 +49,11 @@ export type MarketDeviceResult =
   | { outcome: "unavailable"; reason: MarketDeviceFailure };
 export type MarketDeviceActions = {
   preview: (input: MarketDeviceSelection) => Promise<MarketDevicePreview>;
-  add: (input: MarketDeviceConfirm) => Promise<MarketDeviceResult>;
+  add: (
+    input: MarketDeviceConfirm & {
+      review?: import("@/lib/schedules/review-commit").ScheduleReviewSubmission;
+    },
+  ) => Promise<MarketDeviceResult>;
 };
 
 export function initialMarketDevice(devices: readonly string[] = []): "desktop" | "mobile" {

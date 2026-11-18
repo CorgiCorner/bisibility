@@ -26,10 +26,12 @@ function BillingRow({ group, items }: { group: Group; items: readonly BillingCon
     <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 px-3 py-2.5 sm:grid-cols-[176px_minmax(0,1fr)] sm:items-center">
       <dt className="min-w-0">
         <p className="m-0 text-sm font-medium">
-          {t(`${group}Title`)}{" "}
+          {t(group === "credits" ? "creditsTitle" : group === "own" ? "ownTitle" : "freeTitle")}{" "}
           <span className="font-normal text-fg-muted tabular-nums">{items.length}</span>
         </p>
-        <p className="m-0 text-xs text-fg-muted">{t(`${group}Help`)}</p>
+        <p className="m-0 text-xs text-fg-muted">
+          {t(group === "credits" ? "creditsHelp" : group === "own" ? "ownHelp" : "freeHelp")}
+        </p>
       </dt>
       <dd className="m-0 min-w-0">
         <ul className="m-0 flex min-w-0 list-none flex-wrap gap-1.5 p-0">

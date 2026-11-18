@@ -115,7 +115,8 @@ export const definitionSourceSchema = z
             archivedAt: z.string().nullable(),
             providerPolicy: z.string().nullable(),
             timeOfDay: z.string().nullable(),
-            isDefault: z.boolean(),
+            // Preserve the legacy key when emitted so retained definition fingerprints still match.
+            isDefault: z.boolean().optional(),
           })
           .nullable(),
       })

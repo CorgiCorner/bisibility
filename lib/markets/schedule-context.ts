@@ -8,7 +8,7 @@ import {
 import { resolveSerpDepth } from "@/lib/serp/constants";
 
 type ScheduleContextSource = {
-  checkSchedules: readonly { isDefault?: boolean; name: string }[];
+  checkSchedules: readonly { name: string }[];
   defaults: { serpDepth?: number | null; timezone?: string | null } | null;
   providerConnections: readonly ProviderChainEntry[];
 };
@@ -20,7 +20,6 @@ export function marketScheduleContext(source: ScheduleContextSource) {
     .map(({ provider }) => ({ label: providerLabel(provider), value: provider }));
   return {
     connectedProviders,
-    defaultScheduleName: source.checkSchedules.find((schedule) => schedule.isDefault)?.name ?? null,
     projectDefaults: {
       provider: connectedProviders.at(0) ?? null,
       serpDepth: resolveSerpDepth(source.defaults?.serpDepth ?? undefined),

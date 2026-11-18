@@ -95,6 +95,8 @@ describe("OpenAPI document", () => {
     expect(doc).toHaveProperty(
       "tags",
       [
+        "schedules",
+        "model-playground",
         "prompt-tracker",
         "prompt-research",
         "discovery",
@@ -120,7 +122,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(169);
+    expect(operations).toHaveLength(179);
     expect(
       Object.entries(doc.paths)
         .filter(([path]) => path.includes("/local-monitors/"))

@@ -19,6 +19,10 @@ import {
   listProjectMarkets,
   reconcileProjectMarketsWithinLimit,
 } from "@/lib/markets/registry";
+import { withScheduleReviewActionResult } from "@/lib/schedules/action-result";
+import { ScheduleReviewStaleError } from "@/lib/schedules/errors";
+import { commitMarketReactivation } from "@/lib/schedules/market-reactivation";
+import { splitScheduleReview } from "@/lib/schemas/schedule-review";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { z } from "zod";
 
@@ -61,41 +65,68 @@ async function resolveChoices(projectId: string, choices: readonly ProjectMarket
   );
 }
 
-export async function addProjectMarkets(input: unknown): Promise<AddProjectMarketsResult> {
-  const data = parseActionInput(addMarketsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "create", data.projectId, {
-    type: "project_market",
-  });
-  const resolvedMarkets = uniqueProjectMarketLocations(
-    await resolveChoices(project.id, data.choices),
-  );
+export async function addProjectMarkets(input: unknown) {
+  return withScheduleReviewActionResult(async (): Promise<AddProjectMarketsResult> => {
+    const { body, review } = splitScheduleReview(input);
+    const data = parseActionInput(addMarketsSchema, body);
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "create", data.projectId, {
+      type: "project_market",
+    });
+    const resolvedMarkets = uniqueProjectMarketLocations(
+      await resolveChoices(project.id, data.choices),
+    );
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      const result = await prisma.$transaction(
-        (tx) => ensureProjectMarketsWithinLimit(project.id, resolvedMarkets, tx),
-        { isolationLevel: "Serializable" },
-      );
-      if (!result.ok) return result;
-      recordAppAction(actor);
-      await writeAudit({
-        action: "settings.project_market.add",
-        actorId: actor.id,
-        after: { added: result.added, marketIds: result.marketIds },
-        before: null,
+    const markets = await prisma.projectMarket.findMany({
+      where: {
         projectId: project.id,
-        targetId: project.publicId,
-        targetType: "project",
-      });
-      revalidateSettingsViews();
+        locationId: { in: resolvedMarkets.map((row) => row.locationId) },
+      },
+      select: { publicId: true },
+    });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const result = await commitMarketReactivation(
+          project.id,
+          actor,
+          { op: "market-reactivate", marketIds: markets.map((row) => row.publicId), mode: "add" },
+          review,
+          async (tx) => {
+            const current = await tx.projectMarket.findMany({
+              where: {
+                projectId: project.id,
+                locationId: { in: resolvedMarkets.map((row) => row.locationId) },
+              },
+              select: { publicId: true },
+            });
+            if (
+              current.length !== markets.length ||
+              current.some((row) => !markets.some((quoted) => quoted.publicId === row.publicId))
+            )
+              throw new ScheduleReviewStaleError("preview_mismatch");
+            return ensureProjectMarketsWithinLimit(project.id, resolvedMarkets, tx);
+          },
+        );
+        if (!result.ok) return result;
+        recordAppAction(actor);
+        await writeAudit({
+          action: "settings.project_market.add",
+          actorId: actor.id,
+          after: { added: result.added, marketIds: result.marketIds },
+          before: null,
+          projectId: project.id,
+          targetId: project.publicId,
+          targetType: "project",
+        });
+        revalidateSettingsViews();
 
-      return result;
-    } catch (error) {
-      if (attempt === 2 || !isSerializableConflict(error)) throw error;
+        return result;
+      } catch (error) {
+        if (attempt === 2 || !isSerializableConflict(error)) throw error;
+      }
     }
-  }
-  throw new Error("Project market transaction did not complete.");
+    throw new Error("Project market transaction did not complete.");
+  });
 }
 
 export async function reconcileProjectMarkets(input: unknown) {

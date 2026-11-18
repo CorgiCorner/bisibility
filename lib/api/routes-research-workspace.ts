@@ -3,6 +3,8 @@ import type { ApiContext } from "./context";
 export function researchWorkspaceRoute(ctx: ApiContext) {
   const [first, projectId, resource] = ctx.path;
   if (first !== "projects" || !projectId) return null;
+  if (resource === "model-playground")
+    return import("./model-playground").then((routes) => routes.modelPlaygroundRoute(ctx));
   if (resource === "prompt-tracker" || resource === "prompt-research") {
     return import("./ai-tracking").then((routes) => routes.promptTrackerRoute(ctx));
   }

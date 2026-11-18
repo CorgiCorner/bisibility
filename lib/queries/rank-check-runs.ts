@@ -245,7 +245,6 @@ function scheduleSelect(activeLocationIds: Iterable<string>) {
     cronExpression: true,
     enabled: true,
     frequency: true,
-    isDefault: true,
     jitterMinutes: true,
     name: true,
     providerPolicy: true,
@@ -271,7 +270,7 @@ function scheduleDto(row: ScheduleSource) {
 export async function listCheckSchedules(projectId: string) {
   const activeLocationIds = await activeMarketLocationIds(projectId, prisma);
   const rows = await prisma.checkSchedule.findMany({
-    orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
+    orderBy: [{ name: "asc" }, { publicId: "asc" }],
     select: scheduleSelect(activeLocationIds),
     where: { archivedAt: null, projectId },
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScheduleReviewCancelled } from "@/components/schedules/useScheduleSpendReview";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
@@ -28,7 +29,8 @@ export function RestoreMarketDialog({
     try {
       await onRestore(market);
       onClose();
-    } catch {
+    } catch (error) {
+      if (error instanceof ScheduleReviewCancelled) return;
       setError(t("restoreFailed"));
     } finally {
       setPending(false);

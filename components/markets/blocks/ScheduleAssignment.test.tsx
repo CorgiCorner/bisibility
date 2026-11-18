@@ -24,6 +24,13 @@ function props(overrides: Partial<ScheduleAssignmentProps> = {}): ScheduleAssign
 }
 
 describe("ScheduleAssignment", () => {
+  it("uses a field-sized secondary button for schedule creation", () => {
+    render(<ScheduleAssignment {...props({ onNewSchedule: vi.fn() })} />);
+    const create = screen.getByRole("button", { name: "New schedule" });
+    expect.soft(create).toHaveAttribute("data-size", "input");
+    expect.soft(create).toHaveAttribute("data-variant", "secondary");
+  });
+
   it("selects trusted schedules and offers creation next to the schedule label", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

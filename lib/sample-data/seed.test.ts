@@ -10,6 +10,7 @@ const rawSeedKey = "bsb_key_test_e2e_quickstart_0001";
 
 const mocks = vi.hoisted(() => {
   type ApiKeyRow = {
+    createdById?: string | null;
     hashedKey: string;
     lastUsedAt: Date | null;
     name: string;
@@ -45,6 +46,8 @@ const mocks = vi.hoisted(() => {
     prisma: {
       $disconnect: vi.fn(() => Promise.resolve()),
       $transaction: vi.fn(),
+      // Seeded keys belong to the project owner, whose current role caps them.
+      project: { findUniqueOrThrow: vi.fn(() => Promise.resolve({ ownerId: "user_seed_owner" })) },
       apiKey: {
         upsert: vi.fn(({ create, update, where }) => {
           const existing = apiKeys.find((row) => row.hashedKey === where.hashedKey);
@@ -229,6 +232,7 @@ describe("database seed", () => {
     expect(row?.prefix).toBe(rawSeedKey.slice(0, 21));
     expect(row?.hashedKey).toBe(hashApiKey(rawSeedKey));
     expect(verifyApiKey(rawSeedKey, row?.hashedKey ?? "")).toBe(true);
+    expect(row?.createdById).toBe("user_seed_owner");
   });
 
   it("accepts an application-generated live API key", async () => {

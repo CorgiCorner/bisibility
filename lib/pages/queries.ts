@@ -4,17 +4,25 @@ import { AI_RESEARCH_PROVIDER_ID } from "@/lib/ai-research/catalog-types";
 import { getConversionSources } from "@/lib/conversions/queries";
 import { disconnectedConversionSource, resolveConversionSource } from "@/lib/conversions/selection";
 import { prisma } from "@/lib/db/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { syncPauseSelection } from "@/lib/schedules/sync-pauses";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { readSearchInsightsConnection } from "@/lib/search-insights/sync/credentials";
 import { readOrganicSessionsConnection } from "@/lib/search-insights/sync/sessions-credentials";
 import { type PageColumnFacts, projectPageColumnSources } from "./columns";
+import { PROJECT_PAGES_EXPORT_LIMIT } from "./export-csv";
 import { mapProjectPageRow, type ProjectPageListRecord } from "./list-row";
 import { type ProjectPagesQueryInput, projectPagesListQuery } from "./list-sql";
 import { canonicalProjectHost } from "./page-path";
+import { getStoredSitemapRead } from "./sitemap-read";
+import type { StoredSitemapRead } from "./sitemap-read-model";
+import { sitemapListedSql } from "./sitemap-sql";
+import { snapshotStatusCtes } from "./status-sql";
 import {
   assertProjectPagesListInput,
   emptyProjectPagesCounts,
   type ProjectPagesListInput,
+  type ProjectPagesSitemapFilterStatus,
 } from "./types";
 
 const emptyFacts: PageColumnFacts = {
@@ -35,13 +43,15 @@ const emptyFacts: PageColumnFacts = {
 async function readColumnFacts(
   projectId: string,
   properties: { ga4Property: string | null; gscProperty: string | null },
+  sitemapRead: StoredSitemapRead | null,
 ): Promise<PageColumnFacts> {
   const [facts] = await prisma.$queryRaw<PageColumnFacts[]>`
+    WITH ${snapshotStatusCtes(projectId, sitemapRead)}
     SELECT
-      (SELECT COUNT(*)::int FROM "project_page_sources" source
-        JOIN "project_pages" page ON page.id = source."pageId"
-        WHERE page."projectId" = ${projectId} AND source.source = 'sitemap'
-          AND source.detail->>'listed' = 'true') AS listed,
+      (SELECT COUNT(*)::int FROM "project_pages" page
+        LEFT JOIN "project_page_sources" source ON source."pageId" = page.id AND source.source = 'sitemap'
+        WHERE page."projectId" = ${projectId}
+          AND ${sitemapListedSql(Prisma.sql`source.detail->>'listed' = 'true'`, Prisma.sql`source."lastSeenAt"`)} IS TRUE) AS listed,
       (SELECT COUNT(*)::int FROM "url_presences"
         WHERE "projectId" = ${projectId} AND "checkedAt" IS NOT NULL) AS checked,
       (SELECT COUNT(*)::int FROM "url_presences" WHERE "projectId" = ${projectId}) AS "presenceTotal",
@@ -74,6 +84,15 @@ async function readColumnFacts(
 }
 
 export async function getProjectPagesList(projectId: string, input: ProjectPagesListInput) {
+  return readProjectPages(projectId, input);
+}
+
+/** Bounded single-query export, using exactly the list predicates and ordering. */
+export async function getProjectPagesExportList(projectId: string, input: ProjectPagesListInput) {
+  return readProjectPages(projectId, input, PROJECT_PAGES_EXPORT_LIMIT + 1);
+}
+
+async function readProjectPages(projectId: string, input: ProjectPagesListInput, limit?: number) {
   assertProjectPagesListInput(input);
   const project = await prisma.project.findFirst({
     select: { domain: true, id: true },
@@ -84,6 +103,8 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
   const host = domain ? canonicalProjectHost(domain) : null;
   if (!domain || !host) {
     return {
+      sitemapFilterStatus: input.sitemapState ? ("sitemap_not_checked" as const) : ("ok" as const),
+      sitemapChecked: false,
       conversions: disconnectedConversionSource,
       counts: emptyProjectPagesCounts,
       rows: [],
@@ -91,21 +112,24 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
     };
   }
 
-  const [search, sessionsConnection, plausible, conversionSources] = await Promise.all([
-    readSearchInsightsConnection(project.id),
-    readOrganicSessionsConnection(project.id),
-    prisma.providerConnection.findFirst({
-      select: { id: true },
-      where: {
-        enabled: true,
-        kind: "analytics",
-        projectId: project.id,
-        provider: "plausible",
-        status: "connected",
-      },
-    }),
-    getConversionSources(project.id),
-  ]);
+  const [search, sessionsConnection, plausible, conversionSources, sitemapRead] = await Promise.all(
+    [
+      readSearchInsightsConnection(project.id),
+      readOrganicSessionsConnection(project.id),
+      prisma.providerConnection.findFirst({
+        select: { id: true },
+        where: {
+          enabled: true,
+          kind: "analytics",
+          projectId: project.id,
+          provider: "plausible",
+          status: "connected",
+        },
+      }),
+      getConversionSources(project.id),
+      getStoredSitemapRead(project.id),
+    ],
+  );
   const conversions = resolveConversionSource({
     requested: input.conversionSource,
     sources: conversionSources,
@@ -119,12 +143,13 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
     coverageState: input.coverageState,
     cwv: input.cwv,
     indexGroup: input.indexGroup,
-    page: input.page,
-    pageSize: input.pageSize,
+    page: limit ? 1 : input.page,
+    pageSize: limit ?? input.pageSize,
     projectId: project.id,
     search: input.search,
     sessions: sessionsConnection.connection ? "ga4" : plausible ? "plausible" : "none",
     sitemapState: input.sitemapState,
+    sitemapRead,
     sort: input.sort,
     source: input.source,
     status: input.status,
@@ -136,10 +161,12 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
     prisma.$queryRaw<
       {
         all: number;
+        sitemapChecked: boolean;
+        sitemapComplete: boolean;
         inSnapshot: number;
         listed: number;
         newCount: number;
-        notListed: number;
+        notListed: number | null;
         removed: number;
         total: number;
       }[]
@@ -147,7 +174,14 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
     prisma.$queryRaw<ProjectPageListRecord[]>(query.rows),
   ]);
   const count = counts[0];
-  const pageIds = rows.flatMap((row) => (row.id ? [row.id] : []));
+  const sitemapFilterStatus: ProjectPagesSitemapFilterStatus =
+    input.sitemapState && !count?.sitemapChecked
+      ? "sitemap_not_checked"
+      : input.sitemapState === "not_listed" && !count?.sitemapComplete
+        ? "sitemap_incomplete"
+        : "ok";
+  const matchingRows = sitemapFilterStatus === "ok" ? rows : [];
+  const pageIds = matchingRows.flatMap((row) => (row.id ? [row.id] : []));
   const tagRows = pageIds.length
     ? await prisma.$queryRaw<{ name: string; pageId: string; tagId: string }[]>`
         SELECT page_tag."pageId" AS "pageId", tag."publicId" AS "tagId", tag.name AS name
@@ -165,41 +199,51 @@ export async function getProjectPagesList(projectId: string, input: ProjectPages
     tagsByPage.set(tag.pageId, list);
   }
   return {
+    sitemapFilterStatus,
+    sitemapComplete: count?.sitemapComplete === true,
+    sitemapChecked: count?.sitemapChecked === true,
+    sitemapReadAt: sitemapRead?.latestFetchedAt ?? sitemapRead?.fetchedAt ?? null,
+    period: { from: input.period.from.toISOString(), to: input.period.to.toISOString() },
     conversions,
     counts: {
       all: Number(count?.all ?? 0),
       inSnapshot: Number(count?.inSnapshot ?? 0),
       listed: Number(count?.listed ?? 0),
       new: Number(count?.newCount ?? 0),
-      notListed: Number(count?.notListed ?? 0),
+      notListed: count?.notListed == null ? null : Number(count.notListed),
       removed: Number(count?.removed ?? 0),
     },
-    rows: rows.map((row) => {
+    rows: matchingRows.map((row) => {
       const mapped = mapProjectPageRow(row, { domain, sessions: queryInput.sessions });
       return { ...mapped, tags: tagsByPage.get(mapped.pageId) ?? [] };
     }),
-    total: Number(count?.total ?? 0),
+    total: sitemapFilterStatus === "ok" ? Number(count?.total ?? 0) : 0,
   };
 }
 
 export async function getProjectPageSources(projectId: string) {
   const project = await prisma.project.findFirst({
-    select: { id: true, sitemapMonitoringEnabled: true },
+    select: { id: true, syncPauses: syncPauseSelection("sitemap_fetch") },
     where: { OR: [{ id: projectId }, { publicId: projectId }] },
   });
   if (!project) throw new Error("Project not found.");
-  const [search, sessions, connections] = await Promise.all([
+  const [search, sessions, connections, sitemapRead] = await Promise.all([
     readSearchInsightsConnection(project.id),
     readOrganicSessionsConnection(project.id),
     prisma.providerConnection.findMany({
       select: { enabled: true, kind: true, provider: true, status: true },
       where: { enabled: true, projectId: project.id, status: "connected" },
     }),
+    getStoredSitemapRead(project.id),
   ]);
-  const facts = await readColumnFacts(project.id, {
-    ga4Property: sessions.connection?.property ?? null,
-    gscProperty: search.connection?.property ?? null,
-  });
+  const facts = await readColumnFacts(
+    project.id,
+    {
+      ga4Property: sessions.connection?.property ?? null,
+      gscProperty: search.connection?.property ?? null,
+    },
+    sitemapRead,
+  );
   const serp = connections.some((connection) => connection.kind === "serp");
   return projectPageColumnSources(facts, {
     aiConnected: connections.some((connection) => connection.provider === AI_RESEARCH_PROVIDER_ID),
@@ -208,6 +252,7 @@ export async function getProjectPageSources(projectId: string) {
     pagespeedConnected: connections.some((connection) => connection.provider === "pagespeed"),
     plausibleConnected: connections.some((connection) => connection.provider === "plausible"),
     rankConnected: serp || facts.keywords > 0,
-    sitemapEnabled: project.sitemapMonitoringEnabled,
+    sitemapEnabled: project.syncPauses.length === 0,
+    sitemapChecked: sitemapRead !== null && sitemapRead.checked !== false,
   });
 }

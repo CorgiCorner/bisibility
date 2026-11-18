@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Sheet } from "@/components/ui/Sheet";
 import {
@@ -18,11 +19,15 @@ export function ProjectPagesFilters({
   onQuery,
   open,
   query,
+  sitemapChecked,
+  sitemapComplete = true,
 }: Readonly<{
   onClose: () => void;
   onQuery: (query: ProjectPagesQuery) => void;
   open: boolean;
   query: ProjectPagesQuery;
+  sitemapChecked: boolean;
+  sitemapComplete?: boolean;
 }>) {
   const t = useTranslations("projectPages");
   function apply(patch: Partial<ProjectPagesQuery>) {
@@ -33,15 +38,27 @@ export function ProjectPagesFilters({
       <div className="flex flex-col gap-4">
         <FilterSelect
           label={t("filters.sitemap")}
+          disabled={!sitemapChecked}
+          caption={
+            !sitemapChecked
+              ? t("sitemapState.notCheckedHint")
+              : !sitemapComplete
+                ? t("sitemapState.freshnessHint")
+                : undefined
+          }
           onChange={(value) =>
             apply({ sitemap: value === ANY ? undefined : (value as ProjectPagesQuery["sitemap"]) })
           }
           options={[
             { label: t("filters.any"), value: ANY },
             { label: t("sitemapState.listed"), value: "listed" },
-            { label: t("sitemapState.notListed"), value: "not_listed" },
+            { label: t("sitemapState.notListed"), value: "not_listed", disabled: !sitemapComplete },
           ]}
-          value={query.sitemap ?? ANY}
+          value={
+            sitemapChecked && (query.sitemap !== "not_listed" || sitemapComplete)
+              ? (query.sitemap ?? ANY)
+              : ANY
+          }
         />
         <FilterSelect
           label={t("filters.index")}
@@ -113,26 +130,30 @@ export function ProjectPagesFilters({
 }
 
 function FilterSelect({
+  disabled,
+  caption,
   label,
   onChange,
   options,
   value,
 }: Readonly<{
+  disabled?: boolean;
+  caption?: string;
   label: string;
   onChange: (value: string) => void;
-  options: readonly { label: string; value: string }[];
+  options: readonly { label: string; value: string; disabled?: boolean }[];
   value: string;
 }>) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-ui-caption text-fg-muted">{label}</span>
+    <FormField label={label} caption={caption}>
       <MenuSelect
         ariaLabel={label}
+        disabled={disabled}
         onChange={onChange}
         options={options}
         size="input"
         value={value}
       />
-    </div>
+    </FormField>
   );
 }

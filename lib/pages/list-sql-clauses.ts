@@ -1,6 +1,7 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { canonicalPagePathSql } from "./page-path";
-import type { ProjectPageCwvFilter } from "./types";
+import { sitemapListedSql } from "./sitemap-sql";
+import type { ProjectPageCwvFilter, ProjectPageSourceKind } from "./types";
 
 type SessionsInput = {
   from: Date;
@@ -59,4 +60,40 @@ export function sessionsCte(input: SessionsInput) {
     )`;
   }
   return Prisma.sql`sessions AS (SELECT NULL::text AS path, NULL::int AS value WHERE false)`;
+}
+
+export function sitemapPredicate(
+  state: "listed" | "not_listed" | undefined,
+  listed = sitemapListedSql(),
+) {
+  if (state === "listed") return Prisma.sql`${listed} IS TRUE`;
+  if (state === "not_listed")
+    return Prisma.sql`((SELECT complete FROM sitemap_coverage) AND ${listed} IS FALSE)`;
+  return Prisma.sql`TRUE`;
+}
+
+export function searchFilter(search: string | undefined) {
+  const value = search?.trim();
+  if (!value) return Prisma.sql`TRUE`;
+  const pattern = `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+  return Prisma.sql`page.path ILIKE ${pattern} ESCAPE '\\'`;
+}
+
+export function sourceFilter(source: ProjectPageSourceKind | undefined) {
+  if (!source) return Prisma.empty;
+  return Prisma.sql`AND EXISTS (
+    SELECT 1 FROM "project_page_sources" source_filter
+    WHERE source_filter."pageId" = page.id
+      AND source_filter.source = ${source}::"ProjectPageSourceKind"
+  )`;
+}
+
+export function tagFilter(tagId: string | undefined) {
+  if (!tagId) return Prisma.empty;
+  return Prisma.sql`AND EXISTS (
+    SELECT 1 FROM "page_tags" page_tag
+    JOIN "tags" tag_row ON tag_row.id = page_tag."tagId"
+    WHERE page_tag."pageId" = page.id
+      AND (tag_row.id = ${tagId} OR tag_row."publicId" = ${tagId})
+  )`;
 }

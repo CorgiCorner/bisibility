@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => {
       sitemapSnapshot: {
         create: vi.fn(),
         deleteMany: vi.fn(),
+        updateMany: vi.fn(),
         findFirst: vi.fn(),
       },
     },
@@ -61,6 +62,49 @@ describe("sitemap sync", () => {
     );
   });
 
+  it.each([
+    ["stable complete read", true, false],
+    ["completeness recovery", false, true],
+  ] as const)("advances only the matching unchanged %s", async (_name, complete, rewrite) => {
+    const urls = ["https://example.com/a"];
+    const { contentHash } = await import("./snapshot");
+    vi.mocked(fetch).mockImplementation(async () => xmlResponse(urlset(urls)));
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      id: "project_1",
+      domain: "example.com",
+      syncPauses: [],
+    });
+    mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
+      id: "snapshot_old",
+      complete,
+      contentHash: contentHash(urls.map((loc) => ({ loc }))),
+      entries: urls.map((loc) => ({ loc })),
+    });
+    await expect(syncSitemapForProject("project_1", now)).resolves.toMatchObject({
+      status: "unchanged",
+    });
+    expect(mocks.prisma.sitemapSnapshot.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "snapshot_old",
+        projectId: "project_1",
+        contentHash: contentHash(urls.map((loc) => ({ loc }))),
+        fetchedAt: { lt: now },
+      },
+      data: {
+        fetchedAt: now,
+        complete: true,
+        urlCount: 1,
+        ...(rewrite ? { entries: urls.map((loc) => ({ loc })) } : {}),
+      },
+    });
+    expect(mocks.prisma.sitemapSnapshot.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { projectId: "project_1", sitemapUrl: "https://example.com/sitemap.xml" },
+      }),
+    );
+    expect(mocks.emitSignal).not.toHaveBeenCalled();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -68,8 +112,12 @@ describe("sitemap sync", () => {
 
   it("stores a baseline snapshot without emitting a signal", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(xmlResponse(urlset(["https://example.com/"])));
-    mocks.prisma.project.findFirst.mockResolvedValue({ domain: "example.com", id: "project_1" });
+    fetchMock.mockImplementation(async () => xmlResponse(urlset(["https://example.com/"])));
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [],
+    });
     mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue(null);
 
     await expect(syncSitemapForProject("project_1", now)).resolves.toMatchObject({
@@ -104,8 +152,12 @@ describe("sitemap sync", () => {
         <url><loc>https://example.com/common</loc><lastmod>2026-07-04</lastmod></url>
       </urlset>
     `;
-    vi.mocked(fetch).mockResolvedValue(xmlResponse(currentXml));
-    mocks.prisma.project.findFirst.mockResolvedValue({ domain: "example.com", id: "project_1" });
+    vi.mocked(fetch).mockImplementation(async () => xmlResponse(currentXml));
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [],
+    });
     mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
       contentHash: "previous-hash",
       entries: [
@@ -147,8 +199,14 @@ describe("sitemap sync", () => {
   });
 
   it("fails instead of emitting when the response is not a sitemap document", async () => {
-    vi.mocked(fetch).mockResolvedValue(xmlResponse("<html><body>Not found</body></html>"));
-    mocks.prisma.project.findFirst.mockResolvedValue({ domain: "example.com", id: "project_1" });
+    vi.mocked(fetch).mockImplementation(async () =>
+      xmlResponse("<html><body>Not found</body></html>"),
+    );
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [],
+    });
 
     await expect(syncSitemapForProject("project_1", now)).rejects.toThrow(
       "not a urlset or sitemapindex",
@@ -157,11 +215,141 @@ describe("sitemap sync", () => {
     expect(mocks.prisma.sitemapSnapshot.create).not.toHaveBeenCalled();
   });
 
+  it.each([404, 500])("does not record a failed HTTP %s as a read", async (status) => {
+    vi.mocked(fetch).mockImplementation(async () => xmlResponse("<urlset/>", status));
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [],
+    });
+    await expect(syncSitemapForProject("project_1", now)).rejects.toThrow();
+    expect(mocks.prisma.sitemapSnapshot.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.sitemapSnapshot.updateMany).not.toHaveBeenCalled();
+  });
+  it.each(["entry cap", "child cap", "nested index"])(
+    "continues monitoring a truncated %s",
+    async (kind) => {
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const index = (urls: string[]) =>
+        `<sitemapindex>${urls.map((url) => `<sitemap><loc>${url}</loc></sitemap>`).join("")}</sitemapindex>`;
+      if (kind === "entry cap")
+        vi.mocked(fetch).mockImplementation(async () =>
+          xmlResponse(urlset(Array.from({ length: 5001 }, (_, i) => `https://example.com/${i}`))),
+        );
+      else
+        vi.mocked(fetch)
+          .mockResolvedValueOnce(
+            xmlResponse(
+              index(
+                Array.from(
+                  { length: kind === "child cap" ? 6 : 1 },
+                  (_, i) => `https://example.com/${i}.xml`,
+                ),
+              ),
+            ),
+          )
+          .mockImplementation(async () =>
+            xmlResponse(
+              kind === "nested index"
+                ? index(["https://example.com/grandchild.xml"])
+                : urlset(["https://example.com/a"]),
+            ),
+          );
+      mocks.prisma.project.findFirst.mockResolvedValue({
+        domain: "example.com",
+        id: "project_1",
+        syncPauses: [],
+      });
+      mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
+        id: "old",
+        contentHash: "old",
+        entries: [{ loc: "https://example.com/old" }],
+      });
+      const result = await syncSitemapForProject("project_1", now);
+      expect(result).toMatchObject({ status: "changed", truncated: true });
+      const stored = mocks.tx.sitemapSnapshot.create.mock.calls[0]?.[0].data;
+      expect(stored.complete).toBe(false);
+      expect(stored.urlCount).toBe(kind === "entry cap" ? 5001 : kind === "child cap" ? 5 : 0);
+      expect(mocks.emitSignal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            truncated: true,
+            urlCount: stored.urlCount,
+            storedUrlCount: stored.entries.length,
+          }),
+        }),
+        mocks.tx,
+      );
+      const { normalizeStoredSitemapReads, sitemapMembershipForPage } = await import(
+        "@/lib/pages/sitemap-read-model"
+      );
+      const read = normalizeStoredSitemapReads([stored], "example.com", true, now);
+      expect(
+        sitemapMembershipForPage(read, "example.com", "/unobserved", new Date("2026-01-01")),
+      ).toBeNull();
+    },
+  );
+  it.each([true, false])(
+    "updates completeness atomically on unchanged content: %s",
+    async (complete) => {
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      vi.mocked(fetch).mockImplementation(async () =>
+        xmlResponse(
+          complete
+            ? "<urlset/>"
+            : "<sitemapindex><sitemap><loc>https://example.com/child.xml</loc></sitemap></sitemapindex>",
+        ),
+      );
+      const { contentHash } = await import("./snapshot");
+      mocks.prisma.project.findFirst.mockResolvedValue({
+        domain: "example.com",
+        id: "project_1",
+        syncPauses: [],
+      });
+      mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
+        id: "old",
+        complete: !complete,
+        contentHash: contentHash([]),
+        entries: [],
+      });
+      await expect(syncSitemapForProject("project_1", now)).resolves.toMatchObject({
+        status: "unchanged",
+        truncated: !complete,
+      });
+      expect(mocks.prisma.sitemapSnapshot.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "old",
+          projectId: "project_1",
+          contentHash: contentHash([]),
+          fetchedAt: { lt: now },
+        },
+        data: { fetchedAt: now, complete, urlCount: 0, entries: [] },
+      });
+      expect(mocks.emitSignal).not.toHaveBeenCalled();
+    },
+  );
+
+  it("skips the HTTP provider when a sitemap pause row exists", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [{ kind: "sitemap_fetch" }],
+    });
+    vi.mocked(fetch).mockImplementation(() => {
+      throw new Error("Paused sitemap reached the provider");
+    });
+    await expect(syncSitemapForProject("project_1", now)).resolves.toMatchObject({
+      reason: "monitor_disabled",
+      status: "skipped",
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("skips a project whose sitemap monitor is disabled", async () => {
     mocks.prisma.project.findFirst.mockResolvedValue({
       domain: "example.com",
       id: "project_1",
-      sitemapMonitoringEnabled: false,
+      syncPauses: [{ kind: "sitemap_fetch" }],
     });
 
     await expect(syncSitemapForProject("project_1", now)).resolves.toEqual({
@@ -174,7 +362,11 @@ describe("sitemap sync", () => {
 
   it("fails when the response declares or exceeds the size cap", async () => {
     const fetchMock = vi.mocked(fetch);
-    mocks.prisma.project.findFirst.mockResolvedValue({ domain: "example.com", id: "project_1" });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      domain: "example.com",
+      id: "project_1",
+      syncPauses: [],
+    });
 
     fetchMock.mockResolvedValueOnce(
       xmlResponse(urlset(["https://example.com/"]), 200, 11 * 1024 * 1024),
@@ -194,8 +386,8 @@ describe("sitemap sync", () => {
       .mockResolvedValueOnce(xmlResponse(urlset(["https://two.example.com/"])));
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
     mocks.prisma.project.findFirst
-      .mockResolvedValueOnce({ domain: "one.example.com", id: "project_1" })
-      .mockResolvedValueOnce({ domain: "two.example.com", id: "project_2" });
+      .mockResolvedValueOnce({ domain: "one.example.com", id: "project_1", syncPauses: [] })
+      .mockResolvedValueOnce({ domain: "two.example.com", id: "project_2", syncPauses: [] });
     mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue(null);
 
     await expect(syncSitemapForAllProjects(now)).resolves.toMatchObject({
@@ -218,10 +410,32 @@ describe("sitemap sync", () => {
 
     expect(mocks.prisma.project.findMany).toHaveBeenCalledWith({
       select: { id: true },
-      where: { domain: { not: "" }, sitemapMonitoringEnabled: true },
+      where: { domain: { not: "" }, syncPauses: { none: { kind: "sitemap_fetch" } } },
     });
 
     const where = mocks.prisma.sitemapSnapshot.deleteMany.mock.calls[0]?.[0]?.where;
     expect(where.fetchedAt.lt.toISOString()).toBe("2026-04-05T04:45:00.000Z");
+  });
+  it("keeps observed counts and stored duplicate entries consistent on an unchanged read", async () => {
+    const entries = [{ loc: "https://example.com/a" }, { loc: "https://example.com/a" }];
+    const { contentHash } = await import("./snapshot");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => xmlResponse(urlset(entries.map((entry) => entry.loc)))),
+    );
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      id: "project_1",
+      domain: "example.com",
+      syncPauses: [],
+    });
+    mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
+      id: "old",
+      entries: entries.slice(0, 1),
+      contentHash: contentHash(entries),
+    });
+    await syncSitemapForProject("project_1", now);
+    expect(mocks.prisma.sitemapSnapshot.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: { fetchedAt: now, complete: true, urlCount: 2, entries } }),
+    );
   });
 });

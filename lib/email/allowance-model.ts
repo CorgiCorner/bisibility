@@ -13,4 +13,7 @@ export type InstanceEmailAllowance = {
   scope: "installation";
   status: "available" | "unavailable" | "not_configured" | "disabled";
   categories: EmailAllowanceCategory[];
+  /** Notifications are disabled independently of the account-access transport status. */
+  notificationsDisabled?: boolean;
+  notificationPolicyMessage?: string;
 };

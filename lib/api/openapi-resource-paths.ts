@@ -15,6 +15,25 @@ type Bearer = (
 type Ref = (name: string) => object;
 type List = (schema: object) => object;
 
+/** A cursor page. Pages of a component are named `<Component>Page` for SDK generators. */
+export function resourceList(schema: object) {
+  const meta = {
+    properties: { next_cursor: { type: ["string", "null"] } },
+    required: ["next_cursor"],
+    type: "object",
+    ...sdkName("PageMeta"),
+  };
+  const item = "$ref" in schema ? String(schema.$ref).split("/").pop() : undefined;
+  return {
+    properties: {
+      data: { items: schema, type: "array" },
+      meta,
+    },
+    required: ["data", "meta"],
+    type: "object",
+    ...(item ? sdkName(`${item}Page`) : {}),
+  };
+}
 export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
   const { bearer, list, ref } = input;
   const ruleParameters = [

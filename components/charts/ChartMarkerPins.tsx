@@ -21,7 +21,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useId, useRef, useState } from "react";
 import { ReferenceArea, usePlotArea, useXAxisScale } from "recharts";
 import { ChartMarkerPinBody, chartMarkerKindLabel } from "./ChartMarkerLegend";
-import "./ChartMarkerPins.module.css";
+import styles from "./ChartMarkerPins.module.css";
 import type { ChartMarkerBand, ChartMarkerPin } from "./chart-marker-layout";
 import { CHART_MARKER_PIN_RADIUS, chartMarkerPinCenter } from "./chart-marker-layout";
 
@@ -170,6 +170,7 @@ export function PinControl({
           className={cn(
             "grid size-full select-none place-items-center rounded-full border-0 bg-transparent p-0 text-current outline-none focus-visible:ring-2 focus-visible:ring-accent-solid focus-visible:ring-offset-2 focus-visible:ring-offset-bg-elev",
             "annotation-pin-control",
+            styles.pinControl,
           )}
           href={href}
           ref={(node) => {

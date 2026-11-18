@@ -7,7 +7,8 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ConfirmModal, type ConfirmModalProps } from "./ConfirmModal";
+import { ConfirmModal, type ConfirmModalProps, confirmCopy } from "./ConfirmModal";
+import { CONFIRM } from "./confirm-copy";
 import { ToastProvider } from "./Toast";
 
 afterEach(() => {
@@ -26,6 +27,28 @@ function renderConfirmModal(kind: ConfirmModalProps["kind"], onConfirm = vi.fn()
   );
   return onConfirm;
 }
+
+it("resolves only the shown confirmation kind from its previous catalog keys", () => {
+  for (const kind of Object.keys(CONFIRM) as ConfirmModalProps["kind"][]) {
+    const seen: string[] = [];
+    const t = ((key: string) => {
+      seen.push(key);
+      return key;
+    }) as Parameters<typeof confirmCopy>[1];
+    expect(confirmCopy(kind, t)).toEqual({
+      body: `${kind}Body`,
+      dangerLabel: `${kind}DangerLabel`,
+      title: `${kind}Title`,
+      toastMessage: `${kind}ToastMessage`,
+    });
+    expect(seen).toEqual([
+      `${kind}Body`,
+      `${kind}DangerLabel`,
+      `${kind}Title`,
+      `${kind}ToastMessage`,
+    ]);
+  }
+});
 
 describe("instance-admin confirmation copy", () => {
   it("documents account state and rolling-spend consequences", () => {

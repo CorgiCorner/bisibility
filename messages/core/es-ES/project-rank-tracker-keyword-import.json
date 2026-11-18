@@ -488,7 +488,6 @@
           "currentUnavailable": "La programación actual no está disponible. Actualiza la página e inténtalo de nuevo.",
           "ariaLabel": "Programación",
           "current": "Actual",
-          "default": "Predeterminada",
           "alreadyAssigned": "{count, plural, one {Este objetivo ya está aquí.} other {Los # objetivos ya están aquí.}}",
           "moveFrom": "{count, plural, one {Este objetivo se mueve} other {Los # objetivos se mueven}} desde {name}.",
           "assignTo": "Asigna {count, plural, one {este objetivo} other {estos # objetivos}} a esta programación.",

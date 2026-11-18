@@ -110,10 +110,7 @@ function AgentReportsStory({
           />
         </AgentReportDetailFrame>
       ) : view === "detail-loading" ? (
-        <AgentReportDetailLoading
-          backLabel={messages.agentWorkspace.back}
-          membersOnlyLabel={messages.agentWorkspace.membersOnly}
-        />
+        <AgentReportDetailLoading backLabel={messages.agentWorkspace.back} />
       ) : view === "loading" ? (
         <AgentReportsLoading
           description={messages.agentWorkspace.reportsDescription}

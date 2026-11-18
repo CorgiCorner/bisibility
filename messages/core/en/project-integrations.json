@@ -16,9 +16,12 @@
       "analyticsTitle": "Analytics sources",
       "analyticsDescription": "Connect owned-data sources such as Google Search Console or Google Analytics 4 to add traffic and query performance context. Analytics sources are not used to determine rank positions.",
       "enrichmentTitle": "SEO enrichment",
-      "enrichmentDescription": "Track your domain authority with one free Domain Rating check per day."
+      "enrichmentDescription": "Track your domain authority with one free Domain Rating check per day.",
+      "modelTitle": "Model providers",
+      "modelDescription": "Connect your own model provider keys. Billed by your provider."
     },
     "drawer": {
+      "ahrefsSyncSchedule": "Domain Rating is checked once a day. You can pause it in Schedules.",
       "oauthTitleCloud": "Sign in with Google, read-only. Tokens are stored encrypted in your workspace.",
       "oauthTitleSelfHost": "Sign in with Google, read-only. Tokens are stored encrypted in your instance.",
       "keyTitle": "Use your own provider account. Credentials are stored encrypted in your instance.",
@@ -68,6 +71,7 @@
       "connectionSavedTraffic": "{provider} connection saved. Traffic sync is queued."
     },
     "oauth": {
+      "gscSyncSchedule": "Search Console imports and page indexing checks run daily when enabled. You can pause them in Schedules.",
       "loadPropertiesError": "Properties could not be loaded. Try again or reconnect the account.",
       "propertySelectionUnavailable": "Property selection is unavailable.",
       "reconnectToChangeProperty": "Reconnect the Google account to change its property.",

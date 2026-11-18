@@ -1,9 +1,14 @@
 import { integrationCategories } from "@/components/integrations/integrations-fixtures";
 import { ProviderCardHeader } from "@/components/integrations/ProviderCardHeader";
 import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import type { ConnectionRecoveryView } from "@/lib/integrations/provider-recovery/types";
+import type {
+  AttentionState,
+  ConnectionRecoveryView,
+} from "@/lib/integrations/provider-recovery/types";
+import messages from "@/messages/core/en/project-integrations.json";
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ProviderAttentionNotice } from "./ProviderAttentionNotice";
 import { ProviderRecovery } from "./ProviderRecovery";
 
 vi.mock("@/lib/actions/provider-recovery", () => ({
@@ -118,3 +123,38 @@ describe("provider account recovery", () => {
     expect(screen.getByText("2 earlier requests need accounting review")).toBeVisible();
   });
 });
+
+const attentionCopy = {
+  billing: ["billingHeading", "billingDescription"],
+  checking: ["checkingHeading", "checkingDescription"],
+  ready: ["readyHeading", "readyDescription"],
+  review: ["reviewHeading", "reviewDescription"],
+  internal: ["internalHeading", "internalDescription"],
+} as const satisfies Record<AttentionState, readonly [string, string]>;
+
+it.each(Object.entries(attentionCopy))(
+  "retains the %s attention copy",
+  (state, [heading, description]) => {
+    const copy = messages.projectIntegrations.recovery;
+    const noticeProps = {
+      state: state as AttentionState,
+      canManage: true,
+      onCheck: vi.fn(),
+      onViewChecks: vi.fn(),
+      onDismiss: vi.fn(),
+    };
+    const view = render(<ProviderAttentionNotice {...noticeProps} />);
+    expect(screen.getByRole("heading")).toHaveTextContent(
+      copy[heading].replace("{provider}", "").replace(/\s+/g, " ").trim(),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(copy[description]);
+    view.rerender(
+      <ProviderAttentionNotice
+        {...noticeProps}
+        copy={{ heading: "Supplied heading", description: "Supplied description" }}
+      />,
+    );
+    expect(screen.getByRole("heading")).toHaveTextContent("Supplied heading");
+    expect(screen.getByRole("status")).toHaveTextContent("Supplied description");
+  },
+);

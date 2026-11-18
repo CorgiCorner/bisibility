@@ -29,7 +29,10 @@ vi.mock("@/lib/api/idempotency", () => ({
   withIdempotency: vi.fn((_input, execute) => execute()),
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/registry", () => ({ getSerpProvider: mocks.getProvider }));
+vi.mock("@/lib/providers/registry", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/registry")>()),
+  getSerpProvider: mocks.getProvider,
+}));
 vi.mock("@/lib/provider-lookups/paid-call", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/provider-lookups/paid-call")>()),
   paidProviderCall: mocks.paidCall,
@@ -67,6 +70,7 @@ describe("MCP estimate tools with read-scope access", () => {
     mocks.auth.mockResolvedValue({
       apiKey: { id: "key_1", projectId: project.id, scopes: ["read"] },
       kind: "project_key",
+      creatorRole: "owner",
       project,
     });
     mocks.prisma.project.findFirst.mockResolvedValue(project);

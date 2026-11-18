@@ -118,3 +118,26 @@ describe("source-aware provider key actions", () => {
     expect(screen.queryByRole("button", { name: /Manage key|Actions for/ })).toBeNull();
   });
 });
+
+it.each([false, true])(
+  "unavailable model keeps only stored-connection removal (stored=%s)",
+  (stored) => {
+    render(
+      card({
+        ...base,
+        id: "openai",
+        name: "OpenAI",
+        kind: "model",
+        status: "planned",
+        secondaryAction: undefined,
+        connectionId: stored ? base.connectionId : undefined,
+      }),
+    );
+    expect(screen.queryByRole("button", { name: /^(Connect|Manage|Reconnect)$/ })).toBeNull();
+    if (stored) {
+      fireEvent.click(screen.getByRole("button", { name: "Actions for OpenAI" }));
+      expect(screen.getByRole("menuitem", { name: "Disconnect" })).toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: "Test" })).toBeNull();
+    } else expect(screen.queryByRole("button", { name: "Actions for OpenAI" })).toBeNull();
+  },
+);

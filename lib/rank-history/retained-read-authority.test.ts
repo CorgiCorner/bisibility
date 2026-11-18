@@ -21,7 +21,12 @@ function database() {
     apiKey: {
       findFirst: vi
         .fn<RetainedCredentialReadPort["apiKey"]["findFirst"]>()
-        .mockResolvedValue(valid),
+        .mockResolvedValue({ ...valid, createdById: "creator" }),
+    },
+    membership: {
+      findUnique: vi
+        .fn<RetainedCredentialReadPort["membership"]["findUnique"]>()
+        .mockResolvedValue({ role: "admin" }),
     },
     personalAccessToken: {
       findFirst: vi
@@ -63,7 +68,7 @@ describe("retained project read credentials", () => {
     expect(scope).toMatchObject({ actor: { id: "key-db" }, grant: { role: "admin" } });
     expect(db.apiKey.findFirst).toHaveBeenCalledWith({
       where: { id: "key-db", projectId: project.id },
-      select: { revokedAt: true, expiresAt: true, scopes: true },
+      select: { revokedAt: true, expiresAt: true, scopes: true, createdById: true },
     });
     expect(db.$queryRaw).not.toHaveBeenCalled();
   });
@@ -71,7 +76,12 @@ describe("retained project read credentials", () => {
     for (const tier of ["read", "write", "admin"]) {
       const db = database(),
         binding = authority("project_key");
-      db.apiKey.findFirst.mockResolvedValue({ revokedAt: null, expiresAt: null, scopes: [tier] });
+      db.apiKey.findFirst.mockResolvedValue({
+        revokedAt: null,
+        expiresAt: null,
+        scopes: [tier],
+        createdById: "creator",
+      });
       await expect(
         authorizeRetainedProjectRead(
           db,
@@ -109,6 +119,14 @@ describe("retained project read credentials", () => {
         );
     }
   });
+  it("refuses a key whose creator left the project", async () => {
+    const db = database(),
+      binding = authority("project_key");
+    db.membership.findUnique.mockResolvedValue(null);
+    await expect(
+      authorizeRetainedProjectRead(db, binding, binding.credential.actor, project, "entity_match"),
+    ).rejects.toThrow();
+  });
   it("refuses revoked, expired, missing and ungranted keys/PATs", async () => {
     for (const kind of ["project_key", "personal_token"] as const) {
       for (const state of [
@@ -119,7 +137,8 @@ describe("retained project read credentials", () => {
       ]) {
         const db = database(),
           binding = authority(kind);
-        if (kind === "project_key") db.apiKey.findFirst.mockResolvedValue(state);
+        if (kind === "project_key")
+          db.apiKey.findFirst.mockResolvedValue(state && { ...state, createdById: "creator" });
         else db.personalAccessToken.findFirst.mockResolvedValue(state);
         await expect(
           authorizeRetainedProjectRead(

@@ -100,6 +100,7 @@ beforeEach(() => {
       scopes: ["read"],
     },
     kind: "project_key",
+    creatorRole: "owner",
     project: {
       createdAt,
       domain: "example.com",

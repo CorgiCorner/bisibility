@@ -313,7 +313,7 @@
         "markets": "Gestiona las ubicaciones, los valores por defecto de las palabras clave y el ciclo de vida de los mercados.",
         "preferences": "Tema y preferencias personales.",
         "runs": "Comprobaciones de posición, seguimiento de prompts e importaciones de Search Console de este proyecto.",
-        "pages": "Cada URL del proyecto, una fila por URL.",
+        "pages": "URLs conocidas del proyecto, una por fila.",
         "searchConsole": "Lo que Google ha comunicado, lo que ha ocultado y lo que tú conservas.",
         "security": "Contraseña, sesiones y protección de la cuenta.",
         "timeline": "Tus notas, más las actualizaciones de Google, los despliegues y los cambios de contenido y del mapa del sitio.",

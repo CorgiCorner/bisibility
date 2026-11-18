@@ -154,8 +154,6 @@ it("renders the extension overview in place of the provider card and usage summa
   });
   mocks.budgetExtension.mockResolvedValueOnce({
     content: <p>Account cap notice</p>,
-    credits: { providers: [], walletBalanceCents: null },
-    hostedBudgetLabels: { title: "Credits", description: "Credits budgets" },
     overview: <section>Usage overview</section>,
   } as never);
   const html = renderToStaticMarkup(

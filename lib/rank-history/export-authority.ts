@@ -1,4 +1,5 @@
 import "server-only";
+import { liveApiKeyScopes } from "@/lib/api/key-creator";
 import { grantedApiScopes, hasApiScope, parseStoredApiScopes } from "@/lib/api/scope-policy";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import type { RankReportContext } from "@/lib/rank-reports/access";
@@ -47,9 +48,16 @@ export async function assertHistoryExportCredential(
     if (credential.kind !== "project_key") return deny();
     const key = await tx.apiKey.findFirst({
       where: { id: credential.id, projectId: project.id },
-      select: { revokedAt: true, expiresAt: true, scopes: true },
+      select: { revokedAt: true, expiresAt: true, scopes: true, createdById: true },
     });
-    if (!key || key.revokedAt || (key.expiresAt && key.expiresAt <= now) || !canRead(key.scopes))
+    const scopes = await liveApiKeyScopes(tx, key && { ...key, projectId: project.id }, now);
+    if (
+      !key ||
+      key.revokedAt ||
+      (key.expiresAt && key.expiresAt <= now) ||
+      !scopes ||
+      !canRead(scopes)
+    )
       deny();
     return;
   }

@@ -1,7 +1,78 @@
 import type { CoreMessages } from "@/i18n/core-messages.generated";
 import type { ItemStatus, RunOutcome, RunStatus } from "@/lib/rank-check/runs/contract";
 import { type RankRunStatusKey, rankRunStatusKey } from "@/lib/runs/run-status-vocabulary";
+import type { useTranslations } from "next-intl";
 import type { StatusChipTone } from "./StatusChip";
+
+type StatusMessageKey = keyof CoreMessages["shared"]["controls"]["status"];
+type StatusTranslator = ReturnType<typeof useTranslations<"shared.controls.status">>;
+
+export function statusMessage(messageKey: StatusMessageKey, t: StatusTranslator) {
+  switch (messageKey) {
+    case "blocked":
+      return t("blocked");
+    case "cancelled":
+      return t("cancelled");
+    case "cancelling":
+      return t("cancelling");
+    case "completed":
+      return t("completed");
+    case "connected":
+      return t("connected");
+    case "create":
+      return t("create");
+    case "deferred":
+      return t("deferred");
+    case "delete":
+      return t("delete");
+    case "disabled":
+      return t("disabled");
+    case "export":
+      return t("export");
+    case "failed":
+      return t("failed");
+    case "fallback":
+      return t("fallback");
+    case "import":
+      return t("import");
+    case "login":
+      return t("login");
+    case "matches":
+      return t("matches");
+    case "needsReauth":
+      return t("needsReauth");
+    case "notConfirmed":
+      return t("notConfirmed");
+    case "optional":
+      return t("optional");
+    case "partial":
+      return t("partial");
+    case "planned":
+      return t("planned");
+    case "primary":
+      return t("primary");
+    case "queued":
+      return t("queued");
+    case "ready":
+      return t("ready");
+    case "running":
+      return t("running");
+    case "skipped":
+      return t("skipped");
+    case "succeeded":
+      return t("succeeded");
+    case "success":
+      return t("success");
+    case "update":
+      return t("update");
+    case "wrongUrl":
+      return t("wrongUrl");
+    default: {
+      const unreachable: never = messageKey;
+      return unreachable;
+    }
+  }
+}
 
 export type StatusChipPresentation = {
   label: string;

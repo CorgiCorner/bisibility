@@ -4,6 +4,7 @@ import {
   type PublicIdPrefix,
 } from "@/lib/db/public-id-resources";
 import { ApiInputError } from "./errors";
+import { modelPlaygroundRunIdSchema } from "./model-playground-schemas";
 
 function label(prefix: PublicIdPrefix) {
   return prefix === "prj" ? "project" : "resource";
@@ -54,6 +55,14 @@ export function requireApiPathPublicIds(path: string[]) {
   const [first, second, third, fourth, fifth] = path;
   if (first === "projects" && second) {
     requireApiPublicId(second, "prj");
+    if (
+      third === "model-playground" &&
+      fourth === "runs" &&
+      fifth &&
+      fifth !== "preview" &&
+      fifth !== "estimate"
+    )
+      modelPlaygroundRunIdSchema.parse(fifth);
     if (third === "prompt-tracker" && fifth && fifth !== "preview") {
       const prefixes = { topics: "ait", prompts: "aip", schedules: "ais", runs: "air" } as const;
       const prefix = prefixes[fourth as keyof typeof prefixes];

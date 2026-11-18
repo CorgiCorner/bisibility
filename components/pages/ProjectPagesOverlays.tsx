@@ -22,6 +22,8 @@ export function ProjectPagesOverlays({
   previewRule,
   projectId,
   query,
+  sitemapChecked,
+  sitemapComplete = true,
   setPasteOpen,
   sitemaps,
   tagOptions,
@@ -39,6 +41,8 @@ export function ProjectPagesOverlays({
   previewRule: (draft: PageTagDraft) => Promise<PageTagPreview>;
   projectId: string;
   query: ProjectPagesQuery;
+  sitemapChecked: boolean;
+  sitemapComplete?: boolean;
   setPasteOpen: (open: boolean) => void;
   sitemaps: ProjectPageTagView["sitemaps"];
   tagOptions: ProjectPageTagView["options"];
@@ -50,6 +54,8 @@ export function ProjectPagesOverlays({
         onQuery={onQuery}
         open={filtersOpen}
         query={query}
+        sitemapChecked={sitemapChecked}
+        sitemapComplete={sitemapComplete}
       />
       <ProjectPagesPasteDialog
         onAdded={onAdded}

@@ -7,6 +7,7 @@ import { setDomainRatingTracking } from "@/lib/actions/domain-rating";
 import type { DomainRatingView } from "@/lib/domain-rating/history";
 import { domainRatingSettingsSchema } from "@/lib/domain-rating/settings";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { isScheduleActionFailure } from "@/lib/schedules/action-result";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,7 +30,11 @@ export function DomainRatingSettings({
   const submit = form.handleSubmit(async (values) => {
     setNotice(null);
     try {
-      await setDomainRatingTracking(values);
+      const saved = await setDomainRatingTracking(values);
+      if (isScheduleActionFailure(saved)) {
+        setNotice("saveError");
+        return;
+      }
       setNotice("saved");
       router.refresh();
     } catch {

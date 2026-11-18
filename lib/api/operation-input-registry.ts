@@ -14,6 +14,7 @@ import {
 import { keywordCreateBodySchema } from "./keyword-create-input";
 import { keywordListQueryAliases, keywordListQuerySchema } from "./keyword-list-query";
 import { mintTokenSchema } from "./migration-tokens";
+import { modelPlaygroundInputs } from "./model-playground-registry";
 import { preferencePatchSchema } from "./notification-prefs";
 import { promptTrackerOperationInputs } from "./operation-input-ai-tracking";
 import { noInput, type OperationInput, rawInput, zodInput } from "./operation-input-helpers";
@@ -25,6 +26,12 @@ import { connectProviderActionSchema, providerSettingsSchema } from "./provider-
 import { pushTokenRegisterSchema } from "./push-tokens";
 import { rankCheckListQuerySchema } from "./rank-check-list-query";
 import { createSavedKeywordsSchema } from "./saved-keywords";
+import {
+  publicSchedulePreviewBody,
+  scheduleCreateBody,
+  scheduleUpdateBody,
+} from "./schedule-write-input";
+import { scheduleListQuerySchema } from "./schedules-input";
 import {
   apiKeyCreateSchema,
   keywordBulkSchema,
@@ -56,6 +63,12 @@ const pageQuery = rawInput("cursor", "limit");
 const zodPage = zodInput(sharedPageQuery, { keys: "wire" });
 
 export const operationInputs = {
+  previewSchedule: { body: zodInput(publicSchedulePreviewBody, { keys: "wire" }) },
+  createSchedule: { body: zodInput(scheduleCreateBody, { keys: "wire" }) },
+  updateSchedule: { body: zodInput(scheduleUpdateBody, { keys: "wire" }) },
+  listSchedules: { query: zodInput(scheduleListQuerySchema, { keys: "wire" }) },
+  getSchedule: noInput,
+  ...modelPlaygroundInputs,
   getDomainVerification: noInput,
   issueDomainVerification: { body: zodInput(verificationInputSchema, { keys: "wire" }) },
   checkDomainVerification: noInput,
@@ -65,6 +78,7 @@ export const operationInputs = {
   addKeywords: {
     body: zodInput(keywordCreateBodySchema, {
       keys: "wire",
+      alsoReads: ["review"],
       aliases: {
         "[].schedule.cron_expression": "cronExpression",
         "[].schedule.jitter_minutes": "jitterMinutes",
@@ -172,7 +186,16 @@ export const operationInputs = {
   revokeProjectTeamInvite: noInput,
   revokeTeamInvite: noInput,
   runRankCheck: { body: zodInput(runRankCheckSchema, { keys: "wire" }) },
-  setKeywordTargetUrl: { body: zodInput(keywordPatchSchema, { keys: "wire" }) },
+  setKeywordTargetUrl: {
+    body: zodInput(keywordPatchSchema, {
+      keys: "wire",
+      aliases: {
+        "schedule.cron_expression": "cronExpression",
+        "schedule.jitter_minutes": "jitterMinutes",
+        "schedule.serp_depth": "serpDepth",
+      },
+    }),
+  },
   testProviderConnection: {
     body: zodInput(testProviderConnectionSchema, { serverKeys: providerKeys }),
   },

@@ -39,11 +39,30 @@ export function validateProviderAllocation(
   }
 }
 
+export class ProviderBudgetFundingError extends TypeError {
+  constructor() {
+    super("Model providers support own-key budgets only.");
+    this.name = "ProviderBudgetFundingError";
+  }
+}
+
+/** Native model connections have only their two provider-billed spending limits. */
+export function assertProviderBudgetFunding(
+  catalog: readonly ProviderCatalogEntry[],
+  provider: string,
+  credits: unknown,
+) {
+  if (credits !== undefined && catalog.find((entry) => entry.id === provider)?.kind === "model") {
+    throw new ProviderBudgetFundingError();
+  }
+}
+
 export function validateProviderConnectionAllocations(
   catalog: readonly ProviderCatalogEntry[],
   provider: string,
   allocations: ProviderConnectionAllocationUpdate,
 ) {
+  assertProviderBudgetFunding(catalog, provider, allocations.credits);
   if (
     allocations.app &&
     allocations.programmatic &&
@@ -66,6 +85,7 @@ export function validateCreditsAllocation(
   provider: string,
   allocation: ProviderAllocation | null,
 ) {
+  assertProviderBudgetFunding(catalog, provider, allocation);
   const entry = catalogEntry(catalog, provider);
   if (!allocation) return;
   if (entry.allocation.kind !== "billable") {

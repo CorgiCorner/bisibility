@@ -1,10 +1,20 @@
+import { LocalMonitorConflictError } from "@/lib/local-monitor-store/model";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { approveRecurringMonitor } from "./approve";
 import { policy } from "./recurring.test-fixture";
+import { approveRecurringFor } from "./service";
 
-const f = vi.hoisted(() => ({ write: vi.fn(), wake: vi.fn() }));
+const f = vi.hoisted(() => ({ intent: vi.fn(), write: vi.fn(), wake: vi.fn() }));
 vi.mock("@/lib/local-monitor-store/schedule", () => ({ setLocalMonitorScheduleIntent: f.write }));
 vi.mock("@/lib/worker-intents/realtime", () => ({ publishWorkerIntent: f.wake }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    localMonitor: {
+      findFirst: async () => ({ currentScheduleIntentId: "intent" }),
+    },
+    localMonitorScheduleIntent: { findFirst: f.intent },
+  },
+}));
 const { actorId, internalProjectId, connectionStamp, definitionHash, ...publicBody } = policy;
 const command = {
   ...publicBody,
@@ -14,6 +24,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("LOCAL_MONITOR_RECURRING_ENABLED", "true");
   vi.stubEnv("SCHEDULER_DRIVER", "worker");
+  f.intent.mockResolvedValue({ mode: "scheduled" });
   f.write.mockResolvedValue({
     receipt: { monitorId: policy.monitorId, version: 2 },
     replayed: true,
@@ -36,6 +47,26 @@ describe("whole-policy schedule request replay", () => {
       approveRecurringMonitor({ ...command, actorId: "administrator" }, { actor: { id: "actor" } }),
     ).rejects.toThrow();
     expect(f.write).not.toHaveBeenCalled();
+  });
+  it("does not pre-read the current intent and maps a store conflict", async () => {
+    f.intent.mockResolvedValue({ mode: "archived" });
+    f.write.mockRejectedValueOnce(new LocalMonitorConflictError());
+    await expect(approveRecurringFor(command, { actor: { id: "actor" } })).resolves.toEqual({
+      kind: "conflict",
+    });
+    expect(f.intent).not.toHaveBeenCalled();
+    f.write.mockResolvedValueOnce({
+      receipt: { monitorId: policy.monitorId, version: 2 },
+      replayed: false,
+    });
+    await approveRecurringMonitor(command, { actor: { id: "actor" } });
+    expect(f.write).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: "scheduled" }),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ approvalBodyHash: expect.any(String) }),
+    );
+    expect(f.intent).not.toHaveBeenCalled();
   });
   it("does not invoke approval storage while runtime is explicitly off", async () => {
     vi.stubEnv("LOCAL_MONITOR_RECURRING_ENABLED", "false");

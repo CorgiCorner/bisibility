@@ -1,4 +1,5 @@
 import { providerIdSchema } from "@/lib/schemas/provider";
+import { modelPlaygroundRunIdContract } from "./model-playground-registry";
 import { documentOperations } from "./openapi-sdk-lint.test-support";
 import {
   isJson,
@@ -7,6 +8,7 @@ import {
   resolveSchema,
   type SdkDocument,
 } from "./openapi-sdk-lint-schema.test-support";
+import { strictPublicIdUnionPrefixes } from "./openapi-sdk-schema";
 
 /**
  * Operation-level `x-bisibility-*` values: well formed, and consistent with what the operation
@@ -80,7 +82,8 @@ function at(schema: Json | undefined, path: string, document: SdkDocument) {
 function costValid(document: SdkDocument, operation: Json, cost: unknown) {
   if (!isJson(cost)) return false;
   if (cost.kind === "free") return onlyKeys(cost, ["kind"]);
-  const allowed = ["estimate", "kind", "max_cost_cents", "timing"];
+  const allowed = ["estimate", "kind", "max_cost_cents", "timing", "payer"];
+  if (cost.payer !== undefined && cost.payer !== "customer_provider") return false;
   if (cost.kind !== "paid" || !onlyKeys(cost, allowed, ["kind", "timing"])) return false;
   if (cost.timing !== "inline" && cost.timing !== "deferred") return false;
   const locate = (where: unknown, name: string) => {
@@ -157,6 +160,28 @@ function sdkValid(sdk: unknown) {
 
 const placeholderName = /^[a-z][a-z0-9_]*$/;
 
+function resolvedUnionMembers(document: SdkDocument, schema: Json) {
+  const raw = schema.oneOf ?? schema.anyOf;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(isJson)
+    .map((member) => resolveSchema(document, member))
+    .filter((member) => member.type !== "null");
+}
+
+/** A single public-ID annotation, or an explicit union of strict single-prefix patterns. */
+function declaresPublicId(document: SdkDocument, schema: Json | undefined) {
+  if (!schema) return false;
+  const union = schema["x-bisibility-union"];
+  const composite =
+    Array.isArray(schema.oneOf) ||
+    Array.isArray(schema.anyOf) ||
+    (isJson(union) && union.style === "public_id");
+  if (!composite) return Boolean(schema["x-bisibility-public-id"]);
+  if (!isJson(union) || union.style !== "public_id") return false;
+  return Boolean(strictPublicIdUnionPrefixes(resolvedUnionMembers(document, schema))?.length);
+}
+
 /**
  * A generated client builds the URL from declared path parameters only: every placeholder is a
  * snake_case name with a required path parameter, and an ID placeholder has a public-ID schema.
@@ -176,7 +201,14 @@ export function pathParameterProblems(document: SdkDocument, path: string, opera
       problems.push(`missing-path-parameter ${name} ${id}`);
     } else if (
       /(^|_)id$/.test(name) &&
-      !schema?.["x-bisibility-public-id"] &&
+      !declaresPublicId(document, schema) &&
+      !(
+        id === modelPlaygroundRunIdContract.operationId &&
+        path === modelPlaygroundRunIdContract.path &&
+        name === modelPlaygroundRunIdContract.parameter &&
+        schema?.type === "string" &&
+        schema.format === "uuid"
+      ) &&
       !(
         name === "provider_id" &&
         path.includes("/providers/{provider_id}") &&

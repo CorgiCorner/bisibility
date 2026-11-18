@@ -61,6 +61,7 @@ describe("team invite delivery", () => {
 
     expect(delivered.inviteLink).toBe("https://app.example.com/invite/raw-token");
     expect(sendEmailMock).toHaveBeenCalledExactlyOnceWith({
+      purpose: "team-invitation",
       category: "transactional",
       html: expect.stringContaining("https://app.example.com/invite/raw-token"),
       subject: "Invitation to Acme",

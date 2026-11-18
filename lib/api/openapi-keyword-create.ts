@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { keywordBulkRequest } from "./openapi-keyword-bulk";
+import { publicScheduleReviewSchema } from "./openapi-schedule-writes";
 import { closedEnum, sdkName, shorthandUnion } from "./openapi-sdk-schema";
 import { keywordCreateItemSchema } from "./schemas";
 
@@ -14,6 +15,7 @@ const keyword = {
     device: { ...properties.device, ...closedEnum("KeywordCreateDevice") },
     frequency: {
       ...properties.frequency,
+      deprecated: true,
       ...closedEnum("KeywordCreateFrequency"),
       description:
         "Explicitly join a matching project schedule. Omit frequency and schedule for Manual; schedule takes precedence.",
@@ -21,6 +23,7 @@ const keyword = {
     location: { ...properties.location, ...closedEnum("KeywordCreateLocation") },
     schedule: {
       ...keywordBulkRequest.properties.schedule,
+      deprecated: true,
       ...sdkName("KeywordCreateSchedule"),
     },
   },
@@ -40,12 +43,20 @@ export const keywordCreateRequest = {
   anyOf: [
     {
       type: "object",
-      properties: { keywords },
+      properties: {
+        keywords,
+        review: publicScheduleReviewSchema,
+        schedule_id: keywordBulkRequest.properties.schedule_id,
+      },
       required: ["keywords"],
       ...sdkName("KeywordCreateRequest"),
     },
     { type: "array", minItems: 1, maxItems: 500, items: keyword },
-    keyword,
+    {
+      ...keyword,
+      ...sdkName("KeywordSingleAddRequest"),
+      properties: { ...keyword.properties, review: publicScheduleReviewSchema },
+    },
   ],
   ...sdkName("KeywordCreateBody"),
   ...shorthandUnion("KeywordCreateRequest"),

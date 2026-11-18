@@ -1,35 +1,16 @@
 import "server-only";
 
 import { loadPagesCompare } from "./compare-read";
+import { projectPagesListInput } from "./list-input";
 import { projectPagesPeriod } from "./period";
 import { getProjectPageSources, getProjectPagesList } from "./queries";
 import { getActivePageSnapshot, loadExistingVsNew } from "./snapshot-read";
 import { syncProjectPages } from "./sync";
 import { getProjectPageTagView } from "./tag-queries";
 import type { ProjectPagesListInput } from "./types";
-import { PROJECT_PAGES_PAGE_SIZE, type ProjectPagesQuery } from "./url-state";
+import type { ProjectPagesQuery } from "./url-state";
 
-export function projectPagesListInput(
-  query: ProjectPagesQuery,
-  now = new Date(),
-): ProjectPagesListInput {
-  const period = projectPagesPeriod(query.period, now);
-  return {
-    conversionSource: query.conv,
-    coverageState: query.coverage,
-    cwv: query.cwv,
-    indexGroup: query.index,
-    page: query.page,
-    pageSize: PROJECT_PAGES_PAGE_SIZE,
-    period: { from: period.from, to: period.to },
-    search: query.search || undefined,
-    sitemapState: query.sitemap,
-    sort: { by: query.sort, dir: query.dir },
-    source: query.source,
-    status: query.status,
-    tagId: query.tag,
-  };
-}
+export { projectPagesListInput } from "./list-input";
 
 function narrowed(input: ProjectPagesListInput) {
   return Boolean(

@@ -1,8 +1,8 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { fetchPublicDocument } from "@/lib/expected-url/public-document-fetch";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { syncPauseSelection } from "@/lib/schedules/sync-pauses";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { emitSignal } from "@/lib/signals/emit";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
@@ -13,13 +13,11 @@ import {
   parseSitemapXml,
   type SitemapEntry,
 } from "./parse";
-import { contentHash, jsonEntries } from "./snapshot";
+import { contentHash, jsonEntries, SITEMAP_SNAPSHOT_RETENTION_DAYS } from "./snapshot";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 10 * 1024 * 1024;
-const RETENTION_DAYS = 90;
 const USER_AGENT = "bisibility Sitemap Sync/1.0";
-
 type ResolvedSitemap = {
   childSitemapCount: number;
   childSitemapsFetched: number;
@@ -28,7 +26,6 @@ type ResolvedSitemap = {
   truncated: boolean;
   urlCount: number;
 };
-
 export type SyncSitemapForProjectResult =
   | {
       projectId: string;
@@ -54,7 +51,6 @@ export type SyncSitemapForProjectResult =
       truncated: boolean;
       urlCount: number;
     };
-
 export type SyncSitemapForAllProjectsResult = {
   baselined: number;
   changed: number;
@@ -64,11 +60,9 @@ export type SyncSitemapForAllProjectsResult = {
   skipped: number;
   unchanged: number;
 };
-
 export function sitemapUrlForDomain(domain: string) {
   return `https://${domain}/sitemap.xml`;
 }
-
 async function fetchSitemapXml(url: string) {
   return fetchPublicDocument({
     url,
@@ -78,7 +72,6 @@ async function fetchSitemapXml(url: string) {
     timeoutMs: FETCH_TIMEOUT_MS,
   });
 }
-
 function resolveChildUrl(childUrl: string, parentUrl: string) {
   const url = new URL(childUrl, parentUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {
@@ -175,25 +168,25 @@ export async function syncSitemapForProject(
   now: Date = new Date(),
 ): Promise<SyncSitemapForProjectResult> {
   const project = await prisma.project.findFirst({
-    select: { domain: true, id: true, sitemapMonitoringEnabled: true },
+    select: { domain: true, id: true, syncPauses: syncPauseSelection("sitemap_fetch") },
     where: { OR: [{ id: projectId }, { publicId: projectId }] },
   });
   if (!project) return { projectId, reason: "project_not_found", status: "skipped" };
-  if (project.sitemapMonitoringEnabled === false)
+  if (project.syncPauses.length > 0)
     return { projectId: project.id, reason: "monitor_disabled", status: "skipped" };
   const projectDomain = trackedProjectDomain(project.domain);
   if (!projectDomain) return { projectId: project.id, reason: "missing_domain", status: "skipped" };
 
   const sitemap = await resolveSitemap(sitemapUrlForDomain(projectDomain));
   warnIfTruncated(project.id, sitemap);
-
   const latest = await prisma.sitemapSnapshot.findFirst({
     orderBy: { fetchedAt: "desc" },
-    select: { contentHash: true, entries: true, id: true },
-    where: { projectId: project.id },
+    select: { complete: true, contentHash: true, entries: true, id: true },
+    where: { projectId: project.id, sitemapUrl: sitemap.sitemapUrl },
   });
   const hash = contentHash(sitemap.entries);
   const snapshotData = {
+    complete: !sitemap.truncated,
     contentHash: hash,
     entries: sitemap.entries as Prisma.InputJsonValue,
     fetchedAt: now,
@@ -213,6 +206,18 @@ export async function syncSitemapForProject(
     };
   }
   if (latest.contentHash === hash) {
+    const refreshEntries =
+      latest.complete !== snapshotData.complete ||
+      jsonEntries(latest.entries).length !== sitemap.entries.length;
+    await prisma.sitemapSnapshot.updateMany({
+      where: { id: latest.id, projectId: project.id, contentHash: hash, fetchedAt: { lt: now } },
+      data: {
+        fetchedAt: now,
+        complete: !sitemap.truncated,
+        urlCount: sitemap.urlCount,
+        ...(refreshEntries ? { entries: snapshotData.entries } : {}),
+      },
+    });
     return {
       projectId: project.id,
       sitemapUrl: sitemap.sitemapUrl,
@@ -255,7 +260,7 @@ export async function syncSitemapForProject(
 }
 
 export async function pruneOldSitemapSnapshots(now: Date = new Date()) {
-  const cutoff = new Date(now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const cutoff = new Date(now.getTime() - SITEMAP_SNAPSHOT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
   const result = await prisma.sitemapSnapshot.deleteMany({ where: { fetchedAt: { lt: cutoff } } });
   return result.count;
 }
@@ -265,7 +270,7 @@ export async function syncSitemapForAllProjects(
 ): Promise<SyncSitemapForAllProjectsResult> {
   const projects = await prisma.project.findMany({
     select: { id: true },
-    where: { domain: { not: "" }, sitemapMonitoringEnabled: true },
+    where: { domain: { not: "" }, syncPauses: { none: { kind: "sitemap_fetch" } } },
   });
   const summary = {
     baselined: 0,

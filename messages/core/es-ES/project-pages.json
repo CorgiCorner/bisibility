@@ -306,7 +306,13 @@
     },
     "sitemapState": {
       "listed": "Incluida",
-      "notListed": "No incluida"
+      "notListed": "No incluida",
+      "notChecked": "Mapa del sitio sin comprobar",
+      "notCheckedCell": "Sin comprobar",
+      "notCheckedHint": "Disponible cuando el monitor del proyecto haya leído el mapa del sitio.",
+      "lastRead": "Última lectura correcta: {date} UTC",
+      "freshnessHint": "La pertenencia usa lecturas correctas de las últimas 48 horas. Las páginas vistas después de una lectura siguen sin comprobar hasta volver a leer todos los sitemaps.",
+      "absenceNotChecked": "Fuera del sitemap: sin comprobar"
     },
     "sourceKind": {
       "ai_citation": "Citas de IA",
@@ -345,6 +351,13 @@
     "tags": {
       "all": "Todas las etiquetas",
       "new": "Nueva etiqueta"
+    },
+    "export": {
+      "csv": "Exportar CSV",
+      "hint": "Exporta todas las filas coincidentes y las columnas visibles, hasta 5.000 filas. Las etiquetas se separan con espacio, barra vertical y espacio ( | ).",
+      "empty": "No hay páginas coincidentes para exportar.",
+      "tooLarge": "Esta vista tiene más de {count, number} páginas. Acota la búsqueda o los filtros y vuelve a exportar. No se ha descargado ningún archivo.",
+      "failed": "No se pudieron exportar las páginas. Inténtalo de nuevo."
     }
   }
 }

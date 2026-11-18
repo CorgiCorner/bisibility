@@ -5,6 +5,10 @@ import { prisma } from "@/lib/db/prisma";
 import { isDemoViewer } from "@/lib/demo/config";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
+import {
+  NOTIFICATIONS_DISABLED_REASON,
+  skipEmailNotification,
+} from "@/lib/email/notification-policy";
 import { oneClickUnsubscribeUrl } from "@/lib/email/one-click-link";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { EmailBudgetExceededError, sendEmail } from "@/lib/email/send";
@@ -15,6 +19,8 @@ import { achievementEmailsEnabled } from "./config";
 import { createAchievementUnsubscribeToken } from "./unsubscribe";
 
 export async function sweepAchievementMail(limit = 10, now = new Date()) {
+  if (skipEmailNotification("achievement"))
+    return { sent: 0, skipped: true, reason: NOTIFICATIONS_DISABLED_REASON };
   if (!achievementEmailsEnabled()) return { sent: 0 };
   // An interrupted submission has unknown delivery, so it is never automatically sent again.
   await prisma.achievementMail.updateMany({
@@ -130,7 +136,8 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
         continue;
       }
       try {
-        await sendEmail({
+        const submitted = await sendEmail({
+          purpose: "achievement",
           category: "bulk",
           listUnsubscribeUrl: oneClickUnsubscribeUrl(unsubscribe, "achievement"),
           to: eligible.user.email,
@@ -140,9 +147,9 @@ export async function sweepAchievementMail(limit = 10, now = new Date()) {
         });
         await prisma.achievementMail.update({
           where: { id: mail.id },
-          data: { status: "sent", finishedAt: new Date() },
+          data: { status: submitted === false ? "skipped" : "sent", finishedAt: new Date() },
         });
-        sent++;
+        if (submitted !== false) sent++;
       } catch (error) {
         const budget = error instanceof EmailBudgetExceededError;
         await prisma.achievementMail.update({

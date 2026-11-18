@@ -73,6 +73,8 @@ export function isProviderRateLimitDisabled() {
 }
 
 export function providerRateLimitPolicy(providerId: string): ProviderPolicy {
+  if (["openai", "anthropic", "openrouter", "vercel_ai_gateway"].includes(providerId))
+    return { perMinute: 60, windowSeconds: 60 };
   if (!isConfiguredProvider(providerId)) return FALLBACK_POLICY;
   const base = DEFAULT_POLICIES[providerId];
   const values = PROVIDER_RATE_LIMIT_ENV[providerId]();
@@ -136,6 +138,10 @@ export function providerAccountKey(
       return c.login
         ? `dataforseo:${rateLimitBucketFingerprint(c.login)}`
         : projectFallback(providerId, options?.projectId);
+    case "openai":
+    case "anthropic":
+    case "openrouter":
+    case "vercel_ai_gateway":
     case "ahrefs":
     case "pagespeed":
     case "serpapi":

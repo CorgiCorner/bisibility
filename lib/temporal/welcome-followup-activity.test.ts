@@ -237,3 +237,16 @@ describe("welcome follow-up activity", () => {
     expect(mocks.sendFollowup).not.toHaveBeenCalled();
   });
 });
+
+it("quietly skips founder follow-up before delivery claims", async () => {
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  try {
+    vi.clearAllMocks();
+    expect(await sendWelcomeFollowupActivity({ userId: "user" })).toEqual({
+      status: "notifications_disabled",
+    });
+    for (const mock of Object.values(mocks)) expect(mock).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

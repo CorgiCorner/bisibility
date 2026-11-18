@@ -1,0 +1,450 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "kind": "admitted",
+          "quote_id": "00000000-0000-4000-8000-000000000000",
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "column_attempts": {
+            "019a70b2-0000-7000-8000-000000000001": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001"
+          },
+          "attempts": [
+            {
+              "id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "column_id": "00000000-0000-4000-8000-000000000000",
+              "state": "admitted"
+            }
+          ],
+          "replayed": false,
+          "earlier_attempt_unconfirmed": false
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "kind": "confirmation_required",
+          "nonce": "00000000-0000-4000-8000-000000000000",
+          "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "attempt_ids": [
+            "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001"
+          ],
+          "earlier_attempt_unconfirmed": true
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "kind": "not_dispatched",
+          "reason": "quote_expired",
+          "quote_invalidated": true
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "estimated_at": "2026-11-13T12:00:00Z",
+          "budget_available": true,
+          "forecasts": [
+            {
+              "column_id": "00000000-0000-4000-8000-000000000000",
+              "money": {
+                "amount": null,
+                "currency": "USD",
+                "certainty": "unknown",
+                "basis": "unknown",
+                "rate_card_version": null
+              },
+              "complete": false
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "estimateModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "provider_id": "openrouter",
+          "fetched_at": "2026-11-11T11:00:00Z",
+          "expires_at": "2026-11-11T13:00:00Z",
+          "capability_version": "synthetic-v1",
+          "models": [
+            {
+              "provider_id": "openrouter",
+              "model_id": "vendor/text-model:version.1",
+              "source_kind": "raw_model",
+              "protocol": "chat_completions",
+              "capability_version": "synthetic-v1",
+              "availability": "fixture_verified",
+              "text": {
+                "documentation_url": "https://example.com/model-contract",
+                "reviewed_at": "2026-11-11T12:00:00.000Z",
+                "fixture_revision": "synthetic-contract-v1"
+              },
+              "max_output_tokens": 4096,
+              "temperature": true,
+              "search": [
+                {
+                  "mode": "openrouter_web_exa",
+                  "country_hint": false,
+                  "max_calls": 1,
+                  "evidence": {
+                    "documentation_url": "https://example.com/model-contract",
+                    "reviewed_at": "2026-11-11T12:00:00.000Z",
+                    "fixture_revision": "synthetic-contract-v1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundCatalog",
+      "path": "/projects/{project_id}/model-playground/catalog",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "quote_id": "00000000-0000-4000-8000-000000000000",
+          "expires_at": "2026-11-13T12:10:00Z",
+          "forecasts": [
+            {
+              "column_id": "00000000-0000-4000-8000-000000000000",
+              "money": {
+                "amount": null,
+                "currency": "USD",
+                "certainty": "unknown",
+                "basis": "unknown",
+                "rate_card_version": null
+              },
+              "complete": false
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "version": 1,
+          "run_id": "00000000-0000-4000-8000-000000000000",
+          "project_id": "prj_a00000000000000000000000",
+          "report_id": null,
+          "prompt": "Compare tools for a small team.",
+          "response_language": "en",
+          "columns": [
+            {
+              "column": {
+                "column_id": "00000000-0000-4000-8000-000000000000",
+                "provider_id": "openrouter",
+                "connection_id": "conn_a00000000000000000000000",
+                "source_kind": "raw_model",
+                "model_id": "vendor/text-model:version.1",
+                "settings": {
+                  "max_output_tokens": 512,
+                  "search": {
+                    "mode": "off"
+                  }
+                },
+                "payment": {
+                  "option_id": "own:example",
+                  "funding_source": "byok"
+                }
+              },
+              "state": "completed",
+              "attempt_id": "model:019a70b2-0000-7000-8000-000000000002:019a70b2-0000-7000-8000-000000000001",
+              "attempt_state": "observed",
+              "result": {
+                "version": 1,
+                "column": {
+                  "column_id": "00000000-0000-4000-8000-000000000000",
+                  "provider_id": "openrouter",
+                  "connection_id": "conn_a00000000000000000000000",
+                  "source_kind": "raw_model",
+                  "model_id": "vendor/text-model:version.1",
+                  "settings": {
+                    "max_output_tokens": 512,
+                    "search": {
+                      "mode": "off"
+                    }
+                  },
+                  "payment": {
+                    "option_id": "own:example",
+                    "funding_source": "byok"
+                  }
+                },
+                "actual_provider_id": null,
+                "actual_model_id": "vendor/text-model:version.1",
+                "provider_request_id": "request:example",
+                "state": "completed",
+                "failure": null,
+                "started_at": "2026-11-11T12:00:00.000Z",
+                "finished_at": "2026-11-11T12:00:00.000Z",
+                "duration_ms": 0,
+                "answer": "An answer with two citations.",
+                "truncation": {
+                  "provider": false,
+                  "application": false,
+                  "citations": false
+                },
+                "citations": [
+                  {
+                    "occurrence_id": "citation-1",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 0,
+                    "end": 2
+                  },
+                  {
+                    "occurrence_id": "citation-2",
+                    "source_id": "source-1",
+                    "url": "https://example.org/source",
+                    "title": "Source",
+                    "start": 3,
+                    "end": 5
+                  }
+                ],
+                "consulted_sources": {
+                  "total": null,
+                  "omitted": null,
+                  "sources": [],
+                  "truncated": false
+                },
+                "citation_totals": {
+                  "total": 2,
+                  "omitted": 0
+                },
+                "cost_evidence": {
+                  "provider_reported": null,
+                  "upstream_inference": null,
+                  "local_estimate": null
+                },
+                "routing_attempt_credentials": {
+                  "version": 1,
+                  "completeness": "unknown",
+                  "attempts": []
+                },
+                "usage": {
+                  "completeness": "unknown",
+                  "input_tokens": null,
+                  "output_tokens": null,
+                  "reasoning_tokens": null,
+                  "cache_read_input_tokens": null,
+                  "cache_write_input_tokens": null,
+                  "input_cache_accounting": "unknown",
+                  "cache_writes": [],
+                  "search_calls": null,
+                  "search_content_tokens": null
+                },
+                "provider_cost": {
+                  "amount": null,
+                  "currency": "USD",
+                  "certainty": "unknown",
+                  "basis": "unknown",
+                  "rate_card_version": null
+                },
+                "payment_receipt": null,
+                "raw_evidence_id": null
+              },
+              "result_issue": null
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key is not scoped to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Idempotency-Key is required.",
+        "docs_url": "https://bisibility.com/docs/api/errors#bad_request",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 400,
+        "title": "Bad request",
+        "type": "https://bisibility.com/problems/bad_request"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Model Playground is not available yet.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 503,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable",
+        "details": {
+          "reason": "not_available_yet",
+          "retryable": false
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 503
+    },
+    {
+      "body": {
+        "detail": "Model Playground resource not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/019a70b2-0000-7000-8000-000000000003",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found",
+        "details": {
+          "reason": "not_found"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Model Playground resource not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found",
+        "details": {
+          "reason": "not_found"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/not-a-uuid",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Invalid UUID"],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/{run_id}",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs/preview",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Unrecognized key: \"price\""],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "previewModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs/preview",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Unexpected API error.",
+        "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/model-playground/runs",
+        "status": 500,
+        "title": "Internal server error",
+        "type": "https://bisibility.com/problems/internal_server_error"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createModelPlaygroundRun",
+      "path": "/projects/{project_id}/model-playground/runs",
+      "status": 500
+    }
+  ],
+  "source": "lib/api/model-playground-router.test.ts"
+}

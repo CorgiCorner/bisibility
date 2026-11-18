@@ -67,6 +67,7 @@ model AiTopic {
 }
 
 model AiPrompt {
+  modelPlaygroundPresets ModelPlaygroundPreset[]
   id         String             @id @default(cuid())
   publicId   String             @unique
   projectId  String
@@ -143,6 +144,8 @@ model AiTrackingRun {
   launchPayload      Json
   competitorSnapshot Json
   state              AiTrackingRunState @default(planned)
+  reasonCode         String?
+  reasonDetails      Json?
   retryOfRunId        String?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt

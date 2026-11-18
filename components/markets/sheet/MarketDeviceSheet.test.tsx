@@ -38,7 +38,7 @@ it("places Review and the explicit Add beside Cancel in the actual sheet footer"
   const cancel = screen.getByRole("button", { name: "Cancel" });
   const review = await screen.findByRole("button", { name: "Review changes" });
   expect(review).toHaveAttribute("data-variant", "primary");
-  expect(cancel).toHaveAttribute("data-size", "sm");
+  expect(cancel).toHaveAttribute("data-size", "input");
   expect(cancel.parentElement).toHaveClass("flex", "items-center");
   expect(review.closest("footer")).not.toBeNull();
   expect(review.closest("footer")).toBe(cancel.closest("footer"));

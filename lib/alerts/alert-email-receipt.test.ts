@@ -1,7 +1,13 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { TriggeredAlertDeliveryPayload } from "./alert-delivery-payload";
 
-const mocks = vi.hoisted(() => ({ receipt: vi.fn(), find: vi.fn(), deliver: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  record: vi.fn(),
+  receipt: vi.fn(),
+  find: vi.fn(),
+  deliver: vi.fn(),
+}));
+vi.mock("./delivery", () => ({ recordDeliveryAttempt: mocks.record }));
 vi.mock("@/lib/activity/result-receipt-extension", () => ({ recordResultReceipt: mocks.receipt }));
 vi.mock("./prepared-email-store", () => ({ prismaPreparedEmailStore: { find: mocks.find } }));
 vi.mock("./prepared-email-delivery", async (original) => ({
@@ -51,3 +57,27 @@ it.each([
     });
   },
 );
+
+it("records disabled alert mail as skipped before prepared-mail reservations", async () => {
+  vi.stubEnv("EMAIL_NOTIFICATIONS_DISABLED", "1");
+  try {
+    expect(
+      await deliverAlertEmailActivity({
+        alertId: "alert",
+        recipientEmail: "owner@example.org",
+        payload: {} as TriggeredAlertDeliveryPayload,
+      }),
+    ).toMatchObject({ delivered: false, skipped: true });
+    expect(mocks.find).not.toHaveBeenCalled();
+    expect(mocks.deliver).not.toHaveBeenCalled();
+    expect(mocks.receipt).not.toHaveBeenCalled();
+    expect(mocks.record).toHaveBeenCalledWith(
+      "alert",
+      "email",
+      "skipped",
+      expect.stringContaining("Notification email is disabled"),
+    );
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

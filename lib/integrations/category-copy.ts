@@ -1,6 +1,9 @@
 import type { ProviderKind } from "@/lib/providers/types";
 
-export type ActiveIntegrationKind = Extract<ProviderKind, "analytics" | "serp" | "enrichment">;
+export type ActiveIntegrationKind = Extract<
+  ProviderKind,
+  "analytics" | "serp" | "enrichment" | "model"
+>;
 
 export type IntegrationCategoryCopy = {
   description: string;
@@ -22,6 +25,11 @@ export const ANALYTICS_INTEGRATION_CATEGORY_COPY = {
 } satisfies IntegrationCategoryCopy;
 
 export const INTEGRATION_CATEGORY_COPY = {
+  model: {
+    description: "Connect your own model provider keys. Billed by your provider.",
+    eyebrow: "Model providers",
+    title: "Model providers",
+  },
   enrichment: {
     description: "Track your domain's backlink authority with daily Domain Rating observations.",
     eyebrow: "Domain authority",

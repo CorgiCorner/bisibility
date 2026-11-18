@@ -204,7 +204,6 @@ export default async function SchedulePage({
               canEdit={canEdit}
               candidates={candidates}
               connectedProviders={connectedProviders}
-              defaultScheduleName={schedules.find((item) => item.isDefault)?.name ?? null}
               isNew={isNew}
               initialSaveConfirmed={!isNew && query?.saved === "1"}
               planningMinutes={schedulePlanningMinutes()}
@@ -216,7 +215,6 @@ export default async function SchedulePage({
               projectTimezone={defaults?.timezone ?? "UTC"}
               referenceIso={referenceIso}
               schedule={editorSchedule}
-              showDefaultControl={isNew}
             />
           </div>
         )}

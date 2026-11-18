@@ -6,11 +6,18 @@ import { PROVIDER_REQUEST_SOURCES } from "./tag";
 
 type EvidenceClient = Pick<PrismaClient, "meteringUsageEvidence">;
 
+export {
+  bindModelUsageEvidence,
+  loadModelUsageEvidence,
+  persistModelUsageEvidence,
+} from "@/lib/model-playground/usage-storage";
+
 /** Do not infer a historical owner from the current project. Missing identity is unknown. */
 export async function loadByokEvidence(db: EvidenceClient, id: string): Promise<UsageEntry | null> {
   const row = await db.meteringUsageEvidence.findUnique({ where: { id } });
   const source = PROVIDER_REQUEST_SOURCES.find((source) => source === row?.source);
-  if (!row || row.discarded || !source || !row.namespace) return null;
+  if (!row || row.discarded || !source || !row.namespace || row.feature === "model_playground")
+    return null;
   const receipt = row.receipt as {
     costCents: string | null;
     quantity: string | null;
@@ -58,6 +65,8 @@ export async function persistByokEvidence(
   await tx.$queryRaw`SELECT id FROM metering_usage_evidence WHERE id=${id} FOR UPDATE`;
   const row = await tx.meteringUsageEvidence.findUnique({ where: { id } });
   if (!row || row.discarded) throw new Error("BYOK accounting identity is unavailable.");
+  if (row.feature === "model_playground")
+    throw new Error("Native models require versioned usage evidence.");
   const providerRequestId = receipt.cached
     ? null
     : (receipt.providerRequestId ?? row.providerRequestId);

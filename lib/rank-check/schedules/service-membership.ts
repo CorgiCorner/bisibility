@@ -20,7 +20,6 @@ export type CheckScheduleRow = {
   enabled: boolean;
   frequency: RankCheckFrequency;
   id: string;
-  isDefault: boolean;
   jitterMinutes: number;
   name: string;
   providerPolicy: string | null;
@@ -36,7 +35,6 @@ export const checkScheduleSelect = {
   enabled: true,
   frequency: true,
   id: true,
-  isDefault: true,
   jitterMinutes: true,
   name: true,
   providerPolicy: true,
@@ -54,7 +52,6 @@ export function checkScheduleAudit(schedule: CheckScheduleRow) {
     cronExpression: schedule.cronExpression,
     enabled: schedule.enabled,
     frequency: schedule.frequency,
-    isDefault: schedule.isDefault,
     jitterMinutes: schedule.jitterMinutes,
     name: schedule.name,
     providerPolicy: schedule.providerPolicy,
@@ -172,103 +169,107 @@ export async function assignKeywordsToSchedule(
   actorId: string,
   projectId: string,
   data: CheckScheduleMembershipInput,
+  existingTx?: Prisma.TransactionClient,
+  clientConsent?: string,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
-      await lockProjectForProviderMutation(tx, projectId);
-      const schedule = await requireSchedule(tx, projectId, data.scheduleId);
-      const candidates = await tx.keyword.findMany({
-        select: {
-          checkScheduleId: true,
-          checkSchedule: { select: { publicId: true } },
-          id: true,
-          publicId: true,
-        },
-        where: keywordIdsWhere(projectId, data.keywordIds),
+  const run = async (tx: Prisma.TransactionClient) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
+    await lockProjectForProviderMutation(tx, projectId);
+    const schedule = await requireSchedule(tx, projectId, data.scheduleId);
+    const candidates = await tx.keyword.findMany({
+      select: {
+        checkScheduleId: true,
+        checkSchedule: { select: { publicId: true } },
+        id: true,
+        publicId: true,
+      },
+      where: keywordIdsWhere(projectId, data.keywordIds),
+    });
+    const moved = candidates.filter((keyword) => keyword.checkScheduleId !== schedule.id);
+    const keywordIds = moved.map((keyword) => keyword.id);
+    const capacity = await prepareKeywordScheduleChange(tx, projectId, keywordIds, schedule);
+    if (keywordIds.length > 0) {
+      await tx.keyword.updateMany({
+        data: { checkScheduleId: schedule.id },
+        where: { id: { in: keywordIds } },
       });
-      const moved = candidates.filter((keyword) => keyword.checkScheduleId !== schedule.id);
-      const keywordIds = moved.map((keyword) => keyword.id);
-      const capacity = await prepareKeywordScheduleChange(tx, projectId, keywordIds, schedule);
-      if (keywordIds.length > 0) {
-        await tx.keyword.updateMany({
-          data: { checkScheduleId: schedule.id },
-          where: { id: { in: keywordIds } },
-        });
-      }
-      await mirrorScheduleToKeywords(tx, projectId, schedule, keywordIds);
-      const affectedScheduleIds = [
-        schedule.id,
-        ...moved.flatMap((keyword) => keyword.checkScheduleId ?? []),
-      ];
-      for (const affectedScheduleId of new Set(affectedScheduleIds)) {
-        await reconcilePlannedRunsForSchedule(affectedScheduleId, tx);
-      }
-      const movedFrom = [
-        ...new Set(moved.flatMap((keyword) => keyword.checkSchedule?.publicId ?? [])),
-      ];
-      await writeAudit(
-        {
-          action: "check_schedule.assign",
-          actorId,
-          after: {
-            ...checkScheduleAudit(schedule),
-            keywordIds: moved.map((keyword) => keyword.publicId),
-            movedFrom,
-          },
-          projectId,
-          targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
+    }
+    await mirrorScheduleToKeywords(tx, projectId, schedule, keywordIds);
+    const affectedScheduleIds = [
+      schedule.id,
+      ...moved.flatMap((keyword) => keyword.checkScheduleId ?? []),
+    ];
+    for (const affectedScheduleId of new Set(affectedScheduleIds)) {
+      await reconcilePlannedRunsForSchedule(affectedScheduleId, tx);
+    }
+    const movedFrom = [
+      ...new Set(moved.flatMap((keyword) => keyword.checkSchedule?.publicId ?? [])),
+    ];
+    await writeAudit(
+      {
+        action: "check_schedule.assign",
+        actorId,
+        after: {
+          ...checkScheduleAudit(schedule),
+          ...(clientConsent ? { clientConsent } : {}),
+          keywordIds: moved.map((keyword) => keyword.publicId),
+          movedFrom,
         },
-        tx,
-      );
-      await capacity.check();
-      return { updated: moved.length };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+        projectId,
+        targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
+        targetType: "check_schedule",
+      },
+      tx,
+    );
+    await capacity.check();
+    return { updated: moved.length };
+  };
+  return existingTx
+    ? run(existingTx)
+    : prisma.$transaction(run, { maxWait: 10_000, timeout: 60_000 });
 }
 
 export async function removeKeywordsFromSchedule(
   actorId: string,
   projectId: string,
   data: CheckScheduleMembershipInput,
+  existingTx?: Prisma.TransactionClient,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
-      await lockProjectForProviderMutation(tx, projectId);
-      const schedule = await requireSchedule(tx, projectId, data.scheduleId);
-      const moved = await tx.keyword.findMany({
-        select: { id: true, publicId: true },
-        where: { ...keywordIdsWhere(projectId, data.keywordIds), checkScheduleId: schedule.id },
+  const run = async (tx: Prisma.TransactionClient) => {
+    await prepareResourceCapacity(tx, { projectId: projectId, dimensions: [] });
+    await lockProjectForProviderMutation(tx, projectId);
+    const schedule = await requireSchedule(tx, projectId, data.scheduleId);
+    const moved = await tx.keyword.findMany({
+      select: { id: true, publicId: true },
+      where: { ...keywordIdsWhere(projectId, data.keywordIds), checkScheduleId: schedule.id },
+    });
+    const keywordIds = moved.map((keyword) => keyword.id);
+    if (keywordIds.length > 0) {
+      await tx.keyword.updateMany({
+        data: { checkScheduleId: null },
+        where: { id: { in: keywordIds } },
       });
-      const keywordIds = moved.map((keyword) => keyword.id);
-      if (keywordIds.length > 0) {
-        await tx.keyword.updateMany({
-          data: { checkScheduleId: null },
-          where: { id: { in: keywordIds } },
-        });
-      }
-      const manual = await mirrorManualToKeywords(tx, projectId, keywordIds, schedule.serpDepth);
-      await reconcilePlannedRunsForSchedule(schedule.id, tx);
-      await writeAudit(
-        {
-          action: "check_schedule.remove",
-          actorId,
-          after: {
-            ...manual,
-            keywordIds: moved.map((keyword) => keyword.publicId),
-            movedFrom: moved.length > 0 ? [schedule.publicId] : [],
-          },
-          projectId,
-          targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
+    }
+    const manual = await mirrorManualToKeywords(tx, projectId, keywordIds, schedule.serpDepth);
+    await reconcilePlannedRunsForSchedule(schedule.id, tx);
+    await writeAudit(
+      {
+        action: "check_schedule.remove",
+        actorId,
+        after: {
+          ...manual,
+          keywordIds: moved.map((keyword) => keyword.publicId),
+          movedFrom: moved.length > 0 ? [schedule.publicId] : [],
         },
-        tx,
-      );
-      return { updated: moved.length };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+        projectId,
+        targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
+        targetType: "check_schedule",
+      },
+      tx,
+    );
+    return { updated: moved.length };
+  };
+  return existingTx
+    ? run(existingTx)
+    : prisma.$transaction(run, { maxWait: 10_000, timeout: 60_000 });
 }
